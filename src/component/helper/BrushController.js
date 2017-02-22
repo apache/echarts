@@ -352,6 +352,12 @@ define(function (require) {
         },
 
         unmount: function () {
+            if (__DEV__) {
+                if (!this._mounted) {
+                    return;
+                }
+            }
+
             this.enableBrush(false);
 
             // container may 'removeAll' outside.

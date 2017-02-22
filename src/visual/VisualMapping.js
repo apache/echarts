@@ -130,7 +130,6 @@ define(function (require) {
              */
             getColorMapper: function () {
                 var thisOption = this.option;
-                var parsedVisual = zrUtil.map(thisOption.visual, zrColor.parse);
 
                 return zrUtil.bind(
                     thisOption.mappingMethod === 'category'
@@ -143,8 +142,8 @@ define(function (require) {
                             // which will be much faster and useful in pixel manipulation
                             var returnRGBArray = !!out;
                             !isNormalized && (value = this._normalizeData(value));
-                            out = zrColor.fastMapToColor(value, parsedVisual, out);
-                            return returnRGBArray ? out : zrUtil.stringify(out, 'rgba');
+                            out = zrColor.fastMapToColor(value, thisOption.parsedVisual, out);
+                            return returnRGBArray ? out : zrColor.stringify(out, 'rgba');
                         },
                     this
                 );
@@ -152,13 +151,19 @@ define(function (require) {
 
             _doMap: {
                 linear: function (normalized) {
-                    return zrColor.mapToColor(normalized, this.option.visual);
+                    return zrColor.stringify(
+                        zrColor.fastMapToColor(normalized, this.option.parsedVisual),
+                        'rgba'
+                    );
                 },
                 category: doMapCategory,
                 piecewise: function (normalized, value) {
                     var result = getSpecifiedVisual.call(this, value);
                     if (result == null) {
-                        result = zrColor.mapToColor(normalized, this.option.visual);
+                        result = zrColor.stringify(
+                            zrColor.fastMapToColor(normalized, this.option.parsedVisual),
+                            'rgba'
+                        );
                     }
                     return result;
                 },
@@ -260,7 +265,7 @@ define(function (require) {
                 visualArr[CATEGORY_DEFAULT_VISUAL_INDEX] = visual;
             }
 
-            visual = thisOption.visual = visualArr;
+            visual = setVisualToOption(thisOption, visualArr);
         }
 
         // Remove categories that has no visual,
@@ -296,7 +301,7 @@ define(function (require) {
             visualArr[1] = visualArr[0];
         }
 
-        thisOption.visual = visualArr;
+        setVisualToOption(thisOption, visualArr);
     }
 
     function makePartialColorVisualHandler(applyValue) {
@@ -363,6 +368,16 @@ define(function (require) {
                 return piece.visual[this.type];
             }
         }
+    }
+
+    function setVisualToOption(thisOption, visualArr) {
+        thisOption.visual = visualArr;
+        if (thisOption.type === 'color') {
+            thisOption.parsedVisual = zrUtil.map(visualArr, function (item) {
+                return zrColor.parse(item);
+            });
+        }
+        return visualArr;
     }
 
 

@@ -2,7 +2,10 @@ define(function (require) {
 
     var createListFromArray = require('./chart/helper/createListFromArray');
     var symbolUtil = require('./util/symbol');
-    // var axisHelper = require('./coord/axisHelper');
+    var axisHelper = require('./coord/axisHelper');
+    var axisModelCommonMixin = require('./coord/axisModelCommonMixin');
+    var Model = require('./model/Model');
+    var util = require('zrender/core/util');
 
     return {
         createList: function (seriesModel) {
@@ -20,10 +23,41 @@ define(function (require) {
          * @param {number} h
          * @param {string} color
          */
-        createSymbol: symbolUtil.createSymbol
+        createSymbol: symbolUtil.createSymbol,
 
-        // createScale: function () {
+        /**
+         * Create scale
+         * @param {Array.<number>} dataExtent
+         * @param {Object|module:echarts/Model} option
+         */
+        createScale: function (dataExtent, option) {
+            var axisModel = option;
+            if (!(option instanceof Model)) {
+                axisModel = new Model(option);
+                util.mixin(axisModel, axisModelCommonMixin);
+            }
 
-        // }
+            var scale = axisHelper.createScaleByModel(axisModel);
+            scale.setExtent(dataExtent[0], dataExtent[1]);
+
+            axisHelper.niceScaleExtent(scale, axisModel);
+            return scale;
+        },
+
+        /**
+         * Mixin common methods to axis model,
+         *
+         * Inlcude methods
+         * `getFormattedLabels() => Array.<string>`
+         * `getCategories() => Array.<string>`
+         * `getMin(origin: boolean) => number`
+         * `getMax(origin: boolean) => number`
+         * `getNeedCrossZero() => boolean`
+         * `setRange(start: number, end: number)`
+         * `resetRange()`
+         */
+        mixinAxisModelCommonMethods: function (Model) {
+            util.mixin(Model, axisModelCommonMixin);
+        }
     };
 });
