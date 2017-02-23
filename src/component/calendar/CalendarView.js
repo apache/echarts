@@ -145,7 +145,7 @@ define(function (require) {
                 firstDay = coordSys.getDateInfo(date);
             }
 
-            addPoints(coordSys.getNextNDay(rangeData.range[1], 1).formatedDate);
+            addPoints(coordSys.getNextNDay(rangeData.end.time, 1).formatedDate);
 
             function addPoints(date) {
 
