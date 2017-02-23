@@ -29,16 +29,16 @@
                 var arr30 = [4, 6, 9, 11];
                 for (var i = 1; i <= 31; i++) {
                     for (var j = arr31.length - 1; j >= 0; j--) {
-                        datas.push([(+new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                        datas.push([(new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
                     }
                 }
                 for (var i = 1; i <= 30; i++) {
                     for (var j = arr30.length - 1; j >= 0; j--) {
-                        datas.push([(+new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                        datas.push([(new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
                     }
                 }
                 for (var i = 1; i <= 29; i++) {
-                    datas.push([(+new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
+                    datas.push([(new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
                 }
                 return datas;
             }
@@ -117,14 +117,14 @@
                     calendar: [
                     {
                         yearLabel: {
-                            padding: 40
+                            margin: 40
                         },
                         cellSize: 40,
                         range: '2017-02'
                     },
                     {
                         yearLabel: {
-                            padding: 40
+                            margin: 40
                         },
                         cellSize: 40,
                         left: 350,
@@ -132,7 +132,7 @@
                     },
                     {
                         yearLabel: {
-                            padding: 40
+                            margin: 40
                         },
                         cellSize: 40,
                         left: 650,
@@ -140,7 +140,7 @@
                     },
                     {
                         yearLabel: {
-                            padding: 40
+                            margin: 40
                         },
                         cellSize: 40,
                         left: 950,

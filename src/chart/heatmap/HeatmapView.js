@@ -117,7 +117,7 @@ define(function (require) {
 
                 var rect = new graphic.Rect({
                     z2: 1,
-                    shape: calendar.dataToRectShape([time, value]),
+                    shape: calendar.dataToRect([time, value]).contentShape,
                     style: {
                         fill: data.getItemVisual(idx, 'color'),
                         opacity: data.getItemVisual(idx, 'opacity')

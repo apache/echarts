@@ -56,6 +56,9 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
+                    tooltip: {
+                        position: 'top'
+                    },
                     visualMap: {
                         min: 0,
                         max: 1000,
@@ -145,7 +148,8 @@
                     },
                     {
                         monthLabel: {
-                            padding: 20,
+                            margin: 20,
+                            formatter: '{yy}-{nameMap}',
                             textStyle: {
                                 color: '#009688',
                                 fontStyle: 'italic',
@@ -229,10 +233,6 @@
                         data: getVirtulData(2017)
                     }]
 
-                });
-
-                $(window).resize(function() {
-                    chart.resize();
                 });
             });
         </script>

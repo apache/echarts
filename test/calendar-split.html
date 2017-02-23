@@ -56,6 +56,9 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
+                    tooltip: {
+                        position: 'top'
+                    },
                     visualMap: {
                         min: 0,
                         max: 1000,
@@ -104,10 +107,6 @@
                         data: getVirtulData(2015)
                     }]
 
-                });
-
-                $(window).resize(function() {
-                    chart.resize();
                 });
             });
         </script>

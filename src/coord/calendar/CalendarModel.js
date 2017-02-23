@@ -55,7 +55,7 @@ define(function (require) {
             // week text style
             dayLabel: {
                 show: true,
-                padding: 0,
+                margin: 0,
                 firstDay: 0,
 
                 // start end
@@ -77,8 +77,8 @@ define(function (require) {
                 position: 'start',
 
                 // center or left
-                posAlign: 'center',
-                padding: 5,
+                align: 'center',
+                margin: 5,
                 formatter: null,
                 textStyle: {
                     color: '#000'
@@ -91,7 +91,7 @@ define(function (require) {
 
                 // top bottom left right
                 position: null,
-                padding: 30,
+                margin: 30,
                 formatter: null,
                 textStyle: {
                     color: '#ccc',

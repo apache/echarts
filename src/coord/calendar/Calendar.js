@@ -12,7 +12,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     // (24*60*60*1000)
-    var ONEDAY = 86400000;
+    var ONE_DAY = 86400000;
 
     /**
      * Calendar
@@ -55,42 +55,53 @@ define(function (require) {
             return this._orient;
         },
 
-        getFirstDayWeek: function () {
-            return this._firstDayWeek;
+        /**
+         * getFirstDayOfWeek
+         *
+         * @example
+         *     0 : start at Sunday
+         *     1 : start at Monday
+         *
+         * @return {number}
+         */
+        getFirstDayOfWeek: function () {
+            return this._firstDayOfWeek;
         },
 
-        handlerRangeOption: function () {
-            this._range = this._model.get('range');
+        _initRangeOption: function () {
+            var range = this._model.get('range');
 
-            var rg = this._range;
+            var rg = range;
 
             if (zrUtil.isArray(rg) && rg.length === 1) {
                 rg = rg[0];
             }
 
             if (/^\d{4}$/.test(rg)) {
-                this._range = [rg + '-01-01', rg + '-12-31'];
+                range = [rg + '-01-01', rg + '-12-31'];
             }
 
             if (/^\d{4}[\/|-]\d{1,2}$/.test(rg)) {
 
-                var start = this.getYMDInfo(rg);
+                var start = this.getDateInfo(rg);
                 var firstDay = start.date;
                 firstDay.setMonth(firstDay.getMonth() + 1);
 
                 var end = this.getNextNDay(firstDay, -1);
-                this._range = [start.format, end.format];
+                range = [start.formatedDate, end.formatedDate];
             }
 
             if (/^\d{4}[\/|-]\d{1,2}[\/|-]\d{1,2}$/.test(rg)) {
-                this._range = [rg, rg];
+                range = [rg, rg];
             }
 
-            var tmp = this.getRangeInfo(this._range);
+            var tmp = this.getRangeInfo(range);
 
             if (tmp.start.time > tmp.end.time) {
-                this._range.reverse();
+                range.reverse();
             }
+
+            return range;
         },
 
         update: function (ecModel, api) {
@@ -105,11 +116,9 @@ define(function (require) {
 
             this._rect = calendarRect;
 
-            this._firstDayWeek = this._model.getModel('dayLabel').get('firstDay');
+            this._firstDayOfWeek = this._model.getModel('dayLabel').get('firstDay');
 
-            this.handlerRangeOption();
-
-            this._rangeInfo = this.getRangeInfo(this._range);
+            this._rangeInfo = this.getRangeInfo(this._initRangeOption());
 
             var size = this._model.get('cellSize');
 
@@ -132,19 +141,19 @@ define(function (require) {
          * Convert a time data(time, value) item to (x, y) point.
          *
          * @override
-         * @param  {string} data  data
-         * @param  {string} noClip  out of range
-         * @return {string}       point
+         * @param  {Array} data  data
+         * @param  {boolean} noClip  out of range
+         * @return {Array}       point
          */
         dataToPoint: function (data, noClip) {
 
-            var dayInfo = this.getYMDInfo(data[0]);
+            var dayInfo = this.getDateInfo(data[0]);
             var range = this._rangeInfo.range;
-            var date = dayInfo.format;
+            var date = dayInfo.formatedDate;
 
             // if not in range return [NaN, NaN]
             if (!noClip && !this.isInRangeOfDate(date, range)) {
-                return [NaN, NaN, data[1]];
+                return [NaN, NaN];
             }
 
             var week = dayInfo.day;
@@ -153,38 +162,60 @@ define(function (require) {
             if (this._orient === 'vertical') {
                 return [
                     this._rect.x + week * this._sw + this._sw / 2,
-                    this._rect.y + (nthWeek - 1) * this._sh + this._sh / 2,
-                    data[1]
+                    this._rect.y + (nthWeek - 1) * this._sh + this._sh / 2
                 ];
 
             }
 
             return [
                 this._rect.x + (nthWeek - 1) * this._sw + this._sw / 2,
-                this._rect.y + week * this._sh + this._sh / 2,
-                data[1]
+                this._rect.y + week * this._sh + this._sh / 2
             ];
 
         },
 
         /**
-         * Convert a time data(time, value) item to rect shape option.
+         * Convert a time date item to (x, y) four point.
          *
-         * @param  {string} data  data
-         * @return {Object}      obj
+         * @param  {Array} data  date[0] is date
+         * @param  {boolean} noClip  out of range
+         * @return {Object}       point
          */
-        dataToRectShape: function (data) {
+        dataToRect: function (data, noClip) {
 
-            var point = this.dataToPoint(data);
+            var point = this.dataToPoint(data, noClip);
 
-            var shape = {
-                x: point[0] - (this._sw - this._lineWidth) / 2,
-                y: point[1] - (this._sh - this._lineWidth) / 2,
-                width: this._sw - this._lineWidth,
-                height: this._sh - this._lineWidth
+            return {
+                contentShape: {
+                    x: point[0] - (this._sw - this._lineWidth) / 2,
+                    y: point[1] - (this._sh - this._lineWidth) / 2,
+                    width: this._sw - this._lineWidth,
+                    height: this._sh - this._lineWidth
+                },
+
+                center: point,
+
+                tl: [
+                    point[0] - this._sw / 2,
+                    point[1] - this._sh / 2
+                ],
+
+                tr: [
+                    point[0] + this._sw / 2,
+                    point[1] - this._sh / 2
+                ],
+
+                br: [
+                    point[0] + this._sw / 2,
+                    point[1] + this._sh / 2
+                ],
+
+                bl: [
+                    point[0] - this._sw / 2,
+                    point[1] + this._sh / 2
+                ]
+
             };
-
-            return shape;
         },
 
         /**
@@ -197,7 +228,7 @@ define(function (require) {
 
             var date = this.pointToDate(point);
 
-            return date && date.format;
+            return date && date.time;
         },
 
         /**
@@ -212,48 +243,12 @@ define(function (require) {
             var range = this._rangeInfo.range;
 
             if (this._orient === 'vertical') {
-                return this.getRangeDateOfWeek(nthY, nthX - 1, range);
+                return this.getDateByWeeksAndDay(nthY, nthX - 1, range);
             }
 
-            return this.getRangeDateOfWeek(nthX, nthY - 1, range);
+            return this.getDateByWeeksAndDay(nthX, nthY - 1, range);
         },
 
-        /**
-         * Convert a time date item to (x, y) four point.
-         *
-         * @param  {string} date  date
-         * @return {Object}       point
-         */
-        dateToPonitFour: function (date) {
-
-            var point = this.dataToPoint([date, 0], true);
-
-            return {
-
-                CENTER: point,
-
-                TL: [
-                    point[0] - this._sw / 2,
-                    point[1] - this._sh / 2
-                ],
-
-                TR: [
-                    point[0] + this._sw / 2,
-                    point[1] - this._sh / 2
-                ],
-
-                BR: [
-                    point[0] + this._sw / 2,
-                    point[1] + this._sh / 2
-                ],
-
-                BL: [
-                    point[0] - this._sw / 2,
-                    point[1] + this._sh / 2
-                ]
-
-            };
-        },
         /**
          * range info
          *
@@ -262,15 +257,15 @@ define(function (require) {
          */
         getRangeInfo: function (range) {
 
-            var start = this.getYMDInfo(range[0]);
-            var end = this.getYMDInfo(range[1]);
+            var start = this.getDateInfo(range[0]);
+            var end = this.getDateInfo(range[1]);
 
-            var allDay = Math.floor(end.time / ONEDAY) - Math.floor(start.time / ONEDAY) + 1;
+            var allDay = Math.floor(end.time / ONE_DAY) - Math.floor(start.time / ONE_DAY) + 1;
 
             var weeks = Math.floor((allDay + start.day + 6) / 7);
 
             return {
-                range: [start.format, end.format],
+                range: [start.formatedDate, end.formatedDate],
                 start: start,
                 end: end,
                 allDay: allDay,
@@ -281,27 +276,28 @@ define(function (require) {
         },
 
         /**
-         * According to nthWeeks and week day  get date
+         * get date by nthWeeks and week day in range
          *
          * @param  {number} nthWeek the week
-         * @param  {[number]} day   the week day
+         * @param  {number} day   the week day
          * @param  {Array} range [d1, d2]
          * @return {string}         'YYYY-MM-DD'
          */
-        getRangeDateOfWeek: function (nthWeek, day, range) {
+        getDateByWeeksAndDay: function (nthWeek, day, range) {
             var rangeInfo = this.getRangeInfo(range);
 
             if (nthWeek > rangeInfo.weeks
                 || (nthWeek === 0 && day < rangeInfo.fweek)
-                || (nthWeek === rangeInfo.weeks && day > rangeInfo.lweek)) {
+                || (nthWeek === rangeInfo.weeks && day > rangeInfo.lweek)
+            ) {
                 return false;
             }
 
             var nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
 
-            var time = this.getYMDInfo(rangeInfo.range[0]).time + nthDay * ONEDAY;
+            var time = this.getDateInfo(rangeInfo.range[0]).time + nthDay * ONE_DAY;
 
-            return this.getYMDInfo(time);
+            return this.getDateInfo(time);
 
         },
 
@@ -313,9 +309,9 @@ define(function (require) {
          * @return {Boolean}       true | false
          */
         isInRangeOfDate: function (date, range) {
-            var start = this.getYMDInfo(range[0]).time;
-            var end = this.getYMDInfo(range[1]).time;
-            var cur = this.getYMDInfo(date).time;
+            var start = this.getDateInfo(range[0]).time;
+            var end = this.getDateInfo(range[1]).time;
+            var cur = this.getDateInfo(date).time;
 
             if (cur >= start && cur <= end) {
                 return true;
@@ -330,7 +326,7 @@ define(function (require) {
          * @param  {string|number} date date
          * @return {Object}      info
          */
-        getYMDInfo: function (date) {
+        getDateInfo: function (date) {
 
             date = number.parseDate(date);
 
@@ -344,19 +340,15 @@ define(function (require) {
 
             var day = date.getDay();
 
-            day = Math.abs((day + 7 - this._firstDayWeek) % 7);
-
-            var time = date.getTime();
-
-            var format = y + '-' + m + '-' + d;
+            day = Math.abs((day + 7 - this.getFirstDayOfWeek()) % 7);
 
             return {
                 y: y,
                 m: m,
                 d: d,
                 day: day,
-                time: time,
-                format: format,
+                time: date.getTime(),
+                formatedDate: y + '-' + m + '-' + d,
                 date: date
             };
         },
@@ -364,12 +356,12 @@ define(function (require) {
         getNextNDay: function (date, n) {
             n = n || 0;
             if (n === 0) {
-                return this.getYMDInfo(date);
+                return this.getDateInfo(date);
             }
 
-            var time = this.getYMDInfo(date).time;
+            var time = this.getDateInfo(date).time;
 
-            return this.getYMDInfo(time + ONEDAY * n);
+            return this.getDateInfo(time + ONE_DAY * n);
         }
     };
     Calendar.dimensions =  Calendar.prototype.dimensions,

@@ -119,14 +119,12 @@ define(function (require) {
      */
     formatUtil.formatTplSimple = function (tpl, param, encode) {
 
-        for (var i in param) {
-            if (param.hasOwnProperty(i)) {
-                tpl = tpl.replace(
-                    '{' + i + '}',
-                    encode ? encodeHTML(param[i]) : param[i]
-                );
-            }
-        }
+        zrUtil.each(param, function (value, key) {
+            tpl = tpl.replace(
+                '{' + key + '}',
+                encode ? encodeHTML(vaule) : value
+            );
+        });
 
         return tpl;
     };

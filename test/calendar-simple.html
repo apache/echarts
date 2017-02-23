@@ -56,71 +56,19 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
-                    tooltip: {
-                        position: 'top'
-                    },
                     visualMap: {
+                        show: false,
                         min: 0,
-                        max: 1000,
-                        calculable: true,
-                        orient: 'horizontal',
-                        left: 'center',
-                        top: 'top'
+                        max: 1000
                     },
-
-                    calendar: [
-                    {
+                    calendar: {
                         range: '2017'
                     },
-                    {
-                        top: 260,
-                        range: '2016'
-                    },
-                    {
-                        orient: 'vertical',
-                        top: 500,
-                        range: '2015-03'
-                    },
-                    {
-                        orient: 'vertical',
-                        top: 500,
-                        left: 400,
-                        range: '2015-04'
-                    },
-                    {
-                        orient: 'vertical',
-                        top: 500,
-                        left: 800,
-                        range: '2015-05'
-                    }],
-
-                    series: [{
+                    series: {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
-                        calendarIndex: 0,
                         data: getVirtulData(2017)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 1,
-                        data: getVirtulData(2016)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 2,
-                        data: getVirtulData(2015)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 3,
-                        data: getVirtulData(2015)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 4,
-                        data: getVirtulData(2015)
-                    }]
-
+                    }
                 });
             });
         </script>
