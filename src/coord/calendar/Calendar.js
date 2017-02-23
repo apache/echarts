@@ -18,10 +18,14 @@ define(function (require) {
      * Calendar
      *
      * @constructor
+     *
+     * @param {Object} calendarModel calendarModel
+     * @param {Object} ecModel       ecModel
+     * @param {Object} api           api
      */
     function Calendar(calendarModel, ecModel, api) {
         this._model = calendarModel;
-    };
+    }
 
     Calendar.prototype = {
 
@@ -325,7 +329,7 @@ define(function (require) {
          * @param  {number} nthWeek the week
          * @param  {number} day   the week day
          * @param  {Array} range [d1, d2]
-         * @return {string}         'YYYY-MM-DD'
+         * @return {Object}
          */
         _getDateByWeeksAndDay: function (nthWeek, day, range) {
             var rangeInfo = this._getRangeInfo(range);
@@ -343,25 +347,6 @@ define(function (require) {
 
             return this.getDateInfo(time);
 
-        },
-
-        /**
-         * judge the date within range
-         *
-         * @param  {string|number}  date  date
-         * @param  {Array} range [d1, d2]
-         * @return {boolean}       true | false
-         */
-        _isInRangeOfDate: function (date, range) {
-            var start = this.getDateInfo(range[0]).time;
-            var end = this.getDateInfo(range[1]).time;
-            var cur = this.getDateInfo(date).time;
-
-            if (cur >= start && cur <= end) {
-                return true;
-            }
-
-            return false;
         }
     };
     Calendar.dimensions =  Calendar.prototype.dimensions,

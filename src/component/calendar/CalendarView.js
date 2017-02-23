@@ -296,12 +296,10 @@ define(function (require) {
                 right: [points[idx][0], yc]
             };
 
-            // var coordSys = calendarModel.coordinateSystem;
-
             var name = rangeData.start.y;
 
             if (+rangeData.end.y > +rangeData.start.y) {
-                name = rangeData.start.y + '-' + rangeData.end.y;
+                name = name + '-' + rangeData.end.y;
             }
 
             var formatter = yearLabel.get('formatter');
@@ -381,8 +379,6 @@ define(function (require) {
 
             var termPoints = [this._tlpoints, this._blpoints];
 
-            // var coordSys = calendarModel.coordinateSystem;
-
             if (zrUtil.isString(nameMap)) {
                 nameMap = MONTH_TEXT[nameMap.toUpperCase()] || [];
             }
@@ -390,7 +386,7 @@ define(function (require) {
             var idx = pos === 'start' ? 0 : 1;
             var axis = orient === 'horizontal' ? 0 : 1;
             margin = pos === 'start' ? -margin : margin;
-            var isCenter = align === 'center' ? true : false;
+            var isCenter = (align === 'center');
 
             for (var i = 0; i < termPoints[idx].length - 1; i++) {
 
