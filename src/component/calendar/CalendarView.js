@@ -1,8 +1,3 @@
-/**
- * @file CalendarView.js
- * @author dxh
- */
-
 define(function (require) {
 
     'use strict';
@@ -169,6 +164,7 @@ define(function (require) {
 
         },
 
+        // get points at both ends
         _getEdgesPoints: function (points, lineWidth, orient) {
             var rs = [points[0].slice(), points[points.length - 1].slice()];
             var idx = orient === 'horizontal' ? 0 : 1;

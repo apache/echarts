@@ -1,8 +1,3 @@
-/**
- * @file CalendarModel.js
- * @author dxh
- */
-
 define(function (require) {
 
     'use strict';
@@ -55,11 +50,13 @@ define(function (require) {
             // week text style
             dayLabel: {
                 show: true,
-                margin: 0,
+
+                // a week first day
                 firstDay: 0,
 
                 // start end
                 position: 'start',
+                margin: 0,
                 nameMap: 'en',
                 textStyle: {
                     color: '#000'
@@ -70,15 +67,15 @@ define(function (require) {
             monthLabel: {
                 show: true,
 
-                // cn en []
-                nameMap: 'en',
-
                 // start end
                 position: 'start',
+                margin: 5,
 
                 // center or left
                 align: 'center',
-                margin: 5,
+
+                // cn en []
+                nameMap: 'en',
                 formatter: null,
                 textStyle: {
                     color: '#000'

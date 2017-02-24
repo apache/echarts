@@ -1,8 +1,3 @@
-/**
- * @file Calendar.js
- * @author dxh
- */
-
 define(function (require) {
 
     'use strict';
@@ -187,6 +182,20 @@ define(function (require) {
         },
 
         /**
+         * Convert a (x, y) point to time data
+         *
+         * @override
+         * @param  {string} point point
+         * @return {string}       data
+         */
+        pointToData: function (point) {
+
+            var date = this.pointToDate(point);
+
+            return date && date.time;
+        },
+
+        /**
          * Convert a time date item to (x, y) four point.
          *
          * @param  {Array} data  date[0] is date
@@ -231,19 +240,6 @@ define(function (require) {
         },
 
         /**
-         * Convert a (x, y) point to time data
-         *
-         * @param  {string} point point
-         * @return {string}       data
-         */
-        pointToData: function (point) {
-
-            var date = this.pointToDate(point);
-
-            return date && date.time;
-        },
-
-        /**
          * Convert a (x, y) point to time date
          *
          * @param  {string} point point
@@ -261,6 +257,12 @@ define(function (require) {
             return this._getDateByWeeksAndDay(nthX, nthY - 1, range);
         },
 
+        /**
+         * initRange
+         *
+         * @private
+         * @return {Array} [start, end]
+         */
         _initRangeOption: function () {
             var range = this._model.get('range');
 
@@ -300,6 +302,7 @@ define(function (require) {
         /**
          * range info
          *
+         * @private
          * @param  {Array} range range ['2017-01-01', '2017-07-08']
          * @return {Object}       obj
          */
@@ -326,6 +329,7 @@ define(function (require) {
         /**
          * get date by nthWeeks and week day in range
          *
+         * @private
          * @param  {number} nthWeek the week
          * @param  {number} day   the week day
          * @param  {Array} range [d1, d2]
