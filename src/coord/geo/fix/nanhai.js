@@ -33,7 +33,12 @@ define(function (require) {
     return function (geo) {
         if (geo.map === 'china') {
             geo.regions.push(new Region(
-                '南海诸岛', points, geoCoord
+                '南海诸岛', points.map(function (exterior) {
+                    return {
+                        type: 'polygon',
+                        exterior: exterior
+                    }
+                }), geoCoord
             ));
         }
     };

@@ -285,6 +285,8 @@ define(function (require) {
 
     echarts.getMap = geoCreator.getMap;
 
+    echarts.parseGeoJSON = require('./parseGeoJson');
+
     // TODO
     echarts.loadMap = function () {};
 
