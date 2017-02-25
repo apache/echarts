@@ -190,8 +190,22 @@ define(function (require) {
         return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
     };
 
+    var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(?:Z|([\+\-]\d\d):?\d\d)?)?)?)?)?$/; // jshint ignore:line
+    var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset();
+
     /**
-     * @param {string|Date|number} value
+     * @param {string|Date|number} value These values can be accepted:
+     *   + An instance of Date, represent a time in its own time zone.
+     *   + Or string in a subset of ISO 8601, only including:
+     *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
+     *     + separated with T or space: '2012-03-01T12:22:33.123', '2012-03-01 12:22:33.123',
+     *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
+     *     all of which will be treated as they reperent a time in UTC
+     *     if time zone is not specified.
+     *   + Or other string format, including:
+     *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
+     *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
+     *   + a timestamp, which represent a time in UTC.
      * @return {Date} date
      */
     number.parseDate = function (value) {
@@ -199,13 +213,32 @@ define(function (require) {
             return value;
         }
         else if (typeof value === 'string') {
-            // Treat as ISO format. See issue #3623
-            var ret = new Date(value);
-            if (isNaN(+ret)) {
-                // FIXME new Date('1970-01-01') is UTC, new Date('1970/01/01') is local
-                ret = new Date(new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'));
+            // Different browsers parse date in different way, so we parse it manually.
+            // Some other issues:
+            // new Date('1970-01-01') is UTC,
+            // new Date('1970/01/01') and new Date('1970-1-01') is local.
+            // See issue #3623
+            var match = TIME_REG.exec(value);
+
+            if (!match) {
+                // return Invalid Date.
+                return new Date(NaN);
             }
-            return ret;
+
+            // match[n] can only be string or undefined.
+            // But take care of '12' + 1 => '121'.
+            return new Date(
+                +match[1],
+                +(match[2] || 1) - 1,
+                +match[3] || 1,
+                +match[4] || 0,
+                +(match[5] || 0) - (match[8] || 0) * 60 - TIMEZONE_OFFSET,
+                +match[6] || 0,
+                +match[7] || 0
+            );
+        }
+        else if (value == null) {
+            return new Date(NaN);
         }
 
         return new Date(Math.round(value));
