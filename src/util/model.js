@@ -92,7 +92,12 @@ define(function(require) {
             return value;
         }
 
-        if (dimType === 'time' && !isFinite(value) && value != null && value !== '-') {
+        if (dimType === 'time'
+            // spead up when using timestamp
+            && typeof value !== 'number'
+            && value != null
+            && value !== '-'
+        ) {
             value = +nubmerUtil.parseDate(value);
         }
 
