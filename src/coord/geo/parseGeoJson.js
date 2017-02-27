@@ -70,19 +70,6 @@ define(function (require) {
     }
 
     /**
-     * @inner
-     */
-    function flattern2D(array) {
-        var ret = [];
-        for (var i = 0; i < array.length; i++) {
-            for (var k = 0; k < array[i].length; k++) {
-                ret.push(array[i][k]);
-            }
-        }
-        return ret;
-    }
-
-    /**
      * @alias module:echarts/coord/geo/parseGeoJson
      * @param {Object} geoJson
      * @return {module:zrender/container/Group}
@@ -93,20 +80,36 @@ define(function (require) {
 
         return zrUtil.map(zrUtil.filter(geoJson.features, function (featureObj) {
             // Output of mapshaper may have geometry null
-            return featureObj.geometry && featureObj.properties;
+            return featureObj.geometry && featureObj.properties && featureObj.geometry.coordinates.length > 0;
         }), function (featureObj) {
             var properties = featureObj.properties;
-            var geometry = featureObj.geometry;
+            var geo = featureObj.geometry;
 
-            var coordinates = geometry.coordinates;
+            var coordinates = geo.coordinates;
 
-            if (geometry.type === 'MultiPolygon') {
-                coordinates = flattern2D(coordinates);
+            var geometries = [];
+            if (geo.type === 'Polygon') {
+                geometries.push({
+                    type: 'polygon',
+                    // According to the GeoJSON specification.
+                    // First must be exterior, and the rest are all interior(holes).
+                    exterior: coordinates[0],
+                    interiors: coordinates.slice(1)
+                });
+            }
+            if (geo.type === 'MultiPolygon') {
+                coordinates.forEach(function (item) {
+                    geometries.push({
+                        type: 'polygon',
+                        exterior: item[0],
+                        interiors: item.slice(1)
+                    });
+                });
             }
 
             return new Region(
                 properties.name,
-                coordinates,
+                geometries,
                 properties.cp
             );
         });

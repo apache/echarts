@@ -196,15 +196,23 @@ define(function (require) {
                 var textStyleModel = labelModel.getModel('textStyle');
                 var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
 
-                zrUtil.each(region.contours, function (contour) {
-
-                    var polygon = new graphic.Polygon({
+                zrUtil.each(region.geometries, function (geometry) {
+                    if (geometry.type !== 'polygon') {
+                        return;
+                    }
+                    compoundPath.shape.paths.push(new graphic.Polygon({
                         shape: {
-                            points: contour
+                            points: geometry.exterior
                         }
-                    });
+                    }));
 
-                    compoundPath.shape.paths.push(polygon);
+                    for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); i++) {
+                        compoundPath.shape.paths.push(new graphic.Polygon({
+                            shape: {
+                                points: geometry.interiors[i]
+                            }
+                        }));
+                    }
                 });
 
                 compoundPath.setStyle(itemStyle);
