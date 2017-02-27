@@ -123,9 +123,15 @@ define(function (require) {
      * ISO Date format
      * @param {string} tpl
      * @param {number} value
+     * @param {boolean} [isLocal=false] Default use UTC
+     *  Why default UTC? In most case, time provided by user is
+     *  understood in UTC. For example, new Date('2012-01-01')
+     *  or a string '2012-01-01' or a timestamp. So it is
+     *  recommended to format time in UTC.
+     *  (see `echarts/util/number.js#parseDate`);
      * @inner
      */
-    formatUtil.formatTime = function (tpl, value) {
+    formatUtil.formatTime = function (tpl, value, isLocal) {
         if (tpl === 'week'
             || tpl === 'month'
             || tpl === 'quarter'
@@ -136,12 +142,13 @@ define(function (require) {
         }
 
         var date = numberUtil.parseDate(value);
-        var y = date.getFullYear();
-        var M = date.getMonth() + 1;
-        var d = date.getDate();
-        var h = date.getHours();
-        var m = date.getMinutes();
-        var s = date.getSeconds();
+        var utc = isLocal ? '' : 'UTC';
+        var y = date['get' + utc + 'FullYear']();
+        var M = date['get' + utc + 'Month']() + 1;
+        var d = date['get' + utc + 'Date']();
+        var h = date['get' + utc + 'Hours']();
+        var m = date['get' + utc + 'Minutes']();
+        var s = date['get' + utc + 'Seconds']();
 
         tpl = tpl.replace('MM', s2d(M))
             .toLowerCase()
