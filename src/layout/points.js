@@ -1,12 +1,16 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     return function (seriesType, ecModel) {
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
             var data = seriesModel.getData();
             var coordSys = seriesModel.coordinateSystem;
 
             if (coordSys) {
-                var dims = coordSys.dimensions;
+                var dims = zrUtil.map(coordSys.dimensions, function (dimItem) {
+                    return zrUtil.isObject(dimItem) ? dimItem.name : dimItem;
+                });
 
                 if (dims.length === 1) {
                     data.each(dims[0], function (x, idx) {
