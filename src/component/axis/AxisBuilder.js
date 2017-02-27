@@ -297,7 +297,15 @@ define(function (require) {
                         textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
                         textFont: itemTextStyleModel.getFont(),
                         fill: typeof textColor === 'function'
-                            ? textColor(labelStr, index, {value: tickVal, index: index, label: labelStr})
+                            ? textColor(
+                                // Compatible with previous version, which always returns labelStr.
+                                // But in interval scale labelStr is like '223,445', which maked
+                                // user repalce ','. So we modify it to return original val but remain
+                                // it as 'string' to avoid error in replacing.
+                                axis.type === 'category' ? labelStr : axis.type === 'value' ? tickVal + '' : tickVal,
+                                index,
+                                {value: tickVal, index: index, label: labelStr}
+                            )
                             : textColor
                     },
                     position: pos,
