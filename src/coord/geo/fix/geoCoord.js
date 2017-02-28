@@ -4,6 +4,7 @@ define(function (require) {
 
     var geoCoordMap = {
         'Russia': [100, 60],
+        'United States': [-99, 38],
         'United States of America': [-99, 38]
     };
 
