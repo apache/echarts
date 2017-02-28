@@ -284,7 +284,7 @@ define(function (require) {
                     tickCoord,
                     opt.labelOffset + opt.labelDirection * labelMargin
                 ];
-                var labelBeforeFormat = axis.scale.getLabel(tickVal);
+                var labelStr = axis.scale.getLabel(tickVal);
 
                 var textEl = new graphic.Text({
 
@@ -296,7 +296,17 @@ define(function (require) {
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
                         textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
                         textFont: itemTextStyleModel.getFont(),
-                        fill: typeof textColor === 'function' ? textColor(labelBeforeFormat) : textColor
+                        fill: typeof textColor === 'function'
+                            ? textColor(
+                                // Compatible with previous version, which always returns labelStr.
+                                // But in interval scale labelStr is like '223,445', which maked
+                                // user repalce ','. So we modify it to return original val but remain
+                                // it as 'string' to avoid error in replacing.
+                                axis.type === 'category' ? labelStr : axis.type === 'value' ? tickVal + '' : tickVal,
+                                index,
+                                {value: tickVal, index: index, label: labelStr}
+                            )
+                            : textColor
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
@@ -308,7 +318,7 @@ define(function (require) {
                 if (triggerEvent) {
                     textEl.eventData = makeAxisEventDataBase(axisModel);
                     textEl.eventData.targetType = 'axisLabel';
-                    textEl.eventData.value = labelBeforeFormat;
+                    textEl.eventData.value = labelStr;
                 }
 
                 // FIXME

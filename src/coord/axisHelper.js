@@ -228,9 +228,12 @@ define(function (require) {
         }
         else if (typeof labelFormatter === 'function') {
             return zrUtil.map(ticks, function (tick, idx) {
+                var labelStr = scale.getLabel(tick);
                 return labelFormatter(
-                    axis.type === 'category' ? scale.getLabel(tick) : tick,
-                    idx
+                    // Have to be compatible with previous version.
+                    axis.type === 'category' ? labelStr : tick,
+                    idx,
+                    {value: tick, index: idx, label: labelStr}
                 );
             }, this);
         }
