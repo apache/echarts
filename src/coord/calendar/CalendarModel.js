@@ -1,7 +1,10 @@
 define(function (require) {
 
     'use strict';
+
     var ComponentModel = require('../../model/Component');
+    var zrUtil = require('zrender/core/util');
+    var layout = require('../../util/layout');
 
     var CalendarModel = ComponentModel.extend({
 
@@ -11,11 +14,6 @@ define(function (require) {
          * @type {module:echarts/coord/calendar/Calendar}
          */
         coordinateSystem: null,
-
-        layoutMode: {
-            type: 'box',
-            ignoreSize: true
-        },
 
         defaultOption: {
             zlevel: 0,
@@ -97,8 +95,58 @@ define(function (require) {
                     fontSize: 20
                 }
             }
+        },
+
+        /**
+         * @override
+         */
+        init: function (option, parentModel, ecModel, extraOpt) {
+            var inputPositionParams = layout.getLayoutParams(option);
+
+            CalendarModel.superApply(this, 'init', arguments);
+
+            var cellSize = normalizeCellSize(option);
+
+            mergeLayoutParam(option, inputPositionParams, cellSize);
+        },
+
+        /**
+         * @override
+         */
+        mergeOption: function (option, extraOpt) {
+            CalendarModel.superApply(this, 'mergeOption', arguments);
+
+            var cellSize = normalizeCellSize(this.option);
+
+            mergeLayoutParam(this.option, option, cellSize);
         }
     });
+
+    function normalizeCellSize(option) {
+        var size = option.cellSize;
+
+        if (!zrUtil.isArray(size)) {
+            option.cellSize = [size, size];
+        }
+        else if (size.length === 1) {
+            size[1] = size[0];
+        }
+
+        return option.cellSize;
+    }
+
+    function mergeLayoutParam(target, raw, cellSize) {
+        var whNames = ['width', 'height'];
+        var ignoreSize = zrUtil.map([0, 1], function (idx) {
+            if (raw[whNames[idx]] != null) {
+                cellSize[idx] = 'auto';
+            }
+            return cellSize[idx] != null && cellSize[idx] !== 'auto';
+        });
+        layout.mergeLayoutParam(target, raw, {
+            type: 'box', ignoreSize: ignoreSize
+        });
+    }
 
     return CalendarModel;
 

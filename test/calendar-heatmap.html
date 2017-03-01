@@ -29,16 +29,16 @@
                 var arr30 = [4, 6, 9, 11];
                 for (var i = 1; i <= 31; i++) {
                     for (var j = arr31.length - 1; j >= 0; j--) {
-                        datas.push([year + '-' + arr31[j] + '-' + i, Math.floor(Math.random() * 1000)]);
+                        datas.push([year + '-' + arr31[j] + '-' + i, Math.floor(Math.random() * 10000)]);
                     }
                 }
                 for (var i = 1; i <= 30; i++) {
                     for (var j = arr30.length - 1; j >= 0; j--) {
-                        datas.push([year + '-' + arr30[j] + '-' + i, Math.floor(Math.random() * 1000)]);
+                        datas.push([year + '-' + arr30[j] + '-' + i, Math.floor(Math.random() * 10000)]);
                     }
                 }
                 for (var i = 1; i <= 29; i++) {
-                    datas.push([year + '-2-' + i, Math.floor(Math.random() * 1000)]);
+                    datas.push([year + '-2-' + i, Math.floor(Math.random() * 10000)]);
                 }
                 return datas;
             }
@@ -56,59 +56,34 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
-                    tooltip: {
-                        position: 'top'
+                    title: {
+                        top: 30,
+                        left: 'center',
+                        text: '2016年某人每天的步数',
+                        subtext: '数据纯属虚构'
                     },
+                    tooltip : {},
                     visualMap: {
                         min: 0,
-                        max: 1000,
-                        calculable: true,
+                        max: 10000,
+                        type: 'piecewise',
                         orient: 'horizontal',
                         left: 'center',
-                        top: 'top'
-                    },
-
-                    calendar: [
-                    {
-                        range: 2017
-                    },
-                    {
                         top: 260,
-                        range: '2016-01-01'
+                        textStyle: {
+                            color: '#000'
+                        }
                     },
-                    {
-                        top: 260,
-                        left: 260,
-                        range: '2015-01'
+                    calendar: {
+                        top: 100,
+                        left: 60,
+                        range: '2016'
                     },
-                    {
-                        top: 260,
-                        left: 500,
-                        range: ['2014-03-19', '2014-06-30']
-                    }],
-
-                    series: [{
+                    series: {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
-                        calendarIndex: 0,
-                        data: getVirtulData(2017)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 1,
                         data: getVirtulData(2016)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 2,
-                        data: getVirtulData(2015)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 3,
-                        data: getVirtulData(2014)
-                    }]
-
+                    }
                 });
 
                 $(window).resize(function() {

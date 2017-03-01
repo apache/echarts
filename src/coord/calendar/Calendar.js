@@ -28,7 +28,11 @@ define(function (require) {
 
         type: 'calendar',
 
-        dimensions: ['time'],
+        dimensions: [{
+            name: 'time',
+            stackable: false,
+            type: 'time'
+        }],
 
         getHandledRangeInfo: function () {
             return this._rangeInfo;
@@ -112,35 +116,43 @@ define(function (require) {
         },
 
         update: function (ecModel, api) {
-            var calendarRect = layout.getLayoutRect(
-                this._model.getBoxLayoutParams(),
-
-                {
-                    width: api.getWidth(),
-                    height: api.getHeight()
-                }
-            );
-
-            this._rect = calendarRect;
 
             this._firstDayOfWeek = this._model.getModel('dayLabel').get('firstDay');
-
-            this._rangeInfo = this._getRangeInfo(this._initRangeOption());
-
-            var size = this._model.get('cellSize');
-
-            if (zrUtil.isArray(size)) {
-                this._sw = size[0];
-                this._sh = size[1] || this._sw;
-            }
-            else {
-                this._sw = size;
-                this._sh = this._sw;
-            }
-
-
             this._orient = this._model.get('orient');
             this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 0;
+
+
+            this._rangeInfo = this._getRangeInfo(this._initRangeOption());
+            var weeks = this._rangeInfo.weeks || 1;
+            var whNames = ['width', 'height'];
+            var cellSize = this._model.get('cellSize').slice();
+            var layoutParams = this._model.getBoxLayoutParams();
+            var cellNumbers = this._orient === 'horizontal' ? [weeks, 7] : [7, weeks];
+
+            zrUtil.each([0, 1], function (idx) {
+                if (cellSizeSpecified(cellSize, idx)) {
+                    layoutParams[whNames[idx]] = cellSize[idx] * cellNumbers[idx];
+                }
+            });
+
+            var whGlobal = {
+                width: api.getWidth(),
+                height: api.getHeight()
+            };
+            var calendarRect = this._rect = layout.getLayoutRect(layoutParams, whGlobal);
+
+            zrUtil.each([0, 1], function (idx) {
+                if (!cellSizeSpecified(cellSize, idx)) {
+                    cellSize[idx] = calendarRect[whNames[idx]] / cellNumbers[idx];
+                }
+            });
+
+            function cellSizeSpecified(cellSize, idx) {
+                return cellSize[idx] != null && cellSize[idx] !== 'auto';
+            }
+
+            this._sw = cellSize[0];
+            this._sh = cellSize[1];
         },
 
 

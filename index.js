@@ -34,6 +34,7 @@ require('./lib/component/geo');
 require('./lib/component/parallel');
 require('./lib/component/singleAxis');
 require('./lib/component/brush');
+require('./lib/component/calendar');
 
 require('./lib/component/title');
 

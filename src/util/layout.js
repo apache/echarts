@@ -352,24 +352,28 @@ define(function(require) {
      * @param {Object} targetOption
      * @param {Object} newOption
      * @param {Object|string} [opt]
-     * @param {boolean} [opt.ignoreSize=false] Some component must has width and height.
+     * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Some component must has width and height.
      */
     layout.mergeLayoutParam = function (targetOption, newOption, opt) {
         !zrUtil.isObject(opt) && (opt = {});
         var hNames = ['width', 'left', 'right']; // Order by priority.
         var vNames = ['height', 'top', 'bottom']; // Order by priority.
-        var hResult = merge(hNames);
-        var vResult = merge(vNames);
+
+        var ignoreSize = opt.ignoreSize;
+        !zrUtil.isArray(ignoreSize) && (ignoreSize = [ignoreSize, ignoreSize]);
+
+        var hResult = merge(hNames, ignoreSize[0]);
+        var vResult = merge(vNames, ignoreSize[1]);
 
         copy(hNames, targetOption, hResult);
         copy(vNames, targetOption, vResult);
 
-        function merge(names) {
+        function merge(names, ignoreSize) {
             var newParams = {};
             var newValueCount = 0;
             var merged = {};
             var mergedValueCount = 0;
-            var enoughParamNumber = opt.ignoreSize ? 1 : 2;
+            var enoughParamNumber = ignoreSize ? 1 : 2;
 
             each(names, function (name) {
                 merged[name] = targetOption[name];

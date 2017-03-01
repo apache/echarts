@@ -56,59 +56,71 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
-                    tooltip: {
-                        position: 'top'
+                    title: {
+                        left: 'center',
+                        text: '2017年北京空气质量情况',
+                        subtext: '数据纯属虚构'
                     },
-                    visualMap: {
+                    tooltip: {
+                        formatter: function (p) {
+                            var format = echarts.format.formatTime('yyyy-MM-dd', p.data[0])
+                            return format + ': ' + p.data[1];
+                        }
+                    },
+                    calendar: {
+                        top: 70,
+                        range: '2017'
+                    },
+                    legend: {
+                        top: 'top',
+                        data: ['pm2.5', 'AQI'],
+                        textStyle: {
+                            color: '#fff',
+                            fontSize: 16
+                        }
+                    },
+                    /*visualMap: [{
+                        text: ['北京pm2.5'],
                         min: 0,
                         max: 1000,
+                        seriesIndex: 0,
                         calculable: true,
                         orient: 'horizontal',
-                        left: 'center',
-                        top: 'top'
-                    },
-
-                    calendar: [
-                    {
-                        range: 2017
-                    },
-                    {
-                        top: 260,
-                        range: '2016-01-01'
-                    },
-                    {
-                        top: 260,
                         left: 260,
-                        range: '2015-01'
+                        top: 500
                     },
                     {
-                        top: 260,
+                        text: ['北京AQI'],
+                        min: 0,
+                        max: 1000,
+                        seriesIndex: 1,
+                        calculable: true,
+                        orient: 'horizontal',
                         left: 500,
-                        range: ['2014-03-19', '2014-06-30']
-                    }],
-
+                        top: 500
+                    }],*/
                     series: [{
-                        type: 'heatmap',
+                        name: '北京pm2.5',
+                        type: 'scatter',
+                        symbolSize: function (val) {
+                            return val[1] / 100;
+                        },
                         coordinateSystem: 'calendar',
-                        calendarIndex: 0,
                         data: getVirtulData(2017)
-                    }, {
-                        type: 'heatmap',
+                    }/*,
+                    {
+                        name: '北京AQI',
+                        type: 'scatter',
+                        symbolSize: function (val) {
+                            return val[1] / 100;
+                        },
                         coordinateSystem: 'calendar',
-                        calendarIndex: 1,
-                        data: getVirtulData(2016)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 2,
-                        data: getVirtulData(2015)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 3,
-                        data: getVirtulData(2014)
-                    }]
+                        data: getVirtulData(2017)
+                    }*/]
+                });
 
+                $(window).resize(function() {
+                    chart.resize();
                 });
 
                 $(window).resize(function() {

@@ -29,16 +29,16 @@
                 var arr30 = [4, 6, 9, 11];
                 for (var i = 1; i <= 31; i++) {
                     for (var j = arr31.length - 1; j >= 0; j--) {
-                        datas.push([(new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                        datas.push([year + '-' + arr31[j] + '-' + i, Math.floor(Math.random() * 1000)]);
                     }
                 }
                 for (var i = 1; i <= 30; i++) {
                     for (var j = arr30.length - 1; j >= 0; j--) {
-                        datas.push([(new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                        datas.push([year + '-' + arr30[j] + '-' + i, Math.floor(Math.random() * 1000)]);
                     }
                 }
                 for (var i = 1; i <= 29; i++) {
-                    datas.push([(new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
+                    datas.push([year + '-2-' + i, Math.floor(Math.random() * 1000)]);
                 }
                 return datas;
             }
@@ -101,6 +101,10 @@
                         data: getVirtulData(2017)
                     }]
 
+                });
+
+                $(window).resize(function() {
+                    chart.resize();
                 });
             });
         </script>

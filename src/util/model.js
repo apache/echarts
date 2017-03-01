@@ -109,6 +109,18 @@ define(function(require) {
     };
 
     /**
+     * coordSys.dimensions can be [{name: ..., type: ...}, '...', ...]
+     *
+     * @param {Object} coordSys
+     * @return {Array.<string>}
+     */
+    modelUtil.getCoordSysDimNames = function (coordSys) {
+        return zrUtil.map(coordSys.dimensions, function (dimItem) {
+            return zrUtil.isObject(dimItem) ? dimItem.name : dimItem;
+        });
+    };
+
+    /**
      * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
      * @param {module:echarts/data/List} data
      * @param {Object} opt
