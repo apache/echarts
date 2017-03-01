@@ -80,7 +80,9 @@ define(function (require) {
 
         return zrUtil.map(zrUtil.filter(geoJson.features, function (featureObj) {
             // Output of mapshaper may have geometry null
-            return featureObj.geometry && featureObj.properties && featureObj.geometry.coordinates.length > 0;
+            return featureObj.geometry
+                && featureObj.properties
+                && featureObj.geometry.coordinates.length > 0;
         }), function (featureObj) {
             var properties = featureObj.properties;
             var geo = featureObj.geometry;
@@ -99,11 +101,13 @@ define(function (require) {
             }
             if (geo.type === 'MultiPolygon') {
                 coordinates.forEach(function (item) {
-                    geometries.push({
-                        type: 'polygon',
-                        exterior: item[0],
-                        interiors: item.slice(1)
-                    });
+                    if (item[0]) {
+                        geometries.push({
+                            type: 'polygon',
+                            exterior: item[0],
+                            interiors: item.slice(1)
+                        });
+                    }
                 });
             }
 

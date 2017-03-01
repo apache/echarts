@@ -356,24 +356,24 @@ define(function(require) {
      */
     layout.mergeLayoutParam = function (targetOption, newOption, opt) {
         !zrUtil.isObject(opt) && (opt = {});
-        var hNames = ['width', 'left', 'right']; // Order by priority.
-        var vNames = ['height', 'top', 'bottom']; // Order by priority.
+        var hNames = ['width', 'left', 'right'];
+        var vNames = ['height', 'top', 'bottom'];
 
         var ignoreSize = opt.ignoreSize;
         !zrUtil.isArray(ignoreSize) && (ignoreSize = [ignoreSize, ignoreSize]);
 
-        var hResult = merge(hNames, ignoreSize[0]);
-        var vResult = merge(vNames, ignoreSize[1]);
+        var hResult = merge(hNames, 0);
+        var vResult = merge(vNames, 1);
 
         copy(hNames, targetOption, hResult);
         copy(vNames, targetOption, vResult);
 
-        function merge(names, ignoreSize) {
+        function merge(names, hvIdx) {
             var newParams = {};
             var newValueCount = 0;
             var merged = {};
             var mergedValueCount = 0;
-            var enoughParamNumber = ignoreSize ? 1 : 2;
+            var enoughParamNumber = 2;
 
             each(names, function (name) {
                 merged[name] = targetOption[name];
@@ -385,6 +385,13 @@ define(function(require) {
                 hasValue(newParams, name) && newValueCount++;
                 hasValue(merged, name) && mergedValueCount++;
             });
+
+            if (ignoreSize[hvIdx]) {
+                // Only one of left/height is premitted to exist.
+                hasValue(newOption, names[2]) && (merged[names[1]] = null);
+                hasValue(newOption, names[1]) && (merged[names[2]] = null);
+                return merged;
+            }
 
             // Case: newOption: {width: ..., right: ...},
             // or targetOption: {right: ...} and newOption: {width: ...},
@@ -401,7 +408,6 @@ define(function(require) {
             }
             else {
                 // Chose another param from targetOption by priority.
-                // When 'ignoreSize', enoughParamNumber is 1 and those will not happen.
                 for (var i = 0; i < names.length; i++) {
                     var name = names[i];
                     if (!hasProp(newParams, name) && hasProp(targetOption, name)) {

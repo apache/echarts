@@ -8,10 +8,27 @@ define(function (require) {
     var util = require('zrender/core/util');
 
     return {
+        /**
+         * Create a muti dimension List structure from seriesModel.
+         * @param  {module:echarts/model/Model} seriesModel
+         * @return {module:echarts/data/List} list
+         */
         createList: function (seriesModel) {
             var data = seriesModel.get('data');
             return createListFromArray(data, seriesModel, seriesModel.ecModel);
         },
+
+        /**
+         * Complete the dimensions array guessed from the data structure.
+         * @param  {Array.<string>} dimensions Necessary dimensions, like ['x', 'y']
+         * @param  {Array} data Data list. [[1, 2, 3], [2, 3, 4]]
+         * @param  {Object} [opt]
+         * @param  {Array.<string>} [opt.defaultNames] Default names to fill not necessary dimensions, like ['value']
+         * @param  {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
+         * @param  {number} [opt.dimCount] If not specified, guess by the first data item.
+         * @return {Array.<string>}
+         */
+        completeDimensions: require('./data/helper/completeDimensions'),
 
         /**
          * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
