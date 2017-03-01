@@ -105,9 +105,7 @@ define(function (require) {
 
             CalendarModel.superApply(this, 'init', arguments);
 
-            var cellSize = normalizeCellSize(option);
-
-            mergeLayoutParam(option, inputPositionParams, cellSize);
+            mergeAndNormalizeLayoutParams(option, inputPositionParams);
         },
 
         /**
@@ -116,33 +114,31 @@ define(function (require) {
         mergeOption: function (option, extraOpt) {
             CalendarModel.superApply(this, 'mergeOption', arguments);
 
-            var cellSize = normalizeCellSize(this.option);
-
-            mergeLayoutParam(this.option, option, cellSize);
+            mergeAndNormalizeLayoutParams(this.option, option);
         }
     });
 
-    function normalizeCellSize(option) {
-        var size = option.cellSize;
+    function mergeAndNormalizeLayoutParams(target, raw) {
+        // Normalize cellSize
+        var cellSize = target.cellSize;
 
-        if (!zrUtil.isArray(size)) {
-            option.cellSize = [size, size];
+        if (!zrUtil.isArray(cellSize)) {
+            cellSize = target.cellSize = [cellSize, cellSize];
         }
-        else if (size.length === 1) {
-            size[1] = size[0];
+        else if (cellSize.length === 1) {
+            cellSize[1] = cellSize[0];
         }
 
-        return option.cellSize;
-    }
-
-    function mergeLayoutParam(target, raw, cellSize) {
-        var whNames = ['width', 'height'];
-        var ignoreSize = zrUtil.map([0, 1], function (idx) {
-            if (raw[whNames[idx]] != null) {
-                cellSize[idx] = 'auto';
+        var ignoreSize = zrUtil.map([0, 1], function (hvIdx) {
+            // If user have set `width` or both `left` and `right`, cellSize
+            // will be automatically set to 'auto', otherwise the default
+            // setting of cellSize will make `width` setting not work.
+            if (layout.sizeCalculable(raw, hvIdx)) {
+                cellSize[hvIdx] = 'auto';
             }
-            return cellSize[idx] != null && cellSize[idx] !== 'auto';
+            return cellSize[hvIdx] != null && cellSize[hvIdx] !== 'auto';
         });
+
         layout.mergeLayoutParam(target, raw, {
             type: 'box', ignoreSize: ignoreSize
         });
