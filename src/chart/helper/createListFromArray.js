@@ -43,9 +43,14 @@ define(function(require) {
         var dimensions = axesInfo && axesInfo.dimensions;
         if (!dimensions) {
             // Get dimensions from registered coordinate system
-            dimensions = (registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y'];
+            dimensions = (registeredCoordSys && (
+                registeredCoordSys.getDimensionsInfo
+                    ? registeredCoordSys.getDimensionsInfo()
+                    : registeredCoordSys.dimensions.slice()
+            )) || ['x', 'y'];
             dimensions = completeDimensions(dimensions, data, {defaultNames: dimensions.concat(['value'])});
         }
+
         var categoryIndex = axesInfo ? axesInfo.categoryIndex : -1;
 
         var list = new List(dimensions, seriesModel);

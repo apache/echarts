@@ -1,14 +1,12 @@
 define(function (require) {
 
-    var modelUtil = require('../util/model');
-
     return function (seriesType, ecModel) {
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
             var data = seriesModel.getData();
             var coordSys = seriesModel.coordinateSystem;
 
             if (coordSys) {
-                var dims = modelUtil.getCoordSysDimNames(coordSys);
+                var dims = coordSys.dimensions;
 
                 if (dims.length === 1) {
                     data.each(dims[0], function (x, idx) {

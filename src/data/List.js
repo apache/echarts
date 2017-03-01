@@ -45,8 +45,9 @@ define(function (require) {
      * @constructor
      * @alias module:echarts/data/List
      *
-     * @param {Array.<string>} dimensions
-     *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
+     * @param {Array.<string|Object>} dimensions
+     *      For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
+     *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
      * @param {module:echarts/model/Model} hostModel
      */
     var List = function (dimensions, hostModel) {

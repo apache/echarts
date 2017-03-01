@@ -28,11 +28,12 @@ define(function (require) {
 
         type: 'calendar',
 
-        dimensions: [{
-            name: 'time',
-            stackable: false,
-            type: 'time'
-        }],
+        dimensions: ['time'],
+
+        // Required in createListFromData
+        getDimensionsInfo: function () {
+            return [{name: 'time', type: 'time'}]
+        },
 
         getHandledRangeInfo: function () {
             return this._rangeInfo;
@@ -365,7 +366,11 @@ define(function (require) {
 
         }
     };
-    Calendar.dimensions =  Calendar.prototype.dimensions,
+
+    Calendar.dimensions =  Calendar.prototype.dimensions;
+
+    Calendar.getDimensionsInfo =  Calendar.prototype.getDimensionsInfo;
+
     Calendar.create = function (ecModel, api) {
         var calendarList = [];
 

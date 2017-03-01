@@ -1,9 +1,7 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var simpleLayoutHelper = require('./simpleLayoutHelper');
     var simpleLayoutEdge = require('./simpleLayoutEdge');
-    var modelUtil = require('../../util/model');
 
     return function (ecModel, api) {
         ecModel.eachSeriesByType('graph', function (seriesModel) {
@@ -11,13 +9,13 @@ define(function (require) {
             var coordSys = seriesModel.coordinateSystem;
             if (coordSys && coordSys.type !== 'view') {
                 var data = seriesModel.getData();
-                var dimensions = modelUtil.getCoordSysDimNames(coordSys);
+                var dimensions = coordSys.dimensions;
 
                 data.each(dimensions, function () {
                     var hasValue;
                     var args = arguments;
                     var value = [];
-                    for (i = 0; i < dimensions.length; i++) {
+                    for (var i = 0; i < dimensions.length; i++) {
                         if (!isNaN(args[i])) {
                             hasValue = true;
                         }
