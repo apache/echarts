@@ -1564,7 +1564,13 @@ define(function (require) {
             if (!dom) {
                 throw new Error('Initialize failed: invalid dom.');
             }
-            if (zrUtil.isDom(dom) && dom.nodeName.toUpperCase() !== 'CANVAS' && (!dom.clientWidth || !dom.clientHeight)) {
+            if (zrUtil.isDom(dom)
+                && dom.nodeName.toUpperCase() !== 'CANVAS'
+                && (
+                    (!dom.clientWidth && (!opts || opts.width == null))
+                    || (!dom.clientHeight && (!opts || opts.height == null))
+                )
+            ) {
                 console.warn('Can\'t get dom width or height');
             }
         }
