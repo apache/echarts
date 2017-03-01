@@ -109,6 +109,26 @@ define(function (require) {
         return tpl;
     };
 
+    /**
+     * simple Template formatter
+     *
+     * @param {string} tpl
+     * @param {Object} param
+     * @param {boolean} [encode=false]
+     * @return {string}
+     */
+    formatUtil.formatTplSimple = function (tpl, param, encode) {
+
+        zrUtil.each(param, function (value, key) {
+            tpl = tpl.replace(
+                '{' + key + '}',
+                encode ? encodeHTML(vaule) : value
+            );
+        });
+
+        return tpl;
+    };
+
 
     /**
      * @param {string} str

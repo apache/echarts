@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>calendar</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+
+            var getVirtulData =  function(year) {
+
+                year = year || '2017';
+
+                var datas = [];
+
+                var arr31 = [1, 3, 5, 7, 8, 10, 12];
+                var arr30 = [4, 6, 9, 11];
+                for (var i = 1; i <= 31; i++) {
+                    for (var j = arr31.length - 1; j >= 0; j--) {
+                        datas.push([year + '-' + arr31[j] + '-' + i, Math.floor(Math.random() * 1000)]);
+                    }
+                }
+                for (var i = 1; i <= 30; i++) {
+                    for (var j = arr30.length - 1; j >= 0; j--) {
+                        datas.push([year + '-' + arr30[j] + '-' + i, Math.floor(Math.random() * 1000)]);
+                    }
+                }
+                for (var i = 1; i <= 29; i++) {
+                    datas.push([year + '-2-' + i, Math.floor(Math.random() * 1000)]);
+                }
+                return datas;
+            }
+            require([
+                'echarts',
+                'echarts/chart/heatmap',
+                'echarts/chart/scatter',
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/calendar',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                chart.setOption({
+                    tooltip: {
+                        position: 'top'
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 1000,
+                        calculable: true,
+                        orient: 'horizontal',
+                        left: 'center',
+                        top: 'top'
+                    },
+
+                    calendar: [
+                    {
+                        splitLine: {
+                            show: false
+                        },
+                        range: '2017'
+                    },
+                    {
+                        top: 260,
+                        range: '2016'
+                    },
+                    {
+                        splitLine: {
+                            lineStyle: {
+                                color: '#795548',
+                                width: 3
+                            }
+                        },
+                        top: 460,
+                        range: '2015'
+                    }],
+
+                    series: [{
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 0,
+                        data: getVirtulData(2017)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 1,
+                        data: getVirtulData(2016)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 2,
+                        data: getVirtulData(2015)
+                    }]
+
+                });
+
+                $(window).resize(function() {
+                    chart.resize();
+                });
+            });
+        </script>
+    </body>
+</html>
