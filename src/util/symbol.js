@@ -310,6 +310,8 @@ define(function(require) {
          * @param {string} color
          */
         createSymbol: function (symbolType, x, y, w, h, color) {
+            // TODO Support image object, DynamicImage.
+
             var isEmpty = symbolType.indexOf('empty') === 0;
             if (isEmpty) {
                 symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);

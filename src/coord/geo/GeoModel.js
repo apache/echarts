@@ -139,7 +139,8 @@ define(function (require) {
          * @return {string}
          */
         getFormattedLabel: function (name, status) {
-            var formatter = this.get('label.' + status + '.formatter');
+            var regionModel = this.getRegionModel(name);
+            var formatter = regionModel.get('label.' + status + '.formatter');
             var params = {
                 name: name
             };
