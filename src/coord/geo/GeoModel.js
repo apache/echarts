@@ -129,7 +129,7 @@ define(function (require) {
          * @return {module:echarts/model/Model}
          */
         getRegionModel: function (name) {
-            return this._optionModelMap[name];
+            return this._optionModelMap[name] || new Model(null, this, this.ecModel);
         },
 
         /**
