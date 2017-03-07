@@ -28,7 +28,7 @@ define(function (require) {
 
         type: 'calendar',
 
-        dimensions: ['time'],
+        dimensions: ['time', 'value'],
 
         // Required in createListFromData
         getDimensionsInfo: function () {
