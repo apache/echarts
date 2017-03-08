@@ -1611,11 +1611,17 @@ define(function (require) {
     };
 
     /**
+     * @DEPRECATED
      * @return {string} groupId
      */
     echarts.disConnect = function (groupId) {
         connectedGroups[groupId] = false;
     };
+
+    /**
+     * @return {string} groupId
+     */
+    echarts.disconnect = echarts.disConnect;
 
     /**
      * Dispose a chart instance
