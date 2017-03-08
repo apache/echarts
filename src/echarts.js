@@ -845,7 +845,7 @@ define(function (require) {
             var view = ecIns[
                 mainType === 'series' ? '_chartsMap' : '_componentsMap'
             ][model.__viewId];
-            if (view && view.__alive) {
+            if (view && view.__alive && view[method]) {
                 view[method](model, ecModel, ecIns._api, payload);
             }
         }, ecIns);
