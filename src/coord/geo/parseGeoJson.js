@@ -111,11 +111,13 @@ define(function (require) {
                 });
             }
 
-            return new Region(
+            var region = new Region(
                 properties.name,
                 geometries,
                 properties.cp
             );
+            region.properties = properties;
+            return region;
         });
     };
 });
