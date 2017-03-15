@@ -91,14 +91,23 @@
                 height: height
             }, {
                 type: 'category',
-                    id: 'b',
+                id: 'b',
                 data: xAxisData,
                 height: height,
+                axisPointer: {
+                    type: 'shadow'
+                },
                 top: '27%'
             }, {
                 type: 'log',
                 id: 'c',
                 height: height,
+                axisPointer: {
+                    snap: false,
+                    label: {
+                        show: true
+                    }
+                },
                 top: '55%'
             }, {
                 type: 'time',

@@ -19,7 +19,6 @@ define(function(require) {
 
             type: 'line',
             snap: false,
-            animation: 'auto',
             triggerTooltip: true,
 
             value: null,
@@ -27,6 +26,7 @@ define(function(require) {
 
             links: [],
 
+            animation: 'auto', // Animate if snap and not to tight.
             animationDurationUpdate: 200,
 
             lineStyle: {

@@ -50,6 +50,13 @@ define(function (require) {
             }
         },
 
+        // Single coordinate system and single axis is the,
+        // which is used as the parent tooltip model.
+        // same model, so we set default tooltip show as true.
+        tooltip: {
+            show: true
+        },
+
         axisTick: {
             show: true,
             length: 6,

@@ -20,6 +20,13 @@ define(function (require) {
          * @override
          */
         render: function (axisModel, ecModel, api, payload) {
+            // FIXME
+            // This process should proformed after coordinate systems updated
+            // (axis scale updated), and should be performed each time update.
+            // So put it here temporarily, although it is not appropriate to
+            // put a model-writing procedure in `view`.
+            axisPointerModelHelper.fixValue(axisModel);
+
             AxisView.superApply(this, 'render', arguments);
             updateAxisPointer(this, axisModel, ecModel, api, payload, true);
         },
@@ -59,7 +66,7 @@ define(function (require) {
         if (!axisView.axisPointerClass) {
             return;
         }
-        var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel, ecModel);
+        var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
         axisPointerModel
             ? (axisView._axisPointer || (axisView._axisPointer = new axisView.axisPointerClass()))
                 .render(axisModel, axisPointerModel, api, forceRender)

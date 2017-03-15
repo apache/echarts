@@ -24,9 +24,13 @@
         </style>
 
 
+        <h1>time axis default | data zoom | animation auto: zoom in has animation, zoom out no animation</h1>
+        <div class="chart" id="time-animation"></div>
+        <h1>category axis default | data zoom | animation auto: zoom in has animation, zoom out no animation</h1>
+        <div class="chart" id="category-animation"></div>
         <h1>time axis cross | x snap | label show | tooltip show</h1>
         <div class="chart" id="time-cross"></div>
-        <h1>two value axes | snap | grid.tooltip setting </h1>
+        <h1>two value axes | snap | grid.tooltip setting | snap has animation </h1>
         <div class="chart" id="two-value-axes"></div>
         <h1>label style</h1>
         <div class="chart" id="label-style"></div>
@@ -43,6 +47,7 @@
         <h1>no tooltip</h1>
         <div class="chart" id="no-tooltip"></div>
 
+label 位置 when inverse.
 link
 log轴
 时间轴
@@ -52,6 +57,101 @@ absorb
 
 
 
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }]
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 30;
+                makeTimeGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                createChart('time-animation', echarts, option, baseTop + 40);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        start: 40,
+                        end: 60
+                    }, {
+                        type: 'slider',
+                        start: 40,
+                        end: 60
+                    }]
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 30;
+                makeCategoryGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height}
+                }, false, 100, 'bar');
+                baseTop += height + gap;
+
+                createChart('category-animation', echarts, option, baseTop + 40);
+            })
+
+        </script>
 
 
 
@@ -529,15 +629,40 @@ absorb
                 var height = 250;
                 var gap = 50;
                 makeCategoryPolar(option, {
-                    polar: {top: baseTop, height: height}
-                    // yAxis: {
-                    //     axisPointer: {
-                    //         show: true,
-                    //         triggerTooltip: false,
-                    //         animation: true
-                    //     }
-                    // }
+                    polar: {
+                        center: ['25%', baseTop + height / 2],
+                        radius: 120
+                    }
                 }, true);
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['75%', baseTop + height / 2],
+                        radius: 120
+                    },
+                    angleAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                }, true);
+                baseTop += height + gap;
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['25%', baseTop + height / 2],
+                        radius: 120
+                    }
+                });
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['75%', baseTop + height / 2],
+                        radius: 120
+                    },
+                    radiusAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                });
                 baseTop += height + gap;
 
                 createChart('polar-category', echarts, option, baseTop);

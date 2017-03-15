@@ -7,6 +7,8 @@ define(function(require) {
 
     var helper = {};
 
+    // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
+    // allAxesInfo should be updated when setOption performed.
     helper.collect = function (ecModel, api) {
         var result = {
             /**
@@ -18,7 +20,8 @@ define(function(require) {
              *      triggerTooltip,
              *      involveSeries,
              *      snap,
-             *      seriesModels
+             *      seriesModels,
+             *      seriesDataCount
              * }
              */
             axesInfo: {},
@@ -193,6 +196,8 @@ define(function(require) {
                 var axis = axisInfo.axis;
                 if (coordSys.getAxis(axis.dim) === axis) {
                     axisInfo.seriesModels.push(seriesModel);
+                    axisInfo.seriesDataCount == null && (axisInfo.seriesDataCount = 0);
+                    axisInfo.seriesDataCount += seriesModel.getData().count();
                 }
             });
 
@@ -233,30 +238,55 @@ define(function(require) {
             || linkPropValue === axisPropValue;
     }
 
-    // If handle used, axisPointer will always be displayed, so value
-    // and status should be initialized.
-    helper.initializeValue = function (coordSysAxesInfo) {
-        each(coordSysAxesInfo.axesInfo, function (axisInfo) {
-            var axisPointerModel = axisInfo.axisPointerModel;
-            var status = axisPointerModel.get('status');
-            var value = axisPointerModel.get('value');
-            var option = axisPointerModel.option;
+    helper.fixValue = function (axisModel) {
+        var axisInfo = helper.getAxisInfo(axisModel);
+        if (!axisInfo) {
+            return;
+        }
 
-            if (status == null) {
-                option.status = isHandleTrigger(axisPointerModel) ? 'show' : 'hide';
-            }
-            // Pick a value on axis.
-            if (value == null) {
-                value = axisInfo.axis.getExtent()[0];
-            }
-            // Parse init value for category and time axis.
-            option.value = axisInfo.axis.scale.parse(value);
-        });
+        var axisPointerModel = axisInfo.axisPointerModel;
+        var scale = axisInfo.axis.scale;
+        var option = axisPointerModel.option;
+        var status = axisPointerModel.get('status');
+        var value = axisPointerModel.get('value');
+
+        // Parse init value for category and time axis.
+        if (value != null) {
+            value = scale.parse(value);
+        }
+
+        // If `handle` used, `axisPointer` will always be displayed, so value
+        // and status should be initialized.
+        if (status == null) {
+            option.status = isHandleTrigger(axisPointerModel) ? 'show' : 'hide';
+        }
+
+        var extent = scale.getExtent().slice();
+        extent[0] > extent[1] && extent.reverse();
+
+        if (// Pick a value on axis when initializing.
+            value == null
+            // If both `handle` and `dataZoom` are used, value may be out of axis extent,
+            // where we should re-pick a value to keep `handle` displaying normally.
+            || value > extent[1]
+        ) {
+            // Make handle displayed on the end of the axis when init, which looks better.
+            value = extent[1];
+        }
+        if (value < extent[0]) {
+            value = extent[0];
+        }
+
+        option.value = value;
     };
 
-    helper.getAxisPointerModel = function (axisModel, ecModel) {
-        var coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
-        var axisInfo = coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
+    helper.getAxisInfo = function (axisModel) {
+        var coordSysAxesInfo = axisModel.ecModel.getComponent('axisPointer').coordSysAxesInfo;
+        return coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
+    };
+
+    helper.getAxisPointerModel = function (axisModel) {
+        var axisInfo = helper.getAxisInfo(axisModel);
         return axisInfo && axisInfo.axisPointerModel;
     };
 

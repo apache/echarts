@@ -14,15 +14,6 @@ define(function(require) {
         /**
          * @override
          */
-        useAnimation: function (axisModel, axisPointerModel) {
-            var axis = axisModel.axis;
-            return (axis.type === 'category' && axis.getBandWidth() > 20)
-                || axisPointerModel.get('snap');
-        },
-
-        /**
-         * @override
-         */
         makeElOption: function (elOption, value, axisModel, axisPointerModel) {
             var axis = axisModel.axis;
             var grid = axis.grid;

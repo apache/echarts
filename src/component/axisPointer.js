@@ -15,14 +15,13 @@ define(function (require) {
             && (option.axisPointer = {});
     });
 
-    // This process should proformed after coordinate systems created.
-    // So put it on processor stage
-    echarts.registerProcessor(function (ecModel, api) {
+    // This process should proformed after coordinate systems created
+    // and series data processed. So put it on statistic processing stage.
+    echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, function (ecModel, api) {
         // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
         // allAxesInfo should be updated when setOption performed.
-        var coordSysAxesInfo = axisPointerModelHelper.collect(ecModel, api);
-        axisPointerModelHelper.initializeValue(coordSysAxesInfo);
-        ecModel.getComponent('axisPointer').coordSysAxesInfo = coordSysAxesInfo;
+        ecModel.getComponent('axisPointer').coordSysAxesInfo
+            = axisPointerModelHelper.collect(ecModel, api);
     });
 
     // Broadcast to all views.
@@ -37,7 +36,8 @@ define(function (require) {
             payload,
             payload.dispatchAction || zrUtil.bind(api.dispatchAction, api),
             api,
-            payload.tooltipOption
+            payload.tooltipOption,
+            payload.highDownKey
         );
     });
 

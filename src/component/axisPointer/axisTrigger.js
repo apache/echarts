@@ -16,18 +16,20 @@ define(function(require) {
      * @param {Function} dispatchAction
      * @param {module:echarts/ExtensionAPI} api
      * @param {Object} tooltipOption
+     * @param {string} [highDownKey]
      */
-    function axisTrigger(coordSysAxesInfo, currTrigger, finder, dispatchAction, api, tooltipOption) {
+    function axisTrigger(coordSysAxesInfo, currTrigger, finder, dispatchAction, api, tooltipOption, highDownKey) {
         var point = [finder.x, finder.y];
+        var linksNewValueMap = {};
         var shouldHide = currTrigger === 'leave' || illegalPoint(point);
+
         var tooltipInfo = {axesInfo: []};
         var doDispatchTooltip = curry(dispatchTooltip, point, tooltipInfo, tooltipOption);
-        // highDownInfo.batch array should not be initialized util it is used, because in
-        // dispatchHighDownActually, null highDownInfo.batch represents no high/down should
-        // be performe, while empty highDownInfo.batch represents dowplay all existent high items.
-        var highDownInfo = {};
+
+        // If nothing highlighted, should downplay all highlighted items.
+        // This case will occur when mouse leave coordSys.
+        var highDownInfo = {batch: []};
         var doDispatchHighDown = curry(dispatchHighDown, highDownInfo);
-        var linksNewValueMap = {};
 
         // Process for triggered axes.
         each(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
@@ -70,7 +72,7 @@ define(function(require) {
 
         // Perform dispatch actions.
         dispatchTooltipActually(tooltipInfo, dispatchAction);
-        dispatchHighDownActually(highDownInfo, dispatchAction, api);
+        dispatchHighDownActually(highDownInfo, dispatchAction, api, highDownKey);
     }
 
     // return: newValue indicates whether axis triggered.
@@ -80,7 +82,6 @@ define(function(require) {
     ) {
         axisInfo.processed = true;
         var axis = axisInfo.axis;
-        var seriesModels = axisInfo.seriesModels;
         var alwaysShow = axisInfo.alwaysShow;
         var axisPointerModel = axisInfo.axisPointerModel;
         var axisPointerOption = axisPointerModel.option;
@@ -110,7 +111,7 @@ define(function(require) {
         }
 
         // Heavy calculation. So put it after axis.containData checking.
-        var payloadInfo = buildPayloadsByNearest(newValue, axisInfo, seriesModels);
+        var payloadInfo = buildPayloadsBySeries(newValue, axisInfo);
         var payloadBatch = payloadInfo.payloadBatch;
 
         if (!dontSnap && axisInfo.snap) {
@@ -135,7 +136,7 @@ define(function(require) {
         }
     }
 
-    function buildPayloadsByNearest(value, axisInfo, seriesModels) {
+    function buildPayloadsBySeries(value, axisInfo) {
         var axis = axisInfo.axis;
         var dim = axis.dim;
         // Compatibale with legend action payload definition, remain them.
@@ -145,16 +146,14 @@ define(function(require) {
         var sampleDataIndex;
         var minDist = Infinity;
         var snapToValue = value;
-
         var payloadBatch = [];
 
-        each(seriesModels, function (series, idx) {
+        each(axisInfo.seriesModels, function (series, idx) {
+            var dataDim = series.coordDimToDataDim(dim);
             var dataIndex = series.getAxisTooltipDataIndex
-                ? series.getAxisTooltipDataIndex(
-                    series.coordDimToDataDim(dim), value, axis
-                )
+                ? series.getAxisTooltipDataIndex(dataDim, value, axis)
                 : series.getData().indexOfNearest(
-                    series.coordDimToDataDim(dim)[0],
+                    dataDim[0],
                     value,
                     // Add a threshold to avoid find the wrong dataIndex
                     // when data length is not same.
@@ -248,22 +247,23 @@ define(function(require) {
     }
 
     function dispatchHighDown(highDownInfo, actionType, batch) {
-        highDownInfo.batch = (highDownInfo.batch || []).concat(batch);
+        highDownInfo.batch = highDownInfo.batch.concat(batch);
     }
 
-    function dispatchHighDownActually(highDownInfo, dispatchAction, api) {
-        if (!highDownInfo.batch) {
-            return;
-        }
-
+    function dispatchHighDownActually(highDownInfo, dispatchAction, api, highDownKey) {
         // FIXME
         // (1) highlight status shoule be managemented in series.getData()?
         // (2) If axisPointer A triggerOn 'handle' and axisPointer B triggerOn
         // 'mousemove', items highlighted by A will be downplayed by B.
         // It will not be fixed until someone requires this scenario.
+
+        // Consider items area hightlighted by 'handle', and globalListener may
+        // downplay all items (including just highlighted ones) when mousemove.
+        // So we use a highDownKey to separate them as a temporary solution.
         var zr = api.getZr();
-        var lastHighlights = get(zr).lastHighlights || {list: [], map: {}};
-        var newHighlights = get(zr).lastHighlights = {list: [], map: {}};
+        highDownKey = 'lastHighlights' + (highDownKey || '');
+        var lastHighlights = get(zr)[highDownKey] || {list: [], map: {}};
+        var newHighlights = get(zr)[highDownKey] = {list: [], map: {}};
 
         zrUtil.each(highDownInfo.batch, function (batchItem) {
             // FIXME vulnerable code

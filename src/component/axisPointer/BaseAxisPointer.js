@@ -5,6 +5,7 @@ define(function(require) {
     var clazzUtil = require('../../util/clazz');
     var graphic = require('../../util/graphic');
     var get = require('../../util/model').makeGetter();
+    var axisPointerModelHelper = require('./modelHelper');
 
     var extend = zrUtil.extend;
     var clone = zrUtil.clone;
@@ -49,6 +50,12 @@ define(function(require) {
         _lastStatus: null,
 
         /**
+         * 10px, arbitrary value.
+         * @protected
+         */
+        animationThreshold: 10,
+
+        /**
          * @implement
          */
         render: function (axisModel, axisPointerModel, api, forceRender) {
@@ -67,10 +74,17 @@ define(function(require) {
             this._lastValue = value;
             this._lastStatus = status;
 
+            var group = this._group;
+            var handle = this._handle;
+
             if (!status || status === 'hide') {
-                this.clear(api);
+                // Do not clear here, for animation better.
+                group && group.hide();
+                handle && handle.hide();
                 return;
             }
+            group && group.show();
+            handle && handle.show();
 
             // Otherwise status is 'show'
             var elOption = {};
@@ -83,19 +97,14 @@ define(function(require) {
             }
             this._lastGraphicKey = graphicKey;
 
-            if (!this._group) {
-                var group = this._group = new graphic.Group();
+            if (!group) {
+                group = this._group = new graphic.Group();
                 this.createEl(group, elOption, axisModel, axisPointerModel);
                 api.getZr().add(group);
             }
             else {
-                var animation = axisPointerModel.get('animation');
-                var moveAnimation = animation === true || animation === 1
-                    || (
-                        (animation === 'auto' || animation == null)
-                        && this.useAnimation(axisModel, axisPointerModel)
-                    );
-                this.updateEl(this._group, moveAnimation, elOption, axisModel, axisPointerModel);
+                var moveAnimation = this.determineAnimation(axisModel, axisPointerModel);
+                this.updateEl(group, moveAnimation, elOption, axisModel, axisPointerModel);
             }
 
             this._renderHandle(value, axisModel, axisPointerModel, api);
@@ -118,11 +127,35 @@ define(function(require) {
         /**
          * @protected
          */
-        useAnimation: function (enableAnimation, axisPointerModel, axisModel) {
-            return enableAnimation;
+        determineAnimation: function (axisModel, axisPointerModel) {
+            var animation = axisPointerModel.get('animation');
+
+            if (animation === 'auto' || animation == null) {
+                var axis = axisModel.axis;
+
+                var animationThreshold = this.animationThreshold;
+                if (axis.type === 'category' && axis.getBandWidth() > animationThreshold) {
+                    return true;
+                }
+
+                // It is important to auto animation when snap used. Consider if there is
+                // a dataZoom, animation will be disabled when too many points exist, while
+                // it will be enabled for better visual effect when little points exist.
+                if (axisPointerModel.get('snap')) {
+                    var seriesDataCount = axisPointerModelHelper.getAxisInfo(axisModel).seriesDataCount;
+                    var axisExtent = axis.getExtent();
+                    // Approximate band width
+                    return Math.abs(axisExtent[0] - axisExtent[1]) / seriesDataCount > animationThreshold;
+                }
+
+                return false;
+            }
+
+            return animation === true || animation === 1;
         },
 
         /**
+         * add {pointer, label, graphicKey} to elOption
          * @protected
          */
         makeElOption: function (elOption, value, axisModel, axisPointerModel) {
@@ -310,7 +343,8 @@ define(function(require) {
                 y: trans.cursorPoint[1],
                 tooltipOption: {
                     verticalAlign: 'middle'
-                }
+                },
+                highDownKey: 'axisPointerHandle'
             };
             var axis = axisModel.axis;
             payload[axis.dim + 'AxisId'] = axisModel.id;
@@ -358,7 +392,7 @@ define(function(require) {
         },
 
         /**
-         * @protected
+         * @private
          */
         clear: function (api) {
             this._lastValue = null;
@@ -374,6 +408,13 @@ define(function(require) {
                 this._group = null;
                 this._handle = null;
             }
+        },
+
+        /**
+         * @protected
+         */
+        doClear: function () {
+            // Implemented by sub-class if necessary.
         },
 
         /**
@@ -396,13 +437,13 @@ define(function(require) {
     BaseAxisPointer.prototype.constructor = BaseAxisPointer;
 
 
-    function updateProps(axisPointerModel, moveAnimation, el, props) {
+    function updateProps(animationModel, moveAnimation, el, props) {
         // Animation optimize.
         if (!propsEqual(get(el).lastProp, props)) {
             get(el).lastProp = props;
             moveAnimation
-                ? graphic.updateProps(el, props, axisPointerModel)
-                : el.attr(props);
+                ? graphic.updateProps(el, props, animationModel)
+                : (el.stopAnimation(), el.attr(props));
         }
     }
 

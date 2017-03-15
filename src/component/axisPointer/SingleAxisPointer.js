@@ -17,25 +17,18 @@ define(function(require) {
         /**
          * @override
          */
-        useAnimation: function (axisModel, axisPointerModel) {
-            var axis = axisModel.axis;
-            return (axis.type === 'category' && axis.getBandWidth() > 20)
-                || axisPointerModel.get('snap');
-        },
-
-        /**
-         * @override
-         */
         makeElOption: function (elOption, value, axisModel, axisPointerModel) {
             var axis = axisModel.axis;
             var coordSys = axis.coordinateSystem;
             var rect = coordSys.getRect();
             var otherDimIndex = 1 - getPointDimIndex(axis);
             var otherExtent = [rect[XY[otherDimIndex]], rect[XY[otherDimIndex]] + rect[WH[otherDimIndex]]];
-            var pixelValue = coordSys.dataToPoint(value);
+            var pixelValue = coordSys.dataToPoint(value)[0];
 
             var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerModel.get('type')](axis, pixelValue, otherExtent, elStyle);
+            var pointerOption = pointerShapeBuilder[axisPointerModel.get('type')](
+                axis, pixelValue, otherExtent, elStyle
+            );
             pointerOption.style = elStyle;
 
             elOption.graphicKey = pointerOption.type;

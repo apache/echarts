@@ -24,12 +24,68 @@
         </style>
 
 
+        <h1>handle | time axis | x snap | init value: '2017-04-12' | tooltip not show | inside data zoom | animation auto</h1>
+        <div class="chart" id="handle-time-init"></div>
         <h1>handle | category | check resize | should trigger hightlight</h1>
         <div class="chart" id="handle-category"></div>
         <h1>handle | value axis | x snap, y not-snap | has init handle value | tooltip.alwaysShowContent</h1>
         <div class="chart" id="handle-value-init"></div>
-        <h1>handle | time axis | x snap | init value: '2017-04-12' | tooltip not show | inside data zoom</h1>
-        <div class="chart" id="handle-time-init"></div>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    dataZoom: {
+                        type: 'inside',
+                        start: 20,
+                        end: 50
+                    }
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 50;
+                makeTimeGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            triggerOn: 'handle',
+                            snap: true,
+                            handle: {
+                                margin: 60
+                            },
+                            value: '2017-04-12' // init value
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('handle-time-init', echarts, option, baseTop + 100);
+            })
+
+        </script>
+
+
+
+
 
 
 
@@ -134,57 +190,6 @@
         </script>
 
 
-
-
-
-
-
-
-
-
-        <script>
-
-            require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
-            ], function (echarts) {
-
-                var option = {
-                    dataZoom: {
-                        type: 'inside',
-                        start: 20,
-                        end: 50
-                    }
-                };
-                var baseTop = 90;
-                var height = 250;
-                var gap = 50;
-                makeTimeGrid(option, {
-                    grid: {left: 100, top: baseTop, height: height},
-                    xAxis: {
-                        axisPointer: {
-                            triggerOn: 'handle',
-                            animation: false,
-                            snap: true,
-                            handle: {
-                                margin: 60
-                            },
-                            value: '2017-04-12' // init value
-                        }
-                    }
-                });
-                baseTop += height + gap;
-
-                createChart('handle-time-init', echarts, option, baseTop + 100);
-            })
-
-        </script>
 
 
 

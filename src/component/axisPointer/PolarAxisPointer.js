@@ -13,16 +13,13 @@ define(function(require) {
         /**
          * @override
          */
-        useAnimation: function (axisModel, axisPointerModel) {
-            return axisModel.axis.type === 'category'
-                || axisPointerModel.get('snap');
-        },
-
-        /**
-         * @override
-         */
         makeElOption: function (elOption, value, axisModel, axisPointerModel) {
             var axis = axisModel.axis;
+
+            if (axis.dim === 'angle') {
+                this.animationThreshold = Math.PI / 18;
+            }
+
             var polar = axis.polar;
             var otherAxis = polar.getOtherAxis(axis);
             var otherExtent = otherAxis.getExtent();
@@ -50,6 +47,7 @@ define(function(require) {
         var axis = axisModel.axis;
         var coord = axis.dataToCoord(value);
         var axisAngle = polar.getAngleAxis().getExtent()[0];
+        axisAngle = axisAngle / 180 * Math.PI;
         var radiusExtent = polar.getRadiusAxis().getExtent();
         var position;
         var align;
@@ -57,19 +55,16 @@ define(function(require) {
 
         if (axis.dim === 'radius') {
             var transform = matrix.create();
-            matrix.rotate(transform, transform, axisAngle / 180 * Math.PI);
+            matrix.rotate(transform, transform, axisAngle);
             matrix.translate(transform, transform, [polar.cx, polar.cy]);
-            position = graphic.applyTransform([coord, labelMargin], transform);
-
-            // ???
-            // label verticalalign
+            position = graphic.applyTransform([coord, -labelMargin], transform);
 
             var labelRotation = axisModel.getModel('axisLabel').get('rotate');
             var labelLayout = AxisBuilder.innerTextLayout(
-                labelRotation * Math.PI / 180, axisAngle, -1
+                axisAngle, labelRotation * Math.PI / 180, -1
             );
-            align = labelLayout.align;
-            verticalAlign = labelLayout.verticalAlign;
+            align = labelLayout.textAlign;
+            verticalAlign = labelLayout.textVerticalAlign;
         }
         else { // angle axis
             var r = radiusExtent[1];
@@ -102,7 +97,7 @@ define(function(require) {
                     )
                 }
                 : {
-                    type: 'Sector',
+                    type: 'Circle',
                     shape: {
                         cx: polar.cx,
                         cy: polar.cy,

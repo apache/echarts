@@ -27,13 +27,14 @@ function extend(target, source) {
     return target;
 }
 
-function makeCategoryData(scale, catePrefix) {
+function makeCategoryData(scale, catePrefix, dataCount) {
     var categoryData = [];
     var data1 = [];
     var data2 = [];
     var data3 = [];
     scale = scale || 1;
     catePrefix = catePrefix || 'category';
+    dataCount = dataCount || 10;
 
     categoryData.push(catePrefix + -1);
     data1.push('-');
@@ -52,7 +53,7 @@ function makeCategoryData(scale, catePrefix) {
     data2.push('-');
     data3.push('-');
 
-    for (; i < 10; i++) {
+    for (; i < dataCount - 1; i++) {
         categoryData.push(catePrefix + i);
         data1.push(((-Math.random() - 0.2) * scale).toFixed(3));
         data2.push(((Math.random() + 0.3) * scale).toFixed(3));
@@ -205,9 +206,10 @@ function makeCategoryPolar(option, patterns, inV) {
     );
 }
 
-function makeCategoryGrid(option, patterns, inV) {
-    var data = makeCategoryData();
+function makeCategoryGrid(option, patterns, inV, dataCount, seriesType) {
+    var data = makeCategoryData(null, null, dataCount);
     var key = Math.random().toFixed(5);
+    seriesType = seriesType || 'line';
 
     option.legend = option.legend || {
         tooltip: {show: true}
@@ -246,7 +248,7 @@ function makeCategoryGrid(option, patterns, inV) {
             name: 'line1' + key,
             xAxisId: 'xAxis' + key,
             yAxisId: 'yAxis' + key,
-            type: 'line',
+            type: seriesType,
             symbolSize: 10,
             data: data.data1,
             smooth: true,
@@ -257,7 +259,7 @@ function makeCategoryGrid(option, patterns, inV) {
             name: 'line2' + key,
             xAxisId: 'xAxis' + key,
             yAxisId: 'yAxis' + key,
-            type: 'line',
+            type: seriesType,
             symbolSize: 10,
             data: data.data2,
             connectNulls: true,
@@ -268,7 +270,7 @@ function makeCategoryGrid(option, patterns, inV) {
             name: 'line3' + key,
             xAxisId: 'xAxis' + key,
             yAxisId: 'yAxis' + key,
-            type: 'line',
+            type: seriesType,
             symbolSize: 10,
             symbol: 'circle',
             data: data.data3,
