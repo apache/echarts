@@ -96,7 +96,7 @@ define(function (require) {
     /**
      * @module echarts~ECharts
      */
-    function ECharts (dom, theme, opts) {
+    function ECharts(dom, theme, opts) {
         opts = opts || {};
 
         // Get theme by name
@@ -167,16 +167,16 @@ define(function (require) {
         this._componentsMap = {};
 
         /**
-         * @type {module:echarts/ExtensionAPI}
-         * @private
-         */
-        this._api = new ExtensionAPI(this);
-
-        /**
          * @type {module:echarts/CoordinateSystem}
          * @private
          */
         this._coordSysMgr = new CoordinateSystemManager();
+
+        /**
+         * @type {module:echarts/ExtensionAPI}
+         * @private
+         */
+        this._api = new ExtensionAPI(this, this._coordSysMgr);
 
         Eventful.call(this);
 
@@ -832,6 +832,13 @@ define(function (require) {
      */
     function updateDirectly(ecIns, method, payload, mainType, subType) {
         var ecModel = ecIns._model;
+
+        // broadcast
+        if (!mainType) {
+            each(ecIns._componentsViews.concat(ecIns._chartsViews), callView);
+            return;
+        }
+
         var query = {};
         query[mainType + 'Id'] = payload[mainType + 'Id'];
         query[mainType + 'Index'] = payload[mainType + 'Index'];
@@ -842,13 +849,16 @@ define(function (require) {
 
         // If dispatchAction before setOption, do nothing.
         ecModel && ecModel.eachComponent(condition, function (model, index) {
-            var view = ecIns[
+            callView(ecIns[
                 mainType === 'series' ? '_chartsMap' : '_componentsMap'
-            ][model.__viewId];
-            if (view && view.__alive) {
-                view[method](model, ecModel, ecIns._api, payload);
-            }
+            ][model.__viewId]);
         }, ecIns);
+
+        function callView(view) {
+            view && view.__alive && view[method] && view[method](
+                view.__model, ecModel, ecIns._api, payload
+            );
+        }
     }
 
     /**
@@ -981,7 +991,7 @@ define(function (require) {
 
         var cptType = (actionInfo.update || 'update').split(':');
         var updateMethod = cptType.pop();
-        cptType = cptType[0] && parseClassType(cptType[0]);
+        cptType = cptType[0] != null && parseClassType(cptType[0]);
 
         this[IN_MAIN_PROCESS] = true;
 
@@ -1004,7 +1014,7 @@ define(function (require) {
         for (var i = 0; i < payloads.length; i++) {
             var batchItem = payloads[i];
             // Action can specify the event by return it.
-            eventObj = actionWrap.action(batchItem, this._model);
+            eventObj = actionWrap.action(batchItem, this._model, this._api);
             // Emit event outside
             eventObj = eventObj || zrUtil.extend({}, batchItem);
             // Convert type to eventType

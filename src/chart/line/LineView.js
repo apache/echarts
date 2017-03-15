@@ -530,6 +530,8 @@ define(function(require) {
                 }
             }
             else {
+                // FIXME
+                // can not downplay completely.
                 // Downplay whole series
                 ChartView.prototype.downplay.call(
                     this, seriesModel, ecModel, api, payload

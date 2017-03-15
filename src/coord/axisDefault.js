@@ -32,6 +32,8 @@ define(function (require) {
             show: false
         },
 
+        axisPointer: {},
+
         // 坐标轴线
         axisLine: {
             // 默认显示，属性show控制显示与否

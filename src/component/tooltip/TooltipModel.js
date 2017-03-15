@@ -4,6 +4,8 @@ define(function (require) {
 
         type: 'tooltip',
 
+        dependencies: ['axisPointer'],
+
         defaultOption: {
             zlevel: 0,
 
@@ -14,17 +16,20 @@ define(function (require) {
             // tooltip主体内容
             showContent: true,
 
-            // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
+            // 'trigger' only works on coordinate system.
+            // 'item' | 'axis' | 'none'
             trigger: 'item',
 
-            // 触发条件，支持 'click' | 'mousemove' | 'none'
+            // 'click' | 'mousemove' | 'none'
             triggerOn: 'mousemove',
 
-            // 是否永远显示 content
             alwaysShowContent: false,
 
             // 位置 {Array} | {Function}
             // position: null
+            // Consider triggered from axisPointer handle, verticalAlign should be 'middle'
+            // align: null,
+            // verticalAlign: null,
 
             // 是否约束 content 在 viewRect 中。默认 false 是为了兼容以前版本。
             confine: false,
@@ -77,13 +82,6 @@ define(function (require) {
                 animationDurationUpdate: 200,
                 animationEasingUpdate: 'exponentialOut',
 
-                // 直线指示器样式设置
-                lineStyle: {
-                    color: '#555',
-                    width: 1,
-                    type: 'solid'
-                },
-
                 crossStyle: {
                     color: '#555',
                     width: 1,
@@ -91,12 +89,10 @@ define(function (require) {
 
                     // TODO formatter
                     textStyle: {}
-                },
-
-                // 阴影指示器样式设置
-                shadowStyle: {
-                    color: 'rgba(150,150,150,0.3)'
                 }
+
+                // lineStyle and shadowStyle should not be specified here,
+                // otherwise it will always override those styles on option.axisPointer.
             },
             textStyle: {
                 color: '#fff',

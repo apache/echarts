@@ -1,0 +1,196 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="tooltipTestHelper.js"></script>
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #360;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+        <h1>handle | category | check resize | should trigger hightlight</h1>
+        <div class="chart" id="handle-category"></div>
+        <h1>handle | value axis | x snap, y not-snap | has init handle value | tooltip.alwaysShowContent</h1>
+        <div class="chart" id="handle-value-init"></div>
+        <h1>handle | time axis | x snap | init value: '2017-04-12' | tooltip not show | inside data zoom</h1>
+        <div class="chart" id="handle-time-init"></div>
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        triggerOn: 'none'
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 100;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            triggerOn: 'handle'
+                        }
+                    },
+                    yAxis: {name: 'no init handle value'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            triggerOn: 'handle',
+                            value: 'category3'
+                        }
+                    },
+                    yAxis: {name: 'init handle value: "category3"'}
+                });
+                baseTop += height + gap;
+
+                createChart('handle-category', echarts, option, baseTop + 100);
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        alwaysShowContent: true
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeValueGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            triggerOn: 'handle',
+                            snap: true,
+                            value: 600 // init value
+                        }
+                    },
+                    yAxis: {
+                        axisPointer: {
+                            triggerOn: 'handle',
+                            handle: {
+                                margin: 70
+                            }
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('handle-value-init', echarts, option, baseTop + 100);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    dataZoom: {
+                        type: 'inside',
+                        start: 20,
+                        end: 50
+                    }
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 50;
+                makeTimeGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            triggerOn: 'handle',
+                            animation: false,
+                            snap: true,
+                            handle: {
+                                margin: 60
+                            },
+                            value: '2017-04-12' // init value
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('handle-time-init', echarts, option, baseTop + 100);
+            })
+
+        </script>
+
+
+
+
+
+
+
+    </body>
+</html>

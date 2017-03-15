@@ -36,6 +36,7 @@ define(function (require) {
     };
 
     /**
+     * Notice, parseClassType('') should returns {main: '', sub: ''}
      * @public
      */
     var parseClassType = clazz.parseClassType = function (componentType) {

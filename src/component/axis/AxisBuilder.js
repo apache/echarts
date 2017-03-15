@@ -258,7 +258,7 @@ define(function (require) {
             // To radian.
             labelRotation = labelRotation * PI / 180;
 
-            var labelLayout = innerTextLayout(opt, labelRotation, opt.labelDirection);
+            var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
             var categoryData = axisModel.get('data');
 
             var textEls = [];
@@ -294,7 +294,7 @@ define(function (require) {
                     style: {
                         text: labels[index],
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
-                        textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
+                        textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.textVerticalAlign,
                         textFont: itemTextStyleModel.getFont(),
                         fill: typeof textColor === 'function'
                             ? textColor(
@@ -401,7 +401,7 @@ define(function (require) {
 
             if (nameLocation === 'middle') {
                 labelLayout = innerTextLayout(
-                    opt,
+                    opt.rotation,
                     nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
                     nameDirection
                 );
@@ -456,7 +456,7 @@ define(function (require) {
                     fill: textStyleModel.getTextColor()
                         || axisModel.get('axisLine.lineStyle.color'),
                     textAlign: labelLayout.textAlign,
-                    textVerticalAlign: labelLayout.verticalAlign
+                    textVerticalAlign: labelLayout.textVerticalAlign
                 },
                 position: pos,
                 rotation: labelLayout.rotation,
@@ -491,23 +491,28 @@ define(function (require) {
     };
 
     /**
-     * @inner
+     * @public
+     * @static
+     * @param {Object} opt
+     * @param {number} axisRotation in radian
+     * @param {number} textRotation in radian
+     * @param {number} direction
      */
-    function innerTextLayout(opt, textRotation, direction) {
-        var rotationDiff = remRadian(textRotation - opt.rotation);
+    var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, textRotation, direction) {
+        var rotationDiff = remRadian(textRotation - axisRotation);
         var textAlign;
-        var verticalAlign;
+        var textVerticalAlign;
 
         if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
-            verticalAlign = direction > 0 ? 'top' : 'bottom';
+            textVerticalAlign = direction > 0 ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else if (isRadianAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
-            verticalAlign = direction > 0 ? 'bottom' : 'top';
+            textVerticalAlign = direction > 0 ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else {
-            verticalAlign = 'middle';
+            textVerticalAlign = 'middle';
 
             if (rotationDiff > 0 && rotationDiff < PI) {
                 textAlign = direction > 0 ? 'right' : 'left';
@@ -520,9 +525,9 @@ define(function (require) {
         return {
             rotation: rotationDiff,
             textAlign: textAlign,
-            verticalAlign: verticalAlign
+            textVerticalAlign: textVerticalAlign
         };
-    }
+    };
 
     /**
      * @inner
@@ -530,21 +535,21 @@ define(function (require) {
     function endTextLayout(opt, textPosition, textRotate, extent) {
         var rotationDiff = remRadian(textRotate - opt.rotation);
         var textAlign;
-        var verticalAlign;
+        var textVerticalAlign;
         var inverse = extent[0] > extent[1];
         var onLeft = (textPosition === 'start' && !inverse)
             || (textPosition !== 'start' && inverse);
 
         if (isRadianAroundZero(rotationDiff - PI / 2)) {
-            verticalAlign = onLeft ? 'bottom' : 'top';
+            textVerticalAlign = onLeft ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else if (isRadianAroundZero(rotationDiff - PI * 1.5)) {
-            verticalAlign = onLeft ? 'top' : 'bottom';
+            textVerticalAlign = onLeft ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else {
-            verticalAlign = 'middle';
+            textVerticalAlign = 'middle';
             if (rotationDiff < PI * 1.5 && rotationDiff > PI / 2) {
                 textAlign = onLeft ? 'left' : 'right';
             }
@@ -556,7 +561,7 @@ define(function (require) {
         return {
             rotation: rotationDiff,
             textAlign: textAlign,
-            verticalAlign: verticalAlign
+            textVerticalAlign: textVerticalAlign
         };
     }
 

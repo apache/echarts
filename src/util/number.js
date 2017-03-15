@@ -104,15 +104,18 @@ define(function (require) {
     /**
      * Fix rounding error of float numbers
      * @param {number} x
-     * @return {number}
+     * @param {number} [precision]
+     * @param {boolean} [returnStr]
+     * @return {number|string}
      */
-    number.round = function (x, precision) {
+    number.round = function (x, precision, returnStr) {
         if (precision == null) {
             precision = 10;
         }
         // Avoid range error
         precision = Math.min(Math.max(0, precision), 20);
-        return +(+x).toFixed(precision);
+        x = (+x).toFixed(precision);
+        return returnStr ? x : +x;
     };
 
     number.asc = function (arr) {

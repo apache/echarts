@@ -112,6 +112,7 @@ define(function (require) {
                 polarList.push(polar);
 
                 polarModel.coordinateSystem = polar;
+                polar.model = polarModel;
             });
             // Inject coordinateSystem to series
             ecModel.eachSeries(function (seriesModel) {

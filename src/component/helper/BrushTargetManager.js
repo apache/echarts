@@ -247,12 +247,12 @@ define(function(require) {
             }
 
             each(xAxisModels, function (axisModel) {
-                var gridModel = axisModel.axis.grid.getModel();
+                var gridModel = axisModel.axis.grid.model;
                 gridModelMap[gridModel.id] = gridModel;
                 xAxesHas[gridModel.id] = true;
             });
             each(yAxisModels, function (axisModel) {
-                var gridModel = axisModel.axis.grid.getModel();
+                var gridModel = axisModel.axis.grid.model;
                 gridModelMap[gridModel.id] = gridModel;
                 yAxesHas[gridModel.id] = true;
             });
@@ -308,8 +308,8 @@ define(function(require) {
             var yAxisModel = foundCpts.yAxisModel;
             var gridModel = foundCpts.gridModel;
 
-            !gridModel && xAxisModel && (gridModel = xAxisModel.axis.grid.getModel());
-            !gridModel && yAxisModel && (gridModel = yAxisModel.axis.grid.getModel());
+            !gridModel && xAxisModel && (gridModel = xAxisModel.axis.grid.model);
+            !gridModel && yAxisModel && (gridModel = yAxisModel.axis.grid.model);
 
             return gridModel && gridModel === targetInfo.gridModel;
         },

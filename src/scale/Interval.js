@@ -24,6 +24,8 @@ define(function (require) {
 
         _interval: 0,
 
+        _intervalPrecision: 2,
+
         setExtent: function (start, end) {
             var thisExtent = this._extent;
             //start,end may be a Number like '25',so...
@@ -79,7 +81,9 @@ define(function (require) {
 
             if (interval) {
                 var niceExtent = this._niceExtent;
-                var precision = getPrecisionSafe(interval) + 2;
+                var precision = this._intervalPrecision = getPrecisionSafe(interval);
+                // FIXME
+                precision += 2;
 
                 if (extent[0] < niceExtent[0]) {
                     ticks.push(extent[0]);
@@ -117,10 +121,19 @@ define(function (require) {
         },
 
         /**
-         * @param {number} n
+         * @param {number} data
+         * @param {Object} [opt]
+         * @param {number|string} [opt.precision] If 'auto', use nice presision.
+         * @param {boolean} [opt.pad] returns 1.50 but not 1.5 if precision is 2.
          * @return {number}
          */
-        getLabel: function (data) {
+        getLabel: function (data, opt) {
+            var precision = opt && opt.precision;
+            if (data != null && precision != null) {
+                // Should be more precise then tick.
+                precision === 'auto' && (precision = this._intervalPrecision + 2);
+                data = roundingErrorFix(data, precision, opt && opt.pad);
+            }
             return formatUtil.addCommas(data);
         },
 

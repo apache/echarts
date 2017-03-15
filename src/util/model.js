@@ -489,6 +489,30 @@ define(function(require) {
     };
 
     /**
+     * Enable property storage to any host object.
+     * Notice: Serialization is not supported.
+     *
+     * For example:
+     * var get = modelUitl.makeGetter();
+     *
+     * function some(hostObj) {
+     *      get(hostObj)._someProperty = 1212;
+     *      ...
+     * }
+     *
+     * @return {Function}
+     */
+    modelUtil.makeGetter = (function () {
+        var index = 0;
+        return function () {
+            var key = '\0__ec_prop_getter_' + index++;
+            return function (hostObj) {
+                return hostObj[key] || (hostObj[key] = {});
+            };
+        };
+    })();
+
+    /**
      * @param {module:echarts/model/Global} ecModel
      * @param {string|Object} finder
      *        If string, e.g., 'geo', means {geoIndex: 0}.

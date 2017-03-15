@@ -47,7 +47,7 @@ define(function (require) {
         /**
          * @type {module:echarts/coord/single/AxisModel}
          */
-        this._model = axisModel;
+        this.model = axisModel;
     }
 
     Single.prototype = {
@@ -83,6 +83,7 @@ define(function (require) {
 
             axisModel.axis = axis;
             axis.model = axisModel;
+            axis.coordinateSystem = this;
             this._axis = axis;
         },
 
@@ -200,6 +201,20 @@ define(function (require) {
         },
 
         /**
+         * @return {Array.<module:echarts/coord/Axis>}
+         */
+        getAxes: function () {
+            return [this._axis];
+        },
+
+        /**
+         * @return {Object} {baseAxes: [], otherAxes: []}
+         */
+        getTooltipAxes: function () {
+            return {baseAxes: [this.getAxis()]};
+        },
+
+        /**
          * If contain point.
          *
          * @param  {Array.<number>} point
@@ -241,6 +256,11 @@ define(function (require) {
             var rect = this.getRect();
             var pt = [];
             var idx = axis.orient === 'horizontal' ? 0 : 1;
+
+            if (val instanceof Array) {
+                val = val[0];
+            }
+
             pt[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
             pt[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
             return pt;

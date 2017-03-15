@@ -32,7 +32,7 @@ define(function (require) {
 
         // Required in createListFromData
         getDimensionsInfo: function () {
-            return [{name: 'time', type: 'time'}]
+            return [{name: 'time', type: 'time'}];
         },
 
         getHandledRangeInfo: function () {

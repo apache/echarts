@@ -144,6 +144,17 @@ define(function (require) {
 
             return this.scale.scale(t);
         },
+
+        /**
+         * Convert pixel point to data in axis
+         * @param {Array.<number>} point
+         * @param  {boolean} clamp
+         * @return {number} data
+         */
+        pointToData: function (point, clamp) {
+            // Should be implemented in derived class if necessary.
+        },
+
         /**
          * @return {Array.<number>}
          */
@@ -214,6 +225,7 @@ define(function (require) {
 
             return Math.abs(size) / len;
         }
+
     };
 
     return Axis;

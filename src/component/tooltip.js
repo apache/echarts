@@ -1,9 +1,12 @@
 // FIXME Better way to pack data in graphic element
 define(function (require) {
 
+    require('./axisPointer');
+
     require('./tooltip/TooltipModel');
 
     require('./tooltip/TooltipView');
+
 
     // Show tip action
     /**

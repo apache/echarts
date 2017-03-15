@@ -76,7 +76,7 @@ define(function(require, factory) {
 
         this._initCartesian(gridModel, ecModel, api);
 
-        this._model = gridModel;
+        this.model = gridModel;
     }
 
     var gridProto = Grid.prototype;
@@ -87,15 +87,11 @@ define(function(require, factory) {
         return this._rect;
     };
 
-    gridProto.getModel = function () {
-        return this._model;
-    };
-
     gridProto.update = function (ecModel, api) {
 
         var axesMap = this._axesMap;
 
-        this._updateScale(ecModel, this._model);
+        this._updateScale(ecModel, this.model);
 
         function ifAxisCanNotOnZero(otherAxisDim) {
             var axes = axesMap[otherAxisDim];
@@ -133,7 +129,7 @@ define(function(require, factory) {
 
         // Resize again if containLabel is enabled
         // FIXME It may cause getting wrong grid size in data processing stage
-        this.resize(this._model, api);
+        this.resize(this.model, api);
     };
 
     /**
@@ -207,19 +203,39 @@ define(function(require, factory) {
         }
     };
 
+    /**
+     * @return {Array.<module:echarts/coord/Axis>}
+     */
+    gridProto.getAxes = function () {
+        return this._axesList.slice();
+    };
+
+    /**
+     * Usage:
+     *      grid.getCartesian(xAxisIndex, yAxisIndex);
+     *      grid.getCartesian(xAxisIndex);
+     *      grid.getCartesian(null, yAxisIndex);
+     *      grid.getCartesian({xAxisIndex: ..., yAxisIndex: ...});
+     *
+     * @param {number|Object} [xAxisIndex]
+     * @param {number} [yAxisIndex]
+     */
     gridProto.getCartesian = function (xAxisIndex, yAxisIndex) {
         if (xAxisIndex != null && yAxisIndex != null) {
             var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
             return this._coordsMap[key];
         }
-        else {
-            // When only xAxisIndex or yAxisIndex given, find its first cartesian.
-            for (var i = 0, coordList = this._coordsList; i < coordList.length; i++) {
-                if (coordList[i].getAxis('x').index === xAxisIndex
-                    || coordList[i].getAxis('y').index === yAxisIndex
-                ) {
-                    return coordList[i];
-                }
+
+        if (zrUtil.isObject(xAxisIndex)) {
+            yAxisIndex = xAxisIndex.yAxisIndex;
+            xAxisIndex = xAxisIndex.xAxisIndex;
+        }
+        // When only xAxisIndex or yAxisIndex given, find its first cartesian.
+        for (var i = 0, coordList = this._coordsList; i < coordList.length; i++) {
+            if (coordList[i].getAxis('x').index === xAxisIndex
+                || coordList[i].getAxis('y').index === yAxisIndex
+            ) {
+                return coordList[i];
             }
         }
     };
@@ -346,6 +362,7 @@ define(function(require, factory) {
                 var cartesian = new Cartesian2D(key);
 
                 cartesian.grid = this;
+                cartesian.model = gridModel;
 
                 this._coordsMap[key] = cartesian;
                 this._coordsList.push(cartesian);
@@ -461,6 +478,25 @@ define(function(require, factory) {
     };
 
     /**
+     * @param {string} [dim] 'x' or 'y' or 'auto' or null/undefined
+     * @return {Object} {baseAxes: [], otherAxes: []}
+     */
+    gridProto.getTooltipAxes = function (dim) {
+        var baseAxes = [];
+        var otherAxes = [];
+
+        each(this.getCartesians(), function (cartesian) {
+            var baseAxis = (dim != null && dim !== 'auto')
+                ? cartesian.getAxis(dim) : cartesian.getBaseAxis();
+            var otherAxis = cartesian.getOtherAxis(baseAxis);
+            zrUtil.indexOf(baseAxes, baseAxis) < 0 && baseAxes.push(baseAxis);
+            zrUtil.indexOf(otherAxes, otherAxis) < 0 && otherAxes.push(otherAxis);
+        });
+
+        return {baseAxes: baseAxes, otherAxes: otherAxes};
+    };
+
+    /**
      * @inner
      */
     function updateAxisTransfrom(axis, coordBase) {
@@ -562,7 +598,7 @@ define(function(require, factory) {
     };
 
     // For deciding which dimensions to use when creating list data
-    Grid.dimensions = Cartesian2D.prototype.dimensions;
+    Grid.dimensions = Grid.prototype.dimensions = Cartesian2D.prototype.dimensions;
 
     require('../../CoordinateSystem').register('cartesian2d', Grid);
 

@@ -61,11 +61,24 @@ define(function (require) {
             return position === 'top' || position === 'bottom';
         },
 
-        getGlobalExtent: function () {
+        /**
+         * Each item cooresponds to this.getExtent(), which
+         * means globalExtent[0] may greater than globalExtent[1],
+         * unless `asc` is input.
+         *
+         * @param {boolean} [asc]
+         * @return {Array.<number>}
+         */
+        getGlobalExtent: function (asc) {
             var ret = this.getExtent();
             ret[0] = this.toGlobalCoord(ret[0]);
             ret[1] = this.toGlobalCoord(ret[1]);
+            asc && ret[0] > ret[1] && ret.reverse();
             return ret;
+        },
+
+        getOtherAxis: function () {
+            this.grid.getOtherAxis();
         },
 
         /**
@@ -92,6 +105,13 @@ define(function (require) {
                     && !labelInterval(idx, this.scale.getLabel(idx)))
                     || idx % (labelInterval + 1);
             }
+        },
+
+        /**
+         * @override
+         */
+        pointToData: function (point, clamp) {
+            return this.coordToData(this.toLocalCoord(point[this.dim === 'x' ? 0 : 1]), clamp);
         },
 
         /**

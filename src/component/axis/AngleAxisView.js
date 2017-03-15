@@ -4,6 +4,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var Model = require('../../model/Model');
+    var PolarAxisPointer = require('../axisPointer/PolarAxisPointer');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
@@ -18,9 +19,12 @@ define(function (require) {
             y2: end[1]
         };
     }
-    require('../../echarts').extendComponentView({
+
+    require('./AxisView').extend({
 
         type: 'angleAxis',
+
+        axisPointerClass: PolarAxisPointer,
 
         render: function (angleAxisModel, ecModel) {
             this.group.removeAll();

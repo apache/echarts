@@ -1,0 +1,21 @@
+/**
+ * AxisPointer Interface:
+ *
+ *
+ * Instance members:
+ *
+ *  + render {Function}: mandatory.
+ *      If `show` called, axisPointer must be displayed or remain its original status.
+ *      @param {module:echarts/model/Model} axisModel
+ *      @param {module:echarts/model/Model} axisPointerModel
+ *      @param {module:echarts/coord/ICoordinateSystem} coordSys
+ *      @param {module:echarts/ExtensionAPI} api
+ *      @param {boolean} forceRender
+ *
+ *  + remove {Function}: mandatory.
+ *      If `hide` called, axisPointer must be hidden.
+ *      @param {module:echarts/ExtensionAPI} api
+ *
+ *  + dispose {Function}: mandatory
+ *      @param {module:echarts/ExtensionAPI} api
+ */

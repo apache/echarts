@@ -43,6 +43,8 @@ define(function(require) {
          * @private
          */
         this._angleAxis = new AngleAxis();
+
+        this._radiusAxis.polar = this._angleAxis.polar = this;
     };
 
     Polar.prototype = {
@@ -56,6 +58,11 @@ define(function(require) {
          * @readOnly
          */
         dimensions: ['radius', 'angle'],
+
+        /**
+         * @type {module:echarts/coord/PolarModel}
+         */
+        model: null,
 
         /**
          * If contain coord
@@ -79,11 +86,18 @@ define(function(require) {
         },
 
         /**
-         * @param {string} axisType
+         * @param {string} dim
          * @return {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
-        getAxis: function (axisType) {
-            return this['_' + axisType + 'Axis'];
+        getAxis: function (dim) {
+            return this['_' + dim + 'Axis'];
+        },
+
+        /**
+         * @return {Array.<module:echarts/coord/Axis>}
+         */
+        getAxes: function () {
+            return [this._radiusAxis, this._angleAxis];
         },
 
         /**
@@ -133,6 +147,19 @@ define(function(require) {
             return this.getAxesByScale('ordinal')[0]
                 || this.getAxesByScale('time')[0]
                 || this.getAngleAxis();
+        },
+
+        /**
+         * @param {string} [dim] 'radius' or 'angle' or 'auto' or null/undefined
+         * @return {Object} {baseAxes: [], otherAxes: []}
+         */
+        getTooltipAxes: function (dim) {
+            var baseAxis = (dim != null && dim !== 'auto')
+                ? this.getAxis(dim) : this.getBaseAxis();
+            return {
+                baseAxes: [baseAxis],
+                otherAxes: [this.getOtherAxis(baseAxis)]
+            };
         },
 
         /**

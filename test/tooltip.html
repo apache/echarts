@@ -4,20 +4,414 @@
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="tooltipTestHelper.js"></script>
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
             }
-            #main {
-                width: 1000px;
-                background: #fff;
+            .chart {
+                height: 350px;
             }
         </style>
-        <div id="main"></div>
+
+
+        <h1>category | axisPointer label should not show</h1>
+        <div class="chart" id="category"></div>
+        <h1>tooltip lineStyle | axisPointer label should not show</h1>
+        <div class="chart" id="line-style"></div>
+        <h1>global-axis-pointer-style | axisPointer label should not show</h1>
+        <div class="chart" id="global-axis-pointer-style"></div>
+        <h1>cross compatible | tooltip.trigger: 'item' | yAxis pointer precision 3 | crossStyle set | xAxisPointer label show</h1>
+        <div class="chart" id="cross-item"></div>
+        <h1>cross compatible | tooltip.trigger: 'axis' | xAxisPointer label not show</h1>
+        <div class="chart" id="cross-axis"></div>
+        <h1>tooltip.axisPointer.axis is 'y' | auto snap | auto animation when snap</h1>
+        <div class="chart" id="tooltip.axisPointer.axis"></div>
+        <h1>main</h1>
+        <div class="chart" id="main"></div>
+
+
+tooltip 动态回调
+tooltip 固定位置
+tooltip enterable
+triggerOn click
+http://echarts.baidu.com/option.html#tooltip.position 每个配置项都试验一下。
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'axisPointer: line\nno item trigger'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'axisPointer: shadow\nno item trigger'},
+                    xAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'trigger: item \n(only the 1st series item trigger)'},
+                    xAxis: {
+                        axisPointer: {show: false}
+                    },
+                    series: [
+                        {tooltip: {trigger: 'item'}}
+                    ]
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'both axis and item trigger\n(the 1st series can item trigger)'},
+                    xAxis: {
+                        axisPointer: {type: 'shadow'}
+                    },
+                    series: [
+                        {tooltip: {trigger: 'item'}}
+                    ]
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('category');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line',
+                            lineStyle: {
+                                color : 'blue',
+                                shadowBlur: 4,
+                                shadowColor: '#000',
+                                shadowOffsetX: 3,
+                                shadowOffsetY: 3
+                            }
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'tooltip lineStyle: "blue"'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'xAxis lineStyle override tooltip lineStyle: "red"'},
+                    xAxis: {
+                        axisPointer: {
+                            lineStyle: {
+                                color: 'red'
+                            }
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('line-style');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    axisPointer: {
+                        shadowStyle: {
+                            color: 'red'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'should be red shadow'}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('global-axis-pointer-style');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('cross-axis');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        axisPointer: {
+                            type: 'cross',
+                            crossStyle: {
+                                color: 'blue',
+                                shadowBlur: 4,
+                                shadowColor: '#000',
+                                shadowOffsetX: 3,
+                                shadowOffsetY: 3,
+                                textStyle: {
+                                    color: 'yellow',
+                                    fontSize: 16
+                                }
+                            }
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        axisPointer: {
+                            label: {
+                                precision: 3
+                            }
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('cross-item');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            axis: 'y'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('tooltip.axisPointer.axis');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
         <script>
 
             require([
@@ -28,9 +422,11 @@
                 'echarts/component/tooltip'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var dom = document.getElementById('main');
+                if (!dom) {
+                    return;
+                }
+                var chart = echarts.init(dom);
 
                 var xAxisData = [];
                 var data1 = [];

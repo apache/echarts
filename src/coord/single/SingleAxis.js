@@ -99,6 +99,13 @@ define(function (require) {
         },
 
         /**
+         * @override
+         */
+        pointToData: function (point, clamp) {
+            return this.coordinateSystem.pointToData(point, clamp)[0];
+        },
+
+        /**
          * Convert the local coord(processed by dataToCoord())
          * to global coord(concrete pixel coord).
          * designated by module:echarts/coord/single/Single.

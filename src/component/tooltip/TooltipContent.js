@@ -62,8 +62,6 @@ define(function (require) {
      */
     function assembleCssText(tooltipModel) {
 
-        tooltipModel = tooltipModel;
-
         var cssText = [];
 
         var transitionDuration = tooltipModel.get('transitionDuration');
@@ -135,7 +133,7 @@ define(function (require) {
         var self = this;
         el.onmouseenter = function () {
             // clear the timeout in hideLater and keep showing tooltip
-            if (self.enterable) {
+            if (self._enterable) {
                 clearTimeout(self._hideTimeout);
                 self._show = true;
             }
@@ -143,7 +141,7 @@ define(function (require) {
         };
         el.onmousemove = function (e) {
             e = e || window.event;
-            if (!self.enterable) {
+            if (!self._enterable) {
                 // Try trigger zrender event to avoid mouse
                 // in and out shape too frequently
                 var handler = zr.handler;
@@ -152,7 +150,7 @@ define(function (require) {
             }
         };
         el.onmouseleave = function () {
-            if (self.enterable) {
+            if (self._enterable) {
                 if (self._show) {
                     self.hideLater(self._hideDelay);
                 }
@@ -165,7 +163,11 @@ define(function (require) {
 
         constructor: TooltipContent,
 
-        enterable: true,
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _enterable: true,
 
         /**
          * Update when tooltip is rendered
@@ -203,6 +205,15 @@ define(function (require) {
             el.style.display = content ? 'block' : 'none';
         },
 
+        setEnterable: function (enterable) {
+            this._enterable = enterable;
+        },
+
+        getSize: function () {
+            var el = this.el;
+            return [el.clientWidth, el.clientHeight];
+        },
+
         moveTo: function (x, y) {
             var style = this.el.style;
             style.left = x + 'px';
@@ -220,7 +231,7 @@ define(function (require) {
         // showLater: function ()
 
         hideLater: function (time) {
-            if (this._show && !(this._inContent && this.enterable)) {
+            if (this._show && !(this._inContent && this._enterable)) {
                 if (time) {
                     this._hideDelay = time;
                     // Set show false to avoid invoke hideLater mutiple times
