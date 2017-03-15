@@ -32,9 +32,8 @@ define(function (require) {
                 return;
             }
 
-            var polarModel = ecModel.getComponent('polar', angleAxisModel.get('polarIndex'));
             var angleAxis = angleAxisModel.axis;
-            var polar = polarModel.coordinateSystem;
+            var polar = angleAxis.polar;
             var radiusExtent = polar.getRadiusAxis().getExtent();
             var ticksAngles = angleAxis.getTicksCoords();
 

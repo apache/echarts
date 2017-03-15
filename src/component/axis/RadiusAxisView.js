@@ -25,10 +25,9 @@ define(function (require) {
             if (!radiusAxisModel.get('show')) {
                 return;
             }
-            var polarModel = ecModel.getComponent('polar', radiusAxisModel.get('polarIndex'));
-            var angleAxis = polarModel.coordinateSystem.getAngleAxis();
             var radiusAxis = radiusAxisModel.axis;
-            var polar = polarModel.coordinateSystem;
+            var polar = radiusAxis.polar;
+            var angleAxis = polar.getAngleAxis();
             var ticksCoords = radiusAxis.getTicksCoords();
             var axisAngle = angleAxis.getExtent()[0];
             var radiusExtent = radiusAxis.getExtent();
