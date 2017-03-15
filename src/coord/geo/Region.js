@@ -49,6 +49,8 @@ define(function (require) {
 
         constructor: Region,
 
+        properties: null,
+
         /**
          * @return {module:zrender/core/BoundingRect}
          */
