@@ -25,8 +25,6 @@
 
         <h1>category | axisPointer label should not show</h1>
         <div class="chart" id="category"></div>
-        <h1>tooltip lineStyle | axisPointer label should not show</h1>
-        <div class="chart" id="line-style"></div>
         <h1>global-axis-pointer-style | axisPointer label should not show</h1>
         <div class="chart" id="global-axis-pointer-style"></div>
         <h1>cross compatible | tooltip.trigger: 'item' | yAxis pointer precision 3 | crossStyle set | xAxisPointer label show</h1>
@@ -122,74 +120,6 @@ http://echarts.baidu.com/option.html#tooltip.position 每个配置项都试验�
                 }
             })
 
-        </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <script>
-
-            require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
-            ], function (echarts) {
-
-                var option = {
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'line',
-                            lineStyle: {
-                                color : 'blue',
-                                shadowBlur: 4,
-                                shadowColor: '#000',
-                                shadowOffsetX: 3,
-                                shadowOffsetY: 3
-                            }
-                        }
-                    }
-                };
-                var baseTop = 90;
-                var height = 150;
-                var gap = 50;
-                makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
-                    yAxis: {name: 'tooltip lineStyle: "blue"'}
-                });
-                baseTop += height + gap;
-                makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
-                    yAxis: {name: 'xAxis lineStyle override tooltip lineStyle: "red"'},
-                    xAxis: {
-                        axisPointer: {
-                            lineStyle: {
-                                color: 'red'
-                            }
-                        }
-                    }
-                });
-                baseTop += height + gap;
-
-                var dom = document.getElementById('line-style');
-                if (dom) {
-                    dom.style.height = baseTop + 'px';
-                    var chart = echarts.init(dom);
-                    chart.setOption(option);
-                }
-            })
         </script>
 
 

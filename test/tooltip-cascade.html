@@ -1,0 +1,192 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="tooltipTestHelper.js"></script>
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #871;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+
+        <h1>xAxis.axisPointer override tooltip.axisPointer | axisPointer label should not show</h1>
+        <div class="chart" id="line-style"></div>
+        <h1>coordSys.tooltip and series.tooltip override global tooltip in one ec-instance</h1>
+        <div class="chart" id="coords"></div>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line',
+                            lineStyle: {
+                                color : 'blue',
+                                shadowBlur: 4,
+                                shadowColor: '#000',
+                                shadowOffsetX: 3,
+                                shadowOffsetY: 3
+                            }
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'tooltip lineStyle: "blue"'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'xAxis lineStyle override tooltip lineStyle: "red"'},
+                    xAxis: {
+                        axisPointer: {
+                            lineStyle: {
+                                color: 'red'
+                            }
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('line-style', echarts, option, baseTop);
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/pie',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 100;
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height,
+                        tooltip: {
+                            trigger: 'axis'
+                        }
+                    },
+                    xAxis: {nameGap: 40, nameLocation: 'middle',
+                        name: 'grid.tooltip trigger "axis"'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height,
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {type: 'cross'},
+                            formatter: 'this is a formatter:<br>{a0}<br>{a1}<br>{a2} '
+                        }
+                    },
+                    xAxis: {nameGap: 40, nameLocation: 'middle',
+                        name: 'grid.tooltip trigger "axis" and "cross", and use formatter'}
+                });
+                baseTop += height + gap;
+
+                option.series.push({
+                    name: '访问来源',
+                    type: 'pie',
+                    radius : 80,
+                    center: ['50%', baseTop + 80],
+                    tooltip: {
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    data:[
+                        {value:335, name:'series.tooltip'},
+                        {value:310, name:'邮件营销'},
+                        {value:234, name:'联盟广告'},
+                        {value:135, name:'视频广告'},
+                        {value:1548, name:'搜索引擎'}
+                    ],
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height
+                    },
+                    xAxis: {nameGap: 40, nameLocation: 'middle',
+                        name: 'default item trigger'}
+                });
+                baseTop += height + gap;
+
+
+                createChart('coords', echarts, option, baseTop);
+            })
+        </script>
+
+
+
+
+    </body>
+</html>
