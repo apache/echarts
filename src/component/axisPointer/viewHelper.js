@@ -1,6 +1,7 @@
 define(function(require) {
     'use strict';
 
+    var zrUtil = require('zrender/core/util');
     var textContain = require('zrender/contain/text');
     var formatUtil = require('../../util/format');
 
@@ -32,8 +33,7 @@ define(function(require) {
     ) {
         var value = axisPointerModel.get('value');
         var labelModel = axisPointerModel.getModel('label');
-        // Use 'pad' to debounce when when moving label.
-        var text = axisModel.axis.scale.getLabel(value, {precision: labelModel.get('precision'), pad: true});
+        var text = getLabelText(value, axisModel, axisPointerModel, labelModel);
         var textStyleModel = labelModel.getModel('textStyle');
         var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
@@ -76,6 +76,33 @@ define(function(require) {
             }
         };
     };
+
+    function getLabelText(value, axisModel, axisPointerModel, labelModel) {
+        // Use 'pad' to debounce when when moving label.
+        var text = axisModel.axis.scale.getLabel(value, {precision: labelModel.get('precision'), pad: true});
+        var formatter = labelModel.get('formatter');
+
+        if (formatter) {
+            var params = {value: value, seriesData: []};
+            zrUtil.each(axisPointerModel.get('seriesDataIndices'), function (idxItem) {
+                var series = axisModel.ecModel.getSeriesByIndex(idxItem.seriesIndex);
+                var dataIndex = idxItem.dataIndexInside;
+                var dataParams = series && series.getDataParams(dataIndex);
+                dataParams && params.seriesData.push(dataParams);
+            });
+
+            if (zrUtil.isString(formatter)) {
+                text = formatter.replace('{value}', value);
+                // The same as tooltip content formatter.
+                text = formatUtil.formatTpl(text, params.seriesData);
+            }
+            else if (zrUtil.isFunction(formatter)) {
+                text = formatter(params);
+            }
+        }
+
+        return text;
+    }
 
     /**
      * @param {Array.<number>} p1

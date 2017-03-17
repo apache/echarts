@@ -101,7 +101,7 @@ define(function(require) {
         }
 
         updaters.highlight('highlight', payloadBatch);
-        updaters.showPointer(axisInfo, newValue);
+        updaters.showPointer(axisInfo, newValue, payloadBatch);
         updaters.showTooltip(axisInfo, payloadInfo, newValue);
     }
 
@@ -153,8 +153,8 @@ define(function(require) {
         };
     }
 
-    function showPointer(showValueMap, axisInfo, value) {
-        showValueMap[axisInfo.key] = {value: value};
+    function showPointer(showValueMap, axisInfo, value, payloadBatch) {
+        showValueMap[axisInfo.key] = {value: value, payloadBatch: payloadBatch};
     }
 
     function showTooltip(seriesDataByAxis, axisInfo, payloadInfo, value) {
@@ -186,6 +186,8 @@ define(function(require) {
             if (valItem) {
                 option.status = 'show';
                 option.value = valItem.value;
+                // For label formatter param.
+                option.seriesDataIndices = (valItem.payloadBatch || []).slice();
             }
             // When always show (e.g., handle used), remain
             // original value and status.

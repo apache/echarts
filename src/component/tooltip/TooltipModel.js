@@ -78,7 +78,7 @@ define(function (require) {
                 // 极坐标系会默认选择 angle 轴
                 axis: 'auto',
 
-                animation: true,
+                animation: 'auto',
                 animationDurationUpdate: 200,
                 animationEasingUpdate: 'exponentialOut',
 

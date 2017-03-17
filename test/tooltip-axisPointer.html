@@ -32,7 +32,7 @@
         <div class="chart" id="time-cross"></div>
         <h1>two value axes | snap | grid.tooltip setting | snap has animation </h1>
         <div class="chart" id="two-value-axes"></div>
-        <h1>label style</h1>
+        <h1>label style and formatter</h1>
         <div class="chart" id="label-style"></div>
         <h1>dual yAxes | label color auto : the same as axisline</h1>
         <div class="chart" id="dual-yAxes"></div>
@@ -47,7 +47,6 @@
         <h1>no tooltip</h1>
         <div class="chart" id="no-tooltip"></div>
 
-labelFormatter
 label 位置 when inverse.
 组合图表
 
@@ -266,74 +265,6 @@ api: 用 axisid name 限定
 
 
 
-        <script>
-
-            require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
-            ], function (echarts) {
-
-                var option = {
-                    axisPointer: {
-                        label: {
-                            backgroundColor: 'blue',
-                            borderColor: 'green',
-                            borderRadius: 5,
-                            borderWidth: 2,
-                            shadowBlur: 6,
-                            shadowOffsetX: 3,
-                            shadowOffsetY: 3,
-                            shadowColor: '#000'
-                        }
-                    }
-                };
-                var baseTop = 90;
-                var height = 150;
-                var gap = 50;
-                makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
-                    xAxis: {
-                        axisPointer: {show: true}
-                    },
-                    yAxis: {name: 'global style: \nbg: "blue", border: "green", shadow, borderRadius'}
-                });
-                baseTop += height + gap;
-                makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
-                    xAxis: {
-                        axisPointer: {
-                            show: true,
-                            label: {
-                                backgroundColor: 'red',
-                                borderWidth: 0
-                            }
-                        }
-                    },
-                    yAxis: {name: 'xAxis style: \nbg: "red", borderWidth: 0'}
-                });
-                baseTop += height + gap;
-
-                var dom = document.getElementById('label-style');
-                if (dom) {
-                    dom.style.height = baseTop + 'px';
-                    var chart = echarts.init(dom);
-                    chart.setOption(option);
-                }
-            })
-
-        </script>
-
-
-
-
-
-
-
-
 
 
         <script>
@@ -386,6 +317,45 @@ api: 用 axisid name 限定
                     yAxis: {name: 'xAxis style: \nbg: "red", borderWidth: 0'}
                 });
                 baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height
+                    },
+                    xAxis: {
+                        axisPointer: {
+                            show: true,
+                            label: {
+                                show: true,
+                                formatter: '类别 {value}\n 系列2：{c2}'
+                            }
+                        }
+                    },
+                    yAxis: {name: 'axisLabel formatter string'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height
+                    },
+                    xAxis: {
+                        axisPointer: {
+                            show: true,
+                            label: {
+                                show: true,
+                                formatter: function(params) {
+                                    return 'x: ' + params.value + '\n'
+                                        + echarts.util.map(params.seriesData, function (item) {
+                                            return item.name + ': ' + item.value;
+                                        }).join('\n')
+                                }
+                            }
+                        }
+                    },
+                    yAxis: {name: 'axisLabel formatter function'}
+                });
+                baseTop += height + gap + 20;
 
                 var dom = document.getElementById('label-style');
                 if (dom) {
