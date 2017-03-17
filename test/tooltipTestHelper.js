@@ -368,7 +368,7 @@ function makeTimeGrid(option, patterns) {
     option.legend = option.legend || {
         tooltip: {show: true}
     };
-    getArray(option.legend, 'data').push('line1' + key, 'line2' + key, 'line3' + key);
+    getArray(option.legend, 'data').push('scatter1' + key, 'scatter2' + key, 'scatter3' + key);
 
     var grid = extend({}, patterns.grid);
     grid.id = 'grid' + key;

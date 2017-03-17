@@ -23,7 +23,7 @@
         </style>
 
 
-        <h1>category | axisPointer label should not show</h1>
+        <h1>category | axisPointer label should not show | legend tooltip | axis name tooltip on 1st grid</h1>
         <div class="chart" id="category"></div>
         <h1>global-axis-pointer-style | axisPointer label should not show</h1>
         <div class="chart" id="global-axis-pointer-style"></div>
@@ -33,12 +33,9 @@
         <div class="chart" id="cross-axis"></div>
         <h1>tooltip.axisPointer.axis is 'y' | auto snap | auto animation when snap</h1>
         <div class="chart" id="tooltip.axisPointer.axis"></div>
-        <h1>main</h1>
+        <h1>showDelay: 50 | dynamic callback</h1>
         <div class="chart" id="main"></div>
 
-snap on empty value
-blank axis.
-legend tooltip  axisname tooltip
 tooltip 动态回调
 tooltip 固定位置
 tooltip enterable
@@ -76,7 +73,13 @@ http://echarts.baidu.com/option.html#tooltip.position 每个配置项都试验�
                 var gap = 50;
                 makeCategoryGrid(option, {
                     grid: {top: baseTop, height: height},
-                    yAxis: {name: 'axisPointer: line\nno item trigger'}
+                    yAxis: {
+                        name: 'axisPointer: line\nno item trigger',
+                        tooltip: {show: true}
+                    },
+                    xAxis: {
+                        tooltip: {show: true}
+                    }
                 });
                 baseTop += height + gap;
                 makeCategoryGrid(option, {
@@ -386,43 +389,43 @@ http://echarts.baidu.com/option.html#tooltip.position 每个配置项都试验�
                         trigger: 'axis',
                         //show: true,   //default true
                         showDelay: 50,
-                        hideDelay: 200,
-                        transitionDuration:0.2,
-                        backgroundColor : 'rgba(255,0,255,0.7)',
-                        borderColor : '#f50',
-                        borderRadius : 8,
-                        borderWidth: 2,
-                        padding: 10,    // [5, 10, 15, 20]
-                        axisPointer: {
-                            type: 'shadow'
-                        },
-                        position : function(p) {
-                            // 位置回调
-                            // console.log && console.log(p);
-                            return [p[0] + 10, p[1] - 10];
-                        },
-                        textStyle : {
-                            color: 'yellow',
-                            decoration: 'none',
-                            fontFamily: 'Verdana, sans-serif',
-                            fontSize: 15,
-                            fontStyle: 'italic',
-                            fontWeight: 'bold'
-                        },
-                        formatter: function (params,ticket,callback) {
-                            if (params.componentType === 'legend') {
-                                return params.name;
-                            }
-                            var res = 'Function formatter : <br/>' + params[0].name;
-                            for (var i = 0, l = params.length; i < l; i++) {
-                                res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
-                            }
-                            setTimeout(function (){
-                                // 仅为了模拟异步回调
-                                callback(ticket, res);
-                            }, 1000);
-                            return 'loading';
-                        }
+                        // hideDelay: 200,
+                        // transitionDuration:0.2,
+                        // backgroundColor : 'rgba(255,0,255,0.7)',
+                        // borderColor : '#f50',
+                        // borderRadius : 8,
+                        // borderWidth: 2,
+                        // padding: 10,    // [5, 10, 15, 20]
+                        // axisPointer: {
+                        //     type: 'shadow'
+                        // },
+                        // position : function(p) {
+                        //     // 位置回调
+                        //     // console.log && console.log(p);
+                        //     return [p[0] + 10, p[1] - 10];
+                        // },
+                        // textStyle : {
+                        //     color: 'yellow',
+                        //     decoration: 'none',
+                        //     fontFamily: 'Verdana, sans-serif',
+                        //     fontSize: 15,
+                        //     fontStyle: 'italic',
+                        //     fontWeight: 'bold'
+                        // },
+                        // formatter: function (params,ticket,callback) {
+                        //     if (params.componentType === 'legend') {
+                        //         return params.name;
+                        //     }
+                        //     var res = 'Function formatter : <br/>' + params[0].name;
+                        //     for (var i = 0, l = params.length; i < l; i++) {
+                        //         res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
+                        //     }
+                        //     setTimeout(function (){
+                        //         // 仅为了模拟异步回调
+                        //         callback(ticket, res);
+                        //     }, 1000);
+                        //     return 'loading';
+                        // }
                         //formatter: "Template formatter: <br/>{b}<br/>{a}:{c}<br/>{a1}:{c1}"
                     },
                     toolbox: {

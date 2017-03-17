@@ -60,7 +60,7 @@ define(function(require) {
             var coordSysModel = coordSys.model;
             var baseTooltipModel = coordSysModel.getModel('tooltip', globalTooltipModel);
 
-            each(coordSys.getAxes(), curry(saveTooltipAxisInfo, false, null));
+            each(coordSys.getAxes && coordSys.getAxes(), curry(saveTooltipAxisInfo, false, null));
 
             // If axis tooltip used, choose tooltip axis for each coordSys.
             // Notice this case: coordSys is `grid` but not `cartesian2D` here.

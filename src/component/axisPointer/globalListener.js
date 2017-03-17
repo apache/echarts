@@ -78,6 +78,7 @@ define(function(require) {
     function dispatchTooltipFinally(pendings, api) {
         var showLen = pendings.showTip.length;
         var hideLen = pendings.hideTip.length;
+
         var actuallyPayload;
         if (showLen) {
             actuallyPayload = pendings.showTip[showLen - 1];

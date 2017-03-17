@@ -365,7 +365,7 @@ define(function (require) {
             });
         },
 
-        _showComponentItemTooltip: function (e, el) {
+        _showComponentItemTooltip: function (e, el, dispatchAction) {
             var tooltipOpt = el.tooltip;
             if (typeof tooltipOpt === 'string') {
                 var content = tooltipOpt;
@@ -387,6 +387,12 @@ define(function (require) {
                 subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
                 asyncTicket, e.offsetX, e.offsetY, e.position, el
             );
+
+            // If not dispatch showTip, tip may be hide triggered by axis.
+            dispatchAction({
+                type: 'showTip',
+                from: this.uid
+            });
         },
 
         _showTooltipContent: function (

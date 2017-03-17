@@ -183,6 +183,7 @@ define(function(require) {
         each(axesInfo, function (axisInfo, key) {
             var option = axisInfo.axisPointerModel.option;
             var valItem = showValueMap[key];
+
             if (valItem) {
                 option.status = 'show';
                 option.value = valItem.value;
@@ -191,10 +192,14 @@ define(function(require) {
             }
             // When always show (e.g., handle used), remain
             // original value and status.
-            else if (!axisInfo.alwaysShow) {
+            else {
                 // If hide, value still need to be set, consider
                 // click legend to toggle axis blank.
                 option.status = 'hide';
+            }
+
+            if (axisInfo.alwaysShow) {
+                option.status = axisInfo.axis.scale.isBlank() ? 'hide' : 'show';
             }
         });
     }
