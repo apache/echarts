@@ -63,7 +63,7 @@ define(function (require) {
             this._optionManager = optionManager;
         },
 
-        setOption: function (option, optionPreprocessorFuncs) {
+        setOption: function (option, optionPreprocessorFuncs, onlyGraphic) {
             zrUtil.assert(
                 !(OPTION_INNER_KEY in option),
                 'please use chart.getOption()'
@@ -71,7 +71,7 @@ define(function (require) {
 
             this._optionManager.setOption(option, optionPreprocessorFuncs);
 
-            this.resetOption();
+            this.resetOption(null, onlyGraphic);
         },
 
         /**
@@ -81,7 +81,7 @@ define(function (require) {
          *                      'media': only reset media query option
          * @return {boolean} Whether option changed.
          */
-        resetOption: function (type) {
+        resetOption: function (type, onlyGraphic) {
             var optionChanged = false;
             var optionManager = this._optionManager;
 
@@ -92,7 +92,11 @@ define(function (require) {
                     initBase.call(this, baseOption);
                 }
                 else {
-                    this.restoreData();
+                    // If only graphic, other series and component will not
+                    // go through update process, data should not be restored.
+                    // Otherwise grphic els mounted on data will be eliminated
+                    // and downplay will not work.
+                    !onlyGraphic && this.restoreData();
                     this.mergeOption(baseOption);
                 }
                 optionChanged = true;

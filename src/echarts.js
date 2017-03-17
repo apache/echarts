@@ -283,7 +283,7 @@ define(function (require) {
             mainType !== 'graphic' && (this.__lastOnlyGraphic = false);
         }, this);
 
-        this._model.setOption(option, optionPreprocessorFuncs);
+        this._model.setOption(option, optionPreprocessorFuncs, this.__lastOnlyGraphic);
 
         if (lazyUpdate) {
             this[OPTION_UPDATED] = {silent: silent};
