@@ -168,12 +168,6 @@ define(function(require) {
             ];
             var valueWindow = [];
 
-            // In percent range is used and axis min/max/scale is set,
-            // window should be based on min/max/0, but should not be
-            // based on the extent of filtered data.
-            dataExtent = dataExtent.slice();
-            fixExtentByAxis(dataExtent, axisModel);
-
             each(['startValue', 'endValue'], function (prop) {
                 valueWindow.push(opt[prop] != null ? scale.parse(opt[prop]) : null);
             });
@@ -239,7 +233,7 @@ define(function(require) {
 
             // Culculate data window and data extent, and record them.
             this._dataExtent = calculateDataExtent(
-                this._dimName, this.getTargetSeriesModels()
+                this, this._dimName, this.getTargetSeriesModels()
             );
 
             var dataWindow = this.calculateDataWindow(dataZoomModel.option);
@@ -316,7 +310,7 @@ define(function(require) {
         }
     };
 
-    function calculateDataExtent(axisDim, seriesModels) {
+    function calculateDataExtent(axisProxy, axisDim, seriesModels) {
         var dataExtent = [Infinity, -Infinity];
 
         each(seriesModels, function (seriesModel) {
@@ -328,29 +322,59 @@ define(function(require) {
                     seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
                 });
             }
-        }, this);
+        });
 
         if (dataExtent[1] < dataExtent[0]) {
             dataExtent = [NaN, NaN];
         }
 
+        // It is important to get "consistent" extent when more then one axes is
+        // controlled by a `dataZoom`, otherwise those axes will not be synchronized
+        // when zooming. But it is difficult to know what is "consistent", considering
+        // axes have different type or even different meanings (For example, two
+        // time axes are used to compare data of the same date in different years).
+        // So basically dataZoom just obtains extent by series.data (in category axis
+        // extent can be obtained from axis.data).
+        // Nevertheless, user can set min/max/scale on axes to make extent of axes
+        // consistent.
+        fixExtentByAxis(axisProxy, dataExtent);
+
         return dataExtent;
     }
 
-    function fixExtentByAxis(dataExtent, axisModel) {
+    function fixExtentByAxis(axisProxy, dataExtent) {
+        var axisModel = axisProxy.getAxisModel();
         var min = axisModel.getMin(true);
+
+        // For category axis, if min/max/scale are not set, extent is determined
+        // by axis.data by default.
+        var isCategoryAxis = axisModel.get('type') === 'category';
+        var axisDataLen = isCategoryAxis && (axisModel.get('data') || []).length;
+
         if (min != null && min !== 'dataMin') {
             dataExtent[0] = min;
         }
+        else if (isCategoryAxis) {
+            dataExtent[0] = 0;
+        }
+
         var max = axisModel.getMax(true);
         if (max != null && max !== 'dataMax') {
             dataExtent[1] = max;
+        }
+        else if (isCategoryAxis) {
+            dataExtent[1] = Math.max(0, axisDataLen - 1);
         }
 
         if (!axisModel.get('scale', true)) {
             dataExtent[0] > 0 && (dataExtent[0] = 0);
             dataExtent[1] < 0 && (dataExtent[1] = 0);
         }
+
+        // For value axis, if min/max/scale are not set, we just use the extent obtained
+        // by series data, which may be a little different from the extent calculated by
+        // `axisHelper.getScaleExtent`. But the different just affects the experience a
+        // little when zooming. So it will not be fixed until some users require it strongly.
 
         return dataExtent;
     }
