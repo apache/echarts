@@ -50,10 +50,11 @@ define(function(require) {
         _lastStatus: null,
 
         /**
-         * 10px, arbitrary value.
+         * In px, arbitrary value. Do not set too small,
+         * no animation is ok for most cases.
          * @protected
          */
-        animationThreshold: 10,
+        animationThreshold: 15,
 
         /**
          * @implement
@@ -97,17 +98,18 @@ define(function(require) {
             }
             this._lastGraphicKey = graphicKey;
 
+            var moveAnimation = this.determineAnimation(axisModel, axisPointerModel);
+
             if (!group) {
                 group = this._group = new graphic.Group();
                 this.createEl(group, elOption, axisModel, axisPointerModel);
                 api.getZr().add(group);
             }
             else {
-                var moveAnimation = this.determineAnimation(axisModel, axisPointerModel);
                 this.updateEl(group, moveAnimation, elOption, axisModel, axisPointerModel);
             }
 
-            this._renderHandle(value, axisModel, axisPointerModel, api);
+            this._renderHandle(value, moveAnimation, axisModel, axisPointerModel, api);
         },
 
         /**
@@ -151,7 +153,7 @@ define(function(require) {
                 return false;
             }
 
-            return animation === true || animation === 1;
+            return animation === true;
         },
 
         /**
@@ -241,7 +243,7 @@ define(function(require) {
         /**
          * @private
          */
-        _renderHandle: function (value, axisModel, axisPointerModel, api) {
+        _renderHandle: function (value, moveAnimation, axisModel, axisPointerModel, api) {
             if (this._dragging) {
                 return;
             }
@@ -268,8 +270,12 @@ define(function(require) {
                     rectHover: true,
                     cursor: 'move',
                     draggable: true,
-                    drift: zrUtil.bind(this._onHandleDragMove, this, axisModel, axisPointerModel, api),
-                    ondragend: zrUtil.bind(this._onHandleDragEnd, this, axisModel, axisPointerModel)
+                    drift: zrUtil.bind(
+                        this._onHandleDragMove, this, axisModel, axisPointerModel, api
+                    ),
+                    ondragend: zrUtil.bind(
+                        this._onHandleDragEnd, this, axisModel, axisPointerModel, moveAnimation
+                    )
                 }, {
                     x: -1, y: -1, width: 2, height: 2
                 }, 'center');
@@ -293,21 +299,20 @@ define(function(require) {
             // handle margin is from symbol center to axis,
             // which is stable when circular move.
 
-            this._moveHandleToValue(handle, value, axisModel, axisPointerModel, isInit);
+            this._moveHandleToValue(handle, value, moveAnimation, axisModel, axisPointerModel, isInit);
         },
 
         /**
          * @private
          */
-        _moveHandleToValue: function (handle, value, axisModel, axisPointerModel, isInit) {
+        _moveHandleToValue: function (handle, value, moveAnimation, axisModel, axisPointerModel, isInit) {
             var trans = this.getHandleTransform(value, axisModel, axisPointerModel);
-            var moveAnimation = !isInit && axisPointerModel.get('animation');
             var valueProps = {
                 position: trans.position.slice(),
                 rotation: trans.rotation || 0
             };
 
-            updateProps(axisPointerModel, moveAnimation, handle, valueProps);
+            updateProps(axisPointerModel, !isInit && moveAnimation, handle, valueProps);
         },
 
         /**
@@ -354,7 +359,7 @@ define(function(require) {
         /**
          * @private
          */
-        _onHandleDragEnd: function (axisModel, axisPointerModel) {
+        _onHandleDragEnd: function (axisModel, axisPointerModel, moveAnimation) {
             this._dragging = false;
             var handle = this._handle;
             if (!handle) {
@@ -365,7 +370,7 @@ define(function(require) {
             // Consider snap or categroy axis, handle may be not consistent with
             // axisPointer. So move handle to align the exact value position when
             // drag ended.
-            this._moveHandleToValue(handle, value, axisModel, axisPointerModel);
+            this._moveHandleToValue(handle, value, moveAnimation, axisModel, axisPointerModel);
         },
 
         /**

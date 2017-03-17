@@ -26,7 +26,7 @@
 
         <h1>handle | time axis | x snap | init value: '2017-04-12' | tooltip not show | inside data zoom | animation auto</h1>
         <div class="chart" id="handle-time-init"></div>
-        <h1>handle | category | check resize | should trigger hightlight</h1>
+        <h1>handle | category | check resize | should trigger hightlight | should link</h1>
         <div class="chart" id="handle-category"></div>
         <h1>handle | value axis | x snap, y not-snap | has init handle value | tooltip.alwaysShowContent</h1>
         <div class="chart" id="handle-value-init"></div>
@@ -105,6 +105,9 @@
                 var option = {
                     tooltip: {
                         triggerOn: 'none'
+                    },
+                    axisPointer: {
+                        link: {xAxisIndex: 'all'}
                     }
                 };
                 var baseTop = 90;
@@ -121,7 +124,7 @@
                 });
                 baseTop += height + gap;
                 makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
+                    grid: {top: baseTop, height: height, left: '30%', width: '50%'},
                     xAxis: {
                         axisPointer: {
                             triggerOn: 'handle',

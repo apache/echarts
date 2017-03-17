@@ -118,14 +118,12 @@ define(function (require) {
      * @return {string}
      */
     formatUtil.formatTplSimple = function (tpl, param, encode) {
-
         zrUtil.each(param, function (value, key) {
             tpl = tpl.replace(
                 '{' + key + '}',
-                encode ? encodeHTML(vaule) : value
+                encode ? encodeHTML(value) : value
             );
         });
-
         return tpl;
     };
 

@@ -31,8 +31,7 @@ define(function(require) {
              * value: Object: key makeKey(axis.model), value: axisInfo
              */
             coordSysAxesInfo: {},
-            coordSysMap: {},
-            linkGroups: []
+            coordSysMap: {}
         };
 
         collectAxesInfo(result, ecModel, api);
@@ -47,7 +46,8 @@ define(function(require) {
         var globalTooltipModel = ecModel.getComponent('tooltip');
         var globalAxisPointerModel = ecModel.getComponent('axisPointer');
         // links can only be set on global.
-        var linksOption = globalAxisPointerModel.get('links', true) || [];
+        var linksOption = globalAxisPointerModel.get('link', true) || [];
+        var linkGroups = [];
 
         // Collect axes info.
         each(api.getCoordinateSystems(), function (coordSys) {
@@ -115,6 +115,7 @@ define(function(require) {
                 var involveSeries = triggerTooltip || snap;
                 // If result.axesInfo[key] exist, override it (tooltip has higher priority).
                 var axisInfo = result.axesInfo[key] = {
+                    key: key,
                     axis: axis,
                     coordSys: coordSys,
                     axisPointerModel: axisPointerModel,
@@ -122,7 +123,6 @@ define(function(require) {
                     involveSeries: involveSeries,
                     snap: snap,
                     alwaysShow: isHandleTrigger(axisPointerModel),
-                    actions: [],
                     seriesModels: []
                 };
                 axesInfoInCoordSys[key] = axisInfo;
@@ -130,11 +130,15 @@ define(function(require) {
 
                 var groupIndex = getLinkGroupIndex(linksOption, axis);
                 if (groupIndex != null) {
-                    (result.linkGroups[groupIndex] || (result.linkGroups[groupIndex] = {}))[key] = axisInfo;
+                    var linkGroup = linkGroups[groupIndex] || (linkGroups[groupIndex] = {axesInfo: {}});
+                    linkGroup.axesInfo[key] = axisInfo;
+                    linkGroup.mapper = linksOption[groupIndex].mapper;
+                    axisInfo.linkGroup = linkGroup;
                 }
             }
         });
     }
+
 
     function makeAxisPointerModel(
         axis, baseTooltipModel, globalAxisPointerModel, ecModel, fromTooltip, triggerTooltip
@@ -142,9 +146,15 @@ define(function(require) {
         var tooltipAxisPointerModel = baseTooltipModel.getModel('axisPointer');
         var volatileOption = {};
 
-        each(['type', 'precision', 'snap', 'lineStyle', 'shadowStyle', 'label'], function (field) {
-            volatileOption[field] = zrUtil.clone(tooltipAxisPointerModel.get(field));
-        });
+        each(
+            [
+                'type', 'precision', 'snap', 'lineStyle', 'shadowStyle', 'label',
+                'animation', 'animationDurationUpdate', 'animationEasingUpdate'
+            ],
+            function (field) {
+                volatileOption[field] = zrUtil.clone(tooltipAxisPointerModel.get(field));
+            }
+        );
 
         // category axis do not auto snap, otherwise some tick that do not
         // has value can not be hovered. value/time/log axis default snap if

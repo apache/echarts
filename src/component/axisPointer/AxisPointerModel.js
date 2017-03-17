@@ -24,9 +24,15 @@ define(function(require) {
             value: null,
             status: null, // Init value depends on whether handle is used.
 
-            links: [],
+            // [{mapper: function () {}, xAxisId: ..., yAxisName: ..., angleAxisIndex: ...}, ...]
+            // mapper: can be ignored.
+            //      input: {axisInfo, value}
+            //      output: {axisInfo, value}
+            link: [],
 
-            animation: 'auto', // Animate if snap and not to tight.
+            // Do not set 'auto' here, otherwise global animation: false
+            // will not effect at this axispointer.
+            animation: null,
             animationDurationUpdate: 200,
 
             lineStyle: {

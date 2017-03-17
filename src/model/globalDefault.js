@@ -35,7 +35,7 @@ define(function () {
         // Default is source-over
         blendMode: null,
 
-        animation: true,
+        animation: 'auto',
         animationDuration: 1000,
         animationDurationUpdate: 300,
         animationEasing: 'exponentialOut',

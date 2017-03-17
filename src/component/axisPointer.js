@@ -10,9 +10,18 @@ define(function (require) {
 
     echarts.registerPreprocessor(function (option) {
         // Always has a global axisPointerModel for default setting.
-        option
-            && (!option.axisPointer || option.axisPointer.length === 0)
-            && (option.axisPointer = {});
+        if (option) {
+            (!option.axisPointer || option.axisPointer.length === 0)
+                && (option.axisPointer = {});
+
+            var link = option.axisPointer.link;
+            // Normalize to array to avoid object mergin. But if link
+            // is not set, remain null/undefined, otherwise it will
+            // override existent link setting.
+            if (link && !zrUtil.isArray(link)) {
+                option.axisPointer.link = [link];
+            }
+        }
     });
 
     // This process should proformed after coordinate systems created
