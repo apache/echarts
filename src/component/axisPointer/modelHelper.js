@@ -51,6 +51,11 @@ define(function(require) {
 
         // Collect axes info.
         each(api.getCoordinateSystems(), function (coordSys) {
+            // Some coordinate system do not support axes, like geo.
+            if (!coordSys.axisPointerEnabled) {
+                return;
+            }
+
             var coordSysKey = makeKey(coordSys.model);
             var axesInfoInCoordSys = result.coordSysAxesInfo[coordSysKey] = {};
             result.coordSysMap[coordSysKey] = coordSys;
@@ -60,7 +65,7 @@ define(function(require) {
             var coordSysModel = coordSys.model;
             var baseTooltipModel = coordSysModel.getModel('tooltip', globalTooltipModel);
 
-            each(coordSys.getAxes && coordSys.getAxes(), curry(saveTooltipAxisInfo, false, null));
+            each(coordSys.getAxes(), curry(saveTooltipAxisInfo, false, null));
 
             // If axis tooltip used, choose tooltip axis for each coordSys.
             // Notice this case: coordSys is `grid` but not `cartesian2D` here.
@@ -155,6 +160,9 @@ define(function(require) {
                 volatileOption[field] = zrUtil.clone(tooltipAxisPointerModel.get(field));
             }
         );
+
+        // Consider tooltip.triggerOn: 'click'.
+        volatileOption.triggerOn = baseTooltipModel.get('triggerOn');
 
         // category axis do not auto snap, otherwise some tick that do not
         // has value can not be hovered. value/time/log axis default snap if

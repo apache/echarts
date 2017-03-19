@@ -55,7 +55,7 @@ define(function (require) {
      * @param {string} [opt.axisLabelShow] default get from axisModel.
      * @param {string} [opt.axisName] default get from axisModel.
      * @param {number} [opt.axisNameAvailableWidth]
-     * @param {number} [opt.labelRotation] by degree, default get from axisModel.
+     * @param {number} [opt.labelRotate] by degree, default get from axisModel.
      * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
@@ -254,9 +254,9 @@ define(function (require) {
             var labels = axisModel.getFormattedLabels();
 
             // Special label rotate.
-            var labelRotation = retrieve(opt.labelRotation, labelModel.get('rotate')) || 0;
-            // To radian.
-            labelRotation = labelRotation * PI / 180;
+            var labelRotation = (
+                retrieve(opt.labelRotate, labelModel.get('rotate')) || 0
+            ) * PI / 180;
 
             var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
             var categoryData = axisModel.get('data');
@@ -497,6 +497,11 @@ define(function (require) {
      * @param {number} axisRotation in radian
      * @param {number} textRotation in radian
      * @param {number} direction
+     * @return {Object} {
+     *  rotation, // according to axis
+     *  textAlign,
+     *  textVerticalAlign
+     * }
      */
     var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, textRotation, direction) {
         var rotationDiff = remRadian(textRotation - axisRotation);

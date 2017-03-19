@@ -77,8 +77,8 @@ function makeValueData() {
     data3.push(['-', '-']);
 
     for (var i = 0; i < 5; i++) {
-        data1.push([(Math.random() * 1000).toFixed(2), (-Math.random() - 0.2).toFixed(3)]);
-        data2.push([(Math.random() * 1000).toFixed(2), (Math.random() + 0.3).toFixed(3)]);
+        data1.push([(Math.random() * 1000).toFixed(2), (-Math.random() - 0.4).toFixed(3)]);
+        data2.push([(Math.random() * 1000).toFixed(2), (Math.random() + 1.8).toFixed(3)]);
         data3.push([(Math.random() * 1000).toFixed(2), (Math.random() + 0.2).toFixed(3)]);
     }
 
@@ -206,8 +206,8 @@ function makeCategoryPolar(option, patterns, inV) {
     );
 }
 
-function makeCategoryGrid(option, patterns, inV, dataCount, seriesType) {
-    var data = makeCategoryData(null, null, dataCount);
+function makeCategoryGrid(option, patterns, inV, dataCount, seriesType, catePrefix) {
+    var data = makeCategoryData(null, catePrefix, dataCount);
     var key = Math.random().toFixed(5);
     seriesType = seriesType || 'line';
 

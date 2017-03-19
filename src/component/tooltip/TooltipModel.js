@@ -21,7 +21,7 @@ define(function (require) {
             trigger: 'item',
 
             // 'click' | 'mousemove' | 'none'
-            triggerOn: 'mousemove',
+            triggerOn: ['mousemove', 'click'],
 
             alwaysShowContent: false,
 

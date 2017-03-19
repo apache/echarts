@@ -14,13 +14,13 @@ define(function (require) {
 
     var selfBuilderAttr = 'splitLine';
 
-    var AxisView = require('./AxisView').extend({
+    var SingleAxisView = require('./AxisView').extend({
 
         type: 'singleAxis',
 
         axisPointerClass: SingleAxisPointer,
 
-        render: function (axisModel, ecModel) {
+        render: function (axisModel, ecModel, api, payload) {
 
             var group = this.group;
 
@@ -37,6 +37,8 @@ define(function (require) {
             if (axisModel.get(selfBuilderAttr + '.show')) {
                 this['_' + selfBuilderAttr](axisModel, layout.labelInterval);
             }
+
+            SingleAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
         },
 
         _splitLine: function(axisModel, labelInterval) {
@@ -112,6 +114,6 @@ define(function (require) {
         }
     });
 
-    return AxisView;
+    return SingleAxisView;
 
 });

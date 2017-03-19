@@ -49,9 +49,11 @@ define(function(require) {
 
     Polar.prototype = {
 
-        constructor: Polar,
-
         type: 'polar',
+
+        axisPointerEnabled: true,
+
+        constructor: Polar,
 
         /**
          * @param {Array.<string>}

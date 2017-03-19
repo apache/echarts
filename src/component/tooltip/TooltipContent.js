@@ -185,7 +185,7 @@ define(function (require) {
             // this.hide();
         },
 
-        show: function (tooltipModel) {
+        show: function (tooltipModel, delay) {
             clearTimeout(this._hideTimeout);
             var el = this.el;
 
@@ -200,9 +200,7 @@ define(function (require) {
         },
 
         setContent: function (content) {
-            var el = this.el;
-            el.innerHTML = content;
-            el.style.display = content ? 'block' : 'none';
+            this.el.innerHTML = content;
         },
 
         setEnterable: function (enterable) {

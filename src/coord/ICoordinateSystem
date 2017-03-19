@@ -13,18 +13,23 @@
  *
  *  + model {module:echarts/model/Model}: mandatory
  *
- *  + create:
+ *  + create: mandatory
  *     @param {module:echarts/model/Global} ecModel
  *     @param {module:echarts/ExtensionAPI} api
  *     @return {Object} coordinate system instance
  *
- *  + update:
+ *  + update: mandatory
  *     @param {module:echarts/model/Global} ecModel
  *     @param {module:echarts/ExtensionAPI} api
  *
- *  + getAxis {Function}
+ *  + getAxis {Function}: mandatory
  *      @param {string} dim
  *      @return {module:echarts/coord/Axis}
+ *
+ *  + getAxes: {Function}: optional
+ *      @return {Array.<module:echarts/coord/Axis>}
+ *
+ *  + axisPointerEnabled {boolean}
  *
  *  + dataToPoint {Function}: mandatory
  *      @param {Array.<*>} data
@@ -55,8 +60,5 @@
  *        @param {Array|number} value
  *        @return {Array|number} convert result.
  *
- *  + prepareAxisPointers {Function}: optional
- *      If implemented, this coordinate system supports axis tooltip and axis pointer.
- *      @param {Array.<Object>} seriesGroup
- *      @return {Array}
+ *
  */

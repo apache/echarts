@@ -1,8 +1,18 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     var helper = {};
 
-    helper.layout = function (axisModel) {
+    /**
+     * @param {Object} opt {labelInside}
+     * @return {Object} {
+     *  position, rotation, labelDirection, labelOffset,
+     *  tickDirection, labelRotate, labelInterval, z2
+     * }
+     */
+    helper.layout = function (axisModel, opt) {
+        opt = opt || {};
         var single = axisModel.coordinateSystem;
         var axis = axisModel.axis;
         var layout = {};
@@ -36,15 +46,16 @@ define(function (require) {
             = layout.nameDirection
             = directionMap[axisPosition];
 
-        if (axisModel.getModel('axisTick').get('inside')) {
+        if (axisModel.get('axisTick.inside')) {
             layout.tickDirection = -layout.tickDirection;
         }
 
-        if (axisModel.getModel('axisLabel').get('inside')) {
+        if (zrUtil.retrieve(opt.labelInside, axisModel.get('axisLabel.inside'))) {
             layout.labelDirection = -layout.labelDirection;
         }
 
-        var labelRotation = axisModel.getModel('axisLabel').get('rotate');
+        var labelRotation = opt.rotate;
+        labelRotation == null && (labelRotation = axisModel.get('axisLabel.rotate'));
         layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
 
         layout.labelInterval = axis.getLabelInterval();

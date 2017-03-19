@@ -12,7 +12,7 @@ define(function(require) {
             // 'auto' means that show when triggered by tooltip or handle.
             show: 'auto',
             // 'auto' | 'click' | 'mousemove' | 'handle' | 'none'
-            triggerOn: 'mousemove',
+            triggerOn: ['mousemove', 'click'],
 
             zlevel: 0,
             z: 50,
@@ -50,6 +50,7 @@ define(function(require) {
                 formatter: null, // string | Function
                 precision: 'auto', // Or a number like 0, 1, 2 ...
                 margin: 3,
+                rotate: 0,    // in degree.
                 textStyle: {
                     color: '#fff',
                     fontSize: 12

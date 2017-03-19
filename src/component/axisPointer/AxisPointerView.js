@@ -7,17 +7,11 @@ define(function (require) {
         type: 'axisPointer',
 
         render: function (globalAxisPointerModel, ecModel, api) {
-            var tooltipModel = ecModel.getComponent('tooltip');
-            var showDelay = (
-                tooltipModel && tooltipModel.get('showDelay')
-            ) || globalAxisPointerModel.get('showDelay') || 0;
-
             // Register global listener in AxisPointerView to enable
             // AxisPointerView to be independent to Tooltip.
             globalListener.register(
                 'axisPointer',
                 api,
-                {delay: showDelay},
                 function (currTrigger, e, dispatchAction) {
                     dispatchAction({
                         type: 'updateAxisPointer',

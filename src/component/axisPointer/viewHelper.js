@@ -2,8 +2,11 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var graphic = require('../../util/graphic');
     var textContain = require('zrender/contain/text');
     var formatUtil = require('../../util/format');
+    var matrix = require('zrender/core/matrix');
+    var AxisBuilder = require('../axis/AxisBuilder');
 
     var helper = {};
 
@@ -29,11 +32,11 @@ define(function(require) {
      * @param {Function} labelPos {align, verticalAlign, position}
      */
     helper.buildLabelElOption = function (
-        elOption, value, labelPos, axisModel, axisPointerModel
+        elOption, axisModel, axisPointerModel, api, labelPos
     ) {
         var value = axisPointerModel.get('value');
+        var text = helper.getValueLabel(value, axisModel, axisPointerModel);
         var labelModel = axisPointerModel.getModel('label');
-        var text = getLabelText(value, axisModel, axisPointerModel, labelModel);
         var textStyleModel = labelModel.getModel('textStyle');
         var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
@@ -46,12 +49,16 @@ define(function(require) {
         var width = textRect.width + paddings[1] + paddings[3];
         var height = textRect.height + paddings[0] + paddings[2];
 
+        // Adjust by align.
         var align = labelPos.align;
         align === 'right' && (position[0] -= width);
         align === 'center' && (position[0] -= width / 2);
         var verticalAlign = labelPos.verticalAlign;
         verticalAlign === 'bottom' && (position[1] -= height);
         verticalAlign === 'middle' && (position[1] -= height / 2);
+
+        // Not overflow ec container
+        confineInContainer(position, width, height, api);
 
         var bgColor = labelModel.get('backgroundColor');
         if (!bgColor || bgColor === 'auto') {
@@ -77,10 +84,22 @@ define(function(require) {
         };
     };
 
-    function getLabelText(value, axisModel, axisPointerModel, labelModel) {
-        // Use 'pad' to debounce when when moving label.
-        var text = axisModel.axis.scale.getLabel(value, {precision: labelModel.get('precision'), pad: true});
-        var formatter = labelModel.get('formatter');
+    // Do not overflow ec container
+    function confineInContainer(position, width, height, api) {
+        var viewWidth = api.getWidth();
+        var viewHeight = api.getHeight();
+        position[0] = Math.min(position[0] + width, viewWidth) - width;
+        position[1] = Math.min(position[1] + height, viewHeight) - height;
+        position[0] = Math.max(position[0], 0);
+        position[1] = Math.max(position[1], 0);
+    }
+
+    helper.getValueLabel = function (value, axisModel, axisPointerModel) {
+        var text = axisModel.axis.scale.getLabel(
+            // Use 'pad' to try to fix width, which helps to debounce when when moving label.
+            value, {precision: axisPointerModel.get('label.precision'), pad: true}
+        );
+        var formatter = axisPointerModel.get('label.formatter');
 
         if (formatter) {
             var params = {value: value, seriesData: []};
@@ -102,7 +121,40 @@ define(function(require) {
         }
 
         return text;
-    }
+    };
+
+    /**
+     * @param {module:echarts/coord/Axis} axis
+     * @param {number} value
+     * @param {Object} layoutInfo {
+     *  rotation, position, labelOffset, labelDirection, labelMargin
+     * }
+     */
+    helper.getTransformedPosition = function (axis, value, layoutInfo) {
+        var transform = matrix.create();
+        matrix.rotate(transform, transform, layoutInfo.rotation);
+        matrix.translate(transform, transform, layoutInfo.position);
+
+        return graphic.applyTransform([
+            axis.dataToCoord(value),
+            (layoutInfo.labelOffset || 0)
+                + (layoutInfo.labelDirection || 1) * (layoutInfo.labelMargin || 0)
+        ], transform);
+    };
+
+    helper.buildCartesianSingleLabelElOption = function (
+        value, elOption, layoutInfo, axisModel, axisPointerModel, api
+    ) {
+        var textLayout = AxisBuilder.innerTextLayout(
+            layoutInfo.rotation, 0, layoutInfo.labelDirection
+        );
+        layoutInfo.labelMargin = axisPointerModel.get('label.margin');
+        helper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, {
+            position: helper.getTransformedPosition(axisModel.axis, value, layoutInfo),
+            align: textLayout.textAlign,
+            verticalAlign: textLayout.textVerticalAlign
+        });
+    };
 
     /**
      * @param {Array.<number>} p1

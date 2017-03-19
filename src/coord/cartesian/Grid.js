@@ -83,6 +83,8 @@ define(function(require, factory) {
 
     gridProto.type = 'grid';
 
+    gridProto.axisPointerEnabled = true;
+
     gridProto.getRect = function () {
         return this._rect;
     };

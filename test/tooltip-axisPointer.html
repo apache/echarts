@@ -30,6 +30,8 @@
         <div class="chart" id="category-animation"></div>
         <h1>time axis cross | x snap | label show | tooltip show</h1>
         <div class="chart" id="time-cross"></div>
+        <h1>axis label too long | x axis label rotate | label should not overflow ec container</h1>
+        <div class="chart" id="label-rotate"></div>
         <h1>two value axes | snap | grid.tooltip setting | snap has animation </h1>
         <div class="chart" id="two-value-axes"></div>
         <h1>label style and formatter</h1>
@@ -44,6 +46,8 @@
         <div class="chart" id="value-axis-as-base"></div>
         <h1>polar category</h1>
         <div class="chart" id="polar-category"></div>
+        <h1>multiple points with the same axis value | when not snap tooltip should be correct</h1>
+        <div class="chart" id="same-value"></div>
         <h1>no tooltip</h1>
         <div class="chart" id="no-tooltip"></div>
 
@@ -129,7 +133,8 @@
                 var height = 250;
                 var gap = 30;
                 makeCategoryGrid(option, {
-                    grid: {left: 100, top: baseTop, height: height}
+                    grid: {left: 100, top: baseTop, height: height},
+                    xAxis: {boundaryGap: true}
                 }, false, 100, 'bar');
                 baseTop += height + gap;
 
@@ -173,6 +178,53 @@
             })
 
         </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'cross'}
+                    }
+                };
+                var baseTop = 90;
+                makeCategoryGrid(option, {
+                    grid: {
+                        containLabel: true, left: 5, right: 10, top: baseTop, height: 140
+                    },
+                    xAxis: {
+                        axisLabel: {
+                            rotate: 30,
+                            formatter: function (value) {
+                                return echarts.format.truncateText(value, 50);
+                            }
+                        }
+                    }
+                }, null, null, null, 'toolonglonglonglonglonglonglong');
+
+                createChart('label-rotate', echarts, option, baseTop + 200);
+            })
+
+        </script>
+
+
 
 
 
@@ -626,6 +678,108 @@
             })
 
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    xAxis: [{
+                        nameLocation: 'middle',
+                        nameGap: 30,
+                        name: 'snap: show display both value'
+                    }, {
+                        gridIndex: 1,
+                        nameLocation: 'middle',
+                        nameGap: 30,
+                        name: 'not snap: put axis on the middle of the two points, should display only one value.'
+                    }, {
+                        gridIndex: 2,
+                        nameLocation: 'middle',
+                        nameGap: 30,
+                        name: 'step line not snap: should tooltip correct.',
+                        axisPointer: {
+                            snap: false
+                        }
+                    }],
+                    yAxis: [{}, {gridIndex: 1}, {gridIndex: 2}],
+                    grid: [{
+                        top: 10,
+                        height: 100
+                    }, {
+                        top: 200,
+                        height: 100
+                    }, {
+                        top: 400,
+                        height: 200
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [[10, 10], [10, 20], [20, 20]]
+                    }, {
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: [[10, 10], [30, 10]]
+                    }, {
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        name:'Step Start',
+                        type:'line',
+                        step: 'start',
+                        data: echarts.util.map([120, 132, 101, 134, 90, 230, 210], function (value, index) {
+                            return [index * 100, value];
+                        })
+                    }, {
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        name:'Step Middle',
+                        type:'line',
+                        step: 'middle',
+                        data: echarts.util.map([220, 282, 201, 234, 290, 430, 410], function (value, index) {
+                            return [index * 100, value];
+                        })
+                    }, {
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        name:'Step End',
+                        type:'line',
+                        step: 'end',
+                        data: echarts.util.map([450, 432, 401, 454, 590, 530, 510], function (value, index) {
+                            return [index * 100, value];
+                        })
+                    }]
+                };
+
+                createChart('same-value', echarts, option, 700);
+            })
+
+        </script>
+
+
+
 
 
 

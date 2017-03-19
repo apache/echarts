@@ -11,13 +11,11 @@ define(function(require) {
     /**
      * @param {string} key
      * @param {module:echarts/ExtensionAPI} api
-     * @param {Object} opt
-     * @param {number} [opt.delay=0]
      * @param {Function} handler
      *      param: {string} currTrigger
      *      param: {Array.<number>} point
      */
-    globalListener.register = function (key, api, opt, handler) {
+    globalListener.register = function (key, api, handler) {
         if (env.node) {
             return;
         }
@@ -29,7 +27,6 @@ define(function(require) {
 
         var record = get(zr).records[key] || (get(zr).records[key] = {});
         record.handler = handler;
-        record.opt = zrUtil.extend({}, opt);
     };
 
     function initGlobalListeners(zr, api) {
@@ -40,7 +37,7 @@ define(function(require) {
         get(zr).initialized = true;
 
         useHandler('click', zrUtil.curry(doEnter, 'click'));
-        useHandler('mousemove', onMouseMove);
+        useHandler('mousemove', zrUtil.curry(doEnter, 'mousemove'));
         useHandler('mouseout', onLeave);
         useHandler('globalout', onLeave);
 
@@ -92,22 +89,7 @@ define(function(require) {
         }
     }
 
-    function onMouseMove(record, e, dispatchAction) {
-        clearTimeout(record._showTimeout);
-
-        var delay = record.opt.delay;
-        if (delay > 0) {
-            record._showTimeout = setTimeout(function () {
-                doEnter('mousemove', record, e, dispatchAction);
-            }, delay);
-        }
-        else {
-            doEnter('mousemove', record, e, dispatchAction);
-        }
-    }
-
     function onLeave(record, e, dispatchAction) {
-        clearTimeout(record._showTimeout);
         record.handler('leave', null, dispatchAction);
     }
 
@@ -126,8 +108,6 @@ define(function(require) {
 
         var record = (get(zr).records || {})[key];
         if (record) {
-            clearTimeout(record._showTimeout);
-            record._showTimeout = null;
             record.handler('leave');
             get(zr).records[key] = null;
         }

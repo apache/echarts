@@ -13,7 +13,7 @@ define(function(require) {
         /**
          * @override
          */
-        makeElOption: function (elOption, value, axisModel, axisPointerModel) {
+        makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
             var axis = axisModel.axis;
 
             if (axis.dim === 'angle') {
@@ -38,8 +38,10 @@ define(function(require) {
 
             var labelMargin = axisPointerModel.get('label.margin');
             var labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);
-            viewHelper.buildLabelElOption(elOption, value, labelPos, axisModel, axisPointerModel);
+            viewHelper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, labelPos);
         }
+
+        // Do not support handle, utill any user requires it.
 
     });
 
@@ -59,7 +61,7 @@ define(function(require) {
             matrix.translate(transform, transform, [polar.cx, polar.cy]);
             position = graphic.applyTransform([coord, -labelMargin], transform);
 
-            var labelRotation = axisModel.getModel('axisLabel').get('rotate');
+            var labelRotation = axisModel.getModel('axisLabel').get('rotate') || 0;
             var labelLayout = AxisBuilder.innerTextLayout(
                 axisAngle, labelRotation * Math.PI / 180, -1
             );

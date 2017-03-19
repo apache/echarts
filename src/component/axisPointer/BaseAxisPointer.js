@@ -89,7 +89,7 @@ define(function(require) {
 
             // Otherwise status is 'show'
             var elOption = {};
-            this.makeElOption(elOption, value, axisModel, axisPointerModel);
+            this.makeElOption(elOption, value, axisModel, axisPointerModel, api);
 
             // Enable change axis pointer type.
             var graphicKey = elOption.graphicKey;
@@ -160,7 +160,7 @@ define(function(require) {
          * add {pointer, label, graphicKey} to elOption
          * @protected
          */
-        makeElOption: function (elOption, value, axisModel, axisPointerModel) {
+        makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
             // Shoule be implemenented by sub-class.
         },
 
@@ -196,6 +196,7 @@ define(function(require) {
             var labelEl = get(group).labelEl = new graphic.Rect(
                 extend(clone(basicOpt), elOption.label)
             );
+
             group.add(labelEl);
             updateLabelShowHide(labelEl, axisPointerModel);
         },
@@ -244,7 +245,7 @@ define(function(require) {
          * @private
          */
         _renderHandle: function (value, moveAnimation, axisModel, axisPointerModel, api) {
-            if (this._dragging) {
+            if (this._dragging || !this.updateHandleTransform) {
                 return;
             }
 
@@ -374,17 +375,17 @@ define(function(require) {
         },
 
         /**
+         * Should be implemenented by sub-class if support `handle`.
          * @protected
          * @param {number} value
          * @param {module:echarts/model/Model} axisModel
          * @param {module:echarts/model/Model} axisPointerModel
          * @return {Object} {position: [x, y], rotation: 0}
          */
-        getHandleTransform: function () {
-            // Should be implemenented by sub-class.
-        },
+        getHandleTransform: null,
 
         /**
+         * * Should be implemenented by sub-class if support `handle`.
          * @protected
          * @param {Object} transform {position, rotation}
          * @param {Array.<number>} delta [dx, dy]
@@ -392,9 +393,7 @@ define(function(require) {
          * @param {module:echarts/model/Model} axisPointerModel
          * @return {Object} {position: [x, y], rotation: 0, cursorPoint: [x, y]}
          */
-        updateHandleTransform: function () {
-            // Should be implemenented by sub-class.
-        },
+        updateHandleTransform: null,
 
         /**
          * @private

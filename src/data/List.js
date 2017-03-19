@@ -547,37 +547,39 @@ define(function (require) {
      * @param {number} value
      * @param {boolean} stack If given value is after stacked
      * @param {number} [maxDistance=Infinity]
-     * @return {number}
+     * @return {Array.<number>} Considere multiple points has the same value.
      */
     listProto.indexOfNearest = function (dim, value, stack, maxDistance) {
         var storage = this._storage;
         var dimData = storage[dim];
+        var nearestIndices = [];
+
+        if (!dimData) {
+            return nearestIndices;
+        }
 
         if (maxDistance == null) {
             maxDistance = Infinity;
         }
 
-        var nearestIdx = -1;
-        if (dimData) {
-            var minDist = Number.MAX_VALUE;
-            for (var i = 0, len = this.count(); i < len; i++) {
-                var diff = value - this.get(dim, i, stack);
-                var dist = Math.abs(diff);
-                if (
-                    diff <= maxDistance
-                    && (dist < minDist
-                        // For the case of two data are same on xAxis, which has sequence data.
-                        // Show the nearest index
-                        // https://github.com/ecomfe/echarts/issues/2869
-                        || (dist === minDist && diff > 0)
-                    )
-                ) {
+        var minDist = Number.MAX_VALUE;
+        var minDiff = -1;
+        for (var i = 0, len = this.count(); i < len; i++) {
+            var diff = value - this.get(dim, i, stack);
+            var dist = Math.abs(diff);
+            if (diff <= maxDistance && dist <= minDist) {
+                // For the case of two data are same on xAxis, which has sequence data.
+                // Show the nearest index
+                // https://github.com/ecomfe/echarts/issues/2869
+                if (dist < minDist || (diff >= 0 && minDiff < 0)) {
                     minDist = dist;
-                    nearestIdx = i;
+                    minDiff = diff;
+                    nearestIndices.length = 0;
                 }
+                nearestIndices.push(i);
             }
         }
-        return nearestIdx;
+        return nearestIndices;
     };
 
     /**

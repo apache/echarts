@@ -1,8 +1,18 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     var helper = {};
 
-    helper.layout = function (gridModel, axisModel) {
+    /**
+     * @param {Object} opt {labelInside}
+     * @return {Object} {
+     *  position, rotation, labelDirection, labelOffset,
+     *  tickDirection, labelRotate, labelInterval, z2
+     * }
+     */
+    helper.layout = function (gridModel, axisModel, opt) {
+        opt = opt || {};
         var grid = gridModel.coordinateSystem;
         var axis = axisModel.axis;
         var layout = {};
@@ -45,16 +55,16 @@ define(function (require) {
         layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
         layout.labelOffset = axis.onZero ? posMap[axisDim][rawAxisPosition] - posMap[axisDim].onZero : 0;
 
-        if (axisModel.getModel('axisTick').get('inside')) {
+        if (axisModel.get('axisTick.inside')) {
             layout.tickDirection = -layout.tickDirection;
         }
-        if (axisModel.getModel('axisLabel').get('inside')) {
+        if (zrUtil.retrieve(opt.labelInside, axisModel.get('axisLabel.inside'))) {
             layout.labelDirection = -layout.labelDirection;
         }
 
         // Special label rotation
-        var labelRotation = axisModel.getModel('axisLabel').get('rotate');
-        layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
+        var labelRotate = axisModel.get('axisLabel.rotate');
+        layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
 
         // label interval when auto mode.
         layout.labelInterval = axis.getLabelInterval();

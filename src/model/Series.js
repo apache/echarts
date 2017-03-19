@@ -309,9 +309,9 @@ define(function(require) {
          * @param {Array.<string>|string} dim
          * @param {Array.<number>} value
          * @param {module:echarts/coord/single/SingleAxis} baseAxis
-         * @return {Array.<number>} data indices.
+         * @return {Object} {dataIndices, nestestValue}.
          */
-        getAxisTooltipDataIndex: null,
+        getAxisTooltipData: null,
 
         /**
          * See tooltip.

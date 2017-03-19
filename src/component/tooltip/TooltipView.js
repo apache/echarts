@@ -75,14 +75,13 @@ define(function (require) {
 
         _initGlobalListener: function () {
             var tooltipModel = this._tooltipModel;
-            var triggerOn = tooltipModel.get('triggerOn');
+            var triggerOns = modelUtil.normalizeToArray(tooltipModel.get('triggerOn'));
 
             globalListener.register(
                 'itemTooltip',
                 this._api,
-                {delay: tooltipModel.get('showDelay')},
                 bind(function (currTrigger, e, dispatchAction) {
-                    if (currTrigger === triggerOn) {
+                    if (zrUtil.indexOf(triggerOns, currTrigger) >= 0) {
                         this._tryShow(e, dispatchAction);
                     }
                     else if (currTrigger === 'leave') {
@@ -240,8 +239,7 @@ define(function (require) {
 
             var seriesDataByAxis = e.seriesDataByAxis;
             if (seriesDataByAxis && seriesDataByAxis.length) {
-                var contentNotChanged = this._updateContentNotChanged(seriesDataByAxis);
-                this._showAxisTooltip(seriesDataByAxis, e, contentNotChanged);
+                this._showAxisTooltip(seriesDataByAxis, e);
             }
             // Always show item tooltip if mouse is on the element with dataIndex
             else if (el && el.dataIndex != null) {
@@ -259,7 +257,20 @@ define(function (require) {
             }
         },
 
-        _showAxisTooltip: function (seriesDataByAxis, e, contentNotChanged) {
+        _showOrMove: function (tooltipModel, cb) {
+            // showDelay is used in this case: tooltip.enterable is set
+            // as true. User intent to move mouse into tooltip and click
+            // something. `showDelay` makes it easyer to enter the content
+            // but tooltip do not move immediately.
+            var delay = tooltipModel.get('showDelay');
+            cb = zrUtil.bind(cb, this);
+            clearTimeout(this._showTimout);
+            delay > 0
+                ? (this._showTimout = setTimeout(cb, delay))
+                : cb();
+        },
+
+        _showAxisTooltip: function (seriesDataByAxis, e) {
             var ecModel = this._ecModel;
             var point = [e.offsetX, e.offsetY];
             var defaultHtml = [];
@@ -305,21 +316,23 @@ define(function (require) {
             defaultHtml = defaultHtml.join('<br /><br />');
 
             var positionExpr = e.position;
-            if (contentNotChanged) {
-                this._updatePosition(
-                    tooltipModel,
-                    positionExpr || tooltipModel.get('position'),
-                    point[0], point[1],
-                    this._tooltipContent,
-                    paramsList
-                );
-            }
-            else {
-                this._showTooltipContent(
-                    tooltipModel, defaultHtml, paramsList, Math.random(),
-                    point[0], point[1], positionExpr
-                );
-            }
+            this._showOrMove(tooltipModel, function () {
+                if (this._updateContentNotChangedOnAxis(seriesDataByAxis)) {
+                    this._updatePosition(
+                        tooltipModel,
+                        positionExpr,
+                        point[0], point[1],
+                        this._tooltipContent,
+                        paramsList
+                    );
+                }
+                else {
+                    this._showTooltipContent(
+                        tooltipModel, defaultHtml, paramsList, Math.random(),
+                        point[0], point[1], positionExpr
+                    );
+                }
+            });
         },
 
         _showSeriesItemTooltip: function (e, el, dispatchAction) {
@@ -349,10 +362,12 @@ define(function (require) {
             var defaultHtml = dataModel.formatTooltip(dataIndex, false, dataType);
             var asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
-            this._showTooltipContent(
-                tooltipModel, defaultHtml, params, asyncTicket,
-                e.offsetX, e.offsetY, e.position, e.target
-            );
+            this._showOrMove(tooltipModel, function () {
+                this._showTooltipContent(
+                    tooltipModel, defaultHtml, params, asyncTicket,
+                    e.offsetX, e.offsetY, e.position, e.target
+                );
+            });
 
             // FIXME
             // duplicated showtip if manuallyShowTip is called from dispatchAction.
@@ -383,10 +398,12 @@ define(function (require) {
             // only works on cooridinate system. In fact, we have not found case
             // that requires setting `trigger` nothing on component yet.
 
-            this._showTooltipContent(
-                subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
-                asyncTicket, e.offsetX, e.offsetY, e.position, el
-            );
+            this._showOrMove(subTooltipModel, function () {
+                this._showTooltipContent(
+                    subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
+                    asyncTicket, e.offsetX, e.offsetY, e.position, el
+                );
+            });
 
             // If not dispatch showTip, tip may be hide triggered by axis.
             dispatchAction({
@@ -427,8 +444,8 @@ define(function (require) {
                 html = formatter(params, asyncTicket, callback);
             }
 
-            tooltipContent.show(tooltipModel);
             tooltipContent.setContent(html);
+            tooltipContent.show(tooltipModel);
 
             this._updatePosition(
                 tooltipModel, positionExpr, x, y, tooltipContent, params, el
@@ -448,6 +465,7 @@ define(function (require) {
         _updatePosition: function (tooltipModel, positionExpr, x, y, content, params, el) {
             var viewWidth = this._api.getWidth();
             var viewHeight = this._api.getHeight();
+            positionExpr = positionExpr || tooltipModel.get('position');
 
             var rect = el && el.getBoundingRect().clone();
             el && rect.applyTransform(el.transform);
@@ -496,7 +514,7 @@ define(function (require) {
 
         // FIXME
         // Should we remove this but leave this to user?
-        _updateContentNotChanged: function (seriesDataByAxis) {
+        _updateContentNotChangedOnAxis: function (seriesDataByAxis) {
             var last = this._lastSeriesDataByAxis;
             var contentNotChanged = !!last && last.length === seriesDataByAxis.length;
 

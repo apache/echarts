@@ -54,6 +54,8 @@ define(function (require) {
 
         type: 'singleAxis',
 
+        axisPointerEnabled: true,
+
         constructor: Single,
 
         /**

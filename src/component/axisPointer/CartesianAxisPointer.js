@@ -1,20 +1,17 @@
 define(function(require) {
     'use strict';
 
-    var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var BaseAxisPointer = require('./BaseAxisPointer');
     var viewHelper = require('./viewHelper');
     var cartesianAxisHelper = require('../axis/cartesianAxisHelper');
-    var matrix = require('zrender/core/matrix');
-    var AxisBuilder = require('../axis/AxisBuilder');
 
     var CartesianAxisPointer = BaseAxisPointer.extend({
 
         /**
          * @override
          */
-        makeElOption: function (elOption, value, axisModel, axisPointerModel) {
+        makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
             var axis = axisModel.axis;
             var grid = axis.grid;
             var axisPointerType = axisPointerModel.get('type');
@@ -28,23 +25,23 @@ define(function(require) {
             elOption.graphicKey = pointerOption.type;
             elOption.pointer = pointerOption;
 
-            var labelMargin = axisPointerModel.get('label.margin');
-            var labelPos = getLabelPosition(value, axisModel, axisPointerModel, grid, labelMargin);
-            viewHelper.buildLabelElOption(elOption, value, labelPos, axisModel, axisPointerModel);
+            var layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
+            viewHelper.buildCartesianSingleLabelElOption(
+                value, elOption, layoutInfo, axisModel, axisPointerModel, api
+            );
         },
 
         /**
          * @override
          */
         getHandleTransform: function (value, axisModel, axisPointerModel) {
-            var handleMargin = axisPointerModel.get('handle.margin');
-            var handlePos = getLabelPosition(
-                value, axisModel, axisPointerModel, axisModel.axis.grid, handleMargin
-            );
-
+            var layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.model, axisModel, {
+                labelInside: false
+            });
+            layoutInfo.labelMargin = axisPointerModel.get('handle.margin');
             return {
-                position: handlePos.position,
-                rotation: handlePos.rotation
+                position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
+                rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
             };
         },
 
@@ -69,32 +66,6 @@ define(function(require) {
         }
 
     });
-
-    function getLabelPosition(value, axisModel, axisPointerModel, grid, labelMargin) {
-        var axis = axisModel.axis;
-        var layout = cartesianAxisHelper.layout(grid.model, axisModel);
-
-        var transform = matrix.create();
-        matrix.rotate(transform, transform, layout.rotation);
-        matrix.translate(transform, transform, layout.position);
-
-        var position = graphic.applyTransform([
-            axis.dataToCoord(value),
-            layout.labelOffset + layout.labelDirection * labelMargin
-        ], transform);
-
-        var labelRotation = zrUtil.retrieve(layout.labelRotation, axisPointerModel.get('label.rotate')) || 0;
-        labelRotation = labelRotation * Math.PI / 180;
-
-        var labelLayout = AxisBuilder.innerTextLayout(layout.rotation, labelRotation, layout.labelDirection);
-
-        return {
-            position: position,
-            align: labelLayout.textAlign,
-            verticalAlign: labelLayout.textVerticalAlign,
-            rotation: -layout.rotation
-        };
-    }
 
     function getCartesian(grid, axis) {
         var opt = {};

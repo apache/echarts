@@ -2,6 +2,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var viewHelper = require('./viewHelper');
 
     var each = zrUtil.each;
     var curry = zrUtil.curry;
@@ -41,10 +42,10 @@ define(function(require) {
 
             each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
                 var axis = axisInfo.axis;
-                var triggerOn = axisInfo.axisPointerModel.get('triggerOn');
+                var triggerOns = modelUtil.normalizeToArray(axisInfo.axisPointerModel.get('triggerOn'));
 
-                if ((!currTrigger || triggerOn === currTrigger)
-                    && (triggerOn === 'handle' || (!shouldHide && coordSysContainsPoint))
+                if ((!currTrigger || zrUtil.indexOf(triggerOns, currTrigger) >= 0)
+                    && (currTrigger === 'handle' || (!shouldHide && coordSysContainsPoint))
                     && !notTargetAxis(finder, axis)
                 ) {
                     processOnAxis(axisInfo, axis.pointToData(point), updaters);
@@ -90,11 +91,11 @@ define(function(require) {
         // Heavy calculation. So put it after axis.containData checking.
         var payloadInfo = buildPayloadsBySeries(newValue, axisInfo);
         var payloadBatch = payloadInfo.payloadBatch;
+        var snapToValue = payloadInfo.snapToValue;
 
         // If no linkSource input, this process is for collecting link
         // target, where snap should not be accepted.
         if (!dontSnap && axisInfo.snap) {
-            var snapToValue = payloadInfo.snapToValue;
             if (axis.containData(snapToValue) && snapToValue != null) {
                 newValue = snapToValue;
             }
@@ -102,48 +103,64 @@ define(function(require) {
 
         updaters.highlight('highlight', payloadBatch);
         updaters.showPointer(axisInfo, newValue, payloadBatch);
-        updaters.showTooltip(axisInfo, payloadInfo, newValue);
+        // Tooltip should always be snapToValue, otherwise there will be
+        // incorrect "axis value ~ series value" mapping displayed in tooltip.
+        updaters.showTooltip(axisInfo, payloadInfo, snapToValue);
     }
 
     function buildPayloadsBySeries(value, axisInfo) {
         var axis = axisInfo.axis;
         var dim = axis.dim;
-        var minDist = Infinity;
         var snapToValue = value;
         var payloadBatch = [];
+        var minDist = Number.MAX_VALUE;
+        var minDiff = -1;
 
         each(axisInfo.seriesModels, function (series, idx) {
             var dataDim = series.coordDimToDataDim(dim);
-            var dataIndex = series.getAxisTooltipDataIndex
-                ? series.getAxisTooltipDataIndex(dataDim, value, axis)
-                : series.getData().indexOfNearest(
+            var seriesNestestValue;
+            var dataIndices;
+
+            if (series.getAxisTooltipData) {
+                var result = series.getAxisTooltipData(dataDim, value, axis);
+                dataIndices = result.dataIndices;
+                seriesNestestValue = result.nestestValue;
+            }
+            else {
+                dataIndices = series.getData().indexOfNearest(
                     dataDim[0],
                     value,
                     // Add a threshold to avoid find the wrong dataIndex
                     // when data length is not same.
                     false, axis.type === 'category' ? 0.5 : null
                 );
+                if (!dataIndices.length) {
+                    return;
+                }
+                seriesNestestValue = series.getData().get(dataDim[0], dataIndices[0]);
+            }
 
-            if (dataIndex == null || dataIndex < 0) {
+            if (seriesNestestValue == null || !isFinite(seriesNestestValue)) {
                 return;
             }
 
-            var seriesNestestValue = series.getData().get(dim, dataIndex);
-            if (seriesNestestValue != null && isFinite(seriesNestestValue)) {
-                var dist = Math.abs(value - seriesNestestValue);
-                // Consider category case
-                if (dist <= minDist) {
-                    if (dist < minDist) {
-                        minDist = dist;
-                        snapToValue = seriesNestestValue;
-                        payloadBatch.length = 0;
-                    }
+            var diff = value - seriesNestestValue;
+            var dist = Math.abs(diff);
+            // Consider category case
+            if (dist <= minDist) {
+                if (dist < minDist || (diff >= 0 && minDiff < 0)) {
+                    minDist = dist;
+                    minDiff = diff;
+                    snapToValue = seriesNestestValue;
+                    payloadBatch.length = 0;
+                }
+                each(dataIndices, function (dataIndex) {
                     payloadBatch.push({
                         seriesIndex: series.seriesIndex,
                         dataIndexInside: dataIndex,
                         dataIndex: series.getData().getRawIndex(dataIndex)
                     });
-                }
+                });
             }
         });
 
@@ -160,16 +177,16 @@ define(function(require) {
     function showTooltip(seriesDataByAxis, axisInfo, payloadInfo, value) {
         var payloadBatch = payloadInfo.payloadBatch;
         var axis = axisInfo.axis;
+        var valueLabel = viewHelper.getValueLabel(
+            value, axisInfo.axis.model, axisInfo.axisPointerModel
+        );
 
         axisInfo.triggerTooltip && payloadBatch.length && seriesDataByAxis.push({
             axisDim: axis.dim,
             axisIndex: axis.model.componentIndex,
             axisId: axis.model.id,
             value: value,
-            valueLabel: axis.scale.getLabel(
-                value,
-                {precision: axisInfo.axisPointerModel.get('label.precision'), pad: true}
-            ),
+            valueLabel: valueLabel,
             seriesDataIndices: payloadBatch.slice()
         });
     }

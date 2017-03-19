@@ -1,13 +1,10 @@
 define(function(require) {
     'use strict';
 
-    var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var BaseAxisPointer = require('./BaseAxisPointer');
     var viewHelper = require('./viewHelper');
     var singleAxisHelper = require('../axis/singleAxisHelper');
-    var matrix = require('zrender/core/matrix');
-    var AxisBuilder = require('../axis/AxisBuilder');
 
     var XY = ['x', 'y'];
     var WH = ['width', 'height'];
@@ -17,14 +14,11 @@ define(function(require) {
         /**
          * @override
          */
-        makeElOption: function (elOption, value, axisModel, axisPointerModel) {
+        makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
             var axis = axisModel.axis;
             var coordSys = axis.coordinateSystem;
-            var rect = coordSys.getRect();
-            var otherDimIndex = 1 - getPointDimIndex(axis);
-            var otherExtent = [rect[XY[otherDimIndex]], rect[XY[otherDimIndex]] + rect[WH[otherDimIndex]]];
+            var otherExtent = getGlobalExtent(coordSys, 1 - getPointDimIndex(axis));
             var pixelValue = coordSys.dataToPoint(value)[0];
-
             var elStyle = viewHelper.buildElStyle(axisPointerModel);
             var pointerOption = pointerShapeBuilder[axisPointerModel.get('type')](
                 axis, pixelValue, otherExtent, elStyle
@@ -34,39 +28,44 @@ define(function(require) {
             elOption.graphicKey = pointerOption.type;
             elOption.pointer = pointerOption;
 
-            var labelMargin = axisPointerModel.get('label.margin');
-            var labelPos = getLabelPosition(value, axisModel, axisPointerModel, labelMargin);
-            viewHelper.buildLabelElOption(
-                elOption, value, labelPos, axisModel, axisPointerModel
+            var layoutInfo = singleAxisHelper.layout(axisModel);
+            viewHelper.buildCartesianSingleLabelElOption(
+                value, elOption, layoutInfo, axisModel, axisPointerModel, api
             );
+        },
+
+        /**
+         * @override
+         */
+        getHandleTransform: function (value, axisModel, axisPointerModel) {
+            var layoutInfo = singleAxisHelper.layout(axisModel, {labelInside: false});
+            layoutInfo.labelMargin = axisPointerModel.get('handle.margin');
+            return {
+                position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
+                rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
+            };
+        },
+
+        /**
+         * @override
+         */
+        updateHandleTransform: function (transform, delta, axisModel, axisPointerModel) {
+            var axis = axisModel.axis;
+            var coordSys = axis.coordinateSystem;
+            var dimIndex = getPointDimIndex(axis);
+            var axisExtent = getGlobalExtent(coordSys, dimIndex);
+            var currPosition = transform.position;
+            currPosition[dimIndex] += delta[dimIndex];
+            currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
+            currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
+            var otherExtent = getGlobalExtent(coordSys, 1 - dimIndex);
+            var cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
+            var cursorPoint = [cursorOtherValue, cursorOtherValue];
+            cursorPoint[dimIndex] = currPosition[dimIndex];
+
+            return {position: currPosition, rotation: transform.rotation, cursorPoint: cursorPoint};
         }
     });
-
-
-    function getLabelPosition(value, axisModel, axisPointerModel, labelMargin) {
-        var axis = axisModel.axis;
-        var layout = singleAxisHelper.layout(axisModel);
-
-        var transform = matrix.create();
-        matrix.rotate(transform, transform, layout.rotation);
-        matrix.translate(transform, transform, layout.position);
-
-        var position = graphic.applyTransform([
-            axis.dataToCoord(value),
-            0 + layout.labelDirection * labelMargin
-        ], transform);
-
-        var labelRotation = zrUtil.retrieve(layout.labelRotation, axisPointerModel.get('label.rotate')) || 0;
-        labelRotation = labelRotation * Math.PI / 180;
-
-        var labelLayout = AxisBuilder.innerTextLayout(layout.rotation, labelRotation, layout.labelDirection);
-
-        return {
-            position: position,
-            align: labelLayout.textAlign,
-            verticalAlign: labelLayout.textVerticalAlign
-        };
-    }
 
     var pointerShapeBuilder = {
 
@@ -102,6 +101,11 @@ define(function(require) {
 
     function getPointDimIndex(axis) {
         return axis.isHorizontal() ? 0 : 1;
+    }
+
+    function getGlobalExtent(coordSys, dimIndex) {
+        var rect = coordSys.getRect();
+        return [rect[XY[dimIndex]], rect[XY[dimIndex]] + rect[WH[dimIndex]]];
     }
 
     return SingleAxisPointer;
