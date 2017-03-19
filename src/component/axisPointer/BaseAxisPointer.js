@@ -131,19 +131,25 @@ define(function(require) {
          */
         determineAnimation: function (axisModel, axisPointerModel) {
             var animation = axisPointerModel.get('animation');
+            var axis = axisModel.axis;
+            var isCategoryAxis = axis.type === 'category';
+            var useSnap = axisPointerModel.get('snap');
+
+            // Value axis without snap always do not snap.
+            if (!useSnap && !isCategoryAxis) {
+                return false;
+            }
 
             if (animation === 'auto' || animation == null) {
-                var axis = axisModel.axis;
-
                 var animationThreshold = this.animationThreshold;
-                if (axis.type === 'category' && axis.getBandWidth() > animationThreshold) {
+                if (isCategoryAxis && axis.getBandWidth() > animationThreshold) {
                     return true;
                 }
 
                 // It is important to auto animation when snap used. Consider if there is
                 // a dataZoom, animation will be disabled when too many points exist, while
                 // it will be enabled for better visual effect when little points exist.
-                if (axisPointerModel.get('snap')) {
+                if (useSnap) {
                     var seriesDataCount = axisPointerModelHelper.getAxisInfo(axisModel).seriesDataCount;
                     var axisExtent = axis.getExtent();
                     // Approximate band width
@@ -347,9 +353,7 @@ define(function(require) {
                 currTrigger: 'handle',
                 x: trans.cursorPoint[0],
                 y: trans.cursorPoint[1],
-                tooltipOption: {
-                    verticalAlign: 'middle'
-                },
+                tooltipOption: this.getHandleTooltipOption(axisModel, axisPointerModel),
                 highDownKey: 'axisPointerHandle'
             };
             var axis = axisModel.axis;
@@ -394,6 +398,16 @@ define(function(require) {
          * @return {Object} {position: [x, y], rotation: 0, cursorPoint: [x, y]}
          */
         updateHandleTransform: null,
+
+        /**
+         * @protected
+         * @return {Object}
+         */
+        getHandleTooltipOption: function (axisModel, axisPointerModel) {
+            return {
+                verticalAlign: 'middle'
+            };
+        },
 
         /**
          * @private

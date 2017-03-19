@@ -18,6 +18,8 @@ define(function(require) {
             z: 50,
 
             type: 'line',
+            // axispointer triggered by tootip determine snap automatically,
+            // see `modelHelper`.
             snap: false,
             triggerTooltip: true,
 
