@@ -26,7 +26,14 @@ define(function(require) {
             value: null,
             status: null, // Init value depends on whether handle is used.
 
-            // [{mapper: function () {}, xAxisId: ..., yAxisName: ..., angleAxisIndex: ...}, ...]
+            // [group0, group1, ...]
+            // Each group can be: {
+            //      mapper: function () {},
+            //      singleTooltip: 'multiple',  // 'multiple' or 'single'
+            //      xAxisId: ...,
+            //      yAxisName: ...,
+            //      angleAxisIndex: ...
+            // }
             // mapper: can be ignored.
             //      input: {axisInfo, value}
             //      output: {axisInfo, value}

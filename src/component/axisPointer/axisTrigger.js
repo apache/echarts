@@ -3,6 +3,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
     var viewHelper = require('./viewHelper');
+    var modelHelper = require('./modelHelper');
 
     var each = zrUtil.each;
     var curry = zrUtil.curry;
@@ -28,11 +29,11 @@ define(function(require) {
         var shouldHide = currTrigger === 'leave' || illegalPoint(point);
 
         var showValueMap = {};
-        var seriesDataByAxis = [];
+        var dataByCoordSys = {list: [], map: {}};
         var highlightBatch = [];
         var updaters = {
             showPointer: curry(showPointer, showValueMap),
-            showTooltip: curry(showTooltip, seriesDataByAxis),
+            showTooltip: curry(showTooltip, dataByCoordSys),
             highlight: curry(highlight, highlightBatch)
         };
 
@@ -72,7 +73,7 @@ define(function(require) {
         });
 
         updateModelActually(showValueMap, axesInfo);
-        dispatchTooltipActually(seriesDataByAxis, point, tooltipOption, dispatchAction);
+        dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction);
         dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey);
     }
 
@@ -174,17 +175,32 @@ define(function(require) {
         showValueMap[axisInfo.key] = {value: value, payloadBatch: payloadBatch};
     }
 
-    function showTooltip(seriesDataByAxis, axisInfo, payloadInfo, value) {
+    function showTooltip(dataByCoordSys, axisInfo, payloadInfo, value) {
         var payloadBatch = payloadInfo.payloadBatch;
         var axis = axisInfo.axis;
+        var axisModel = axis.model;
         var valueLabel = viewHelper.getValueLabel(
             value, axisInfo.axis.model, axisInfo.axisPointerModel
         );
+        var coordSysModel = axisInfo.coordSys.model;
+        var coordSysKey = modelHelper.makeKey(coordSysModel);
+        var coordSysItem = dataByCoordSys.map[coordSysKey];
+        if (!coordSysItem) {
+            coordSysItem = dataByCoordSys.map[coordSysKey] = {
+                coordSysId: coordSysModel.id,
+                coordSysIndex: coordSysModel.componentIndex,
+                coordSysType: coordSysModel.type,
+                coordSysMainType: coordSysModel.mainType,
+                dataByAxis: []
+            };
+            dataByCoordSys.list.push(coordSysItem);
+        }
 
-        axisInfo.triggerTooltip && payloadBatch.length && seriesDataByAxis.push({
+        axisInfo.triggerTooltip && payloadBatch.length && coordSysItem.dataByAxis.push({
             axisDim: axis.dim,
-            axisIndex: axis.model.componentIndex,
-            axisId: axis.model.id,
+            axisIndex: axisModel.componentIndex,
+            axisType: axisModel.type,
+            axisId: axisModel.id,
             value: value,
             valueLabel: valueLabel,
             seriesDataIndices: payloadBatch.slice()
@@ -221,9 +237,9 @@ define(function(require) {
         });
     }
 
-    function dispatchTooltipActually(seriesDataByAxis, point, tooltipOption, dispatchAction) {
+    function dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction) {
         // Basic logic: If no showTip required, hideTip will be dispatched.
-        if (illegalPoint(point) || !seriesDataByAxis.length) {
+        if (illegalPoint(point) || !dataByCoordSys.list.length) {
             dispatchAction({type: 'hideTip'});
             return;
         }
@@ -232,7 +248,7 @@ define(function(require) {
         // convinient to fetch payload.seriesIndex and payload.dataIndex
         // dirtectly. So put the first seriesIndex and dataIndex of the first
         // axis on the payload.
-        var sampleItem = ((seriesDataByAxis[0] || {}).seriesDataIndices || [])[0] || {};
+        var sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {};
         dispatchAction({
             type: 'showTip',
             x: point[0],
@@ -241,7 +257,7 @@ define(function(require) {
             dataIndexInside: sampleItem.dataIndexInside,
             dataIndex: sampleItem.dataIndex,
             seriesIndex: sampleItem.seriesIndex,
-            seriesDataByAxis: seriesDataByAxis
+            dataByCoordSys: dataByCoordSys.list
         });
     }
 

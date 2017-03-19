@@ -185,7 +185,7 @@ define(function (require) {
             // this.hide();
         },
 
-        show: function (tooltipModel, delay) {
+        show: function (tooltipModel) {
             clearTimeout(this._hideTimeout);
             var el = this.el;
 

@@ -25,6 +25,8 @@ define(function (require) {
 
             alwaysShowContent: false,
 
+            displayMode: 'single', // 'single' | 'multipleByCoordSys'
+
             // 位置 {Array} | {Function}
             // position: null
             // Consider triggered from axisPointer handle, verticalAlign should be 'middle'

@@ -312,9 +312,13 @@ define(function(require) {
         return axisPointerModel.get('triggerOn') === 'handle';
     }
 
-    function makeKey(model) {
-        return model.type + '|' + model.id;
-    }
+    /**
+     * @param {module:echarts/model/Model} model
+     * @return {string} unique key
+     */
+    var makeKey = helper.makeKey = function (model) {
+        return model.type + '||' + model.id;
+    };
 
     return helper;
 
