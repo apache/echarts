@@ -5,6 +5,7 @@ define(function (require) {
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
     var modelUtil = require('../../util/model');
+    var findPointFromSeries = require('../axisPointer/findPointFromSeries');
     var parsePercent = numberUtil.parsePercent;
     var env = require('zrender/core/env');
     var Model = require('../../model/Model');
@@ -135,11 +136,7 @@ define(function (require) {
          *  TODO Batch
          */
         manuallyShowTip: function (tooltipModel, ecModel, api, payload) {
-            if (payload.from === this.uid) {
-                return;
-            }
-
-            if (env.node) {
+            if (payload.from === this.uid || env.node) {
                 return;
             }
 
@@ -149,65 +146,41 @@ define(function (require) {
             this._ticket = '';
 
             var seriesIndex = payload.seriesIndex;
-            var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
-            if (payload.x != null && payload.y != null) {
+            var dataByCoordSys = payload.dataByCoordSys;
+
+            // When triggered from axisPointer.
+            if (dataByCoordSys) {
                 this._tryShow({
                     offsetX: payload.x,
                     offsetY: payload.y,
                     position: payload.position,
-                    target: api.getZr().handler.findHover(payload.x, payload.y),
                     event: {},
-                    // When triggered from axisPointer.
                     dataByCoordSys: payload.dataByCoordSys,
                     tooltipOption: payload.tooltipOption
                 }, dispatchAction);
             }
-            else if (seriesModel) {
-                var data = seriesModel.getData();
-                var dataIndex = modelUtil.queryDataIndex(data, payload);
-
-                if (dataIndex == null || zrUtil.isArray(dataIndex)) {
-                    return;
-                }
-
-                var el = data.getItemGraphicEl(dataIndex);
-                var cx;
-                var cy;
-                // Try to get the point in coordinate system
-                var coordSys = seriesModel.coordinateSystem;
-                if (seriesModel.getTooltipPosition) {
-                    var point = seriesModel.getTooltipPosition(dataIndex) || [];
-                    cx = point[0];
-                    cy = point[1];
-                }
-                else if (coordSys && coordSys.dataToPoint) {
-                    var point = coordSys.dataToPoint(
-                        data.getValues(
-                            zrUtil.map(coordSys.dimensions, function (dim) {
-                                return seriesModel.coordDimToDataDim(dim)[0];
-                            }), dataIndex, true
-                        )
-                    );
-                    cx = point && point[0];
-                    cy = point && point[1];
-                }
-                else if (el) {
-                    // Use graphic bounding rect
-                    var rect = el.getBoundingRect().clone();
-                    rect.applyTransform(el.transform);
-                    cx = rect.x + rect.width / 2;
-                    cy = rect.y + rect.height / 2;
-                }
-
+            else if (seriesIndex != null) {
+                var pointInfo = findPointFromSeries(payload, ecModel);
+                var cx = pointInfo.point[0];
+                var cy = pointInfo.point[1];
                 if (cx != null && cy != null) {
                     this._tryShow({
                         offsetX: cx,
                         offsetY: cy,
                         position: payload.position,
-                        target: el,
+                        target: pointInfo.el,
                         event: {}
                     }, dispatchAction);
                 }
+            }
+            else if (payload.x != null && payload.y != null) {
+                this._tryShow({
+                    offsetX: payload.x,
+                    offsetY: payload.y,
+                    position: payload.position,
+                    target: api.getZr().handler.findHover(payload.x, payload.y),
+                    event: {}
+                }, dispatchAction);
             }
         },
 

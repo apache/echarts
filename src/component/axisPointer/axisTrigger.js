@@ -4,6 +4,7 @@ define(function(require) {
     var modelUtil = require('../../util/model');
     var viewHelper = require('./viewHelper');
     var modelHelper = require('./modelHelper');
+    var findPointFromSeries = require('./findPointFromSeries');
 
     var each = zrUtil.each;
     var curry = zrUtil.curry;
@@ -22,11 +23,28 @@ define(function(require) {
      * @param {module:echarts/ExtensionAPI} api
      * @param {Object} tooltipOption
      * @param {string} [highDownKey]
+     * @return {Object} content of event obj for echarts.connect.
      */
-    function axisTrigger(coordSysAxesInfo, currTrigger, finder, dispatchAction, api, tooltipOption, highDownKey) {
-        var point = [finder.x, finder.y];
+    function axisTrigger(
+        coordSysAxesInfo, currTrigger, finder, dispatchAction,
+        ecModel, api, tooltipOption, highDownKey
+    ) {
+        var point = [];
+        if (finder.x != null && finder.y != null) {
+            point = [finder.x, finder.y];
+        }
+        else {
+            point = findPointFromSeries({
+                seriesIndex: finder.seriesIndex,
+                // Do not use dataIndexInside from other ec instance.
+                // FIXME: auto detect it?
+                dataIndex: finder.dataIndex
+            }, ecModel).point;
+        }
+
         var axesInfo = coordSysAxesInfo.axesInfo;
         var shouldHide = currTrigger === 'leave' || illegalPoint(point);
+        var outputFinder = {};
 
         var showValueMap = {};
         var dataByCoordSys = {list: [], map: {}};
@@ -49,7 +67,7 @@ define(function(require) {
                     && (currTrigger === 'handle' || (!shouldHide && coordSysContainsPoint))
                     && !notTargetAxis(finder, axis)
                 ) {
-                    processOnAxis(axisInfo, axis.pointToData(point), updaters);
+                    processOnAxis(axisInfo, axis.pointToData(point), updaters, false, outputFinder);
                 }
             });
         });
@@ -67,7 +85,7 @@ define(function(require) {
                     linkGroup.mapper && (val = tarAxisInfo.axis.scale.parse(linkGroup.mapper(
                         val, makeMapperParam(srcAxisInfo), makeMapperParam(tarAxisInfo)
                     )));
-                    processOnAxis(tarAxisInfo, val, updaters, true);
+                    processOnAxis(tarAxisInfo, val, updaters, true, outputFinder);
                 }
             });
         });
@@ -75,9 +93,11 @@ define(function(require) {
         updateModelActually(showValueMap, axesInfo);
         dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction);
         dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey);
+
+        return outputFinder;
     }
 
-    function processOnAxis(axisInfo, newValue, updaters, dontSnap) {
+    function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
         var axis = axisInfo.axis;
 
         if (axis.scale.isBlank() || !axis.containData(newValue)) {
@@ -93,6 +113,12 @@ define(function(require) {
         var payloadInfo = buildPayloadsBySeries(newValue, axisInfo);
         var payloadBatch = payloadInfo.payloadBatch;
         var snapToValue = payloadInfo.snapToValue;
+
+        // Fill content of event obj for echarts.connect.
+        // By defualt use the first involved series data as a sample to connect.
+        if (payloadBatch[0] && outputFinder.seriesIndex == null) {
+            zrUtil.extend(outputFinder, payloadBatch[0]);
+        }
 
         // If no linkSource input, this process is for collecting link
         // target, where snap should not be accepted.
@@ -251,6 +277,7 @@ define(function(require) {
         var sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {};
         dispatchAction({
             type: 'showTip',
+            escapeConnect: true,
             x: point[0],
             y: point[1],
             tooltipOption: tooltipOption,
@@ -295,8 +322,12 @@ define(function(require) {
             !lastHighlights[key] && toHighlight.push(batchItem);
         });
 
-        toDownplay.length && api.dispatchAction({type: 'downplay', batch: toDownplay});
-        toHighlight.length && api.dispatchAction({type: 'highlight', batch: toHighlight});
+        toDownplay.length && api.dispatchAction({
+            type: 'downplay', escapeConnect: true, batch: toDownplay
+        });
+        toHighlight.length && api.dispatchAction({
+            type: 'highlight', escapeConnect: true, batch: toHighlight
+        });
     }
 
     function notTargetAxis(finder, axis) {
@@ -328,6 +359,27 @@ define(function(require) {
 
     function illegalPoint(point) {
         return point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
+    }
+
+    function getPointFromSeries(finder, ecModel) {
+        // Considering echarts.connect. Currently only support connect
+        // by sample series data item.
+        var seriesModel = ecModel.getSeries(finder.seriesIndex);
+        if (seriesModel) {
+            var data = series.getData();
+            var dataIndex = modelUtil.queryDataIndex(data, finder);
+            var coordSys = series.coordinateSystem;
+            var point = coordSys.dataToPoint(
+                data.getValues(
+                    zrUtil.map(coordSys.dimensions, function (dim) {
+                        return seriesModel.coordDimToDataDim(dim)[0];
+                    }), dataIndex, true
+                )
+            );
+            // FIXME
+            // single coordSys?
+            series.coordinateSystem.dataToPoint();
+        }
     }
 
     return axisTrigger;

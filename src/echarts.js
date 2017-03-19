@@ -986,6 +986,7 @@ define(function (require) {
 
     function doDispatchAction(payload, silent) {
         var payloadType = payload.type;
+        var escapeConnect = payload.escapeConnect;
         var actionWrap = actions[payloadType];
         var actionInfo = actionWrap.actionInfo;
 
@@ -1011,8 +1012,7 @@ define(function (require) {
         var eventObj;
         var isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
 
-        for (var i = 0; i < payloads.length; i++) {
-            var batchItem = payloads[i];
+        each(payloads, function (batchItem) {
             // Action can specify the event by return it.
             eventObj = actionWrap.action(batchItem, this._model, this._api);
             // Emit event outside
@@ -1029,7 +1029,7 @@ define(function (require) {
             else if (cptType) {
                 updateDirectly(this, updateMethod, batchItem, cptType.main, cptType.sub);
             }
-        }
+        }, this);
 
         if (updateMethod !== 'none' && !isHighDown && !cptType) {
             // Still dirty
@@ -1047,6 +1047,7 @@ define(function (require) {
         if (batched) {
             eventObj = {
                 type: actionInfo.event || payloadType,
+                escapeConnect: escapeConnect,
                 batch: eventObjBatch
             };
         }
@@ -1514,20 +1515,25 @@ define(function (require) {
     };
 
     function enableConnect(chart) {
-
         var STATUS_PENDING = 0;
         var STATUS_UPDATING = 1;
         var STATUS_UPDATED = 2;
         var STATUS_KEY = '__connectUpdateStatus';
+
         function updateConnectedChartsStatus(charts, status) {
             for (var i = 0; i < charts.length; i++) {
                 var otherChart = charts[i];
                 otherChart[STATUS_KEY] = status;
             }
         }
+
         zrUtil.each(eventActionMap, function (actionType, eventType) {
             chart._messageCenter.on(eventType, function (event) {
                 if (connectedGroups[chart.group] && chart[STATUS_KEY] !== STATUS_PENDING) {
+                    if (event && event.escapeConnect) {
+                        return;
+                    }
+
                     var action = chart.makeActionFromEvent(event);
                     var otherCharts = [];
 
@@ -1547,8 +1553,8 @@ define(function (require) {
                 }
             });
         });
-
     }
+
     /**
      * @param {HTMLDomElement} dom
      * @param {Object} [theme]

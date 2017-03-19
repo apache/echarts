@@ -39,15 +39,20 @@ define(function (require) {
         event: 'axisPointerUpdated',
         update: ':updateAxisPointer'
     }, function (payload, ecModel, api) {
-        axisTrigger(
+        var outputFinder = axisTrigger(
             ecModel.getComponent('axisPointer').coordSysAxesInfo,
             payload.currTrigger,
             payload,
             payload.dispatchAction || zrUtil.bind(api.dispatchAction, api),
+            ecModel,
             api,
             payload.tooltipOption,
             payload.highDownKey
         );
+
+        return zrUtil.extend(outputFinder, {
+            currTrigger: payload.currTrigger
+        });
     });
 
 });
