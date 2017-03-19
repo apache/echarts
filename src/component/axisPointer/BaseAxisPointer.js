@@ -353,7 +353,7 @@ define(function(require) {
                 currTrigger: 'handle',
                 x: trans.cursorPoint[0],
                 y: trans.cursorPoint[1],
-                tooltipOption: this.getHandleTooltipOption(axisModel, axisPointerModel),
+                tooltipOption: trans.tooltipOption,
                 highDownKey: 'axisPointerHandle'
             };
             var axis = axisModel.axis;
@@ -398,16 +398,6 @@ define(function(require) {
          * @return {Object} {position: [x, y], rotation: 0, cursorPoint: [x, y]}
          */
         updateHandleTransform: null,
-
-        /**
-         * @protected
-         * @return {Object}
-         */
-        getHandleTooltipOption: function (axisModel, axisPointerModel) {
-            return {
-                verticalAlign: 'middle'
-            };
-        },
 
         /**
          * @private

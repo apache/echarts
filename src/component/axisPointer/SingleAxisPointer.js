@@ -63,7 +63,14 @@ define(function(require) {
             var cursorPoint = [cursorOtherValue, cursorOtherValue];
             cursorPoint[dimIndex] = currPosition[dimIndex];
 
-            return {position: currPosition, rotation: transform.rotation, cursorPoint: cursorPoint};
+            return {
+                position: currPosition,
+                rotation: transform.rotation,
+                cursorPoint: cursorPoint,
+                tooltipOption: {
+                    verticalAlign: 'middle'
+                }
+            };
         }
     });
 

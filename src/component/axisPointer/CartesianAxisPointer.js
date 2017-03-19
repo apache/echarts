@@ -52,17 +52,27 @@ define(function(require) {
             var axis = axisModel.axis;
             var grid = axis.grid;
             var axisExtent = axis.getGlobalExtent(true);
-            var currPosition = transform.position;
+            var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
             var dimIndex = axis.dim === 'x' ? 0 : 1;
+
+            var currPosition = transform.position;
             currPosition[dimIndex] += delta[dimIndex];
             currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
             currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
-            var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
+
             var cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
             var cursorPoint = [cursorOtherValue, cursorOtherValue];
             cursorPoint[dimIndex] = currPosition[dimIndex];
 
-            return {position: currPosition, rotation: transform.rotation, cursorPoint: cursorPoint};
+            // Make tooltip do not overlap axisPointer and in the middle of the grid.
+            var tooltipOptions = [{verticalAlign: 'middle'}, {align: 'center'}];
+
+            return {
+                position: currPosition,
+                rotation: transform.rotation,
+                cursorPoint: cursorPoint,
+                tooltipOption: tooltipOptions[dimIndex]
+            };
         }
 
     });
