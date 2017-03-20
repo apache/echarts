@@ -141,6 +141,7 @@ define(function (require) {
         }
         else {
             var symbolPath = this.childAt(0);
+            symbolPath.silent = false;
             graphic.updateProps(symbolPath, {
                 scale: getScale(symbolSize)
             }, seriesModel, idx);

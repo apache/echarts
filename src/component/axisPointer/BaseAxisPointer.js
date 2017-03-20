@@ -260,7 +260,7 @@ define(function(require) {
             var handleModel = axisPointerModel.getModel('handle');
 
             var status = axisPointerModel.get('status');
-            if (axisPointerModel.get('triggerOn') !== 'handle' || !status || status === 'hide') {
+            if (!handleModel.get('show') || !status || status === 'hide') {
                 handle && zr.remove(handle);
                 this._handle = null;
                 return;
@@ -277,11 +277,14 @@ define(function(require) {
                     rectHover: true,
                     cursor: 'move',
                     draggable: true,
+                    onmousedown: zrUtil.bind(
+                        this._onHandleDragMove, this, axisModel, axisPointerModel, api, 0, 0
+                    ),
                     drift: zrUtil.bind(
                         this._onHandleDragMove, this, axisModel, axisPointerModel, api
                     ),
                     ondragend: zrUtil.bind(
-                        this._onHandleDragEnd, this, axisModel, axisPointerModel, moveAnimation
+                        this._onHandleDragEnd, this, axisModel, axisPointerModel, api, moveAnimation
                     )
                 }, {
                     x: -1, y: -1, width: 2, height: 2
@@ -350,7 +353,6 @@ define(function(require) {
 
             var payload = {
                 type: 'updateAxisPointer',
-                currTrigger: 'handle',
                 x: trans.cursorPoint[0],
                 y: trans.cursorPoint[1],
                 tooltipOption: trans.tooltipOption,
@@ -364,7 +366,7 @@ define(function(require) {
         /**
          * @private
          */
-        _onHandleDragEnd: function (axisModel, axisPointerModel, moveAnimation) {
+        _onHandleDragEnd: function (axisModel, axisPointerModel, api, moveAnimation) {
             this._dragging = false;
             var handle = this._handle;
             if (!handle) {
@@ -376,6 +378,10 @@ define(function(require) {
             // axisPointer. So move handle to align the exact value position when
             // drag ended.
             this._moveHandleToValue(handle, value, moveAnimation, axisModel, axisPointerModel);
+
+            api.dispatchAction({
+                type: 'hideTip'
+            });
         },
 
         /**

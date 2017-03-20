@@ -4,7 +4,6 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
-    var modelUtil = require('../../util/model');
     var findPointFromSeries = require('../axisPointer/findPointFromSeries');
     var parsePercent = numberUtil.parsePercent;
     var env = require('zrender/core/env');
@@ -76,17 +75,20 @@ define(function (require) {
 
         _initGlobalListener: function () {
             var tooltipModel = this._tooltipModel;
-            var triggerOns = modelUtil.normalizeToArray(tooltipModel.get('triggerOn'));
+            var triggerOn = tooltipModel.get('triggerOn');
 
             globalListener.register(
                 'itemTooltip',
                 this._api,
                 bind(function (currTrigger, e, dispatchAction) {
-                    if (zrUtil.indexOf(triggerOns, currTrigger) >= 0) {
-                        this._tryShow(e, dispatchAction);
-                    }
-                    else if (currTrigger === 'leave') {
-                        this._hide(dispatchAction);
+                    // If 'none', it is not controlled by mouse totally.
+                    if (triggerOn !== 'none') {
+                        if (triggerOn.indexOf(currTrigger) >= 0) {
+                            this._tryShow(e, dispatchAction);
+                        }
+                        else if (currTrigger === 'leave') {
+                            this._hide(dispatchAction);
+                        }
                     }
                 }, this)
             );
@@ -574,7 +576,9 @@ define(function (require) {
         while (modelCascade.length) {
             var tooltipOpt = modelCascade.pop();
             if (tooltipOpt) {
-                tooltipOpt = (tooltipOpt instanceof Model) && tooltipOpt.get('tooltip', true);
+                if (tooltipOpt instanceof Model) {
+                    tooltipOpt = tooltipOpt.get('tooltip', true);
+                }
                 // In each data item tooltip can be simply write:
                 // {
                 //  value: 10,

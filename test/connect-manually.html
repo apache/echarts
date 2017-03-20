@@ -123,21 +123,11 @@
         bindAction(chart2, chart1, data1);
 
         function bindAction(fromChart, toChart, toData) {
-            fromChart.on('showTip', function (params) {
-                // Determine index overflow.
-                var rawIndex = getRawIndex(fromChart, params.dataIndex);
-                if (rawIndex < toData.length) {
-                    toChart.dispatchAction({
-                        type: 'showTip',
-                        seriesIndex: params.seriesIndex,
-                        dataIndex: params.dataIndex
-                    }, true);
-                }
-            });
-            fromChart.on('hideTip', function (params) {
-                toChart.dispatchAction({
-                    type: 'hideTip'
-                }, true);
+            fromChart.on('updateAxisPointer', function (params) {
+                toChart.dispatchAction(
+                    toChart.makeActionFromEvent(params),
+                    true
+                );
             });
 
             fromChart.on('dataZoom', function (params) {
@@ -148,10 +138,6 @@
                     end: params.batch[0].end
                 }, true);
             });
-        }
-
-        function getRawIndex(chart, dataIndex) {
-            return chart.getModel().getComponent('series').getData().indexOfRawIndex(dataIndex);
         }
 
     });

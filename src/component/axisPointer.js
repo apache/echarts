@@ -36,7 +36,7 @@ define(function (require) {
     // Broadcast to all views.
     echarts.registerAction({
         type: 'updateAxisPointer',
-        event: 'axisPointerUpdated',
+        event: 'updateAxisPointer',
         update: ':updateAxisPointer'
     }, function (payload, ecModel, api) {
         var outputFinder = axisTrigger(
@@ -50,9 +50,7 @@ define(function (require) {
             payload.highDownKey
         );
 
-        return zrUtil.extend(outputFinder, {
-            currTrigger: payload.currTrigger
-        });
+        return outputFinder;
     });
 
 });

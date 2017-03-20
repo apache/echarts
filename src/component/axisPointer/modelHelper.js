@@ -118,6 +118,7 @@ define(function(require) {
                 var snap = axisPointerModel.get('snap');
                 var key = makeKey(axis.model);
                 var involveSeries = triggerTooltip || snap;
+
                 // If result.axesInfo[key] exist, override it (tooltip has higher priority).
                 var axisInfo = result.axesInfo[key] = {
                     key: key,
@@ -127,7 +128,7 @@ define(function(require) {
                     triggerTooltip: triggerTooltip,
                     involveSeries: involveSeries,
                     snap: snap,
-                    alwaysShow: isHandleTrigger(axisPointerModel),
+                    useHandle: isHandleTrigger(axisPointerModel),
                     seriesModels: []
                 };
                 axesInfoInCoordSys[key] = axisInfo;
@@ -160,9 +161,6 @@ define(function(require) {
                 volatileOption[field] = zrUtil.clone(tooltipAxisPointerModel.get(field));
             }
         );
-
-        // Consider tooltip.triggerOn: 'click'.
-        volatileOption.triggerOn = baseTooltipModel.get('triggerOn');
 
         // category axis do not auto snap, otherwise some tick that do not
         // has value can not be hovered. value/time/log axis default snap if
@@ -309,7 +307,7 @@ define(function(require) {
     };
 
     function isHandleTrigger(axisPointerModel) {
-        return axisPointerModel.get('triggerOn') === 'handle';
+        return !!axisPointerModel.get('handle.show');
     }
 
     /**

@@ -38,7 +38,7 @@ define(function(require) {
 
         useHandler('click', zrUtil.curry(doEnter, 'click'));
         useHandler('mousemove', zrUtil.curry(doEnter, 'mousemove'));
-        useHandler('mouseout', onLeave);
+        // useHandler('mouseout', onLeave);
         useHandler('globalout', onLeave);
 
         function useHandler(eventType, cb) {

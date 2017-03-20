@@ -15,7 +15,7 @@ define(function(require) {
      * then hide/downplay them.
      *
      * @param {Object} coordSysAxesInfo
-     * @param {string} currTrigger 'click' | 'mousemove' | 'handle' | 'leave'
+     * @param {string} currTrigger 'click' | 'mousemove' | 'leave'
      * @param {Object} finder {x, y, xAxisId: ...[], yAxisName: ...[], angleAxisIndex: ...[]}
      *              x and y, which are mandatory, specify a point to tigger axisPointer and tooltip.
      *              other properties, which are optional, restrict target axes.
@@ -61,12 +61,7 @@ define(function(require) {
 
             each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
                 var axis = axisInfo.axis;
-                var triggerOns = modelUtil.normalizeToArray(axisInfo.axisPointerModel.get('triggerOn'));
-
-                if ((!currTrigger || zrUtil.indexOf(triggerOns, currTrigger) >= 0)
-                    && (currTrigger === 'handle' || (!shouldHide && coordSysContainsPoint))
-                    && !notTargetAxis(finder, axis)
-                ) {
+                if (!shouldHide && coordSysContainsPoint && !notTargetAxis(finder, axis)) {
                     processOnAxis(axisInfo, axis.pointToData(point), updaters, false, outputFinder);
                 }
             });
@@ -257,7 +252,7 @@ define(function(require) {
                 option.status = 'hide';
             }
 
-            if (axisInfo.alwaysShow) {
+            if (axisInfo.useHandle) {
                 option.status = axisInfo.axis.scale.isBlank() ? 'hide' : 'show';
             }
         });
@@ -359,27 +354,6 @@ define(function(require) {
 
     function illegalPoint(point) {
         return point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
-    }
-
-    function getPointFromSeries(finder, ecModel) {
-        // Considering echarts.connect. Currently only support connect
-        // by sample series data item.
-        var seriesModel = ecModel.getSeries(finder.seriesIndex);
-        if (seriesModel) {
-            var data = series.getData();
-            var dataIndex = modelUtil.queryDataIndex(data, finder);
-            var coordSys = series.coordinateSystem;
-            var point = coordSys.dataToPoint(
-                data.getValues(
-                    zrUtil.map(coordSys.dimensions, function (dim) {
-                        return seriesModel.coordDimToDataDim(dim)[0];
-                    }), dataIndex, true
-                )
-            );
-            // FIXME
-            // single coordSys?
-            series.coordinateSystem.dataToPoint();
-        }
     }
 
     return axisTrigger;

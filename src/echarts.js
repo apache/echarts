@@ -1448,10 +1448,10 @@ define(function (require) {
         });
     }
     /**
-     * @type {Array.<Function>}
+     * @type {Object} key: actionType.
      * @inner
      */
-    var actions = [];
+    var actions = {};
 
     /**
      * Map eventType to actionType
