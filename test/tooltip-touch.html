@@ -30,7 +30,7 @@
         <h1>handle | category | check resize | should trigger hightlight | should link </h1>
         <h1>press button: show tip, release button: hide tip</h1>
         <div class="chart" id="handle-category"></div>
-        <h1>handle | value axis | x snap, y not-snap | has init handle value | tooltip.alwaysShowContent | y handle tooltip position should not overflow axispointer line</h1>
+        <h1>handle | value axis | x snap, y not-snap | has init handle value | tooltip.alwaysShowContent | y handle tooltip position should not overflow axispointer line | image icon</h1>
         <div class="chart" id="handle-value-init"></div>
         <h1>single coordinate system handle | tooltip time label should be consistent with axisPinter.label.formatter</h1>
         <div class="chart" id="themeRiver"></div>
@@ -195,7 +195,10 @@
                     xAxis: {
                         position: 'top',
                         axisPointer: {
-                            handle: {show: true},
+                            handle: {
+                                show: true,
+                                icon: 'image://http://echarts.baidu.com/images/favicon.png'
+                            },
                             snap: true,
                             value: 600 // init value
                         }
@@ -209,6 +212,7 @@
                         axisPointer: {
                             handle: {
                                 show: true,
+                                icon: 'image://http://echarts.baidu.com/images/favicon.png',
                                 margin: 70
                             }
                         }

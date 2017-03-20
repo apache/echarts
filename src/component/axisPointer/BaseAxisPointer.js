@@ -276,14 +276,7 @@ define(function(require) {
             var isInit;
             if (!this._handle) {
                 isInit = true;
-                var iconStr = handleModel.get('icon');
-                handle = this._handle = graphic.makePath(iconStr, {
-                    style: {
-                        strokeNoScale: true
-                    },
-                    rectHover: true,
-                    cursor: 'move',
-                    draggable: true,
+                handle = this._handle = createIcon(handleModel, {
                     onmousemove: function (e) {
                         // Fot mobile devicem, prevent screen slider on the button.
                         eventTool.stop(e.event);
@@ -297,9 +290,7 @@ define(function(require) {
                     ondragend: zrUtil.bind(
                         this._onHandleDragEnd, this, axisModel, axisPointerModel, api, moveAnimation
                     )
-                }, {
-                    x: -1, y: -1, width: 2, height: 2
-                }, 'center');
+                });
                 zr.add(handle);
             }
 
@@ -506,6 +497,34 @@ define(function(require) {
             position: trans.position.slice(),
             rotation: trans.rotation || 0
         };
+    }
+
+    function createIcon(handleModel, handlers) {
+        var iconStr = handleModel.get('icon');
+        var style = {
+            x: -1, y: -1, width: 2, height: 2
+        };
+        var opt = zrUtil.extend({
+            style: {
+                strokeNoScale: true
+            },
+            rectHover: true,
+            cursor: 'move',
+            draggable: true
+        }, handlers);
+
+        return iconStr.indexOf('image://') === 0
+            ? (
+                style.image = iconStr.slice(8),
+                opt.style = style,
+                new graphic.Image(opt)
+            )
+            : graphic.makePath(
+                iconStr.replace('path://', ''),
+                opt,
+                style,
+                'center'
+            );
     }
 
     clazzUtil.enableClassExtend(BaseAxisPointer);
