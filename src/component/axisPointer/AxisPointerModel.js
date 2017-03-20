@@ -86,7 +86,10 @@ define(function(require) {
                 shadowBlur: 3,
                 shadowColor: '#aaa',
                 shadowOffsetX: 0,
-                shadowOffsetY: 2
+                shadowOffsetY: 2,
+
+                // For mobile performance
+                throttle: 40
             }
         }
 

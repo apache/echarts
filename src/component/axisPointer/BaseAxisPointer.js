@@ -6,6 +6,8 @@ define(function(require) {
     var graphic = require('../../util/graphic');
     var get = require('../../util/model').makeGetter();
     var axisPointerModelHelper = require('./modelHelper');
+    var eventTool = require('zrender/core/event');
+    var throttle = require('../../util/throttle');
 
     var extend = zrUtil.extend;
     var clone = zrUtil.clone;
@@ -48,6 +50,11 @@ define(function(require) {
          * @private
          */
         _lastStatus: null,
+
+        /**
+         * @private
+         */
+        _handleTrans: null,
 
         /**
          * In px, arbitrary value. Do not set too small,
@@ -277,8 +284,12 @@ define(function(require) {
                     rectHover: true,
                     cursor: 'move',
                     draggable: true,
+                    onmousemove: function (e) {
+                        // Fot mobile devicem, prevent screen slider on the button.
+                        eventTool.stop(e.event);
+                    },
                     onmousedown: zrUtil.bind(
-                        this._onHandleDragMove, this, axisModel, axisPointerModel, api, 0, 0
+                        this._onHandleMouseDown, this, axisModel, axisPointerModel, api, 0, 0
                     ),
                     drift: zrUtil.bind(
                         this._onHandleDragMove, this, axisModel, axisPointerModel, api
@@ -306,8 +317,12 @@ define(function(require) {
             }
             handle.attr('scale', [handleSize[0] / 2, handleSize[1] / 2]);
 
-            // handle margin is from symbol center to axis,
-            // which is stable when circular move.
+            throttle.createOrUpdate(
+                this,
+                '_doMoveHandleOnDrag',
+                handleModel.get('throttle') || 0,
+                'fixRate'
+            );
 
             this._moveHandleToValue(handle, value, moveAnimation, axisModel, axisPointerModel, isInit);
         },
@@ -317,12 +332,19 @@ define(function(require) {
          */
         _moveHandleToValue: function (handle, value, moveAnimation, axisModel, axisPointerModel, isInit) {
             var trans = this.getHandleTransform(value, axisModel, axisPointerModel);
-            var valueProps = {
-                position: trans.position.slice(),
-                rotation: trans.rotation || 0
-            };
+            updateProps(axisPointerModel, !isInit && moveAnimation, handle, getHandleTransProps(trans));
+        },
 
-            updateProps(axisPointerModel, !isInit && moveAnimation, handle, valueProps);
+        /**
+         * @private
+         */
+        _onHandleMouseDown: function (axisModel, axisPointerModel, api) {
+            var handle = this._handle;
+            if (handle) {
+                this._handleTrans = getHandleTransProps(handle);
+                // Show tooltip.
+                this._onHandleDragMove(axisModel, axisPointerModel, api, 0, 0);
+            }
         },
 
         /**
@@ -336,19 +358,30 @@ define(function(require) {
 
             this._dragging = true;
 
-            handle.stopAnimation();
-
-            var trans = this.updateHandleTransform(
-                {position: handle.position.slice(), rotation: handle.rotation},
+            // Persistent for throttle.
+            this._handleTrans = this.updateHandleTransform(
+                getHandleTransProps(this._handleTrans),
                 [dx, dy],
                 axisModel,
                 axisPointerModel
             );
 
-            handle.attr({
-                position: trans.position,
-                rotation: trans.rotation || 0
-            });
+            this._doMoveHandleOnDrag(axisModel, api);
+        },
+
+        /**
+         * Throttled method.
+         * @private
+         */
+        _doMoveHandleOnDrag: function (axisModel, api) {
+            var handle = this._handle;
+            if (!handle) {
+                return;
+            }
+
+            var trans = this._handleTrans;
+            handle.stopAnimation();
+            handle.attr(getHandleTransProps(trans));
             get(handle).lastProp = null;
 
             var payload = {
@@ -421,6 +454,7 @@ define(function(require) {
                 handle && zr.remove(handle);
                 this._group = null;
                 this._handle = null;
+                this._handleTrans = null;
             }
         },
 
@@ -476,6 +510,13 @@ define(function(require) {
 
     function updateLabelShowHide(labelEl, axisPointerModel) {
         labelEl[axisPointerModel.get('label.show') ? 'show' : 'hide']();
+    }
+
+    function getHandleTransProps(trans) {
+        return {
+            position: trans.position.slice(),
+            rotation: trans.rotation || 0
+        };
     }
 
     clazzUtil.enableClassExtend(BaseAxisPointer);

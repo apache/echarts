@@ -562,7 +562,7 @@ define(function (require) {
                 return;
             }
             this._tooltipContent.hide();
-            globalListener.disopse(api.getZr(), 'itemTooltip');
+            globalListener.unregister('itemTooltip', api);
         }
     });
 

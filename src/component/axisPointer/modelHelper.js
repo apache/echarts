@@ -271,10 +271,11 @@ define(function(require) {
             value = scale.parse(value);
         }
 
+        var useHandle = isHandleTrigger(axisPointerModel);
         // If `handle` used, `axisPointer` will always be displayed, so value
         // and status should be initialized.
         if (status == null) {
-            option.status = isHandleTrigger(axisPointerModel) ? 'show' : 'hide';
+            option.status = useHandle ? 'show' : 'hide';
         }
 
         var extent = scale.getExtent().slice();
@@ -294,6 +295,10 @@ define(function(require) {
         }
 
         option.value = value;
+
+        if (useHandle) {
+            option.status = axisInfo.axis.scale.isBlank() ? 'hide' : 'show';
+        }
     };
 
     helper.getAxisInfo = function (axisModel) {

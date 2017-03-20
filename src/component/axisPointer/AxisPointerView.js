@@ -44,7 +44,7 @@ define(function (require) {
          * @override
          */
         dispose: function (ecModel, api) {
-            globalListener.disopse(api.getZr(), 'axisPointer');
+            globalListener.unregister('axisPointer', api);
             AxisPonterView.superApply(this._model, 'dispose', arguments);
         }
 

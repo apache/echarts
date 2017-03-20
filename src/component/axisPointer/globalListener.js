@@ -43,31 +43,13 @@ define(function(require) {
 
         function useHandler(eventType, cb) {
             zr.on(eventType, function (e) {
-                var pendings = {
-                    showTip: [],
-                    hideTip: []
-                };
-                // FIXME
-                // better approach?
-                // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
-                // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
-                // So we have to add "final stage" to merge those dispatched actions.
-                function dispatchAction(payload) {
-                    var pendingList = pendings[payload.type];
-                    if (pendingList) {
-                        pendingList.push(payload);
-                    }
-                    else {
-                        payload.dispatchAction = dispatchAction;
-                        api.dispatchAction(payload);
-                    }
-                }
+                var dis = makeDispatchAction(api);
 
                 each(get(zr).records, function (record) {
-                    record && cb(record, e, dispatchAction);
+                    record && cb(record, e, dis.dispatchAction);
                 });
 
-                dispatchTooltipFinally(pendings, api);
+                dispatchTooltipFinally(dis.pendings, api);
             });
         }
     }
@@ -97,18 +79,44 @@ define(function(require) {
         record.handler(currTrigger, e, dispatchAction);
     }
 
+    function makeDispatchAction(api) {
+        var pendings = {
+            showTip: [],
+            hideTip: []
+        };
+        // FIXME
+        // better approach?
+        // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
+        // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
+        // So we have to add "final stage" to merge those dispatched actions.
+        var dispatchAction = function (payload) {
+            var pendingList = pendings[payload.type];
+            if (pendingList) {
+                pendingList.push(payload);
+            }
+            else {
+                payload.dispatchAction = dispatchAction;
+                api.dispatchAction(payload);
+            }
+        };
+
+        return {
+            dispatchAction: dispatchAction,
+            pendings: pendings
+        };
+    }
+
     /**
      * @param {string} key
-     * @param {module:zrender} zr
+     * @param {module:echarts/ExtensionAPI} api
      */
-    globalListener.unregister = function (key, zr) {
+    globalListener.unregister = function (key, api) {
         if (env.node) {
             return;
         }
-
+        var zr = api.getZr();
         var record = (get(zr).records || {})[key];
         if (record) {
-            record.handler('leave');
             get(zr).records[key] = null;
         }
     };

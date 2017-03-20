@@ -582,7 +582,7 @@ define(function(require) {
                 || !queryType
                 || value == null
                 || (queryType === 'index' && value === 'none')
-                || (opt.includeMainTypes && zrUtil.indexOf(opt.includeMainTypes, mainType) < 0)
+                || (opt && opt.includeMainTypes && zrUtil.indexOf(opt.includeMainTypes, mainType) < 0)
             ) {
                 return;
             }

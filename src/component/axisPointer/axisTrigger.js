@@ -203,6 +203,13 @@ define(function(require) {
         var valueLabel = viewHelper.getValueLabel(
             value, axisInfo.axis.model, axisInfo.axisPointerModel
         );
+
+        // If no data, do not create anything in dataByCoordSys,
+        // whose length will be used to judge whether dispatch action.
+        if (!axisInfo.triggerTooltip || !payloadBatch.length) {
+            return;
+        }
+
         var coordSysModel = axisInfo.coordSys.model;
         var coordSysKey = modelHelper.makeKey(coordSysModel);
         var coordSysItem = dataByCoordSys.map[coordSysKey];
@@ -217,7 +224,7 @@ define(function(require) {
             dataByCoordSys.list.push(coordSysItem);
         }
 
-        axisInfo.triggerTooltip && payloadBatch.length && coordSysItem.dataByAxis.push({
+        coordSysItem.dataByAxis.push({
             axisDim: axis.dim,
             axisIndex: axisModel.componentIndex,
             axisType: axisModel.type,
@@ -239,7 +246,7 @@ define(function(require) {
             var valItem = showValueMap[key];
 
             if (valItem) {
-                option.status = 'show';
+                !axisInfo.useHandle && (option.status = 'show');
                 option.value = valItem.value;
                 // For label formatter param.
                 option.seriesDataIndices = (valItem.payloadBatch || []).slice();
@@ -249,11 +256,7 @@ define(function(require) {
             else {
                 // If hide, value still need to be set, consider
                 // click legend to toggle axis blank.
-                option.status = 'hide';
-            }
-
-            if (axisInfo.useHandle) {
-                option.status = axisInfo.axis.scale.isBlank() ? 'hide' : 'show';
+                !axisInfo.useHandle && (option.status = 'hide');
             }
         });
     }
