@@ -11,8 +11,10 @@ define(function(require) {
     return function (finder, ecModel) {
         var point = [];
         var seriesIndex = finder.seriesIndex;
-        var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
-        if (!seriesModel) {
+        var seriesModel;
+        if (seriesIndex == null || !(
+            seriesModel = ecModel.getSeriesByIndex(seriesIndex)
+        )) {
             return {point: []};
         }
 

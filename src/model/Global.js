@@ -616,10 +616,12 @@ define(function (require) {
         this.option[OPTION_INNER_KEY] = 1;
 
         /**
+         * Init with series: [], in case of calling findSeries method
+         * before series initialized.
          * @type {Object.<string, Array.<module:echarts/model/Model>>}
          * @private
          */
-        this._componentsMap = {};
+        this._componentsMap = {series: []};
 
         /**
          * Mapping between filtered series list and raw series list.
