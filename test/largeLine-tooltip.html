@@ -13,7 +13,7 @@
                 margin: 0;
             }
         </style>
-        <div id="timing"></div>
+        <div id="main"></div>
         <script>
 
             require([
@@ -26,27 +26,30 @@
                 'echarts/component/tooltip'
             ], function (echarts) {
                 var myChart;
-                var lineCount = 20;
-                var pointCount = 1000;
-                var chartCount = 50;
+                var lineCount = 1;
+                var pointCount = 60 * 10000;
+
+                var chart = echarts.init(document.getElementById('main'));
 
                 var option = {
                     tooltip : {
                         trigger: 'axis',
+                        // showContent: false,
                         axisPointer: {
-                            animation: false
+                            type: 'cross'
+                            // animation: false
                         }
                     },
                     legend: {
                         data:[]
                     },
-                    dataZoom: [{
-                        show: true,
-                        realtime: true,
-                        // showDataShadow: false,
-                        start: 50,
-                        end: 60
-                    }],
+                    // dataZoom: [{
+                    //     show: true,
+                    //     realtime: true,
+                    //     // showDataShadow: false,
+                    //     start: 50,
+                    //     end: 60
+                    // }],
                     xAxis : [
                         {
                             type : 'time'
@@ -94,29 +97,17 @@
                     name: 'line' + i,
                     type: 'line',
                     sampling: 'average',
+showAllSymbol: true,
+symbol: 'emptyCircle',
+// symbolSize: 0.1,
                     hoverAnimation: false,
-                    showSymbol: false,
+                    // showSymbol: false,
                     data: values,
                     lineStyle: lineStyle
                   });
                 }
 
-                function refresh(isBtnRefresh){
-                    var start = new Date();
-                    for( var n = 0; n < chartCount; n++ ) {
-                        var el = document.createElement('div');
-                      el.innerHTML = '<h1>'+n+'</h1><div id="chart'+n+'" style="width: 860px; height: 320px"></div>';
-                      document.body.appendChild(el);
-
-                      myChart = echarts.init(document.getElementById('chart'+n));
-                      myChart.setOption(option, true);
-                    }
-                    var end = new Date();
-
-                    document.getElementById('timing').innerHTML = 'Graphs loaded in ' + ( end - start ) + ' ms.';
-                };
-
-                refresh();
+                chart.setOption(option);
             });
         </script>
     </body>

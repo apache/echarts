@@ -54,7 +54,7 @@ define(function(require) {
         /**
          * @private
          */
-        _handleTrans: null,
+        _payloadInfo: null,
 
         /**
          * In px, arbitrary value. Do not set too small,
@@ -289,7 +289,7 @@ define(function(require) {
                         eventTool.stop(e.event);
                     },
                     onmousedown: zrUtil.bind(
-                        this._onHandleMouseDown, this, axisModel, axisPointerModel, api, 0, 0
+                        this._onHandleDragMove, this, axisModel, axisPointerModel, api, 0, 0
                     ),
                     drift: zrUtil.bind(
                         this._onHandleDragMove, this, axisModel, axisPointerModel, api
@@ -319,7 +319,7 @@ define(function(require) {
 
             throttle.createOrUpdate(
                 this,
-                '_doMoveHandleOnDrag',
+                '_doDispatchAxisPointer',
                 handleModel.get('throttle') || 0,
                 'fixRate'
             );
@@ -338,18 +338,6 @@ define(function(require) {
         /**
          * @private
          */
-        _onHandleMouseDown: function (axisModel, axisPointerModel, api) {
-            var handle = this._handle;
-            if (handle) {
-                this._handleTrans = getHandleTransProps(handle);
-                // Show tooltip.
-                this._onHandleDragMove(axisModel, axisPointerModel, api, 0, 0);
-            }
-        },
-
-        /**
-         * @private
-         */
         _onHandleDragMove: function (axisModel, axisPointerModel, api, dx, dy) {
             var handle = this._handle;
             if (!handle) {
@@ -359,36 +347,37 @@ define(function(require) {
             this._dragging = true;
 
             // Persistent for throttle.
-            this._handleTrans = this.updateHandleTransform(
-                getHandleTransProps(this._handleTrans),
+            var trans = this.updateHandleTransform(
+                getHandleTransProps(handle),
                 [dx, dy],
                 axisModel,
                 axisPointerModel
             );
+            this._payloadInfo = trans;
 
-            this._doMoveHandleOnDrag(axisModel, api);
+            handle.stopAnimation();
+            handle.attr(getHandleTransProps(trans));
+            get(handle).lastProp = null;
+
+            this._doDispatchAxisPointer(axisModel, api);
         },
 
         /**
          * Throttled method.
          * @private
          */
-        _doMoveHandleOnDrag: function (axisModel, api) {
+        _doDispatchAxisPointer: function (axisModel, api) {
             var handle = this._handle;
             if (!handle) {
                 return;
             }
 
-            var trans = this._handleTrans;
-            handle.stopAnimation();
-            handle.attr(getHandleTransProps(trans));
-            get(handle).lastProp = null;
-
+            var payloadInfo = this._payloadInfo;
             var payload = {
                 type: 'updateAxisPointer',
-                x: trans.cursorPoint[0],
-                y: trans.cursorPoint[1],
-                tooltipOption: trans.tooltipOption,
+                x: payloadInfo.cursorPoint[0],
+                y: payloadInfo.cursorPoint[1],
+                tooltipOption: payloadInfo.tooltipOption,
                 highDownKey: 'axisPointerHandle'
             };
             var axis = axisModel.axis;
@@ -454,7 +443,7 @@ define(function(require) {
                 handle && zr.remove(handle);
                 this._group = null;
                 this._handle = null;
-                this._handleTrans = null;
+                this._payloadInfo = null;
             }
         },
 

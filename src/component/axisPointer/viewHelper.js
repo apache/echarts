@@ -6,6 +6,7 @@ define(function(require) {
     var textContain = require('zrender/contain/text');
     var formatUtil = require('../../util/format');
     var matrix = require('zrender/core/matrix');
+    var axisHelper = require('../../coord/axisHelper');
     var AxisBuilder = require('../axis/AxisBuilder');
 
     var helper = {};
@@ -95,14 +96,18 @@ define(function(require) {
     }
 
     helper.getValueLabel = function (value, axisModel, axisPointerModel) {
-        var text = axisModel.axis.scale.getLabel(
+        var axis = axisModel.axis;
+        var text = axis.scale.getLabel(
             // Use 'pad' to try to fix width, which helps to debounce when when moving label.
             value, {precision: axisPointerModel.get('label.precision'), pad: true}
         );
         var formatter = axisPointerModel.get('label.formatter');
 
         if (formatter) {
-            var params = {value: value, seriesData: []};
+            var params = {
+                value: axisHelper.getAxisRawValue(axis, value),
+                seriesData: []
+            };
             zrUtil.each(axisPointerModel.get('seriesDataIndices'), function (idxItem) {
                 var series = axisModel.ecModel.getSeriesByIndex(idxItem.seriesIndex);
                 var dataIndex = idxItem.dataIndexInside;
@@ -111,9 +116,7 @@ define(function(require) {
             });
 
             if (zrUtil.isString(formatter)) {
-                text = formatter.replace('{value}', value);
-                // The same as tooltip content formatter.
-                text = formatUtil.formatTpl(text, params.seriesData);
+                text = formatter.replace('{value}', text);
             }
             else if (zrUtil.isFunction(formatter)) {
                 text = formatter(params);

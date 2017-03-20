@@ -228,18 +228,22 @@ define(function (require) {
         }
         else if (typeof labelFormatter === 'function') {
             return zrUtil.map(ticks, function (tick, idx) {
-                var labelStr = scale.getLabel(tick);
                 return labelFormatter(
-                    // Have to be compatible with previous version.
-                    axis.type === 'category' ? labelStr : tick,
-                    idx,
-                    {value: tick, index: idx, label: labelStr}
+                    axisHelper.getAxisRawValue(axis, tick),
+                    idx
                 );
             }, this);
         }
         else {
             return labels;
         }
+    };
+
+    axisHelper.getAxisRawValue = function (axis, value) {
+        // In category axis with data zoom, tick is not the original
+        // index of axis.data. So tick should not be exposed to user
+        // in category axis.
+        return axis.type === 'category' ? axis.scale.getLabel(value) : value;
     };
 
     return axisHelper;

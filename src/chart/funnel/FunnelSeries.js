@@ -41,10 +41,10 @@ define(function(require) {
             labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
                 && option.label.emphasis.show;
         },
-        
+
         // Overwrite
         getDataParams: function (dataIndex) {
-            var data = this._data;
+            var data = this.getData();
             var params = FunnelSeries.superCall(this, 'getDataParams', dataIndex);
             var sum = data.getSum('value');
             // Percent is 0 if sum is 0
@@ -53,7 +53,7 @@ define(function(require) {
             params.$vars.push('percent');
             return params;
         },
-        
+
         defaultOption: {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠

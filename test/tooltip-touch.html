@@ -258,6 +258,7 @@
                             axisPointer: {
                                 handle: {show: true},
                                 label: {
+                                    // formatter: '|{value}|',
                                     formatter: function (params) {
                                         return echarts.format.formatTime('yyyy-MM-dd', params.value);
                                     }

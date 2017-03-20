@@ -141,10 +141,6 @@ define(function(require) {
          */
         getDataParams: function (dataIndex, dataType) {
             var data = this.getData(dataType);
-
-            var seriesIndex = this.seriesIndex;
-            var seriesName = this.name;
-
             var rawValue = this.getRawValue(dataIndex, dataType);
             var rawDataIndex = data.getRawIndex(dataIndex);
             var name = data.getName(dataIndex, true);
@@ -154,8 +150,9 @@ define(function(require) {
                 componentType: this.mainType,
                 componentSubType: this.subType,
                 seriesType: this.mainType === 'series' ? this.subType : null,
-                seriesIndex: seriesIndex,
-                seriesName: seriesName,
+                seriesIndex: this.seriesIndex,
+                seriesId: this.id,
+                seriesName: this.name,
                 name: name,
                 dataIndex: rawDataIndex,
                 data: itemOpt,
@@ -373,7 +370,7 @@ define(function(require) {
                 ? opt.name + ''
                 : existCpt
                 ? existCpt.name
-                : '\0-';
+                : '\0##';
 
             if (existCpt) {
                 keyInfo.id = existCpt.id;

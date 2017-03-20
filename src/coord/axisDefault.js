@@ -106,7 +106,7 @@ define(function (require) {
         // 坐标轴小标记
         axisTick: {
             // If tick is align with label when boundaryGap is true
-            alignWithLabel: true,
+            alignWithLabel: false,
             interval: 'auto'
         },
         // 坐标轴文本标签，详见axis.axisLabel

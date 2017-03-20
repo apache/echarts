@@ -29,7 +29,8 @@
                 'data/aqi/GZdata',
                 'data/aqi/SHdata',
                 'echarts',
-                'echarts/chart/scatter'
+                'echarts/chart/scatter',
+                'echarts/component/tooltip'
             ], function (dataBJ, dataGZ, dataSH, echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -41,11 +42,38 @@
 
                 function update(isLazy) {
                     var idx = 0;
+                    var axisPointerLinkList = [];
+                    var axisPointerLinkMap = {};
                     for (var i = 1; i < dimSize; i++) {
                         for (var j = 1; j < dimSize; j++) {
                             var id = i + '-' + j;
 
+                            var linkItem = axisPointerLinkMap['x' + i];
+                            if (!linkItem) {
+                                linkItem = axisPointerLinkMap['x' + i] = {xAxisId: []};
+                                axisPointerLinkList.push(linkItem);
+                            }
+                            linkItem.xAxisId.push(id);
+
+                            var linkItem = axisPointerLinkMap['y' + j];
+                            if (!linkItem) {
+                                linkItem = axisPointerLinkMap['y' + j] = {yAxisId: []};
+                                axisPointerLinkList.push(linkItem);
+                            }
+                            linkItem.yAxisId.push(id);
+
                             chart.setOption({
+                                tooltip: {
+                                    trigger: 'none'
+                                },
+                                axisPointer: {
+                                    show: true,
+                                    snap: true,
+                                    lineStyle: {
+                                        type: 'dashed'
+                                    },
+                                    link: axisPointerLinkList
+                                },
                                 grid: [{
                                     id: id,
                                     left: ((i - 1) / dimSize * 100 + 7) + '%',
@@ -110,11 +138,12 @@
                     }
                 }
 
-                console.time('update immediate');
-                update(false);
-                console.timeEnd('update immediate');
+                // console.time('update immediate');
+                // update(false);
+                // console.timeEnd('update immediate');
 
-                chart.clear();
+                // chart.clear();
+
                 setTimeout(function () {
                     console.time('update lazy');
                     update(true);

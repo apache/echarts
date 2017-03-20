@@ -9,6 +9,7 @@ define(function (require) {
     var env = require('zrender/core/env');
     var Model = require('../../model/Model');
     var globalListener = require('../axisPointer/globalListener');
+    var axisHelper = require('../../coord/axisHelper');
 
     var bind = zrUtil.bind;
     var each = zrUtil.each;
@@ -281,6 +282,13 @@ define(function (require) {
                         var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                         var dataIndex = idxItem.dataIndexInside;
                         var dataParams = series && series.getDataParams(dataIndex);
+                        dataParams.axisDim = item.axisDim;
+                        dataParams.axisIndex = item.axisIndex;
+                        dataParams.axisType = item.axisType;
+                        dataParams.axisId = item.axisId;
+                        dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
+                        dataParams.axisValueLabel = item.valueLabel;
+
                         if (dataParams) {
                             singleParamsList.push(dataParams);
                             seriesDefaultHTML.push(series.formatTooltip(dataIndex, true));

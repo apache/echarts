@@ -355,7 +355,7 @@ define(function(require) {
             dataExtent[0] = min;
         }
         else if (isCategoryAxis) {
-            dataExtent[0] = 0;
+            dataExtent[0] = axisDataLen > 0 ? 0 : NaN;
         }
 
         var max = axisModel.getMax(true);
@@ -363,7 +363,7 @@ define(function(require) {
             dataExtent[1] = max;
         }
         else if (isCategoryAxis) {
-            dataExtent[1] = Math.max(0, axisDataLen - 1);
+            dataExtent[1] = axisDataLen > 0 ? axisDataLen - 1 : NaN;
         }
 
         if (!axisModel.get('scale', true)) {
