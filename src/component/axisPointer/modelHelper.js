@@ -117,7 +117,7 @@ define(function(require) {
 
                 var snap = axisPointerModel.get('snap');
                 var key = makeKey(axis.model);
-                var involveSeries = triggerTooltip || snap;
+                var involveSeries = triggerTooltip || snap || axis.type === 'category';
 
                 // If result.axesInfo[key] exist, override it (tooltip has higher priority).
                 var axisInfo = result.axesInfo[key] = {
