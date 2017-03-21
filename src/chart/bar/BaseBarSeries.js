@@ -63,6 +63,8 @@ define(function(require) {
             itemStyle: {
                 normal: {
                     // color: '各异'
+                    borderColor: '#000',
+                    borderWidth: 0
                 },
                 emphasis: {}
             }
