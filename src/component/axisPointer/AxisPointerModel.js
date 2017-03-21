@@ -45,7 +45,7 @@ define(function(require) {
             animationDurationUpdate: 200,
 
             lineStyle: {
-                color: '#555',
+                color: '#aaa',
                 width: 1,
                 type: 'solid'
             },
@@ -69,9 +69,11 @@ define(function(require) {
                 borderColor: null,
                 borderWidth: 0,
                 shadowBlur: 3,
-                shadowColor: '#aaa',
-                shadowOffsetX: 0,
-                shadowOffsetY: 2
+                shadowColor: '#aaa'
+                // Considering applicability, common style should
+                // better not have shadowOffset.
+                // shadowOffsetX: 0,
+                // shadowOffsetY: 2
             },
 
             handle: {

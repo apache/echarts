@@ -145,7 +145,6 @@ define(function(require) {
         });
     }
 
-
     function makeAxisPointerModel(
         axis, baseTooltipModel, globalAxisPointerModel, ecModel, fromTooltip, triggerTooltip
     ) {
@@ -155,7 +154,7 @@ define(function(require) {
         each(
             [
                 'type', 'precision', 'snap', 'lineStyle', 'shadowStyle', 'label',
-                'animation', 'animationDurationUpdate', 'animationEasingUpdate'
+                'animation', 'animationDurationUpdate', 'animationEasingUpdate', 'z'
             ],
             function (field) {
                 volatileOption[field] = zrUtil.clone(tooltipAxisPointerModel.get(field));
@@ -173,7 +172,8 @@ define(function(require) {
             volatileOption.type = 'line';
         }
         var labelOption = volatileOption.label || (volatileOption.label = {});
-        labelOption.show = false;
+        // Follow the convention, do not show label when triggered by tooltip by default.
+        labelOption.show == null && (labelOption.show = false);
 
         if (fromTooltip === 'cross') {
             // When 'cross', both axes show labels.
@@ -182,7 +182,10 @@ define(function(require) {
             // (cross style is dashed by default)
             if (!triggerTooltip) {
                 var crossStyle = volatileOption.lineStyle = tooltipAxisPointerModel.get('crossStyle');
-                volatileOption.label.textStyle = crossStyle && crossStyle.textStyle;
+                crossStyle && zrUtil.defaults(
+                    labelOption.textStyle || (labelOption.textStyle = {}),
+                    crossStyle.textStyle
+                );
             }
         }
 
