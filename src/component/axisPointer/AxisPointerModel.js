@@ -59,10 +59,8 @@ define(function(require) {
                 formatter: null, // string | Function
                 precision: 'auto', // Or a number like 0, 1, 2 ...
                 margin: 3,
-                rotate: 0,    // in degree.
                 textStyle: {
-                    color: '#fff',
-                    fontSize: 12
+                    color: '#fff'
                 },
                 padding: [5, 7, 5, 7],
                 backgroundColor: 'auto', // default: axis line color

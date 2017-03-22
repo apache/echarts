@@ -10,6 +10,7 @@ define(function (require) {
     var Model = require('../../model/Model');
     var globalListener = require('../axisPointer/globalListener');
     var axisHelper = require('../../coord/axisHelper');
+    var axisPointerViewHelper = require('../axisPointer/viewHelper');
 
     var bind = zrUtil.bind;
     var each = zrUtil.each;
@@ -279,6 +280,12 @@ define(function (require) {
                         return;
                     }
 
+                    var valueLabel = axisPointerViewHelper.getValueLabel(
+                        axisValue, axisModel.axis, ecModel,
+                        item.seriesDataIndices,
+                        item.valueLabelOpt
+                    );
+
                     zrUtil.each(item.seriesDataIndices, function (idxItem) {
                         var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                         var dataIndex = idxItem.dataIndexInside;
@@ -288,7 +295,7 @@ define(function (require) {
                         dataParams.axisType = item.axisType;
                         dataParams.axisId = item.axisId;
                         dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
-                        dataParams.axisValueLabel = item.valueLabel;
+                        dataParams.axisValueLabel = valueLabel;
 
                         if (dataParams) {
                             singleParamsList.push(dataParams);
@@ -300,7 +307,7 @@ define(function (require) {
                     // FIXME
                     // (1) shold be the first data which has name?
                     // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
-                    var firstLine = item.valueLabel;
+                    var firstLine = valueLabel;
                     singleDefaultHTML.push(
                         (firstLine ? formatUtil.encodeHTML(firstLine) + '<br />' : '')
                         + seriesDefaultHTML.join('<br />')

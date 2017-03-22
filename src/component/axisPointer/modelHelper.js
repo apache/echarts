@@ -153,7 +153,7 @@ define(function(require) {
 
         each(
             [
-                'type', 'precision', 'snap', 'lineStyle', 'shadowStyle', 'label',
+                'type', 'snap', 'lineStyle', 'shadowStyle', 'label',
                 'animation', 'animationDurationUpdate', 'animationEasingUpdate', 'z'
             ],
             function (field) {

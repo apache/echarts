@@ -382,6 +382,8 @@ define(function(require) {
             // drag ended.
             this._moveHandleToValue(value);
 
+            // For the effect: tooltip will be shown when finger holding on handle
+            // button, and will be hidden after finger left handle button.
             this._api.dispatchAction({
                 type: 'hideTip'
             });
