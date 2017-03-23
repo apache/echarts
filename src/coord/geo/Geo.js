@@ -80,7 +80,7 @@ define(function (require) {
                 this.regions = geoJson ? parseGeoJson(geoJson) : [];
             }
             catch (e) {
-                throw 'Invalid geoJson format\n' + e;
+                throw 'Invalid geoJson format\n' + e.message;
             }
             specialAreas = specialAreas || {};
             nameMap = nameMap || {};

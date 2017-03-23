@@ -100,7 +100,7 @@ define(function (require) {
                 });
             }
             if (geo.type === 'MultiPolygon') {
-                coordinates.forEach(function (item) {
+                zrUtil.each(coordinates, function (item) {
                     if (item[0]) {
                         geometries.push({
                             type: 'polygon',
