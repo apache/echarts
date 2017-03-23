@@ -271,6 +271,20 @@ define(function (require) {
         },
 
         /**
+         * @override
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
+
+        /**
+         * @override
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
+
+        /**
          * initRange
          *
          * @private
@@ -389,6 +403,18 @@ define(function (require) {
         return calendarList;
     };
 
+    function doConvert(methodName, ecModel, finder, value) {
+        var calendarModel = finder.calendarModel;
+        var seriesModel = finder.seriesModel;
+
+        var coordSys = calendarModel
+            ? calendarModel.coordinateSystem
+            : seriesModel
+            ? seriesModel.coordinateSystem
+            : null;
+
+        return coordSys === this ? coordSys[methodName](value) : null;
+    }
 
     require('../../CoordinateSystem').register('calendar', Calendar);
 
