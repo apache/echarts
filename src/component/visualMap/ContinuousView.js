@@ -8,6 +8,7 @@ define(function(require) {
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var helper = require('./helper');
     var modelUtil = require('../../util/model');
+    var eventTool = require('zrender/core/event');
 
     var linearMap = numberUtil.linearMap;
     var each = zrUtil.each;
@@ -230,6 +231,10 @@ define(function(require) {
             var handleLabel = new graphic.Text({
                 draggable: true,
                 drift: onDrift,
+                onmousemove: function (e) {
+                    // Fot mobile devicem, prevent screen slider on the button.
+                    eventTool.stop(e.event);
+                },
                 ondragend: onDragEnd,
                 style: {
                     x: 0, y: 0, text: '',
@@ -794,6 +799,10 @@ define(function(require) {
             draggable: !!onDrift,
             cursor: cursor,
             drift: onDrift,
+            onmousemove: function (e) {
+                // Fot mobile devicem, prevent screen slider on the button.
+                eventTool.stop(e.event);
+            },
             ondragend: onDragEnd
         });
     }
