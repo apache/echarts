@@ -60,9 +60,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = __webpack_require__(1);
 
 	__webpack_require__(112);
-	__webpack_require__(148);
-	__webpack_require__(155);
-	__webpack_require__(123);
+	__webpack_require__(138);
+	__webpack_require__(145);
+	__webpack_require__(122);
 
 /***/ },
 /* 1 */
@@ -27482,18 +27482,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
-	
-
-	    __webpack_require__(123);
-
-	    __webpack_require__(142);
-
-
-
-/***/ },
-/* 123 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 
 
@@ -27501,9 +27489,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 	    var echarts = __webpack_require__(1);
 
-	    __webpack_require__(124);
+	    __webpack_require__(123);
 
-	    __webpack_require__(133);
+	    __webpack_require__(132);
 
 	    // Grid view
 	    echarts.extendComponentView({
@@ -27535,7 +27523,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 124 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27549,8 +27537,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var axisHelper = __webpack_require__(105);
 
 	    var zrUtil = __webpack_require__(4);
-	    var Cartesian2D = __webpack_require__(125);
-	    var Axis2D = __webpack_require__(127);
+	    var Cartesian2D = __webpack_require__(124);
+	    var Axis2D = __webpack_require__(126);
 
 	    var each = zrUtil.each;
 
@@ -27558,7 +27546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var niceScaleExtent = axisHelper.niceScaleExtent;
 
 	    // 依赖 GridModel, AxisModel 做预处理
-	    __webpack_require__(129);
+	    __webpack_require__(128);
 
 	    /**
 	     * Check if the axis is used in the specified grid
@@ -28148,14 +28136,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 125 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var Cartesian = __webpack_require__(126);
+	    var Cartesian = __webpack_require__(125);
 
 	    function Cartesian2D(name) {
 
@@ -28264,7 +28252,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 126 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28382,14 +28370,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 127 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 	    var Axis = __webpack_require__(100);
-	    var axisLabelInterval = __webpack_require__(128);
+	    var axisLabelInterval = __webpack_require__(127);
 
 	    /**
 	     * Extend axis 2d
@@ -28524,7 +28512,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 128 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28555,7 +28543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 129 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28563,7 +28551,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// 所以这里也要被 Cartesian2D 依赖
 
 
-	    __webpack_require__(130);
+	    __webpack_require__(129);
 
 	    var ComponentModel = __webpack_require__(19);
 
@@ -28600,7 +28588,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 130 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28608,7 +28596,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var ComponentModel = __webpack_require__(19);
 	    var zrUtil = __webpack_require__(4);
-	    var axisModelCreator = __webpack_require__(131);
+	    var axisModelCreator = __webpack_require__(130);
 
 	    var AxisModel = ComponentModel.extend({
 
@@ -28679,12 +28667,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 131 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    var axisDefault = __webpack_require__(132);
+	    var axisDefault = __webpack_require__(131);
 	    var zrUtil = __webpack_require__(4);
 	    var ComponentModel = __webpack_require__(19);
 	    var layout = __webpack_require__(21);
@@ -28742,7 +28730,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 132 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28901,30 +28889,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 133 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	// TODO boundaryGap
 
 
-	    __webpack_require__(130);
+	    __webpack_require__(129);
 
-	    __webpack_require__(134);
+	    __webpack_require__(133);
 
 
 /***/ },
-/* 134 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 	    var graphic = __webpack_require__(44);
-	    var AxisBuilder = __webpack_require__(135);
-	    var CartesianAxisPointer = __webpack_require__(136);
-	    var AxisView = __webpack_require__(141);
-	    var cartesianAxisHelper = __webpack_require__(140);
+	    var AxisBuilder = __webpack_require__(134);
+	    var AxisView = __webpack_require__(135);
+	    var cartesianAxisHelper = __webpack_require__(137);
 	    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 	    var getInterval = AxisBuilder.getInterval;
 
@@ -28947,7 +28934,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        type: 'cartesianAxis',
 
-	        axisPointerClass: CartesianAxisPointer,
+	        axisPointerClass: 'CartesianAxisPointer',
 
 	        /**
 	         * @override
@@ -29150,7 +29137,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 135 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -29772,678 +29759,116 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 136 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	
 
+	    var axisPointerModelHelper = __webpack_require__(136);
 
-	    var graphic = __webpack_require__(44);
-	    var BaseAxisPointer = __webpack_require__(137);
-	    var viewHelper = __webpack_require__(139);
-	    var cartesianAxisHelper = __webpack_require__(140);
+	    /**
+	     * Base class of AxisView.
+	     */
+	    var AxisView = __webpack_require__(1).extendComponentView({
 
-	    var CartesianAxisPointer = BaseAxisPointer.extend({
+	        type: 'axis',
+
+	        /**
+	         * @private
+	         */
+	        _axisPointer: null,
+
+	        /**
+	         * @protected
+	         * @type {string}
+	         */
+	        axisPointerClass: null,
 
 	        /**
 	         * @override
 	         */
-	        makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
-	            var axis = axisModel.axis;
-	            var grid = axis.grid;
-	            var axisPointerType = axisPointerModel.get('type');
-	            var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
-	            var pixelValue = axis.toGlobalCoord(axis.dataToCoord(value, true));
+	        render: function (axisModel, ecModel, api, payload) {
+	            // FIXME
+	            // This process should proformed after coordinate systems updated
+	            // (axis scale updated), and should be performed each time update.
+	            // So put it here temporarily, although it is not appropriate to
+	            // put a model-writing procedure in `view`.
+	            this.axisPointerClass && axisPointerModelHelper.fixValue(axisModel);
 
-	            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-	            var pointerOption = pointerShapeBuilder[axisPointerType](axis, pixelValue, otherExtent, elStyle);
-	            pointerOption.style = elStyle;
+	            AxisView.superApply(this, 'render', arguments);
 
-	            elOption.graphicKey = pointerOption.type;
-	            elOption.pointer = pointerOption;
+	            updateAxisPointer(this, axisModel, ecModel, api, payload, true);
+	        },
 
-	            var layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
-	            viewHelper.buildCartesianSingleLabelElOption(
-	                value, elOption, layoutInfo, axisModel, axisPointerModel, api
-	            );
+	        /**
+	         * Action handler.
+	         * @public
+	         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+	         * @param {module:echarts/model/Global} ecModel
+	         * @param {module:echarts/ExtensionAPI} api
+	         * @param {Object} payload
+	         */
+	        updateAxisPointer: function (axisModel, ecModel, api, payload, force) {
+	            updateAxisPointer(this, axisModel, ecModel, api, payload, false);
 	        },
 
 	        /**
 	         * @override
 	         */
-	        getHandleTransform: function (value, axisModel, axisPointerModel) {
-	            var layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.model, axisModel, {
-	                labelInside: false
-	            });
-	            layoutInfo.labelMargin = axisPointerModel.get('handle.margin');
-	            return {
-	                position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
-	                rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
-	            };
+	        remove: function (ecModel, api) {
+	            var axisPointer = this._axisPointer;
+	            axisPointer && axisPointer.remove(api);
+	            AxisView.superApply(this, 'remove', arguments);
 	        },
 
 	        /**
 	         * @override
 	         */
-	        updateHandleTransform: function (transform, delta, axisModel, axisPointerModel) {
-	            var axis = axisModel.axis;
-	            var grid = axis.grid;
-	            var axisExtent = axis.getGlobalExtent(true);
-	            var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
-	            var dimIndex = axis.dim === 'x' ? 0 : 1;
-
-	            var currPosition = transform.position;
-	            currPosition[dimIndex] += delta[dimIndex];
-	            currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
-	            currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
-
-	            var cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
-	            var cursorPoint = [cursorOtherValue, cursorOtherValue];
-	            cursorPoint[dimIndex] = currPosition[dimIndex];
-
-	            // Make tooltip do not overlap axisPointer and in the middle of the grid.
-	            var tooltipOptions = [{verticalAlign: 'middle'}, {align: 'center'}];
-
-	            return {
-	                position: currPosition,
-	                rotation: transform.rotation,
-	                cursorPoint: cursorPoint,
-	                tooltipOption: tooltipOptions[dimIndex]
-	            };
+	        dispose: function (ecModel, api) {
+	            disposeAxisPointer(this, api);
+	            AxisView.superApply(this, 'dispose', arguments);
 	        }
 
 	    });
 
-	    function getCartesian(grid, axis) {
-	        var opt = {};
-	        opt[axis.dim + 'AxisIndex'] = axis.index;
-	        return grid.getCartesian(opt);
+	    function updateAxisPointer(axisView, axisModel, ecModel, api, payload, forceRender) {
+	        var Clazz = AxisView.getAxisPointerClass(axisView.axisPointerClass);
+	        if (!Clazz) {
+	            return;
+	        }
+	        var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
+	        axisPointerModel
+	            ? (axisView._axisPointer || (axisView._axisPointer = new Clazz()))
+	                .render(axisModel, axisPointerModel, api, forceRender)
+	            : disposeAxisPointer(axisView, api);
 	    }
 
-	    var pointerShapeBuilder = {
+	    function disposeAxisPointer(axisView, ecModel, api) {
+	        var axisPointer = axisView._axisPointer;
+	        axisPointer && axisPointer.dispose(ecModel, api);
+	        axisView._axisPointer = null;
+	    }
 
-	        line: function (axis, pixelValue, otherExtent, elStyle) {
-	            var targetShape = viewHelper.makeLineShape(
-	                [pixelValue, otherExtent[0]],
-	                [pixelValue, otherExtent[1]],
-	                getAxisDimIndex(axis)
-	            );
-	            graphic.subPixelOptimizeLine({
-	                shape: targetShape,
-	                style: elStyle
-	            });
-	            return {
-	                type: 'Line',
-	                shape: targetShape
-	            };
-	        },
+	    var axisPointerClazz = [];
 
-	        shadow: function (axis, pixelValue, otherExtent, elStyle) {
-	            var bandWidth = axis.getBandWidth();
-	            var span = otherExtent[1] - otherExtent[0];
-	            return {
-	                type: 'Rect',
-	                shape: viewHelper.makeRectShape(
-	                    [pixelValue - bandWidth / 2, otherExtent[0]],
-	                    [bandWidth, span],
-	                    getAxisDimIndex(axis)
-	                )
-	            };
+	    AxisView.registerAxisPointerClass = function (type, clazz) {
+	        if (true) {
+	            if (axisPointerClazz[type]) {
+	                throw new Error('axisPointer ' + type + ' exists');
+	            }
 	        }
+	        axisPointerClazz[type] = clazz;
 	    };
 
-	    function getAxisDimIndex(axis) {
-	        return axis.dim === 'x' ? 0 : 1;
-	    }
+	    AxisView.getAxisPointerClass = function (type) {
+	        return type && axisPointerClazz[type];
+	    };
 
-	    module.exports = CartesianAxisPointer;
+	    module.exports = AxisView;
 
 
 /***/ },
-/* 137 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-
-	    var zrUtil = __webpack_require__(4);
-	    var clazzUtil = __webpack_require__(13);
-	    var graphic = __webpack_require__(44);
-	    var get = __webpack_require__(5).makeGetter();
-	    var axisPointerModelHelper = __webpack_require__(138);
-	    var eventTool = __webpack_require__(88);
-	    var throttle = __webpack_require__(81);
-
-	    var clone = zrUtil.clone;
-	    var bind = zrUtil.bind;
-
-	    /**
-	     * Base axis pointer class in 2D.
-	     * Implemenents {module:echarts/component/axis/IAxisPointer}.
-	     */
-	    function BaseAxisPointer () {
-	    }
-
-	    BaseAxisPointer.prototype = {
-
-	        /**
-	         * @private
-	         */
-	        _group: null,
-
-	        /**
-	         * @private
-	         */
-	        _lastGraphicKey: null,
-
-	        /**
-	         * @private
-	         */
-	        _handle: null,
-
-	        /**
-	         * @private
-	         */
-	        _dragging: false,
-
-	        /**
-	         * @private
-	         */
-	        _lastValue: null,
-
-	        /**
-	         * @private
-	         */
-	        _lastStatus: null,
-
-	        /**
-	         * @private
-	         */
-	        _payloadInfo: null,
-
-	        /**
-	         * In px, arbitrary value. Do not set too small,
-	         * no animation is ok for most cases.
-	         * @protected
-	         */
-	        animationThreshold: 15,
-
-	        /**
-	         * @implement
-	         */
-	        render: function (axisModel, axisPointerModel, api, forceRender) {
-	            var value = axisPointerModel.get('value');
-	            var status = axisPointerModel.get('status');
-
-	            // Bind them to `this`, not in closure, otherwise they will not
-	            // be replaced when user calling setOption in not merge mode.
-	            this._axisModel = axisModel;
-	            this._axisPointerModel = axisPointerModel;
-	            this._api = api;
-
-	            // Optimize: `render` will be called repeatly during mouse move.
-	            // So it is power consuming if performing `render` each time,
-	            // especially on mobile device.
-	            if (!forceRender
-	                && this._lastValue === value
-	                && this._lastStatus === status
-	            ) {
-	                return;
-	            }
-	            this._lastValue = value;
-	            this._lastStatus = status;
-
-	            var group = this._group;
-	            var handle = this._handle;
-
-	            if (!status || status === 'hide') {
-	                // Do not clear here, for animation better.
-	                group && group.hide();
-	                handle && handle.hide();
-	                return;
-	            }
-	            group && group.show();
-	            handle && handle.show();
-
-	            // Otherwise status is 'show'
-	            var elOption = {};
-	            this.makeElOption(elOption, value, axisModel, axisPointerModel, api);
-
-	            // Enable change axis pointer type.
-	            var graphicKey = elOption.graphicKey;
-	            if (graphicKey !== this._lastGraphicKey) {
-	                this.clear(api);
-	            }
-	            this._lastGraphicKey = graphicKey;
-
-	            var moveAnimation = this._moveAnimation =
-	                this.determineAnimation(axisModel, axisPointerModel);
-
-	            if (!group) {
-	                group = this._group = new graphic.Group();
-	                this.createPointerEl(group, elOption, axisModel, axisPointerModel);
-	                this.createLabelEl(group, elOption, axisModel, axisPointerModel);
-	                api.getZr().add(group);
-	            }
-	            else {
-	                var doUpdateProps = zrUtil.curry(updateProps, axisPointerModel, moveAnimation);
-	                this.updatePointerEl(group, elOption, doUpdateProps, axisPointerModel);
-	                this.updateLabelEl(group, elOption, doUpdateProps, axisPointerModel);
-	            }
-
-	            updateMandatoryProps(group, axisPointerModel, true);
-
-	            this._renderHandle(value);
-	        },
-
-	        /**
-	         * @implement
-	         */
-	        remove: function (api) {
-	            this.clear(api);
-	        },
-
-	        /**
-	         * @implement
-	         */
-	        dispose: function (api) {
-	            this.clear(api);
-	        },
-
-	        /**
-	         * @protected
-	         */
-	        determineAnimation: function (axisModel, axisPointerModel) {
-	            var animation = axisPointerModel.get('animation');
-	            var axis = axisModel.axis;
-	            var isCategoryAxis = axis.type === 'category';
-	            var useSnap = axisPointerModel.get('snap');
-
-	            // Value axis without snap always do not snap.
-	            if (!useSnap && !isCategoryAxis) {
-	                return false;
-	            }
-
-	            if (animation === 'auto' || animation == null) {
-	                var animationThreshold = this.animationThreshold;
-	                if (isCategoryAxis && axis.getBandWidth() > animationThreshold) {
-	                    return true;
-	                }
-
-	                // It is important to auto animation when snap used. Consider if there is
-	                // a dataZoom, animation will be disabled when too many points exist, while
-	                // it will be enabled for better visual effect when little points exist.
-	                if (useSnap) {
-	                    var seriesDataCount = axisPointerModelHelper.getAxisInfo(axisModel).seriesDataCount;
-	                    var axisExtent = axis.getExtent();
-	                    // Approximate band width
-	                    return Math.abs(axisExtent[0] - axisExtent[1]) / seriesDataCount > animationThreshold;
-	                }
-
-	                return false;
-	            }
-
-	            return animation === true;
-	        },
-
-	        /**
-	         * add {pointer, label, graphicKey} to elOption
-	         * @protected
-	         */
-	        makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
-	            // Shoule be implemenented by sub-class.
-	        },
-
-	        /**
-	         * @protected
-	         */
-	        createPointerEl: function (group, elOption, axisModel, axisPointerModel) {
-	            var pointerOption = elOption.pointer;
-	            var pointerEl = get(group).pointerEl = new graphic[pointerOption.type](
-	                clone(elOption.pointer)
-	            );
-	            group.add(pointerEl);
-	        },
-
-	        /**
-	         * @protected
-	         */
-	        createLabelEl: function (group, elOption, axisModel, axisPointerModel) {
-	            var labelEl = get(group).labelEl = new graphic.Rect(
-	                clone(elOption.label)
-	            );
-
-	            group.add(labelEl);
-	            updateLabelShowHide(labelEl, axisPointerModel);
-	        },
-
-	        /**
-	         * @protected
-	         */
-	        updatePointerEl: function (group, elOption, updateProps) {
-	            var pointerEl = get(group).pointerEl;
-	            if (pointerEl) {
-	                pointerEl.setStyle(elOption.pointer.style);
-	                updateProps(pointerEl, {shape: elOption.pointer.shape});
-	            }
-	        },
-
-	        /**
-	         * @protected
-	         */
-	        updateLabelEl: function (group, elOption, updateProps, axisPointerModel) {
-	            var labelEl = get(group).labelEl;
-	            if (labelEl) {
-	                labelEl.setStyle(elOption.label.style);
-	                updateProps(labelEl, {
-	                    // Consider text length change in vertical axis, animation should
-	                    // be used on shape, otherwise the effect will be weird.
-	                    shape: elOption.label.shape,
-	                    position: elOption.label.position
-	                });
-
-	                updateLabelShowHide(labelEl, axisPointerModel);
-	            }
-	        },
-
-	        /**
-	         * @private
-	         */
-	        _renderHandle: function (value) {
-	            if (this._dragging || !this.updateHandleTransform) {
-	                return;
-	            }
-
-	            var axisPointerModel = this._axisPointerModel;
-	            var zr = this._api.getZr();
-	            var handle = this._handle;
-	            var handleModel = axisPointerModel.getModel('handle');
-
-	            var status = axisPointerModel.get('status');
-	            if (!handleModel.get('show') || !status || status === 'hide') {
-	                handle && zr.remove(handle);
-	                this._handle = null;
-	                return;
-	            }
-
-	            var isInit;
-	            if (!this._handle) {
-	                isInit = true;
-	                handle = this._handle = createIcon(handleModel, {
-	                    onmousemove: function (e) {
-	                        // Fot mobile devicem, prevent screen slider on the button.
-	                        eventTool.stop(e.event);
-	                    },
-	                    onmousedown: bind(this._onHandleDragMove, this, 0, 0),
-	                    drift: bind(this._onHandleDragMove, this),
-	                    ondragend: bind(this._onHandleDragEnd, this)
-	                });
-	                zr.add(handle);
-	            }
-
-	            updateMandatoryProps(handle, axisPointerModel, false);
-
-	            // update style
-	            var includeStyles = [
-	                'color', 'borderColor', 'borderWidth', 'opacity',
-	                'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
-	            ];
-	            handle.setStyle(handleModel.getItemStyle(null, includeStyles));
-
-	            // update position
-	            var handleSize = handleModel.get('size');
-	            if (!zrUtil.isArray(handleSize)) {
-	                handleSize = [handleSize, handleSize];
-	            }
-	            handle.attr('scale', [handleSize[0] / 2, handleSize[1] / 2]);
-
-	            throttle.createOrUpdate(
-	                this,
-	                '_doDispatchAxisPointer',
-	                handleModel.get('throttle') || 0,
-	                'fixRate'
-	            );
-
-	            this._moveHandleToValue(value, isInit);
-	        },
-
-	        /**
-	         * @private
-	         */
-	        _moveHandleToValue: function (value, isInit) {
-	            updateProps(
-	                this._axisPointerModel,
-	                !isInit && this._moveAnimation,
-	                this._handle,
-	                getHandleTransProps(this.getHandleTransform(
-	                    value, this._axisModel, this._axisPointerModel
-	                ))
-	            );
-	        },
-
-	        /**
-	         * @private
-	         */
-	        _onHandleDragMove: function (dx, dy) {
-	            var handle = this._handle;
-	            if (!handle) {
-	                return;
-	            }
-
-	            this._dragging = true;
-
-	            // Persistent for throttle.
-	            var trans = this.updateHandleTransform(
-	                getHandleTransProps(handle),
-	                [dx, dy],
-	                this._axisModel,
-	                this._axisPointerModel
-	            );
-	            this._payloadInfo = trans;
-
-	            handle.stopAnimation();
-	            handle.attr(getHandleTransProps(trans));
-	            get(handle).lastProp = null;
-
-	            this._doDispatchAxisPointer();
-	        },
-
-	        /**
-	         * Throttled method.
-	         * @private
-	         */
-	        _doDispatchAxisPointer: function () {
-	            var handle = this._handle;
-	            if (!handle) {
-	                return;
-	            }
-
-	            var payloadInfo = this._payloadInfo;
-	            var payload = {
-	                type: 'updateAxisPointer',
-	                x: payloadInfo.cursorPoint[0],
-	                y: payloadInfo.cursorPoint[1],
-	                tooltipOption: payloadInfo.tooltipOption,
-	                highDownKey: 'axisPointerHandle'
-	            };
-	            var axis = this._axisModel.axis;
-	            payload[axis.dim + 'AxisId'] = this._axisModel.id;
-	            this._api.dispatchAction(payload);
-	        },
-
-	        /**
-	         * @private
-	         */
-	        _onHandleDragEnd: function (moveAnimation) {
-	            this._dragging = false;
-	            var handle = this._handle;
-	            if (!handle) {
-	                return;
-	            }
-
-	            var value = this._axisPointerModel.get('value');
-	            // Consider snap or categroy axis, handle may be not consistent with
-	            // axisPointer. So move handle to align the exact value position when
-	            // drag ended.
-	            this._moveHandleToValue(value);
-
-	            // For the effect: tooltip will be shown when finger holding on handle
-	            // button, and will be hidden after finger left handle button.
-	            this._api.dispatchAction({
-	                type: 'hideTip'
-	            });
-	        },
-
-	        /**
-	         * Should be implemenented by sub-class if support `handle`.
-	         * @protected
-	         * @param {number} value
-	         * @param {module:echarts/model/Model} axisModel
-	         * @param {module:echarts/model/Model} axisPointerModel
-	         * @return {Object} {position: [x, y], rotation: 0}
-	         */
-	        getHandleTransform: null,
-
-	        /**
-	         * * Should be implemenented by sub-class if support `handle`.
-	         * @protected
-	         * @param {Object} transform {position, rotation}
-	         * @param {Array.<number>} delta [dx, dy]
-	         * @param {module:echarts/model/Model} axisModel
-	         * @param {module:echarts/model/Model} axisPointerModel
-	         * @return {Object} {position: [x, y], rotation: 0, cursorPoint: [x, y]}
-	         */
-	        updateHandleTransform: null,
-
-	        /**
-	         * @private
-	         */
-	        clear: function (api) {
-	            this._lastValue = null;
-	            this._lastStatus = null;
-
-	            var zr = api.getZr();
-	            var group = this._group;
-	            var handle = this._handle;
-	            if (zr && group) {
-	                this._lastGraphicKey = null;
-	                group && zr.remove(group);
-	                handle && zr.remove(handle);
-	                this._group = null;
-	                this._handle = null;
-	                this._payloadInfo = null;
-	            }
-	        },
-
-	        /**
-	         * @protected
-	         */
-	        doClear: function () {
-	            // Implemented by sub-class if necessary.
-	        },
-
-	        /**
-	         * @protected
-	         * @param {Array.<number>} xy
-	         * @param {Array.<number>} wh
-	         * @param {number} [xDimIndex=0] or 1
-	         */
-	        buildLabel: function (xy, wh, xDimIndex) {
-	            xDimIndex = xDimIndex || 0;
-	            return {
-	                x: xy[xDimIndex],
-	                y: xy[1 - xDimIndex],
-	                width: wh[xDimIndex],
-	                height: wh[1 - xDimIndex]
-	            };
-	        }
-	    };
-
-	    BaseAxisPointer.prototype.constructor = BaseAxisPointer;
-
-
-	    function updateProps(animationModel, moveAnimation, el, props) {
-	        // Animation optimize.
-	        if (!propsEqual(get(el).lastProp, props)) {
-	            get(el).lastProp = props;
-	            moveAnimation
-	                ? graphic.updateProps(el, props, animationModel)
-	                : (el.stopAnimation(), el.attr(props));
-	        }
-	    }
-
-	    function propsEqual(lastProps, newProps) {
-	        if (zrUtil.isObject(lastProps) && zrUtil.isObject(newProps)) {
-	            var equals = true;
-	            zrUtil.each(newProps, function (item, key) {
-	                equals &= propsEqual(lastProps[key], item);
-	            });
-	            return !!equals;
-	        }
-	        else {
-	            return lastProps === newProps;
-	        }
-	    }
-
-	    function updateLabelShowHide(labelEl, axisPointerModel) {
-	        labelEl[axisPointerModel.get('label.show') ? 'show' : 'hide']();
-	    }
-
-	    function getHandleTransProps(trans) {
-	        return {
-	            position: trans.position.slice(),
-	            rotation: trans.rotation || 0
-	        };
-	    }
-
-	    function createIcon(handleModel, handlers) {
-	        var iconStr = handleModel.get('icon');
-	        var style = {
-	            x: -1, y: -1, width: 2, height: 2
-	        };
-	        var opt = zrUtil.extend({
-	            style: {
-	                strokeNoScale: true
-	            },
-	            rectHover: true,
-	            cursor: 'move',
-	            draggable: true
-	        }, handlers);
-
-	        return iconStr.indexOf('image://') === 0
-	            ? (
-	                style.image = iconStr.slice(8),
-	                opt.style = style,
-	                new graphic.Image(opt)
-	            )
-	            : graphic.makePath(
-	                iconStr.replace('path://', ''),
-	                opt,
-	                style,
-	                'center'
-	            );
-	    }
-
-	    function updateMandatoryProps(group, axisPointerModel, silent) {
-	        var z = axisPointerModel.get('z');
-	        var zlevel = axisPointerModel.get('zlevel');
-
-	        group && group.traverse(function (el) {
-	            if (el.type !== 'group') {
-	                z != null && (el.z = z);
-	                zlevel != null && (el.zlevel = zlevel);
-	                el.silent = silent;
-	            }
-	        });
-	    }
-
-	    clazzUtil.enableClassExtend(BaseAxisPointer);
-
-	    module.exports = BaseAxisPointer;
-
-
-/***/ },
-/* 138 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30753,7 +30178,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    helper.getAxisInfo = function (axisModel) {
-	        var coordSysAxesInfo = axisModel.ecModel.getComponent('axisPointer').coordSysAxesInfo;
+	        var coordSysAxesInfo = (axisModel.ecModel.getComponent('axisPointer') || {}).coordSysAxesInfo;
 	        return coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
 	    };
 
@@ -30779,232 +30204,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 139 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-
-	    var zrUtil = __webpack_require__(4);
-	    var graphic = __webpack_require__(44);
-	    var textContain = __webpack_require__(8);
-	    var formatUtil = __webpack_require__(6);
-	    var matrix = __webpack_require__(11);
-	    var axisHelper = __webpack_require__(105);
-	    var AxisBuilder = __webpack_require__(135);
-
-	    var helper = {};
-
-	    /**
-	     * @param {module:echarts/model/Model} axisPointerModel
-	     */
-	    helper.buildElStyle = function (axisPointerModel) {
-	        var axisPointerType = axisPointerModel.get('type');
-	        var styleModel = axisPointerModel.getModel(axisPointerType + 'Style');
-	        var style;
-	        if (axisPointerType === 'line') {
-	            style = styleModel.getLineStyle();
-	            style.fill = null;
-	        }
-	        else if (axisPointerType === 'shadow') {
-	            style = styleModel.getAreaStyle();
-	            style.stroke = null;
-	        }
-	        return style;
-	    };
-
-	    /**
-	     * @param {Function} labelPos {align, verticalAlign, position}
-	     */
-	    helper.buildLabelElOption = function (
-	        elOption, axisModel, axisPointerModel, api, labelPos
-	    ) {
-	        var value = axisPointerModel.get('value');
-	        var text = helper.getValueLabel(
-	            value, axisModel.axis, axisModel.ecModel,
-	            axisPointerModel.get('seriesDataIndices'),
-	            {
-	                precision: axisPointerModel.get('label.precision'),
-	                formatter: axisPointerModel.get('label.formatter')
-	            }
-	        );
-	        var labelModel = axisPointerModel.getModel('label');
-	        var textStyleModel = labelModel.getModel('textStyle');
-	        var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
-
-	        var font = textStyleModel.getFont();
-	        var textRect = textContain.getBoundingRect(
-	            text, font, labelPos.textAlign, labelPos.textBaseline
-	        );
-
-	        var position = labelPos.position;
-	        var width = textRect.width + paddings[1] + paddings[3];
-	        var height = textRect.height + paddings[0] + paddings[2];
-
-	        // Adjust by align.
-	        var align = labelPos.align;
-	        align === 'right' && (position[0] -= width);
-	        align === 'center' && (position[0] -= width / 2);
-	        var verticalAlign = labelPos.verticalAlign;
-	        verticalAlign === 'bottom' && (position[1] -= height);
-	        verticalAlign === 'middle' && (position[1] -= height / 2);
-
-	        // Not overflow ec container
-	        confineInContainer(position, width, height, api);
-
-	        var bgColor = labelModel.get('backgroundColor');
-	        if (!bgColor || bgColor === 'auto') {
-	            bgColor = axisModel.get('axisLine.lineStyle.color');
-	        }
-
-	        elOption.label = {
-	            shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
-	            position: position.slice(),
-	            style: {
-	                text: text,
-	                textFont: font,
-	                textFill: textStyleModel.getTextColor(),
-	                textPosition: 'inside',
-	                fill: bgColor,
-	                stroke: labelModel.get('borderColor') || 'transparent',
-	                lineWidth: labelModel.get('borderWidth') || 0,
-	                shadowBlur: labelModel.get('shadowBlur'),
-	                shadowColor: labelModel.get('shadowColor'),
-	                shadowOffsetX: labelModel.get('shadowOffsetX'),
-	                shadowOffsetY: labelModel.get('shadowOffsetY')
-	            }
-	        };
-	    };
-
-	    // Do not overflow ec container
-	    function confineInContainer(position, width, height, api) {
-	        var viewWidth = api.getWidth();
-	        var viewHeight = api.getHeight();
-	        position[0] = Math.min(position[0] + width, viewWidth) - width;
-	        position[1] = Math.min(position[1] + height, viewHeight) - height;
-	        position[0] = Math.max(position[0], 0);
-	        position[1] = Math.max(position[1], 0);
-	    }
-
-	    /**
-	     * @param {number} value
-	     * @param {module:echarts/coord/Axis} axis
-	     * @param {module:echarts/model/Global} ecModel
-	     * @param {Object} opt
-	     * @param {Array.<Object>} seriesDataIndices
-	     * @param {number|string} opt.precision 'auto' or a number
-	     * @param {string|Function} opt.formatter label formatter
-	     */
-	    helper.getValueLabel = function (value, axis, ecModel, seriesDataIndices, opt) {
-	        var text = axis.scale.getLabel(
-	            // Use 'pad' to try to fix width, which helps to debounce when when moving label.
-	            value, {precision: opt.precision, pad: true}
-	        );
-	        var formatter = opt.formatter;
-
-	        if (formatter) {
-	            var params = {
-	                value: axisHelper.getAxisRawValue(axis, value),
-	                seriesData: []
-	            };
-	            zrUtil.each(seriesDataIndices, function (idxItem) {
-	                var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
-	                var dataIndex = idxItem.dataIndexInside;
-	                var dataParams = series && series.getDataParams(dataIndex);
-	                dataParams && params.seriesData.push(dataParams);
-	            });
-
-	            if (zrUtil.isString(formatter)) {
-	                text = formatter.replace('{value}', text);
-	            }
-	            else if (zrUtil.isFunction(formatter)) {
-	                text = formatter(params);
-	            }
-	        }
-
-	        return text;
-	    };
-
-	    /**
-	     * @param {module:echarts/coord/Axis} axis
-	     * @param {number} value
-	     * @param {Object} layoutInfo {
-	     *  rotation, position, labelOffset, labelDirection, labelMargin
-	     * }
-	     */
-	    helper.getTransformedPosition = function (axis, value, layoutInfo) {
-	        var transform = matrix.create();
-	        matrix.rotate(transform, transform, layoutInfo.rotation);
-	        matrix.translate(transform, transform, layoutInfo.position);
-
-	        return graphic.applyTransform([
-	            axis.dataToCoord(value),
-	            (layoutInfo.labelOffset || 0)
-	                + (layoutInfo.labelDirection || 1) * (layoutInfo.labelMargin || 0)
-	        ], transform);
-	    };
-
-	    helper.buildCartesianSingleLabelElOption = function (
-	        value, elOption, layoutInfo, axisModel, axisPointerModel, api
-	    ) {
-	        var textLayout = AxisBuilder.innerTextLayout(
-	            layoutInfo.rotation, 0, layoutInfo.labelDirection
-	        );
-	        layoutInfo.labelMargin = axisPointerModel.get('label.margin');
-	        helper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, {
-	            position: helper.getTransformedPosition(axisModel.axis, value, layoutInfo),
-	            align: textLayout.textAlign,
-	            verticalAlign: textLayout.textVerticalAlign
-	        });
-	    };
-
-	    /**
-	     * @param {Array.<number>} p1
-	     * @param {Array.<number>} p2
-	     * @param {number} [xDimIndex=0] or 1
-	     */
-	    helper.makeLineShape = function (p1, p2, xDimIndex) {
-	        xDimIndex = xDimIndex || 0;
-	        return {
-	            x1: p1[xDimIndex],
-	            y1: p1[1 - xDimIndex],
-	            x2: p2[xDimIndex],
-	            y2: p2[1 - xDimIndex]
-	        };
-	    };
-
-	    /**
-	     * @param {Array.<number>} xy
-	     * @param {Array.<number>} wh
-	     * @param {number} [xDimIndex=0] or 1
-	     */
-	    helper.makeRectShape = function (xy, wh, xDimIndex) {
-	        xDimIndex = xDimIndex || 0;
-	        return {
-	            x: xy[xDimIndex],
-	            y: xy[1 - xDimIndex],
-	            width: wh[xDimIndex],
-	            height: wh[1 - xDimIndex]
-	        };
-	    };
-
-	    helper.makeSectorShape = function (cx, cy, r0, r, startAngle, endAngle) {
-	        return {
-	            cx: cx,
-	            cy: cy,
-	            r0: r0,
-	            r: r,
-	            startAngle: startAngle,
-	            endAngle: endAngle,
-	            clockwise: true
-	        };
-	    };
-
-	    module.exports = helper;
-
-
-/***/ },
-/* 140 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -31089,895 +30289,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 141 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var axisPointerModelHelper = __webpack_require__(138);
-
-	    /**
-	     * Base class of AxisView.
-	     */
-	    var AxisView = __webpack_require__(1).extendComponentView({
-
-	        type: 'axis',
-
-	        /**
-	         * @private
-	         */
-	        _axisPointer: null,
-
-	        axisPointerClass: null,
-
-	        /**
-	         * @override
-	         */
-	        render: function (axisModel, ecModel, api, payload) {
-	            // FIXME
-	            // This process should proformed after coordinate systems updated
-	            // (axis scale updated), and should be performed each time update.
-	            // So put it here temporarily, although it is not appropriate to
-	            // put a model-writing procedure in `view`.
-	            axisPointerModelHelper.fixValue(axisModel);
-
-	            AxisView.superApply(this, 'render', arguments);
-	            updateAxisPointer(this, axisModel, ecModel, api, payload, true);
-	        },
-
-	        /**
-	         * Action handler.
-	         * @public
-	         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-	         * @param {module:echarts/model/Global} ecModel
-	         * @param {module:echarts/ExtensionAPI} api
-	         * @param {Object} payload
-	         */
-	        updateAxisPointer: function (axisModel, ecModel, api, payload, force) {
-	            updateAxisPointer(this, axisModel, ecModel, api, payload, false);
-	        },
-
-	        /**
-	         * @override
-	         */
-	        remove: function (ecModel, api) {
-	            var axisPointer = this._axisPointer;
-	            axisPointer && axisPointer.remove(api);
-	            AxisView.superApply(this, 'remove', arguments);
-	        },
-
-	        /**
-	         * @override
-	         */
-	        dispose: function (ecModel, api) {
-	            disposeAxisPointer(this, api);
-	            AxisView.superApply(this, 'dispose', arguments);
-	        }
-
-	    });
-
-	    function updateAxisPointer(axisView, axisModel, ecModel, api, payload, forceRender) {
-	        if (!axisView.axisPointerClass) {
-	            return;
-	        }
-	        var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
-	        axisPointerModel
-	            ? (axisView._axisPointer || (axisView._axisPointer = new axisView.axisPointerClass()))
-	                .render(axisModel, axisPointerModel, api, forceRender)
-	            : disposeAxisPointer(axisView, api);
-	    }
-
-	    function disposeAxisPointer(axisView, ecModel, api) {
-	        var axisPointer = axisView._axisPointer;
-	        axisPointer && axisPointer.dispose(ecModel, api);
-	        axisView._axisPointer = null;
-	    }
-
-	    module.exports = AxisView;
-
-
-/***/ },
-/* 142 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var echarts = __webpack_require__(1);
-	    var axisPointerModelHelper = __webpack_require__(138);
-	    var axisTrigger = __webpack_require__(143);
-	    var zrUtil = __webpack_require__(4);
-
-	    __webpack_require__(145);
-	    __webpack_require__(146);
-
-	    echarts.registerPreprocessor(function (option) {
-	        // Always has a global axisPointerModel for default setting.
-	        if (option) {
-	            (!option.axisPointer || option.axisPointer.length === 0)
-	                && (option.axisPointer = {});
-
-	            var link = option.axisPointer.link;
-	            // Normalize to array to avoid object mergin. But if link
-	            // is not set, remain null/undefined, otherwise it will
-	            // override existent link setting.
-	            if (link && !zrUtil.isArray(link)) {
-	                option.axisPointer.link = [link];
-	            }
-	        }
-	    });
-
-	    // This process should proformed after coordinate systems created
-	    // and series data processed. So put it on statistic processing stage.
-	    echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, function (ecModel, api) {
-	        // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
-	        // allAxesInfo should be updated when setOption performed.
-	        ecModel.getComponent('axisPointer').coordSysAxesInfo
-	            = axisPointerModelHelper.collect(ecModel, api);
-	    });
-
-	    // Broadcast to all views.
-	    echarts.registerAction({
-	        type: 'updateAxisPointer',
-	        event: 'updateAxisPointer',
-	        update: ':updateAxisPointer'
-	    }, function (payload, ecModel, api) {
-	        var outputFinder = axisTrigger(
-	            ecModel.getComponent('axisPointer').coordSysAxesInfo,
-	            payload.currTrigger,
-	            payload,
-	            payload.dispatchAction || zrUtil.bind(api.dispatchAction, api),
-	            ecModel,
-	            api,
-	            payload.tooltipOption,
-	            payload.highDownKey
-	        );
-
-	        return outputFinder;
-	    });
-
-
-
-/***/ },
-/* 143 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var zrUtil = __webpack_require__(4);
-	    var modelUtil = __webpack_require__(5);
-	    var modelHelper = __webpack_require__(138);
-	    var findPointFromSeries = __webpack_require__(144);
-
-	    var each = zrUtil.each;
-	    var curry = zrUtil.curry;
-	    var get = modelUtil.makeGetter();
-
-	    /**
-	     * Basic logic: check all axis, if they do not demand show/highlight,
-	     * then hide/downplay them.
-	     *
-	     * @param {Object} coordSysAxesInfo
-	     * @param {string} currTrigger 'click' | 'mousemove' | 'leave'
-	     * @param {Object} finder {x, y, xAxisId: ...[], yAxisName: ...[], angleAxisIndex: ...[]}
-	     *              x and y, which are mandatory, specify a point to tigger axisPointer and tooltip.
-	     *              other properties, which are optional, restrict target axes.
-	     * @param {Function} dispatchAction
-	     * @param {module:echarts/ExtensionAPI} api
-	     * @param {Object} tooltipOption
-	     * @param {string} [highDownKey]
-	     * @return {Object} content of event obj for echarts.connect.
-	     */
-	    function axisTrigger(
-	        coordSysAxesInfo, currTrigger, finder, dispatchAction,
-	        ecModel, api, tooltipOption, highDownKey
-	    ) {
-	        var point = [];
-	        if (finder.x != null && finder.y != null) {
-	            point = [finder.x, finder.y];
-	        }
-	        else {
-	            point = findPointFromSeries({
-	                seriesIndex: finder.seriesIndex,
-	                // Do not use dataIndexInside from other ec instance.
-	                // FIXME: auto detect it?
-	                dataIndex: finder.dataIndex
-	            }, ecModel).point;
-	        }
-
-	        var axesInfo = coordSysAxesInfo.axesInfo;
-	        var shouldHide = currTrigger === 'leave' || illegalPoint(point);
-	        var outputFinder = {};
-
-	        var showValueMap = {};
-	        var dataByCoordSys = {list: [], map: {}};
-	        var highlightBatch = [];
-	        var updaters = {
-	            showPointer: curry(showPointer, showValueMap),
-	            showTooltip: curry(showTooltip, dataByCoordSys),
-	            highlight: curry(highlight, highlightBatch)
-	        };
-
-	        // Process for triggered axes.
-	        each(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
-	            var coordSysContainsPoint = coordSys.containPoint(point);
-
-	            each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
-	                var axis = axisInfo.axis;
-	                if (!shouldHide && coordSysContainsPoint && !notTargetAxis(finder, axis)) {
-	                    processOnAxis(axisInfo, axis.pointToData(point), updaters, false, outputFinder);
-	                }
-	            });
-	        });
-
-	        // Process for linked axes.
-	        each(axesInfo, function (tarAxisInfo, tarKey) {
-	            var linkGroup = tarAxisInfo.linkGroup;
-
-	            // If axis has been triggered in the previous stage, it should not be triggered by link.
-	            linkGroup && !showValueMap[tarKey] && each(linkGroup.axesInfo, function (srcAxisInfo, srcKey) {
-	                var srcValItem = showValueMap[srcKey];
-	                // If srcValItem exist, source axis is triggered, so link to target axis.
-	                if (srcAxisInfo !== tarAxisInfo && srcValItem) {
-	                    var val = srcValItem.value;
-	                    linkGroup.mapper && (val = tarAxisInfo.axis.scale.parse(linkGroup.mapper(
-	                        val, makeMapperParam(srcAxisInfo), makeMapperParam(tarAxisInfo)
-	                    )));
-	                    processOnAxis(tarAxisInfo, val, updaters, true, outputFinder);
-	                }
-	            });
-	        });
-
-	        updateModelActually(showValueMap, axesInfo);
-	        dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction);
-	        dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey);
-
-	        return outputFinder;
-	    }
-
-	    function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
-	        var axis = axisInfo.axis;
-
-	        if (axis.scale.isBlank() || !axis.containData(newValue)) {
-	            return;
-	        }
-
-	        if (!axisInfo.involveSeries) {
-	            updaters.showPointer(axisInfo, newValue);
-	            return;
-	        }
-
-	        // Heavy calculation. So put it after axis.containData checking.
-	        var payloadInfo = buildPayloadsBySeries(newValue, axisInfo);
-	        var payloadBatch = payloadInfo.payloadBatch;
-	        var snapToValue = payloadInfo.snapToValue;
-
-	        // Fill content of event obj for echarts.connect.
-	        // By defualt use the first involved series data as a sample to connect.
-	        if (payloadBatch[0] && outputFinder.seriesIndex == null) {
-	            zrUtil.extend(outputFinder, payloadBatch[0]);
-	        }
-
-	        // If no linkSource input, this process is for collecting link
-	        // target, where snap should not be accepted.
-	        if (!dontSnap && axisInfo.snap) {
-	            if (axis.containData(snapToValue) && snapToValue != null) {
-	                newValue = snapToValue;
-	            }
-	        }
-
-	        updaters.highlight('highlight', payloadBatch);
-	        updaters.showPointer(axisInfo, newValue, payloadBatch);
-	        // Tooltip should always be snapToValue, otherwise there will be
-	        // incorrect "axis value ~ series value" mapping displayed in tooltip.
-	        updaters.showTooltip(axisInfo, payloadInfo, snapToValue);
-	    }
-
-	    function buildPayloadsBySeries(value, axisInfo) {
-	        var axis = axisInfo.axis;
-	        var dim = axis.dim;
-	        var snapToValue = value;
-	        var payloadBatch = [];
-	        var minDist = Number.MAX_VALUE;
-	        var minDiff = -1;
-
-	        each(axisInfo.seriesModels, function (series, idx) {
-	            var dataDim = series.coordDimToDataDim(dim);
-	            var seriesNestestValue;
-	            var dataIndices;
-
-	            if (series.getAxisTooltipData) {
-	                var result = series.getAxisTooltipData(dataDim, value, axis);
-	                dataIndices = result.dataIndices;
-	                seriesNestestValue = result.nestestValue;
-	            }
-	            else {
-	                dataIndices = series.getData().indexOfNearest(
-	                    dataDim[0],
-	                    value,
-	                    // Add a threshold to avoid find the wrong dataIndex
-	                    // when data length is not same.
-	                    false, axis.type === 'category' ? 0.5 : null
-	                );
-	                if (!dataIndices.length) {
-	                    return;
-	                }
-	                seriesNestestValue = series.getData().get(dataDim[0], dataIndices[0]);
-	            }
-
-	            if (seriesNestestValue == null || !isFinite(seriesNestestValue)) {
-	                return;
-	            }
-
-	            var diff = value - seriesNestestValue;
-	            var dist = Math.abs(diff);
-	            // Consider category case
-	            if (dist <= minDist) {
-	                if (dist < minDist || (diff >= 0 && minDiff < 0)) {
-	                    minDist = dist;
-	                    minDiff = diff;
-	                    snapToValue = seriesNestestValue;
-	                    payloadBatch.length = 0;
-	                }
-	                each(dataIndices, function (dataIndex) {
-	                    payloadBatch.push({
-	                        seriesIndex: series.seriesIndex,
-	                        dataIndexInside: dataIndex,
-	                        dataIndex: series.getData().getRawIndex(dataIndex)
-	                    });
-	                });
-	            }
-	        });
-
-	        return {
-	            payloadBatch: payloadBatch,
-	            snapToValue: snapToValue
-	        };
-	    }
-
-	    function showPointer(showValueMap, axisInfo, value, payloadBatch) {
-	        showValueMap[axisInfo.key] = {value: value, payloadBatch: payloadBatch};
-	    }
-
-	    function showTooltip(dataByCoordSys, axisInfo, payloadInfo, value) {
-	        var payloadBatch = payloadInfo.payloadBatch;
-	        var axis = axisInfo.axis;
-	        var axisModel = axis.model;
-	        var axisPointerModel = axisInfo.axisPointerModel;
-
-	        // If no data, do not create anything in dataByCoordSys,
-	        // whose length will be used to judge whether dispatch action.
-	        if (!axisInfo.triggerTooltip || !payloadBatch.length) {
-	            return;
-	        }
-
-	        var coordSysModel = axisInfo.coordSys.model;
-	        var coordSysKey = modelHelper.makeKey(coordSysModel);
-	        var coordSysItem = dataByCoordSys.map[coordSysKey];
-	        if (!coordSysItem) {
-	            coordSysItem = dataByCoordSys.map[coordSysKey] = {
-	                coordSysId: coordSysModel.id,
-	                coordSysIndex: coordSysModel.componentIndex,
-	                coordSysType: coordSysModel.type,
-	                coordSysMainType: coordSysModel.mainType,
-	                dataByAxis: []
-	            };
-	            dataByCoordSys.list.push(coordSysItem);
-	        }
-
-	        coordSysItem.dataByAxis.push({
-	            axisDim: axis.dim,
-	            axisIndex: axisModel.componentIndex,
-	            axisType: axisModel.type,
-	            axisId: axisModel.id,
-	            value: value,
-	            // Caustion: viewHelper.getValueLabel is actually on "view stage", which
-	            // depends that all models have been updated. So it should not be performed
-	            // here. Considering axisPointerModel used here is volatile, which is hard
-	            // to be retrieve in TooltipView, we prepare parameters here.
-	            valueLabelOpt: {
-	                precision: axisPointerModel.get('label.precision'),
-	                formatter: axisPointerModel.get('label.formatter')
-	            },
-	            seriesDataIndices: payloadBatch.slice()
-	        });
-	    }
-
-	    function highlight(highlightBatch, actionType, batch) {
-	        highlightBatch.push.apply(highlightBatch, batch);
-	    }
-
-	    function updateModelActually(showValueMap, axesInfo) {
-	        // Basic logic: If no 'show' required, 'hide' this axisPointer.
-	        each(axesInfo, function (axisInfo, key) {
-	            var option = axisInfo.axisPointerModel.option;
-	            var valItem = showValueMap[key];
-
-	            if (valItem) {
-	                !axisInfo.useHandle && (option.status = 'show');
-	                option.value = valItem.value;
-	                // For label formatter param.
-	                option.seriesDataIndices = (valItem.payloadBatch || []).slice();
-	            }
-	            // When always show (e.g., handle used), remain
-	            // original value and status.
-	            else {
-	                // If hide, value still need to be set, consider
-	                // click legend to toggle axis blank.
-	                !axisInfo.useHandle && (option.status = 'hide');
-	            }
-	        });
-	    }
-
-	    function dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction) {
-	        // Basic logic: If no showTip required, hideTip will be dispatched.
-	        if (illegalPoint(point) || !dataByCoordSys.list.length) {
-	            dispatchAction({type: 'hideTip'});
-	            return;
-	        }
-
-	        // In most case only one axis (or event one series is used). It is
-	        // convinient to fetch payload.seriesIndex and payload.dataIndex
-	        // dirtectly. So put the first seriesIndex and dataIndex of the first
-	        // axis on the payload.
-	        var sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {};
-
-	        dispatchAction({
-	            type: 'showTip',
-	            escapeConnect: true,
-	            x: point[0],
-	            y: point[1],
-	            tooltipOption: tooltipOption,
-	            dataIndexInside: sampleItem.dataIndexInside,
-	            dataIndex: sampleItem.dataIndex,
-	            seriesIndex: sampleItem.seriesIndex,
-	            dataByCoordSys: dataByCoordSys.list
-	        });
-	    }
-
-	    function dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey) {
-	        // Basic logic: If nothing highlighted, should downplay all highlighted items.
-	        // This case will occur when mouse leave coordSys.
-
-	        // FIXME
-	        // (1) highlight status shoule be managemented in series.getData()?
-	        // (2) If axisPointer A triggerOn 'handle' and axisPointer B triggerOn
-	        // 'mousemove', items highlighted by A will be downplayed by B.
-	        // It will not be fixed until someone requires this scenario.
-
-	        // Consider items area hightlighted by 'handle', and globalListener may
-	        // downplay all items (including just highlighted ones) when mousemove.
-	        // So we use a highDownKey to separate them as a temporary solution.
-	        var zr = api.getZr();
-	        highDownKey = 'lastHighlights' + (highDownKey || '');
-	        var lastHighlights = get(zr)[highDownKey] || {};
-	        var newHighlights = get(zr)[highDownKey] = {};
-
-	        // Build hash map and remove duplicate incidentally.
-	        zrUtil.each(highlightBatch, function (batchItem) {
-	            var key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
-	            newHighlights[key] = batchItem;
-	        });
-
-	        // Diff.
-	        var toHighlight = [];
-	        var toDownplay = [];
-	        zrUtil.each(lastHighlights, function (batchItem, key) {
-	            !newHighlights[key] && toDownplay.push(batchItem);
-	        });
-	        zrUtil.each(newHighlights, function (batchItem, key) {
-	            !lastHighlights[key] && toHighlight.push(batchItem);
-	        });
-
-	        toDownplay.length && api.dispatchAction({
-	            type: 'downplay', escapeConnect: true, batch: toDownplay
-	        });
-	        toHighlight.length && api.dispatchAction({
-	            type: 'highlight', escapeConnect: true, batch: toHighlight
-	        });
-	    }
-
-	    function notTargetAxis(finder, axis) {
-	        var isTarget = 1;
-	        // If none of xxxAxisId and xxxAxisName and xxxAxisIndex exists in finder,
-	        // no axis is not target axis.
-	        each(finder, function (value, propName) {
-	            isTarget &= !(/^.+(AxisId|AxisName|AxisIndex)$/.test(propName));
-	        });
-	        !isTarget && each(
-	            [['AxisId', 'id'], ['AxisIndex', 'componentIndex'], ['AxisName', 'name']],
-	            function (prop) {
-	                var vals = modelUtil.normalizeToArray(finder[axis.dim + prop[0]]);
-	                isTarget |= zrUtil.indexOf(vals, axis.model[prop[1]]) >= 0;
-	            }
-	        );
-	        return !isTarget;
-	    }
-
-	    function makeMapperParam(axisInfo) {
-	        var axisModel = axisInfo.axis.model;
-	        var item = {};
-	        var dim = item.axisDim = axisInfo.axis.dim;
-	        item.axisIndex = item[dim + 'AxisIndex'] = axisModel.componentIndex;
-	        item.axisName = item[dim + 'AxisName'] = axisModel.name;
-	        item.axisId = item[dim + 'AxisId'] = axisModel.id;
-	        return item;
-	    }
-
-	    function illegalPoint(point) {
-	        return point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
-	    }
-
-	    module.exports = axisTrigger;
-
-
-/***/ },
-/* 144 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var zrUtil = __webpack_require__(4);
-	    var modelUtil = __webpack_require__(5);
-
-	    /**
-	     * @param {Object} finder contains {seriesIndex, dataIndex, dataIndexInside}
-	     * @param {module:echarts/model/Global} ecModel
-	     * @return {Object} {point: [x, y], el: ...} point Will not be null.
-	     */
-	    module.exports = function (finder, ecModel) {
-	        var point = [];
-	        var seriesIndex = finder.seriesIndex;
-	        var seriesModel;
-	        if (seriesIndex == null || !(
-	            seriesModel = ecModel.getSeriesByIndex(seriesIndex)
-	        )) {
-	            return {point: []};
-	        }
-
-	        var data = seriesModel.getData();
-	        var dataIndex = modelUtil.queryDataIndex(data, finder);
-	        if (dataIndex == null || zrUtil.isArray(dataIndex)) {
-	            return {point: []};
-	        }
-
-	        var el = data.getItemGraphicEl(dataIndex);
-	        var coordSys = seriesModel.coordinateSystem;
-
-	        if (seriesModel.getTooltipPosition) {
-	            point = seriesModel.getTooltipPosition(dataIndex) || [];
-	        }
-	        else if (coordSys && coordSys.dataToPoint) {
-	            point = coordSys.dataToPoint(
-	                data.getValues(
-	                    zrUtil.map(coordSys.dimensions, function (dim) {
-	                        return seriesModel.coordDimToDataDim(dim)[0];
-	                    }), dataIndex, true
-	                )
-	            ) || [];
-	        }
-	        else if (el) {
-	            // Use graphic bounding rect
-	            var rect = el.getBoundingRect().clone();
-	            rect.applyTransform(el.transform);
-	            point = [
-	                rect.x + rect.width / 2,
-	                rect.y + rect.height / 2
-	            ];
-	        }
-
-	        return {point: point, el: el};
-	    };
-
-
-
-
-/***/ },
-/* 145 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var echarts = __webpack_require__(1);
-
-	    var AxisPointerModel = echarts.extendComponentModel({
-
-	        type: 'axisPointer',
-
-	        coordSysAxesInfo: null,
-
-	        defaultOption: {
-	            // 'auto' means that show when triggered by tooltip or handle.
-	            show: 'auto',
-	            // 'click' | 'mousemove' | 'none'
-	            triggerOn: null, // set default in AxisPonterView.js
-
-	            zlevel: 0,
-	            z: 50,
-
-	            type: 'line',
-	            // axispointer triggered by tootip determine snap automatically,
-	            // see `modelHelper`.
-	            snap: false,
-	            triggerTooltip: true,
-
-	            value: null,
-	            status: null, // Init value depends on whether handle is used.
-
-	            // [group0, group1, ...]
-	            // Each group can be: {
-	            //      mapper: function () {},
-	            //      singleTooltip: 'multiple',  // 'multiple' or 'single'
-	            //      xAxisId: ...,
-	            //      yAxisName: ...,
-	            //      angleAxisIndex: ...
-	            // }
-	            // mapper: can be ignored.
-	            //      input: {axisInfo, value}
-	            //      output: {axisInfo, value}
-	            link: [],
-
-	            // Do not set 'auto' here, otherwise global animation: false
-	            // will not effect at this axispointer.
-	            animation: null,
-	            animationDurationUpdate: 200,
-
-	            lineStyle: {
-	                color: '#aaa',
-	                width: 1,
-	                type: 'solid'
-	            },
-
-	            shadowStyle: {
-	                color: 'rgba(150,150,150,0.3)'
-	            },
-
-	            label: {
-	                show: true,
-	                formatter: null, // string | Function
-	                precision: 'auto', // Or a number like 0, 1, 2 ...
-	                margin: 3,
-	                textStyle: {
-	                    color: '#fff'
-	                },
-	                padding: [5, 7, 5, 7],
-	                backgroundColor: 'auto', // default: axis line color
-	                borderColor: null,
-	                borderWidth: 0,
-	                shadowBlur: 3,
-	                shadowColor: '#aaa'
-	                // Considering applicability, common style should
-	                // better not have shadowOffset.
-	                // shadowOffsetX: 0,
-	                // shadowOffsetY: 2
-	            },
-
-	            handle: {
-	                show: false,
-	                icon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4h1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z', // jshint ignore:line
-	                size: 45,
-	                // handle margin is from symbol center to axis, which is stable when circular move.
-	                margin: 50,
-	                // color: '#1b8bbd'
-	                // color: '#2f4554'
-	                color: '#333',
-	                shadowBlur: 3,
-	                shadowColor: '#aaa',
-	                shadowOffsetX: 0,
-	                shadowOffsetY: 2,
-
-	                // For mobile performance
-	                throttle: 40
-	            }
-	        }
-
-	    });
-
-	    module.exports = AxisPointerModel;
-
-
-
-/***/ },
-/* 146 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var globalListener = __webpack_require__(147);
-
-	    var AxisPonterView = __webpack_require__(1).extendComponentView({
-
-	        type: 'axisPointer',
-
-	        render: function (globalAxisPointerModel, ecModel, api) {
-	            var globalTooltipModel = ecModel.getComponent('tooltip');
-	            var triggerOn = globalAxisPointerModel.get('triggerOn')
-	                || (globalTooltipModel && globalTooltipModel.get('triggerOn') || 'mousemove|click');
-
-	            // Register global listener in AxisPointerView to enable
-	            // AxisPointerView to be independent to Tooltip.
-	            globalListener.register(
-	                'axisPointer',
-	                api,
-	                function (currTrigger, e, dispatchAction) {
-	                    // If 'none', it is not controlled by mouse totally.
-	                    if (triggerOn !== 'none'
-	                        && (currTrigger === 'leave' || triggerOn.indexOf(currTrigger) >= 0)
-	                    ) {
-	                        dispatchAction({
-	                            type: 'updateAxisPointer',
-	                            currTrigger: currTrigger,
-	                            x: e && e.offsetX,
-	                            y: e && e.offsetY
-	                        });
-	                    }
-	                }
-	            );
-	        },
-
-	        /**
-	         * @override
-	         */
-	        remove: function (ecModel, api) {
-	            globalListener.disopse(api.getZr(), 'axisPointer');
-	            AxisPonterView.superApply(this._model, 'remove', arguments);
-	        },
-
-	        /**
-	         * @override
-	         */
-	        dispose: function (ecModel, api) {
-	            globalListener.unregister('axisPointer', api);
-	            AxisPonterView.superApply(this._model, 'dispose', arguments);
-	        }
-
-	    });
-
-
-
-/***/ },
-/* 147 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var env = __webpack_require__(2);
-	    var zrUtil = __webpack_require__(4);
-	    var get = __webpack_require__(5).makeGetter();
-
-	    var each = zrUtil.each;
-
-	    var globalListener = {};
-
-	    /**
-	     * @param {string} key
-	     * @param {module:echarts/ExtensionAPI} api
-	     * @param {Function} handler
-	     *      param: {string} currTrigger
-	     *      param: {Array.<number>} point
-	     */
-	    globalListener.register = function (key, api, handler) {
-	        if (env.node) {
-	            return;
-	        }
-
-	        var zr = api.getZr();
-	        get(zr).records || (get(zr).records = {});
-
-	        initGlobalListeners(zr, api);
-
-	        var record = get(zr).records[key] || (get(zr).records[key] = {});
-	        record.handler = handler;
-	    };
-
-	    function initGlobalListeners(zr, api) {
-	        if (get(zr).initialized) {
-	            return;
-	        }
-
-	        get(zr).initialized = true;
-
-	        useHandler('click', zrUtil.curry(doEnter, 'click'));
-	        useHandler('mousemove', zrUtil.curry(doEnter, 'mousemove'));
-	        // useHandler('mouseout', onLeave);
-	        useHandler('globalout', onLeave);
-
-	        function useHandler(eventType, cb) {
-	            zr.on(eventType, function (e) {
-	                var dis = makeDispatchAction(api);
-
-	                each(get(zr).records, function (record) {
-	                    record && cb(record, e, dis.dispatchAction);
-	                });
-
-	                dispatchTooltipFinally(dis.pendings, api);
-	            });
-	        }
-	    }
-
-	    function dispatchTooltipFinally(pendings, api) {
-	        var showLen = pendings.showTip.length;
-	        var hideLen = pendings.hideTip.length;
-
-	        var actuallyPayload;
-	        if (showLen) {
-	            actuallyPayload = pendings.showTip[showLen - 1];
-	        }
-	        else if (hideLen) {
-	            actuallyPayload = pendings.hideTip[hideLen - 1];
-	        }
-	        if (actuallyPayload) {
-	            actuallyPayload.dispatchAction = null;
-	            api.dispatchAction(actuallyPayload);
-	        }
-	    }
-
-	    function onLeave(record, e, dispatchAction) {
-	        record.handler('leave', null, dispatchAction);
-	    }
-
-	    function doEnter(currTrigger, record, e, dispatchAction) {
-	        record.handler(currTrigger, e, dispatchAction);
-	    }
-
-	    function makeDispatchAction(api) {
-	        var pendings = {
-	            showTip: [],
-	            hideTip: []
-	        };
-	        // FIXME
-	        // better approach?
-	        // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
-	        // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
-	        // So we have to add "final stage" to merge those dispatched actions.
-	        var dispatchAction = function (payload) {
-	            var pendingList = pendings[payload.type];
-	            if (pendingList) {
-	                pendingList.push(payload);
-	            }
-	            else {
-	                payload.dispatchAction = dispatchAction;
-	                api.dispatchAction(payload);
-	            }
-	        };
-
-	        return {
-	            dispatchAction: dispatchAction,
-	            pendings: pendings
-	        };
-	    }
-
-	    /**
-	     * @param {string} key
-	     * @param {module:echarts/ExtensionAPI} api
-	     */
-	    globalListener.unregister = function (key, api) {
-	        if (env.node) {
-	            return;
-	        }
-	        var zr = api.getZr();
-	        var record = (get(zr).records || {})[key];
-	        if (record) {
-	            get(zr).records[key] = null;
-	        }
-	    };
-
-	    module.exports = globalListener;
-
-
-/***/ },
-/* 148 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 
-	    __webpack_require__(124);
+	    __webpack_require__(123);
 
-	    __webpack_require__(149);
-	    __webpack_require__(151);
+	    __webpack_require__(139);
+	    __webpack_require__(141);
 
-	    var barLayoutGrid = __webpack_require__(154);
+	    var barLayoutGrid = __webpack_require__(144);
 	    var echarts = __webpack_require__(1);
 
 	    echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
@@ -31994,12 +30318,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 149 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    module.exports = __webpack_require__(150).extend({
+	    module.exports = __webpack_require__(140).extend({
 
 	        type: 'series.bar',
 
@@ -32010,7 +30334,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 150 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32085,7 +30409,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 151 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32093,13 +30417,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var zrUtil = __webpack_require__(4);
 	    var graphic = __webpack_require__(44);
-	    var helper = __webpack_require__(152);
+	    var helper = __webpack_require__(142);
 
 	    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'barBorderWidth'];
 
 	    // FIXME
 	    // Just for compatible with ec2.
-	    zrUtil.extend(__webpack_require__(12).prototype, __webpack_require__(153));
+	    zrUtil.extend(__webpack_require__(12).prototype, __webpack_require__(143));
 
 	    var BarView = __webpack_require__(1).extendChartView({
 
@@ -32273,7 +30597,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 152 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -32330,7 +30654,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 153 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -32364,7 +30688,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 154 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32616,7 +30940,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 155 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -32624,10 +30948,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 	    var echarts = __webpack_require__(1);
 
-	    __webpack_require__(156);
-	    __webpack_require__(158);
+	    __webpack_require__(146);
+	    __webpack_require__(148);
 
-	    __webpack_require__(159)('pie', [{
+	    __webpack_require__(149)('pie', [{
 	        type: 'pieToggleSelect',
 	        event: 'pieselectchanged',
 	        method: 'toggleSelected'
@@ -32641,17 +30965,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        method: 'unSelect'
 	    }]);
 
-	    echarts.registerVisual(zrUtil.curry(__webpack_require__(160), 'pie'));
+	    echarts.registerVisual(zrUtil.curry(__webpack_require__(150), 'pie'));
 
 	    echarts.registerLayout(zrUtil.curry(
-	        __webpack_require__(161), 'pie'
+	        __webpack_require__(151), 'pie'
 	    ));
 
-	    echarts.registerProcessor(zrUtil.curry(__webpack_require__(163), 'pie'));
+	    echarts.registerProcessor(zrUtil.curry(__webpack_require__(153), 'pie'));
 
 
 /***/ },
-/* 156 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32662,7 +30986,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var modelUtil = __webpack_require__(5);
 	    var completeDimensions = __webpack_require__(103);
 
-	    var dataSelectableMixin = __webpack_require__(157);
+	    var dataSelectableMixin = __webpack_require__(147);
 
 	    var PieSeries = __webpack_require__(1).extendSeriesModel({
 
@@ -32801,7 +31125,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 157 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -32871,7 +31195,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 158 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -33277,7 +31601,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 159 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -33317,7 +31641,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 160 */
+/* 150 */
 /***/ function(module, exports) {
 
 	// Pick color from palette for each data item.
@@ -33368,7 +31692,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 161 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// TODO minAngle
@@ -33377,7 +31701,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var numberUtil = __webpack_require__(7);
 	    var parsePercent = numberUtil.parsePercent;
-	    var labelLayout = __webpack_require__(162);
+	    var labelLayout = __webpack_require__(152);
 	    var zrUtil = __webpack_require__(4);
 
 	    var PI2 = Math.PI * 2;
@@ -33514,7 +31838,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 162 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33745,7 +32069,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 163 */
+/* 153 */
 /***/ function(module, exports) {
 
 	
