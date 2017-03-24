@@ -59,10 +59,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	module.exports = __webpack_require__(1);
 
-	__webpack_require__(100);
-	__webpack_require__(134);
-	__webpack_require__(141);
-	__webpack_require__(113);
+	__webpack_require__(112);
+	__webpack_require__(135);
+	__webpack_require__(142);
+	__webpack_require__(122);
 
 /***/ },
 /* 1 */
@@ -272,6 +272,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        timsort(dataProcessorFuncs, prioritySortFunc);
 
 	        zr.animation.on('frame', this._onframe, this);
+
+	        // ECharts instance can be used as value.
+	        zrUtil.setAsPrimitive(this);
 	    }
 
 	    var echartsProto = ECharts.prototype;
@@ -403,6 +406,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    echartsProto.getHeight = function () {
 	        return this._zr.getHeight();
+	    };
+
+	    /**
+	     * @return {number}
+	     */
+	    echartsProto.getDevicePixelRatio = function () {
+	        return this._zr.painter.dpr || window.devicePixelRatio || 1;
 	    };
 
 	    /**
@@ -608,7 +618,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *            geoIndex / geoId / geoName,
 	     *            bmapIndex / bmapId / bmapName,
 	     *            xAxisIndex / xAxisId / xAxisName,
-	     *            yAxisIndex / yAxisId / yAxisName
+	     *            yAxisIndex / yAxisId / yAxisName,
 	     *            gridIndex / gridId / gridName,
 	     *            ... (can be extended)
 	     *        }
@@ -693,6 +703,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	            : data.getVisual(visualType);
 	    };
 
+	    /**
+	     * Get view of corresponding component model
+	     * @param  {module:echarts/model/Component} componentModel
+	     * @return {module:echarts/view/Component}
+	     */
+	    echartsProto.getViewOfComponentModel = function (componentModel) {
+	        return this._componentsMap[componentModel.__viewId];
+	    };
+
+	    /**
+	     * Get view of corresponding series model
+	     * @param  {module:echarts/model/Series} seriesModel
+	     * @return {module:echarts/view/Chart}
+	     */
+	    echartsProto.getViewOfSeriesModel = function (seriesModel) {
+	        return this._chartsMap[seriesModel.__viewId];
+	    };
+
 
 	    var updateMethods = {
 
@@ -701,7 +729,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @private
 	         */
 	        update: function (payload) {
-	            // console.time && console.time('update');
+	            // console.profile && console.profile('update');
 
 	            var ecModel = this._model;
 	            var api = this._api;
@@ -774,7 +802,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            }
 
-	            // console.time && console.timeEnd('update');
+	            each(postUpdateFuncs, function (func) {
+	                func(ecModel, api);
+	            });
+
+	            // console.profile && console.profileEnd('update');
 	        },
 
 	        /**
@@ -987,14 +1019,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return;
 	        }
 
-	        // if (__DEV__) {
-	        //     zrUtil.assert(
-	        //         !this[IN_MAIN_PROCESS],
-	        //         '`dispatchAction` should not be called during main process.'
-	        //         + 'unless updateMathod is "none".'
-	        //     );
-	        // }
-
 	        // May dispatchAction in rendering procedure
 	        if (this[IN_MAIN_PROCESS]) {
 	            this._pendingActions.push(payload);
@@ -1142,6 +1166,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // If use hover layer
 	        updateHoverLayerStatus(this._zr, ecModel);
+
+	        // Post render
+	        each(postUpdateFuncs, function (func) {
+	            func(ecModel, api);
+	        });
 	    }
 
 	    /**
@@ -1503,6 +1532,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var optionPreprocessorFuncs = [];
 
 	    /**
+	     * @type {Array.<Function>}
+	     * @inner
+	     */
+	    var postUpdateFuncs = [];
+
+	    /**
 	     * Visual encoding functions of each stage
 	     * @type {Array.<Object.<string, Function>>}
 	     * @inner
@@ -1599,7 +1634,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (!dom) {
 	                throw new Error('Initialize failed: invalid dom.');
 	            }
-	            if (zrUtil.isDom(dom) && dom.nodeName.toUpperCase() !== 'CANVAS' && (!dom.clientWidth || !dom.clientHeight)) {
+	            if (zrUtil.isDom(dom)
+	                && dom.nodeName.toUpperCase() !== 'CANVAS'
+	                && (
+	                    (!dom.clientWidth && (!opts || opts.width == null))
+	                    || (!dom.clientHeight && (!opts || opts.height == null))
+	                )
+	            ) {
 	                console.warn('Can\'t get dom width or height');
 	            }
 	        }
@@ -1711,6 +1752,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            prio: priority,
 	            func: processorFunc
 	        });
+	    };
+
+	    /**
+	     * Register postUpdater
+	     * @param {Function} postUpdateFunc
+	     */
+	    echarts.registerPostUpdate = function (postUpdateFunc) {
+	        postUpdateFuncs.push(postUpdateFunc);
 	    };
 
 	    /**
@@ -1907,9 +1956,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // --------
 	    // Exports
 	    // --------
-	    //
+	    echarts.zrender = zrender;
+
 	    echarts.List = __webpack_require__(98);
 	    echarts.Model = __webpack_require__(12);
+
+	    echarts.Axis = __webpack_require__(100);
 
 	    echarts.graphic = __webpack_require__(43);
 	    echarts.number = __webpack_require__(7);
@@ -1923,12 +1975,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    each([
 	            'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
 	            'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction',
-	            'extend', 'defaults', 'clone'
+	            'extend', 'defaults', 'clone', 'merge'
 	        ],
 	        function (name) {
 	            echarts.util[name] = zrUtil[name];
 	        }
 	    );
+
+	    echarts.helper = __webpack_require__(101);
+
 
 	    // PRIORITY
 	    echarts.PRIORITY = {
@@ -2421,7 +2476,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            else {
 	                // Return all components with mainType
-	                result = cpts;
+	                result = cpts.slice();
 	            }
 
 	            return filterBySubType(result, condition);
@@ -3426,7 +3481,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return value;
 	        }
 
-	        if (dimType === 'time' && !isFinite(value) && value != null && value !== '-') {
+	        if (dimType === 'time'
+	            // spead up when using timestamp
+	            && typeof value !== 'number'
+	            && value != null
+	            && value !== '-'
+	        ) {
 	            value = +nubmerUtil.parseDate(value);
 	        }
 
@@ -3824,7 +3884,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *        If Object, could contain some of these properties below:
 	     *        {
 	     *            seriesIndex, seriesId, seriesName,
-	     *            geoIndex, geoId, goeName,
+	     *            geoIndex, geoId, geoName,
 	     *            bmapIndex, bmapId, bmapName,
 	     *            xAxisIndex, xAxisId, xAxisName,
 	     *            yAxisIndex, yAxisId, yAxisName,
@@ -3838,8 +3898,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *            geoId: ['aa', 'cc'],
 	     *            gridName: ['xx', 'rr']
 	     *        }
+	     *        xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
+	     *        If nothing or null/undefined specified, return nothing.
 	     * @param {Object} [opt]
 	     * @param {string} [opt.defaultMainType]
+	     * @param {Array.<string>} [opt.includeMainTypes]
 	     * @return {Object} result like:
 	     *        {
 	     *            seriesModels: [seriesModel1, seriesModel2],
@@ -3878,14 +3941,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
 	            var mainType = parsedKey[1];
-	            var queryType = parsedKey[2];
+	            var queryType = (parsedKey[2] || '').toLowerCase();
 
-	            if (!mainType || !queryType) {
+	            if (!mainType
+	                || !queryType
+	                || value == null
+	                || (queryType === 'index' && value === 'none')
+	                || (opt.includeMainTypes && zrUtil.indexOf(opt.includeMainTypes, mainType) < 0)
+	            ) {
 	                return;
 	            }
 
 	            var queryParam = {mainType: mainType};
-	            queryParam[queryType.toLowerCase()] = value;
+	            if (queryType !== 'index' || value !== 'all') {
+	                queryParam[queryType] = value;
+	            }
+
 	            var models = ecModel.queryComponents(queryParam);
 	            result[mainType + 'Models'] = models;
 	            result[mainType + 'Model'] = models[0];
@@ -3899,6 +3970,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    module.exports = modelUtil;
+
 
 
 /***/ },
@@ -4016,6 +4088,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return tpl;
 	    };
 
+	    /**
+	     * simple Template formatter
+	     *
+	     * @param {string} tpl
+	     * @param {Object} param
+	     * @param {boolean} [encode=false]
+	     * @return {string}
+	     */
+	    formatUtil.formatTplSimple = function (tpl, param, encode) {
+
+	        zrUtil.each(param, function (value, key) {
+	            tpl = tpl.replace(
+	                '{' + key + '}',
+	                encode ? encodeHTML(vaule) : value
+	            );
+	        });
+
+	        return tpl;
+	    };
+
 
 	    /**
 	     * @param {string} str
@@ -4030,9 +4122,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * ISO Date format
 	     * @param {string} tpl
 	     * @param {number} value
+	     * @param {boolean} [isLocal=false] Default use UTC
+	     *  Why default UTC? In most case, time provided by user is
+	     *  understood in UTC. For example, new Date('2012-01-01')
+	     *  or a string '2012-01-01' or a timestamp. So it is
+	     *  recommended to format time in UTC.
+	     *  (see `echarts/util/number.js#parseDate`);
 	     * @inner
 	     */
-	    formatUtil.formatTime = function (tpl, value) {
+	    formatUtil.formatTime = function (tpl, value, isLocal) {
 	        if (tpl === 'week'
 	            || tpl === 'month'
 	            || tpl === 'quarter'
@@ -4043,12 +4141,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        var date = numberUtil.parseDate(value);
-	        var y = date.getFullYear();
-	        var M = date.getMonth() + 1;
-	        var d = date.getDate();
-	        var h = date.getHours();
-	        var m = date.getMinutes();
-	        var s = date.getSeconds();
+	        var utc = isLocal ? '' : 'UTC';
+	        var y = date['get' + utc + 'FullYear']();
+	        var M = date['get' + utc + 'Month']() + 1;
+	        var d = date['get' + utc + 'Date']();
+	        var h = date['get' + utc + 'Hours']();
+	        var m = date['get' + utc + 'Minutes']();
+	        var s = date['get' + utc + 'Seconds']();
 
 	        tpl = tpl.replace('MM', s2d(M))
 	            .toLowerCase()
@@ -4078,6 +4177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    formatUtil.truncateText = textContain.truncateText;
 
 	    module.exports = formatUtil;
+
 
 
 /***/ },
@@ -4276,8 +4376,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
 	    };
 
+	    var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(?:Z|([\+\-]\d\d):?\d\d)?)?)?)?)?$/; // jshint ignore:line
+	    var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset();
+
 	    /**
-	     * @param {string|Date|number} value
+	     * @param {string|Date|number} value These values can be accepted:
+	     *   + An instance of Date, represent a time in its own time zone.
+	     *   + Or string in a subset of ISO 8601, only including:
+	     *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
+	     *     + separated with T or space: '2012-03-01T12:22:33.123', '2012-03-01 12:22:33.123',
+	     *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
+	     *     all of which will be treated as they reperent a time in UTC
+	     *     if time zone is not specified.
+	     *   + Or other string format, including:
+	     *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
+	     *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
+	     *   + a timestamp, which represent a time in UTC.
 	     * @return {Date} date
 	     */
 	    number.parseDate = function (value) {
@@ -4285,13 +4399,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return value;
 	        }
 	        else if (typeof value === 'string') {
-	            // Treat as ISO format. See issue #3623
-	            var ret = new Date(value);
-	            if (isNaN(+ret)) {
-	                // FIXME new Date('1970-01-01') is UTC, new Date('1970/01/01') is local
-	                ret = new Date(new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'));
+	            // Different browsers parse date in different way, so we parse it manually.
+	            // Some other issues:
+	            // new Date('1970-01-01') is UTC,
+	            // new Date('1970/01/01') and new Date('1970-1-01') is local.
+	            // See issue #3623
+	            var match = TIME_REG.exec(value);
+
+	            if (!match) {
+	                // return Invalid Date.
+	                return new Date(NaN);
 	            }
-	            return ret;
+
+	            // match[n] can only be string or undefined.
+	            // But take care of '12' + 1 => '121'.
+	            return new Date(
+	                +match[1],
+	                +(match[2] || 1) - 1,
+	                +match[3] || 1,
+	                +match[4] || 0,
+	                +(match[5] || 0) - (match[8] || 0) * 60 - TIMEZONE_OFFSET,
+	                +match[6] || 0,
+	                +match[7] || 0
+	            );
+	        }
+	        else if (value == null) {
+	            return new Date(NaN);
 	        }
 
 	        return new Date(Math.round(value));
@@ -6399,8 +6532,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var layout = {};
 
+	    /**
+	     * @public
+	     */
 	    var LOCATION_PARAMS = layout.LOCATION_PARAMS = [
 	        'left', 'right', 'top', 'bottom', 'width', 'height'
+	    ];
+
+	    /**
+	     * @public
+	     */
+	    var HV_NAMES = layout.HV_NAMES = [
+	        ['width', 'left', 'right'],
+	        ['height', 'top', 'bottom']
 	    ];
 
 	    function boxLayout(orient, group, gap, maxWidth, maxHeight) {
@@ -6719,6 +6863,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    /**
+	     * @param {Object} option Contains some of the properties in HV_NAMES.
+	     * @param {number} hvIdx 0: horizontal; 1: vertical.
+	     */
+	    layout.sizeCalculable = function (option, hvIdx) {
+	        return option[HV_NAMES[hvIdx][0]] != null
+	            || (option[HV_NAMES[hvIdx][1]] != null && option[HV_NAMES[hvIdx][2]] != null);
+	    };
+
+	    /**
 	     * Consider Case:
 	     * When defulat option has {left: 0, width: 100}, and we set {right: 0}
 	     * through setOption or media query, using normal zrUtil.merge will cause
@@ -6740,24 +6893,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {Object} targetOption
 	     * @param {Object} newOption
 	     * @param {Object|string} [opt]
-	     * @param {boolean} [opt.ignoreSize=false] Some component must has width and height.
+	     * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Some component must has width and height.
 	     */
 	    layout.mergeLayoutParam = function (targetOption, newOption, opt) {
 	        !zrUtil.isObject(opt) && (opt = {});
-	        var hNames = ['width', 'left', 'right']; // Order by priority.
-	        var vNames = ['height', 'top', 'bottom']; // Order by priority.
-	        var hResult = merge(hNames);
-	        var vResult = merge(vNames);
 
-	        copy(hNames, targetOption, hResult);
-	        copy(vNames, targetOption, vResult);
+	        var ignoreSize = opt.ignoreSize;
+	        !zrUtil.isArray(ignoreSize) && (ignoreSize = [ignoreSize, ignoreSize]);
 
-	        function merge(names) {
+	        var hResult = merge(HV_NAMES[0], 0);
+	        var vResult = merge(HV_NAMES[1], 1);
+
+	        copy(HV_NAMES[0], targetOption, hResult);
+	        copy(HV_NAMES[1], targetOption, vResult);
+
+	        function merge(names, hvIdx) {
 	            var newParams = {};
 	            var newValueCount = 0;
 	            var merged = {};
 	            var mergedValueCount = 0;
-	            var enoughParamNumber = opt.ignoreSize ? 1 : 2;
+	            var enoughParamNumber = 2;
 
 	            each(names, function (name) {
 	                merged[name] = targetOption[name];
@@ -6769,6 +6924,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                hasValue(newParams, name) && newValueCount++;
 	                hasValue(merged, name) && mergedValueCount++;
 	            });
+
+	            if (ignoreSize[hvIdx]) {
+	                // Only one of left/height is premitted to exist.
+	                hasValue(newOption, names[2]) && (merged[names[1]] = null);
+	                hasValue(newOption, names[1]) && (merged[names[2]] = null);
+	                return merged;
+	            }
 
 	            // Case: newOption: {width: ..., right: ...},
 	            // or targetOption: {right: ...} and newOption: {width: ...},
@@ -6785,7 +6947,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            else {
 	                // Chose another param from targetOption by priority.
-	                // When 'ignoreSize', enoughParamNumber is 1 and those will not happen.
 	                for (var i = 0; i < names.length; i++) {
 	                    var name = names[i];
 	                    if (!hasProp(newParams, name) && hasProp(targetOption, name)) {
@@ -6834,6 +6995,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    module.exports = layout;
+
 
 
 /***/ },
@@ -6966,8 +7128,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 
 	    var echartsAPIList = [
-	        'getDom', 'getZr', 'getWidth', 'getHeight', 'dispatchAction', 'isDisposed',
-	        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption'
+	        'getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed',
+	        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption',
+	        'getViewOfComponentModel', 'getViewOfSeriesModel'
 	    ];
 
 	    function ExtensionAPI(chartInstance) {
@@ -7569,11 +7732,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            this.mergeDefaultAndTheme(option, ecModel);
 
+	            var data = this.getInitialData(option, ecModel);
+	            if (true) {
+	                zrUtil.assert(data, 'getInitialData returned invalid data.');
+	            }
 	            /**
 	             * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
 	             * @private
 	             */
-	            set(this, 'dataBeforeProcessed', this.getInitialData(option, ecModel));
+	            set(this, 'dataBeforeProcessed', data);
 
 	            // If we reverse the order (make data firstly, and then make
 	            // dataBeforeProcessed by cloneShallow), cloneShallow will
@@ -11482,7 +11649,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * Set hover style of element
+	     * Set hover style of element.
+	     * This method can be called repeatly without side-effects.
 	     * @param {module:zrender/Element} el
 	     * @param {Object} [hoverStyle]
 	     * @param {Object} [opt]
@@ -21676,8 +21844,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @constructor
 	     * @alias module:echarts/data/List
 	     *
-	     * @param {Array.<string>} dimensions
-	     *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
+	     * @param {Array.<string|Object>} dimensions
+	     *      For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
+	     *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
 	     * @param {module:echarts/model/Model} hostModel
 	     */
 	    var List = function (dimensions, hostModel) {
@@ -22909,118 +23078,308 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	
 
+	    var numberUtil = __webpack_require__(7);
+	    var linearMap = numberUtil.linearMap;
 	    var zrUtil = __webpack_require__(4);
-	    var echarts = __webpack_require__(1);
-	    var PRIORITY = echarts.PRIORITY;
 
-	    __webpack_require__(101);
-	    __webpack_require__(104);
+	    function fixExtentWithBands(extent, nTick) {
+	        var size = extent[1] - extent[0];
+	        var len = nTick;
+	        var margin = size / len / 2;
+	        extent[0] += margin;
+	        extent[1] -= margin;
+	    }
 
-	    echarts.registerVisual(zrUtil.curry(
-	        __webpack_require__(110), 'line', 'circle', 'line'
-	    ));
-	    echarts.registerLayout(zrUtil.curry(
-	        __webpack_require__(111), 'line'
-	    ));
+	    var normalizedExtent = [0, 1];
+	    /**
+	     * @name module:echarts/coord/CartesianAxis
+	     * @constructor
+	     */
+	    var Axis = function (dim, scale, extent) {
 
-	    // Down sample after filter
-	    echarts.registerProcessor(PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(
-	        __webpack_require__(112), 'line'
-	    ));
+	        /**
+	         * Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'
+	         * @type {string}
+	         */
+	        this.dim = dim;
 
-	    // In case developer forget to include grid component
-	    __webpack_require__(113);
+	        /**
+	         * Axis scale
+	         * @type {module:echarts/coord/scale/*}
+	         */
+	        this.scale = scale;
+
+	        /**
+	         * @type {Array.<number>}
+	         * @private
+	         */
+	        this._extent = extent || [0, 0];
+
+	        /**
+	         * @type {boolean}
+	         */
+	        this.inverse = false;
+
+	        /**
+	         * Usually true when axis has a ordinal scale
+	         * @type {boolean}
+	         */
+	        this.onBand = false;
+	    };
+
+	    Axis.prototype = {
+
+	        constructor: Axis,
+
+	        /**
+	         * If axis extent contain given coord
+	         * @param {number} coord
+	         * @return {boolean}
+	         */
+	        contain: function (coord) {
+	            var extent = this._extent;
+	            var min = Math.min(extent[0], extent[1]);
+	            var max = Math.max(extent[0], extent[1]);
+	            return coord >= min && coord <= max;
+	        },
+
+	        /**
+	         * If axis extent contain given data
+	         * @param {number} data
+	         * @return {boolean}
+	         */
+	        containData: function (data) {
+	            return this.contain(this.dataToCoord(data));
+	        },
+
+	        /**
+	         * Get coord extent.
+	         * @return {Array.<number>}
+	         */
+	        getExtent: function () {
+	            var ret = this._extent.slice();
+	            return ret;
+	        },
+
+	        /**
+	         * Get precision used for formatting
+	         * @param {Array.<number>} [dataExtent]
+	         * @return {number}
+	         */
+	        getPixelPrecision: function (dataExtent) {
+	            return numberUtil.getPixelPrecision(
+	                dataExtent || this.scale.getExtent(),
+	                this._extent
+	            );
+	        },
+
+	        /**
+	         * Set coord extent
+	         * @param {number} start
+	         * @param {number} end
+	         */
+	        setExtent: function (start, end) {
+	            var extent = this._extent;
+	            extent[0] = start;
+	            extent[1] = end;
+	        },
+
+	        /**
+	         * Convert data to coord. Data is the rank if it has a ordinal scale
+	         * @param {number} data
+	         * @param  {boolean} clamp
+	         * @return {number}
+	         */
+	        dataToCoord: function (data, clamp) {
+	            var extent = this._extent;
+	            var scale = this.scale;
+	            data = scale.normalize(data);
+
+	            if (this.onBand && scale.type === 'ordinal') {
+	                extent = extent.slice();
+	                fixExtentWithBands(extent, scale.count());
+	            }
+
+	            return linearMap(data, normalizedExtent, extent, clamp);
+	        },
+
+	        /**
+	         * Convert coord to data. Data is the rank if it has a ordinal scale
+	         * @param {number} coord
+	         * @param  {boolean} clamp
+	         * @return {number}
+	         */
+	        coordToData: function (coord, clamp) {
+	            var extent = this._extent;
+	            var scale = this.scale;
+
+	            if (this.onBand && scale.type === 'ordinal') {
+	                extent = extent.slice();
+	                fixExtentWithBands(extent, scale.count());
+	            }
+
+	            var t = linearMap(coord, extent, normalizedExtent, clamp);
+
+	            return this.scale.scale(t);
+	        },
+	        /**
+	         * @return {Array.<number>}
+	         */
+	        getTicksCoords: function (alignWithLabel) {
+	            if (this.onBand && !alignWithLabel) {
+	                var bands = this.getBands();
+	                var coords = [];
+	                for (var i = 0; i < bands.length; i++) {
+	                    coords.push(bands[i][0]);
+	                }
+	                if (bands[i - 1]) {
+	                    coords.push(bands[i - 1][1]);
+	                }
+	                return coords;
+	            }
+	            else {
+	                return zrUtil.map(this.scale.getTicks(), this.dataToCoord, this);
+	            }
+	        },
+
+	        /**
+	         * Coords of labels are on the ticks or on the middle of bands
+	         * @return {Array.<number>}
+	         */
+	        getLabelsCoords: function () {
+	            return zrUtil.map(this.scale.getTicks(), this.dataToCoord, this);
+	        },
+
+	        /**
+	         * Get bands.
+	         *
+	         * If axis has labels [1, 2, 3, 4]. Bands on the axis are
+	         * |---1---|---2---|---3---|---4---|.
+	         *
+	         * @return {Array}
+	         */
+	         // FIXME Situation when labels is on ticks
+	        getBands: function () {
+	            var extent = this.getExtent();
+	            var bands = [];
+	            var len = this.scale.count();
+	            var start = extent[0];
+	            var end = extent[1];
+	            var span = end - start;
+
+	            for (var i = 0; i < len; i++) {
+	                bands.push([
+	                    span * i / len + start,
+	                    span * (i + 1) / len + start
+	                ]);
+	            }
+	            return bands;
+	        },
+
+	        /**
+	         * Get width of band
+	         * @return {number}
+	         */
+	        getBandWidth: function () {
+	            var axisExtent = this._extent;
+	            var dataExtent = this.scale.getExtent();
+
+	            var len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+	            // Fix #2728, avoid NaN when only one data.
+	            len === 0 && (len = 1);
+
+	            var size = Math.abs(axisExtent[1] - axisExtent[0]);
+
+	            return Math.abs(size) / len;
+	        }
+	    };
+
+	    module.exports = Axis;
 
 
 /***/ },
 /* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
+	
 
 	    var createListFromArray = __webpack_require__(102);
-	    var SeriesModel = __webpack_require__(28);
+	    var symbolUtil = __webpack_require__(104);
+	    var axisHelper = __webpack_require__(105);
+	    var axisModelCommonMixin = __webpack_require__(111);
+	    var Model = __webpack_require__(12);
+	    var util = __webpack_require__(4);
 
-	    module.exports = SeriesModel.extend({
-
-	        type: 'series.line',
-
-	        dependencies: ['grid', 'polar'],
-
-	        getInitialData: function (option, ecModel) {
-	            if (true) {
-	                var coordSys = option.coordinateSystem;
-	                if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
-	                    throw new Error('Line not support coordinateSystem besides cartesian and polar');
-	                }
-	            }
-	            return createListFromArray(option.data, this, ecModel);
+	    module.exports = {
+	        /**
+	         * Create a muti dimension List structure from seriesModel.
+	         * @param  {module:echarts/model/Model} seriesModel
+	         * @return {module:echarts/data/List} list
+	         */
+	        createList: function (seriesModel) {
+	            var data = seriesModel.get('data');
+	            return createListFromArray(data, seriesModel, seriesModel.ecModel);
 	        },
 
-	        defaultOption: {
-	            zlevel: 0,                  // 一级层叠
-	            z: 2,                       // 二级层叠
-	            coordinateSystem: 'cartesian2d',
-	            legendHoverLink: true,
+	        /**
+	         * Complete the dimensions array guessed from the data structure.
+	         * @param  {Array.<string>} dimensions Necessary dimensions, like ['x', 'y']
+	         * @param  {Array} data Data list. [[1, 2, 3], [2, 3, 4]]
+	         * @param  {Object} [opt]
+	         * @param  {Array.<string>} [opt.defaultNames] Default names to fill not necessary dimensions, like ['value']
+	         * @param  {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
+	         * @param  {number} [opt.dimCount] If not specified, guess by the first data item.
+	         * @return {Array.<string>}
+	         */
+	        completeDimensions: __webpack_require__(103),
 
-	            hoverAnimation: true,
-	            // stack: null
-	            // xAxisIndex: 0,
-	            // yAxisIndex: 0,
+	        /**
+	         * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+	         * @see http://echarts.baidu.com/option.html#series-scatter.symbol
+	         * @param {string} symbolDesc
+	         * @param {number} x
+	         * @param {number} y
+	         * @param {number} w
+	         * @param {number} h
+	         * @param {string} color
+	         */
+	        createSymbol: symbolUtil.createSymbol,
 
-	            // polarIndex: 0,
+	        /**
+	         * Create scale
+	         * @param {Array.<number>} dataExtent
+	         * @param {Object|module:echarts/Model} option
+	         */
+	        createScale: function (dataExtent, option) {
+	            var axisModel = option;
+	            if (!(option instanceof Model)) {
+	                axisModel = new Model(option);
+	                util.mixin(axisModel, axisModelCommonMixin);
+	            }
 
-	            // If clip the overflow value
-	            clipOverflow: true,
+	            var scale = axisHelper.createScaleByModel(axisModel);
+	            scale.setExtent(dataExtent[0], dataExtent[1]);
 
-	            label: {
-	                normal: {
-	                    position: 'top'
-	                }
-	            },
-	            // itemStyle: {
-	            //     normal: {},
-	            //     emphasis: {}
-	            // },
-	            lineStyle: {
-	                normal: {
-	                    width: 2,
-	                    type: 'solid'
-	                }
-	            },
-	            // areaStyle: {},
-	            // false, 'start', 'end', 'middle'
-	            step: false,
+	            axisHelper.niceScaleExtent(scale, axisModel);
+	            return scale;
+	        },
 
-	            // Disabled if step is true
-	            smooth: false,
-	            smoothMonotone: null,
-	            // 拐点图形类型
-	            symbol: 'emptyCircle',
-	            // 拐点图形大小
-	            symbolSize: 4,
-	            // 拐点图形旋转控制
-	            symbolRotate: null,
-
-	            // 是否显示 symbol, 只有在 tooltip hover 的时候显示
-	            showSymbol: true,
-	            // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
-	            showAllSymbol: false,
-
-	            // 是否连接断点
-	            connectNulls: false,
-
-	            // 数据过滤，'average', 'max', 'min', 'sum'
-	            sampling: 'none',
-
-	            animationEasing: 'linear',
-
-	            // Disable progressive
-	            progressive: 0,
-	            hoverLayerThreshold: Infinity
+	        /**
+	         * Mixin common methods to axis model,
+	         *
+	         * Inlcude methods
+	         * `getFormattedLabels() => Array.<string>`
+	         * `getCategories() => Array.<string>`
+	         * `getMin(origin: boolean) => number`
+	         * `getMax(origin: boolean) => number`
+	         * `getNeedCrossZero() => boolean`
+	         * `setRange(start: number, end: number)`
+	         * `resetRange()`
+	         */
+	        mixinAxisModelCommonMethods: function (Model) {
+	            util.mixin(Model, axisModelCommonMixin);
 	        }
-	    });
+	    };
 
 
 /***/ },
@@ -23072,9 +23431,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var dimensions = axesInfo && axesInfo.dimensions;
 	        if (!dimensions) {
 	            // Get dimensions from registered coordinate system
-	            dimensions = (registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y'];
-	            dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
+	            dimensions = (registeredCoordSys && (
+	                registeredCoordSys.getDimensionsInfo
+	                    ? registeredCoordSys.getDimensionsInfo()
+	                    : registeredCoordSys.dimensions.slice()
+	            )) || ['x', 'y'];
+	            dimensions = completeDimensions(dimensions, data, {defaultNames: dimensions.concat(['value'])});
 	        }
+
 	        var categoryIndex = axesInfo ? axesInfo.categoryIndex : -1;
 
 	        var list = new List(dimensions, seriesModel);
@@ -23191,7 +23555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var isXAxisCateogry = xAxisType === 'category';
 	            var isYAxisCategory = yAxisType === 'category';
 
-	            completeDimensions(dimensions, data, ['x', 'y', 'z']);
+	            completeDimensions(dimensions, data, {defaultNames: ['x', 'y', 'z']});
 
 	            var categoryAxesModels = {};
 	            if (isXAxisCateogry) {
@@ -23281,7 +23645,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var isAngleAxisCateogry = angleAxisType === 'category';
 	            var isRadiusAxisCateogry = radiusAxisType === 'category';
 
-	            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
+	            completeDimensions(dimensions, data, {defaultNames: ['radius', 'angle', 'value']});
 
 	            var categoryAxesModels = {};
 	            if (isRadiusAxisCateogry) {
@@ -23304,7 +23668,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                dimensions: completeDimensions([
 	                    {name: 'lng'},
 	                    {name: 'lat'}
-	                ], data, ['lng', 'lat', 'value'])
+	                ], data, {defaultNames: ['lng', 'lat', 'value']})
 	            };
 	        }
 	    };
@@ -23359,23 +23723,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * Complete the dimensions array guessed from the data structure.
-	     * @param  {Array.<string>} dimensions      Necessary dimensions, like ['x', 'y']
-	     * @param  {Array} data                     Data list. [[1, 2, 3], [2, 3, 4]]
-	     * @param  {Array.<string>} [defaultNames]    Default names to fill not necessary dimensions, like ['value']
-	     * @param  {string} [extraPrefix]             Prefix of name when filling the left dimensions.
+	     * @param  {Array.<string>} dimensions Necessary dimensions, like ['x', 'y']
+	     * @param  {Array} data Data list. [[1, 2, 3], [2, 3, 4]]
+	     * @param  {Object} [opt]
+	     * @param  {Array.<string>} [opt.defaultNames] Default names to fill not necessary dimensions, like ['value']
+	     * @param  {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
+	     * @param  {number} [opt.dimCount] If not specified, guess by the first data item.
 	     * @return {Array.<string>}
 	     */
-	    function completeDimensions(dimensions, data, defaultNames, extraPrefix) {
+	    function completeDimensions(dimensions, data, opt) {
 	        if (!data) {
 	            return dimensions;
 	        }
 
-	        var value0 = retrieveValue(data[0]);
-	        var dimSize = zrUtil.isArray(value0) && value0.length || 1;
+	        opt = opt || {};
 
-	        defaultNames = defaultNames || [];
-	        extraPrefix = extraPrefix || 'extra';
-	        for (var i = 0; i < dimSize; i++) {
+	        var dimCount = opt.dimCount;
+	        if (dimCount == null) {
+	            var value0 = retrieveValue(data[0]);
+	            dimCount = zrUtil.isArray(value0) && value0.length || 1;
+	        }
+
+	        var defaultNames = opt.defaultNames || [];
+	        var extraPrefix = opt.extraPrefix || 'extra';
+	        for (var i = 0; i < dimCount; i++) {
 	            if (!dimensions[i]) {
 	                var name = defaultNames[i] || (extraPrefix + (i - defaultNames.length));
 	                dimensions[i] = guessOrdinal(data, i)
@@ -23421,16 +23792,1709 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+	// Symbol factory
+
+
+	    var graphic = __webpack_require__(43);
+	    var BoundingRect = __webpack_require__(9);
+
+	    /**
+	     * Triangle shape
+	     * @inner
+	     */
+	    var Triangle = graphic.extendShape({
+	        type: 'triangle',
+	        shape: {
+	            cx: 0,
+	            cy: 0,
+	            width: 0,
+	            height: 0
+	        },
+	        buildPath: function (path, shape) {
+	            var cx = shape.cx;
+	            var cy = shape.cy;
+	            var width = shape.width / 2;
+	            var height = shape.height / 2;
+	            path.moveTo(cx, cy - height);
+	            path.lineTo(cx + width, cy + height);
+	            path.lineTo(cx - width, cy + height);
+	            path.closePath();
+	        }
+	    });
+	    /**
+	     * Diamond shape
+	     * @inner
+	     */
+	    var Diamond = graphic.extendShape({
+	        type: 'diamond',
+	        shape: {
+	            cx: 0,
+	            cy: 0,
+	            width: 0,
+	            height: 0
+	        },
+	        buildPath: function (path, shape) {
+	            var cx = shape.cx;
+	            var cy = shape.cy;
+	            var width = shape.width / 2;
+	            var height = shape.height / 2;
+	            path.moveTo(cx, cy - height);
+	            path.lineTo(cx + width, cy);
+	            path.lineTo(cx, cy + height);
+	            path.lineTo(cx - width, cy);
+	            path.closePath();
+	        }
+	    });
+
+	    /**
+	     * Pin shape
+	     * @inner
+	     */
+	    var Pin = graphic.extendShape({
+	        type: 'pin',
+	        shape: {
+	            // x, y on the cusp
+	            x: 0,
+	            y: 0,
+	            width: 0,
+	            height: 0
+	        },
+
+	        buildPath: function (path, shape) {
+	            var x = shape.x;
+	            var y = shape.y;
+	            var w = shape.width / 5 * 3;
+	            // Height must be larger than width
+	            var h = Math.max(w, shape.height);
+	            var r = w / 2;
+
+	            // Dist on y with tangent point and circle center
+	            var dy = r * r / (h - r);
+	            var cy = y - h + r + dy;
+	            var angle = Math.asin(dy / r);
+	            // Dist on x with tangent point and circle center
+	            var dx = Math.cos(angle) * r;
+
+	            var tanX = Math.sin(angle);
+	            var tanY = Math.cos(angle);
+
+	            path.arc(
+	                x, cy, r,
+	                Math.PI - angle,
+	                Math.PI * 2 + angle
+	            );
+
+	            var cpLen = r * 0.6;
+	            var cpLen2 = r * 0.7;
+	            path.bezierCurveTo(
+	                x + dx - tanX * cpLen, cy + dy + tanY * cpLen,
+	                x, y - cpLen2,
+	                x, y
+	            );
+	            path.bezierCurveTo(
+	                x, y - cpLen2,
+	                x - dx + tanX * cpLen, cy + dy + tanY * cpLen,
+	                x - dx, cy + dy
+	            );
+	            path.closePath();
+	        }
+	    });
+
+	    /**
+	     * Arrow shape
+	     * @inner
+	     */
+	    var Arrow = graphic.extendShape({
+
+	        type: 'arrow',
+
+	        shape: {
+	            x: 0,
+	            y: 0,
+	            width: 0,
+	            height: 0
+	        },
+
+	        buildPath: function (ctx, shape) {
+	            var height = shape.height;
+	            var width = shape.width;
+	            var x = shape.x;
+	            var y = shape.y;
+	            var dx = width / 3 * 2;
+	            ctx.moveTo(x, y);
+	            ctx.lineTo(x + dx, y + height);
+	            ctx.lineTo(x, y + height / 4 * 3);
+	            ctx.lineTo(x - dx, y + height);
+	            ctx.lineTo(x, y);
+	            ctx.closePath();
+	        }
+	    });
+
+	    /**
+	     * Map of path contructors
+	     * @type {Object.<string, module:zrender/graphic/Path>}
+	     */
+	    var symbolCtors = {
+	        line: graphic.Line,
+
+	        rect: graphic.Rect,
+
+	        roundRect: graphic.Rect,
+
+	        square: graphic.Rect,
+
+	        circle: graphic.Circle,
+
+	        diamond: Diamond,
+
+	        pin: Pin,
+
+	        arrow: Arrow,
+
+	        triangle: Triangle
+	    };
+
+	    var symbolShapeMakers = {
+
+	        line: function (x, y, w, h, shape) {
+	            // FIXME
+	            shape.x1 = x;
+	            shape.y1 = y + h / 2;
+	            shape.x2 = x + w;
+	            shape.y2 = y + h / 2;
+	        },
+
+	        rect: function (x, y, w, h, shape) {
+	            shape.x = x;
+	            shape.y = y;
+	            shape.width = w;
+	            shape.height = h;
+	        },
+
+	        roundRect: function (x, y, w, h, shape) {
+	            shape.x = x;
+	            shape.y = y;
+	            shape.width = w;
+	            shape.height = h;
+	            shape.r = Math.min(w, h) / 4;
+	        },
+
+	        square: function (x, y, w, h, shape) {
+	            var size = Math.min(w, h);
+	            shape.x = x;
+	            shape.y = y;
+	            shape.width = size;
+	            shape.height = size;
+	        },
+
+	        circle: function (x, y, w, h, shape) {
+	            // Put circle in the center of square
+	            shape.cx = x + w / 2;
+	            shape.cy = y + h / 2;
+	            shape.r = Math.min(w, h) / 2;
+	        },
+
+	        diamond: function (x, y, w, h, shape) {
+	            shape.cx = x + w / 2;
+	            shape.cy = y + h / 2;
+	            shape.width = w;
+	            shape.height = h;
+	        },
+
+	        pin: function (x, y, w, h, shape) {
+	            shape.x = x + w / 2;
+	            shape.y = y + h / 2;
+	            shape.width = w;
+	            shape.height = h;
+	        },
+
+	        arrow: function (x, y, w, h, shape) {
+	            shape.x = x + w / 2;
+	            shape.y = y + h / 2;
+	            shape.width = w;
+	            shape.height = h;
+	        },
+
+	        triangle: function (x, y, w, h, shape) {
+	            shape.cx = x + w / 2;
+	            shape.cy = y + h / 2;
+	            shape.width = w;
+	            shape.height = h;
+	        }
+	    };
+
+	    var symbolBuildProxies = {};
+	    for (var name in symbolCtors) {
+	        if (symbolCtors.hasOwnProperty(name)) {
+	            symbolBuildProxies[name] = new symbolCtors[name]();
+	        }
+	    }
+
+	    var Symbol = graphic.extendShape({
+
+	        type: 'symbol',
+
+	        shape: {
+	            symbolType: '',
+	            x: 0,
+	            y: 0,
+	            width: 0,
+	            height: 0
+	        },
+
+	        beforeBrush: function () {
+	            var style = this.style;
+	            var shape = this.shape;
+	            // FIXME
+	            if (shape.symbolType === 'pin' && style.textPosition === 'inside') {
+	                style.textPosition = ['50%', '40%'];
+	                style.textAlign = 'center';
+	                style.textVerticalAlign = 'middle';
+	            }
+	        },
+
+	        buildPath: function (ctx, shape, inBundle) {
+	            var symbolType = shape.symbolType;
+	            var proxySymbol = symbolBuildProxies[symbolType];
+	            if (shape.symbolType !== 'none') {
+	                if (!proxySymbol) {
+	                    // Default rect
+	                    symbolType = 'rect';
+	                    proxySymbol = symbolBuildProxies[symbolType];
+	                }
+	                symbolShapeMakers[symbolType](
+	                    shape.x, shape.y, shape.width, shape.height, proxySymbol.shape
+	                );
+	                proxySymbol.buildPath(ctx, proxySymbol.shape, inBundle);
+	            }
+	        }
+	    });
+
+	    // Provide setColor helper method to avoid determine if set the fill or stroke outside
+	    var symbolPathSetColor = function (color) {
+	        if (this.type !== 'image') {
+	            var symbolStyle = this.style;
+	            var symbolShape = this.shape;
+	            if (symbolShape && symbolShape.symbolType === 'line') {
+	                symbolStyle.stroke = color;
+	            }
+	            else if (this.__isEmptyBrush) {
+	                symbolStyle.stroke = color;
+	                symbolStyle.fill = '#fff';
+	            }
+	            else {
+	                // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
+	                symbolStyle.fill && (symbolStyle.fill = color);
+	                symbolStyle.stroke && (symbolStyle.stroke = color);
+	            }
+	            this.dirty(false);
+	        }
+	    };
+
+	    var symbolUtil = {
+	        /**
+	         * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+	         * @param {string} symbolType
+	         * @param {number} x
+	         * @param {number} y
+	         * @param {number} w
+	         * @param {number} h
+	         * @param {string} color
+	         */
+	        createSymbol: function (symbolType, x, y, w, h, color) {
+	            // TODO Support image object, DynamicImage.
+
+	            var isEmpty = symbolType.indexOf('empty') === 0;
+	            if (isEmpty) {
+	                symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
+	            }
+	            var symbolPath;
+
+	            if (symbolType.indexOf('image://') === 0) {
+	                symbolPath = new graphic.Image({
+	                    style: {
+	                        image: symbolType.slice(8),
+	                        x: x,
+	                        y: y,
+	                        width: w,
+	                        height: h
+	                    }
+	                });
+	            }
+	            else if (symbolType.indexOf('path://') === 0) {
+	                symbolPath = graphic.makePath(symbolType.slice(7), {}, new BoundingRect(x, y, w, h));
+	            }
+	            else {
+	                symbolPath = new Symbol({
+	                    shape: {
+	                        symbolType: symbolType,
+	                        x: x,
+	                        y: y,
+	                        width: w,
+	                        height: h
+	                    }
+	                });
+	            }
+
+	            symbolPath.__isEmptyBrush = isEmpty;
+
+	            symbolPath.setColor = symbolPathSetColor;
+
+	            symbolPath.setColor(color);
+
+	            return symbolPath;
+	        }
+	    };
+
+	    module.exports = symbolUtil;
+
+
+/***/ },
+/* 105 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+
+	    var OrdinalScale = __webpack_require__(106);
+	    var IntervalScale = __webpack_require__(108);
+	    __webpack_require__(109);
+	    __webpack_require__(110);
+	    var Scale = __webpack_require__(107);
+
+	    var numberUtil = __webpack_require__(7);
+	    var zrUtil = __webpack_require__(4);
+	    var textContain = __webpack_require__(8);
+	    var axisHelper = {};
+
+	    /**
+	     * Get axis scale extent before niced.
+	     * Item of returned array can only be number (including Infinity and NaN).
+	     */
+	    axisHelper.getScaleExtent = function (scale, model) {
+	        var scaleType = scale.type;
+
+	        var min = model.getMin();
+	        var max = model.getMax();
+	        var fixMin = min != null;
+	        var fixMax = max != null;
+	        var originalExtent = scale.getExtent();
+
+	        var axisDataLen;
+	        var boundaryGap;
+	        var span;
+	        if (scaleType === 'ordinal') {
+	            axisDataLen = (model.get('data') || []).length;
+	        }
+	        else {
+	            boundaryGap = model.get('boundaryGap');
+	            if (!zrUtil.isArray(boundaryGap)) {
+	                boundaryGap = [boundaryGap || 0, boundaryGap || 0];
+	            }
+	            boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
+	            boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
+	            span = originalExtent[1] - originalExtent[0];
+	        }
+
+	        if (min == null) {
+	            min = scaleType === 'ordinal'
+	                ? (axisDataLen ? 0 : NaN)
+	                : originalExtent[0] - boundaryGap[0] * span;
+	        }
+	        if (max == null) {
+	            max = scaleType === 'ordinal'
+	                ? (axisDataLen ? axisDataLen - 1 : NaN)
+	                : originalExtent[1] + boundaryGap[1] * span;
+	        }
+
+	        if (min === 'dataMin') {
+	            min = originalExtent[0];
+	        }
+	        if (max === 'dataMax') {
+	            max = originalExtent[1];
+	        }
+
+	        (min == null || !isFinite(min)) && (min = NaN);
+	        (max == null || !isFinite(max)) && (max = NaN);
+
+	        scale.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
+
+	        // Evaluate if axis needs cross zero
+	        if (model.getNeedCrossZero()) {
+	            // Axis is over zero and min is not set
+	            if (min > 0 && max > 0 && !fixMin) {
+	                min = 0;
+	            }
+	            // Axis is under zero and max is not set
+	            if (min < 0 && max < 0 && !fixMax) {
+	                max = 0;
+	            }
+	        }
+
+	        return [min, max];
+	    };
+
+	    axisHelper.niceScaleExtent = function (scale, model) {
+	        var extent = axisHelper.getScaleExtent(scale, model);
+	        var fixMin = model.getMin() != null;
+	        var fixMax = model.getMax() != null;
+	        var splitNumber = model.get('splitNumber');
+
+	        if (scale.type === 'log') {
+	            scale.base = model.get('logBase');
+	        }
+
+	        scale.setExtent(extent[0], extent[1]);
+	        scale.niceExtent(splitNumber, fixMin, fixMax);
+
+	        // Use minInterval to constraint the calculated interval.
+	        // If calculated interval is less than minInterval. increase the interval quantity until
+	        // it is larger than minInterval.
+	        // For example:
+	        //  minInterval is 1, calculated interval is 0.2, so increase it to be 1. In this way we can get
+	        //  an integer axis.
+	        var minInterval = model.get('minInterval');
+	        if (isFinite(minInterval) && !fixMin && !fixMax && scale.type === 'interval') {
+	            var interval = scale.getInterval();
+	            var intervalScale = Math.max(Math.abs(interval), minInterval) / interval;
+	            // while (interval < minInterval) {
+	            //     var quantity = numberUtil.quantity(interval);
+	            //     interval = quantity * 10;
+	            //     scaleQuantity *= 10;
+	            // }
+	            extent = scale.getExtent();
+	            var origin = (extent[1] + extent[0]) / 2;
+	            scale.setExtent(
+	                intervalScale * (extent[0] - origin) + origin,
+	                intervalScale * (extent[1] - origin) + origin
+	            );
+	            scale.niceExtent(splitNumber);
+	        }
+
+	        // If some one specified the min, max. And the default calculated interval
+	        // is not good enough. He can specify the interval. It is often appeared
+	        // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
+	        // to be 60.
+	        // FIXME
+	        var interval = model.get('interval');
+	        if (interval != null) {
+	            scale.setInterval && scale.setInterval(interval);
+	        }
+	    };
+
+	    /**
+	     * @param {module:echarts/model/Model} model
+	     * @param {string} [axisType] Default retrieve from model.type
+	     * @return {module:echarts/scale/*}
+	     */
+	    axisHelper.createScaleByModel = function(model, axisType) {
+	        axisType = axisType || model.get('type');
+	        if (axisType) {
+	            switch (axisType) {
+	                // Buildin scale
+	                case 'category':
+	                    return new OrdinalScale(
+	                        model.getCategories(), [Infinity, -Infinity]
+	                    );
+	                case 'value':
+	                    return new IntervalScale();
+	                // Extended scale, like time and log
+	                default:
+	                    return (Scale.getClass(axisType) || IntervalScale).create(model);
+	            }
+	        }
+	    };
+
+	    /**
+	     * Check if the axis corss 0
+	     */
+	    axisHelper.ifAxisCrossZero = function (axis) {
+	        var dataExtent = axis.scale.getExtent();
+	        var min = dataExtent[0];
+	        var max = dataExtent[1];
+	        return !((min > 0 && max > 0) || (min < 0 && max < 0));
+	    };
+
+	    /**
+	     * @param {Array.<number>} tickCoords In axis self coordinate.
+	     * @param {Array.<string>} labels
+	     * @param {string} font
+	     * @param {boolean} isAxisHorizontal
+	     * @return {number}
+	     */
+	    axisHelper.getAxisLabelInterval = function (tickCoords, labels, font, isAxisHorizontal) {
+	        // FIXME
+	        // 不同角的axis和label，不只是horizontal和vertical.
+
+	        var textSpaceTakenRect;
+	        var autoLabelInterval = 0;
+	        var accumulatedLabelInterval = 0;
+
+	        var step = 1;
+	        if (labels.length > 40) {
+	            // Simple optimization for large amount of labels
+	            step = Math.floor(labels.length / 40);
+	        }
+
+	        for (var i = 0; i < tickCoords.length; i += step) {
+	            var tickCoord = tickCoords[i];
+	            var rect = textContain.getBoundingRect(
+	                labels[i], font, 'center', 'top'
+	            );
+	            rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
+	            // FIXME Magic number 1.5
+	            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
+	            if (!textSpaceTakenRect) {
+	                textSpaceTakenRect = rect.clone();
+	            }
+	            // There is no space for current label;
+	            else if (textSpaceTakenRect.intersect(rect)) {
+	                accumulatedLabelInterval++;
+	                autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
+	            }
+	            else {
+	                textSpaceTakenRect.union(rect);
+	                // Reset
+	                accumulatedLabelInterval = 0;
+	            }
+	        }
+	        if (autoLabelInterval === 0 && step > 1) {
+	            return step;
+	        }
+	        return (autoLabelInterval + 1) * step - 1;
+	    };
+
+	    /**
+	     * @param {Object} axis
+	     * @param {Function} labelFormatter
+	     * @return {Array.<string>}
+	     */
+	    axisHelper.getFormattedLabels = function (axis, labelFormatter) {
+	        var scale = axis.scale;
+	        var labels = scale.getTicksLabels();
+	        var ticks = scale.getTicks();
+	        if (typeof labelFormatter === 'string') {
+	            labelFormatter = (function (tpl) {
+	                return function (val) {
+	                    return tpl.replace('{value}', val != null ? val : '');
+	                };
+	            })(labelFormatter);
+	            // Consider empty array
+	            return zrUtil.map(labels, labelFormatter);
+	        }
+	        else if (typeof labelFormatter === 'function') {
+	            return zrUtil.map(ticks, function (tick, idx) {
+	                var labelStr = scale.getLabel(tick);
+	                return labelFormatter(
+	                    // Have to be compatible with previous version.
+	                    axis.type === 'category' ? labelStr : tick,
+	                    idx,
+	                    {value: tick, index: idx, label: labelStr}
+	                );
+	            }, this);
+	        }
+	        else {
+	            return labels;
+	        }
+	    };
+
+	    module.exports = axisHelper;
+
+
+/***/ },
+/* 106 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Linear continuous scale
+	 * @module echarts/coord/scale/Ordinal
+	 *
+	 * http://en.wikipedia.org/wiki/Level_of_measurement
+	 */
+
+	// FIXME only one data
+
+
+	    var zrUtil = __webpack_require__(4);
+	    var Scale = __webpack_require__(107);
+
+	    var scaleProto = Scale.prototype;
+
+	    var OrdinalScale = Scale.extend({
+
+	        type: 'ordinal',
+
+	        init: function (data, extent) {
+	            this._data = data;
+	            this._extent = extent || [0, data.length - 1];
+	        },
+
+	        parse: function (val) {
+	            return typeof val === 'string'
+	                ? zrUtil.indexOf(this._data, val)
+	                // val might be float.
+	                : Math.round(val);
+	        },
+
+	        contain: function (rank) {
+	            rank = this.parse(rank);
+	            return scaleProto.contain.call(this, rank)
+	                && this._data[rank] != null;
+	        },
+
+	        /**
+	         * Normalize given rank or name to linear [0, 1]
+	         * @param {number|string} [val]
+	         * @return {number}
+	         */
+	        normalize: function (val) {
+	            return scaleProto.normalize.call(this, this.parse(val));
+	        },
+
+	        scale: function (val) {
+	            return Math.round(scaleProto.scale.call(this, val));
+	        },
+
+	        /**
+	         * @return {Array}
+	         */
+	        getTicks: function () {
+	            var ticks = [];
+	            var extent = this._extent;
+	            var rank = extent[0];
+
+	            while (rank <= extent[1]) {
+	                ticks.push(rank);
+	                rank++;
+	            }
+
+	            return ticks;
+	        },
+
+	        /**
+	         * Get item on rank n
+	         * @param {number} n
+	         * @return {string}
+	         */
+	        getLabel: function (n) {
+	            return this._data[n];
+	        },
+
+	        /**
+	         * @return {number}
+	         */
+	        count: function () {
+	            return this._extent[1] - this._extent[0] + 1;
+	        },
+
+	        /**
+	         * @override
+	         */
+	        unionExtentFromData: function (data, dim) {
+	            this.unionExtent(data.getDataExtent(dim, false));
+	        },
+
+	        niceTicks: zrUtil.noop,
+	        niceExtent: zrUtil.noop
+	    });
+
+	    /**
+	     * @return {module:echarts/scale/Time}
+	     */
+	    OrdinalScale.create = function () {
+	        return new OrdinalScale();
+	    };
+
+	    module.exports = OrdinalScale;
+
+
+/***/ },
+/* 107 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * // Scale class management
+	 * @module echarts/scale/Scale
+	 */
+
+
+	    var clazzUtil = __webpack_require__(13);
+
+	    function Scale() {
+	        /**
+	         * Extent
+	         * @type {Array.<number>}
+	         * @protected
+	         */
+	        this._extent = [Infinity, -Infinity];
+
+	        /**
+	         * Step is calculated in adjustExtent
+	         * @type {Array.<number>}
+	         * @protected
+	         */
+	        this._interval = 0;
+
+	        this.init && this.init.apply(this, arguments);
+	    }
+
+	    var scaleProto = Scale.prototype;
+
+	    /**
+	     * Parse input val to valid inner number.
+	     * @param {*} val
+	     * @return {number}
+	     */
+	    scaleProto.parse = function (val) {
+	        // Notice: This would be a trap here, If the implementation
+	        // of this method depends on extent, and this method is used
+	        // before extent set (like in dataZoom), it would be wrong.
+	        // Nevertheless, parse does not depend on extent generally.
+	        return val;
+	    };
+
+	    scaleProto.contain = function (val) {
+	        var extent = this._extent;
+	        return val >= extent[0] && val <= extent[1];
+	    };
+
+	    /**
+	     * Normalize value to linear [0, 1], return 0.5 if extent span is 0
+	     * @param {number} val
+	     * @return {number}
+	     */
+	    scaleProto.normalize = function (val) {
+	        var extent = this._extent;
+	        if (extent[1] === extent[0]) {
+	            return 0.5;
+	        }
+	        return (val - extent[0]) / (extent[1] - extent[0]);
+	    };
+
+	    /**
+	     * Scale normalized value
+	     * @param {number} val
+	     * @return {number}
+	     */
+	    scaleProto.scale = function (val) {
+	        var extent = this._extent;
+	        return val * (extent[1] - extent[0]) + extent[0];
+	    };
+
+	    /**
+	     * Set extent from data
+	     * @param {Array.<number>} other
+	     */
+	    scaleProto.unionExtent = function (other) {
+	        var extent = this._extent;
+	        other[0] < extent[0] && (extent[0] = other[0]);
+	        other[1] > extent[1] && (extent[1] = other[1]);
+	        // not setExtent because in log axis it may transformed to power
+	        // this.setExtent(extent[0], extent[1]);
+	    };
+
+	    /**
+	     * Set extent from data
+	     * @param {module:echarts/data/List} data
+	     * @param {string} dim
+	     */
+	    scaleProto.unionExtentFromData = function (data, dim) {
+	        this.unionExtent(data.getDataExtent(dim, true));
+	    };
+
+	    /**
+	     * Get extent
+	     * @return {Array.<number>}
+	     */
+	    scaleProto.getExtent = function () {
+	        return this._extent.slice();
+	    };
+
+	    /**
+	     * Set extent
+	     * @param {number} start
+	     * @param {number} end
+	     */
+	    scaleProto.setExtent = function (start, end) {
+	        var thisExtent = this._extent;
+	        if (!isNaN(start)) {
+	            thisExtent[0] = start;
+	        }
+	        if (!isNaN(end)) {
+	            thisExtent[1] = end;
+	        }
+	    };
+
+	    /**
+	     * @return {Array.<string>}
+	     */
+	    scaleProto.getTicksLabels = function () {
+	        var labels = [];
+	        var ticks = this.getTicks();
+	        for (var i = 0; i < ticks.length; i++) {
+	            labels.push(this.getLabel(ticks[i]));
+	        }
+	        return labels;
+	    };
+
+	    /**
+	     * When axis extent depends on data and no data exists,
+	     * axis ticks should not be drawn, which is named 'blank'.
+	     */
+	    scaleProto.isBlank = function () {
+	        return this._isBlank;
+	    },
+
+	    /**
+	     * When axis extent depends on data and no data exists,
+	     * axis ticks should not be drawn, which is named 'blank'.
+	     */
+	    scaleProto.setBlank = function (isBlank) {
+	        this._isBlank = isBlank;
+	    };
+
+
+	    clazzUtil.enableClassExtend(Scale);
+	    clazzUtil.enableClassManagement(Scale, {
+	        registerWhenExtend: true
+	    });
+
+	    module.exports = Scale;
+
+
+/***/ },
+/* 108 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Interval scale
+	 * @module echarts/scale/Interval
+	 */
+
+
+
+	    var numberUtil = __webpack_require__(7);
+	    var formatUtil = __webpack_require__(6);
+	    var Scale = __webpack_require__(107);
+
+	    var mathFloor = Math.floor;
+	    var mathCeil = Math.ceil;
+
+	    var getPrecisionSafe = numberUtil.getPrecisionSafe;
+	    var roundingErrorFix = numberUtil.round;
+	    /**
+	     * @alias module:echarts/coord/scale/Interval
+	     * @constructor
+	     */
+	    var IntervalScale = Scale.extend({
+
+	        type: 'interval',
+
+	        _interval: 0,
+
+	        setExtent: function (start, end) {
+	            var thisExtent = this._extent;
+	            //start,end may be a Number like '25',so...
+	            if (!isNaN(start)) {
+	                thisExtent[0] = parseFloat(start);
+	            }
+	            if (!isNaN(end)) {
+	                thisExtent[1] = parseFloat(end);
+	            }
+	        },
+
+	        unionExtent: function (other) {
+	            var extent = this._extent;
+	            other[0] < extent[0] && (extent[0] = other[0]);
+	            other[1] > extent[1] && (extent[1] = other[1]);
+
+	            // unionExtent may called by it's sub classes
+	            IntervalScale.prototype.setExtent.call(this, extent[0], extent[1]);
+	        },
+	        /**
+	         * Get interval
+	         */
+	        getInterval: function () {
+	            if (!this._interval) {
+	                this.niceTicks();
+	            }
+	            return this._interval;
+	        },
+
+	        /**
+	         * Set interval
+	         */
+	        setInterval: function (interval) {
+	            this._interval = interval;
+	            // Dropped auto calculated niceExtent and use user setted extent
+	            // We assume user wan't to set both interval, min, max to get a better result
+	            this._niceExtent = this._extent.slice();
+	        },
+
+	        /**
+	         * @return {Array.<number>}
+	         */
+	        getTicks: function () {
+	            if (!this._interval) {
+	                this.niceTicks();
+	            }
+	            var interval = this._interval;
+	            var extent = this._extent;
+	            var ticks = [];
+
+	            // Consider this case: using dataZoom toolbox, zoom and zoom.
+	            var safeLimit = 10000;
+
+	            if (interval) {
+	                var niceExtent = this._niceExtent;
+	                var precision = getPrecisionSafe(interval) + 2;
+
+	                if (extent[0] < niceExtent[0]) {
+	                    ticks.push(extent[0]);
+	                }
+	                var tick = niceExtent[0];
+
+	                while (tick <= niceExtent[1]) {
+	                    ticks.push(tick);
+	                    // Avoid rounding error
+	                    tick = roundingErrorFix(tick + interval, precision);
+	                    if (ticks.length > safeLimit) {
+	                        return [];
+	                    }
+	                }
+	                // Consider this case: the last item of ticks is smaller
+	                // than niceExtent[1] and niceExtent[1] === extent[1].
+	                if (extent[1] > (ticks.length ? ticks[ticks.length - 1] : niceExtent[1])) {
+	                    ticks.push(extent[1]);
+	                }
+	            }
+
+	            return ticks;
+	        },
+
+	        /**
+	         * @return {Array.<string>}
+	         */
+	        getTicksLabels: function () {
+	            var labels = [];
+	            var ticks = this.getTicks();
+	            for (var i = 0; i < ticks.length; i++) {
+	                labels.push(this.getLabel(ticks[i]));
+	            }
+	            return labels;
+	        },
+
+	        /**
+	         * @param {number} n
+	         * @return {number}
+	         */
+	        getLabel: function (data) {
+	            return formatUtil.addCommas(data);
+	        },
+
+	        /**
+	         * Update interval and extent of intervals for nice ticks
+	         *
+	         * @param {number} [splitNumber = 5] Desired number of ticks
+	         */
+	        niceTicks: function (splitNumber) {
+	            splitNumber = splitNumber || 5;
+	            var extent = this._extent;
+	            var span = extent[1] - extent[0];
+	            if (!isFinite(span)) {
+	                return;
+	            }
+	            // User may set axis min 0 and data are all negative
+	            // FIXME If it needs to reverse ?
+	            if (span < 0) {
+	                span = -span;
+	                extent.reverse();
+	            }
+
+	            // From "Nice Numbers for Graph Labels" of Graphic Gems
+	            // var niceSpan = numberUtil.nice(span, false);
+	            var step = roundingErrorFix(
+	                numberUtil.nice(span / splitNumber, true),
+	                Math.max(
+	                    getPrecisionSafe(extent[0]),
+	                    getPrecisionSafe(extent[1])
+	                // extent may be [0, 1], and step should have 1 more digits.
+	                // To make it safe we add 2 more digits
+	                ) + 2
+	            );
+
+	            var precision = getPrecisionSafe(step) + 2;
+	            // Niced extent inside original extent
+	            var niceExtent = [
+	                roundingErrorFix(mathCeil(extent[0] / step) * step, precision),
+	                roundingErrorFix(mathFloor(extent[1] / step) * step, precision)
+	            ];
+
+	            this._interval = step;
+	            this._niceExtent = niceExtent;
+	        },
+
+	        /**
+	         * Nice extent.
+	         * @param {number} [splitNumber = 5] Given approx tick number
+	         * @param {boolean} [fixMin=false]
+	         * @param {boolean} [fixMax=false]
+	         */
+	        niceExtent: function (splitNumber, fixMin, fixMax) {
+	            var extent = this._extent;
+	            // If extent start and end are same, expand them
+	            if (extent[0] === extent[1]) {
+	                if (extent[0] !== 0) {
+	                    // Expand extent
+	                    var expandSize = extent[0];
+	                    // In the fowllowing case
+	                    //      Axis has been fixed max 100
+	                    //      Plus data are all 100 and axis extent are [100, 100].
+	                    // Extend to the both side will cause expanded max is larger than fixed max.
+	                    // So only expand to the smaller side.
+	                    if (!fixMax) {
+	                        extent[1] += expandSize / 2;
+	                        extent[0] -= expandSize / 2;
+	                    }
+	                    else {
+	                        extent[0] -= expandSize / 2;
+	                    }
+	                }
+	                else {
+	                    extent[1] = 1;
+	                }
+	            }
+	            var span = extent[1] - extent[0];
+	            // If there are no data and extent are [Infinity, -Infinity]
+	            if (!isFinite(span)) {
+	                extent[0] = 0;
+	                extent[1] = 1;
+	            }
+
+	            this.niceTicks(splitNumber);
+
+	            // var extent = this._extent;
+	            var interval = this._interval;
+
+	            if (!fixMin) {
+	                extent[0] = roundingErrorFix(mathFloor(extent[0] / interval) * interval);
+	            }
+	            if (!fixMax) {
+	                extent[1] = roundingErrorFix(mathCeil(extent[1] / interval) * interval);
+	            }
+	        }
+	    });
+
+	    /**
+	     * @return {module:echarts/scale/Time}
+	     */
+	    IntervalScale.create = function () {
+	        return new IntervalScale();
+	    };
+
+	    module.exports = IntervalScale;
+
+
+
+/***/ },
+/* 109 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Interval scale
+	 * @module echarts/coord/scale/Time
+	 */
+
+
+
+	    var zrUtil = __webpack_require__(4);
+	    var numberUtil = __webpack_require__(7);
+	    var formatUtil = __webpack_require__(6);
+
+	    var IntervalScale = __webpack_require__(108);
+
+	    var intervalScaleProto = IntervalScale.prototype;
+
+	    var mathCeil = Math.ceil;
+	    var mathFloor = Math.floor;
+	    var ONE_SECOND = 1000;
+	    var ONE_MINUTE = ONE_SECOND * 60;
+	    var ONE_HOUR = ONE_MINUTE * 60;
+	    var ONE_DAY = ONE_HOUR * 24;
+
+	    // FIXME 公用？
+	    var bisect = function (a, x, lo, hi) {
+	        while (lo < hi) {
+	            var mid = lo + hi >>> 1;
+	            if (a[mid][2] < x) {
+	                lo = mid + 1;
+	            }
+	            else {
+	                hi  = mid;
+	            }
+	        }
+	        return lo;
+	    };
+
+	    /**
+	     * @alias module:echarts/coord/scale/Time
+	     * @constructor
+	     */
+	    var TimeScale = IntervalScale.extend({
+	        type: 'time',
+
+	        // Overwrite
+	        getLabel: function (val) {
+	            var stepLvl = this._stepLvl;
+
+	            var date = new Date(val);
+
+	            return formatUtil.formatTime(stepLvl[0], date);
+	        },
+
+	        // Overwrite
+	        niceExtent: function (approxTickNum, fixMin, fixMax) {
+	            var extent = this._extent;
+	            // If extent start and end are same, expand them
+	            if (extent[0] === extent[1]) {
+	                // Expand extent
+	                extent[0] -= ONE_DAY;
+	                extent[1] += ONE_DAY;
+	            }
+	            // If there are no data and extent are [Infinity, -Infinity]
+	            if (extent[1] === -Infinity && extent[0] === Infinity) {
+	                var d = new Date();
+	                extent[1] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+	                extent[0] = extent[1] - ONE_DAY;
+	            }
+
+	            this.niceTicks(approxTickNum);
+
+	            // var extent = this._extent;
+	            var interval = this._interval;
+
+	            if (!fixMin) {
+	                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
+	            }
+	            if (!fixMax) {
+	                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
+	            }
+	        },
+
+	        // Overwrite
+	        niceTicks: function (approxTickNum) {
+	            approxTickNum = approxTickNum || 10;
+
+	            var extent = this._extent;
+	            var span = extent[1] - extent[0];
+	            var approxInterval = span / approxTickNum;
+	            var scaleLevelsLen = scaleLevels.length;
+	            var idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
+
+	            var level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
+	            var interval = level[2];
+	            // Same with interval scale if span is much larger than 1 year
+	            if (level[0] === 'year') {
+	                var yearSpan = span / interval;
+
+	                // From "Nice Numbers for Graph Labels" of Graphic Gems
+	                // var niceYearSpan = numberUtil.nice(yearSpan, false);
+	                var yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
+
+	                interval *= yearStep;
+	            }
+
+	            var niceExtent = [
+	                mathCeil(extent[0] / interval) * interval,
+	                mathFloor(extent[1] / interval) * interval
+	            ];
+
+	            this._stepLvl = level;
+	            // Interval will be used in getTicks
+	            this._interval = interval;
+	            this._niceExtent = niceExtent;
+	        },
+
+	        parse: function (val) {
+	            // val might be float.
+	            return +numberUtil.parseDate(val);
+	        }
+	    });
+
+	    zrUtil.each(['contain', 'normalize'], function (methodName) {
+	        TimeScale.prototype[methodName] = function (val) {
+	            return intervalScaleProto[methodName].call(this, this.parse(val));
+	        };
+	    });
+
+	    // Steps from d3
+	    var scaleLevels = [
+	        // Format       step    interval
+	        ['hh:mm:ss',    1,      ONE_SECOND],           // 1s
+	        ['hh:mm:ss',    5,      ONE_SECOND * 5],       // 5s
+	        ['hh:mm:ss',    10,     ONE_SECOND * 10],      // 10s
+	        ['hh:mm:ss',    15,     ONE_SECOND * 15],      // 15s
+	        ['hh:mm:ss',    30,     ONE_SECOND * 30],      // 30s
+	        ['hh:mm\nMM-dd',1,      ONE_MINUTE],          // 1m
+	        ['hh:mm\nMM-dd',5,      ONE_MINUTE * 5],      // 5m
+	        ['hh:mm\nMM-dd',10,     ONE_MINUTE * 10],     // 10m
+	        ['hh:mm\nMM-dd',15,     ONE_MINUTE * 15],     // 15m
+	        ['hh:mm\nMM-dd',30,     ONE_MINUTE * 30],     // 30m
+	        ['hh:mm\nMM-dd',1,      ONE_HOUR],        // 1h
+	        ['hh:mm\nMM-dd',2,      ONE_HOUR * 2],    // 2h
+	        ['hh:mm\nMM-dd',6,      ONE_HOUR * 6],    // 6h
+	        ['hh:mm\nMM-dd',12,     ONE_HOUR * 12],   // 12h
+	        ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
+	        ['week',        7,      ONE_DAY * 7],        // 7d
+	        ['month',       1,      ONE_DAY * 31],       // 1M
+	        ['quarter',     3,      ONE_DAY * 380 / 4],  // 3M
+	        ['half-year',   6,      ONE_DAY * 380 / 2],  // 6M
+	        ['year',        1,      ONE_DAY * 380]       // 1Y
+	    ];
+
+	    /**
+	     * @return {module:echarts/scale/Time}
+	     */
+	    TimeScale.create = function () {
+	        return new TimeScale();
+	    };
+
+	    module.exports = TimeScale;
+
+
+/***/ },
+/* 110 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Log scale
+	 * @module echarts/scale/Log
+	 */
+
+
+	    var zrUtil = __webpack_require__(4);
+	    var Scale = __webpack_require__(107);
+	    var numberUtil = __webpack_require__(7);
+
+	    // Use some method of IntervalScale
+	    var IntervalScale = __webpack_require__(108);
+
+	    var scaleProto = Scale.prototype;
+	    var intervalScaleProto = IntervalScale.prototype;
+
+	    var getPrecisionSafe = numberUtil.getPrecisionSafe;
+	    var roundingErrorFix = numberUtil.round;
+
+	    var mathFloor = Math.floor;
+	    var mathCeil = Math.ceil;
+	    var mathPow = Math.pow;
+
+	    var mathLog = Math.log;
+
+	    var LogScale = Scale.extend({
+
+	        type: 'log',
+
+	        base: 10,
+
+	        $constructor: function () {
+	            Scale.apply(this, arguments);
+	            this._originalScale = new IntervalScale();
+	        },
+
+	        /**
+	         * @return {Array.<number>}
+	         */
+	        getTicks: function () {
+	            var originalScale = this._originalScale;
+	            var extent = this._extent;
+	            var originalExtent = originalScale.getExtent();
+
+	            return zrUtil.map(intervalScaleProto.getTicks.call(this), function (val) {
+	                var powVal = numberUtil.round(mathPow(this.base, val));
+
+	                // Fix #4158
+	                powVal = (val === extent[0] && originalScale.__fixMin)
+	                    ? fixRoundingError(powVal, originalExtent[0])
+	                    : powVal;
+	                powVal = (val === extent[1] && originalScale.__fixMax)
+	                    ? fixRoundingError(powVal, originalExtent[1])
+	                    : powVal;
+
+	                return powVal;
+	            }, this);
+	        },
+
+	        /**
+	         * @param {number} val
+	         * @return {string}
+	         */
+	        getLabel: intervalScaleProto.getLabel,
+
+	        /**
+	         * @param  {number} val
+	         * @return {number}
+	         */
+	        scale: function (val) {
+	            val = scaleProto.scale.call(this, val);
+	            return mathPow(this.base, val);
+	        },
+
+	        /**
+	         * @param {number} start
+	         * @param {number} end
+	         */
+	        setExtent: function (start, end) {
+	            var base = this.base;
+	            start = mathLog(start) / mathLog(base);
+	            end = mathLog(end) / mathLog(base);
+	            intervalScaleProto.setExtent.call(this, start, end);
+	        },
+
+	        /**
+	         * @return {number} end
+	         */
+	        getExtent: function () {
+	            var base = this.base;
+	            var extent = scaleProto.getExtent.call(this);
+	            extent[0] = mathPow(base, extent[0]);
+	            extent[1] = mathPow(base, extent[1]);
+
+	            // Fix #4158
+	            var originalScale = this._originalScale;
+	            var originalExtent = originalScale.getExtent();
+	            originalScale.__fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
+	            originalScale.__fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
+
+	            return extent;
+	        },
+
+	        /**
+	         * @param  {Array.<number>} extent
+	         */
+	        unionExtent: function (extent) {
+	            this._originalScale.unionExtent(extent);
+
+	            var base = this.base;
+	            extent[0] = mathLog(extent[0]) / mathLog(base);
+	            extent[1] = mathLog(extent[1]) / mathLog(base);
+	            scaleProto.unionExtent.call(this, extent);
+	        },
+
+	        /**
+	         * @override
+	         */
+	        unionExtentFromData: function (data, dim) {
+	            this.unionExtent(data.getDataExtent(dim, true, function (val) {
+	                return val > 0;
+	            }));
+	        },
+
+	        /**
+	         * Update interval and extent of intervals for nice ticks
+	         * @param  {number} [approxTickNum = 10] Given approx tick number
+	         */
+	        niceTicks: function (approxTickNum) {
+	            approxTickNum = approxTickNum || 10;
+	            var extent = this._extent;
+	            var span = extent[1] - extent[0];
+	            if (span === Infinity || span <= 0) {
+	                return;
+	            }
+
+	            var interval = numberUtil.quantity(span);
+	            var err = approxTickNum / span * interval;
+
+	            // Filter ticks to get closer to the desired count.
+	            if (err <= 0.5) {
+	                interval *= 10;
+	            }
+
+	            // Interval should be integer
+	            while (!isNaN(interval) && Math.abs(interval) < 1 && Math.abs(interval) > 0) {
+	                interval *= 10;
+	            }
+
+	            var niceExtent = [
+	                numberUtil.round(mathCeil(extent[0] / interval) * interval),
+	                numberUtil.round(mathFloor(extent[1] / interval) * interval)
+	            ];
+
+	            this._interval = interval;
+	            this._niceExtent = niceExtent;
+	        },
+
+	        /**
+	         * Nice extent.
+	         * @param {number} [approxTickNum = 10] Given approx tick number
+	         * @param {boolean} [fixMin=false]
+	         * @param {boolean} [fixMax=false]
+	         */
+	        niceExtent: function (splitNumber, fixMin, fixMax) {
+	            intervalScaleProto.niceExtent.call(this, splitNumber, fixMin, fixMax);
+
+	            var originalScale = this._originalScale;
+	            originalScale.__fixMin = fixMin;
+	            originalScale.__fixMax = fixMax;
+	        }
+
+	    });
+
+	    zrUtil.each(['contain', 'normalize'], function (methodName) {
+	        LogScale.prototype[methodName] = function (val) {
+	            val = mathLog(val) / mathLog(this.base);
+	            return scaleProto[methodName].call(this, val);
+	        };
+	    });
+
+	    LogScale.create = function () {
+	        return new LogScale();
+	    };
+
+	    function fixRoundingError(val, originalVal) {
+	        return roundingErrorFix(val, getPrecisionSafe(originalVal));
+	    }
+
+	    module.exports = LogScale;
+
+
+/***/ },
+/* 111 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+
+	    var zrUtil = __webpack_require__(4);
+	    var axisHelper = __webpack_require__(105);
+
+	    function getName(obj) {
+	        if (zrUtil.isObject(obj) && obj.value != null) {
+	            return obj.value;
+	        }
+	        else {
+	            return obj;
+	        }
+	    }
+
+	    module.exports = {
+
+	        /**
+	         * Format labels
+	         * @return {Array.<string>}
+	         */
+	        getFormattedLabels: function () {
+	            return axisHelper.getFormattedLabels(
+	                this.axis,
+	                this.get('axisLabel.formatter')
+	            );
+	        },
+
+	        /**
+	         * Get categories
+	         */
+	        getCategories: function () {
+	            return this.get('type') === 'category'
+	                && zrUtil.map(this.get('data'), getName);
+	        },
+
+	        /**
+	         * @param {boolean} origin
+	         * @return {number|string} min value or 'dataMin' or null/undefined (means auto) or NaN
+	         */
+	        getMin: function (origin) {
+	            var option = this.option;
+	            var min = (!origin && option.rangeStart != null)
+	                ? option.rangeStart : option.min;
+
+	            if (this.axis && min != null && min !== 'dataMin' && !zrUtil.eqNaN(min)) {
+	                min = this.axis.scale.parse(min);
+	            }
+	            return min;
+	        },
+
+	        /**
+	         * @param {boolean} origin
+	         * @return {number|string} max value or 'dataMax' or null/undefined (means auto) or NaN
+	         */
+	        getMax: function (origin) {
+	            var option = this.option;
+	            var max = (!origin && option.rangeEnd != null)
+	                ? option.rangeEnd : option.max;
+
+	            if (this.axis && max != null && max !== 'dataMax' && !zrUtil.eqNaN(max)) {
+	                max = this.axis.scale.parse(max);
+	            }
+	            return max;
+	        },
+
+	        /**
+	         * @return {boolean}
+	         */
+	        getNeedCrossZero: function () {
+	            var option = this.option;
+	            return (option.rangeStart != null || option.rangeEnd != null)
+	                ? false : !option.scale;
+	        },
+
+	        /**
+	         * Should be implemented by each axis model if necessary.
+	         * @return {module:echarts/model/Component} coordinate system model
+	         */
+	        getCoordSysModel: zrUtil.noop,
+
+	        /**
+	         * @param {number} rangeStart Can only be finite number or null/undefined or NaN.
+	         * @param {number} rangeEnd Can only be finite number or null/undefined or NaN.
+	         */
+	        setRange: function (rangeStart, rangeEnd) {
+	            this.option.rangeStart = rangeStart;
+	            this.option.rangeEnd = rangeEnd;
+	        },
+
+	        /**
+	         * Reset range
+	         */
+	        resetRange: function () {
+	            // rangeStart and rangeEnd is readonly.
+	            this.option.rangeStart = this.option.rangeEnd = null;
+	        }
+	    };
+
+
+/***/ },
+/* 112 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+
+	    var zrUtil = __webpack_require__(4);
+	    var echarts = __webpack_require__(1);
+	    var PRIORITY = echarts.PRIORITY;
+
+	    __webpack_require__(113);
+	    __webpack_require__(114);
+
+	    echarts.registerVisual(zrUtil.curry(
+	        __webpack_require__(119), 'line', 'circle', 'line'
+	    ));
+	    echarts.registerLayout(zrUtil.curry(
+	        __webpack_require__(120), 'line'
+	    ));
+
+	    // Down sample after filter
+	    echarts.registerProcessor(PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(
+	        __webpack_require__(121), 'line'
+	    ));
+
+	    // In case developer forget to include grid component
+	    __webpack_require__(122);
+
+
+/***/ },
+/* 113 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+
+	    var createListFromArray = __webpack_require__(102);
+	    var SeriesModel = __webpack_require__(28);
+
+	    module.exports = SeriesModel.extend({
+
+	        type: 'series.line',
+
+	        dependencies: ['grid', 'polar'],
+
+	        getInitialData: function (option, ecModel) {
+	            if (true) {
+	                var coordSys = option.coordinateSystem;
+	                if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
+	                    throw new Error('Line not support coordinateSystem besides cartesian and polar');
+	                }
+	            }
+	            return createListFromArray(option.data, this, ecModel);
+	        },
+
+	        defaultOption: {
+	            zlevel: 0,                  // 一级层叠
+	            z: 2,                       // 二级层叠
+	            coordinateSystem: 'cartesian2d',
+	            legendHoverLink: true,
+
+	            hoverAnimation: true,
+	            // stack: null
+	            // xAxisIndex: 0,
+	            // yAxisIndex: 0,
+
+	            // polarIndex: 0,
+
+	            // If clip the overflow value
+	            clipOverflow: true,
+
+	            label: {
+	                normal: {
+	                    position: 'top'
+	                }
+	            },
+	            // itemStyle: {
+	            //     normal: {},
+	            //     emphasis: {}
+	            // },
+	            lineStyle: {
+	                normal: {
+	                    width: 2,
+	                    type: 'solid'
+	                }
+	            },
+	            // areaStyle: {},
+	            // false, 'start', 'end', 'middle'
+	            step: false,
+
+	            // Disabled if step is true
+	            smooth: false,
+	            smoothMonotone: null,
+	            // 拐点图形类型
+	            symbol: 'emptyCircle',
+	            // 拐点图形大小
+	            symbolSize: 4,
+	            // 拐点图形旋转控制
+	            symbolRotate: null,
+
+	            // 是否显示 symbol, 只有在 tooltip hover 的时候显示
+	            showSymbol: true,
+	            // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
+	            showAllSymbol: false,
+
+	            // 是否连接断点
+	            connectNulls: false,
+
+	            // 数据过滤，'average', 'max', 'min', 'sum'
+	            sampling: 'none',
+
+	            animationEasing: 'linear',
+
+	            // Disable progressive
+	            progressive: 0,
+	            hoverLayerThreshold: Infinity
+	        }
+	    });
+
+
+/***/ },
+/* 114 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
 	// FIXME step not support polar
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var SymbolDraw = __webpack_require__(105);
-	    var Symbol = __webpack_require__(106);
-	    var lineAnimationDiff = __webpack_require__(108);
+	    var SymbolDraw = __webpack_require__(115);
+	    var Symbol = __webpack_require__(116);
+	    var lineAnimationDiff = __webpack_require__(117);
 	    var graphic = __webpack_require__(43);
 	    var modelUtil = __webpack_require__(5);
-	    var polyHelper = __webpack_require__(109);
+	    var polyHelper = __webpack_require__(118);
 	    var ChartView = __webpack_require__(42);
 
 	    function isPointsSame(points1, points2) {
@@ -24123,7 +26187,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 105 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -24132,7 +26196,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var graphic = __webpack_require__(43);
-	    var Symbol = __webpack_require__(106);
+	    var Symbol = __webpack_require__(116);
 
 	    /**
 	     * @constructor
@@ -24255,7 +26319,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 106 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -24264,7 +26328,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var symbolUtil = __webpack_require__(107);
+	    var symbolUtil = __webpack_require__(104);
 	    var graphic = __webpack_require__(43);
 	    var numberUtil = __webpack_require__(7);
 
@@ -24545,7 +26609,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    symbolProto.fadeOut = function (cb) {
 	        var symbolPath = this.childAt(0);
 	        // Avoid mistaken hover when fading out
-	        this.silent = true;
+	        this.silent = symbolPath.silent = true;
 	        // Not show text when animating
 	        symbolPath.style.text = '';
 	        graphic.updateProps(symbolPath, {
@@ -24559,367 +26623,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 107 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	// Symbol factory
-
-
-	    var graphic = __webpack_require__(43);
-	    var BoundingRect = __webpack_require__(9);
-
-	    /**
-	     * Triangle shape
-	     * @inner
-	     */
-	    var Triangle = graphic.extendShape({
-	        type: 'triangle',
-	        shape: {
-	            cx: 0,
-	            cy: 0,
-	            width: 0,
-	            height: 0
-	        },
-	        buildPath: function (path, shape) {
-	            var cx = shape.cx;
-	            var cy = shape.cy;
-	            var width = shape.width / 2;
-	            var height = shape.height / 2;
-	            path.moveTo(cx, cy - height);
-	            path.lineTo(cx + width, cy + height);
-	            path.lineTo(cx - width, cy + height);
-	            path.closePath();
-	        }
-	    });
-	    /**
-	     * Diamond shape
-	     * @inner
-	     */
-	    var Diamond = graphic.extendShape({
-	        type: 'diamond',
-	        shape: {
-	            cx: 0,
-	            cy: 0,
-	            width: 0,
-	            height: 0
-	        },
-	        buildPath: function (path, shape) {
-	            var cx = shape.cx;
-	            var cy = shape.cy;
-	            var width = shape.width / 2;
-	            var height = shape.height / 2;
-	            path.moveTo(cx, cy - height);
-	            path.lineTo(cx + width, cy);
-	            path.lineTo(cx, cy + height);
-	            path.lineTo(cx - width, cy);
-	            path.closePath();
-	        }
-	    });
-
-	    /**
-	     * Pin shape
-	     * @inner
-	     */
-	    var Pin = graphic.extendShape({
-	        type: 'pin',
-	        shape: {
-	            // x, y on the cusp
-	            x: 0,
-	            y: 0,
-	            width: 0,
-	            height: 0
-	        },
-
-	        buildPath: function (path, shape) {
-	            var x = shape.x;
-	            var y = shape.y;
-	            var w = shape.width / 5 * 3;
-	            // Height must be larger than width
-	            var h = Math.max(w, shape.height);
-	            var r = w / 2;
-
-	            // Dist on y with tangent point and circle center
-	            var dy = r * r / (h - r);
-	            var cy = y - h + r + dy;
-	            var angle = Math.asin(dy / r);
-	            // Dist on x with tangent point and circle center
-	            var dx = Math.cos(angle) * r;
-
-	            var tanX = Math.sin(angle);
-	            var tanY = Math.cos(angle);
-
-	            path.arc(
-	                x, cy, r,
-	                Math.PI - angle,
-	                Math.PI * 2 + angle
-	            );
-
-	            var cpLen = r * 0.6;
-	            var cpLen2 = r * 0.7;
-	            path.bezierCurveTo(
-	                x + dx - tanX * cpLen, cy + dy + tanY * cpLen,
-	                x, y - cpLen2,
-	                x, y
-	            );
-	            path.bezierCurveTo(
-	                x, y - cpLen2,
-	                x - dx + tanX * cpLen, cy + dy + tanY * cpLen,
-	                x - dx, cy + dy
-	            );
-	            path.closePath();
-	        }
-	    });
-
-	    /**
-	     * Arrow shape
-	     * @inner
-	     */
-	    var Arrow = graphic.extendShape({
-
-	        type: 'arrow',
-
-	        shape: {
-	            x: 0,
-	            y: 0,
-	            width: 0,
-	            height: 0
-	        },
-
-	        buildPath: function (ctx, shape) {
-	            var height = shape.height;
-	            var width = shape.width;
-	            var x = shape.x;
-	            var y = shape.y;
-	            var dx = width / 3 * 2;
-	            ctx.moveTo(x, y);
-	            ctx.lineTo(x + dx, y + height);
-	            ctx.lineTo(x, y + height / 4 * 3);
-	            ctx.lineTo(x - dx, y + height);
-	            ctx.lineTo(x, y);
-	            ctx.closePath();
-	        }
-	    });
-
-	    /**
-	     * Map of path contructors
-	     * @type {Object.<string, module:zrender/graphic/Path>}
-	     */
-	    var symbolCtors = {
-	        line: graphic.Line,
-
-	        rect: graphic.Rect,
-
-	        roundRect: graphic.Rect,
-
-	        square: graphic.Rect,
-
-	        circle: graphic.Circle,
-
-	        diamond: Diamond,
-
-	        pin: Pin,
-
-	        arrow: Arrow,
-
-	        triangle: Triangle
-	    };
-
-	    var symbolShapeMakers = {
-
-	        line: function (x, y, w, h, shape) {
-	            // FIXME
-	            shape.x1 = x;
-	            shape.y1 = y + h / 2;
-	            shape.x2 = x + w;
-	            shape.y2 = y + h / 2;
-	        },
-
-	        rect: function (x, y, w, h, shape) {
-	            shape.x = x;
-	            shape.y = y;
-	            shape.width = w;
-	            shape.height = h;
-	        },
-
-	        roundRect: function (x, y, w, h, shape) {
-	            shape.x = x;
-	            shape.y = y;
-	            shape.width = w;
-	            shape.height = h;
-	            shape.r = Math.min(w, h) / 4;
-	        },
-
-	        square: function (x, y, w, h, shape) {
-	            var size = Math.min(w, h);
-	            shape.x = x;
-	            shape.y = y;
-	            shape.width = size;
-	            shape.height = size;
-	        },
-
-	        circle: function (x, y, w, h, shape) {
-	            // Put circle in the center of square
-	            shape.cx = x + w / 2;
-	            shape.cy = y + h / 2;
-	            shape.r = Math.min(w, h) / 2;
-	        },
-
-	        diamond: function (x, y, w, h, shape) {
-	            shape.cx = x + w / 2;
-	            shape.cy = y + h / 2;
-	            shape.width = w;
-	            shape.height = h;
-	        },
-
-	        pin: function (x, y, w, h, shape) {
-	            shape.x = x + w / 2;
-	            shape.y = y + h / 2;
-	            shape.width = w;
-	            shape.height = h;
-	        },
-
-	        arrow: function (x, y, w, h, shape) {
-	            shape.x = x + w / 2;
-	            shape.y = y + h / 2;
-	            shape.width = w;
-	            shape.height = h;
-	        },
-
-	        triangle: function (x, y, w, h, shape) {
-	            shape.cx = x + w / 2;
-	            shape.cy = y + h / 2;
-	            shape.width = w;
-	            shape.height = h;
-	        }
-	    };
-
-	    var symbolBuildProxies = {};
-	    for (var name in symbolCtors) {
-	        if (symbolCtors.hasOwnProperty(name)) {
-	            symbolBuildProxies[name] = new symbolCtors[name]();
-	        }
-	    }
-
-	    var Symbol = graphic.extendShape({
-
-	        type: 'symbol',
-
-	        shape: {
-	            symbolType: '',
-	            x: 0,
-	            y: 0,
-	            width: 0,
-	            height: 0
-	        },
-
-	        beforeBrush: function () {
-	            var style = this.style;
-	            var shape = this.shape;
-	            // FIXME
-	            if (shape.symbolType === 'pin' && style.textPosition === 'inside') {
-	                style.textPosition = ['50%', '40%'];
-	                style.textAlign = 'center';
-	                style.textVerticalAlign = 'middle';
-	            }
-	        },
-
-	        buildPath: function (ctx, shape, inBundle) {
-	            var symbolType = shape.symbolType;
-	            var proxySymbol = symbolBuildProxies[symbolType];
-	            if (shape.symbolType !== 'none') {
-	                if (!proxySymbol) {
-	                    // Default rect
-	                    symbolType = 'rect';
-	                    proxySymbol = symbolBuildProxies[symbolType];
-	                }
-	                symbolShapeMakers[symbolType](
-	                    shape.x, shape.y, shape.width, shape.height, proxySymbol.shape
-	                );
-	                proxySymbol.buildPath(ctx, proxySymbol.shape, inBundle);
-	            }
-	        }
-	    });
-
-	    // Provide setColor helper method to avoid determine if set the fill or stroke outside
-	    var symbolPathSetColor = function (color) {
-	        if (this.type !== 'image') {
-	            var symbolStyle = this.style;
-	            var symbolShape = this.shape;
-	            if (symbolShape && symbolShape.symbolType === 'line') {
-	                symbolStyle.stroke = color;
-	            }
-	            else if (this.__isEmptyBrush) {
-	                symbolStyle.stroke = color;
-	                symbolStyle.fill = '#fff';
-	            }
-	            else {
-	                // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
-	                symbolStyle.fill && (symbolStyle.fill = color);
-	                symbolStyle.stroke && (symbolStyle.stroke = color);
-	            }
-	            this.dirty(false);
-	        }
-	    };
-
-	    var symbolUtil = {
-	        /**
-	         * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
-	         * @param {string} symbolType
-	         * @param {number} x
-	         * @param {number} y
-	         * @param {number} w
-	         * @param {number} h
-	         * @param {string} color
-	         */
-	        createSymbol: function (symbolType, x, y, w, h, color) {
-	            var isEmpty = symbolType.indexOf('empty') === 0;
-	            if (isEmpty) {
-	                symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
-	            }
-	            var symbolPath;
-
-	            if (symbolType.indexOf('image://') === 0) {
-	                symbolPath = new graphic.Image({
-	                    style: {
-	                        image: symbolType.slice(8),
-	                        x: x,
-	                        y: y,
-	                        width: w,
-	                        height: h
-	                    }
-	                });
-	            }
-	            else if (symbolType.indexOf('path://') === 0) {
-	                symbolPath = graphic.makePath(symbolType.slice(7), {}, new BoundingRect(x, y, w, h));
-	            }
-	            else {
-	                symbolPath = new Symbol({
-	                    shape: {
-	                        symbolType: symbolType,
-	                        x: x,
-	                        y: y,
-	                        width: w,
-	                        height: h
-	                    }
-	                });
-	            }
-
-	            symbolPath.__isEmptyBrush = isEmpty;
-
-	            symbolPath.setColor = symbolPathSetColor;
-
-	            symbolPath.setColor(color);
-
-	            return symbolPath;
-	        }
-	    };
-
-	    module.exports = symbolUtil;
-
-
-/***/ },
-/* 108 */
+/* 117 */
 /***/ function(module, exports) {
 
 	
@@ -25133,7 +26837,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 109 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Poly path support NaN point
@@ -25388,7 +27092,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 110 */
+/* 119 */
 /***/ function(module, exports) {
 
 	
@@ -25437,7 +27141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 111 */
+/* 120 */
 /***/ function(module, exports) {
 
 	
@@ -25450,13 +27154,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (coordSys) {
 	                var dims = coordSys.dimensions;
 
-	                if (coordSys.type === 'singleAxis') {
+	                if (dims.length === 1) {
 	                    data.each(dims[0], function (x, idx) {
 	                        // Also {Array.<number>}, not undefined to avoid if...else... statement
 	                        data.setItemLayout(idx, isNaN(x) ? [NaN, NaN] : coordSys.dataToPoint(x));
 	                    });
 	                }
-	                else {
+	                else if (dims.length === 2) {
 	                    data.each(dims, function (x, y, idx) {
 	                        // Also {Array.<number>}, not undefined to avoid if...else... statement
 	                        data.setItemLayout(
@@ -25469,8 +27173,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 
+
 /***/ },
-/* 112 */
+/* 121 */
 /***/ function(module, exports) {
 
 	
@@ -25553,7 +27258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 113 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25563,9 +27268,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 	    var echarts = __webpack_require__(1);
 
-	    __webpack_require__(114);
+	    __webpack_require__(123);
 
-	    __webpack_require__(131);
+	    __webpack_require__(132);
 
 	    // Grid view
 	    echarts.extendComponentView({
@@ -25597,7 +27302,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 114 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -25608,11 +27313,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var factory = exports;
 
 	    var layout = __webpack_require__(21);
-	    var axisHelper = __webpack_require__(115);
+	    var axisHelper = __webpack_require__(105);
 
 	    var zrUtil = __webpack_require__(4);
-	    var Cartesian2D = __webpack_require__(121);
-	    var Axis2D = __webpack_require__(123);
+	    var Cartesian2D = __webpack_require__(124);
+	    var Axis2D = __webpack_require__(126);
 
 	    var each = zrUtil.each;
 
@@ -25620,7 +27325,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var niceScaleExtent = axisHelper.niceScaleExtent;
 
 	    // 依赖 GridModel, AxisModel 做预处理
-	    __webpack_require__(126);
+	    __webpack_require__(128);
 
 	    /**
 	     * Check if the axis is used in the specified grid
@@ -25689,6 +27394,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this._rect;
 	    };
 
+	    gridProto.getModel = function () {
+	        return this._model;
+	    };
+
 	    gridProto.update = function (ecModel, api) {
 
 	        var axesMap = this._axesMap;
@@ -25709,10 +27418,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        each(axesMap.x, function (xAxis) {
-	            niceScaleExtent(xAxis, xAxis.model);
+	            niceScaleExtent(xAxis.scale, xAxis.model);
 	        });
 	        each(axesMap.y, function (yAxis) {
-	            niceScaleExtent(yAxis, yAxis.model);
+	            niceScaleExtent(yAxis.scale, yAxis.model);
 	        });
 	        // Fix configuration
 	        each(axesMap.x, function (xAxis) {
@@ -25820,6 +27529,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            }
 	        }
+	    };
+
+	    gridProto.getCartesians = function () {
+	        return this._coordsList.slice();
 	    };
 
 	    /**
@@ -26164,1104 +27877,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 115 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var OrdinalScale = __webpack_require__(116);
-	    var IntervalScale = __webpack_require__(118);
-	    __webpack_require__(119);
-	    __webpack_require__(120);
-	    var Scale = __webpack_require__(117);
-
-	    var numberUtil = __webpack_require__(7);
-	    var zrUtil = __webpack_require__(4);
-	    var textContain = __webpack_require__(8);
-	    var axisHelper = {};
-
-	    /**
-	     * Get axis scale extent before niced.
-	     * Item of returned array can only be number (including Infinity and NaN).
-	     */
-	    axisHelper.getScaleExtent = function (axis, model) {
-	        var scale = axis.scale;
-	        var scaleType = scale.type;
-
-	        var min = model.getMin();
-	        var max = model.getMax();
-	        var fixMin = min != null;
-	        var fixMax = max != null;
-	        var originalExtent = scale.getExtent();
-
-	        var axisDataLen;
-	        var boundaryGap;
-	        var span;
-	        if (scaleType === 'ordinal') {
-	            axisDataLen = (model.get('data') || []).length;
-	        }
-	        else {
-	            boundaryGap = model.get('boundaryGap');
-	            if (!zrUtil.isArray(boundaryGap)) {
-	                boundaryGap = [boundaryGap || 0, boundaryGap || 0];
-	            }
-	            boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
-	            boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
-	            span = originalExtent[1] - originalExtent[0];
-	        }
-
-	        if (min == null) {
-	            min = scaleType === 'ordinal'
-	                ? (axisDataLen ? 0 : NaN)
-	                : originalExtent[0] - boundaryGap[0] * span;
-	        }
-	        if (max == null) {
-	            max = scaleType === 'ordinal'
-	                ? (axisDataLen ? axisDataLen - 1 : NaN)
-	                : originalExtent[1] + boundaryGap[1] * span;
-	        }
-
-	        if (min === 'dataMin') {
-	            min = originalExtent[0];
-	        }
-	        if (max === 'dataMax') {
-	            max = originalExtent[1];
-	        }
-
-	        (min == null || !isFinite(min)) && (min = NaN);
-	        (max == null || !isFinite(max)) && (max = NaN);
-
-	        axis.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
-
-	        // Evaluate if axis needs cross zero
-	        if (model.getNeedCrossZero()) {
-	            // Axis is over zero and min is not set
-	            if (min > 0 && max > 0 && !fixMin) {
-	                min = 0;
-	            }
-	            // Axis is under zero and max is not set
-	            if (min < 0 && max < 0 && !fixMax) {
-	                max = 0;
-	            }
-	        }
-
-	        return [min, max];
-	    };
-
-	    axisHelper.niceScaleExtent = function (axis, model) {
-	        var scale = axis.scale;
-	        var extent = axisHelper.getScaleExtent(axis, model);
-	        var fixMin = model.getMin() != null;
-	        var fixMax = model.getMax() != null;
-	        var splitNumber = model.get('splitNumber');
-
-	        if (scale.type === 'log') {
-	            scale.base = model.get('logBase');
-	        }
-
-	        scale.setExtent(extent[0], extent[1]);
-	        scale.niceExtent(splitNumber, fixMin, fixMax);
-
-	        // Use minInterval to constraint the calculated interval.
-	        // If calculated interval is less than minInterval. increase the interval quantity until
-	        // it is larger than minInterval.
-	        // For example:
-	        //  minInterval is 1, calculated interval is 0.2, so increase it to be 1. In this way we can get
-	        //  an integer axis.
-	        var minInterval = model.get('minInterval');
-	        if (isFinite(minInterval) && !fixMin && !fixMax && scale.type === 'interval') {
-	            var interval = scale.getInterval();
-	            var intervalScale = Math.max(Math.abs(interval), minInterval) / interval;
-	            // while (interval < minInterval) {
-	            //     var quantity = numberUtil.quantity(interval);
-	            //     interval = quantity * 10;
-	            //     scaleQuantity *= 10;
-	            // }
-	            extent = scale.getExtent();
-	            var origin = (extent[1] + extent[0]) / 2;
-	            scale.setExtent(
-	                intervalScale * (extent[0] - origin) + origin,
-	                intervalScale * (extent[1] - origin) + origin
-	            );
-	            scale.niceExtent(splitNumber);
-	        }
-
-	        // If some one specified the min, max. And the default calculated interval
-	        // is not good enough. He can specify the interval. It is often appeared
-	        // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
-	        // to be 60.
-	        // FIXME
-	        var interval = model.get('interval');
-	        if (interval != null) {
-	            scale.setInterval && scale.setInterval(interval);
-	        }
-	    };
-
-	    /**
-	     * @param {module:echarts/model/Model} model
-	     * @param {string} [axisType] Default retrieve from model.type
-	     * @return {module:echarts/scale/*}
-	     */
-	    axisHelper.createScaleByModel = function(model, axisType) {
-	        axisType = axisType || model.get('type');
-	        if (axisType) {
-	            switch (axisType) {
-	                // Buildin scale
-	                case 'category':
-	                    return new OrdinalScale(
-	                        model.getCategories(), [Infinity, -Infinity]
-	                    );
-	                case 'value':
-	                    return new IntervalScale();
-	                // Extended scale, like time and log
-	                default:
-	                    return (Scale.getClass(axisType) || IntervalScale).create(model);
-	            }
-	        }
-	    };
-
-	    /**
-	     * Check if the axis corss 0
-	     */
-	    axisHelper.ifAxisCrossZero = function (axis) {
-	        var dataExtent = axis.scale.getExtent();
-	        var min = dataExtent[0];
-	        var max = dataExtent[1];
-	        return !((min > 0 && max > 0) || (min < 0 && max < 0));
-	    };
-
-	    /**
-	     * @param {Array.<number>} tickCoords In axis self coordinate.
-	     * @param {Array.<string>} labels
-	     * @param {string} font
-	     * @param {boolean} isAxisHorizontal
-	     * @return {number}
-	     */
-	    axisHelper.getAxisLabelInterval = function (tickCoords, labels, font, isAxisHorizontal) {
-	        // FIXME
-	        // 不同角的axis和label，不只是horizontal和vertical.
-
-	        var textSpaceTakenRect;
-	        var autoLabelInterval = 0;
-	        var accumulatedLabelInterval = 0;
-
-	        var step = 1;
-	        if (labels.length > 40) {
-	            // Simple optimization for large amount of labels
-	            step = Math.floor(labels.length / 40);
-	        }
-
-	        for (var i = 0; i < tickCoords.length; i += step) {
-	            var tickCoord = tickCoords[i];
-	            var rect = textContain.getBoundingRect(
-	                labels[i], font, 'center', 'top'
-	            );
-	            rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
-	            // FIXME Magic number 1.5
-	            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
-	            if (!textSpaceTakenRect) {
-	                textSpaceTakenRect = rect.clone();
-	            }
-	            // There is no space for current label;
-	            else if (textSpaceTakenRect.intersect(rect)) {
-	                accumulatedLabelInterval++;
-	                autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
-	            }
-	            else {
-	                textSpaceTakenRect.union(rect);
-	                // Reset
-	                accumulatedLabelInterval = 0;
-	            }
-	        }
-	        if (autoLabelInterval === 0 && step > 1) {
-	            return step;
-	        }
-	        return (autoLabelInterval + 1) * step - 1;
-	    };
-
-	    /**
-	     * @param {Object} axis
-	     * @param {Function} labelFormatter
-	     * @return {Array.<string>}
-	     */
-	    axisHelper.getFormattedLabels = function (axis, labelFormatter) {
-	        var scale = axis.scale;
-	        var labels = scale.getTicksLabels();
-	        var ticks = scale.getTicks();
-	        if (typeof labelFormatter === 'string') {
-	            labelFormatter = (function (tpl) {
-	                return function (val) {
-	                    return tpl.replace('{value}', val != null ? val : '');
-	                };
-	            })(labelFormatter);
-	            // Consider empty array
-	            return zrUtil.map(labels, labelFormatter);
-	        }
-	        else if (typeof labelFormatter === 'function') {
-	            return zrUtil.map(ticks, function (tick, idx) {
-	                return labelFormatter(
-	                    axis.type === 'category' ? scale.getLabel(tick) : tick,
-	                    idx
-	                );
-	            }, this);
-	        }
-	        else {
-	            return labels;
-	        }
-	    };
-
-	    module.exports = axisHelper;
-
-
-/***/ },
-/* 116 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Linear continuous scale
-	 * @module echarts/coord/scale/Ordinal
-	 *
-	 * http://en.wikipedia.org/wiki/Level_of_measurement
-	 */
-
-	// FIXME only one data
-
-
-	    var zrUtil = __webpack_require__(4);
-	    var Scale = __webpack_require__(117);
-
-	    var scaleProto = Scale.prototype;
-
-	    var OrdinalScale = Scale.extend({
-
-	        type: 'ordinal',
-
-	        init: function (data, extent) {
-	            this._data = data;
-	            this._extent = extent || [0, data.length - 1];
-	        },
-
-	        parse: function (val) {
-	            return typeof val === 'string'
-	                ? zrUtil.indexOf(this._data, val)
-	                // val might be float.
-	                : Math.round(val);
-	        },
-
-	        contain: function (rank) {
-	            rank = this.parse(rank);
-	            return scaleProto.contain.call(this, rank)
-	                && this._data[rank] != null;
-	        },
-
-	        /**
-	         * Normalize given rank or name to linear [0, 1]
-	         * @param {number|string} [val]
-	         * @return {number}
-	         */
-	        normalize: function (val) {
-	            return scaleProto.normalize.call(this, this.parse(val));
-	        },
-
-	        scale: function (val) {
-	            return Math.round(scaleProto.scale.call(this, val));
-	        },
-
-	        /**
-	         * @return {Array}
-	         */
-	        getTicks: function () {
-	            var ticks = [];
-	            var extent = this._extent;
-	            var rank = extent[0];
-
-	            while (rank <= extent[1]) {
-	                ticks.push(rank);
-	                rank++;
-	            }
-
-	            return ticks;
-	        },
-
-	        /**
-	         * Get item on rank n
-	         * @param {number} n
-	         * @return {string}
-	         */
-	        getLabel: function (n) {
-	            return this._data[n];
-	        },
-
-	        /**
-	         * @return {number}
-	         */
-	        count: function () {
-	            return this._extent[1] - this._extent[0] + 1;
-	        },
-
-	        /**
-	         * @override
-	         */
-	        unionExtentFromData: function (data, dim) {
-	            this.unionExtent(data.getDataExtent(dim, false));
-	        },
-
-	        niceTicks: zrUtil.noop,
-	        niceExtent: zrUtil.noop
-	    });
-
-	    /**
-	     * @return {module:echarts/scale/Time}
-	     */
-	    OrdinalScale.create = function () {
-	        return new OrdinalScale();
-	    };
-
-	    module.exports = OrdinalScale;
-
-
-/***/ },
-/* 117 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * // Scale class management
-	 * @module echarts/scale/Scale
-	 */
-
-
-	    var clazzUtil = __webpack_require__(13);
-
-	    function Scale() {
-	        /**
-	         * Extent
-	         * @type {Array.<number>}
-	         * @protected
-	         */
-	        this._extent = [Infinity, -Infinity];
-
-	        /**
-	         * Step is calculated in adjustExtent
-	         * @type {Array.<number>}
-	         * @protected
-	         */
-	        this._interval = 0;
-
-	        this.init && this.init.apply(this, arguments);
-	    }
-
-	    var scaleProto = Scale.prototype;
-
-	    /**
-	     * Parse input val to valid inner number.
-	     * @param {*} val
-	     * @return {number}
-	     */
-	    scaleProto.parse = function (val) {
-	        // Notice: This would be a trap here, If the implementation
-	        // of this method depends on extent, and this method is used
-	        // before extent set (like in dataZoom), it would be wrong.
-	        // Nevertheless, parse does not depend on extent generally.
-	        return val;
-	    };
-
-	    scaleProto.contain = function (val) {
-	        var extent = this._extent;
-	        return val >= extent[0] && val <= extent[1];
-	    };
-
-	    /**
-	     * Normalize value to linear [0, 1], return 0.5 if extent span is 0
-	     * @param {number} val
-	     * @return {number}
-	     */
-	    scaleProto.normalize = function (val) {
-	        var extent = this._extent;
-	        if (extent[1] === extent[0]) {
-	            return 0.5;
-	        }
-	        return (val - extent[0]) / (extent[1] - extent[0]);
-	    };
-
-	    /**
-	     * Scale normalized value
-	     * @param {number} val
-	     * @return {number}
-	     */
-	    scaleProto.scale = function (val) {
-	        var extent = this._extent;
-	        return val * (extent[1] - extent[0]) + extent[0];
-	    };
-
-	    /**
-	     * Set extent from data
-	     * @param {Array.<number>} other
-	     */
-	    scaleProto.unionExtent = function (other) {
-	        var extent = this._extent;
-	        other[0] < extent[0] && (extent[0] = other[0]);
-	        other[1] > extent[1] && (extent[1] = other[1]);
-	        // not setExtent because in log axis it may transformed to power
-	        // this.setExtent(extent[0], extent[1]);
-	    };
-
-	    /**
-	     * Set extent from data
-	     * @param {module:echarts/data/List} data
-	     * @param {string} dim
-	     */
-	    scaleProto.unionExtentFromData = function (data, dim) {
-	        this.unionExtent(data.getDataExtent(dim, true));
-	    };
-
-	    /**
-	     * Get extent
-	     * @return {Array.<number>}
-	     */
-	    scaleProto.getExtent = function () {
-	        return this._extent.slice();
-	    };
-
-	    /**
-	     * Set extent
-	     * @param {number} start
-	     * @param {number} end
-	     */
-	    scaleProto.setExtent = function (start, end) {
-	        var thisExtent = this._extent;
-	        if (!isNaN(start)) {
-	            thisExtent[0] = start;
-	        }
-	        if (!isNaN(end)) {
-	            thisExtent[1] = end;
-	        }
-	    };
-
-	    /**
-	     * @return {Array.<string>}
-	     */
-	    scaleProto.getTicksLabels = function () {
-	        var labels = [];
-	        var ticks = this.getTicks();
-	        for (var i = 0; i < ticks.length; i++) {
-	            labels.push(this.getLabel(ticks[i]));
-	        }
-	        return labels;
-	    };
-
-	    clazzUtil.enableClassExtend(Scale);
-	    clazzUtil.enableClassManagement(Scale, {
-	        registerWhenExtend: true
-	    });
-
-	    module.exports = Scale;
-
-
-/***/ },
-/* 118 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Interval scale
-	 * @module echarts/scale/Interval
-	 */
-
-
-
-	    var numberUtil = __webpack_require__(7);
-	    var formatUtil = __webpack_require__(6);
-	    var Scale = __webpack_require__(117);
-
-	    var mathFloor = Math.floor;
-	    var mathCeil = Math.ceil;
-
-	    var getPrecisionSafe = numberUtil.getPrecisionSafe;
-	    var roundingErrorFix = numberUtil.round;
-	    /**
-	     * @alias module:echarts/coord/scale/Interval
-	     * @constructor
-	     */
-	    var IntervalScale = Scale.extend({
-
-	        type: 'interval',
-
-	        _interval: 0,
-
-	        setExtent: function (start, end) {
-	            var thisExtent = this._extent;
-	            //start,end may be a Number like '25',so...
-	            if (!isNaN(start)) {
-	                thisExtent[0] = parseFloat(start);
-	            }
-	            if (!isNaN(end)) {
-	                thisExtent[1] = parseFloat(end);
-	            }
-	        },
-
-	        unionExtent: function (other) {
-	            var extent = this._extent;
-	            other[0] < extent[0] && (extent[0] = other[0]);
-	            other[1] > extent[1] && (extent[1] = other[1]);
-
-	            // unionExtent may called by it's sub classes
-	            IntervalScale.prototype.setExtent.call(this, extent[0], extent[1]);
-	        },
-	        /**
-	         * Get interval
-	         */
-	        getInterval: function () {
-	            if (!this._interval) {
-	                this.niceTicks();
-	            }
-	            return this._interval;
-	        },
-
-	        /**
-	         * Set interval
-	         */
-	        setInterval: function (interval) {
-	            this._interval = interval;
-	            // Dropped auto calculated niceExtent and use user setted extent
-	            // We assume user wan't to set both interval, min, max to get a better result
-	            this._niceExtent = this._extent.slice();
-	        },
-
-	        /**
-	         * @return {Array.<number>}
-	         */
-	        getTicks: function () {
-	            if (!this._interval) {
-	                this.niceTicks();
-	            }
-	            var interval = this._interval;
-	            var extent = this._extent;
-	            var ticks = [];
-
-	            // Consider this case: using dataZoom toolbox, zoom and zoom.
-	            var safeLimit = 10000;
-
-	            if (interval) {
-	                var niceExtent = this._niceExtent;
-	                var precision = getPrecisionSafe(interval) + 2;
-
-	                if (extent[0] < niceExtent[0]) {
-	                    ticks.push(extent[0]);
-	                }
-	                var tick = niceExtent[0];
-
-	                while (tick <= niceExtent[1]) {
-	                    ticks.push(tick);
-	                    // Avoid rounding error
-	                    tick = roundingErrorFix(tick + interval, precision);
-	                    if (ticks.length > safeLimit) {
-	                        return [];
-	                    }
-	                }
-	                // Consider this case: the last item of ticks is smaller
-	                // than niceExtent[1] and niceExtent[1] === extent[1].
-	                if (extent[1] > (ticks.length ? ticks[ticks.length - 1] : niceExtent[1])) {
-	                    ticks.push(extent[1]);
-	                }
-	            }
-
-	            return ticks;
-	        },
-
-	        /**
-	         * @return {Array.<string>}
-	         */
-	        getTicksLabels: function () {
-	            var labels = [];
-	            var ticks = this.getTicks();
-	            for (var i = 0; i < ticks.length; i++) {
-	                labels.push(this.getLabel(ticks[i]));
-	            }
-	            return labels;
-	        },
-
-	        /**
-	         * @param {number} n
-	         * @return {number}
-	         */
-	        getLabel: function (data) {
-	            return formatUtil.addCommas(data);
-	        },
-
-	        /**
-	         * Update interval and extent of intervals for nice ticks
-	         *
-	         * @param {number} [splitNumber = 5] Desired number of ticks
-	         */
-	        niceTicks: function (splitNumber) {
-	            splitNumber = splitNumber || 5;
-	            var extent = this._extent;
-	            var span = extent[1] - extent[0];
-	            if (!isFinite(span)) {
-	                return;
-	            }
-	            // User may set axis min 0 and data are all negative
-	            // FIXME If it needs to reverse ?
-	            if (span < 0) {
-	                span = -span;
-	                extent.reverse();
-	            }
-
-	            // From "Nice Numbers for Graph Labels" of Graphic Gems
-	            // var niceSpan = numberUtil.nice(span, false);
-	            var step = roundingErrorFix(
-	                numberUtil.nice(span / splitNumber, true),
-	                Math.max(
-	                    getPrecisionSafe(extent[0]),
-	                    getPrecisionSafe(extent[1])
-	                // extent may be [0, 1], and step should have 1 more digits.
-	                // To make it safe we add 2 more digits
-	                ) + 2
-	            );
-
-	            var precision = getPrecisionSafe(step) + 2;
-	            // Niced extent inside original extent
-	            var niceExtent = [
-	                roundingErrorFix(mathCeil(extent[0] / step) * step, precision),
-	                roundingErrorFix(mathFloor(extent[1] / step) * step, precision)
-	            ];
-
-	            this._interval = step;
-	            this._niceExtent = niceExtent;
-	        },
-
-	        /**
-	         * Nice extent.
-	         * @param {number} [splitNumber = 5] Given approx tick number
-	         * @param {boolean} [fixMin=false]
-	         * @param {boolean} [fixMax=false]
-	         */
-	        niceExtent: function (splitNumber, fixMin, fixMax) {
-	            var extent = this._extent;
-	            // If extent start and end are same, expand them
-	            if (extent[0] === extent[1]) {
-	                if (extent[0] !== 0) {
-	                    // Expand extent
-	                    var expandSize = extent[0];
-	                    // In the fowllowing case
-	                    //      Axis has been fixed max 100
-	                    //      Plus data are all 100 and axis extent are [100, 100].
-	                    // Extend to the both side will cause expanded max is larger than fixed max.
-	                    // So only expand to the smaller side.
-	                    if (!fixMax) {
-	                        extent[1] += expandSize / 2;
-	                        extent[0] -= expandSize / 2;
-	                    }
-	                    else {
-	                        extent[0] -= expandSize / 2;
-	                    }
-	                }
-	                else {
-	                    extent[1] = 1;
-	                }
-	            }
-	            var span = extent[1] - extent[0];
-	            // If there are no data and extent are [Infinity, -Infinity]
-	            if (!isFinite(span)) {
-	                extent[0] = 0;
-	                extent[1] = 1;
-	            }
-
-	            this.niceTicks(splitNumber);
-
-	            // var extent = this._extent;
-	            var interval = this._interval;
-
-	            if (!fixMin) {
-	                extent[0] = roundingErrorFix(mathFloor(extent[0] / interval) * interval);
-	            }
-	            if (!fixMax) {
-	                extent[1] = roundingErrorFix(mathCeil(extent[1] / interval) * interval);
-	            }
-	        }
-	    });
-
-	    /**
-	     * @return {module:echarts/scale/Time}
-	     */
-	    IntervalScale.create = function () {
-	        return new IntervalScale();
-	    };
-
-	    module.exports = IntervalScale;
-
-
-
-/***/ },
-/* 119 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Interval scale
-	 * @module echarts/coord/scale/Time
-	 */
-
-
-
-	    var zrUtil = __webpack_require__(4);
-	    var numberUtil = __webpack_require__(7);
-	    var formatUtil = __webpack_require__(6);
-
-	    var IntervalScale = __webpack_require__(118);
-
-	    var intervalScaleProto = IntervalScale.prototype;
-
-	    var mathCeil = Math.ceil;
-	    var mathFloor = Math.floor;
-	    var ONE_SECOND = 1000;
-	    var ONE_MINUTE = ONE_SECOND * 60;
-	    var ONE_HOUR = ONE_MINUTE * 60;
-	    var ONE_DAY = ONE_HOUR * 24;
-
-	    // FIXME 公用？
-	    var bisect = function (a, x, lo, hi) {
-	        while (lo < hi) {
-	            var mid = lo + hi >>> 1;
-	            if (a[mid][2] < x) {
-	                lo = mid + 1;
-	            }
-	            else {
-	                hi  = mid;
-	            }
-	        }
-	        return lo;
-	    };
-
-	    /**
-	     * @alias module:echarts/coord/scale/Time
-	     * @constructor
-	     */
-	    var TimeScale = IntervalScale.extend({
-	        type: 'time',
-
-	        // Overwrite
-	        getLabel: function (val) {
-	            var stepLvl = this._stepLvl;
-
-	            var date = new Date(val);
-
-	            return formatUtil.formatTime(stepLvl[0], date);
-	        },
-
-	        // Overwrite
-	        niceExtent: function (approxTickNum, fixMin, fixMax) {
-	            var extent = this._extent;
-	            // If extent start and end are same, expand them
-	            if (extent[0] === extent[1]) {
-	                // Expand extent
-	                extent[0] -= ONE_DAY;
-	                extent[1] += ONE_DAY;
-	            }
-	            // If there are no data and extent are [Infinity, -Infinity]
-	            if (extent[1] === -Infinity && extent[0] === Infinity) {
-	                var d = new Date();
-	                extent[1] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-	                extent[0] = extent[1] - ONE_DAY;
-	            }
-
-	            this.niceTicks(approxTickNum);
-
-	            // var extent = this._extent;
-	            var interval = this._interval;
-
-	            if (!fixMin) {
-	                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
-	            }
-	            if (!fixMax) {
-	                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
-	            }
-	        },
-
-	        // Overwrite
-	        niceTicks: function (approxTickNum) {
-	            approxTickNum = approxTickNum || 10;
-
-	            var extent = this._extent;
-	            var span = extent[1] - extent[0];
-	            var approxInterval = span / approxTickNum;
-	            var scaleLevelsLen = scaleLevels.length;
-	            var idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
-
-	            var level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
-	            var interval = level[2];
-	            // Same with interval scale if span is much larger than 1 year
-	            if (level[0] === 'year') {
-	                var yearSpan = span / interval;
-
-	                // From "Nice Numbers for Graph Labels" of Graphic Gems
-	                // var niceYearSpan = numberUtil.nice(yearSpan, false);
-	                var yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
-
-	                interval *= yearStep;
-	            }
-
-	            var niceExtent = [
-	                mathCeil(extent[0] / interval) * interval,
-	                mathFloor(extent[1] / interval) * interval
-	            ];
-
-	            this._stepLvl = level;
-	            // Interval will be used in getTicks
-	            this._interval = interval;
-	            this._niceExtent = niceExtent;
-	        },
-
-	        parse: function (val) {
-	            // val might be float.
-	            return +numberUtil.parseDate(val);
-	        }
-	    });
-
-	    zrUtil.each(['contain', 'normalize'], function (methodName) {
-	        TimeScale.prototype[methodName] = function (val) {
-	            return intervalScaleProto[methodName].call(this, this.parse(val));
-	        };
-	    });
-
-	    // Steps from d3
-	    var scaleLevels = [
-	        // Format       step    interval
-	        ['hh:mm:ss',    1,      ONE_SECOND],           // 1s
-	        ['hh:mm:ss',    5,      ONE_SECOND * 5],       // 5s
-	        ['hh:mm:ss',    10,     ONE_SECOND * 10],      // 10s
-	        ['hh:mm:ss',    15,     ONE_SECOND * 15],      // 15s
-	        ['hh:mm:ss',    30,     ONE_SECOND * 30],      // 30s
-	        ['hh:mm\nMM-dd',1,      ONE_MINUTE],          // 1m
-	        ['hh:mm\nMM-dd',5,      ONE_MINUTE * 5],      // 5m
-	        ['hh:mm\nMM-dd',10,     ONE_MINUTE * 10],     // 10m
-	        ['hh:mm\nMM-dd',15,     ONE_MINUTE * 15],     // 15m
-	        ['hh:mm\nMM-dd',30,     ONE_MINUTE * 30],     // 30m
-	        ['hh:mm\nMM-dd',1,      ONE_HOUR],        // 1h
-	        ['hh:mm\nMM-dd',2,      ONE_HOUR * 2],    // 2h
-	        ['hh:mm\nMM-dd',6,      ONE_HOUR * 6],    // 6h
-	        ['hh:mm\nMM-dd',12,     ONE_HOUR * 12],   // 12h
-	        ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
-	        ['week',        7,      ONE_DAY * 7],        // 7d
-	        ['month',       1,      ONE_DAY * 31],       // 1M
-	        ['quarter',     3,      ONE_DAY * 380 / 4],  // 3M
-	        ['half-year',   6,      ONE_DAY * 380 / 2],  // 6M
-	        ['year',        1,      ONE_DAY * 380]       // 1Y
-	    ];
-
-	    /**
-	     * @return {module:echarts/scale/Time}
-	     */
-	    TimeScale.create = function () {
-	        return new TimeScale();
-	    };
-
-	    module.exports = TimeScale;
-
-
-/***/ },
-/* 120 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Log scale
-	 * @module echarts/scale/Log
-	 */
-
-
-	    var zrUtil = __webpack_require__(4);
-	    var Scale = __webpack_require__(117);
-	    var numberUtil = __webpack_require__(7);
-
-	    // Use some method of IntervalScale
-	    var IntervalScale = __webpack_require__(118);
-
-	    var scaleProto = Scale.prototype;
-	    var intervalScaleProto = IntervalScale.prototype;
-
-	    var getPrecisionSafe = numberUtil.getPrecisionSafe;
-	    var roundingErrorFix = numberUtil.round;
-
-	    var mathFloor = Math.floor;
-	    var mathCeil = Math.ceil;
-	    var mathPow = Math.pow;
-
-	    var mathLog = Math.log;
-
-	    var LogScale = Scale.extend({
-
-	        type: 'log',
-
-	        base: 10,
-
-	        $constructor: function () {
-	            Scale.apply(this, arguments);
-	            this._originalScale = new IntervalScale();
-	        },
-
-	        /**
-	         * @return {Array.<number>}
-	         */
-	        getTicks: function () {
-	            var originalScale = this._originalScale;
-	            var extent = this._extent;
-	            var originalExtent = originalScale.getExtent();
-
-	            return zrUtil.map(intervalScaleProto.getTicks.call(this), function (val) {
-	                var powVal = numberUtil.round(mathPow(this.base, val));
-
-	                // Fix #4158
-	                powVal = (val === extent[0] && originalScale.__fixMin)
-	                    ? fixRoundingError(powVal, originalExtent[0])
-	                    : powVal;
-	                powVal = (val === extent[1] && originalScale.__fixMax)
-	                    ? fixRoundingError(powVal, originalExtent[1])
-	                    : powVal;
-
-	                return powVal;
-	            }, this);
-	        },
-
-	        /**
-	         * @param {number} val
-	         * @return {string}
-	         */
-	        getLabel: intervalScaleProto.getLabel,
-
-	        /**
-	         * @param  {number} val
-	         * @return {number}
-	         */
-	        scale: function (val) {
-	            val = scaleProto.scale.call(this, val);
-	            return mathPow(this.base, val);
-	        },
-
-	        /**
-	         * @param {number} start
-	         * @param {number} end
-	         */
-	        setExtent: function (start, end) {
-	            var base = this.base;
-	            start = mathLog(start) / mathLog(base);
-	            end = mathLog(end) / mathLog(base);
-	            intervalScaleProto.setExtent.call(this, start, end);
-	        },
-
-	        /**
-	         * @return {number} end
-	         */
-	        getExtent: function () {
-	            var base = this.base;
-	            var extent = scaleProto.getExtent.call(this);
-	            extent[0] = mathPow(base, extent[0]);
-	            extent[1] = mathPow(base, extent[1]);
-
-	            // Fix #4158
-	            var originalScale = this._originalScale;
-	            var originalExtent = originalScale.getExtent();
-	            originalScale.__fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
-	            originalScale.__fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
-
-	            return extent;
-	        },
-
-	        /**
-	         * @param  {Array.<number>} extent
-	         */
-	        unionExtent: function (extent) {
-	            this._originalScale.unionExtent(extent);
-
-	            var base = this.base;
-	            extent[0] = mathLog(extent[0]) / mathLog(base);
-	            extent[1] = mathLog(extent[1]) / mathLog(base);
-	            scaleProto.unionExtent.call(this, extent);
-	        },
-
-	        /**
-	         * @override
-	         */
-	        unionExtentFromData: function (data, dim) {
-	            this.unionExtent(data.getDataExtent(dim, true, function (val) {
-	                return val > 0;
-	            }));
-	        },
-
-	        /**
-	         * Update interval and extent of intervals for nice ticks
-	         * @param  {number} [approxTickNum = 10] Given approx tick number
-	         */
-	        niceTicks: function (approxTickNum) {
-	            approxTickNum = approxTickNum || 10;
-	            var extent = this._extent;
-	            var span = extent[1] - extent[0];
-	            if (span === Infinity || span <= 0) {
-	                return;
-	            }
-
-	            var interval = numberUtil.quantity(span);
-	            var err = approxTickNum / span * interval;
-
-	            // Filter ticks to get closer to the desired count.
-	            if (err <= 0.5) {
-	                interval *= 10;
-	            }
-
-	            // Interval should be integer
-	            while (!isNaN(interval) && Math.abs(interval) < 1 && Math.abs(interval) > 0) {
-	                interval *= 10;
-	            }
-
-	            var niceExtent = [
-	                numberUtil.round(mathCeil(extent[0] / interval) * interval),
-	                numberUtil.round(mathFloor(extent[1] / interval) * interval)
-	            ];
-
-	            this._interval = interval;
-	            this._niceExtent = niceExtent;
-	        },
-
-	        /**
-	         * Nice extent.
-	         * @param {number} [approxTickNum = 10] Given approx tick number
-	         * @param {boolean} [fixMin=false]
-	         * @param {boolean} [fixMax=false]
-	         */
-	        niceExtent: function (splitNumber, fixMin, fixMax) {
-	            intervalScaleProto.niceExtent.call(this, splitNumber, fixMin, fixMax);
-
-	            var originalScale = this._originalScale;
-	            originalScale.__fixMin = fixMin;
-	            originalScale.__fixMax = fixMax;
-	        }
-
-	    });
-
-	    zrUtil.each(['contain', 'normalize'], function (methodName) {
-	        LogScale.prototype[methodName] = function (val) {
-	            val = mathLog(val) / mathLog(this.base);
-	            return scaleProto[methodName].call(this, val);
-	        };
-	    });
-
-	    LogScale.create = function () {
-	        return new LogScale();
-	    };
-
-	    function fixRoundingError(val, originalVal) {
-	        return roundingErrorFix(val, getPrecisionSafe(originalVal));
-	    }
-
-	    module.exports = LogScale;
-
-
-/***/ },
-/* 121 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var Cartesian = __webpack_require__(122);
+	    var Cartesian = __webpack_require__(125);
 
 	    function Cartesian2D(name) {
 
@@ -27370,7 +27993,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 122 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27488,14 +28111,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 123 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
-	    var Axis = __webpack_require__(124);
-	    var axisLabelInterval = __webpack_require__(125);
+	    var Axis = __webpack_require__(100);
+	    var axisLabelInterval = __webpack_require__(127);
 
 	    /**
 	     * Extend axis 2d
@@ -27610,249 +28233,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 124 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var numberUtil = __webpack_require__(7);
-	    var linearMap = numberUtil.linearMap;
-	    var zrUtil = __webpack_require__(4);
-
-	    function fixExtentWithBands(extent, nTick) {
-	        var size = extent[1] - extent[0];
-	        var len = nTick;
-	        var margin = size / len / 2;
-	        extent[0] += margin;
-	        extent[1] -= margin;
-	    }
-
-	    var normalizedExtent = [0, 1];
-	    /**
-	     * @name module:echarts/coord/CartesianAxis
-	     * @constructor
-	     */
-	    var Axis = function (dim, scale, extent) {
-
-	        /**
-	         * Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'
-	         * @type {string}
-	         */
-	        this.dim = dim;
-
-	        /**
-	         * Axis scale
-	         * @type {module:echarts/coord/scale/*}
-	         */
-	        this.scale = scale;
-
-	        /**
-	         * @type {Array.<number>}
-	         * @private
-	         */
-	        this._extent = extent || [0, 0];
-
-	        /**
-	         * @type {boolean}
-	         */
-	        this.inverse = false;
-
-	        /**
-	         * Usually true when axis has a ordinal scale
-	         * @type {boolean}
-	         */
-	        this.onBand = false;
-	    };
-
-	    Axis.prototype = {
-
-	        constructor: Axis,
-
-	        /**
-	         * If axis extent contain given coord
-	         * @param {number} coord
-	         * @return {boolean}
-	         */
-	        contain: function (coord) {
-	            var extent = this._extent;
-	            var min = Math.min(extent[0], extent[1]);
-	            var max = Math.max(extent[0], extent[1]);
-	            return coord >= min && coord <= max;
-	        },
-
-	        /**
-	         * If axis extent contain given data
-	         * @param {number} data
-	         * @return {boolean}
-	         */
-	        containData: function (data) {
-	            return this.contain(this.dataToCoord(data));
-	        },
-
-	        /**
-	         * Get coord extent.
-	         * @return {Array.<number>}
-	         */
-	        getExtent: function () {
-	            var ret = this._extent.slice();
-	            return ret;
-	        },
-
-	        /**
-	         * Get precision used for formatting
-	         * @param {Array.<number>} [dataExtent]
-	         * @return {number}
-	         */
-	        getPixelPrecision: function (dataExtent) {
-	            return numberUtil.getPixelPrecision(
-	                dataExtent || this.scale.getExtent(),
-	                this._extent
-	            );
-	        },
-
-	        /**
-	         * Set coord extent
-	         * @param {number} start
-	         * @param {number} end
-	         */
-	        setExtent: function (start, end) {
-	            var extent = this._extent;
-	            extent[0] = start;
-	            extent[1] = end;
-	        },
-
-	        /**
-	         * Convert data to coord. Data is the rank if it has a ordinal scale
-	         * @param {number} data
-	         * @param  {boolean} clamp
-	         * @return {number}
-	         */
-	        dataToCoord: function (data, clamp) {
-	            var extent = this._extent;
-	            var scale = this.scale;
-	            data = scale.normalize(data);
-
-	            if (this.onBand && scale.type === 'ordinal') {
-	                extent = extent.slice();
-	                fixExtentWithBands(extent, scale.count());
-	            }
-
-	            return linearMap(data, normalizedExtent, extent, clamp);
-	        },
-
-	        /**
-	         * Convert coord to data. Data is the rank if it has a ordinal scale
-	         * @param {number} coord
-	         * @param  {boolean} clamp
-	         * @return {number}
-	         */
-	        coordToData: function (coord, clamp) {
-	            var extent = this._extent;
-	            var scale = this.scale;
-
-	            if (this.onBand && scale.type === 'ordinal') {
-	                extent = extent.slice();
-	                fixExtentWithBands(extent, scale.count());
-	            }
-
-	            var t = linearMap(coord, extent, normalizedExtent, clamp);
-
-	            return this.scale.scale(t);
-	        },
-	        /**
-	         * @return {Array.<number>}
-	         */
-	        getTicksCoords: function (alignWithLabel) {
-	            if (this.onBand && !alignWithLabel) {
-	                var bands = this.getBands();
-	                var coords = [];
-	                for (var i = 0; i < bands.length; i++) {
-	                    coords.push(bands[i][0]);
-	                }
-	                if (bands[i - 1]) {
-	                    coords.push(bands[i - 1][1]);
-	                }
-	                return coords;
-	            }
-	            else {
-	                return zrUtil.map(this.scale.getTicks(), this.dataToCoord, this);
-	            }
-	        },
-
-	        /**
-	         * Coords of labels are on the ticks or on the middle of bands
-	         * @return {Array.<number>}
-	         */
-	        getLabelsCoords: function () {
-	            return zrUtil.map(this.scale.getTicks(), this.dataToCoord, this);
-	        },
-
-	        /**
-	         * Get bands.
-	         *
-	         * If axis has labels [1, 2, 3, 4]. Bands on the axis are
-	         * |---1---|---2---|---3---|---4---|.
-	         *
-	         * @return {Array}
-	         */
-	         // FIXME Situation when labels is on ticks
-	        getBands: function () {
-	            var extent = this.getExtent();
-	            var bands = [];
-	            var len = this.scale.count();
-	            var start = extent[0];
-	            var end = extent[1];
-	            var span = end - start;
-
-	            for (var i = 0; i < len; i++) {
-	                bands.push([
-	                    span * i / len + start,
-	                    span * (i + 1) / len + start
-	                ]);
-	            }
-	            return bands;
-	        },
-
-	        /**
-	         * Get width of band
-	         * @return {number}
-	         */
-	        getBandWidth: function () {
-	            var axisExtent = this._extent;
-	            var dataExtent = this.scale.getExtent();
-
-	            var len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
-	            // Fix #2728, avoid NaN when only one data.
-	            len === 0 && (len = 1);
-
-	            var size = Math.abs(axisExtent[1] - axisExtent[0]);
-
-	            return Math.abs(size) / len;
-	        },
-
-	        /**
-	         * When axis extent depends on data and no data exists,
-	         * axis ticks should not be drawn, which is named 'blank'.
-	         */
-	        isBlank: function () {
-	            return this._isBlank;
-	        },
-
-	        /**
-	         * When axis extent depends on data and no data exists,
-	         * axis ticks should not be drawn, which is named 'blank'.
-	         */
-	        setBlank: function (isBlank) {
-	            this._isBlank = isBlank;
-	        }
-
-	    };
-
-	    module.exports = Axis;
-
-
-/***/ },
-/* 125 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27863,7 +28244,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var axisHelper = __webpack_require__(115);
+	    var axisHelper = __webpack_require__(105);
 
 	    module.exports = function (axis) {
 	        var axisModel = axis.model;
@@ -27883,7 +28264,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 126 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27891,7 +28272,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// 所以这里也要被 Cartesian2D 依赖
 
 
-	    __webpack_require__(127);
+	    __webpack_require__(129);
 	    var ComponentModel = __webpack_require__(19);
 
 	    module.exports = ComponentModel.extend({
@@ -27927,7 +28308,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 127 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27935,7 +28316,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var ComponentModel = __webpack_require__(19);
 	    var zrUtil = __webpack_require__(4);
-	    var axisModelCreator = __webpack_require__(128);
+	    var axisModelCreator = __webpack_require__(130);
 
 	    var AxisModel = ComponentModel.extend({
 
@@ -27989,7 +28370,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return option.type || (option.data ? 'category' : 'value');
 	    }
 
-	    zrUtil.merge(AxisModel.prototype, __webpack_require__(130));
+	    zrUtil.merge(AxisModel.prototype, __webpack_require__(111));
 
 	    var extraOption = {
 	        // gridIndex: 0,
@@ -28006,12 +28387,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 128 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    var axisDefault = __webpack_require__(129);
+	    var axisDefault = __webpack_require__(131);
 	    var zrUtil = __webpack_require__(4);
 	    var ComponentModel = __webpack_require__(19);
 	    var layout = __webpack_require__(21);
@@ -28069,7 +28450,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 129 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28227,130 +28608,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 130 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-
-	    var zrUtil = __webpack_require__(4);
-	    var axisHelper = __webpack_require__(115);
-
-	    function getName(obj) {
-	        if (zrUtil.isObject(obj) && obj.value != null) {
-	            return obj.value;
-	        }
-	        else {
-	            return obj;
-	        }
-	    }
-
-	    module.exports = {
-
-	        /**
-	         * Format labels
-	         * @return {Array.<string>}
-	         */
-	        getFormattedLabels: function () {
-	            return axisHelper.getFormattedLabels(
-	                this.axis,
-	                this.get('axisLabel.formatter')
-	            );
-	        },
-
-	        /**
-	         * Get categories
-	         */
-	        getCategories: function () {
-	            return this.get('type') === 'category'
-	                && zrUtil.map(this.get('data'), getName);
-	        },
-
-	        /**
-	         * @param {boolean} origin
-	         * @return {number|string} min value or 'dataMin' or null/undefined (means auto) or NaN
-	         */
-	        getMin: function (origin) {
-	            var option = this.option;
-	            var min = (!origin && option.rangeStart != null)
-	                ? option.rangeStart : option.min;
-
-	            if (min != null && min !== 'dataMin' && !zrUtil.eqNaN(min)) {
-	                min = this.axis.scale.parse(min);
-	            }
-	            return min;
-	        },
-
-	        /**
-	         * @param {boolean} origin
-	         * @return {number|string} max value or 'dataMax' or null/undefined (means auto) or NaN
-	         */
-	        getMax: function (origin) {
-	            var option = this.option;
-	            var max = (!origin && option.rangeEnd != null)
-	                ? option.rangeEnd : option.max;
-
-	            if (max != null && max !== 'dataMax' && !zrUtil.eqNaN(max)) {
-	                max = this.axis.scale.parse(max);
-	            }
-	            return max;
-	        },
-
-	        /**
-	         * @return {boolean}
-	         */
-	        getNeedCrossZero: function () {
-	            var option = this.option;
-	            return (option.rangeStart != null || option.rangeEnd != null)
-	                ? false : !option.scale;
-	        },
-
-	        /**
-	         * Should be implemented by each axis model if necessary.
-	         * @return {module:echarts/model/Component} coordinate system model
-	         */
-	        getCoordSysModel: zrUtil.noop,
-
-	        /**
-	         * @param {number} rangeStart Can only be finite number or null/undefined or NaN.
-	         * @param {number} rangeEnd Can only be finite number or null/undefined or NaN.
-	         */
-	        setRange: function (rangeStart, rangeEnd) {
-	            this.option.rangeStart = rangeStart;
-	            this.option.rangeEnd = rangeEnd;
-	        },
-
-	        /**
-	         * Reset range
-	         */
-	        resetRange: function () {
-	            // rangeStart and rangeEnd is readonly.
-	            this.option.rangeStart = this.option.rangeEnd = null;
-	        }
-	    };
-
-
-/***/ },
-/* 131 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	// TODO boundaryGap
 
 
-	    __webpack_require__(127);
+	    __webpack_require__(129);
 
-	    __webpack_require__(132);
+	    __webpack_require__(133);
 
 
 /***/ },
-/* 132 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 	    var graphic = __webpack_require__(43);
-	    var AxisBuilder = __webpack_require__(133);
+	    var AxisBuilder = __webpack_require__(134);
 	    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 	    var getInterval = AxisBuilder.getInterval;
 
@@ -28414,7 +28692,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _splitLine: function (axisModel, gridModel, labelInterval) {
 	            var axis = axisModel.axis;
 
-	            if (axis.isBlank()) {
+	            if (axis.scale.isBlank()) {
 	                return;
 	            }
 
@@ -28488,7 +28766,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _splitArea: function (axisModel, gridModel, labelInterval) {
 	            var axis = axisModel.axis;
 
-	            if (axis.isBlank()) {
+	            if (axis.scale.isBlank()) {
 	                return;
 	            }
 
@@ -28636,7 +28914,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 133 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28814,7 +29092,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var axisModel = this.axisModel;
 	            var axis = axisModel.axis;
 
-	            if (!axisModel.get('axisTick.show') || axis.isBlank()) {
+	            if (!axisModel.get('axisTick.show') || axis.scale.isBlank()) {
 	                return;
 	            }
 
@@ -28884,7 +29162,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var axis = axisModel.axis;
 	            var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
 
-	            if (!show || axis.isBlank()) {
+	            if (!show || axis.scale.isBlank()) {
 	                return;
 	            }
 
@@ -28925,7 +29203,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    tickCoord,
 	                    opt.labelOffset + opt.labelDirection * labelMargin
 	                ];
-	                var labelBeforeFormat = axis.scale.getLabel(tickVal);
+	                var labelStr = axis.scale.getLabel(tickVal);
 
 	                var textEl = new graphic.Text({
 
@@ -28937,7 +29215,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
 	                        textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
 	                        textFont: itemTextStyleModel.getFont(),
-	                        fill: typeof textColor === 'function' ? textColor(labelBeforeFormat) : textColor
+	                        fill: typeof textColor === 'function'
+	                            ? textColor(
+	                                // Compatible with previous version, which always returns labelStr.
+	                                // But in interval scale labelStr is like '223,445', which maked
+	                                // user repalce ','. So we modify it to return original val but remain
+	                                // it as 'string' to avoid error in replacing.
+	                                axis.type === 'category' ? labelStr : axis.type === 'value' ? tickVal + '' : tickVal,
+	                                index,
+	                                {value: tickVal, index: index, label: labelStr}
+	                            )
+	                            : textColor
 	                    },
 	                    position: pos,
 	                    rotation: labelLayout.rotation,
@@ -28949,7 +29237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (triggerEvent) {
 	                    textEl.eventData = makeAxisEventDataBase(axisModel);
 	                    textEl.eventData.targetType = 'axisLabel';
-	                    textEl.eventData.value = labelBeforeFormat;
+	                    textEl.eventData.value = labelStr;
 	                }
 
 	                // FIXME
@@ -29236,19 +29524,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 134 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 
-	    __webpack_require__(114);
+	    __webpack_require__(123);
 
-	    __webpack_require__(135);
-	    __webpack_require__(137);
+	    __webpack_require__(136);
+	    __webpack_require__(138);
 
-	    var barLayoutGrid = __webpack_require__(140);
+	    var barLayoutGrid = __webpack_require__(141);
 	    var echarts = __webpack_require__(1);
 
 	    echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
@@ -29261,16 +29549,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 
 	    // In case developer forget to include grid component
-	    __webpack_require__(113);
+	    __webpack_require__(122);
 
 
 /***/ },
-/* 135 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    module.exports = __webpack_require__(136).extend({
+	    module.exports = __webpack_require__(137).extend({
 
 	        type: 'series.bar',
 
@@ -29281,7 +29569,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 136 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29356,7 +29644,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 137 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29364,13 +29652,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var zrUtil = __webpack_require__(4);
 	    var graphic = __webpack_require__(43);
-	    var helper = __webpack_require__(138);
+	    var helper = __webpack_require__(139);
 
 	    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'barBorderWidth'];
 
 	    // FIXME
 	    // Just for compatible with ec2.
-	    zrUtil.extend(__webpack_require__(12).prototype, __webpack_require__(139));
+	    zrUtil.extend(__webpack_require__(12).prototype, __webpack_require__(140));
 
 	    var BarView = __webpack_require__(1).extendChartView({
 
@@ -29544,7 +29832,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 138 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -29601,7 +29889,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 139 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -29635,7 +29923,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 140 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29887,7 +30175,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 141 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -29895,10 +30183,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 	    var echarts = __webpack_require__(1);
 
-	    __webpack_require__(142);
-	    __webpack_require__(144);
+	    __webpack_require__(143);
+	    __webpack_require__(145);
 
-	    __webpack_require__(145)('pie', [{
+	    __webpack_require__(146)('pie', [{
 	        type: 'pieToggleSelect',
 	        event: 'pieselectchanged',
 	        method: 'toggleSelected'
@@ -29912,17 +30200,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        method: 'unSelect'
 	    }]);
 
-	    echarts.registerVisual(zrUtil.curry(__webpack_require__(146), 'pie'));
+	    echarts.registerVisual(zrUtil.curry(__webpack_require__(147), 'pie'));
 
 	    echarts.registerLayout(zrUtil.curry(
-	        __webpack_require__(147), 'pie'
+	        __webpack_require__(148), 'pie'
 	    ));
 
-	    echarts.registerProcessor(zrUtil.curry(__webpack_require__(149), 'pie'));
+	    echarts.registerProcessor(zrUtil.curry(__webpack_require__(150), 'pie'));
 
 
 /***/ },
-/* 142 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29933,7 +30221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var modelUtil = __webpack_require__(5);
 	    var completeDimensions = __webpack_require__(103);
 
-	    var dataSelectableMixin = __webpack_require__(143);
+	    var dataSelectableMixin = __webpack_require__(144);
 
 	    var PieSeries = __webpack_require__(1).extendSeriesModel({
 
@@ -30072,7 +30360,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -30142,7 +30430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30548,7 +30836,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30588,7 +30876,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 146 */
+/* 147 */
 /***/ function(module, exports) {
 
 	// Pick color from palette for each data item.
@@ -30639,7 +30927,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// TODO minAngle
@@ -30648,7 +30936,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var numberUtil = __webpack_require__(7);
 	    var parsePercent = numberUtil.parsePercent;
-	    var labelLayout = __webpack_require__(148);
+	    var labelLayout = __webpack_require__(149);
 	    var zrUtil = __webpack_require__(4);
 
 	    var PI2 = Math.PI * 2;
@@ -30785,7 +31073,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -31016,7 +31304,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports) {
 
 	
