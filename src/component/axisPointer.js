@@ -8,6 +8,11 @@ define(function (require) {
     require('./axisPointer/AxisPointerModel');
     require('./axisPointer/AxisPointerView');
 
+    // CartesianAxisPointer is not supposed to be required here. But consider
+    // echarts.simple.js and online build tooltip, which only require gridSimple,
+    // CartesianAxisPointer should be able to required somewhere.
+    require('./axisPointer/CartesianAxisPointer');
+
     echarts.registerPreprocessor(function (option) {
         // Always has a global axisPointerModel for default setting.
         if (option) {
