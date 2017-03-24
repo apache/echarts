@@ -287,6 +287,7 @@ define(function (require) {
         var symbolPath = this.childAt(0);
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
+        symbolPath.off('mouseover').off('mouseout').off('emphasis').off('normal');
         // Not show text when animating
         symbolPath.style.text = '';
         graphic.updateProps(symbolPath, {
