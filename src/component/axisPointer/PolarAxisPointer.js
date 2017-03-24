@@ -7,6 +7,7 @@ define(function(require) {
     var viewHelper = require('./viewHelper');
     var matrix = require('zrender/core/matrix');
     var AxisBuilder = require('../axis/AxisBuilder');
+    var AxisView = require('../axis/AxisView');
 
     var PolarAxisPointer = BaseAxisPointer.extend({
 
@@ -134,6 +135,8 @@ define(function(require) {
                 };
         }
     };
+
+    AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
     return PolarAxisPointer;
 });

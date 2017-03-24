@@ -14,6 +14,10 @@ define(function (require) {
          */
         _axisPointer: null,
 
+        /**
+         * @protected
+         * @type {string}
+         */
         axisPointerClass: null,
 
         /**
@@ -25,9 +29,10 @@ define(function (require) {
             // (axis scale updated), and should be performed each time update.
             // So put it here temporarily, although it is not appropriate to
             // put a model-writing procedure in `view`.
-            axisPointerModelHelper.fixValue(axisModel);
+            this.axisPointerClass && axisPointerModelHelper.fixValue(axisModel);
 
             AxisView.superApply(this, 'render', arguments);
+
             updateAxisPointer(this, axisModel, ecModel, api, payload, true);
         },
 
@@ -63,12 +68,13 @@ define(function (require) {
     });
 
     function updateAxisPointer(axisView, axisModel, ecModel, api, payload, forceRender) {
-        if (!axisView.axisPointerClass) {
+        var Clazz = AxisView.getAxisPointerClass(axisView.axisPointerClass);
+        if (!Clazz) {
             return;
         }
         var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
         axisPointerModel
-            ? (axisView._axisPointer || (axisView._axisPointer = new axisView.axisPointerClass()))
+            ? (axisView._axisPointer || (axisView._axisPointer = new Clazz()))
                 .render(axisModel, axisPointerModel, api, forceRender)
             : disposeAxisPointer(axisView, api);
     }
@@ -78,6 +84,21 @@ define(function (require) {
         axisPointer && axisPointer.dispose(ecModel, api);
         axisView._axisPointer = null;
     }
+
+    var axisPointerClazz = [];
+
+    AxisView.registerAxisPointerClass = function (type, clazz) {
+        if (__DEV__) {
+            if (axisPointerClazz[type]) {
+                throw new Error('axisPointer ' + type + ' exists');
+            }
+        }
+        axisPointerClazz[type] = clazz;
+    };
+
+    AxisView.getAxisPointerClass = function (type) {
+        return type && axisPointerClazz[type];
+    };
 
     return AxisView;
 });
