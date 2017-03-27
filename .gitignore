@@ -170,3 +170,5 @@ theme/thumb
 /lib
 todo
 **/*.log
+*.sublime-workspace
+*.sublime-project
