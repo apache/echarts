@@ -1622,9 +1622,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.5.0',
+	        version: '3.5.1',
 	        dependencies: {
-	            zrender: '3.4.0'
+	            zrender: '3.4.1'
 	        }
 	    };
 
@@ -11140,7 +11140,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        out[0] = clampCssByte(lerp(leftColor[0], rightColor[0], dv));
 	        out[1] = clampCssByte(lerp(leftColor[1], rightColor[1], dv));
 	        out[2] = clampCssByte(lerp(leftColor[2], rightColor[2], dv));
-	        out[3] = clampCssByte(lerp(leftColor[3], rightColor[3], dv));
+	        out[3] = clampCssFloat(lerp(leftColor[3], rightColor[3], dv));
 	        return out;
 	    }
 	    /**
@@ -17682,7 +17682,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.4.0';
+	    zrender.version = '3.4.1';
 
 	    /**
 	     * Initializing a zrender instance
@@ -55604,6 +55604,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    __webpack_require__(317);
 
+
 	    // Show tip action
 	    /**
 	     * @action
@@ -56656,7 +56657,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        setContent: function (content) {
-	            this.el.innerHTML = content;
+	            this.el.innerHTML = content == null ? '' : content;
 	        },
 
 	        setEnterable: function (enterable) {
