@@ -11,6 +11,8 @@ define(function(require) {
 
         dependencies: ['parallel'],
 
+        visualColorAccessPath: 'lineStyle.normal.color',
+
         getInitialData: function (option, ecModel) {
             var parallelModel = ecModel.getComponent(
                 'parallel', this.get('parallelIndex')

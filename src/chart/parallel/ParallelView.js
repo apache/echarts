@@ -190,17 +190,17 @@ define(function (require) {
             if (data.hasItemOption) {
                 var itemModel = data.getItemModel(dataIndex);
                 var lineStyleModel = itemModel.getModel('lineStyle.normal', seriesStyleModel);
-                lineStyle = lineStyleModel.getLineStyle();
+                lineStyle = lineStyleModel.getLineStyle(['color', 'stroke']);
             }
 
-            line.useStyle(zrUtil.extend(
-                lineStyle,
-                {
-                    fill: null,
-                    stroke: data.getItemVisual(dataIndex, 'color'),
-                    opacity: data.getItemVisual(dataIndex, 'opacity')
-                }
-            ));
+            line.useStyle(zrUtil.extend(lineStyle, {
+                fill: null,
+                // lineStyle.color have been set to itemVisual in module:echarts/visual/seriesColor.
+                stroke: data.getItemVisual(dataIndex, 'color'),
+                // lineStyle.opacity have been set to itemVisual in parallelVisual.
+                opacity: data.getItemVisual(dataIndex, 'opacity')
+            }));
+
             line.shape.smooth = smooth;
         });
     }
