@@ -135,10 +135,10 @@ define(function (require) {
             var off = 0;
             for (var i = 0; i < 256; i++) {
                 colorFunc[state](i / 255, true, color);
-                pixelsSingleState[off++] = color[0];
-                pixelsSingleState[off++] = color[1];
-                pixelsSingleState[off++] = color[2];
-                pixelsSingleState[off++] = color[3];
+                pixelsSingleState[off++] = color[0] || 0;
+                pixelsSingleState[off++] = color[1] || 0;
+                pixelsSingleState[off++] = color[2] || 0;
+                pixelsSingleState[off++] = color[3] || 0;
             }
             return pixelsSingleState;
         }
