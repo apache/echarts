@@ -29,7 +29,7 @@ define(function (require) {
 
             computeNodeValues(nodes);
 
-            var filteredNodes = nodes.filter(function (node) {
+            var filteredNodes = zrUtil.filter(nodes, function (node) {
                 return node.getLayout().value === 0;
             });
 
