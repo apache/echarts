@@ -131,14 +131,14 @@ define(function (require) {
         _getGradient: function (data, colorFunc, state) {
             var gradientPixels = this._gradientPixels;
             var pixelsSingleState = gradientPixels[state] || (gradientPixels[state] = new Uint8ClampedArray(256 * 4));
-            var color = [];
+            var color = [0, 0, 0, 0];
             var off = 0;
             for (var i = 0; i < 256; i++) {
                 colorFunc[state](i / 255, true, color);
-                pixelsSingleState[off++] = color[0] || 0;
-                pixelsSingleState[off++] = color[1] || 0;
-                pixelsSingleState[off++] = color[2] || 0;
-                pixelsSingleState[off++] = color[3] || 0;
+                pixelsSingleState[off++] = color[0];
+                pixelsSingleState[off++] = color[1];
+                pixelsSingleState[off++] = color[2];
+                pixelsSingleState[off++] = color[3];
             }
             return pixelsSingleState;
         }
