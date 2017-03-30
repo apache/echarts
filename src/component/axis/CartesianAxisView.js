@@ -3,7 +3,6 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var AxisBuilder = require('./AxisBuilder');
-    var CartesianAxisPointer = require('../axisPointer/CartesianAxisPointer');
     var AxisView = require('./AxisView');
     var cartesianAxisHelper = require('./cartesianAxisHelper');
     var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
@@ -28,7 +27,7 @@ define(function (require) {
 
         type: 'cartesianAxis',
 
-        axisPointerClass: CartesianAxisPointer,
+        axisPointerClass: 'CartesianAxisPointer',
 
         /**
          * @override

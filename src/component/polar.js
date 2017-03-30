@@ -6,6 +6,8 @@ define(function(require) {
     require('./radiusAxis');
     require('./axisPointer');
 
+    require('./axisPointer/PolarAxisPointer');
+
     // Polar view
     require('../echarts').extendComponentView({
         type: 'polar'

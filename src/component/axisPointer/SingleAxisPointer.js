@@ -5,6 +5,7 @@ define(function(require) {
     var BaseAxisPointer = require('./BaseAxisPointer');
     var viewHelper = require('./viewHelper');
     var singleAxisHelper = require('../axis/singleAxisHelper');
+    var AxisView = require('../axis/AxisView');
 
     var XY = ['x', 'y'];
     var WH = ['width', 'height'];
@@ -114,6 +115,8 @@ define(function(require) {
         var rect = coordSys.getRect();
         return [rect[XY[dimIndex]], rect[XY[dimIndex]] + rect[WH[dimIndex]]];
     }
+
+    AxisView.registerAxisPointerClass('SingleAxisPointer', SingleAxisPointer);
 
     return SingleAxisPointer;
 });

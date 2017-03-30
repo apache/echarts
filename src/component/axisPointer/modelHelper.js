@@ -305,7 +305,7 @@ define(function(require) {
     };
 
     helper.getAxisInfo = function (axisModel) {
-        var coordSysAxesInfo = axisModel.ecModel.getComponent('axisPointer').coordSysAxesInfo;
+        var coordSysAxesInfo = (axisModel.ecModel.getComponent('axisPointer') || {}).coordSysAxesInfo;
         return coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
     };
 

@@ -5,6 +5,7 @@ define(function(require) {
     var BaseAxisPointer = require('./BaseAxisPointer');
     var viewHelper = require('./viewHelper');
     var cartesianAxisHelper = require('../axis/cartesianAxisHelper');
+    var AxisView = require('../axis/AxisView');
 
     var CartesianAxisPointer = BaseAxisPointer.extend({
 
@@ -118,6 +119,8 @@ define(function(require) {
     function getAxisDimIndex(axis) {
         return axis.dim === 'x' ? 0 : 1;
     }
+
+    AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 
     return CartesianAxisPointer;
 });

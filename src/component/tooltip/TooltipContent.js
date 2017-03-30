@@ -202,7 +202,7 @@ define(function (require) {
         },
 
         setContent: function (content) {
-            this.el.innerHTML = content;
+            this.el.innerHTML = content == null ? '' : content;
         },
 
         setEnterable: function (enterable) {
