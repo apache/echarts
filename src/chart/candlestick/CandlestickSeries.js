@@ -91,7 +91,8 @@ define(function(require) {
             return html.join('<br />');
         },
 
-        brushSelector: function (itemLayout, selectors) {
+        brushSelector: function (dataIndex, data, selectors) {
+            var itemLayout = data.getItemLayout(dataIndex);
             return selectors.rect(itemLayout.brushRect);
         }
 

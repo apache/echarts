@@ -233,11 +233,10 @@ define(function (require) {
     }
 
     function checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex) {
-        var itemLayout = data.getItemLayout(dataIndex);
         for (var i = 0, len = rangeInfoList.length; i < len; i++) {
             var area = rangeInfoList[i];
             if (selectorsByBrushType[area.brushType](
-                itemLayout, area.selectors, area
+                dataIndex, data, area.selectors, area
             )) {
                 return true;
             }

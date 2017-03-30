@@ -16,19 +16,23 @@ define(function(require) {
         lineX: getLineSelectors(0),
         lineY: getLineSelectors(1),
         rect: {
-            point: function (itemLayout, selectors, area) {
+            point: function (dataIndex, data, selectors, area) {
+                var itemLayout = data.getItemLayout(dataIndex);
                 return area.boundingRect.contain(itemLayout[0], itemLayout[1]);
             },
-            rect: function (itemLayout, selectors, area) {
+            rect: function (dataIndex, data, selectors, area) {
+                var itemLayout = data.getItemLayout(dataIndex);
                 return area.boundingRect.intersect(itemLayout);
             }
         },
         polygon: {
-            point: function (itemLayout, selectors, area) {
+            point: function (dataIndex, data, selectors, area) {
+                var itemLayout = data.getItemLayout(dataIndex);
                 return area.boundingRect.contain(itemLayout[0], itemLayout[1])
                     && polygonContain(area.range, itemLayout[0], itemLayout[1]);
             },
-            rect: function (itemLayout, selectors, area) {
+            rect: function (dataIndex, data, selectors, area) {
+                var itemLayout = data.getItemLayout(dataIndex);
                 var points = area.range;
 
                 if (points.length <= 1) {
