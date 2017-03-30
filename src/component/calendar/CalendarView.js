@@ -5,6 +5,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var formatUtil = require('../../util/format');
+    var numberUtil = require('../../util/number');
 
     var MONTH_TEXT = {
         EN: [
@@ -419,22 +420,20 @@ define(function (require) {
             }
         },
 
-        _weekTextPositionControl: function (point, orient, position, margin) {
-            var align = 'left';
+        _weekTextPositionControl: function (point, orient, position, margin, cellSize) {
+            var align = 'center';
             var vAlign = 'middle';
             var x = point[0];
             var y = point[1];
+            var isStart = position === 'start';
 
             if (orient === 'horizontal') {
-                x = x + margin;
-
-                if (position === 'start') {
-                    align = 'right';
-                }
+                x = x + margin + (isStart ? 1 : -1) * cellSize[0] / 2;
+                align = isStart ? 'right' : 'left';
             }
             else {
-                y = y + margin;
-                align = 'center';
+                y = y + margin + (isStart ? 1 : -1) * cellSize[1] / 2;
+                vAlign = isStart ? 'bottom' : 'top';
             }
 
             return {
@@ -468,6 +467,9 @@ define(function (require) {
                 rangeData.end.time, (7 - rangeData.lweek)
             ).time;
 
+            var cellSize = [coordSys.getCellWidth(), coordSys.getCellHeight()];
+            margin = numberUtil.parsePercent(margin, cellSize[orient === 'horizontal' ? 0 : 1]);
+
             if (pos === 'start') {
                 start = coordSys.getNextNDay(
                     rangeData.start.time, -(7 + rangeData.fweek)
@@ -487,7 +489,7 @@ define(function (require) {
                         text: nameMap[day],
                         font: dayLabelStyleModel.getFont(),
                         fill: dayLabelStyleModel.getTextColor()
-                    }, this._weekTextPositionControl(point, orient, pos, margin))
+                    }, this._weekTextPositionControl(point, orient, pos, margin, cellSize))
                 });
                 group.add(weekText);
             }

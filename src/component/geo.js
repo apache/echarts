@@ -30,7 +30,7 @@ define(function (require) {
             return {
                 selected: selected,
                 name: payload.name
-            }
+            };
         });
     }
 

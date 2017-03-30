@@ -69,7 +69,7 @@ define(function (require) {
         var textStyleModel = tooltipModel.getModel('textStyle');
         var padding = tooltipModel.get('padding');
 
-        // Animation transition
+        // Animation transition. Do not animate when transitionDuration is 0.
         transitionDuration &&
             cssText.push(assembleTransition(transitionDuration));
 
@@ -112,7 +112,7 @@ define(function (require) {
      */
     function TooltipContent(container, api) {
         var el = document.createElement('div');
-        var zr = api.getZr();
+        var zr = this._zr = api.getZr();
 
         this.el = el;
 
@@ -173,6 +173,8 @@ define(function (require) {
          * Update when tooltip is rendered
          */
         update: function () {
+            // FIXME
+            // Move this logic to ec main?
             var container = this._container;
             var stl = container.currentStyle
                 || document.defaultView.getComputedStyle(container);
@@ -200,7 +202,7 @@ define(function (require) {
         },
 
         setContent: function (content) {
-            this.el.innerHTML = content;
+            this.el.innerHTML = content == null ? '' : content;
         },
 
         setEnterable: function (enterable) {
@@ -213,6 +215,16 @@ define(function (require) {
         },
 
         moveTo: function (x, y) {
+            // xy should be based on canvas root. But tooltipContent is
+            // the sibling of canvas root. So padding of ec container
+            // should be considered here.
+            var zr = this._zr;
+            var viewportRoot;
+            if (zr && zr.painter && (viewportRoot = zr.painter.getViewportRoot())) {
+                x += viewportRoot.offsetLeft || 0;
+                y += viewportRoot.offsetTop || 0;
+            }
+
             var style = this.el.style;
             style.left = x + 'px';
             style.top = y + 'px';
@@ -225,8 +237,6 @@ define(function (require) {
             this.el.style.display = 'none';
             this._show = false;
         },
-
-        // showLater: function ()
 
         hideLater: function (time) {
             if (this._show && !(this._inContent && this._enterable)) {

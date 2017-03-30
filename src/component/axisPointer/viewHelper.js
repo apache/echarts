@@ -36,7 +36,14 @@ define(function(require) {
         elOption, axisModel, axisPointerModel, api, labelPos
     ) {
         var value = axisPointerModel.get('value');
-        var text = helper.getValueLabel(value, axisModel, axisPointerModel);
+        var text = helper.getValueLabel(
+            value, axisModel.axis, axisModel.ecModel,
+            axisPointerModel.get('seriesDataIndices'),
+            {
+                precision: axisPointerModel.get('label.precision'),
+                formatter: axisPointerModel.get('label.formatter')
+            }
+        );
         var labelModel = axisPointerModel.getModel('label');
         var textStyleModel = labelModel.getModel('textStyle');
         var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
@@ -95,21 +102,29 @@ define(function(require) {
         position[1] = Math.max(position[1], 0);
     }
 
-    helper.getValueLabel = function (value, axisModel, axisPointerModel) {
-        var axis = axisModel.axis;
+    /**
+     * @param {number} value
+     * @param {module:echarts/coord/Axis} axis
+     * @param {module:echarts/model/Global} ecModel
+     * @param {Object} opt
+     * @param {Array.<Object>} seriesDataIndices
+     * @param {number|string} opt.precision 'auto' or a number
+     * @param {string|Function} opt.formatter label formatter
+     */
+    helper.getValueLabel = function (value, axis, ecModel, seriesDataIndices, opt) {
         var text = axis.scale.getLabel(
             // Use 'pad' to try to fix width, which helps to debounce when when moving label.
-            value, {precision: axisPointerModel.get('label.precision'), pad: true}
+            value, {precision: opt.precision, pad: true}
         );
-        var formatter = axisPointerModel.get('label.formatter');
+        var formatter = opt.formatter;
 
         if (formatter) {
             var params = {
                 value: axisHelper.getAxisRawValue(axis, value),
                 seriesData: []
             };
-            zrUtil.each(axisPointerModel.get('seriesDataIndices'), function (idxItem) {
-                var series = axisModel.ecModel.getSeriesByIndex(idxItem.seriesIndex);
+            zrUtil.each(seriesDataIndices, function (idxItem) {
+                var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                 var dataIndex = idxItem.dataIndexInside;
                 var dataParams = series && series.getDataParams(dataIndex);
                 dataParams && params.seriesData.push(dataParams);

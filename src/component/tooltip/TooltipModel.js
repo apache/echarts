@@ -85,7 +85,7 @@ define(function (require) {
                 animationEasingUpdate: 'exponentialOut',
 
                 crossStyle: {
-                    color: '#555',
+                    color: '#999',
                     width: 1,
                     type: 'dashed',
 

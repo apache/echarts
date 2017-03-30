@@ -9,6 +9,8 @@ define(function (require) {
     var linearMap = numberUtil.linearMap;
     var layout = require('../../util/layout');
     var sliderMove = require('../helper/sliderMove');
+    var eventTool = require('zrender/core/event');
+
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
     // var mathMax = Math.max;
@@ -415,6 +417,10 @@ define(function (require) {
                 draggable: true,
                 cursor: 'move',
                 drift: bind(this._onDragMove, this, 'all'),
+                onmousemove: function (e) {
+                    // Fot mobile devicem, prevent screen slider on the button.
+                    eventTool.stop(e.event);
+                },
                 ondragstart: bind(this._showDataInfo, this, true),
                 ondragend: bind(this._onDragEnd, this),
                 onmouseover: bind(this._showDataInfo, this, true),
@@ -452,6 +458,10 @@ define(function (require) {
                     cursor: this._orient === 'vertical' ? 'ns-resize' : 'ew-resize',
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
+                    onmousemove: function (e) {
+                        // Fot mobile devicem, prevent screen slider on the button.
+                        eventTool.stop(e.event);
+                    },
                     ondragend: bind(this._onDragEnd, this),
                     onmouseover: bind(this._showDataInfo, this, true),
                     onmouseout: bind(this._showDataInfo, this, false)

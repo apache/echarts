@@ -117,7 +117,7 @@ define(function(require) {
 
                 var snap = axisPointerModel.get('snap');
                 var key = makeKey(axis.model);
-                var involveSeries = triggerTooltip || snap;
+                var involveSeries = triggerTooltip || snap || axis.type === 'category';
 
                 // If result.axesInfo[key] exist, override it (tooltip has higher priority).
                 var axisInfo = result.axesInfo[key] = {
@@ -145,7 +145,6 @@ define(function(require) {
         });
     }
 
-
     function makeAxisPointerModel(
         axis, baseTooltipModel, globalAxisPointerModel, ecModel, fromTooltip, triggerTooltip
     ) {
@@ -154,8 +153,8 @@ define(function(require) {
 
         each(
             [
-                'type', 'precision', 'snap', 'lineStyle', 'shadowStyle', 'label',
-                'animation', 'animationDurationUpdate', 'animationEasingUpdate'
+                'type', 'snap', 'lineStyle', 'shadowStyle', 'label',
+                'animation', 'animationDurationUpdate', 'animationEasingUpdate', 'z'
             ],
             function (field) {
                 volatileOption[field] = zrUtil.clone(tooltipAxisPointerModel.get(field));
@@ -173,7 +172,8 @@ define(function(require) {
             volatileOption.type = 'line';
         }
         var labelOption = volatileOption.label || (volatileOption.label = {});
-        labelOption.show = false;
+        // Follow the convention, do not show label when triggered by tooltip by default.
+        labelOption.show == null && (labelOption.show = false);
 
         if (fromTooltip === 'cross') {
             // When 'cross', both axes show labels.
@@ -182,7 +182,10 @@ define(function(require) {
             // (cross style is dashed by default)
             if (!triggerTooltip) {
                 var crossStyle = volatileOption.lineStyle = tooltipAxisPointerModel.get('crossStyle');
-                volatileOption.label.textStyle = crossStyle && crossStyle.textStyle;
+                crossStyle && zrUtil.defaults(
+                    labelOption.textStyle || (labelOption.textStyle = {}),
+                    crossStyle.textStyle
+                );
             }
         }
 
@@ -302,7 +305,7 @@ define(function(require) {
     };
 
     helper.getAxisInfo = function (axisModel) {
-        var coordSysAxesInfo = axisModel.ecModel.getComponent('axisPointer').coordSysAxesInfo;
+        var coordSysAxesInfo = (axisModel.ecModel.getComponent('axisPointer') || {}).coordSysAxesInfo;
         return coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
     };
 

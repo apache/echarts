@@ -45,7 +45,7 @@ define(function(require) {
             animationDurationUpdate: 200,
 
             lineStyle: {
-                color: '#555',
+                color: '#aaa',
                 width: 1,
                 type: 'solid'
             },
@@ -59,19 +59,19 @@ define(function(require) {
                 formatter: null, // string | Function
                 precision: 'auto', // Or a number like 0, 1, 2 ...
                 margin: 3,
-                rotate: 0,    // in degree.
                 textStyle: {
-                    color: '#fff',
-                    fontSize: 12
+                    color: '#fff'
                 },
                 padding: [5, 7, 5, 7],
                 backgroundColor: 'auto', // default: axis line color
                 borderColor: null,
                 borderWidth: 0,
                 shadowBlur: 3,
-                shadowColor: '#aaa',
-                shadowOffsetX: 0,
-                shadowOffsetY: 2
+                shadowColor: '#aaa'
+                // Considering applicability, common style should
+                // better not have shadowOffset.
+                // shadowOffsetX: 0,
+                // shadowOffsetY: 2
             },
 
             handle: {

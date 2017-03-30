@@ -34,6 +34,8 @@
         <div class="chart" id="handle-value-init"></div>
         <h1>single coordinate system handle | tooltip time label should be consistent with axisPinter.label.formatter</h1>
         <div class="chart" id="themeRiver"></div>
+        <h1>setOption in not merge mode: (1) drag handle (2) click the eye. Check: handle should be normal</h1>
+        <div class="chart" id="setOption-merge"></div>
 
 
 
@@ -335,6 +337,140 @@
                 });
 
         </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'echarts/component/toolbox',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var base = +new Date(1968, 9, 3);
+                var oneDay = 24 * 3600 * 1000;
+                var date = [];
+
+                var data = [Math.random() * 300];
+
+                for (var i = 1; i < 200; i++) {
+                    var now = new Date(base += oneDay);
+                    date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'));
+                    data.push(Math.round((Math.random() - 0.5) * 20 + data[i - 1]));
+                }
+
+                option = {
+                    animation: false,
+                    title: {
+                        left: 'center',
+                        text: '触屏 tooltip 和 dataZoom 示例',
+                        subtext: '"tootip" and "dataZoom" on mobile device',
+                    },
+                    legend: {
+                        top: 'bottom',
+                        data:['意向']
+                    },
+                    tooltip: {
+                        triggerOn: 'none',
+                        position: function (pt) {
+                            return [pt[0], 100];
+                        }
+                    },
+                    toolbox: {
+                        left: 'center',
+                        top: 10,
+                        itemSize: 40,
+                        feature: {
+                            myMerge: {
+                                show: true,
+                                title: 'setOption in NOT merge mode',
+                                icon: 'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
+                                onclick: function () {
+                                    chart.setOption(option, true);
+                                }
+                            }
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        axisPointer: {
+                            lineStyle: {
+                                color: '#215F5A',
+                                width: 2
+                            },
+                            label: {
+                                show: true
+                            },
+                            handle: {
+                                show: true
+                            }
+                        },
+                        data: date
+                    },
+                    yAxis: {
+                        type: 'value',
+                        boundaryGap: [0, '100%']
+                    },
+                    grid: {
+                        top: 70,
+                        left: 20,
+                        right: 30,
+                        containLabel: true,
+                        height: 150
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        start: 0,
+                        end: 10
+                    }],
+                    series: [
+                        {
+                            name:'模拟数据',
+                            type:'line',
+                            smooth:true,
+                            symbol: 'none',
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#8ec6ad'
+                                }
+                            },
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#8ec6ad'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data
+                        }
+                    ]
+                };
+
+                var chart = createChart('setOption-merge', echarts, option, 400);
+            });
+
+        </script>
+
+
+
 
 
 

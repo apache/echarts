@@ -3,7 +3,6 @@ define(function (require) {
     var AxisBuilder = require('./AxisBuilder');
     var zrUtil =  require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var SingleAxisPointer = require('../axisPointer/SingleAxisPointer');
     var singleAxisHelper = require('./singleAxisHelper');
     var getInterval = AxisBuilder.getInterval;
     var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
@@ -18,7 +17,7 @@ define(function (require) {
 
         type: 'singleAxis',
 
-        axisPointerClass: SingleAxisPointer,
+        axisPointerClass: 'SingleAxisPointer',
 
         render: function (axisModel, ecModel, api, payload) {
 

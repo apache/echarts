@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var opacityAccessPath = ['lineStyle', 'normal', 'opacity'];
+
     return function (ecModel) {
 
         ecModel.eachSeriesByType('parallel', function (seriesModel) {
@@ -25,7 +27,13 @@ define(function (require) {
             };
 
             coordSys.eachActiveState(data, function (activeState, dataIndex) {
-                data.setItemVisual(dataIndex, 'opacity', opacityMap[activeState]);
+                var itemModel = data.getItemModel(dataIndex);
+                var opacity = opacityMap[activeState];
+                if (activeState === 'normal') {
+                    var itemOpacity = itemModel.get(opacityAccessPath, true);
+                    itemOpacity != null && (opacity = itemOpacity);
+                }
+                data.setItemVisual(dataIndex, 'opacity', opacity);
             });
 
             data.setVisual('color', color);

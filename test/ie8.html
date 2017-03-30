@@ -637,18 +637,21 @@
                         subtext: '抽样调查来自: Heinz  2003'
                     },
                     tooltip : {
-                        trigger: 'axis',
+                        // trigger: 'axis',
                         showDelay : 0,
                         formatter : function (params) {
-                            if (params.value.length > 1) {
-                                return params.seriesName + ' :<br/>'
-                                   + params.value[0] + 'cm '
-                                   + params.value[1] + 'kg ';
-                            }
-                            else {
-                                return params.seriesName + ' :<br/>'
-                                   + params.name + ' : '
-                                   + params.value + 'kg ';
+                            console.log(params);
+                            if (params.value) {
+                                if (params.value.length > 1) {
+                                    return params.seriesName + ' :<br/>'
+                                    + params.value[0] + 'cm '
+                                    + params.value[1] + 'kg ';
+                                }
+                                else {
+                                    return params.seriesName + ' :<br/>'
+                                    + params.name + ' : '
+                                    + params.value + 'kg ';
+                                }
                             }
                         },
                         axisPointer:{

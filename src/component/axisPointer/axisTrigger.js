@@ -2,7 +2,6 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
-    var viewHelper = require('./viewHelper');
     var modelHelper = require('./modelHelper');
     var findPointFromSeries = require('./findPointFromSeries');
 
@@ -200,9 +199,7 @@ define(function(require) {
         var payloadBatch = payloadInfo.payloadBatch;
         var axis = axisInfo.axis;
         var axisModel = axis.model;
-        var valueLabel = viewHelper.getValueLabel(
-            value, axisInfo.axis.model, axisInfo.axisPointerModel
-        );
+        var axisPointerModel = axisInfo.axisPointerModel;
 
         // If no data, do not create anything in dataByCoordSys,
         // whose length will be used to judge whether dispatch action.
@@ -230,7 +227,14 @@ define(function(require) {
             axisType: axisModel.type,
             axisId: axisModel.id,
             value: value,
-            valueLabel: valueLabel,
+            // Caustion: viewHelper.getValueLabel is actually on "view stage", which
+            // depends that all models have been updated. So it should not be performed
+            // here. Considering axisPointerModel used here is volatile, which is hard
+            // to be retrieve in TooltipView, we prepare parameters here.
+            valueLabelOpt: {
+                precision: axisPointerModel.get('label.precision'),
+                formatter: axisPointerModel.get('label.formatter')
+            },
             seriesDataIndices: payloadBatch.slice()
         });
     }
@@ -273,6 +277,7 @@ define(function(require) {
         // dirtectly. So put the first seriesIndex and dataIndex of the first
         // axis on the payload.
         var sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {};
+
         dispatchAction({
             type: 'showTip',
             escapeConnect: true,

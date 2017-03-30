@@ -54,7 +54,7 @@ define(function (require) {
 
                 // start end
                 position: 'start',
-                margin: 0,
+                margin: '50%', // 50% of cellSize
                 nameMap: 'en',
                 textStyle: {
                     color: '#000'

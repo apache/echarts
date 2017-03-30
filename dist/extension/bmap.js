@@ -103,9 +103,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._mapOffset = [0, 0];
 
 	        this._api = api;
+
+	        this._projection = new BMap.MercatorProjection();
 	    }
 
 	    BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
+
+	    BMapCoordSys.prototype.setZoom = function (zoom) {
+	        this._zoom = zoom;
+	    };
+
+	    BMapCoordSys.prototype.setCenter = function (center) {
+	        this._center = this._projection.lngLatToPoint(new BMap.Point(center[0], center[1]));
+	    };
 
 	    BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
 	        this._mapOffset = mapOffset;
@@ -117,7 +127,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    BMapCoordSys.prototype.dataToPoint = function (data) {
 	        var point = new BMap.Point(data[0], data[1]);
-	        // TODO pointToOverlayPixel is toooooooo slow, cache the transform
+	        // TODO mercator projection is toooooooo slow
+	        // var mercatorPoint = this._projection.lngLatToPoint(point);
+
+	        // var width = this._api.getZr().getWidth();
+	        // var height = this._api.getZr().getHeight();
+	        // var divider = Math.pow(2, 18 - 10);
+	        // return [
+	        //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
+	        //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
+	        // ];
 	        var px = this._bmap.pointToOverlayPixel(point);
 	        var mapOffset = this._mapOffset;
 	        return [px.x - mapOffset[0], px.y - mapOffset[1]];
@@ -217,6 +236,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            bmapCoordSys = new BMapCoordSys(bmap, api);
 	            bmapCoordSys.setMapOffset(bmapModel.__mapOffset || [0, 0]);
+	            bmapCoordSys.setZoom(zoom);
+	            bmapCoordSys.setCenter(center);
+
 	            bmapModel.coordinateSystem = bmapCoordSys;
 	        });
 

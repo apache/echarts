@@ -5,14 +5,16 @@ define(function (require) {
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
     var findPointFromSeries = require('../axisPointer/findPointFromSeries');
-    var parsePercent = numberUtil.parsePercent;
+    var layoutUtil = require('../../util/layout');
     var env = require('zrender/core/env');
     var Model = require('../../model/Model');
     var globalListener = require('../axisPointer/globalListener');
     var axisHelper = require('../../coord/axisHelper');
+    var axisPointerViewHelper = require('../axisPointer/viewHelper');
 
     var bind = zrUtil.bind;
     var each = zrUtil.each;
+    var parsePercent = numberUtil.parsePercent;
 
 
     require('../../echarts').extendComponentView({
@@ -278,6 +280,12 @@ define(function (require) {
                         return;
                     }
 
+                    var valueLabel = axisPointerViewHelper.getValueLabel(
+                        axisValue, axisModel.axis, ecModel,
+                        item.seriesDataIndices,
+                        item.valueLabelOpt
+                    );
+
                     zrUtil.each(item.seriesDataIndices, function (idxItem) {
                         var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                         var dataIndex = idxItem.dataIndexInside;
@@ -287,7 +295,7 @@ define(function (require) {
                         dataParams.axisType = item.axisType;
                         dataParams.axisId = item.axisId;
                         dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
-                        dataParams.axisValueLabel = item.valueLabel;
+                        dataParams.axisValueLabel = valueLabel;
 
                         if (dataParams) {
                             singleParamsList.push(dataParams);
@@ -299,7 +307,7 @@ define(function (require) {
                     // FIXME
                     // (1) shold be the first data which has name?
                     // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
-                    var firstLine = item.valueLabel;
+                    var firstLine = valueLabel;
                     singleDefaultHTML.push(
                         (firstLine ? formatUtil.encodeHTML(firstLine) + '<br />' : '')
                         + seriesDefaultHTML.join('<br />')
@@ -469,20 +477,36 @@ define(function (require) {
             var viewHeight = this._api.getHeight();
             positionExpr = positionExpr || tooltipModel.get('position');
 
-            var rect = el && el.getBoundingRect().clone();
-            el && rect.applyTransform(el.transform);
-            if (typeof positionExpr === 'function') {
-                // Callback of position can be an array or a string specify the position
-                positionExpr = positionExpr([x, y], params, content.el, rect);
-            }
-
             var contentSize = content.getSize();
             var align = tooltipModel.get('align');
             var vAlign = tooltipModel.get('verticalAlign');
+            var rect = el && el.getBoundingRect().clone();
+            el && rect.applyTransform(el.transform);
+
+            if (typeof positionExpr === 'function') {
+                // Callback of position can be an array or a string specify the position
+                positionExpr = positionExpr([x, y], params, content.el, rect, {
+                    viewSize: [viewWidth, viewHeight],
+                    contentSize: contentSize.slice()
+                });
+            }
 
             if (zrUtil.isArray(positionExpr)) {
                 x = parsePercent(positionExpr[0], viewWidth);
                 y = parsePercent(positionExpr[1], viewHeight);
+            }
+            else if (zrUtil.isObject(positionExpr)) {
+                positionExpr.width = contentSize[0];
+                positionExpr.height = contentSize[1];
+                var layoutRect = layoutUtil.getLayoutRect(
+                    positionExpr, {width: viewWidth, height: viewHeight}
+                );
+                x = layoutRect.x;
+                y = layoutRect.y;
+                align = null;
+                // When positionExpr is left/top/right/bottom,
+                // align and verticalAlign will not work.
+                vAlign = null;
             }
             // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
             else if (typeof positionExpr === 'string' && el) {
@@ -500,8 +524,8 @@ define(function (require) {
                 y = pos[1];
             }
 
-            align && (x -= align === 'center' ? contentSize[0] / 2 : align === 'right' ? contentSize[0] : 0);
-            vAlign && (y -= vAlign === 'middle' ? contentSize[1] / 2 : vAlign === 'bottom' ? contentSize[1] : 0);
+            align && (x -= isCenterAlign(align) ? contentSize[0] / 2 : align === 'right' ? contentSize[0] : 0);
+            vAlign && (y -= isCenterAlign(vAlign) ? contentSize[1] / 2 : vAlign === 'bottom' ? contentSize[1] : 0);
 
             if (tooltipModel.get('confine')) {
                 var pos = confineTooltipPosition(
@@ -666,6 +690,10 @@ define(function (require) {
                 y = rect.y + rectHeight / 2 - domHeight / 2;
         }
         return [x, y];
+    }
+
+    function isCenterAlign(align) {
+        return align === 'center' || align === 'middle';
     }
 
 });

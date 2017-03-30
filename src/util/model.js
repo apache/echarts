@@ -370,7 +370,7 @@ define(function(require) {
                 ? opt.name + ''
                 : existCpt
                 ? existCpt.name
-                : '\0##';
+                : '\0-'; // name may be displayed on screen, so use '-'.
 
             if (existCpt) {
                 keyInfo.id = existCpt.id;

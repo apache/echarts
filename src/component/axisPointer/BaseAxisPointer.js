@@ -9,8 +9,8 @@ define(function(require) {
     var eventTool = require('zrender/core/event');
     var throttle = require('../../util/throttle');
 
-    var extend = zrUtil.extend;
     var clone = zrUtil.clone;
+    var bind = zrUtil.bind;
 
     /**
      * Base axis pointer class in 2D.
@@ -70,6 +70,12 @@ define(function(require) {
             var value = axisPointerModel.get('value');
             var status = axisPointerModel.get('status');
 
+            // Bind them to `this`, not in closure, otherwise they will not
+            // be replaced when user calling setOption in not merge mode.
+            this._axisModel = axisModel;
+            this._axisPointerModel = axisPointerModel;
+            this._api = api;
+
             // Optimize: `render` will be called repeatly during mouse move.
             // So it is power consuming if performing `render` each time,
             // especially on mobile device.
@@ -105,18 +111,24 @@ define(function(require) {
             }
             this._lastGraphicKey = graphicKey;
 
-            var moveAnimation = this.determineAnimation(axisModel, axisPointerModel);
+            var moveAnimation = this._moveAnimation =
+                this.determineAnimation(axisModel, axisPointerModel);
 
             if (!group) {
                 group = this._group = new graphic.Group();
-                this.createEl(group, elOption, axisModel, axisPointerModel);
+                this.createPointerEl(group, elOption, axisModel, axisPointerModel);
+                this.createLabelEl(group, elOption, axisModel, axisPointerModel);
                 api.getZr().add(group);
             }
             else {
-                this.updateEl(group, moveAnimation, elOption, axisModel, axisPointerModel);
+                var doUpdateProps = zrUtil.curry(updateProps, axisPointerModel, moveAnimation);
+                this.updatePointerEl(group, elOption, doUpdateProps, axisPointerModel);
+                this.updateLabelEl(group, elOption, doUpdateProps, axisPointerModel);
             }
 
-            this._renderHandle(value, moveAnimation, axisModel, axisPointerModel, api);
+            updateMandatoryProps(group, axisPointerModel, true);
+
+            this._renderHandle(value);
         },
 
         /**
@@ -180,24 +192,10 @@ define(function(require) {
         /**
          * @protected
          */
-        createEl: function (group, elOption, axisModel, axisPointerModel) {
-            var basicOpt = {
-                z: axisPointerModel.get('z'),
-                zlevel: axisPointerModel.get('zlevel'),
-                silent: true
-            };
-
-            this.createPointerEl(group, elOption, basicOpt, axisModel, axisPointerModel);
-            this.createLabelEl(group, elOption, basicOpt, axisModel, axisPointerModel);
-        },
-
-        /**
-         * @protected
-         */
-        createPointerEl: function (group, elOption, basicOpt, axisModel, axisPointerModel) {
+        createPointerEl: function (group, elOption, axisModel, axisPointerModel) {
             var pointerOption = elOption.pointer;
             var pointerEl = get(group).pointerEl = new graphic[pointerOption.type](
-                extend(clone(basicOpt), elOption.pointer)
+                clone(elOption.pointer)
             );
             group.add(pointerEl);
         },
@@ -205,26 +203,13 @@ define(function(require) {
         /**
          * @protected
          */
-        createLabelEl: function (group, elOption, basicOpt, axisModel, axisPointerModel) {
+        createLabelEl: function (group, elOption, axisModel, axisPointerModel) {
             var labelEl = get(group).labelEl = new graphic.Rect(
-                extend(clone(basicOpt), elOption.label)
+                clone(elOption.label)
             );
 
             group.add(labelEl);
             updateLabelShowHide(labelEl, axisPointerModel);
-        },
-
-        /**
-         * @protected
-         */
-        updateEl: function (group, moveAnimation, elOption, axisModel, axisPointerModel) {
-            if (!group) {
-                return;
-            }
-
-            var doUpdateProps = zrUtil.curry(updateProps, axisPointerModel, moveAnimation);
-            this.updatePointerEl(group, elOption, doUpdateProps, axisPointerModel);
-            this.updateLabelEl(group, elOption, doUpdateProps, axisPointerModel);
         },
 
         /**
@@ -245,8 +230,10 @@ define(function(require) {
             var labelEl = get(group).labelEl;
             if (labelEl) {
                 labelEl.setStyle(elOption.label.style);
-                labelEl.attr('shape', elOption.label.shape);
                 updateProps(labelEl, {
+                    // Consider text length change in vertical axis, animation should
+                    // be used on shape, otherwise the effect will be weird.
+                    shape: elOption.label.shape,
                     position: elOption.label.position
                 });
 
@@ -257,12 +244,13 @@ define(function(require) {
         /**
          * @private
          */
-        _renderHandle: function (value, moveAnimation, axisModel, axisPointerModel, api) {
+        _renderHandle: function (value) {
             if (this._dragging || !this.updateHandleTransform) {
                 return;
             }
 
-            var zr = api.getZr();
+            var axisPointerModel = this._axisPointerModel;
+            var zr = this._api.getZr();
             var handle = this._handle;
             var handleModel = axisPointerModel.getModel('handle');
 
@@ -281,18 +269,14 @@ define(function(require) {
                         // Fot mobile devicem, prevent screen slider on the button.
                         eventTool.stop(e.event);
                     },
-                    onmousedown: zrUtil.bind(
-                        this._onHandleDragMove, this, axisModel, axisPointerModel, api, 0, 0
-                    ),
-                    drift: zrUtil.bind(
-                        this._onHandleDragMove, this, axisModel, axisPointerModel, api
-                    ),
-                    ondragend: zrUtil.bind(
-                        this._onHandleDragEnd, this, axisModel, axisPointerModel, api, moveAnimation
-                    )
+                    onmousedown: bind(this._onHandleDragMove, this, 0, 0),
+                    drift: bind(this._onHandleDragMove, this),
+                    ondragend: bind(this._onHandleDragEnd, this)
                 });
                 zr.add(handle);
             }
+
+            updateMandatoryProps(handle, axisPointerModel, false);
 
             // update style
             var includeStyles = [
@@ -315,21 +299,27 @@ define(function(require) {
                 'fixRate'
             );
 
-            this._moveHandleToValue(handle, value, moveAnimation, axisModel, axisPointerModel, isInit);
+            this._moveHandleToValue(value, isInit);
         },
 
         /**
          * @private
          */
-        _moveHandleToValue: function (handle, value, moveAnimation, axisModel, axisPointerModel, isInit) {
-            var trans = this.getHandleTransform(value, axisModel, axisPointerModel);
-            updateProps(axisPointerModel, !isInit && moveAnimation, handle, getHandleTransProps(trans));
+        _moveHandleToValue: function (value, isInit) {
+            updateProps(
+                this._axisPointerModel,
+                !isInit && this._moveAnimation,
+                this._handle,
+                getHandleTransProps(this.getHandleTransform(
+                    value, this._axisModel, this._axisPointerModel
+                ))
+            );
         },
 
         /**
          * @private
          */
-        _onHandleDragMove: function (axisModel, axisPointerModel, api, dx, dy) {
+        _onHandleDragMove: function (dx, dy) {
             var handle = this._handle;
             if (!handle) {
                 return;
@@ -341,8 +331,8 @@ define(function(require) {
             var trans = this.updateHandleTransform(
                 getHandleTransProps(handle),
                 [dx, dy],
-                axisModel,
-                axisPointerModel
+                this._axisModel,
+                this._axisPointerModel
             );
             this._payloadInfo = trans;
 
@@ -350,14 +340,14 @@ define(function(require) {
             handle.attr(getHandleTransProps(trans));
             get(handle).lastProp = null;
 
-            this._doDispatchAxisPointer(axisModel, api);
+            this._doDispatchAxisPointer();
         },
 
         /**
          * Throttled method.
          * @private
          */
-        _doDispatchAxisPointer: function (axisModel, api) {
+        _doDispatchAxisPointer: function () {
             var handle = this._handle;
             if (!handle) {
                 return;
@@ -371,28 +361,30 @@ define(function(require) {
                 tooltipOption: payloadInfo.tooltipOption,
                 highDownKey: 'axisPointerHandle'
             };
-            var axis = axisModel.axis;
-            payload[axis.dim + 'AxisId'] = axisModel.id;
-            api.dispatchAction(payload);
+            var axis = this._axisModel.axis;
+            payload[axis.dim + 'AxisId'] = this._axisModel.id;
+            this._api.dispatchAction(payload);
         },
 
         /**
          * @private
          */
-        _onHandleDragEnd: function (axisModel, axisPointerModel, api, moveAnimation) {
+        _onHandleDragEnd: function (moveAnimation) {
             this._dragging = false;
             var handle = this._handle;
             if (!handle) {
                 return;
             }
 
-            var value = axisPointerModel.get('value');
+            var value = this._axisPointerModel.get('value');
             // Consider snap or categroy axis, handle may be not consistent with
             // axisPointer. So move handle to align the exact value position when
             // drag ended.
-            this._moveHandleToValue(handle, value, moveAnimation, axisModel, axisPointerModel);
+            this._moveHandleToValue(value);
 
-            api.dispatchAction({
+            // For the effect: tooltip will be shown when finger holding on handle
+            // button, and will be hidden after finger left handle button.
+            this._api.dispatchAction({
                 type: 'hideTip'
             });
         },
@@ -525,6 +517,19 @@ define(function(require) {
                 style,
                 'center'
             );
+    }
+
+    function updateMandatoryProps(group, axisPointerModel, silent) {
+        var z = axisPointerModel.get('z');
+        var zlevel = axisPointerModel.get('zlevel');
+
+        group && group.traverse(function (el) {
+            if (el.type !== 'group') {
+                z != null && (el.z = z);
+                zlevel != null && (el.zlevel = zlevel);
+                el.silent = silent;
+            }
+        });
     }
 
     clazzUtil.enableClassExtend(BaseAxisPointer);

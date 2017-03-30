@@ -5,7 +5,6 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var AxisBuilder = require('./AxisBuilder');
-    var PolarAxisPointer = require('../axisPointer/PolarAxisPointer');
 
     var axisBuilderAttrs = [
         'axisLine', 'axisLabel', 'axisTick', 'axisName'
@@ -18,7 +17,7 @@ define(function (require) {
 
         type: 'radiusAxis',
 
-        axisPointerClass: PolarAxisPointer,
+        axisPointerClass: 'PolarAxisPointer',
 
         render: function (radiusAxisModel, ecModel) {
             this.group.removeAll();
