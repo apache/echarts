@@ -1,0 +1,28 @@
+{
+  "name": "echarts",
+  "version": "3.5.1",
+  "homepage": "http://echarts.baidu.com",
+  "repository": "git://github.com/ecomfe/echarts",
+  "authors": [
+    { "name": "Kener", "email": "kener.linfeng@gmail.com" },
+    { "name": "Pissang", "email": "shenyi.914@gmail.com" },
+    { "name": "Erik", "email": "errorrik@gmail.com" },
+    { "name": "Yangji", "email": "511415343@qq.com" }
+  ],
+  "description": "A powerful charting and visualization library for browser",
+  "main": "./dist/echarts.js",
+  "keywords": [
+    "baidu",
+    "echarts",
+    "canvas",
+    "data visualization"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "doc"
+  ]
+}
