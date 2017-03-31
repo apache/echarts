@@ -170,6 +170,7 @@ define(function (require) {
 
     /**
      * Minimal dicernible data precisioin according to a single pixel.
+     *
      * @param {Array.<number>} dataExtent
      * @param {Array.<number>} pixelExtent
      * @return {number} precision
@@ -261,24 +262,33 @@ define(function (require) {
 
     /**
      * Quantity of a number. e.g. 0.1, 1, 10, 100
+     *
      * @param  {number} val
      * @return {number}
      */
     number.quantity = function (val) {
-        return Math.pow(10, Math.floor(Math.log(val) / Math.LN10));
+        return Math.pow(10, quantityExponent(val));
     };
 
-    // "Nice Numbers for Graph Labels" of Graphic Gems
+    function quantityExponent(val) {
+        return Math.floor(Math.log(val) / Math.LN10);
+    }
+
     /**
-     * find a “nice” number approximately equal to x. Round the number if round = true, take ceiling if round = false
-     * The primary observation is that the “nicest” numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
-     * @param  {number} val
+     * find a “nice” number approximately equal to x. Round the number if round = true,
+     * take ceiling if round = false. The primary observation is that the “nicest”
+     * numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
+     *
+     * See "Nice Numbers for Graph Labels" of Graphic Gems.
+     *
+     * @param  {number} val Non-negative value.
      * @param  {boolean} round
      * @return {number}
      */
     number.nice = function (val, round) {
-        var exp10 = number.quantity(val);
-        var f = val / exp10; // between 1 and 10
+        var exponent = quantityExponent(val);
+        var exp10 = Math.pow(10, exponent);
+        var f = val / exp10; // 1 <= f < 10
         var nf;
         if (round) {
             if (f < 1.5) { nf = 1; }
@@ -294,7 +304,11 @@ define(function (require) {
             else if (f < 5) { nf = 5; }
             else { nf = 10; }
         }
-        return nf * exp10;
+        val = nf * exp10;
+
+        // Fix 3 * 0.1 === 0.30000000000000004 issue (see IEEE 754).
+        // 20 is the uppper bound of toFixed.
+        return exponent >= -20 ? +val.toFixed(exponent < 0 ? -exponent : 0) : val;
     };
 
     /**
@@ -365,6 +379,7 @@ define(function (require) {
      * parseFloat NaNs numeric-cast false positives (null|true|false|"")
      * ...but misinterprets leading-number strings, particularly hex literals ("0x...")
      * subtraction forces infinities to NaN
+     *
      * @param {*} v
      * @return {boolean}
      */

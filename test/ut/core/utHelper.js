@@ -296,6 +296,13 @@
 
     /**
      * @public
+     */
+    helper.isValueFinite = function (val) {
+        return val != null && val !== '' && isFinite(val);
+    };
+
+    /**
+     * @public
      * @param {Array.<string>} deps
      * @param {Array.<Function>} testFnList
      * @param {Function} done All done callback.
@@ -332,5 +339,13 @@
         return window.JSON.stringify(result, null, 4);
     };
 
+    /**
+     * @public
+     */
+    helper.print = function (str) {
+        if (typeof console !== 'undefined') {
+            console.log(str);
+        }
+    };
 
 })(window);

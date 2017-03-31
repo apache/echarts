@@ -310,7 +310,6 @@ describe('util/number', function () {
 
 
     describe('getPrecisionSafe', function () {
-
         testCase('basic', function (numberUtil) {
             expect(numberUtil.getPrecisionSafe(10)).toEqual(0);
             expect(numberUtil.getPrecisionSafe(1)).toEqual(0);
@@ -322,6 +321,26 @@ describe('util/number', function () {
             expect(numberUtil.getPrecisionSafe(0.0032)).toEqual(4);
             expect(numberUtil.getPrecisionSafe(0.0000000000034)).toEqual(12);
             expect(numberUtil.getPrecisionSafe(3.4e-10)).toEqual(10);
+        });
+    });
+
+    describe('nice', function () {
+        testCase('extreme', function (numberUtil) {
+            // Should not be 0.30000000000000004
+            expect(numberUtil.nice(0.3869394696651766, true)).toEqual(0.3);
+            expect(numberUtil.nice(0.3869394696651766)).toEqual(0.5);
+            expect(numberUtil.nice(0.00003869394696651766, true)).toEqual(0.00003);
+            expect(numberUtil.nice(0.00003869394696651766, false)).toEqual(0.00005);
+            expect(numberUtil.nice(0, true)).toEqual(0);
+            expect(numberUtil.nice(0)).toEqual(0);
+            expect(numberUtil.nice(13, true)).toEqual(10);
+            expect(numberUtil.nice(13)).toEqual(20);
+            expect(numberUtil.nice(3900000000000000000021, true)).toEqual(3000000000000000000000);
+            expect(numberUtil.nice(3900000000000000000021)).toEqual(5000000000000000000000);
+            expect(numberUtil.nice(0.00000000000000000656939, true)).toEqual(0.000000000000000005);
+            expect(numberUtil.nice(0.00000000000000000656939)).toEqual(0.00000000000000001);
+            expect(numberUtil.nice(0.10000000000000000656939, true)).toEqual(0.1);
+            expect(numberUtil.nice(0.10000000000000000656939)).toEqual(0.2);
         });
     });
 
