@@ -113,8 +113,9 @@ define(function(require) {
      */
     helper.getValueLabel = function (value, axis, ecModel, seriesDataIndices, opt) {
         var text = axis.scale.getLabel(
-            // Use 'pad' to try to fix width, which helps to debounce when when moving label.
-            value, {precision: opt.precision, pad: true}
+            // If `precision` is set, width can be fixed (like '12.00500'), which
+            // helps to debounce when when moving label.
+            value, {precision: opt.precision}
         );
         var formatter = opt.formatter;
 

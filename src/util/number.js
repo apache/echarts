@@ -102,7 +102,9 @@ define(function (require) {
     };
 
     /**
-     * Fix rounding error of float numbers
+     * (1) Fix rounding error of float numbers.
+     * (2) Support return string to avoid scientific notation like '3.5e-7'.
+     *
      * @param {number} x
      * @param {number} [precision]
      * @param {boolean} [returnStr]
@@ -147,13 +149,23 @@ define(function (require) {
         return count;
     };
 
+    /**
+     * @param {string|number} val
+     * @return {number}
+     */
     number.getPrecisionSafe = function (val) {
         var str = val.toString();
-        var dotIndex = str.indexOf('.');
-        if (dotIndex < 0) {
-            return 0;
+
+        // Consider scientific notation: '3.4e-12' '3.4e+12'
+        var eIndex = str.indexOf('e');
+        if (eIndex > 0) {
+            var precision = +str.slice(eIndex + 1);
+            return precision < 0 ? -precision : 0;
         }
-        return str.length - 1 - dotIndex;
+        else {
+            var dotIndex = str.indexOf('.');
+            return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
+        }
     };
 
     /**

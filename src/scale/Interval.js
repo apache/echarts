@@ -13,7 +13,7 @@ define(function (require) {
     var mathCeil = Math.ceil;
 
     var getPrecisionSafe = numberUtil.getPrecisionSafe;
-    var roundingErrorFix = numberUtil.round;
+    var roundNumber = numberUtil.round;
     /**
      * @alias module:echarts/coord/scale/Interval
      * @constructor
@@ -93,7 +93,7 @@ define(function (require) {
                 while (tick <= niceExtent[1]) {
                     ticks.push(tick);
                     // Avoid rounding error
-                    tick = roundingErrorFix(tick + interval, precision);
+                    tick = roundNumber(tick + interval, precision);
                     if (ticks.length > safeLimit) {
                         return [];
                     }
@@ -125,15 +125,27 @@ define(function (require) {
          * @param {Object} [opt]
          * @param {number|string} [opt.precision] If 'auto', use nice presision.
          * @param {boolean} [opt.pad] returns 1.50 but not 1.5 if precision is 2.
-         * @return {number}
+         * @return {string}
          */
         getLabel: function (data, opt) {
-            var precision = opt && opt.precision;
-            if (data != null && precision != null) {
-                // Should be more precise then tick.
-                precision === 'auto' && (precision = this._intervalPrecision + 2);
-                data = roundingErrorFix(data, precision, opt && opt.pad);
+            if (data == null) {
+                return '';
             }
+
+            var precision = opt && opt.precision;
+
+            if (precision == null) {
+                precision = numberUtil.getPrecisionSafe(data) || 0;
+            }
+            else if (precision === 'auto') {
+                // Should be more precise then tick.
+                precision = this._intervalPrecision + 2;
+            }
+
+            // (1) If `precision` is set, 12.005 should be display as '12.00500'.
+            // (2) Use roundNumber (toFixed) to avoid scientific notation like '3.5e-7'.
+            data = roundNumber(data, precision, true);
+
             return formatUtil.addCommas(data);
         },
 
@@ -158,7 +170,7 @@ define(function (require) {
 
             // From "Nice Numbers for Graph Labels" of Graphic Gems
             // var niceSpan = numberUtil.nice(span, false);
-            var step = roundingErrorFix(
+            var step = roundNumber(
                 numberUtil.nice(span / splitNumber, true),
                 Math.max(
                     getPrecisionSafe(extent[0]),
@@ -171,8 +183,8 @@ define(function (require) {
             var precision = getPrecisionSafe(step) + 2;
             // Niced extent inside original extent
             var niceExtent = [
-                roundingErrorFix(mathCeil(extent[0] / step) * step, precision),
-                roundingErrorFix(mathFloor(extent[1] / step) * step, precision)
+                roundNumber(mathCeil(extent[0] / step) * step, precision),
+                roundNumber(mathFloor(extent[1] / step) * step, precision)
             ];
 
             this._interval = step;
@@ -222,10 +234,10 @@ define(function (require) {
             var interval = this._interval;
 
             if (!fixMin) {
-                extent[0] = roundingErrorFix(mathFloor(extent[0] / interval) * interval);
+                extent[0] = roundNumber(mathFloor(extent[0] / interval) * interval);
             }
             if (!fixMax) {
-                extent[1] = roundingErrorFix(mathCeil(extent[1] / interval) * interval);
+                extent[1] = roundNumber(mathCeil(extent[1] / interval) * interval);
             }
         }
     });

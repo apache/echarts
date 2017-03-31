@@ -5,9 +5,11 @@ define(function (require) {
     var textContain = require('zrender/contain/text');
 
     var formatUtil = {};
+
     /**
      * 每三位默认加,格式化
-     * @type {string|number} x
+     * @param {string|number} x
+     * @return {string}
      */
     formatUtil.addCommas = function (x) {
         if (isNaN(x)) {

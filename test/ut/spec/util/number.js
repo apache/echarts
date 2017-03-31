@@ -308,4 +308,21 @@ describe('util/number', function () {
         });
     });
 
+
+    describe('getPrecisionSafe', function () {
+
+        testCase('basic', function (numberUtil) {
+            expect(numberUtil.getPrecisionSafe(10)).toEqual(0);
+            expect(numberUtil.getPrecisionSafe(1)).toEqual(0);
+            expect(numberUtil.getPrecisionSafe(0)).toEqual(0);
+            expect(numberUtil.getPrecisionSafe(100000000000000000000000000000)).toEqual(0);
+            expect(numberUtil.getPrecisionSafe(1e+100)).toEqual(0);
+            expect(numberUtil.getPrecisionSafe(0.1)).toEqual(1);
+            expect(numberUtil.getPrecisionSafe(0.100)).toEqual(1);
+            expect(numberUtil.getPrecisionSafe(0.0032)).toEqual(4);
+            expect(numberUtil.getPrecisionSafe(0.0000000000034)).toEqual(12);
+            expect(numberUtil.getPrecisionSafe(3.4e-10)).toEqual(10);
+        });
+    });
+
 });
