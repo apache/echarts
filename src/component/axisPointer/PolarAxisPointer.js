@@ -28,14 +28,16 @@ define(function(require) {
             var coordValue;
             coordValue = axis['dataTo' + formatUtil.capitalFirst(axis.dim)](value);
 
-            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerModel.get('type')](
-                axis, polar, coordValue, otherExtent, elStyle
-            );
-            pointerOption.style = elStyle;
-
-            elOption.graphicKey = pointerOption.type;
-            elOption.pointer = pointerOption;
+            var axisPointerType = axisPointerModel.get('type');
+            if (axisPointerType && axisPointerType !== 'none') {
+                var elStyle = viewHelper.buildElStyle(axisPointerModel);
+                var pointerOption = pointerShapeBuilder[axisPointerType](
+                    axis, polar, coordValue, otherExtent, elStyle
+                );
+                pointerOption.style = elStyle;
+                elOption.graphicKey = pointerOption.type;
+                elOption.pointer = pointerOption;
+            }
 
             var labelMargin = axisPointerModel.get('label.margin');
             var labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);

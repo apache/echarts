@@ -20,14 +20,18 @@ define(function(require) {
             var coordSys = axis.coordinateSystem;
             var otherExtent = getGlobalExtent(coordSys, 1 - getPointDimIndex(axis));
             var pixelValue = coordSys.dataToPoint(value)[0];
-            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerModel.get('type')](
-                axis, pixelValue, otherExtent, elStyle
-            );
-            pointerOption.style = elStyle;
 
-            elOption.graphicKey = pointerOption.type;
-            elOption.pointer = pointerOption;
+            var axisPointerType = axisPointerModel.get('type');
+            if (axisPointerType && axisPointerType !== 'none') {
+                var elStyle = viewHelper.buildElStyle(axisPointerModel);
+                var pointerOption = pointerShapeBuilder[axisPointerType](
+                    axis, pixelValue, otherExtent, elStyle
+                );
+                pointerOption.style = elStyle;
+
+                elOption.graphicKey = pointerOption.type;
+                elOption.pointer = pointerOption;
+            }
 
             var layoutInfo = singleAxisHelper.layout(axisModel);
             viewHelper.buildCartesianSingleLabelElOption(

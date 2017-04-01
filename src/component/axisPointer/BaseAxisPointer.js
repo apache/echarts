@@ -194,22 +194,26 @@ define(function(require) {
          */
         createPointerEl: function (group, elOption, axisModel, axisPointerModel) {
             var pointerOption = elOption.pointer;
-            var pointerEl = get(group).pointerEl = new graphic[pointerOption.type](
-                clone(elOption.pointer)
-            );
-            group.add(pointerEl);
+            if (pointerOption) {
+                var pointerEl = get(group).pointerEl = new graphic[pointerOption.type](
+                    clone(elOption.pointer)
+                );
+                group.add(pointerEl);
+            }
         },
 
         /**
          * @protected
          */
         createLabelEl: function (group, elOption, axisModel, axisPointerModel) {
-            var labelEl = get(group).labelEl = new graphic.Rect(
-                clone(elOption.label)
-            );
+            if (elOption.label) {
+                var labelEl = get(group).labelEl = new graphic.Rect(
+                    clone(elOption.label)
+                );
 
-            group.add(labelEl);
-            updateLabelShowHide(labelEl, axisPointerModel);
+                group.add(labelEl);
+                updateLabelShowHide(labelEl, axisPointerModel);
+            }
         },
 
         /**

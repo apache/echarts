@@ -12,8 +12,6 @@
     </head>
     <body>
         <style>
-            body {
-            }
             .chart {
                 position: relative;
                 height: 500px;
@@ -43,7 +41,7 @@
         <div class="chart" id="main3"></div>
         <h2>negative symbolMargin | symbolPosition (check whether overflow)</h2>
         <div class="chart" id="main4"></div>
-        <h2>repeat strategy | dynamic data</h2>
+        <h2>repeat strategy | dynamic data | axisPointer.type 'none' label show</h2>
         <div class="chart" id="dynamic-data"></div>
 
         <script>
@@ -686,7 +684,13 @@
 
             makeChart('dynamic-data', {
                 backgroundColor: '#0f375f',
-                tooltip: {},
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'none',
+                        label: {show: true}
+                    }
+                },
                 legend: {
                     data: ['all'],
                     textStyle: {color: '#ddd'}

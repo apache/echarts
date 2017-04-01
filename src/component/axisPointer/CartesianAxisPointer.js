@@ -19,12 +19,15 @@ define(function(require) {
             var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
             var pixelValue = axis.toGlobalCoord(axis.dataToCoord(value, true));
 
-            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerType](axis, pixelValue, otherExtent, elStyle);
-            pointerOption.style = elStyle;
-
-            elOption.graphicKey = pointerOption.type;
-            elOption.pointer = pointerOption;
+            if (axisPointerType && axisPointerType !== 'none') {
+                var elStyle = viewHelper.buildElStyle(axisPointerModel);
+                var pointerOption = pointerShapeBuilder[axisPointerType](
+                    axis, pixelValue, otherExtent, elStyle
+                );
+                pointerOption.style = elStyle;
+                elOption.graphicKey = pointerOption.type;
+                elOption.pointer = pointerOption;
+            }
 
             var layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
             viewHelper.buildCartesianSingleLabelElOption(
