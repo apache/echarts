@@ -10,30 +10,6 @@ describe('graphic_setOption', function() {
 
     var NUMBER_PRECISION = 6;
 
-    function getGraphicElements(chartOrGroup) {
-        if (chartOrGroup.type === 'group') {
-            return chartOrGroup.children();
-        }
-        else {
-            var viewGroup = getViewGroup(chartOrGroup);
-            if (viewGroup) {
-                var list = [viewGroup];
-                viewGroup.traverse(function (el) {
-                    list.push(el);
-                });
-                return list;
-            }
-            else {
-                return [];
-            }
-        }
-    }
-
-    function getViewGroup(chart) {
-        var graphicComponent = chart.getModel().getComponent('graphic');
-        return graphicComponent ? chart._componentsMap[graphicComponent.__viewId].group : null;
-    }
-
     function propHasAll(els, propsObjList) {
         for (var i = 0; i < propsObjList.length; i++) {
             propHas(els[i], propsObjList[i]);
@@ -247,14 +223,14 @@ describe('graphic_setOption', function() {
             checkExistsAndRelations();
 
             function checkExistsAndRelations() {
-                var els = getGraphicElements(chart);
+                var els = utHelper.getGraphicElements(chart, 'graphic');
 
                 expect(els.length === 6).toEqual(true);
                 expect(els[0].type === 'group').toEqual(true);
                 expect(els[1].name === 'nameuriimg').toEqual(true);
 
                 expect(els[2].type === 'group').toEqual(true);
-                var groupEls = getGraphicElements(els[2]);
+                var groupEls = utHelper.getGraphicElements(els[2], 'graphic');
                 expect(groupEls.length === 2).toEqual(true);
                 expect(groupEls[0] === els[3]).toEqual(true);
                 expect(groupEls[1] === els[4]).toEqual(true);
@@ -331,7 +307,7 @@ describe('graphic_setOption', function() {
                 }
             });
 
-            var els = getGraphicElements(chart);
+            var els = utHelper.getGraphicElements(chart, 'graphic');
 
             expect(els.length === 2).toEqual(true);
             expect(els[0].type === 'group').toEqual(true);
@@ -356,7 +332,7 @@ describe('graphic_setOption', function() {
                 }
             });
 
-            var els = getGraphicElements(chart);
+            var els = utHelper.getGraphicElements(chart, 'graphic');
 
             expect(els.length === 2).toEqual(true);
             expect(els[0].type === 'group').toEqual(true);
@@ -405,7 +381,7 @@ describe('graphic_setOption', function() {
         }
 
         function checkDeteteSource(chart) {
-            var els = getGraphicElements(chart);
+            var els = utHelper.getGraphicElements(chart, 'graphic');
             expect(els.length === 4);
             expect(els[1].type === 'text' && els[1].name === 'textname').toEqual(true);
             expect(els[2].type === 'ring' && els[2].name === 'ringname').toEqual(true);
@@ -426,7 +402,7 @@ describe('graphic_setOption', function() {
                 }
             });
 
-            var els = getGraphicElements(chart);
+            var els = utHelper.getGraphicElements(chart, 'graphic');
             expect(els.length === 3);
             expect(els[1].type === 'text' && els[1].name === 'textname').toEqual(true);
             expect(els[2].type === 'rect' && els[2].name === 'rectname').toEqual(true);
@@ -455,7 +431,7 @@ describe('graphic_setOption', function() {
                 }
             }, true);
 
-            var els = getGraphicElements(chart);
+            var els = utHelper.getGraphicElements(chart, 'graphic');
             expect(els.length === 2);
             expect(els[1].type === 'rect' && els[1].name === 'rectname2').toEqual(true);
         });
@@ -469,13 +445,13 @@ describe('graphic_setOption', function() {
 
             chart.clear();
 
-            var els = getGraphicElements(chart);
+            var els = utHelper.getGraphicElements(chart, 'graphic');
             expect(els.length === 0);
         });
 
 
         function checkMergeElements(chart, merged) {
-            propHasAll(getGraphicElements(chart), [
+            propHasAll(utHelper.getGraphicElements(chart, 'graphic'), [
                 {
                     position: [0, 0],
                     scale: [1, 1],
@@ -712,7 +688,7 @@ describe('graphic_setOption', function() {
         }
 
         function checkLocations(chart, uriimgChanged) {
-            propHasAll(getGraphicElements(chart), [
+            propHasAll(utHelper.getGraphicElements(chart, 'graphic'), [
                 {
                     position: [0, 0],
                     scale: [1, 1],
@@ -817,7 +793,7 @@ describe('graphic_setOption', function() {
         }
 
         function checkResizedLocations(chart) {
-            propHasAll(getGraphicElements(chart), [
+            propHasAll(utHelper.getGraphicElements(chart, 'graphic'), [
                 {
                     position: [0, 0],
                     scale: [1, 1],
@@ -1099,7 +1075,7 @@ describe('graphic_setOption', function() {
         }
 
         function checkLocations(chart, rotated) {
-            propHasAll(getGraphicElements(chart), [
+            propHasAll(utHelper.getGraphicElements(chart, 'graphic'), [
                 {
                     position: [0, 0],
                     scale: [1, 1],

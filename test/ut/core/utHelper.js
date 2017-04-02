@@ -327,6 +327,32 @@
         }
     };
 
+    helper.getGraphicElements = function (chartOrGroup, mainType, index) {
+        if (chartOrGroup.type === 'group') {
+            return chartOrGroup.children();
+        }
+        else {
+            var viewGroup = helper.getViewGroup(chartOrGroup, mainType, index);
+            if (viewGroup) {
+                var list = [viewGroup];
+                viewGroup.traverse(function (el) {
+                    list.push(el);
+                });
+                return list;
+            }
+            else {
+                return [];
+            }
+        }
+    };
+
+    helper.getViewGroup = function (chart, mainType, index) {
+        var component = chart.getModel().getComponent(mainType, index);
+        return component ? chart[
+            mainType === 'series' ? '_chartsMap' : '_componentsMap'
+        ][component.__viewId].group : null;
+    };
+
     /**
      * @public
      */
