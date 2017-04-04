@@ -14,25 +14,23 @@ define(function(require) {
      * then hide/downplay them.
      *
      * @param {Object} coordSysAxesInfo
-     * @param {string} currTrigger 'click' | 'mousemove' | 'leave'
-     * @param {Object} finder {x, y, xAxisId: ...[], yAxisName: ...[], angleAxisIndex: ...[]}
-     *              x and y, which are mandatory, specify a point to tigger axisPointer and tooltip.
-     *              other properties, which are optional, restrict target axes.
+     * @param {string} [currTrigger] 'click' | 'mousemove' | 'leave'
+     * @param {Array.<number>} [point] x and y, which are mandatory, specify a point to
+     *              tigger axisPointer and tooltip.
+     * @param {Object} [finder] {xAxisId: ...[], yAxisName: ...[], angleAxisIndex: ...[]}
+     *              These properties, which are optional, restrict target axes.
      * @param {Function} dispatchAction
      * @param {module:echarts/ExtensionAPI} api
-     * @param {Object} tooltipOption
+     * @param {Object} [tooltipOption]
      * @param {string} [highDownKey]
      * @return {Object} content of event obj for echarts.connect.
      */
     function axisTrigger(
-        coordSysAxesInfo, currTrigger, finder, dispatchAction,
+        coordSysAxesInfo, currTrigger, point, finder, dispatchAction,
         ecModel, api, tooltipOption, highDownKey
     ) {
-        var point = [];
-        if (finder.x != null && finder.y != null) {
-            point = [finder.x, finder.y];
-        }
-        else {
+        finder = finder || {};
+        if (!point || point[0] == null || point[1] == null) {
             point = findPointFromSeries({
                 seriesIndex: finder.seriesIndex,
                 // Do not use dataIndexInside from other ec instance.

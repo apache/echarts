@@ -11,6 +11,7 @@ define(function (require) {
     var globalListener = require('../axisPointer/globalListener');
     var axisHelper = require('../../coord/axisHelper');
     var axisPointerViewHelper = require('../axisPointer/viewHelper');
+    var axisTrigger = require('../axisPointer/axisTrigger');
 
     var bind = zrUtil.bind;
     var each = zrUtil.each;
@@ -150,10 +151,8 @@ define(function (require) {
             // Reset ticket
             this._ticket = '';
 
-            var seriesIndex = payload.seriesIndex;
-            var dataByCoordSys = payload.dataByCoordSys;
-
             // When triggered from axisPointer.
+            var dataByCoordSys = payload.dataByCoordSys;
             if (dataByCoordSys) {
                 this._tryShow({
                     offsetX: payload.x,
@@ -164,7 +163,12 @@ define(function (require) {
                     tooltipOption: payload.tooltipOption
                 }, dispatchAction);
             }
-            else if (seriesIndex != null) {
+            else if (payload.seriesIndex != null) {
+
+                if (this._manuallyAxisShowTip(tooltipModel, ecModel, api, payload)) {
+                    return;
+                }
+
                 var pointInfo = findPointFromSeries(payload, ecModel);
                 var cx = pointInfo.point[0];
                 var cy = pointInfo.point[1];
@@ -201,6 +205,44 @@ define(function (require) {
             if (payload.from !== this.uid) {
                 this._hide(makeDispatchAction(payload, api));
             }
+        },
+
+        // Be compatible with previous design, that is, when tooltip.type is 'axis' and
+        // dispatchAction 'showTip' with seriesIndex and dataIndex will trigger axis pointer
+        // and tooltip.
+        _manuallyAxisShowTip: function (tooltipModel, ecModel, api, payload) {
+            var seriesIndex = payload.seriesIndex;
+            var dataIndex = payload.dataIndex;
+            var coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
+
+            if (seriesIndex == null || dataIndex == null || coordSysAxesInfo == null) {
+                return;
+            }
+
+            var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
+            if (!seriesModel) {
+                return;
+            }
+
+            var data = seriesModel.getData();
+            var tooltipModel = buildTooltipModel([
+                data.getItemModel(dataIndex),
+                seriesModel,
+                (seriesModel.coordinateSystem || {}).model,
+                tooltipModel
+            ]);
+
+            if (tooltipModel.get('trigger') !== 'axis') {
+                return;
+            }
+
+            api.dispatchAction({
+                type: 'updateAxisPointer',
+                seriesIndex: seriesIndex,
+                dataIndex: dataIndex
+            });
+
+            return true;
         },
 
         _tryShow: function (e, dispatchAction) {

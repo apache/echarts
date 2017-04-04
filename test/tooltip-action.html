@@ -1,0 +1,197 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="tooltipTestHelper.js"></script>
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+        <h1>showTip: trigger: item, seriesIndex dataIndex, on displayed symbol</h1>
+        <div class="chart" id="category"></div>
+
+        <h1>showTip: trigger: item, seriesIndex dataIndex, on not displayed symbol (show no tooltip)</h1>
+        <div class="chart" id="category2"></div>
+
+        <h1>showTip: trigger: axis, seriesIndex dataIndex</h1>
+        <div class="chart" id="category3"></div>
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'axisPointer: line\nno item trigger',
+                        tooltip: {show: true}
+                    },
+                    xAxis: {
+                        tooltip: {show: true}
+                    }
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('category');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+
+                    setTimeout(function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            seriesIndex: 0,
+                            dataIndex: 2
+                        });
+                    }, 1000);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'axisPointer: line\nno item trigger',
+                        tooltip: {show: true}
+                    },
+                    xAxis: {
+                        tooltip: {show: true}
+                    }
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('category2');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+
+                    setTimeout(function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            seriesIndex: 0,
+                            dataIndex: 1
+                        });
+                    }, 1000);
+                }
+            })
+        </script>
+
+
+
+\
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'axisPointer: line\nno item trigger',
+                        tooltip: {show: true}
+                    },
+                    xAxis: {
+                        tooltip: {show: true}
+                    }
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('category3');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+
+                    setTimeout(function () {
+                        chart.dispatchAction({
+                            type: 'showTip',
+                            seriesIndex: 0,
+                            dataIndex: 2
+                        });
+                    }, 1000);
+                }
+            })
+        </script>
+
+
+
+
+    </body>
+</html>

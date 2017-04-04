@@ -47,6 +47,7 @@ define(function (require) {
         var outputFinder = axisTrigger(
             ecModel.getComponent('axisPointer').coordSysAxesInfo,
             payload.currTrigger,
+            [payload.x, payload.y],
             payload,
             payload.dispatchAction || zrUtil.bind(api.dispatchAction, api),
             ecModel,
