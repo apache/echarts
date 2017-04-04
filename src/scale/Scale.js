@@ -6,7 +6,12 @@ define(function (require) {
 
     var clazzUtil = require('../util/clazz');
 
-    function Scale() {
+    /**
+     * @param {Object} [setting]
+     */
+    function Scale(setting) {
+        this._setting = setting || {};
+
         /**
          * Extent
          * @type {Array.<number>}
@@ -37,6 +42,10 @@ define(function (require) {
         // before extent set (like in dataZoom), it would be wrong.
         // Nevertheless, parse does not depend on extent generally.
         return val;
+    };
+
+    scaleProto.getSetting = function (name) {
+        return this._setting[name];
     };
 
     scaleProto.contain = function (val) {

@@ -206,8 +206,14 @@ define(function (require) {
         return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
     };
 
-    var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(?:Z|([\+\-]\d\d):?\d\d)?)?)?)?)?$/; // jshint ignore:line
-    var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset();
+    var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
+
+    /**
+     * @return {number} in minutes
+     */
+    number.getTimezoneOffset = function () {
+        return (new Date()).getTimezoneOffset();
+    };
 
     /**
      * @param {string|Date|number} value These values can be accepted:
@@ -216,9 +222,9 @@ define(function (require) {
      *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
      *     + separated with T or space: '2012-03-01T12:22:33.123', '2012-03-01 12:22:33.123',
      *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
-     *     all of which will be treated as they reperent a time in UTC
-     *     if time zone is not specified.
-     *   + Or other string format, including:
+     *     all of which will be treated as local time if time zone is not specified
+     *     (see <https://momentjs.com/>).
+     *   + Or other string format, including (all of which will be treated as loacal time):
      *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
      *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
      *   + a timestamp, which represent a time in UTC.
@@ -241,6 +247,13 @@ define(function (require) {
                 return new Date(NaN);
             }
 
+            var timezoneOffset = number.getTimezoneOffset();
+            var timeOffset = !match[8]
+                ? 0
+                : match[8].toUpperCase() === 'Z'
+                ? timezoneOffset
+                : +match[8].slice(0, 3) * 60 + timezoneOffset;
+
             // match[n] can only be string or undefined.
             // But take care of '12' + 1 => '121'.
             return new Date(
@@ -248,7 +261,7 @@ define(function (require) {
                 +(match[2] || 1) - 1,
                 +match[3] || 1,
                 +match[4] || 0,
-                +(match[5] || 0) - (match[8] || 0) * 60 - TIMEZONE_OFFSET,
+                +(match[5] || 0) - timeOffset,
                 +match[6] || 0,
                 +match[7] || 0
             );

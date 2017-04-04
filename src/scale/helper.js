@@ -28,14 +28,7 @@ define(function (require) {
             roundNumber(Math.floor(extent[1] / interval) * interval, precision)
         ];
 
-        // In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
-        !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
-        !isFinite(niceTickExtent[1]) && (niceTickExtent[1] = extent[1]);
-        clamp(niceTickExtent, 0, extent);
-        clamp(niceTickExtent, 1, extent);
-        if (niceTickExtent[0] > niceTickExtent[1]) {
-            niceTickExtent[0] = niceTickExtent[1];
-        }
+        helper.fixExtent(niceTickExtent, extent);
 
         return result;
     };
@@ -43,6 +36,17 @@ define(function (require) {
     function clamp(niceTickExtent, idx, extent) {
         niceTickExtent[idx] = Math.max(Math.min(niceTickExtent[idx], extent[1]), extent[0]);
     }
+
+    // In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
+    helper.fixExtent = function (niceTickExtent, extent) {
+        !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
+        !isFinite(niceTickExtent[1]) && (niceTickExtent[1] = extent[1]);
+        clamp(niceTickExtent, 0, extent);
+        clamp(niceTickExtent, 1, extent);
+        if (niceTickExtent[0] > niceTickExtent[1]) {
+            niceTickExtent[0] = niceTickExtent[1];
+        }
+    };
 
     helper.intervalScaleGetTicks = function (interval, extent, niceTickExtent, intervalPrecision) {
         var ticks = [];

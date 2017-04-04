@@ -51,6 +51,9 @@ define(function () {
         // `progressiveThreshold`, otherwise hover will cause restart of progressive,
         // which is unexpected.
         // see example <echarts/test/heatmap-large.html>.
-        hoverLayerThreshold: 3000
+        hoverLayerThreshold: 3000,
+
+        // See: module:echarts/scale/Time
+        useUTC: false
     };
 });

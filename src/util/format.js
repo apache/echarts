@@ -143,15 +143,12 @@ define(function (require) {
      * ISO Date format
      * @param {string} tpl
      * @param {number} value
-     * @param {boolean} [isLocal=false] Default use UTC
-     *  Why default UTC? In most case, time provided by user is
-     *  understood in UTC. For example, new Date('2012-01-01')
-     *  or a string '2012-01-01' or a timestamp. So it is
-     *  recommended to format time in UTC.
-     *  (see `echarts/util/number.js#parseDate`);
+     * @param {boolean} [isUTC=false] Default in local time.
+     *           see `module:echarts/scale/Time`
+     *           and `module:echarts/util/number#parseDate`.
      * @inner
      */
-    formatUtil.formatTime = function (tpl, value, isLocal) {
+    formatUtil.formatTime = function (tpl, value, isUTC) {
         if (tpl === 'week'
             || tpl === 'month'
             || tpl === 'quarter'
@@ -162,7 +159,7 @@ define(function (require) {
         }
 
         var date = numberUtil.parseDate(value);
-        var utc = isLocal ? '' : 'UTC';
+        var utc = isUTC ? 'UTC' : '';
         var y = date['get' + utc + 'FullYear']();
         var M = date['get' + utc + 'Month']() + 1;
         var d = date['get' + utc + 'Date']();
