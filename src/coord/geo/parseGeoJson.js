@@ -12,6 +12,11 @@ define(function (require) {
         if (!json.UTF8Encoding) {
             return json;
         }
+        var encodeScale = json.UTF8Scale;
+        if (encodeScale == null) {
+            encodeScale = 1024;
+        }
+
         var features = json.features;
 
         for (var f = 0; f < features.length; f++) {
@@ -26,7 +31,8 @@ define(function (require) {
                 if (geometry.type === 'Polygon') {
                     coordinates[c] = decodePolygon(
                         coordinate,
-                        encodeOffsets[c]
+                        encodeOffsets[c],
+                        encodeScale
                     );
                 }
                 else if (geometry.type === 'MultiPolygon') {
@@ -34,7 +40,8 @@ define(function (require) {
                         var polygon = coordinate[c2];
                         coordinate[c2] = decodePolygon(
                             polygon,
-                            encodeOffsets[c][c2]
+                            encodeOffsets[c][c2],
+                            encodeScale
                         );
                     }
                 }
@@ -45,7 +52,7 @@ define(function (require) {
         return json;
     }
 
-    function decodePolygon(coordinate, encodeOffsets) {
+    function decodePolygon(coordinate, encodeOffsets, encodeScale) {
         var result = [];
         var prevX = encodeOffsets[0];
         var prevY = encodeOffsets[1];
@@ -63,7 +70,7 @@ define(function (require) {
             prevX = x;
             prevY = y;
             // Dequantize
-            result.push([x / 1024, y / 1024]);
+            result.push([x / encodeScale, y / encodeScale]);
         }
 
         return result;
