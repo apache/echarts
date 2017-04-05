@@ -65,6 +65,8 @@ define(function (require) {
             // 控制文本标签是否在grid里
             inside: false,
             rotate: 0,
+            showMinLabel: null, // true | false | null (auto)
+            showMaxLabel: null, // true | false | null (auto)
             margin: 8,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE

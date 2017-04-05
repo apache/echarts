@@ -1,0 +1,263 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                background: #360;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+                margin: 0;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+        <h1>xAxis: {showMinLabel: null, showMaxLabel: null (auto)}. The last x label should not be displayed (overlap).</h1>
+        <div class="chart" id="chart-1"></div>
+
+        <h1>xAxis: {showMinLabel: null, showMaxLabel: null (auto)}. The last x label shoule be displayed (not overlap).</h1>
+        <div class="chart" id="chart0"></div>
+
+        <h1>xAxis: {showMinLabel: true, showMaxLabel: true}, yAxis: {showMaxLabel: false}. The last x label should be displayed. 100 on y should not be displayed.</h1>
+        <div class="chart" id="chart1"></div>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/rainfall.json',
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/title',
+                'echarts/component/dataZoom',
+                'echarts/scale/Time'
+            ], function (rainfallData, echarts) {
+
+                var chart = echarts.init(document.getElementById('chart-1'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+                    tooltip : {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        bottom: 150
+                    },
+                    dataZoom: {
+                        show: true,
+                        realtime: true,
+                        startValue: '2009-09-20 12:00',
+                        end: 100
+                    },
+                    xAxis : [
+                        {
+                            type : 'time',
+                            splitNumber: 20,
+                            axisLabel: {
+                                formatter: function (value) {
+                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
+                                }
+                            }
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            name: '流量(m^3/s)'
+                        }
+                    ],
+                    series : [
+                        {
+                            name: '流量',
+                            type: 'line',
+                            symbol: 'none',
+                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+                            data: rainfallData.flow.map(function (val, idx) {
+                                return [+(new Date(rainfallData.category[idx])), val];
+                            })
+                        }
+                    ]
+                });
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/rainfall.json',
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/title',
+                'echarts/component/dataZoom',
+                'echarts/scale/Time'
+            ], function (rainfallData, echarts) {
+
+                var chart = echarts.init(document.getElementById('chart0'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+                    tooltip : {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        bottom: 150
+                    },
+                    dataZoom: {
+                        show: true,
+                        realtime: true,
+                        startValue: '2009-09-20 12:00',
+                        end: 100
+                    },
+                    xAxis : [
+                        {
+                            type : 'time',
+                            splitNumber: 20,
+                            axisLabel: {
+                                rotate: 45,
+                                formatter: function (value) {
+                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
+                                }
+                            }
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            name: '流量(m^3/s)'
+                        }
+                    ],
+                    series : [
+                        {
+                            name: '流量',
+                            type: 'line',
+                            symbol: 'none',
+                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+                            data: rainfallData.flow.map(function (val, idx) {
+                                return [+(new Date(rainfallData.category[idx])), val];
+                            })
+                        }
+                    ]
+                });
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/rainfall.json',
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/title',
+                'echarts/component/dataZoom',
+                'echarts/scale/Time'
+            ], function (rainfallData, echarts) {
+
+                var chart = echarts.init(document.getElementById('chart1'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+                    tooltip : {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        bottom: 150
+                    },
+                    dataZoom: {
+                        show: true,
+                        realtime: true,
+                        startValue: '2009-09-20 12:00',
+                        end: 100
+                    },
+                    xAxis : [
+                        {
+                            type : 'time',
+                            splitNumber: 20,
+                            axisLabel: {
+                                showMaxLabel: true,
+                                showMinLabel: true,
+                                formatter: function (value) {
+                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
+                                }
+                            }
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            name: '流量(m^3/s)',
+                            position: 'right',
+                            axisLabel: {
+                                inside: true,
+                                showMaxLabel: false,
+                                formatter: '{value}\n'
+                            }
+                        }
+                    ],
+                    series : [
+                        {
+                            name: '流量',
+                            type: 'line',
+                            symbol: 'none',
+                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+                            data: rainfallData.flow.map(function (val, idx) {
+                                return [+(new Date(rainfallData.category[idx])), val];
+                            })
+                        }
+                    ]
+                });
+            })
+
+        </script>
+
+
+
+
+
+
+    </body>
+</html>

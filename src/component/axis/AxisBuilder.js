@@ -8,6 +8,7 @@ define(function (require) {
     var remRadian = numberUtil.remRadian;
     var isRadianAroundZero = numberUtil.isRadianAroundZero;
     var vec2 = require('zrender/core/vector');
+    var matrix = require('zrender/core/matrix');
     var v2ApplyTransform = vec2.applyTransform;
     var retrieve = zrUtil.retrieve;
 
@@ -334,33 +335,7 @@ define(function (require) {
 
             }, this);
 
-            function isTwoLabelOverlapped(current, next) {
-                var firstRect = current && current.getBoundingRect().clone();
-                var nextRect = next && next.getBoundingRect().clone();
-                if (firstRect && nextRect) {
-                    firstRect.applyTransform(current.getLocalTransform());
-                    nextRect.applyTransform(next.getLocalTransform());
-                    return firstRect.intersect(nextRect);
-                }
-            }
-
-            // If min or max are user set, we need to check
-            // If the tick on min(max) are overlap on their neighbour tick
-            // If they are overlapped, we need to hide the min(max) tick label
-            if (axisModel.getMin() != null) {
-                var firstLabel = textEls[0];
-                var nextLabel = textEls[1];
-                if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
-                    firstLabel.ignore = true;
-                }
-            }
-            if (axisModel.getMax() != null) {
-                var lastLabel = textEls[textEls.length - 1];
-                var prevLabel = textEls[textEls.length - 2];
-                if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
-                    lastLabel.ignore = true;
-                }
-            }
+            fixMinMaxLabelShow(axisModel, textEls);
         },
 
         /**
@@ -536,9 +511,6 @@ define(function (require) {
         };
     };
 
-    /**
-     * @inner
-     */
     function endTextLayout(opt, textPosition, textRotate, extent) {
         var rotationDiff = remRadian(textRotate - opt.rotation);
         var textAlign;
@@ -572,9 +544,6 @@ define(function (require) {
         };
     }
 
-    /**
-     * @inner
-     */
     function isSilent(axisModel) {
         var tooltipOpt = axisModel.get('tooltip');
         return axisModel.get('silent')
@@ -583,6 +552,53 @@ define(function (require) {
                 axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
             );
     }
+
+    function fixMinMaxLabelShow(axisModel, textEls) {
+        // If min or max are user set, we need to check
+        // If the tick on min(max) are overlap on their neighbour tick
+        // If they are overlapped, we need to hide the min(max) tick label
+        var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+        var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+        var firstLabel = textEls[0];
+        var nextLabel = textEls[1];
+        var lastLabel = textEls[textEls.length - 1];
+        var prevLabel = textEls[textEls.length - 2];
+
+        if (showMinLabel === false) {
+            firstLabel.ignore = true;
+        }
+        else if (axisModel.getMin() != null && isTwoLabelOverlapped(firstLabel, nextLabel)) {
+            showMinLabel ? (nextLabel.ignore = true) : (firstLabel.ignore = true);
+        }
+
+        if (showMaxLabel === false) {
+            lastLabel.ignore = true;
+        }
+        else if (axisModel.getMax() != null && isTwoLabelOverlapped(prevLabel, lastLabel)) {
+            showMaxLabel ? (prevLabel.ignore = true) : (lastLabel.ignore = true);
+        }
+    }
+
+    function isTwoLabelOverlapped(current, next, labelLayout) {
+        // current and next has the same rotation.
+        var firstRect = current && current.getBoundingRect().clone();
+        var nextRect = next && next.getBoundingRect().clone();
+
+        if (!firstRect || !nextRect) {
+            return;
+        }
+
+        // When checking intersect of two rotated labels, we use mRotationBack
+        // to avoid that boundingRect is enlarge when using `boundingRect.applyTransform`.
+        var mRotationBack = matrix.identity([]);
+        matrix.rotate(mRotationBack, mRotationBack, -current.rotation);
+
+        firstRect.applyTransform(matrix.mul([], mRotationBack, current.getLocalTransform()));
+        nextRect.applyTransform(matrix.mul([], mRotationBack, next.getLocalTransform()));
+
+        return firstRect.intersect(nextRect);
+    }
+
 
     /**
      * @static
