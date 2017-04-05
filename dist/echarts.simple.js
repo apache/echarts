@@ -30933,8 +30933,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Find if any auto calculated bar exceeded maxBarWidth
 	            zrUtil.each(stacks, function (column, stack) {
 	                var maxWidth = column.maxWidth;
-	                if (!column.width && maxWidth && maxWidth < autoWidth) {
+	                if (maxWidth && maxWidth < autoWidth) {
 	                    maxWidth = Math.min(maxWidth, remainedWidth);
+	                    if (column.width) {
+	                        maxWidth = Math.min(maxWidth, column.width);
+	                    }
 	                    remainedWidth -= maxWidth;
 	                    column.width = maxWidth;
 	                    autoWidthCount--;
