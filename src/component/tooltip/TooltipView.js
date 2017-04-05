@@ -11,7 +11,6 @@ define(function (require) {
     var globalListener = require('../axisPointer/globalListener');
     var axisHelper = require('../../coord/axisHelper');
     var axisPointerViewHelper = require('../axisPointer/viewHelper');
-    var axisTrigger = require('../axisPointer/axisTrigger');
 
     var bind = zrUtil.bind;
     var each = zrUtil.each;
