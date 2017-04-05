@@ -59,10 +59,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	module.exports = __webpack_require__(1);
 
-	__webpack_require__(112);
-	__webpack_require__(138);
-	__webpack_require__(145);
-	__webpack_require__(122);
+	__webpack_require__(113);
+	__webpack_require__(139);
+	__webpack_require__(146);
+	__webpack_require__(123);
 
 /***/ },
 /* 1 */
@@ -1578,9 +1578,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.5.1',
+	        version: '3.5.2',
 	        dependencies: {
-	            zrender: '3.4.1'
+	            zrender: '3.4.2'
 	        }
 	    };
 
@@ -4048,9 +4048,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var textContain = __webpack_require__(8);
 
 	    var formatUtil = {};
+
 	    /**
 	     * 每三位默认加,格式化
-	     * @type {string|number} x
+	     * @param {string|number} x
+	     * @return {string}
 	     */
 	    formatUtil.addCommas = function (x) {
 	        if (isNaN(x)) {
@@ -4184,15 +4186,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * ISO Date format
 	     * @param {string} tpl
 	     * @param {number} value
-	     * @param {boolean} [isLocal=false] Default use UTC
-	     *  Why default UTC? In most case, time provided by user is
-	     *  understood in UTC. For example, new Date('2012-01-01')
-	     *  or a string '2012-01-01' or a timestamp. So it is
-	     *  recommended to format time in UTC.
-	     *  (see `echarts/util/number.js#parseDate`);
+	     * @param {boolean} [isUTC=false] Default in local time.
+	     *           see `module:echarts/scale/Time`
+	     *           and `module:echarts/util/number#parseDate`.
 	     * @inner
 	     */
-	    formatUtil.formatTime = function (tpl, value, isLocal) {
+	    formatUtil.formatTime = function (tpl, value, isUTC) {
 	        if (tpl === 'week'
 	            || tpl === 'month'
 	            || tpl === 'quarter'
@@ -4203,7 +4202,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        var date = numberUtil.parseDate(value);
-	        var utc = isLocal ? '' : 'UTC';
+	        var utc = isUTC ? 'UTC' : '';
 	        var y = date['get' + utc + 'FullYear']();
 	        var M = date['get' + utc + 'Month']() + 1;
 	        var d = date['get' + utc + 'Date']();
@@ -4350,7 +4349,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    /**
-	     * Fix rounding error of float numbers
+	     * (1) Fix rounding error of float numbers.
+	     * (2) Support return string to avoid scientific notation like '3.5e-7'.
+	     *
 	     * @param {number} x
 	     * @param {number} [precision]
 	     * @param {boolean} [returnStr]
@@ -4395,17 +4396,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return count;
 	    };
 
+	    /**
+	     * @param {string|number} val
+	     * @return {number}
+	     */
 	    number.getPrecisionSafe = function (val) {
 	        var str = val.toString();
-	        var dotIndex = str.indexOf('.');
-	        if (dotIndex < 0) {
-	            return 0;
+
+	        // Consider scientific notation: '3.4e-12' '3.4e+12'
+	        var eIndex = str.indexOf('e');
+	        if (eIndex > 0) {
+	            var precision = +str.slice(eIndex + 1);
+	            return precision < 0 ? -precision : 0;
 	        }
-	        return str.length - 1 - dotIndex;
+	        else {
+	            var dotIndex = str.indexOf('.');
+	            return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
+	        }
 	    };
 
 	    /**
 	     * Minimal dicernible data precisioin according to a single pixel.
+	     *
 	     * @param {Array.<number>} dataExtent
 	     * @param {Array.<number>} pixelExtent
 	     * @return {number} precision
@@ -4441,8 +4453,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
 	    };
 
-	    var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(?:Z|([\+\-]\d\d):?\d\d)?)?)?)?)?$/; // jshint ignore:line
-	    var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset();
+	    var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
+
+	    /**
+	     * @return {number} in minutes
+	     */
+	    number.getTimezoneOffset = function () {
+	        return (new Date()).getTimezoneOffset();
+	    };
 
 	    /**
 	     * @param {string|Date|number} value These values can be accepted:
@@ -4451,9 +4469,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
 	     *     + separated with T or space: '2012-03-01T12:22:33.123', '2012-03-01 12:22:33.123',
 	     *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
-	     *     all of which will be treated as they reperent a time in UTC
-	     *     if time zone is not specified.
-	     *   + Or other string format, including:
+	     *     all of which will be treated as local time if time zone is not specified
+	     *     (see <https://momentjs.com/>).
+	     *   + Or other string format, including (all of which will be treated as loacal time):
 	     *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
 	     *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
 	     *   + a timestamp, which represent a time in UTC.
@@ -4476,6 +4494,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return new Date(NaN);
 	            }
 
+	            var timezoneOffset = number.getTimezoneOffset();
+	            var timeOffset = !match[8]
+	                ? 0
+	                : match[8].toUpperCase() === 'Z'
+	                ? timezoneOffset
+	                : +match[8].slice(0, 3) * 60 + timezoneOffset;
+
 	            // match[n] can only be string or undefined.
 	            // But take care of '12' + 1 => '121'.
 	            return new Date(
@@ -4483,7 +4508,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                +(match[2] || 1) - 1,
 	                +match[3] || 1,
 	                +match[4] || 0,
-	                +(match[5] || 0) - (match[8] || 0) * 60 - TIMEZONE_OFFSET,
+	                +(match[5] || 0) - timeOffset,
 	                +match[6] || 0,
 	                +match[7] || 0
 	            );
@@ -4497,24 +4522,33 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * Quantity of a number. e.g. 0.1, 1, 10, 100
+	     *
 	     * @param  {number} val
 	     * @return {number}
 	     */
 	    number.quantity = function (val) {
-	        return Math.pow(10, Math.floor(Math.log(val) / Math.LN10));
+	        return Math.pow(10, quantityExponent(val));
 	    };
 
-	    // "Nice Numbers for Graph Labels" of Graphic Gems
+	    function quantityExponent(val) {
+	        return Math.floor(Math.log(val) / Math.LN10);
+	    }
+
 	    /**
-	     * find a “nice” number approximately equal to x. Round the number if round = true, take ceiling if round = false
-	     * The primary observation is that the “nicest” numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
-	     * @param  {number} val
+	     * find a “nice” number approximately equal to x. Round the number if round = true,
+	     * take ceiling if round = false. The primary observation is that the “nicest”
+	     * numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
+	     *
+	     * See "Nice Numbers for Graph Labels" of Graphic Gems.
+	     *
+	     * @param  {number} val Non-negative value.
 	     * @param  {boolean} round
 	     * @return {number}
 	     */
 	    number.nice = function (val, round) {
-	        var exp10 = number.quantity(val);
-	        var f = val / exp10; // between 1 and 10
+	        var exponent = quantityExponent(val);
+	        var exp10 = Math.pow(10, exponent);
+	        var f = val / exp10; // 1 <= f < 10
 	        var nf;
 	        if (round) {
 	            if (f < 1.5) { nf = 1; }
@@ -4530,7 +4564,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            else if (f < 5) { nf = 5; }
 	            else { nf = 10; }
 	        }
-	        return nf * exp10;
+	        val = nf * exp10;
+
+	        // Fix 3 * 0.1 === 0.30000000000000004 issue (see IEEE 754).
+	        // 20 is the uppper bound of toFixed.
+	        return exponent >= -20 ? +val.toFixed(exponent < 0 ? -exponent : 0) : val;
 	    };
 
 	    /**
@@ -4601,6 +4639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * parseFloat NaNs numeric-cast false positives (null|true|false|"")
 	     * ...but misinterprets leading-number strings, particularly hex literals ("0x...")
 	     * subtraction forces infinities to NaN
+	     *
 	     * @param {*} v
 	     * @return {boolean}
 	     */
@@ -7143,7 +7182,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // `progressiveThreshold`, otherwise hover will cause restart of progressive,
 	        // which is unexpected.
 	        // see example <echarts/test/heatmap-large.html>.
-	        hoverLayerThreshold: 3000
+	        hoverLayerThreshold: 3000,
+
+	        // See: module:echarts/scale/Time
+	        useUTC: false
 	    };
 
 
@@ -11074,19 +11116,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * Map value to color. Faster than mapToColor methods because color is represented by rgba array
+	     * Map value to color. Faster than mapToColor methods because color is represented by rgba array.
 	     * @param {number} normalizedValue A float between 0 and 1.
 	     * @param {Array.<Array.<number>>} colors List of rgba color array
 	     * @param {Array.<number>} [out] Mapped gba color array
-	     * @return {Array.<number>}
+	     * @return {Array.<number>} will be null/undefined if input illegal.
 	     */
 	    function fastMapToColor(normalizedValue, colors, out) {
-	        out = out || [0, 0, 0, 0];
 	        if (!(colors && colors.length)
 	            || !(normalizedValue >= 0 && normalizedValue <= 1)
 	        ) {
-	            return out;
+	            return;
 	        }
+
+	        out = out || [];
+
 	        var value = normalizedValue * (colors.length - 1);
 	        var leftIndex = Math.floor(value);
 	        var rightIndex = Math.ceil(value);
@@ -11097,6 +11141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        out[1] = clampCssByte(lerp(leftColor[1], rightColor[1], dv));
 	        out[2] = clampCssByte(lerp(leftColor[2], rightColor[2], dv));
 	        out[3] = clampCssFloat(lerp(leftColor[3], rightColor[3], dv));
+
 	        return out;
 	    }
 	    /**
@@ -11178,12 +11223,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @param {Array.<string>} colors Color list.
+	     * @param {Array.<number>} arrColor like [12,33,44,0.4]
 	     * @param {string} type 'rgba', 'hsva', ...
 	     * @return {string} Result color. (If input illegal, return undefined).
 	     */
 	    function stringify(arrColor, type) {
-	        if (!arrColor) {
+	        if (!arrColor || !arrColor.length) {
 	            return;
 	        }
 	        var colorStr = arrColor[0] + ',' + arrColor[1] + ',' + arrColor[2];
@@ -17638,7 +17683,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.4.1';
+	    zrender.version = '3.4.2';
 
 	    /**
 	     * Initializing a zrender instance
@@ -23507,7 +23552,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var createListFromArray = __webpack_require__(102);
 	    var symbolUtil = __webpack_require__(104);
 	    var axisHelper = __webpack_require__(105);
-	    var axisModelCommonMixin = __webpack_require__(111);
+	    var axisModelCommonMixin = __webpack_require__(112);
 	    var Model = __webpack_require__(12);
 	    var util = __webpack_require__(4);
 
@@ -24358,8 +24403,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var OrdinalScale = __webpack_require__(106);
 	    var IntervalScale = __webpack_require__(108);
-	    __webpack_require__(109);
 	    __webpack_require__(110);
+	    __webpack_require__(111);
 	    var Scale = __webpack_require__(107);
 
 	    var numberUtil = __webpack_require__(7);
@@ -24724,7 +24769,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var clazzUtil = __webpack_require__(13);
 
-	    function Scale() {
+	    /**
+	     * @param {Object} [setting]
+	     */
+	    function Scale(setting) {
+	        this._setting = setting || {};
+
 	        /**
 	         * Extent
 	         * @type {Array.<number>}
@@ -24755,6 +24805,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // before extent set (like in dataZoom), it would be wrong.
 	        // Nevertheless, parse does not depend on extent generally.
 	        return val;
+	    };
+
+	    scaleProto.getSetting = function (name) {
+	        return this._setting[name];
 	    };
 
 	    scaleProto.contain = function (val) {
@@ -24880,12 +24934,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var numberUtil = __webpack_require__(7);
 	    var formatUtil = __webpack_require__(6);
 	    var Scale = __webpack_require__(107);
+	    var helper = __webpack_require__(109);
 
-	    var mathFloor = Math.floor;
-	    var mathCeil = Math.ceil;
+	    var roundNumber = numberUtil.round;
 
-	    var getPrecisionSafe = numberUtil.getPrecisionSafe;
-	    var roundingErrorFix = numberUtil.round;
 	    /**
 	     * @alias module:echarts/coord/scale/Interval
 	     * @constructor
@@ -24944,40 +24996,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (!this._interval) {
 	                this.niceTicks();
 	            }
-	            var interval = this._interval;
-	            var extent = this._extent;
-	            var ticks = [];
-
-	            // Consider this case: using dataZoom toolbox, zoom and zoom.
-	            var safeLimit = 10000;
-
-	            if (interval) {
-	                var niceExtent = this._niceExtent;
-	                var precision = this._intervalPrecision = getPrecisionSafe(interval);
-	                // FIXME
-	                precision += 2;
-
-	                if (extent[0] < niceExtent[0]) {
-	                    ticks.push(extent[0]);
-	                }
-	                var tick = niceExtent[0];
-
-	                while (tick <= niceExtent[1]) {
-	                    ticks.push(tick);
-	                    // Avoid rounding error
-	                    tick = roundingErrorFix(tick + interval, precision);
-	                    if (ticks.length > safeLimit) {
-	                        return [];
-	                    }
-	                }
-	                // Consider this case: the last item of ticks is smaller
-	                // than niceExtent[1] and niceExtent[1] === extent[1].
-	                if (extent[1] > (ticks.length ? ticks[ticks.length - 1] : niceExtent[1])) {
-	                    ticks.push(extent[1]);
-	                }
-	            }
-
-	            return ticks;
+	            return helper.intervalScaleGetTicks(
+	                this._interval, this._extent, this._niceExtent, this._intervalPrecision
+	            );
 	        },
 
 	        /**
@@ -24997,15 +25018,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @param {Object} [opt]
 	         * @param {number|string} [opt.precision] If 'auto', use nice presision.
 	         * @param {boolean} [opt.pad] returns 1.50 but not 1.5 if precision is 2.
-	         * @return {number}
+	         * @return {string}
 	         */
 	        getLabel: function (data, opt) {
-	            var precision = opt && opt.precision;
-	            if (data != null && precision != null) {
-	                // Should be more precise then tick.
-	                precision === 'auto' && (precision = this._intervalPrecision + 2);
-	                data = roundingErrorFix(data, precision, opt && opt.pad);
+	            if (data == null) {
+	                return '';
 	            }
+
+	            var precision = opt && opt.precision;
+
+	            if (precision == null) {
+	                precision = numberUtil.getPrecisionSafe(data) || 0;
+	            }
+	            else if (precision === 'auto') {
+	                // Should be more precise then tick.
+	                precision = this._intervalPrecision;
+	            }
+
+	            // (1) If `precision` is set, 12.005 should be display as '12.00500'.
+	            // (2) Use roundNumber (toFixed) to avoid scientific notation like '3.5e-7'.
+	            data = roundNumber(data, precision, true);
+
 	            return formatUtil.addCommas(data);
 	        },
 
@@ -25028,27 +25061,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                extent.reverse();
 	            }
 
-	            // From "Nice Numbers for Graph Labels" of Graphic Gems
-	            // var niceSpan = numberUtil.nice(span, false);
-	            var step = roundingErrorFix(
-	                numberUtil.nice(span / splitNumber, true),
-	                Math.max(
-	                    getPrecisionSafe(extent[0]),
-	                    getPrecisionSafe(extent[1])
-	                // extent may be [0, 1], and step should have 1 more digits.
-	                // To make it safe we add 2 more digits
-	                ) + 2
-	            );
+	            var result = helper.intervalScaleNiceTicks(extent, splitNumber);
 
-	            var precision = getPrecisionSafe(step) + 2;
-	            // Niced extent inside original extent
-	            var niceExtent = [
-	                roundingErrorFix(mathCeil(extent[0] / step) * step, precision),
-	                roundingErrorFix(mathFloor(extent[1] / step) * step, precision)
-	            ];
-
-	            this._interval = step;
-	            this._niceExtent = niceExtent;
+	            this._intervalPrecision = result.intervalPrecision;
+	            this._interval = result.interval;
+	            this._niceExtent = result.niceTickExtent;
 	        },
 
 	        /**
@@ -25094,10 +25111,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var interval = this._interval;
 
 	            if (!fixMin) {
-	                extent[0] = roundingErrorFix(mathFloor(extent[0] / interval) * interval);
+	                extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval);
 	            }
 	            if (!fixMax) {
-	                extent[1] = roundingErrorFix(mathCeil(extent[1] / interval) * interval);
+	                extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval);
 	            }
 	        }
 	    });
@@ -25118,15 +25135,121 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
+	 * For testable.
+	 */
+
+
+	    var numberUtil = __webpack_require__(7);
+
+	    var roundNumber = numberUtil.round;
+
+	    var helper = {};
+
+	    /**
+	     * @param {Array.<number>} extent Both extent[0] and extent[1] should be valid number.
+	     *                                Should be extent[0] < extent[1].
+	     * @param {number} splitNumber splitNumber should be >= 1.
+	     * @return {Object} {interval, intervalPrecision, niceTickExtent}
+	     */
+	    helper.intervalScaleNiceTicks = function (extent, splitNumber) {
+	        var result = {};
+	        var span = extent[1] - extent[0];
+
+	        var interval = result.interval = numberUtil.nice(span / splitNumber, true);
+	        // Tow more digital for tick.
+	        var precision = result.intervalPrecision = numberUtil.getPrecisionSafe(interval) + 2;
+	        // Niced extent inside original extent
+	        var niceTickExtent = result.niceTickExtent = [
+	            roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
+	            roundNumber(Math.floor(extent[1] / interval) * interval, precision)
+	        ];
+
+	        helper.fixExtent(niceTickExtent, extent);
+
+	        return result;
+	    };
+
+	    function clamp(niceTickExtent, idx, extent) {
+	        niceTickExtent[idx] = Math.max(Math.min(niceTickExtent[idx], extent[1]), extent[0]);
+	    }
+
+	    // In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
+	    helper.fixExtent = function (niceTickExtent, extent) {
+	        !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
+	        !isFinite(niceTickExtent[1]) && (niceTickExtent[1] = extent[1]);
+	        clamp(niceTickExtent, 0, extent);
+	        clamp(niceTickExtent, 1, extent);
+	        if (niceTickExtent[0] > niceTickExtent[1]) {
+	            niceTickExtent[0] = niceTickExtent[1];
+	        }
+	    };
+
+	    helper.intervalScaleGetTicks = function (interval, extent, niceTickExtent, intervalPrecision) {
+	        var ticks = [];
+
+	        // If interval is 0, return [];
+	        if (!interval) {
+	            return ticks;
+	        }
+
+	        // Consider this case: using dataZoom toolbox, zoom and zoom.
+	        var safeLimit = 10000;
+
+	        if (extent[0] < niceTickExtent[0]) {
+	            ticks.push(extent[0]);
+	        }
+	        var tick = niceTickExtent[0];
+
+	        while (tick <= niceTickExtent[1]) {
+	            ticks.push(tick);
+	            // Avoid rounding error
+	            tick = roundNumber(tick + interval, intervalPrecision);
+	            if (tick === ticks[ticks.length - 1]) {
+	                // Consider out of safe float point, e.g.,
+	                // -3711126.9907707 + 2e-10 === -3711126.9907707
+	                break;
+	            }
+	            if (ticks.length > safeLimit) {
+	                return [];
+	            }
+	        }
+	        // Consider this case: the last item of ticks is smaller
+	        // than niceTickExtent[1] and niceTickExtent[1] === extent[1].
+	        if (extent[1] > (ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1])) {
+	            ticks.push(extent[1]);
+	        }
+
+	        return ticks;
+	    };
+
+	    module.exports = helper;
+
+
+/***/ },
+/* 110 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
 	 * Interval scale
 	 * @module echarts/coord/scale/Time
 	 */
 
 
 
+	    // [About UTC and local time zone]:
+	    // In most cases, `number.parseDate` will treat input data string as local time
+	    // (except time zone is specified in time string). And `format.formateTime` returns
+	    // local time by default. option.useUTC is false by default. This design have
+	    // concidered these common case:
+	    // (1) Time that is persistent in server is in UTC, but it is needed to be diplayed
+	    // in local time by default.
+	    // (2) By default, the input data string (e.g., '2011-01-02') should be displayed
+	    // as its original time, without any time difference.
+
 	    var zrUtil = __webpack_require__(4);
 	    var numberUtil = __webpack_require__(7);
 	    var formatUtil = __webpack_require__(6);
+	    var scaleHelper = __webpack_require__(109);
 
 	    var IntervalScale = __webpack_require__(108);
 
@@ -25166,7 +25289,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var date = new Date(val);
 
-	            return formatUtil.formatTime(stepLvl[0], date);
+	            return formatUtil.formatTime(stepLvl[0], date, this.getSetting('useUTC'));
 	        },
 
 	        // Overwrite
@@ -25200,6 +25323,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Overwrite
 	        niceTicks: function (approxTickNum) {
+	            var timezoneOffset = this.getSetting('useUTC')
+	                ? 0 : numberUtil.getTimezoneOffset() * 60 * 1000;
 	            approxTickNum = approxTickNum || 10;
 
 	            var extent = this._extent;
@@ -25222,9 +25347,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            var niceExtent = [
-	                mathCeil(extent[0] / interval) * interval,
-	                mathFloor(extent[1] / interval) * interval
+	                Math.round(mathCeil((extent[0] - timezoneOffset) / interval) * interval + timezoneOffset),
+	                Math.round(mathFloor((extent[1] - timezoneOffset)/ interval) * interval + timezoneOffset)
 	            ];
+
+	            scaleHelper.fixExtent(niceExtent, extent);
 
 	            this._stepLvl = level;
 	            // Interval will be used in getTicks
@@ -25270,17 +25397,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    ];
 
 	    /**
+	     * @param {module:echarts/model/Model}
 	     * @return {module:echarts/scale/Time}
 	     */
-	    TimeScale.create = function () {
-	        return new TimeScale();
+	    TimeScale.create = function (model) {
+	        return new TimeScale({useUTC: model.ecModel.get('useUTC')});
 	    };
 
 	    module.exports = TimeScale;
 
 
 /***/ },
-/* 110 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -25476,7 +25604,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 111 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -25579,7 +25707,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 112 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -25588,27 +25716,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var echarts = __webpack_require__(1);
 	    var PRIORITY = echarts.PRIORITY;
 
-	    __webpack_require__(113);
 	    __webpack_require__(114);
+	    __webpack_require__(115);
 
 	    echarts.registerVisual(zrUtil.curry(
-	        __webpack_require__(119), 'line', 'circle', 'line'
+	        __webpack_require__(120), 'line', 'circle', 'line'
 	    ));
 	    echarts.registerLayout(zrUtil.curry(
-	        __webpack_require__(120), 'line'
+	        __webpack_require__(121), 'line'
 	    ));
 
 	    // Down sample after filter
 	    echarts.registerProcessor(PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(
-	        __webpack_require__(121), 'line'
+	        __webpack_require__(122), 'line'
 	    ));
 
 	    // In case developer forget to include grid component
-	    __webpack_require__(122);
+	    __webpack_require__(123);
 
 
 /***/ },
-/* 113 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25699,7 +25827,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 114 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25707,12 +25835,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var SymbolDraw = __webpack_require__(115);
-	    var Symbol = __webpack_require__(116);
-	    var lineAnimationDiff = __webpack_require__(117);
+	    var SymbolDraw = __webpack_require__(116);
+	    var Symbol = __webpack_require__(117);
+	    var lineAnimationDiff = __webpack_require__(118);
 	    var graphic = __webpack_require__(44);
 	    var modelUtil = __webpack_require__(5);
-	    var polyHelper = __webpack_require__(118);
+	    var polyHelper = __webpack_require__(119);
 	    var ChartView = __webpack_require__(43);
 
 	    function isPointsSame(points1, points2) {
@@ -26407,7 +26535,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 115 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -26416,7 +26544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var graphic = __webpack_require__(44);
-	    var Symbol = __webpack_require__(116);
+	    var Symbol = __webpack_require__(117);
 
 	    /**
 	     * @constructor
@@ -26539,7 +26667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 116 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -26844,7 +26972,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 117 */
+/* 118 */
 /***/ function(module, exports) {
 
 	
@@ -27058,7 +27186,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 118 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Poly path support NaN point
@@ -27313,7 +27441,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 119 */
+/* 120 */
 /***/ function(module, exports) {
 
 	
@@ -27362,7 +27490,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 120 */
+/* 121 */
 /***/ function(module, exports) {
 
 	
@@ -27396,7 +27524,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 121 */
+/* 122 */
 /***/ function(module, exports) {
 
 	
@@ -27479,7 +27607,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 122 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27489,9 +27617,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 	    var echarts = __webpack_require__(1);
 
-	    __webpack_require__(123);
+	    __webpack_require__(124);
 
-	    __webpack_require__(132);
+	    __webpack_require__(133);
 
 	    // Grid view
 	    echarts.extendComponentView({
@@ -27523,7 +27651,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 123 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27537,8 +27665,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var axisHelper = __webpack_require__(105);
 
 	    var zrUtil = __webpack_require__(4);
-	    var Cartesian2D = __webpack_require__(124);
-	    var Axis2D = __webpack_require__(126);
+	    var Cartesian2D = __webpack_require__(125);
+	    var Axis2D = __webpack_require__(127);
 
 	    var each = zrUtil.each;
 
@@ -27546,7 +27674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var niceScaleExtent = axisHelper.niceScaleExtent;
 
 	    // 依赖 GridModel, AxisModel 做预处理
-	    __webpack_require__(128);
+	    __webpack_require__(129);
 
 	    /**
 	     * Check if the axis is used in the specified grid
@@ -28136,14 +28264,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 124 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 
 	    var zrUtil = __webpack_require__(4);
-	    var Cartesian = __webpack_require__(125);
+	    var Cartesian = __webpack_require__(126);
 
 	    function Cartesian2D(name) {
 
@@ -28252,7 +28380,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 125 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28370,14 +28498,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 126 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 	    var Axis = __webpack_require__(100);
-	    var axisLabelInterval = __webpack_require__(127);
+	    var axisLabelInterval = __webpack_require__(128);
 
 	    /**
 	     * Extend axis 2d
@@ -28512,7 +28640,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 127 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28543,7 +28671,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 128 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28551,7 +28679,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// 所以这里也要被 Cartesian2D 依赖
 
 
-	    __webpack_require__(129);
+	    __webpack_require__(130);
 
 	    var ComponentModel = __webpack_require__(19);
 
@@ -28588,7 +28716,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 129 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28596,7 +28724,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var ComponentModel = __webpack_require__(19);
 	    var zrUtil = __webpack_require__(4);
-	    var axisModelCreator = __webpack_require__(130);
+	    var axisModelCreator = __webpack_require__(131);
 
 	    var AxisModel = ComponentModel.extend({
 
@@ -28650,7 +28778,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return option.type || (option.data ? 'category' : 'value');
 	    }
 
-	    zrUtil.merge(AxisModel.prototype, __webpack_require__(111));
+	    zrUtil.merge(AxisModel.prototype, __webpack_require__(112));
 
 	    var extraOption = {
 	        // gridIndex: 0,
@@ -28667,12 +28795,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 130 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    var axisDefault = __webpack_require__(131);
+	    var axisDefault = __webpack_require__(132);
 	    var zrUtil = __webpack_require__(4);
 	    var ComponentModel = __webpack_require__(19);
 	    var layout = __webpack_require__(21);
@@ -28730,7 +28858,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 131 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28800,6 +28928,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // 控制文本标签是否在grid里
 	            inside: false,
 	            rotate: 0,
+	            showMinLabel: null, // true | false | null (auto)
+	            showMaxLabel: null, // true | false | null (auto)
 	            margin: 8,
 	            // formatter: null,
 	            // 其余属性默认使用全局文本样式，详见TEXTSTYLE
@@ -28889,29 +29019,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 132 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	// TODO boundaryGap
 
 
-	    __webpack_require__(129);
+	    __webpack_require__(130);
 
-	    __webpack_require__(133);
+	    __webpack_require__(134);
 
 
 /***/ },
-/* 133 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 	    var graphic = __webpack_require__(44);
-	    var AxisBuilder = __webpack_require__(134);
-	    var AxisView = __webpack_require__(135);
-	    var cartesianAxisHelper = __webpack_require__(137);
+	    var AxisBuilder = __webpack_require__(135);
+	    var AxisView = __webpack_require__(136);
+	    var cartesianAxisHelper = __webpack_require__(138);
 	    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 	    var getInterval = AxisBuilder.getInterval;
 
@@ -29137,7 +29267,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 134 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -29150,6 +29280,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var remRadian = numberUtil.remRadian;
 	    var isRadianAroundZero = numberUtil.isRadianAroundZero;
 	    var vec2 = __webpack_require__(10);
+	    var matrix = __webpack_require__(11);
 	    var v2ApplyTransform = vec2.applyTransform;
 	    var retrieve = zrUtil.retrieve;
 
@@ -29476,33 +29607,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            }, this);
 
-	            function isTwoLabelOverlapped(current, next) {
-	                var firstRect = current && current.getBoundingRect().clone();
-	                var nextRect = next && next.getBoundingRect().clone();
-	                if (firstRect && nextRect) {
-	                    firstRect.applyTransform(current.getLocalTransform());
-	                    nextRect.applyTransform(next.getLocalTransform());
-	                    return firstRect.intersect(nextRect);
-	                }
-	            }
-
-	            // If min or max are user set, we need to check
-	            // If the tick on min(max) are overlap on their neighbour tick
-	            // If they are overlapped, we need to hide the min(max) tick label
-	            if (axisModel.getMin() != null) {
-	                var firstLabel = textEls[0];
-	                var nextLabel = textEls[1];
-	                if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
-	                    firstLabel.ignore = true;
-	                }
-	            }
-	            if (axisModel.getMax() != null) {
-	                var lastLabel = textEls[textEls.length - 1];
-	                var prevLabel = textEls[textEls.length - 2];
-	                if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
-	                    lastLabel.ignore = true;
-	                }
-	            }
+	            fixMinMaxLabelShow(axisModel, textEls);
 	        },
 
 	        /**
@@ -29678,9 +29783,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 	    };
 
-	    /**
-	     * @inner
-	     */
 	    function endTextLayout(opt, textPosition, textRotate, extent) {
 	        var rotationDiff = remRadian(textRotate - opt.rotation);
 	        var textAlign;
@@ -29714,9 +29816,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 	    }
 
-	    /**
-	     * @inner
-	     */
 	    function isSilent(axisModel) {
 	        var tooltipOpt = axisModel.get('tooltip');
 	        return axisModel.get('silent')
@@ -29725,6 +29824,53 @@ return /******/ (function(modules) { // webpackBootstrap
 	                axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
 	            );
 	    }
+
+	    function fixMinMaxLabelShow(axisModel, textEls) {
+	        // If min or max are user set, we need to check
+	        // If the tick on min(max) are overlap on their neighbour tick
+	        // If they are overlapped, we need to hide the min(max) tick label
+	        var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+	        var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+	        var firstLabel = textEls[0];
+	        var nextLabel = textEls[1];
+	        var lastLabel = textEls[textEls.length - 1];
+	        var prevLabel = textEls[textEls.length - 2];
+
+	        if (showMinLabel === false) {
+	            firstLabel.ignore = true;
+	        }
+	        else if (axisModel.getMin() != null && isTwoLabelOverlapped(firstLabel, nextLabel)) {
+	            showMinLabel ? (nextLabel.ignore = true) : (firstLabel.ignore = true);
+	        }
+
+	        if (showMaxLabel === false) {
+	            lastLabel.ignore = true;
+	        }
+	        else if (axisModel.getMax() != null && isTwoLabelOverlapped(prevLabel, lastLabel)) {
+	            showMaxLabel ? (prevLabel.ignore = true) : (lastLabel.ignore = true);
+	        }
+	    }
+
+	    function isTwoLabelOverlapped(current, next, labelLayout) {
+	        // current and next has the same rotation.
+	        var firstRect = current && current.getBoundingRect().clone();
+	        var nextRect = next && next.getBoundingRect().clone();
+
+	        if (!firstRect || !nextRect) {
+	            return;
+	        }
+
+	        // When checking intersect of two rotated labels, we use mRotationBack
+	        // to avoid that boundingRect is enlarge when using `boundingRect.applyTransform`.
+	        var mRotationBack = matrix.identity([]);
+	        matrix.rotate(mRotationBack, mRotationBack, -current.rotation);
+
+	        firstRect.applyTransform(matrix.mul([], mRotationBack, current.getLocalTransform()));
+	        nextRect.applyTransform(matrix.mul([], mRotationBack, next.getLocalTransform()));
+
+	        return firstRect.intersect(nextRect);
+	    }
+
 
 	    /**
 	     * @static
@@ -29759,12 +29905,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 135 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    var axisPointerModelHelper = __webpack_require__(136);
+	    var axisPointerModelHelper = __webpack_require__(137);
 
 	    /**
 	     * Base class of AxisView.
@@ -29868,7 +30014,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 136 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30204,7 +30350,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 137 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30289,19 +30435,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 138 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
 	    var zrUtil = __webpack_require__(4);
 
-	    __webpack_require__(123);
+	    __webpack_require__(124);
 
-	    __webpack_require__(139);
-	    __webpack_require__(141);
+	    __webpack_require__(140);
+	    __webpack_require__(142);
 
-	    var barLayoutGrid = __webpack_require__(144);
+	    var barLayoutGrid = __webpack_require__(145);
 	    var echarts = __webpack_require__(1);
 
 	    echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
@@ -30314,16 +30460,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 
 	    // In case developer forget to include grid component
-	    __webpack_require__(122);
+	    __webpack_require__(123);
 
 
 /***/ },
-/* 139 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    module.exports = __webpack_require__(140).extend({
+	    module.exports = __webpack_require__(141).extend({
 
 	        type: 'series.bar',
 
@@ -30334,7 +30480,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 140 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30409,7 +30555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 141 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30417,13 +30563,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var zrUtil = __webpack_require__(4);
 	    var graphic = __webpack_require__(44);
-	    var helper = __webpack_require__(142);
+	    var helper = __webpack_require__(143);
 
 	    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'barBorderWidth'];
 
 	    // FIXME
 	    // Just for compatible with ec2.
-	    zrUtil.extend(__webpack_require__(12).prototype, __webpack_require__(143));
+	    zrUtil.extend(__webpack_require__(12).prototype, __webpack_require__(144));
 
 	    var BarView = __webpack_require__(1).extendChartView({
 
@@ -30597,7 +30743,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 142 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30654,7 +30800,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30688,7 +30834,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30940,7 +31086,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -30948,10 +31094,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 	    var echarts = __webpack_require__(1);
 
-	    __webpack_require__(146);
-	    __webpack_require__(148);
+	    __webpack_require__(147);
+	    __webpack_require__(149);
 
-	    __webpack_require__(149)('pie', [{
+	    __webpack_require__(150)('pie', [{
 	        type: 'pieToggleSelect',
 	        event: 'pieselectchanged',
 	        method: 'toggleSelected'
@@ -30965,17 +31111,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        method: 'unSelect'
 	    }]);
 
-	    echarts.registerVisual(zrUtil.curry(__webpack_require__(150), 'pie'));
+	    echarts.registerVisual(zrUtil.curry(__webpack_require__(151), 'pie'));
 
 	    echarts.registerLayout(zrUtil.curry(
-	        __webpack_require__(151), 'pie'
+	        __webpack_require__(152), 'pie'
 	    ));
 
-	    echarts.registerProcessor(zrUtil.curry(__webpack_require__(153), 'pie'));
+	    echarts.registerProcessor(zrUtil.curry(__webpack_require__(154), 'pie'));
 
 
 /***/ },
-/* 146 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30986,7 +31132,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var modelUtil = __webpack_require__(5);
 	    var completeDimensions = __webpack_require__(103);
 
-	    var dataSelectableMixin = __webpack_require__(147);
+	    var dataSelectableMixin = __webpack_require__(148);
 
 	    var PieSeries = __webpack_require__(1).extendSeriesModel({
 
@@ -31125,7 +31271,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -31195,7 +31341,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -31601,7 +31747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -31641,7 +31787,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 150 */
+/* 151 */
 /***/ function(module, exports) {
 
 	// Pick color from palette for each data item.
@@ -31692,7 +31838,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 151 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// TODO minAngle
@@ -31701,7 +31847,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var numberUtil = __webpack_require__(7);
 	    var parsePercent = numberUtil.parsePercent;
-	    var labelLayout = __webpack_require__(152);
+	    var labelLayout = __webpack_require__(153);
 	    var zrUtil = __webpack_require__(4);
 
 	    var PI2 = Math.PI * 2;
@@ -31838,7 +31984,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 152 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -32069,7 +32215,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 153 */
+/* 154 */
 /***/ function(module, exports) {
 
 	
