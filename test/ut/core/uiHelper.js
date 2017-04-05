@@ -226,6 +226,10 @@
             describe(suiteName, function() {
                 var start = isTestAll ? 0 : cases.length - 1;
                 for (var cid = start; cid < cases.length; ++cid) {
+                    if (cases[cid].ignore) {
+                        continue;
+                    }
+
                     var name = specName + ' - ' + suiteName + ': '
                         + cases[cid].name;
                     if (cases[cid].cases) {
@@ -236,13 +240,13 @@
                     if (cases[cid].test === 'equalOption') {
                         helper.expectEqualOption(name, cases[cid].option1,
                             cases[cid].option2);
-                        helper.testOption(name + ', same as last version',
-                            cases[cid].option1);
+                        // helper.testOption(name + ', same as last version',
+                        //     cases[cid].option1);
                     } else if (cases[cid].test === 'notEqualOption') {
                         helper.expectNotEqualOption(name, cases[cid].option1,
                             cases[cid].option2);
-                        helper.testOption(name + ', same as last version',
-                            cases[cid].option1);
+                        // helper.testOption(name + ', same as last version',
+                        //     cases[cid].option1);
                     } else {
                         helper.testOption(name, cases[cid].option);
                     }

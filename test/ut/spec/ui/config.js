@@ -1,6 +1,6 @@
 require.config({
     paths: {
-        'oldEcharts': 'tmp/oldEcharts',
+        'oldEcharts': 'tmp/echarts-v3.4.0',
         'newEcharts': '../../dist/echarts'
     }
 });
