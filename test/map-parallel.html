@@ -284,13 +284,19 @@ function makeParallelAxis(schema) {
 
 
 option = {
-    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [{
-        offset: 0,
-        color: '#4b5769'
-    }, {
-        offset: 1,
-        color: '#404a59'
-    }]),
+    backgroundColor: {
+        type: 'radial',
+        x: 0.5,
+        y: 0.5,
+        r: 0.4,
+        colorStops: [{
+            offset: 0,
+            color: '#4b5769'
+        }, {
+            offset: 1,
+            color: '#404a59'
+        }]
+    },
     title: {
         text: 'Prices and Earnings 2012',
         subtext: 'data from macrofocus',

@@ -617,13 +617,17 @@
                         itemStyle: {
                             normal: {
                                 barBorderRadius: 5,
-                                color: new echarts.graphic.LinearGradient(
-                                    0, 0, 0, 1,
-                                    [
+                                color: {
+                                    type: 'linear',
+                                    x: 0,
+                                    y: 0,
+                                    x2: 0,
+                                    y2: 1,
+                                    colorStops: [
                                         {offset: 0, color: '#14c8d4'},
                                         {offset: 1, color: '#43eec6'}
                                     ]
-                                )
+                                }
                             }
                         },
                         data: barData
