@@ -120,7 +120,7 @@ define(function (require) {
 
             function stepAParallel(seriesModel, seriesIndex) {
                 var coordSys = seriesModel.coordinateSystem;
-                hasBrushExists |= coordSys.hasAxisbrushed();
+                hasBrushExists |= coordSys.hasAxisBrushed();
 
                 linkOthers(seriesIndex) && coordSys.eachActiveState(
                     seriesModel.getData(),

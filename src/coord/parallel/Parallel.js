@@ -4,7 +4,7 @@
  */
 define(function(require) {
 
-    var layout = require('../../util/layout');
+    var layoutUtil = require('../../util/layout');
     var axisHelper = require('../../coord/axisHelper');
     var zrUtil = require('zrender/core/util');
     var ParallelAxis = require('./ParallelAxis');
@@ -12,6 +12,9 @@ define(function(require) {
     var matrix = require('zrender/core/matrix');
 
     var each = zrUtil.each;
+    var mathMin = Math.min;
+    var mathMax = Math.max;
+    var mathFloor = Math.floor;
 
     var PI = Math.PI;
 
@@ -128,7 +131,7 @@ define(function(require) {
          * @param {module:echarts/ExtensionAPI} api
          */
         resize: function (parallelModel, api) {
-            this._rect = layout.getLayoutRect(
+            this._rect = layoutUtil.getLayoutRect(
                 parallelModel.getBoxLayoutParams(),
                 {
                     width: api.getWidth(),
@@ -136,7 +139,7 @@ define(function(require) {
                 }
             );
 
-            this._layoutAxes(parallelModel);
+            this._layoutAxes();
         },
 
         /**
@@ -149,79 +152,63 @@ define(function(require) {
         /**
          * @private
          */
-        _layoutAxes: function (parallelModel) {
+        _getLayoutSettings: function () {
+            var parallelModel = this._model;
             var rect = this._rect;
+            var xy = ['x', 'y'];
+            var wh = ['width', 'height'];
             var layout = parallelModel.get('layout');
+            var pixelDimIndex = layout === 'horizontal' ? 0 : 1;
+
+            return {
+                layout: layout,
+                pixelDimIndex: pixelDimIndex,
+                layoutBase: rect[xy[pixelDimIndex]],
+                layoutLength: rect[wh[pixelDimIndex]],
+                axisBase: rect[xy[1 - pixelDimIndex]],
+                axisLength: rect[wh[1 - pixelDimIndex]],
+                axisExpandable: parallelModel.get('axisExpandable'),
+                axisExpandWidth: parallelModel.get('axisExpandWidth'),
+                axisExpandCenter: parallelModel.get('axisExpandCenter'),
+                axisExpandCount: parallelModel.get('axisExpandCount') || 0
+            };
+        },
+
+        /**
+         * @private
+         */
+        _layoutAxes: function () {
+            var rect = this._rect;
             var axes = this._axesMap;
             var dimensions = this.dimensions;
-
-            var size = [rect.width, rect.height];
-            var sizeIdx = layout === 'horizontal' ? 0 : 1;
-            var layoutLength = size[sizeIdx];
-            var axisLength = size[1 - sizeIdx];
-            var axisExtent = [0, axisLength];
+            var layoutSettings = this._getLayoutSettings();
+            var axisExpandCenter = layoutSettings.axisExpandCenter;
+            var axisExpandCount = layoutSettings.axisExpandCount;
+            var axisExpandWidth = layoutSettings.axisExpandWidth;
+            var layoutLength = layoutSettings.layoutLength;
+            var layout = layoutSettings.layout;
 
             each(axes, function (axis) {
+                var axisExtent = [0, layoutSettings.axisLength];
                 var idx = axis.inverse ? 1 : 0;
                 axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
             });
 
-            var axisExpandable = parallelModel.get('axisExpandable');
-            var axisExpandWidth = parallelModel.get('axisExpandWidth');
-            var axisExpandCenter = parallelModel.get('axisExpandCenter');
-            var axisExpandCount = parallelModel.get('axisExpandCount') || 0;
             var axisExpandWindow;
-
             if (axisExpandCenter != null) {
                 // Clamp
-                var left = Math.max(0, Math.floor(axisExpandCenter - (axisExpandCount - 1) / 2));
+                var left = mathMax(0, mathFloor(axisExpandCenter - (axisExpandCount - 1) / 2));
                 var right = left + axisExpandCount - 1;
                 if (right >= dimensions.length) {
                     right = dimensions.length - 1;
-                    left = Math.max(0, Math.floor(right - axisExpandCount + 1));
+                    left = mathMax(0, mathFloor(right - axisExpandCount + 1));
                 }
                 axisExpandWindow = [left, right];
             }
 
-            var calcPos = (axisExpandable && axisExpandWindow && axisExpandWidth)
-                ? function (axisIndex, layoutLength, axisCount) {
-                    var peekIntervalCount = axisExpandWindow[1] - axisExpandWindow[0];
-                    var otherWidth = (
-                        layoutLength - axisExpandWidth * peekIntervalCount
-                    ) / (axisCount - 1 - peekIntervalCount);
-
-                    var position;
-
-                    if (axisIndex < axisExpandWindow[0]) {
-                        position = (axisIndex - 1) * otherWidth;
-                    }
-                    else if (axisIndex <= axisExpandWindow[1]) {
-                        position = axisExpandWindow[0] * otherWidth
-                            + (axisIndex - axisExpandWindow[0]) * axisExpandWidth;
-                    }
-                    else if (axisIndex === axisCount - 1) {
-                        position = layoutLength;
-                    }
-                    else {
-                        position = axisExpandWindow[0] * otherWidth
-                            + peekIntervalCount * axisExpandWidth
-                            + (axisIndex - axisExpandWindow[1]) * otherWidth;
-                    }
-
-                    return {
-                        position: position,
-                        axisNameAvailableWidth: (
-                            axisExpandWindow[0] < axisIndex && axisIndex < axisExpandWindow[1]
-                        ) ? axisExpandWidth : otherWidth
-                    };
-                }
-                : function (axisIndex, layoutLength, axisCount) {
-                    var step = layoutLength / (axisCount - 1);
-                    return {
-                        position: step * axisIndex,
-                        axisNameAvailableWidth: step
-                    };
-                };
+            var calcPos = (layoutSettings.axisExpandable && axisExpandWindow && axisExpandWidth)
+                ? zrUtil.curry(layoutAxisWithExpand, axisExpandWindow, axisExpandWidth)
+                : layoutAxisWithoutExpand;
 
             each(dimensions, function (dim, idx) {
                 var posInfo = calcPos(idx, layoutLength, dimensions.length);
@@ -229,7 +216,7 @@ define(function(require) {
                 var positionTable = {
                     horizontal: {
                         x: posInfo.position,
-                        y: axisLength
+                        y: layoutSettings.axisLength
                     },
                     vertical: {
                         x: 0,
@@ -301,7 +288,7 @@ define(function(require) {
         eachActiveState: function (data, callback, context) {
             var dimensions = this.dimensions;
             var axesMap = this._axesMap;
-            var hasActiveSet = this.hasAxisbrushed();
+            var hasActiveSet = this.hasAxisBrushed();
 
             for (var i = 0, len = data.count(); i < len; i++) {
                 var values = data.getValues(dimensions, i);
@@ -331,7 +318,7 @@ define(function(require) {
          * Whether has any activeSet.
          * @return {boolean}
          */
-        hasAxisbrushed: function () {
+        hasAxisBrushed: function () {
             var dimensions = this.dimensions;
             var axesMap = this._axesMap;
             var hasActiveSet = false;
@@ -364,6 +351,16 @@ define(function(require) {
             return zrUtil.clone(this._axesLayout[dim]);
         },
 
+        _getCollapseWith: function (layoutSettings) {
+            var axisExpandCount = layoutSettings.axisExpandCount;
+            var width = mathMax(0, (
+                layoutSettings.layoutLength
+                    - layoutSettings.axisExpandWidth * mathMax(0, (axisExpandCount - 1))
+            ) / (this.dimensions.length - axisExpandCount));
+            !isFinite(width) && (width = 0);
+            return width;
+        },
+
         findClosestAxisDim: function (point) {
             var axisDim;
             var minDist = Infinity;
@@ -384,9 +381,78 @@ define(function(require) {
             }, this);
 
             return axisDim;
+        },
+
+        findAxisExpandCenter: function (point) {
+            var layoutSettings = this._getLayoutSettings();
+            var axisBase = layoutSettings.axisBase;
+            var pixelDimIndex = layoutSettings.pixelDimIndex;
+
+            if (point[1 - pixelDimIndex] < axisBase
+                || point[1 - pixelDimIndex] > axisBase + layoutSettings.axisLength
+            ) {
+                return;
+            }
+
+            var targetPos = point[pixelDimIndex] - layoutSettings.layoutBase;
+            var collapseWidth = this._getCollapseWith(layoutSettings);
+            var expandWidth = layoutSettings.axisExpandWidth;
+
+            var centerIndex = collapseWidth <= 0
+                // When layoutLength is smaller than expand window.
+                ? mathMax(0, mathFloor(
+                     this.dimensions.length * targetPos / layoutSettings.layoutLength
+                ))
+                : mathMax(0, mathFloor((
+                    targetPos - layoutSettings.axisExpandCount / 2 * (expandWidth - collapseWidth)
+                ) / collapseWidth));
+
+            return !isFinite(centerIndex) ? null : centerIndex;
         }
 
     };
+
+    function layoutAxisWithoutExpand(axisIndex, layoutLength, axisCount) {
+        var step = layoutLength / (axisCount - 1);
+        return {
+            position: step * axisIndex,
+            axisNameAvailableWidth: step
+        };
+    }
+
+    function layoutAxisWithExpand(
+        axisExpandWindow, axisExpandWidth, axisIndex, layoutLength, axisCount
+    ) {
+        var peekIntervalCount = axisExpandWindow[1] - axisExpandWindow[0];
+        var otherWidth = (
+            layoutLength - axisExpandWidth * peekIntervalCount
+        ) / (axisCount - 1 - peekIntervalCount);
+
+        var position;
+
+        if (axisIndex < axisExpandWindow[0]) {
+            position = (axisIndex - 1) * otherWidth;
+        }
+        else if (axisIndex <= axisExpandWindow[1]) {
+            position = axisExpandWindow[0] * otherWidth
+                + (axisIndex - axisExpandWindow[0]) * axisExpandWidth;
+        }
+        else if (axisIndex === axisCount - 1) {
+            position = layoutLength;
+        }
+        else {
+            position = axisExpandWindow[0] * otherWidth
+                + peekIntervalCount * axisExpandWidth
+                + (axisIndex - axisExpandWindow[1]) * otherWidth;
+        }
+
+        return {
+            position: position,
+            axisNameAvailableWidth: (
+                axisExpandWindow[0] < axisIndex && axisIndex < axisExpandWindow[1]
+            ) ? axisExpandWidth : otherWidth
+        };
+    }
 
     return Parallel;
 });

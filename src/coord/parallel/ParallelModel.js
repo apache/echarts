@@ -50,6 +50,8 @@ define(function(require) {
             axisExpandCenter: null,
             axisExpandCount: 0,
             axisExpandWidth: 50,      // FIXME '10%' ?
+            axisExpandTriggerOn: 'click', // 'mousemove' | 'click'
+            axisExpandThrottle: 30,
 
             parallelAxisDefault: null
         },

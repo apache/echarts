@@ -9,9 +9,6 @@
     </head>
     <body>
         <style>
-            #main {
-                /*height: 1000px;*/
-            }
         </style>
         <div id="main"></div>
         <script>
@@ -394,6 +391,8 @@ option = {
         axisExpandCenter: 15,
         axisExpandCount: 10,
         axisExpandWidth: 50,
+        axisExpandTriggerOn: 'mousemove',
+
         z: 100,
         parallelAxisDefault: {
             type: 'value',
@@ -403,6 +402,7 @@ option = {
             nameTextStyle: {
                 fontSize: 12
             },
+            animation: false,
             nameGap: 20,
             splitNumber: 3,
             tooltip: {
@@ -457,6 +457,7 @@ option = {
             name: 'parallel',
             type: 'parallel',
             smooth: true,
+            animation: false,
             lineStyle: {
                 normal: {
                     color: '#577ceb',
