@@ -72,7 +72,7 @@ define(function (require) {
 
             this._updateNodeAndLinkScale();
 
-            this._updateController(seriesModel, api);
+            this._updateController(seriesModel, ecModel, api);
 
             clearTimeout(this._layoutTimeout);
             var forceLayout = seriesModel.forceLayout;
@@ -256,15 +256,15 @@ define(function (require) {
             })();
         },
 
-        _updateController: function (seriesModel, api) {
+        _updateController: function (seriesModel, ecModel, api) {
             var controller = this._controller;
             var controllerHost = this._controllerHost;
             var group = this.group;
 
-            controller.setContainsPoint(function (x, y) {
+            controller.setPointerChecker(function (x, y) {
                 var rect = group.getBoundingRect();
                 rect.applyTransform(group.transform);
-                return rect.contain(x, y);
+                return rect.contain(x, y) && !roamHelper.onIrrelevantElement(x, y, ecModel, api, seriesModel);
             });
 
             if (seriesModel.coordinateSystem.type !== 'view') {

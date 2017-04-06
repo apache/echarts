@@ -176,7 +176,7 @@ define(function (require) {
          * @type {module:echarts/ExtensionAPI}
          * @private
          */
-        this._api = new ExtensionAPI(this, this._coordSysMgr);
+        this._api = createExtensionAPI(this);
 
         Eventful.call(this);
 
@@ -1160,10 +1160,13 @@ define(function (require) {
                 }
             }
 
-            model.__viewId = viewId;
+            model.__viewId = view.__id = viewId;
             view.__alive = true;
-            view.__id = viewId;
             view.__model = model;
+            view.group.__ecComponentInfo = {
+                mainType: model.mainType,
+                index: model.componentIndex
+            };
         }, this);
 
         for (var i = 0; i < viewList.length;) {
@@ -1173,6 +1176,7 @@ define(function (require) {
                 view.dispose(ecModel, this._api);
                 viewList.splice(i, 1);
                 delete viewMap[view.__id];
+                view.__id = view.group.__ecComponentInfo = null;
             }
             else {
                 i++;
@@ -1344,6 +1348,7 @@ define(function (require) {
     echartsProto.clear = function () {
         this.setOption({ series: [] }, true);
     };
+
     /**
      * Dispose instance
      */
@@ -1390,6 +1395,7 @@ define(function (require) {
             });
         }
     }
+
     /**
      * Update chart progressive and blend.
      * @param {module:echarts/model/Series|module:echarts/model/Component} model
@@ -1432,6 +1438,7 @@ define(function (require) {
             }
         });
     }
+
     /**
      * @param {module:echarts/model/Series|module:echarts/model/Component} model
      * @param {module:echarts/view/Component|module:echarts/view/Chart} view
@@ -1447,6 +1454,26 @@ define(function (require) {
             }
         });
     }
+
+    function createExtensionAPI(ecInstance) {
+        var coordSysMgr = ecInstance._coordSysMgr;
+        return zrUtil.extend(new ExtensionAPI(ecInstance), {
+            // Inject methods
+            getCoordinateSystems: zrUtil.bind(
+                coordSysMgr.getCoordinateSystems, coordSysMgr
+            ),
+            getComponentByElement: function (el) {
+                while (el) {
+                    var modelInfo = el.__ecComponentInfo;
+                    if (modelInfo != null) {
+                        return ecInstance._model.getComponent(modelInfo.mainType, modelInfo.index);
+                    }
+                    el = el.parent;
+                }
+            }
+        });
+    }
+
     /**
      * @type {Object} key: actionType.
      * @inner

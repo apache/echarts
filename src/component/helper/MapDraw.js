@@ -357,8 +357,9 @@ define(function (require) {
                 }
             }, this);
 
-            controller.setContainsPoint(function (x, y) {
-                return geo.getViewRectAfterRoam().contain(x, y);
+            controller.setPointerChecker(function (x, y) {
+                return geo.getViewRectAfterRoam().contain(x, y)
+                    && !roamHelper.onIrrelevantElement(x, y, ecModel, api, mapOrGeoModel);
             });
         }
     };

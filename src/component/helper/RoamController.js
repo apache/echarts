@@ -20,7 +20,7 @@ define(function (require) {
         /**
          * @type {Function}
          */
-        this.containsPoint;
+        this.pointerChecker;
 
         /**
          * @type {module:zrender}
@@ -38,12 +38,12 @@ define(function (require) {
         Eventful.call(this);
 
         /**
-         * @param {Function} containsPoint
+         * @param {Function} pointerChecker
          *                   input: x, y
          *                   output: boolean
          */
-        this.setContainsPoint = function (containsPoint) {
-            this.containsPoint = containsPoint;
+        this.setPointerChecker = function (pointerChecker) {
+            this.pointerChecker = pointerChecker;
         };
 
         /**
@@ -104,7 +104,9 @@ define(function (require) {
         var x = e.offsetX;
         var y = e.offsetY;
 
-        if (this.containsPoint && this.containsPoint(x, y)) {
+        // Only check on mosedown, but not mousemove.
+        // Mouse can be out of target when mouse moving.
+        if (this.pointerChecker && this.pointerChecker(x, y)) {
             this._x = x;
             this._y = y;
             this._dragging = true;
@@ -166,7 +168,7 @@ define(function (require) {
     }
 
     function zoom(e, zoomDelta, zoomX, zoomY) {
-        if (this.containsPoint && this.containsPoint(zoomX, zoomY)) {
+        if (this.pointerChecker && this.pointerChecker(zoomX, zoomY)) {
             // When mouse is out of roamController rect,
             // default befavoius should be be disabled, otherwise
             // page sliding is disabled, contrary to expectation.
