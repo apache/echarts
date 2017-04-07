@@ -4,6 +4,7 @@
 define(function (require) {
 
     var RoamController = require('./RoamController');
+    var roamHelper = require('../../component/helper/roamHelper');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
 
@@ -84,9 +85,13 @@ define(function (require) {
          * @type {module:echarts/component/helper/RoamController}
          * @private
          */
-        this._controller = new RoamController(
-            api.getZr(), updateGroup ? group : null, null
-        );
+        this._controller = new RoamController(api.getZr());
+
+        /**
+         * @type {Object} {target, zoom, zoomLimit}
+         * @private
+         */
+        this._controllerHost = {target: updateGroup ? group : null};
 
         /**
          * @type {module:zrender/container/Group}
@@ -295,14 +300,17 @@ define(function (require) {
         remove: function () {
             this.group.removeAll();
             this._controller.dispose();
+            this._controllerHost = {};
         },
 
         _updateController: function (mapOrGeoModel, ecModel, api) {
             var geo = mapOrGeoModel.coordinateSystem;
             var controller = this._controller;
-            controller.zoomLimit = mapOrGeoModel.get('scaleLimit');
-            // Update zoom from model
-            controller.zoom = geo.getZoom();
+            var controllerHost = this._controllerHost;
+
+            controllerHost.zoomLimit = mapOrGeoModel.get('scaleLimit');
+            controllerHost.zoom = geo.getZoom();
+
             // roamType is will be set default true if it is null
             controller.enable(mapOrGeoModel.get('roam') || false);
             var mainType = mapOrGeoModel.mainType;
@@ -319,6 +327,8 @@ define(function (require) {
             controller.off('pan').on('pan', function (dx, dy) {
                 this._mouseDownFlag = false;
 
+                roamHelper.updateViewOnPan(controllerHost, dx, dy);
+
                 api.dispatchAction(zrUtil.extend(makeActionBase(), {
                     dx: dx,
                     dy: dy
@@ -327,6 +337,8 @@ define(function (require) {
 
             controller.off('zoom').on('zoom', function (zoom, mouseX, mouseY) {
                 this._mouseDownFlag = false;
+
+                roamHelper.updateViewOnZoom(controllerHost, zoom, mouseX, mouseY);
 
                 api.dispatchAction(zrUtil.extend(makeActionBase(), {
                     zoom: zoom,
@@ -345,8 +357,9 @@ define(function (require) {
                 }
             }, this);
 
-            controller.setContainsPoint(function (x, y) {
-                return geo.getViewRectAfterRoam().contain(x, y);
+            controller.setPointerChecker(function (x, y) {
+                return geo.getViewRectAfterRoam().contain(x, y)
+                    && !roamHelper.onIrrelevantElement(x, y, ecModel, api, mapOrGeoModel);
             });
         }
     };

@@ -62,7 +62,7 @@ define(function(require) {
             }
 
             // Consider resize, area should be always updated.
-            record.controller.setContainsPoint(dataZoomInfo.containsPoint);
+            record.controller.setPointerChecker(dataZoomInfo.containsPoint);
 
             // Update throttle.
             throttle.createOrUpdate(

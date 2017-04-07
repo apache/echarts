@@ -10,13 +10,10 @@ define(function(require) {
         'getViewOfComponentModel', 'getViewOfSeriesModel'
     ];
 
-    function ExtensionAPI(chartInstance, coordSysMgr) {
+    function ExtensionAPI(chartInstance) {
         zrUtil.each(echartsAPIList, function (name) {
             this[name] = zrUtil.bind(chartInstance[name], chartInstance);
         }, this);
-
-        // Inject getCoordinateSystems to ecModel
-        this.getCoordinateSystems = zrUtil.bind(coordSysMgr.getCoordinateSystems, coordSysMgr);
     }
 
     return ExtensionAPI;
