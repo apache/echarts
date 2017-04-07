@@ -4,6 +4,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
+    var graphic = require('../../util/graphic');
     var findPointFromSeries = require('../axisPointer/findPointFromSeries');
     var layoutUtil = require('../../util/layout');
     var env = require('zrender/core/env');
@@ -16,6 +17,10 @@ define(function (require) {
     var each = zrUtil.each;
     var parsePercent = numberUtil.parsePercent;
 
+
+    var proxyRect = new graphic.Rect({
+        shape: {x: -1, y: -1, width: 2, height: 2}
+    });
 
     require('../../echarts').extendComponentView({
 
@@ -152,7 +157,20 @@ define(function (require) {
 
             // When triggered from axisPointer.
             var dataByCoordSys = payload.dataByCoordSys;
-            if (dataByCoordSys) {
+
+            if (payload.tooltip && payload.x != null && payload.y != null) {
+                var el = proxyRect;
+                el.position = [payload.x, payload.y];
+                el.update();
+                el.tooltip = payload.tooltip;
+                // Manually show tooltip while view is not using zrender elements.
+                this._tryShow({
+                    offsetX: payload.x,
+                    offsetY: payload.y,
+                    target: el
+                }, dispatchAction);
+            }
+            else if (dataByCoordSys) {
                 this._tryShow({
                     offsetX: payload.x,
                     offsetY: payload.y,
