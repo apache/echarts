@@ -23,15 +23,6 @@ define(function (require) {
         var fixMin = min != null;
         var fixMax = max != null;
         var originalExtent = scale.getExtent();
-        if (originalExtent[1] === originalExtent[0]) {
-            // Min and max values are the same, scale from 0
-            if (originalExtent[0] > 0) {
-                originalExtent[0] = 0;
-            }
-            else {
-                originalExtent[1] = 0;
-            }
-        }
 
         var axisDataLen;
         var boundaryGap;
@@ -55,7 +46,8 @@ define(function (require) {
             }
             boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
             boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
-            span = originalExtent[1] - originalExtent[0];
+            span = (originalExtent[1] - originalExtent[0])
+                || Math.abs(originalExtent[0]);
         }
 
         if (min == null) {
