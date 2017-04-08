@@ -46,7 +46,9 @@ define(function(require) {
 
             // FIXME
             // 试验效果
-            removeOnClick: true
+            removeOnClick: true,
+
+            z: 10000
         },
 
         /**
@@ -133,7 +135,8 @@ define(function(require) {
                 brushMode: option.brushMode,
                 transformable: option.transformable,
                 brushStyle: new Model(option.brushStyle).getItemStyle(),
-                removeOnClick: option.removeOnClick
+                removeOnClick: option.removeOnClick,
+                z: option.z
             },
             brushOption,
             true

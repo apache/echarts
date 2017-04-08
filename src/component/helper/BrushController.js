@@ -193,6 +193,7 @@ define(function (require) {
          * @param {number} [brushOption.brushStyle.lineWidth]
          * @param {string} [brushOption.brushStyle.stroke]
          * @param {string} [brushOption.brushStyle.fill]
+         * @param {number} [brushOption.z]
          */
         enableBrush: function (brushOption) {
             if (__DEV__) {
@@ -410,8 +411,8 @@ define(function (require) {
 
     function createCover(controller, brushOption) {
         var cover = coverRenderers[brushOption.brushType].createCover(controller, brushOption);
-        updateZ(cover);
         cover.__brushOption = brushOption;
+        updateZ(cover, brushOption);
         controller.group.add(cover);
         return cover;
     }
@@ -420,7 +421,7 @@ define(function (require) {
         var coverRenderer = getCoverRenderer(creatingCover);
         if (coverRenderer.endCreating) {
             coverRenderer.endCreating(controller, creatingCover);
-            updateZ(creatingCover);
+            updateZ(creatingCover, creatingCover.__brushOption);
         }
         return creatingCover;
     }
@@ -432,10 +433,12 @@ define(function (require) {
         );
     }
 
-    function updateZ(group) {
-        group.traverse(function (el) {
-            el.z = COVER_Z;
-            el.z2 = COVER_Z; // Consider in given container.
+    function updateZ(cover, brushOption) {
+        var z = brushOption.z;
+        z == null && (z = COVER_Z);
+        cover.traverse(function (el) {
+            el.z = z;
+            el.z2 = z; // Consider in given container.
         });
     }
 
