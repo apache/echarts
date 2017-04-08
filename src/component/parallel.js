@@ -8,8 +8,6 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var throttle = require('../util/throttle');
 
-    var CLICK_THRESHOLD = 5; // > 4
-
     // Parallel view
     echarts.extendComponentView({
         type: 'parallel',
@@ -18,85 +16,52 @@ define(function(require) {
             this._model = parallelModel;
             this._api = api;
 
-            if (!this._handlers) {
-                this._handlers = {};
-                zrUtil.each(handlers, function (handler, eventName) {
-                    api.getZr().on(eventName, this._handlers[eventName] = zrUtil.bind(handler, this));
-                }, this);
-            }
+            // The same method will not be rebounded.
+            api.getZr().on('mousemove', this._onMouseMove, this);
 
             throttle.createOrUpdate(
                 this,
                 '_throttledDispatchExpand',
-                parallelModel.get('axisExpandThrottle') || 0,
+                parallelModel.get('axisExpandRate'),
                 'fixRate'
             );
         },
 
         dispose: function (ecModel, api) {
-            zrUtil.each(this._handlers, function (handler, eventName) {
-                api.getZr().off(eventName, handler);
-            });
-            this._handlers = null;
+            api.getZr().off('mousemove', this._onMouseMove);
         },
 
-        _throttledDispatchExpand: function (axisExpandCenter) {
-            this._dispatchExpand(axisExpandCenter);
+        /**
+         * @param {Object} [opt] If null, cancle the last action triggering for debounce.
+         */
+        _throttledDispatchExpand: function (opt) {
+            this._dispatchExpand(opt);
         },
 
-        _dispatchExpand: function (axisExpandCenter) {
-            axisExpandCenter != null && this._api.dispatchAction({
-                type: 'parallelAxisExpand',
-                axisExpandCenter: axisExpandCenter
-            });
+        _dispatchExpand: function (opt) {
+            opt && this._api.dispatchAction(
+                zrUtil.extend({type: 'parallelAxisExpand'}, opt)
+            );
+        },
+
+        _onMouseMove: function (e) {
+            var model = this._model;
+            var result = model.coordinateSystem.getSlidedAxisExpandWindow(
+                [e.offsetX, e.offsetY]
+            );
+
+            result.jump && this._throttledDispatchExpand.debounceNextCall(model.get('axisExpandDebounce'));
+            this._throttledDispatchExpand(
+                !result.delta
+                    ? null // Cancle the last trigger, in case that mouse slide out of the area quickly.
+                    : {
+                        axisExpandWindow: result.axisExpandWindow,
+                        // Jumping uses animation, and sliding suppresses animation.
+                        animation: result.jump ? null : false
+                    }
+            );
         }
     });
-
-    var handlers = {
-
-        mousedown: function (e) {
-            if (checkTriggerOn(this, 'click')) {
-                this._mouseDownPoint = [e.offsetX, e.offsetY];
-            }
-        },
-
-        mouseup: function (e) {
-            var mouseDownPoint = this._mouseDownPoint;
-            // FIXME
-            // click: mousemove check. otherwise confilct with drag brush.
-            if (!checkTriggerOn(this, 'click') || !mouseDownPoint) {
-                return;
-            }
-
-            var point = [e.offsetX, e.offsetY];
-            var dist = Math.pow(mouseDownPoint[0] - point[0], 2)
-                + Math.pow(mouseDownPoint[1] - point[1], 2);
-
-            if (!this._model.get('axisExpandable') || dist > CLICK_THRESHOLD) {
-                return;
-            }
-
-            var coordSys = this._model.coordinateSystem;
-            var closestDim = coordSys.findClosestAxisDim(point);
-
-            if (closestDim) {
-                var axisIndex = zrUtil.indexOf(coordSys.dimensions, closestDim);
-                this._dispatchExpand(axisIndex);
-            }
-        },
-
-        mousemove: function (e) {
-            if (checkTriggerOn(this, 'mousemove')) {
-                this._throttledDispatchExpand(
-                    this._model.coordinateSystem.findAxisExpandCenter([e.offsetX, e.offsetY])
-                );
-            }
-        }
-    };
-
-    function checkTriggerOn(view, triggerOn) {
-        return view._model.get('axisExpandTriggerOn') === triggerOn;
-    }
 
     echarts.registerPreprocessor(
         require('../coord/parallel/parallelPreprocessor')

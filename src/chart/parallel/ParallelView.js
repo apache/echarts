@@ -29,7 +29,7 @@ define(function (require) {
          * @override
          */
         render: function (seriesModel, ecModel, api, payload) {
-            this._renderForNormal(seriesModel);
+            this._renderForNormal(seriesModel, payload);
             // this[
             //     seriesModel.option.progressive
             //         ? '_renderForProgressive'
@@ -42,7 +42,7 @@ define(function (require) {
         /**
          * @private
          */
-        _renderForNormal: function (seriesModel) {
+        _renderForNormal: function (seriesModel, payload) {
             var dataGroup = this._dataGroup;
             var data = seriesModel.getData();
             var oldData = this._data;
@@ -86,7 +86,8 @@ define(function (require) {
                 var line = oldData.getItemGraphicEl(oldDataIndex);
                 var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
                 data.setItemGraphicEl(newDataIndex, line);
-                graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
+                var animationModel = (payload && payload.animation === false) ? null : seriesModel;
+                graphic.updateProps(line, {shape: {points: points}}, animationModel, newDataIndex);
             }
 
             function remove(oldDataIndex) {

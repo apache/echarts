@@ -434,9 +434,10 @@ define(function(require) {
 
             duration > 0
                 ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
-                : (el.attr(props), cb && cb());
+                : (el.stopAnimation(), el.attr(props), cb && cb());
         }
         else {
+            el.stopAnimation();
             el.attr(props);
             cb && cb();
         }
@@ -533,7 +534,8 @@ define(function(require) {
     };
 
     /**
-     * Apply group transition animation from g1 to g2
+     * Apply group transition animation from g1 to g2.
+     * If no animatableModel, no animation.
      */
     graphic.groupTransition = function (g1, g2, animatableModel, cb) {
         if (!g1 || !g2) {

@@ -55,22 +55,8 @@ define(function (require) {
             var dim = axisModel.axis.dim;
             var axisLayout = coordSys.getAxisLayout(dim);
 
-            // Fetch from axisModel by default.
-            var axisLabelShow;
-            var axisIndex = zrUtil.indexOf(coordSys.dimensions, dim);
-
-            var axisExpandWindow = axisLayout.axisExpandWindow;
-            if (axisExpandWindow
-                && (axisIndex <= axisExpandWindow[0] || axisIndex >= axisExpandWindow[1])
-            ) {
-                axisLabelShow = false;
-            }
-
             var builderOpt = zrUtil.extend(
-                {
-                    axisLabelShow: axisLabelShow,
-                    strokeContainThreshold: areaWidth
-                },
+                {strokeContainThreshold: areaWidth},
                 axisLayout
             );
 
@@ -82,7 +68,8 @@ define(function (require) {
 
             this._refreshBrushController(builderOpt, areaSelectStyle, axisModel, areaWidth);
 
-            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+            var animationModel = (payload && payload.animation === false) ? null : axisModel;
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
         },
 
         _refreshBrushController: function (builderOpt, areaSelectStyle, axisModel, areaWidth) {

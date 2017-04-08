@@ -13,7 +13,7 @@ define(function (require) {
      *                      'push' handleEnds[0] can not be bigger then handleEnds[1],
      *                              when they touch, one push other.
      * @param {number} handleIndex If mode is 'rigid', handleIndex is not required.
-     * @param {Array.<number>} The input handleEnds.
+     * @return {Array.<number>} The input handleEnds.
      */
     return function (delta, handleEnds, extent, mode, handleIndex) {
         if (!delta) {
