@@ -291,7 +291,7 @@ define(function (require) {
                         }
                     });
 
-                    graphic.updateProps(pointer, {
+                    graphic.initProps(pointer, {
                         shape: {
                             angle: numberUtil.linearMap(data.get('value', idx), valueExtent, angleExtent, true)
                         }

@@ -35,20 +35,36 @@ define(function (require) {
             if (!zrUtil.isArray(boundaryGap)) {
                 boundaryGap = [boundaryGap || 0, boundaryGap || 0];
             }
+            if (typeof boundaryGap[0] === 'boolean') {
+                if (__DEV__) {
+                    console.warn('Boolean type for boundaryGap is only '
+                        + 'allowed for ordinal axis. Please use string in '
+                        + 'percentage instead, e.g., "20%". Currently, '
+                        + 'boundaryGap is set to be 0.');
+                }
+                boundaryGap = [0, 0];
+            }
             boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
             boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
-            span = originalExtent[1] - originalExtent[0];
+            span = (originalExtent[1] - originalExtent[0])
+                || Math.abs(originalExtent[0]);
         }
 
         if (min == null) {
             min = scaleType === 'ordinal'
                 ? (axisDataLen ? 0 : NaN)
-                : originalExtent[0] - boundaryGap[0] * span;
+                : (originalExtent[0] < 0
+                    // Don't show negative gap for all-positive data
+                    ? originalExtent[0] - boundaryGap[0] * span
+                    : 0);
         }
         if (max == null) {
             max = scaleType === 'ordinal'
                 ? (axisDataLen ? axisDataLen - 1 : NaN)
-                : originalExtent[1] + boundaryGap[1] * span;
+                : (originalExtent[1] > 0
+                    // Don't show positive gap for all-negative data
+                    ? originalExtent[1] + boundaryGap[1] * span
+                    : 0);
         }
 
         if (min === 'dataMin') {
