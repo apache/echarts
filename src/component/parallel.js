@@ -50,14 +50,15 @@ define(function(require) {
                 [e.offsetX, e.offsetY]
             );
 
-            result.jump && this._throttledDispatchExpand.debounceNextCall(model.get('axisExpandDebounce'));
+            var behavior = result.behavior;
+            behavior === 'jump' && this._throttledDispatchExpand.debounceNextCall(model.get('axisExpandDebounce'));
             this._throttledDispatchExpand(
-                !result.delta
+                behavior === 'none'
                     ? null // Cancle the last trigger, in case that mouse slide out of the area quickly.
                     : {
                         axisExpandWindow: result.axisExpandWindow,
                         // Jumping uses animation, and sliding suppresses animation.
-                        animation: result.jump ? null : false
+                        animation: behavior === 'jump'  ? null : false
                     }
             );
         }

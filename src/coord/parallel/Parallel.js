@@ -190,7 +190,8 @@ define(function(require) {
                 && axisCount > 3
                 && axisCount > axisExpandCount
                 && axisExpandCount > 1
-                && axisExpandWidth > 0;
+                && axisExpandWidth > 0
+                && layoutLength > 0;
 
             // `axisExpandWindow` is According to the coordinates of [0, axisExpandLength],
             // for sake of consider the case that axisCollapseWidth is 0 (when screen is narrow),
@@ -399,17 +400,18 @@ define(function(require) {
 
         /**
          * @param {Array.<number>} point
-         * @return {Object} {axisExpandWindow, delta, jump}.
+         * @return {Object} {axisExpandWindow, delta, behavior: 'jump' | 'slide' | 'none'}.
          */
         getSlidedAxisExpandWindow: function (point) {
             var layoutInfo = this._makeLayoutInfo();
             var pixelDimIndex = layoutInfo.pixelDimIndex;
             var axisExpandWindow = layoutInfo.axisExpandWindow.slice();
             var winSize = axisExpandWindow[1] - axisExpandWindow[0];
+            var extent = [0, layoutInfo.axisExpandWidth * (layoutInfo.axisCount - 1)];
 
             // Out of the area of coordinate system.
             if (!this.containPoint(point)) {
-                return {delta: 0, axisExpandWindow: axisExpandWindow};
+                return {behavior: 'none', axisExpandWindow: axisExpandWindow};
             }
 
             // Conver the point from global to expand coordinates.
@@ -418,35 +420,41 @@ define(function(require) {
             // For dragging operation convenience, the window should not be
             // slided when mouse is the center area of the window.
             var delta;
-            var jump;
+            var behavior = 'slide';
             var axisCollapseWidth = layoutInfo.axisCollapseWidth;
             var triggerArea = this._model.get('axisExpandSlideTriggerArea');
             // But consider touch device, jump is necessary.
             var useJump = triggerArea[0] != null;
 
-            if (useJump && axisCollapseWidth && pointCoord < winSize * triggerArea[0]) {
-                jump = true;
-                delta = pointCoord - winSize * triggerArea[2];
-            }
-            else if (useJump && axisCollapseWidth && pointCoord > winSize * (1 - triggerArea[0])) {
-                jump = true;
-                delta = pointCoord - winSize * (1 - triggerArea[2]);
-            }
-            else {
-                (delta = pointCoord - winSize * triggerArea[1]) >= 0
-                    && (delta = pointCoord - winSize * (1 - triggerArea[1])) <= 0
-                    && (delta = 0);
-            }
-
             if (axisCollapseWidth) {
+                if (useJump && axisCollapseWidth && pointCoord < winSize * triggerArea[0]) {
+                    behavior = 'jump';
+                    delta = pointCoord - winSize * triggerArea[2];
+                }
+                else if (useJump && axisCollapseWidth && pointCoord > winSize * (1 - triggerArea[0])) {
+                    behavior = 'jump';
+                    delta = pointCoord - winSize * (1 - triggerArea[2]);
+                }
+                else {
+                    (delta = pointCoord - winSize * triggerArea[1]) >= 0
+                        && (delta = pointCoord - winSize * (1 - triggerArea[1])) <= 0
+                        && (delta = 0);
+                }
                 delta *= layoutInfo.axisExpandWidth / axisCollapseWidth;
+                sliderMove(delta, axisExpandWindow, extent, 'rigid');
+            }
+            // When screen is too narrow, make it visible and slidable, although it is hard to interact.
+            else {
+                var winSize = axisExpandWindow[1] - axisExpandWindow[0];
+                var pos = extent[1] * pointCoord / winSize;
+                axisExpandWindow = [mathMax(0, pos - winSize / 2)];
+                axisExpandWindow[1] = mathMin(extent[1], axisExpandWindow[0] + winSize);
+                axisExpandWindow[0] = axisExpandWindow[1] - winSize;
             }
 
-            var extent = [0, layoutInfo.axisExpandWidth * (layoutInfo.axisCount - 1)];
             return {
-                axisExpandWindow: sliderMove(delta, axisExpandWindow, extent, 'rigid'),
-                delta: delta,
-                jump: jump
+                axisExpandWindow: axisExpandWindow,
+                behavior: behavior
             };
         }
     };
