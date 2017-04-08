@@ -387,7 +387,7 @@ option = {
         top: '50%',
         left: 60,
         right: 20,
-        bottom: 60,
+        bottom: 100,
         axisExpandable: true,
         axisExpandCenter: 15,
         axisExpandCount: 10,
@@ -398,10 +398,13 @@ option = {
         parallelAxisDefault: {
             type: 'value',
             nameLocation: 'start',
-            // nameRotate: 45,
+            nameRotate: 25,
             // nameLocation: 'end',
             nameTextStyle: {
                 fontSize: 12
+            },
+            nameTruncate: {
+                maxWidth: 170
             },
             nameGap: 20,
             splitNumber: 3,

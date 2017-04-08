@@ -60,6 +60,7 @@ define(function (require) {
      * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
+     * @param {number} [opt.nameTruncateMaxWidth]
      */
     var AxisBuilder = function (axisModel, opt) {
 
@@ -401,7 +402,9 @@ define(function (require) {
 
             var truncateOpt = axisModel.get('nameTruncate', true) || {};
             var ellipsis = truncateOpt.ellipsis;
-            var maxWidth = retrieve(truncateOpt.maxWidth, axisNameAvailableWidth);
+            var maxWidth = retrieve(
+                opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
+            );
             var truncatedText = (ellipsis != null && maxWidth != null)
                 ? formatUtil.truncateText(
                     name, maxWidth, textFont, ellipsis,

@@ -297,6 +297,7 @@ define(function(require) {
                     transform: transform,
                     axisNameAvailableWidth: posInfo.axisNameAvailableWidth,
                     axisLabelShow: posInfo.axisLabelShow,
+                    nameTruncateMaxWidth: posInfo.nameTruncateMaxWidth,
                     tickDirection: 1,
                     labelDirection: 1
                 };
@@ -482,9 +483,11 @@ define(function(require) {
         var position;
         var axisNameAvailableWidth = axisCollapseWidth;
         var axisLabelShow = false;
+        var nameTruncateMaxWidth;
 
         if (axisIndex < winInnerIndices[0]) {
             position = axisIndex * axisCollapseWidth;
+            nameTruncateMaxWidth = axisCollapseWidth;
         }
         else if (axisIndex <= winInnerIndices[1]) {
             position = layoutInfo.axisExpandWindow0Pos
@@ -494,12 +497,14 @@ define(function(require) {
         }
         else {
             position = layoutLength - (axisCount - 1 - axisIndex) * axisCollapseWidth;
+            nameTruncateMaxWidth = axisCollapseWidth;
         }
 
         return {
             position: position,
             axisNameAvailableWidth: axisNameAvailableWidth,
-            axisLabelShow: axisLabelShow
+            axisLabelShow: axisLabelShow,
+            nameTruncateMaxWidth: nameTruncateMaxWidth
         };
     }
 
