@@ -72,21 +72,17 @@ define(function (require) {
             graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
         },
 
+        /**
+         * @override
+         */
+        updateVisual: function (axisModel, ecModel, api, payload) {
+            this._brushController && this._brushController
+                .updateCovers(getCoverInfoList(axisModel));
+        },
+
         _refreshBrushController: function (builderOpt, areaSelectStyle, axisModel, areaWidth) {
             // After filtering, axis may change, select area needs to be update.
-            var axis = axisModel.axis;
-            var coverInfoList = zrUtil.map(axisModel.activeIntervals, function (interval) {
-                return {
-                    brushType: 'lineX',
-                    panelId: 'pl',
-                    range: [
-                        axis.dataToCoord(interval[0], true),
-                        axis.dataToCoord(interval[1], true)
-                    ]
-                };
-            });
-
-            var extent = axis.getExtent();
+            var extent = axisModel.axis.getExtent();
             var extentLen = extent[1] - extent[0];
             var extra = Math.min(30, Math.abs(extentLen) * 0.1); // Arbitrary value.
 
@@ -116,7 +112,7 @@ define(function (require) {
                     brushStyle: areaSelectStyle,
                     removeOnClick: true
                 })
-                .updateCovers(coverInfoList);
+                .updateCovers(getCoverInfoList(axisModel));
         },
 
         _onBrush: function (coverInfoList, opt) {
@@ -157,6 +153,20 @@ define(function (require) {
             && ecModel.findComponents(
                 {mainType: 'parallelAxis', query: payload}
             )[0] === axisModel;
+    }
+
+    function getCoverInfoList(axisModel) {
+        var axis = axisModel.axis;
+        return zrUtil.map(axisModel.activeIntervals, function (interval) {
+            return {
+                brushType: 'lineX',
+                panelId: 'pl',
+                range: [
+                    axis.dataToCoord(interval[0], true),
+                    axis.dataToCoord(interval[1], true)
+                ]
+            };
+        });
     }
 
     return AxisView;
