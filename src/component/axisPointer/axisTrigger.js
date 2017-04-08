@@ -146,7 +146,7 @@ define(function(require) {
                 seriesNestestValue = result.nestestValue;
             }
             else {
-                dataIndices = series.getData().indexOfNearest(
+                dataIndices = series.getData().indicesOfNearest(
                     dataDim[0],
                     value,
                     // Add a threshold to avoid find the wrong dataIndex

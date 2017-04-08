@@ -33,7 +33,7 @@ define(function (require) {
         var coordArr = [];
         var value = numCalculate(data, targetDataDim, mlType);
 
-        var dataIndex = data.indexOfNearest(targetDataDim, value, true)[0];
+        var dataIndex = data.indicesOfNearest(targetDataDim, value, true)[0];
         coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex, true);
         coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex, true);
 

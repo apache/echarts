@@ -549,7 +549,7 @@ define(function (require) {
      * @param {number} [maxDistance=Infinity]
      * @return {Array.<number>} Considere multiple points has the same value.
      */
-    listProto.indexOfNearest = function (dim, value, stack, maxDistance) {
+    listProto.indicesOfNearest = function (dim, value, stack, maxDistance) {
         var storage = this._storage;
         var dimData = storage[dim];
         var nearestIndices = [];
