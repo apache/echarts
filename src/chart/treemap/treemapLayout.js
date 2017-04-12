@@ -301,8 +301,13 @@ define(function (require) {
     function sort(viewChildren, orderBy) {
         if (orderBy) {
             viewChildren.sort(function (a, b) {
-                return orderBy === 'asc'
+                var diff = orderBy === 'asc'
                     ?  a.getValue() - b.getValue() : b.getValue() - a.getValue();
+                return diff === 0
+                    ? (orderBy === 'asc'
+                        ? a.dataIndex - b.dataIndex : b.dataIndex - a.dataIndex
+                    )
+                    : diff;
             });
         }
         return viewChildren;
