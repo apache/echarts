@@ -50,21 +50,30 @@ define(function (require) {
                 || Math.abs(originalExtent[0]);
         }
 
+        // Notice: When min/max is not set (that is, when there are null/undefined,
+        // which is the most common case), these cases should be ensured:
+        // (1) For 'ordinal', show all axis.data.
+        // (2) For others:
+        //      + `boundaryGap` is applied (if min/max set, boundaryGap is
+        //      disabled).
+        //      + If `needCrossZero`, min/max should be zero, otherwise, min/max should
+        //      be the result that originalExtent enlarged by boundaryGap.
+        // (3) If no data, it should be ensured that `scale.setBlank` is set.
+
+        // FIXME
+        // (1) When min/max is 'dataMin' or 'dataMax', should boundaryGap be able to used?
+        // (2) When `needCrossZero` and all data is positive/negative, should it be ensured
+        // that the results processed by boundaryGap are positive/negative?
+
         if (min == null) {
             min = scaleType === 'ordinal'
                 ? (axisDataLen ? 0 : NaN)
-                : (originalExtent[0] < 0
-                    // Don't show negative gap for all-positive data
-                    ? originalExtent[0] - boundaryGap[0] * span
-                    : 0);
+                : originalExtent[0] - boundaryGap[0] * span;
         }
         if (max == null) {
             max = scaleType === 'ordinal'
                 ? (axisDataLen ? axisDataLen - 1 : NaN)
-                : (originalExtent[1] > 0
-                    // Don't show positive gap for all-negative data
-                    ? originalExtent[1] + boundaryGap[1] * span
-                    : 0);
+                : originalExtent[1] + boundaryGap[1] * span;
         }
 
         if (min === 'dataMin') {
