@@ -248,7 +248,10 @@ define(function (require) {
         if (zrUtil.isString(brushSelector)) {
             var sels = [];
             zrUtil.each(selector, function (selectorsByElementType, brushType) {
-                sels[brushType] = selectorsByElementType[brushSelector];
+                sels[brushType] = function (dataIndex, data, selectors, area) {
+                    var itemLayout = data.getItemLayout(dataIndex);
+                    return selectorsByElementType[brushSelector](itemLayout, selectors, area);
+                };
             });
             return sels;
         }
