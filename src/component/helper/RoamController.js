@@ -106,7 +106,7 @@ define(function (require) {
 
         // Only check on mosedown, but not mousemove.
         // Mouse can be out of target when mouse moving.
-        if (this.pointerChecker && this.pointerChecker(x, y)) {
+        if (this.pointerChecker && this.pointerChecker(e, x, y)) {
             this._x = x;
             this._y = y;
             this._dragging = true;
@@ -168,7 +168,7 @@ define(function (require) {
     }
 
     function zoom(e, zoomDelta, zoomX, zoomY) {
-        if (this.pointerChecker && this.pointerChecker(zoomX, zoomY)) {
+        if (this.pointerChecker && this.pointerChecker(e, zoomX, zoomY)) {
             // When mouse is out of roamController rect,
             // default befavoius should be be disabled, otherwise
             // page sliding is disabled, contrary to expectation.

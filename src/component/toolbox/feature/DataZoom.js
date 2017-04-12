@@ -51,7 +51,7 @@ define(function(require) {
         this.ecModel = ecModel;
         this.api = api;
 
-        updateZoomBtnStatus(featureModel, ecModel, this, payload);
+        updateZoomBtnStatus(featureModel, ecModel, this, payload, api);
         updateBackBtnStatus(featureModel, ecModel);
     };
 
@@ -176,7 +176,7 @@ define(function(require) {
         );
     }
 
-    function updateZoomBtnStatus(featureModel, ecModel, view, payload) {
+    function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
         var zoomActive = view._isZoomActive;
 
         if (payload && payload.type === 'takeGlobalCursor') {
@@ -193,7 +193,7 @@ define(function(require) {
         );
 
         view._brushController
-            .setPanels(brushTargetManager.makePanelOpts(function (targetInfo) {
+            .setPanels(brushTargetManager.makePanelOpts(api, function (targetInfo) {
                 return (targetInfo.xAxisDeclared && !targetInfo.yAxisDeclared)
                     ? 'lineX'
                     : (!targetInfo.xAxisDeclared && targetInfo.yAxisDeclared)

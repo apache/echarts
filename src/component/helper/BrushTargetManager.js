@@ -3,6 +3,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var modelUtil = require('../../util/model');
+    var brushHelper = require('./brushHelper');
 
     var each = zrUtil.each;
     var indexOf = zrUtil.indexOf;
@@ -168,12 +169,17 @@ define(function(require) {
         }, this);
     };
 
-    proto.makePanelOpts = function (getDefaultBrushType) {
+    proto.makePanelOpts = function (api, getDefaultBrushType) {
         return zrUtil.map(this._targetInfoList, function (targetInfo) {
+            var rect = targetInfo.getPanelRect();
             return {
                 panelId: targetInfo.panelId,
-                rect: targetInfo.getPanelRect(),
-                defaultBrushType: getDefaultBrushType && getDefaultBrushType(targetInfo)
+                defaultBrushType: getDefaultBrushType && getDefaultBrushType(targetInfo),
+                clipPath: brushHelper.makeRectPanelClipPath(rect),
+                isTargetByCursor: brushHelper.makeRectIsTargetByCursor(
+                    rect, api, targetInfo.coordSysModel
+                ),
+                getLinearBrushOtherExtent: brushHelper.makeLinearBrushOtherExtent(rect)
             };
         });
     };
@@ -276,6 +282,7 @@ define(function(require) {
                 targetInfoList.push({
                     panelId: 'grid--' + gridModel.id,
                     gridModel: gridModel,
+                    coordSysModel: gridModel,
                     // Use the first one as the representitive coordSys.
                     coordSys: cartesians[0],
                     coordSyses: cartesians,
@@ -292,6 +299,7 @@ define(function(require) {
                 targetInfoList.push({
                     panelId: 'geo--' + geoModel.id,
                     geoModel: geoModel,
+                    coordSysModel: geoModel,
                     coordSys: coordSys,
                     coordSyses: [coordSys],
                     getPanelRect: panelRectBuilder.geo

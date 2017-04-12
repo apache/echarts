@@ -51,17 +51,5 @@ define(function (require) {
         target.dirty();
     };
 
-    /**
-     * Avoid that: mouse click on a elements that is over geo or graph,
-     * but roam is triggered.
-     */
-    helper.onIrrelevantElement = function (x, y, ecModel, api, targetModel) {
-        var model = api.getComponentByElement(api.getZr().handler.findHover(x, y, null, true));
-        var coordSys = model && model.coordinateSystem;
-        return model
-            && model !== targetModel
-            && (model.mainType !== 'series' || !coordSys || coordSys.model !== targetModel);
-    };
-
     return helper;
 });

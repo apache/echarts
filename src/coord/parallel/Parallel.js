@@ -91,11 +91,11 @@ define(function(require) {
                 axis.onBand = isCategory && axisModel.get('boundaryGap');
                 axis.inverse = axisModel.get('inverse');
 
-                // Inject axis into axisModel
+                // Injection
                 axisModel.axis = axis;
-
-                // Inject axisModel into axis
                 axis.model = axisModel;
+                axis.coordinateSystem = axisModel.coordinateSystem = this;
+
             }, this);
         },
 
@@ -442,7 +442,10 @@ define(function(require) {
                         && (delta = 0);
                 }
                 delta *= layoutInfo.axisExpandWidth / axisCollapseWidth;
-                sliderMove(delta, axisExpandWindow, extent, 'rigid');
+                delta
+                    ? sliderMove(delta, axisExpandWindow, extent, 'rigid')
+                    // Avoid nonsense triger on mousemove.
+                    : (behavior = 'none');
             }
             // When screen is too narrow, make it visible and slidable, although it is hard to interact.
             else {

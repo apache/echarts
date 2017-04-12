@@ -5,6 +5,7 @@ define(function (require) {
 
     var RoamController = require('./RoamController');
     var roamHelper = require('../../component/helper/roamHelper');
+    var cursorHelper = require('../../component/helper/cursorHelper');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
 
@@ -357,9 +358,9 @@ define(function (require) {
                 }
             }, this);
 
-            controller.setPointerChecker(function (x, y) {
+            controller.setPointerChecker(function (e, x, y) {
                 return geo.getViewRectAfterRoam().contain(x, y)
-                    && !roamHelper.onIrrelevantElement(x, y, ecModel, api, mapOrGeoModel);
+                    && !cursorHelper.onIrrelevantElement(e, api, mapOrGeoModel);
             });
         }
     };

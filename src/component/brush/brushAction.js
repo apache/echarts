@@ -16,7 +16,7 @@ define(function(require) {
     echarts.registerAction(
          {type: 'brush', event: 'brush', update: 'updateView'},
         function (payload, ecModel) {
-            ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
+            ecModel.eachComponent({mainType: 'brush', query: payload}, function (brushModel) {
                 brushModel.setAreas(payload.areas);
             });
         }

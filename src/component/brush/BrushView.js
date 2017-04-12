@@ -92,7 +92,7 @@ define(function (require) {
     function updateController(brushModel, ecModel, api, payload) {
         // Do not update controller when drawing.
         (!payload || payload.$from !== brushModel.id) && this._brushController
-            .setPanels(brushModel.brushTargetManager.makePanelOpts())
+            .setPanels(brushModel.brushTargetManager.makePanelOpts(api))
             .enableBrush(brushModel.brushOption)
             .updateCovers(brushModel.areas.slice());
     }

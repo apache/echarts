@@ -3,6 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var AxisBuilder = require('./AxisBuilder');
     var BrushController = require('../helper/BrushController');
+    var brushHelper = require('../helper/brushHelper');
     var graphic = require('../../util/graphic');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'axisName'];
@@ -45,9 +46,8 @@ define(function (require) {
                 return;
             }
 
-            var coordSys = ecModel.getComponent(
-                'parallel', axisModel.get('parallelIndex')
-            ).coordinateSystem;
+            var coordSysModel = getCoordSysModel(axisModel, ecModel);
+            var coordSys = coordSysModel.coordinateSystem;
 
             var areaSelectStyle = axisModel.getAreaSelectStyle();
             var areaWidth = areaSelectStyle.width;
@@ -66,7 +66,9 @@ define(function (require) {
 
             this._axisGroup.add(axisBuilder.getGroup());
 
-            this._refreshBrushController(builderOpt, areaSelectStyle, axisModel, areaWidth);
+            this._refreshBrushController(
+                builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
+            );
 
             var animationModel = (payload && payload.animation === false) ? null : axisModel;
             graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
@@ -80,7 +82,9 @@ define(function (require) {
                 .updateCovers(getCoverInfoList(axisModel));
         },
 
-        _refreshBrushController: function (builderOpt, areaSelectStyle, axisModel, areaWidth) {
+        _refreshBrushController: function (
+            builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
+        ) {
             // After filtering, axis may change, select area needs to be update.
             var extent = axisModel.axis.getExtent();
             var extentLen = extent[1] - extent[0];
@@ -105,7 +109,9 @@ define(function (require) {
                 })
                 .setPanels([{
                     panelId: 'pl',
-                    rect: rect
+                    clipPath: brushHelper.makeRectPanelClipPath(rect),
+                    isTargetByCursor: brushHelper.makeRectIsTargetByCursor(rect, api, coordSysModel),
+                    getLinearBrushOtherExtent: brushHelper.makeLinearBrushOtherExtent(rect, 0)
                 }])
                 .enableBrush({
                     brushType: 'lineX',
@@ -119,7 +125,6 @@ define(function (require) {
             // Do not cache these object, because the mey be changed.
             var axisModel = this.axisModel;
             var axis = axisModel.axis;
-
             var intervals = zrUtil.map(coverInfoList, function (coverInfo) {
                 return [
                     axis.coordToData(coverInfo.range[0], true),
@@ -167,6 +172,12 @@ define(function (require) {
                 ]
             };
         });
+    }
+
+    function getCoordSysModel(axisModel, ecModel) {
+        return ecModel.getComponent(
+            'parallel', axisModel.get('parallelIndex')
+        );
     }
 
     return AxisView;

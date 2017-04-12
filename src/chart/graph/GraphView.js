@@ -5,6 +5,7 @@ define(function (require) {
     var LineDraw = require('../helper/LineDraw');
     var RoamController = require('../../component/helper/RoamController');
     var roamHelper = require('../../component/helper/roamHelper');
+    var cursorHelper = require('../../component/helper/cursorHelper');
 
     var graphic = require('../../util/graphic');
     var adjustEdge = require('./adjustEdge');
@@ -261,10 +262,11 @@ define(function (require) {
             var controllerHost = this._controllerHost;
             var group = this.group;
 
-            controller.setPointerChecker(function (x, y) {
+            controller.setPointerChecker(function (e, x, y) {
                 var rect = group.getBoundingRect();
                 rect.applyTransform(group.transform);
-                return rect.contain(x, y) && !roamHelper.onIrrelevantElement(x, y, ecModel, api, seriesModel);
+                return rect.contain(x, y)
+                    && !cursorHelper.onIrrelevantElement(e, api, seriesModel);
             });
 
             if (seriesModel.coordinateSystem.type !== 'view') {
