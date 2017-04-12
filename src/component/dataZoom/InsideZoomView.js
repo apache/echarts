@@ -51,7 +51,7 @@ define(function (require) {
                         {
                             coordId: roams.generateCoordId(coordModel),
                             allCoordIds: allCoordIds,
-                            containsPoint: function (x, y) {
+                            containsPoint: function (e, x, y) {
                                 return coordModel.coordinateSystem.containPoint([x, y]);
                             },
                             dataZoomId: dataZoomModel.id,
