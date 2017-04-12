@@ -55,6 +55,7 @@ define(function(require) {
             // [out, in, jumpTarget]. In percentage. If use [null, 0.05], null means full.
             // Do not doc to user until necessary.
             axisExpandSlideTriggerArea: [-0.15, 0.05, 0.4],
+            axisExpandTriggerOn: 'click', // 'mousemove' or 'click'
 
             parallelAxisDefault: null
         },
