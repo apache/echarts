@@ -10,6 +10,8 @@ define(function(require) {
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
     var vector = require('zrender/core/vector');
+    var Transformable = require('zrender/mixin/Transformable');
+    var BoundingRect = require('zrender/core/BoundingRect');
 
     var graphic = {};
 
@@ -43,7 +45,7 @@ define(function(require) {
 
     graphic.RadialGradient = require('zrender/graphic/RadialGradient');
 
-    graphic.BoundingRect = require('zrender/core/BoundingRect');
+    graphic.BoundingRect = BoundingRect;
 
     /**
      * Extend shape with parameters
@@ -495,16 +497,22 @@ define(function(require) {
 
     /**
      * Apply transform to an vertex.
-     * @param {Array.<number>} vertex [x, y]
-     * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
+     * @param {Array.<number>} target [x, y]
+     * @param {Array.<number>|TypedArray.<number>|Object} transform Can be:
+     *      + Transform matrix: like [1, 0, 0, 1, 0, 0]
+     *      + {position, rotation, scale}, the same as `zrender/Transformable`.
      * @param {boolean=} invert Whether use invert matrix.
      * @return {Array.<number>} [x, y]
      */
-    graphic.applyTransform = function (vertex, transform, invert) {
+    graphic.applyTransform = function (target, transform, invert) {
+        if (transform && !zrUtil.isArrayLike(transform)) {
+            transform = Transformable.getLocalTransform(transform);
+        }
+
         if (invert) {
             transform = matrix.invert([], transform);
         }
-        return vector.applyTransform([], vertex, transform);
+        return vector.applyTransform([], target, transform);
     };
 
     /**

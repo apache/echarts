@@ -9,6 +9,7 @@ define(function(require) {
         'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption',
         'getViewOfComponentModel', 'getViewOfSeriesModel'
     ];
+    // And `getCoordinateSystems` and `getComponentByElement` will be injected in echarts.js
 
     function ExtensionAPI(chartInstance) {
         zrUtil.each(echartsAPIList, function (name) {
