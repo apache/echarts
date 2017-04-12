@@ -204,7 +204,7 @@ define(function (require) {
                     offsetX: payload.x,
                     offsetY: payload.y,
                     position: payload.position,
-                    target: api.getZr().handler.findHover(payload.x, payload.y),
+                    target: api.getZr().findHover(payload.x, payload.y).target,
                     event: {}
                 }, dispatchAction);
             }
