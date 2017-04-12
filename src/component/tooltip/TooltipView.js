@@ -200,6 +200,14 @@ define(function (require) {
                 }
             }
             else if (payload.x != null && payload.y != null) {
+                // FIXME
+                // should wrap dispatchAction like `axisPointer/globalListener` ?
+                api.dispatchAction({
+                    type: 'updateAxisPointer',
+                    x: payload.x,
+                    y: payload.y
+                });
+
                 this._tryShow({
                     offsetX: payload.x,
                     offsetY: payload.y,
