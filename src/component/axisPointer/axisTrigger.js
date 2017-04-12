@@ -65,21 +65,27 @@ define(function(require) {
         });
 
         // Process for linked axes.
+        var linkTriggers = {};
         each(axesInfo, function (tarAxisInfo, tarKey) {
             var linkGroup = tarAxisInfo.linkGroup;
 
             // If axis has been triggered in the previous stage, it should not be triggered by link.
-            linkGroup && !showValueMap[tarKey] && each(linkGroup.axesInfo, function (srcAxisInfo, srcKey) {
-                var srcValItem = showValueMap[srcKey];
-                // If srcValItem exist, source axis is triggered, so link to target axis.
-                if (srcAxisInfo !== tarAxisInfo && srcValItem) {
-                    var val = srcValItem.value;
-                    linkGroup.mapper && (val = tarAxisInfo.axis.scale.parse(linkGroup.mapper(
-                        val, makeMapperParam(srcAxisInfo), makeMapperParam(tarAxisInfo)
-                    )));
-                    processOnAxis(tarAxisInfo, val, updaters, true, outputFinder);
-                }
-            });
+            if (linkGroup && !showValueMap[tarKey]) {
+                each(linkGroup.axesInfo, function (srcAxisInfo, srcKey) {
+                    var srcValItem = showValueMap[srcKey];
+                    // If srcValItem exist, source axis is triggered, so link to target axis.
+                    if (srcAxisInfo !== tarAxisInfo && srcValItem) {
+                        var val = srcValItem.value;
+                        linkGroup.mapper && (val = tarAxisInfo.axis.scale.parse(linkGroup.mapper(
+                            val, makeMapperParam(srcAxisInfo), makeMapperParam(tarAxisInfo)
+                        )));
+                        linkTriggers[tarAxisInfo.key] = val;
+                    }
+                });
+            }
+        });
+        each(linkTriggers, function (val, tarKey) {
+            processOnAxis(axesInfo[tarKey], val, updaters, true, outputFinder);
         });
 
         updateModelActually(showValueMap, axesInfo);
