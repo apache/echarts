@@ -405,9 +405,13 @@ define(function(require) {
             });
 
             if (ignoreSize[hvIdx]) {
-                // Only one of left/height is premitted to exist.
-                hasValue(newOption, names[2]) && (merged[names[1]] = null);
-                hasValue(newOption, names[1]) && (merged[names[2]] = null);
+                // Only one of left/right is premitted to exist.
+                if (hasValue(newOption, names[1])) {
+                    merged[names[2]] = null;
+                }
+                else if (hasValue(newOption, names[2])) {
+                    merged[names[1]] = null;
+                }
                 return merged;
             }
 

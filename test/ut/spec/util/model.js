@@ -12,18 +12,6 @@ describe('util/model', function() {
         });
     });
 
-    function makeRecords(result) {
-        var o = {};
-        modelUtil.eachAxisDim(function (dimNames) {
-            o[dimNames.name] = {};
-            var r = result[dimNames.name] || [];
-            for (var i = 0; i < r.length; i++) {
-                o[dimNames.name][r[i]] = true;
-            }
-        });
-        return o;
-    }
-
     describe('compressBatches', function () {
 
         function item(seriesId, dataIndex) {

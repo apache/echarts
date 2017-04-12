@@ -7,6 +7,7 @@ document.write('<script src="spec/zr/core/util.js"><\/script>');
 document.write('<script src="spec/util/graphic.js"><\/script>');
 document.write('<script src="spec/util/model.js"><\/script>');
 document.write('<script src="spec/util/number.js"><\/script>');
+document.write('<script src="spec/util/layout.js"><\/script>');
 document.write('<script src="spec/model/Component.js"><\/script>');
 document.write('<script src="spec/model/Global.js"><\/script>');
 document.write('<script src="spec/model/timelineOptions.js"><\/script>');
