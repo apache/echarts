@@ -61,10 +61,11 @@ define(function (require) {
             this._api = api;
 
             /**
+             * Should be cleaned when render.
              * @private
              * @type {Array.<Array.<Object>>}
              */
-            this._lastDataByCoordSys;
+            this._lastDataByCoordSys = null;
 
             /**
              * @private
