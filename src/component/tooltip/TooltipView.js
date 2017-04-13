@@ -585,7 +585,7 @@ define(function (require) {
             }
             else {
                 var pos = refixTooltipPosition(
-                    x, y, content.el, viewWidth, viewHeight, align ? 0 : 20, vAlign ? 0 : 20
+                    x, y, content.el, viewWidth, viewHeight, align ? null : 20, vAlign ? null : 20
                 );
                 x = pos[0];
                 y = pos[1];
@@ -700,17 +700,21 @@ define(function (require) {
         var width = el.clientWidth;
         var height = el.clientHeight;
 
-        if (x + width + gapH > viewWidth) {
-            x -= width + gapH;
+        if (gapH != null) {
+            if (x + width + gapH > viewWidth) {
+                x -= width + gapH;
+            }
+            else {
+                x += gapH;
+            }
         }
-        else {
-            x += gapH;
-        }
-        if (y + height + gapV > viewHeight) {
-            y -= height + gapV;
-        }
-        else {
-            y += gapV;
+        if (gapV != null) {
+            if (y + height + gapV > viewHeight) {
+                y -= height + gapV;
+            }
+            else {
+                y += gapV;
+            }
         }
         return [x, y];
     }
