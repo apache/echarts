@@ -11,7 +11,16 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 ## Get ECharts
 
 + Download on [echarts.baidu.com](http://echarts.baidu.com/download.html)
+
 + `npm install echarts --save`
+
+## Get ECharts GL
+
+ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visualization and WebGL acceleration.
+
++ Get from [https://github.com/ecomfe/echarts-gl](https://github.com/ecomfe/echarts-gl)
+
++ `npm install echarts-gl --save`
 
 ## Docs
 
@@ -28,6 +37,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
     + [English](http://ecomfe.github.io/echarts-doc/public/en/option.html)
 
 ## Resources
+
 
 ### Awesome ECharts
 
