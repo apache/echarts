@@ -375,7 +375,7 @@
             }
 
             var rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
-            controller.setPointerChecker(function (x, y) {
+            controller.setPointerChecker(function (e, x, y) {
                 return rect.contain(x, y);
             });
         },
