@@ -88,7 +88,9 @@ define(function(require) {
                 shadowColor: labelModel.get('shadowColor'),
                 shadowOffsetX: labelModel.get('shadowOffsetX'),
                 shadowOffsetY: labelModel.get('shadowOffsetY')
-            }
+            },
+            // Lable should be over axisPointer.
+            z2: 10
         };
     };
 

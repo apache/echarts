@@ -172,7 +172,15 @@
                 var height = 250;
                 var gap = 50;
                 makeTimeGrid(option, {
-                    grid: {left: 100, top: baseTop, height: height}
+                    grid: {left: 100, top: baseTop, height: height},
+                    yAxis: {
+                        axisTick: {
+                            inside: true
+                        },
+                        axisLabel: {
+                            inside: true
+                        }
+                    }
                 });
                 baseTop += height + gap;
 
