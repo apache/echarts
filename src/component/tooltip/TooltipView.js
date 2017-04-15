@@ -613,13 +613,13 @@ define(function (require) {
             var contentNotChanged = !!lastCoordSys
                 && lastCoordSys.length === dataByCoordSys.length;
 
-            each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+            contentNotChanged && each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
                 var lastDataByAxis = lastItemCoordSys.dataByAxis || {};
                 var thisItemCoordSys = dataByCoordSys[indexCoordSys] || {};
                 var thisDataByAxis = thisItemCoordSys.dataByAxis || [];
                 contentNotChanged &= lastDataByAxis.length === thisDataByAxis.length;
 
-                each(lastDataByAxis, function (lastItem, indexAxis) {
+                contentNotChanged && each(lastDataByAxis, function (lastItem, indexAxis) {
                     var thisItem = thisDataByAxis[indexAxis] || {};
                     var lastIndices = lastItem.seriesDataIndices || [];
                     var newIndices = thisItem.seriesDataIndices || [];
@@ -630,7 +630,7 @@ define(function (require) {
                         && lastItem.axisId === thisItem.axisId
                         && lastIndices.length === newIndices.length;
 
-                    each(lastIndices, function (lastIdxItem, j) {
+                    contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
                         var newIdxItem = newIndices[j];
                         contentNotChanged &=
                             lastIdxItem.seriesIndex === newIdxItem.seriesIndex
