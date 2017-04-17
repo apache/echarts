@@ -17,7 +17,12 @@ define(function(require) {
      * @param {string} [currTrigger] 'click' | 'mousemove' | 'leave'
      * @param {Array.<number>} [point] x and y, which are mandatory, specify a point to
      *              tigger axisPointer and tooltip.
-     * @param {Object} [finder] {xAxisId: ...[], yAxisName: ...[], angleAxisIndex: ...[]}
+     * @param {Object} [finder] {
+     *                  seriesIndex, dataIndex,
+     *                  axesInfo: [{
+     *                      axisDim: 'x'|'y'|'angle'|..., axisIndex: ..., value: ...
+     *                  }, ...]
+     *              }
      *              These properties, which are optional, restrict target axes.
      * @param {Function} dispatchAction
      * @param {module:echarts/ExtensionAPI} api
@@ -30,7 +35,9 @@ define(function(require) {
         ecModel, api, tooltipOption, highDownKey
     ) {
         finder = finder || {};
-        if (!point || point[0] == null || point[1] == null) {
+        if (illegalPoint(point)) {
+            // Used in the default behavior of `connection`: use the sample seriesIndex
+            // and dataIndex. And also used in the tooltipView trigger.
             point = findPointFromSeries({
                 seriesIndex: finder.seriesIndex,
                 // Do not use dataIndexInside from other ec instance.
@@ -38,6 +45,13 @@ define(function(require) {
                 dataIndex: finder.dataIndex
             }, ecModel).point;
         }
+        var isIllegalPoint = illegalPoint(point);
+
+        // Axis and value can be specified when calling dispatchAction({type: 'updateAxisPointer'}).
+        // Notice: In this case, it is difficult to get the `point` (which is necessary to show
+        // tooltip, so if point is not given, we just use the point found by sample seriesIndex
+        // and dataIndex.
+        var inputAxesInfo = finder.axesInfo;
 
         var axesInfo = coordSysAxesInfo.axesInfo;
         var shouldHide = currTrigger === 'leave' || illegalPoint(point);
@@ -54,12 +68,19 @@ define(function(require) {
 
         // Process for triggered axes.
         each(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
-            var coordSysContainsPoint = coordSys.containPoint(point);
+            // If a point given, it must be contained by the coordinate system.
+            var coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
 
             each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
                 var axis = axisInfo.axis;
-                if (!shouldHide && coordSysContainsPoint && !notTargetAxis(finder, axis)) {
-                    processOnAxis(axisInfo, axis.pointToData(point), updaters, false, outputFinder);
+                var inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
+                // If no inputAxesInfo, no axis is restricted.
+                if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
+                    var val = inputAxisInfo && inputAxisInfo.value;
+                    if (val == null && !isIllegalPoint) {
+                        val = axis.pointToData(point);
+                    }
+                    val != null && processOnAxis(axisInfo, val, updaters, false, outputFinder);
                 }
             });
         });
@@ -88,7 +109,7 @@ define(function(require) {
             processOnAxis(axesInfo[tarKey], val, updaters, true, outputFinder);
         });
 
-        updateModelActually(showValueMap, axesInfo);
+        updateModelActually(showValueMap, axesInfo, outputFinder);
         dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction);
         dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey);
 
@@ -127,7 +148,7 @@ define(function(require) {
         }
 
         updaters.highlight('highlight', payloadBatch);
-        updaters.showPointer(axisInfo, newValue, payloadBatch);
+        updaters.showPointer(axisInfo, newValue, payloadBatch, outputFinder);
         // Tooltip should always be snapToValue, otherwise there will be
         // incorrect "axis value ~ series value" mapping displayed in tooltip.
         updaters.showTooltip(axisInfo, payloadInfo, snapToValue);
@@ -247,7 +268,8 @@ define(function(require) {
         highlightBatch.push.apply(highlightBatch, batch);
     }
 
-    function updateModelActually(showValueMap, axesInfo) {
+    function updateModelActually(showValueMap, axesInfo, outputFinder) {
+        var outputAxesInfo = outputFinder.axesInfo = [];
         // Basic logic: If no 'show' required, 'hide' this axisPointer.
         each(axesInfo, function (axisInfo, key) {
             var option = axisInfo.axisPointerModel.option;
@@ -266,6 +288,13 @@ define(function(require) {
                 // click legend to toggle axis blank.
                 !axisInfo.useHandle && (option.status = 'hide');
             }
+
+            // If status is 'hide', should be no info in payload.
+            option.status === 'show' && outputAxesInfo.push({
+                axisDim: axisInfo.axis.dim,
+                axisIndex: axisInfo.axis.model.componentIndex,
+                value: option.value
+            });
         });
     }
 
@@ -337,21 +366,15 @@ define(function(require) {
         });
     }
 
-    function notTargetAxis(finder, axis) {
-        var isTarget = 1;
-        // If none of xxxAxisId and xxxAxisName and xxxAxisIndex exists in finder,
-        // no axis is not target axis.
-        each(finder, function (value, propName) {
-            isTarget &= !(/^.+(AxisId|AxisName|AxisIndex)$/.test(propName));
-        });
-        !isTarget && each(
-            [['AxisId', 'id'], ['AxisIndex', 'componentIndex'], ['AxisName', 'name']],
-            function (prop) {
-                var vals = modelUtil.normalizeToArray(finder[axis.dim + prop[0]]);
-                isTarget |= zrUtil.indexOf(vals, axis.model[prop[1]]) >= 0;
+    function findInputAxisInfo(inputAxesInfo, axisInfo) {
+        for (var i = 0; i < (inputAxesInfo || []).length; i++) {
+            var inputAxisInfo = inputAxesInfo[i];
+            if (axisInfo.axis.dim === inputAxisInfo.axisDim
+                && axisInfo.axis.model.componentIndex === inputAxisInfo.axisIndex
+            ) {
+                return inputAxisInfo;
             }
-        );
-        return !isTarget;
+        }
     }
 
     function makeMapperParam(axisInfo) {
@@ -365,7 +388,7 @@ define(function(require) {
     }
 
     function illegalPoint(point) {
-        return point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
+        return !point || point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
     }
 
     return axisTrigger;

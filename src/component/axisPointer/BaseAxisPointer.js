@@ -358,16 +358,18 @@ define(function(require) {
             }
 
             var payloadInfo = this._payloadInfo;
-            var payload = {
+            var axisModel = this._axisModel;
+            this._api.dispatchAction({
                 type: 'updateAxisPointer',
                 x: payloadInfo.cursorPoint[0],
                 y: payloadInfo.cursorPoint[1],
                 tooltipOption: payloadInfo.tooltipOption,
-                highDownKey: 'axisPointerHandle'
-            };
-            var axis = this._axisModel.axis;
-            payload[axis.dim + 'AxisId'] = this._axisModel.id;
-            this._api.dispatchAction(payload);
+                highDownKey: 'axisPointerHandle',
+                axesInfo: [{
+                    axisDim: axisModel.axis.dim,
+                    axisIndex: axisModel.componentIndex
+                }]
+            });
         },
 
         /**
