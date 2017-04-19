@@ -27,12 +27,11 @@ define(function(require) {
      * @param {Function} dispatchAction
      * @param {module:echarts/ExtensionAPI} api
      * @param {Object} [tooltipOption]
-     * @param {string} [highDownKey]
      * @return {Object} content of event obj for echarts.connect.
      */
     function axisTrigger(
         coordSysAxesInfo, currTrigger, point, finder, dispatchAction,
-        ecModel, api, tooltipOption, highDownKey
+        ecModel, api, tooltipOption
     ) {
         finder = finder || {};
         if (illegalPoint(point)) {
@@ -59,11 +58,9 @@ define(function(require) {
 
         var showValueMap = {};
         var dataByCoordSys = {list: [], map: {}};
-        var highlightBatch = [];
         var updaters = {
             showPointer: curry(showPointer, showValueMap),
-            showTooltip: curry(showTooltip, dataByCoordSys),
-            highlight: curry(highlight, highlightBatch)
+            showTooltip: curry(showTooltip, dataByCoordSys)
         };
 
         // Process for triggered axes.
@@ -111,7 +108,7 @@ define(function(require) {
 
         updateModelActually(showValueMap, axesInfo, outputFinder);
         dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction);
-        dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey);
+        dispatchHighDownActually(axesInfo, dispatchAction, api);
 
         return outputFinder;
     }
@@ -147,7 +144,6 @@ define(function(require) {
             }
         }
 
-        updaters.highlight('highlight', payloadBatch);
         updaters.showPointer(axisInfo, newValue, payloadBatch, outputFinder);
         // Tooltip should always be snapToValue, otherwise there will be
         // incorrect "axis value ~ series value" mapping displayed in tooltip.
@@ -264,10 +260,6 @@ define(function(require) {
         });
     }
 
-    function highlight(highlightBatch, actionType, batch) {
-        highlightBatch.push.apply(highlightBatch, batch);
-    }
-
     function updateModelActually(showValueMap, axesInfo, outputFinder) {
         var outputAxesInfo = outputFinder.axesInfo = [];
         // Basic logic: If no 'show' required, 'hide' this axisPointer.
@@ -278,7 +270,7 @@ define(function(require) {
             if (valItem) {
                 !axisInfo.useHandle && (option.status = 'show');
                 option.value = valItem.value;
-                // For label formatter param.
+                // For label formatter param and highlight.
                 option.seriesDataIndices = (valItem.payloadBatch || []).slice();
             }
             // When always show (e.g., handle used), remain
@@ -324,28 +316,24 @@ define(function(require) {
         });
     }
 
-    function dispatchHighDownActually(highlightBatch, dispatchAction, api, highDownKey) {
-        // Basic logic: If nothing highlighted, should downplay all highlighted items.
-        // This case will occur when mouse leave coordSys.
-
+    function dispatchHighDownActually(axesInfo, dispatchAction, api) {
         // FIXME
-        // (1) highlight status shoule be managemented in series.getData()?
-        // (2) If axisPointer A triggerOn 'handle' and axisPointer B triggerOn
-        // 'mousemove', items highlighted by A will be downplayed by B.
-        // It will not be fixed until someone requires this scenario.
+        // highlight status modification shoule be a stage of main process?
+        // (Consider confilct (e.g., legend and axisPointer) and setOption)
 
-        // Consider items area hightlighted by 'handle', and globalListener may
-        // downplay all items (including just highlighted ones) when mousemove.
-        // So we use a highDownKey to separate them as a temporary solution.
         var zr = api.getZr();
-        highDownKey = 'lastHighlights' + (highDownKey || '');
+        var highDownKey = 'axisPointerLastHighlights';
         var lastHighlights = get(zr)[highDownKey] || {};
         var newHighlights = get(zr)[highDownKey] = {};
 
+        // Update highlight/downplay status according to axisPointer model.
         // Build hash map and remove duplicate incidentally.
-        zrUtil.each(highlightBatch, function (batchItem) {
-            var key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
-            newHighlights[key] = batchItem;
+        each(axesInfo, function (axisInfo, key) {
+            var option = axisInfo.axisPointerModel.option;
+            option.status === 'show' && each(option.seriesDataIndices, function (batchItem) {
+                var key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
+                newHighlights[key] = batchItem;
+            });
         });
 
         // Diff.

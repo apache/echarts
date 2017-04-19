@@ -52,8 +52,7 @@ define(function (require) {
             payload.dispatchAction || zrUtil.bind(api.dispatchAction, api),
             ecModel,
             api,
-            payload.tooltipOption,
-            payload.highDownKey
+            payload.tooltipOption
         );
 
         return outputFinder;

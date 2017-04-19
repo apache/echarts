@@ -364,7 +364,6 @@ define(function(require) {
                 x: payloadInfo.cursorPoint[0],
                 y: payloadInfo.cursorPoint[1],
                 tooltipOption: payloadInfo.tooltipOption,
-                highDownKey: 'axisPointerHandle',
                 axesInfo: [{
                     axisDim: axisModel.axis.dim,
                     axisIndex: axisModel.componentIndex
