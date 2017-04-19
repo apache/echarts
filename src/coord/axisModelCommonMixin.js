@@ -8,7 +8,7 @@ define(function (require) {
             return obj.value;
         }
         else {
-            return obj;
+            return obj + '';
         }
     }
 
