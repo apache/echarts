@@ -47,6 +47,10 @@ define(function (require) {
         var dy = Math.sin(midAngle);
 
         var offset = isSelected ? selectedOffset : 0;
+        var pieces = el.parent && el.parent._children.length;
+        // no offset when there is only 1 piece
+        offset = (pieces && pieces > 1) ? offset : 0;
+
         var position = [dx * offset, dy * offset];
 
         hasAnimation
