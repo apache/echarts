@@ -5,6 +5,7 @@ define(function(require) {
     var BrushController = require('../../helper/BrushController');
     var BrushTargetManager = require('../../helper/BrushTargetManager');
     var history = require('../../dataZoom/history');
+    var sliderMove = require('../../helper/sliderMove');
 
     var each = zrUtil.each;
 
@@ -122,7 +123,19 @@ define(function(require) {
         this._dispatchZoomAction(snapshot);
 
         function setBatch(dimName, coordSys, minMax) {
-            var dataZoomModel = findDataZoom(dimName, coordSys.getAxis(dimName).model, ecModel);
+            var axis = coordSys.getAxis(dimName);
+            var axisModel = axis.model;
+            var dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
+
+            // Restrict range.
+            var minMaxSpan = dataZoomModel.findRepresentativeAxisProxy(axisModel).getMinMaxSpan();
+            if (minMaxSpan.minValueSpan != null || minMaxSpan.maxValueSpan != null) {
+                minMax = sliderMove(
+                    0, minMax.slice(), axis.scale.getExtent(), 0,
+                    minMaxSpan.minValueSpan, minMaxSpan.maxValueSpan
+                );
+            }
+
             dataZoomModel && (snapshot[dataZoomModel.id] = {
                 dataZoomId: dataZoomModel.id,
                 startValue: minMax[0],

@@ -520,25 +520,29 @@ define(function (require) {
         /**
          * @private
          * @param {(number|string)} handleIndex 0 or 1 or 'all'
-         * @param {number} dx
-         * @param {number} dy
+         * @param {number} delta
          */
         _updateInterval: function (handleIndex, delta) {
+            var dataZoomModel = this.dataZoomModel;
             var handleEnds = this._handleEnds;
             var viewExtend = this._getViewExtent();
+            var minMaxSpan = dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+            var percentExtent = [0, 100];
 
             sliderMove(
                 delta,
                 handleEnds,
                 viewExtend,
-                (handleIndex === 'all' || this.dataZoomModel.get('zoomLock'))
-                    ? 'rigid' : 'cross',
-                handleIndex
+                dataZoomModel.get('zoomLock') ? 'all' : handleIndex,
+                minMaxSpan.minSpan != null
+                    ? linearMap(minMaxSpan.minSpan, percentExtent, viewExtend, true) : null,
+                minMaxSpan.maxSpan != null
+                    ? linearMap(minMaxSpan.maxSpan, percentExtent, viewExtend, true) : null
             );
 
             this._range = asc([
-                linearMap(handleEnds[0], viewExtend, [0, 100], true),
-                linearMap(handleEnds[1], viewExtend, [0, 100], true)
+                linearMap(handleEnds[0], viewExtend, percentExtent, true),
+                linearMap(handleEnds[1], viewExtend, percentExtent, true)
             ]);
         },
 

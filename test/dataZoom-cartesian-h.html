@@ -6,9 +6,12 @@
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
+            html, body{
+                padding: 0;
+                margin: 0;
+            }
+            #main {
+                height: 500px;
             }
             body {
                 margin: 0;
@@ -19,7 +22,10 @@
                 line-height: 30px;
             }
         </style>
-        <h3>Check the highlighted label while data zooming</h3>
+        <h3>
+            Check the highlighted label while data zooming.<br>
+            Check the minSpan and maxSpan (both in slider and inside and toolbox zoom).
+        </h3>
         <div id="main"></div>
         <script>
 
@@ -32,6 +38,7 @@
                 'echarts/component/axis',
                 'echarts/component/dataZoom',
                 'echarts/component/tooltip',
+                'echarts/component/toolbox',
                 'echarts/component/markPoint',
                 'echarts/component/markLine'
             ], function (echarts) {
@@ -96,6 +103,15 @@
                     tooltip: {
                         trigger: 'axis'
                     },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                show: true,
+                                xAxisIndex: false
+                            },
+                            restore: {show: true}
+                        }
+                    },
                     yAxis: {
                         data: xAxisData,
                         boundaryGap: false
@@ -153,13 +169,17 @@
                             end: 30,
                             borderColor: 'rgba(0,0,0,0.15)',
                             backgroundColor: 'rgba(200,200,200,0)',
-                            yAxisIndex: 0
+                            yAxisIndex: 0,
+                            minValueSpan: 5,
+                            maxValueSpan: 80
                         },
                         {
                             type: 'inside',
                             startValue: 2,
                             end: 30,
-                            yAxisIndex: 0
+                            yAxisIndex: 0,
+                            minSpan: 5,
+                            maxSpan: 80
                         }
                     ]
                 });

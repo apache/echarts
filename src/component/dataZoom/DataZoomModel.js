@@ -47,7 +47,11 @@ define(function(require) {
             start: 0,               // Start percent. 0 ~ 100
             end: 100,               // End percent. 0 ~ 100
             startValue: null,       // Start value. If startValue specified, start is ignored.
-            endValue: null          // End value. If endValue specified, end is ignored.
+            endValue: null,         // End value. If endValue specified, end is ignored.
+            minSpan: null,          // 0 ~ 100
+            maxSpan: null,          // 0 ~ 100
+            minValueSpan: null,     // The range of dataZoom can not be smaller than that.
+            maxValueSpan: null      // The range of dataZoom can not be larger than that.
         },
 
         /**
@@ -469,9 +473,15 @@ define(function(require) {
 
         /**
          * @public
+         * @param {module:echarts/model/Model} [axisModel] If axisModel given, find axisProxy
+         *      corresponding to the axisModel
          * @return {module:echarts/component/dataZoom/AxisProxy}
          */
-        findRepresentativeAxisProxy: function () {
+        findRepresentativeAxisProxy: function (axisModel) {
+            if (axisModel) {
+                return axisModel.__dzAxisProxy;
+            }
+
             // Find the first hosted axisProxy
             var axisProxies = this._axisProxies;
             for (var key in axisProxies) {

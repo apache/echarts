@@ -443,7 +443,7 @@ define(function(require) {
                 }
                 delta *= layoutInfo.axisExpandWidth / axisCollapseWidth;
                 delta
-                    ? sliderMove(delta, axisExpandWindow, extent, 'rigid')
+                    ? sliderMove(delta, axisExpandWindow, extent, 'all')
                     // Avoid nonsense triger on mousemove.
                     : (behavior = 'none');
             }

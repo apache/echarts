@@ -355,16 +355,18 @@ define(function(require) {
             delta = delta || 0;
             var visualMapModel = this.visualMapModel;
             var handleEnds = this._handleEnds;
+            var sizeExtent = [0, visualMapModel.itemSize[1]];
 
             sliderMove(
                 delta,
                 handleEnds,
-                [0, visualMapModel.itemSize[1]],
-                handleIndex === 'all' ? 'rigid' : 'push',
-                handleIndex
+                sizeExtent,
+                handleIndex,
+                // cross is forbiden
+                0
             );
+
             var dataExtent = visualMapModel.getExtent();
-            var sizeExtent = [0, visualMapModel.itemSize[1]];
             // Update data interval.
             this._dataInterval = [
                 linearMap(handleEnds[0], sizeExtent, dataExtent, true),

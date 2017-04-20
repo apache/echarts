@@ -98,7 +98,7 @@ define(function (require) {
                 * (range[1] - range[0])
                 * directionInfo.pixel / directionInfo.pixelLength;
 
-            sliderMove(percentDelta, range, [0, 100], 'rigid');
+            sliderMove(percentDelta, range, [0, 100], 'all');
 
             return (this._range = range);
         },
@@ -131,7 +131,12 @@ define(function (require) {
             scale = Math.max(1 / scale, 0);
             range[0] = (range[0] - percentPoint) * scale + percentPoint;
             range[1] = (range[1] - percentPoint) * scale + percentPoint;
-            return (this._range = fixRange(range));
+
+            // Restrict range.
+            var minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+            sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
+
+            return (this._range = range);
         }
 
     });
@@ -213,19 +218,6 @@ define(function (require) {
             return ret;
         }
     };
-
-    function fixRange(range) {
-        // Clamp, using !(<= or >=) to handle NaN.
-        // jshint ignore:start
-        var bound = [0, 100];
-        !(range[0] <= bound[1]) && (range[0] = bound[1]);
-        !(range[1] <= bound[1]) && (range[1] = bound[1]);
-        !(range[0] >= bound[0]) && (range[0] = bound[0]);
-        !(range[1] >= bound[0]) && (range[1] = bound[0]);
-        // jshint ignore:end
-
-        return range;
-    }
 
     return InsideZoomView;
 });
