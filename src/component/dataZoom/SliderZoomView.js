@@ -248,11 +248,12 @@ define(function (require) {
             return [0, this._size[0]];
         },
 
-        _renderBackground : function () {
+        _renderBackground: function () {
             var dataZoomModel = this.dataZoomModel;
             var size = this._size;
+            var barGroup = this._displayables.barGroup;
 
-            this._displayables.barGroup.add(new Rect({
+            barGroup.add(new Rect({
                 silent: true,
                 shape: {
                     x: 0, y: 0, width: size[0], height: size[1]
@@ -261,6 +262,18 @@ define(function (require) {
                     fill: dataZoomModel.get('backgroundColor')
                 },
                 z2: -40
+            }));
+
+            // Click panel, over shadow, below handles.
+            barGroup.add(new Rect({
+                shape: {
+                    x: 0, y: 0, width: size[0], height: size[1]
+                },
+                style: {
+                    fill: 'transparent'
+                },
+                z2: 0,
+                onclick: zrUtil.bind(this._onClickPanelClick, this)
             }));
         },
 
@@ -686,7 +699,8 @@ define(function (require) {
             this._dragging = true;
 
             // Transform dx, dy to bar coordination.
-            var vertex = this._applyBarTransform([dx, dy], true);
+            var barTransform = this._displayables.barGroup.getLocalTransform();
+            var vertex = graphic.applyTransform([dx, dy], barTransform, true);
 
             this._updateInterval(handleIndex, vertex[0]);
 
@@ -705,6 +719,24 @@ define(function (require) {
             this._dispatchZoomAction();
         },
 
+        _onClickPanelClick: function (e) {
+            var size = this._size;
+            var localPoint = this._displayables.barGroup.transformCoordToLocal(e.offsetX, e.offsetY);
+
+            if (localPoint[0] < 0 || localPoint[0] > size[0]
+                || localPoint[1] < 0 || localPoint[1] > size[1]
+            ) {
+                return;
+            }
+
+            var handleEnds = this._handleEnds;
+            var center = (handleEnds[0] + handleEnds[1]) / 2;
+
+            this._updateInterval('all', localPoint[0] - center);
+            this._updateView();
+            this._dispatchZoomAction();
+        },
+
         /**
          * This action will be throttled.
          * @private
@@ -719,14 +751,6 @@ define(function (require) {
                 start: range[0],
                 end: range[1]
             });
-        },
-
-        /**
-         * @private
-         */
-        _applyBarTransform: function (vertex, inverse) {
-            var barTransform = this._displayables.barGroup.getLocalTransform();
-            return graphic.applyTransform(vertex, barTransform, inverse);
         },
 
         /**
