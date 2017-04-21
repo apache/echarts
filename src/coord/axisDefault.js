@@ -142,10 +142,11 @@ define(function (require) {
         min: 'dataMin',
         max: 'dataMax'
     }, valueAxis);
+
     var logAxis = zrUtil.defaults({
+        scale: true,
         logBase: 10
     }, valueAxis);
-    logAxis.scale = true;
 
     return {
         categoryAxis: categoryAxis,

@@ -100,7 +100,9 @@ define(function(require, factory) {
             for (var idx in axes) {
                 if (axes.hasOwnProperty(idx)) {
                     var axis = axes[idx];
-                    if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                    if (axis && (
+                        axis.type === 'category' || axis.type === 'time' || !ifAxisCrossZero(axis)
+                    )) {
                         return true;
                     }
                 }
