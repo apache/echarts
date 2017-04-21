@@ -147,5 +147,23 @@ describe('List', function () {
                 return x;
             })).toEqual([20]);
         });
+
+        testCase('dataProvider', function (List) {
+            var list = new List(['x', 'y']);
+            var typedArray = new Float32Array([10, 10, 20, 20]);
+            list.initData({
+                count: function () {
+                    return typedArray.length / 2;
+                },
+                getItem: function (idx) {
+                    return [typedArray[idx * 2], typedArray[idx * 2 + 1]];
+                }
+            });
+            expect(list.mapArray(['x', 'y'], function (x, y) {
+                return [x, y];
+            })).toEqual([[10, 10], [20, 20]]);
+            expect(list.getRawDataItem(0)).toEqual([10, 10]);
+            expect(list.getItemModel(0).option).toEqual([10, 10]);
+        });
     });
 });

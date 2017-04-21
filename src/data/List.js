@@ -31,7 +31,7 @@ define(function (require) {
         'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData'
     ];
 
-    var transferProperties = function (a, b) {
+    function transferProperties(a, b) {
         zrUtil.each(TRANSFERABLE_PROPERTIES.concat(b.__wrappedMethods || []), function (propName) {
             if (b.hasOwnProperty(propName)) {
                 a[propName] = b[propName];
@@ -39,6 +39,16 @@ define(function (require) {
         });
 
         a.__wrappedMethods = b.__wrappedMethods;
+    }
+
+    function DefaultDataProvider(dataArray) {
+        this._array = dataArray || [];
+    }
+    DefaultDataProvider.prototype.count = function () {
+        return this._array.length;
+    };
+    DefaultDataProvider.prototype.getItem = function (idx) {
+        return this._array[idx];
     };
 
     /**
@@ -221,11 +231,13 @@ define(function (require) {
      * @param {Function} [dimValueGetter] (dataItem, dimName, dataIndex, dimIndex) => number
      */
     listProto.initData = function (data, nameList, dimValueGetter) {
-        data = data || [];
-
+        var isDataArray = zrUtil.isArray(data);
+        if (isDataArray) {
+            data = new DefaultDataProvider(data);
+        }
         if (__DEV__) {
-            if (!zrUtil.isArray(data)) {
-                throw new Error('Invalid data.');
+            if (!isDataArray && (typeof data.getItem != 'function' || typeof data.count != 'function')) {
+                throw new Error('Inavlid data provider.');
             }
         }
 
@@ -236,8 +248,9 @@ define(function (require) {
         var indices = this.indices = [];
 
         var dimensions = this.dimensions;
-        var size = data.length;
         var dimensionInfoMap = this._dimensionInfos;
+
+        var size = data.count();
 
         var idList = [];
         var nameRepeatCount = {};
@@ -271,8 +284,9 @@ define(function (require) {
             );
         };
 
-        for (var idx = 0; idx < data.length; idx++) {
-            var dataItem = data[idx];
+        for (var i = 0; i < size; i++) {
+            // NOTICE: Try not to write things into dataItem
+            var dataItem = data.getItem(i);
             // Each data item is value
             // [1, 2]
             // 2
@@ -285,22 +299,23 @@ define(function (require) {
                 var dim = dimensions[k];
                 var dimStorage = storage[dim];
                 // PENDING NULL is empty or zero
-                dimStorage[idx] = dimValueGetter(dataItem, dim, idx, k);
+                dimStorage[i] = dimValueGetter(dataItem, dim, i, k);
             }
 
-            indices.push(idx);
+            indices.push(i);
         }
 
         // Use the name in option and create id
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < size; i++) {
+            var dataItem = data.getItem(i);
             if (!nameList[i]) {
-                if (data[i] && data[i].name != null) {
-                    nameList[i] = data[i].name;
+                if (dataItem && dataItem.name != null) {
+                    nameList[i] = dataItem.name;
                 }
             }
             var name = nameList[i] || '';
             // Try using the id in option
-            var id = data[i] && data[i].id;
+            var id = dataItem && dataItem.id;
 
             if (!id && name) {
                 // Use name as id and add counter to avoid same name
@@ -598,7 +613,7 @@ define(function (require) {
      * @return {number}
      */
     listProto.getRawDataItem = function (idx) {
-        return this._rawData[this.getRawIndex(idx)];
+        return this._rawData.getItem(this.getRawIndex(idx));
     };
 
     /**
@@ -882,7 +897,7 @@ define(function (require) {
     listProto.getItemModel = function (idx) {
         var hostModel = this.hostModel;
         idx = this.indices[idx];
-        return new Model(this._rawData[idx], hostModel, hostModel && hostModel.ecModel);
+        return new Model(this._rawData.getItem(idx), hostModel, hostModel && hostModel.ecModel);
     };
 
     /**
