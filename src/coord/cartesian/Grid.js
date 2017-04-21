@@ -557,7 +557,8 @@ define(function(require, factory) {
         ecModel.eachComponent('grid', function (gridModel, idx) {
             var grid = new Grid(gridModel, ecModel, api);
             grid.name = 'grid_' + idx;
-            grid.resize(gridModel, api);
+            // Postpone `resize` to `update`.
+            // grid.resize(gridModel, api);
 
             gridModel.coordinateSystem = grid;
 

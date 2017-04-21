@@ -1,0 +1,106 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+            #main {
+                height: 500px;
+            }
+        </style>
+        <h2>minInterval: 1, min: 0</h2>
+        <div id="main"></div>
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts',
+                'zrender/tool/color',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/chart/pie',
+                'echarts/chart/scatter',
+                'echarts/chart/map',
+                'echarts/chart/parallel',
+                'echarts/chart/radar',
+                'echarts/component/grid',
+                'echarts/component/polar',
+                'echarts/component/geo',
+                'echarts/component/singleAxis',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = ct;
+                chart = myChart = echarts.init(document.getElementById('main'));
+
+                option = {
+                    title: {
+                        text: '堆叠区域图'
+                    },
+                    tooltip : {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            data : ['周一','周二','周三','周四','周五','周六','周日']
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value',
+                            scale:true,
+                            min: 0,
+                            minInterval: 1
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[1]
+                        }
+                    ]
+                };
+
+
+                chart.setOption(option);
+            });
+
+        </script>
+    </body>
+</html>

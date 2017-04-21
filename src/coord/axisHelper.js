@@ -114,31 +114,12 @@ define(function (require) {
         }
 
         scale.setExtent(extent[0], extent[1]);
-        scale.niceExtent(splitNumber, fixMin, fixMax);
-
-        // Use minInterval to constraint the calculated interval.
-        // If calculated interval is less than minInterval. increase the interval quantity until
-        // it is larger than minInterval.
-        // For example:
-        //  minInterval is 1, calculated interval is 0.2, so increase it to be 1. In this way we can get
-        //  an integer axis.
-        var minInterval = model.get('minInterval');
-        if (isFinite(minInterval) && !fixMin && !fixMax && scale.type === 'interval') {
-            var interval = scale.getInterval();
-            var intervalScale = Math.max(Math.abs(interval), minInterval) / interval;
-            // while (interval < minInterval) {
-            //     var quantity = numberUtil.quantity(interval);
-            //     interval = quantity * 10;
-            //     scaleQuantity *= 10;
-            // }
-            extent = scale.getExtent();
-            var origin = (extent[1] + extent[0]) / 2;
-            scale.setExtent(
-                intervalScale * (extent[0] - origin) + origin,
-                intervalScale * (extent[1] - origin) + origin
-            );
-            scale.niceExtent(splitNumber);
-        }
+        scale.niceExtent({
+            splitNumber: splitNumber,
+            fixMin: fixMin,
+            fixMax: fixMax,
+            minInterval: scale.type === 'interval' ? model.get('minInterval') : null
+        });
 
         // If some one specified the min, max. And the default calculated interval
         // is not good enough. He can specify the interval. It is often appeared

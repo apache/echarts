@@ -158,16 +158,14 @@ define(function (require) {
 
         /**
          * Nice extent.
-         * @param {number} [approxTickNum = 10] Given approx tick number
-         * @param {boolean} [fixMin=false]
-         * @param {boolean} [fixMax=false]
+         * @override
          */
-        niceExtent: function (splitNumber, fixMin, fixMax) {
-            intervalScaleProto.niceExtent.call(this, splitNumber, fixMin, fixMax);
+        niceExtent: function (opt) {
+            intervalScaleProto.niceExtent.call(this, opt);
 
             var originalScale = this._originalScale;
-            originalScale.__fixMin = fixMin;
-            originalScale.__fixMax = fixMax;
+            originalScale.__fixMin = opt.fixMin;
+            originalScale.__fixMax = opt.fixMax;
         }
 
     });

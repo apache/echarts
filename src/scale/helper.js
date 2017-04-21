@@ -13,13 +13,17 @@ define(function (require) {
      * @param {Array.<number>} extent Both extent[0] and extent[1] should be valid number.
      *                                Should be extent[0] < extent[1].
      * @param {number} splitNumber splitNumber should be >= 1.
+     * @param {number} [minInterval]
      * @return {Object} {interval, intervalPrecision, niceTickExtent}
      */
-    helper.intervalScaleNiceTicks = function (extent, splitNumber) {
+    helper.intervalScaleNiceTicks = function (extent, splitNumber, minInterval) {
         var result = {};
         var span = extent[1] - extent[0];
 
         var interval = result.interval = numberUtil.nice(span / splitNumber, true);
+        if (minInterval != null && interval < minInterval) {
+            interval = result.interval = minInterval;
+        }
         // Tow more digital for tick.
         var precision = result.intervalPrecision = numberUtil.getPrecisionSafe(interval) + 2;
         // Niced extent inside original extent
