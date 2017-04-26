@@ -1649,9 +1649,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.5.3',
+	        version: '3.5.4',
 	        dependencies: {
-	            zrender: '3.4.3'
+	            zrender: '3.4.4'
 	        }
 	    };
 
@@ -3462,6 +3462,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return obj[primitiveKey];
 	    }
 
+	    /**
+	     * @constructor
+	     */
+	    function HashMap(obj) {
+	        obj && extend(this, obj);
+	    }
+
+	    // Add prefix to avoid conflict with Object.prototype.
+	    var HASH_MAP_PREFIX = '_ec_';
+	    var HASH_MAP_PREFIX_LENGTH = 4;
+
+	    HashMap.prototype = {
+	        constructor: HashMap,
+	        // Do not provide `has` method to avoid defining what is `has`.
+	        // (We usually treat `null` and `undefined` as the same, different
+	        // from ES6 Map).
+	        get: function (key) {
+	            return this[HASH_MAP_PREFIX + key];
+	        },
+	        set: function (key, value) {
+	            this[HASH_MAP_PREFIX + key] = value;
+	            // Comparing with invocation chaining, `return value` is more commonly
+	            // used in this case: `var someVal = map.set('a', genVal());`
+	            return value;
+	        },
+	        // Although util.each can be performed on this hashMap directly, user
+	        // should not use the exposed keys, who are prefixed.
+	        each: function (cb, context) {
+	            context !== void 0 && (cb = bind(cb, context));
+	            for (var prefixedKey in this) {
+	                this.hasOwnProperty(prefixedKey)
+	                    && cb(this[prefixedKey], prefixedKey.slice(HASH_MAP_PREFIX_LENGTH));
+	            }
+	        },
+	        // Do not use this method if performance sensitive.
+	        removeKey: function (key) {
+	            delete this[key];
+	        }
+	    };
+
+	    function createHashMap() {
+	        return new HashMap();
+	    }
+
 	    var util = {
 	        inherits: inherits,
 	        mixin: mixin,
@@ -3492,6 +3536,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        retrieve: retrieve,
 	        assert: assert,
 	        setAsPrimitive: setAsPrimitive,
+	        createHashMap: createHashMap,
 	        noop: function () {}
 	    };
 	    module.exports = util;
@@ -4853,7 +4898,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                break;
 	            case 'insideTop':
 	                x += width / 2;
-	                y += distance;
+	                y += distance + lineHeight;
 	                textAlign = 'center';
 	                break;
 	            case 'insideBottom':
@@ -4863,12 +4908,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                break;
 	            case 'insideTopLeft':
 	                x += distance;
-	                y += distance;
+	                y += distance + lineHeight;
 	                textAlign = 'left';
 	                break;
 	            case 'insideTopRight':
 	                x += width - distance;
-	                y += distance;
+	                y += distance + lineHeight;
 	                textAlign = 'right';
 	                break;
 	            case 'insideBottomLeft':
@@ -12365,7 +12410,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var Path = __webpack_require__(46);
 	    var PathProxy = __webpack_require__(50);
 	    var transformPath = __webpack_require__(61);
-	    var matrix = __webpack_require__(11);
 
 	    // command chars
 	    var cc = [
@@ -12690,23 +12734,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // TODO Optimize double memory cost problem
 	    function createPathOptions(str, opts) {
 	        var pathProxy = createPathProxyFromString(str);
-	        var transform;
 	        opts = opts || {};
 	        opts.buildPath = function (path) {
-	            path.setData(pathProxy.data);
-	            transform && transformPath(path, transform);
-	            // Svg and vml renderer don't have context
-	            var ctx = path.getContext();
-	            if (ctx) {
-	                path.rebuildPath(ctx);
+	            if (path.setData) {
+	                path.setData(pathProxy.data);
+	                // Svg and vml renderer don't have context
+	                var ctx = path.getContext();
+	                if (ctx) {
+	                    path.rebuildPath(ctx);
+	                }
+	            }
+	            else {
+	                var ctx = path;
+	                pathProxy.rebuildPath(ctx);
 	            }
 	        };
 
 	        opts.applyTransform = function (m) {
-	            if (!transform) {
-	                transform = matrix.create();
-	            }
-	            matrix.mul(transform, m, transform);
+	            transformPath(pathProxy, m);
+
 	            this.dirty(true);
 	        };
 
@@ -16209,8 +16255,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var sy = mathSqrt(m[2] * m[2] + m[3] * m[3]);
 	                    var angle = mathAtan2(-m[1] / sy, m[0] / sx);
 	                    // cx
+	                    data[i] *= sx;
 	                    data[i++] += x;
 	                    // cy
+	                    data[i] *= sy;
 	                    data[i++] += y;
 	                    // Scale rx and ry
 	                    // FIXME Assume psi is 0 here
@@ -17845,7 +17893,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.4.3';
+	    zrender.version = '3.4.4';
 
 	    /**
 	     * Initializing a zrender instance
@@ -53965,7 +54013,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                shadowColor: labelModel.get('shadowColor'),
 	                shadowOffsetX: labelModel.get('shadowOffsetX'),
 	                shadowOffsetY: labelModel.get('shadowOffsetY')
-	            }
+	            },
+	            // Lable should be over axisPointer.
+	            z2: 10
 	        };
 	    };
 
