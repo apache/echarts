@@ -36,12 +36,12 @@ define(function (require) {
 
             option.regions = geoCreator.getFilledRegions(option.regions, option.map);
 
-            this._optionModelMap = zrUtil.reduce(option.regions || [], function (obj, regionOpt) {
+            this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
                 if (regionOpt.name) {
-                    obj[regionOpt.name] = new Model(regionOpt, self);
+                    optionModelMap.set(regionOpt.name, new Model(regionOpt, self));
                 }
-                return obj;
-            }, {});
+                return optionModelMap;
+            }, zrUtil.createHashMap());
 
             this.updateSelectedMap(option.regions);
         },
@@ -129,7 +129,7 @@ define(function (require) {
          * @return {module:echarts/model/Model}
          */
         getRegionModel: function (name) {
-            return this._optionModelMap[name] || new Model(null, this, this.ecModel);
+            return this._optionModelMap.get(name) || new Model(null, this, this.ecModel);
         },
 
         /**

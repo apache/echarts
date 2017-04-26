@@ -12,7 +12,7 @@ define(function (require) {
 
             data.each(function (index) {
                 var name = data.getName(index);
-                var color = colorList[(seriesModel.nameMap[name] - 1) % colorList.length];
+                var color = colorList[(seriesModel.nameMap.get(name) - 1) % colorList.length];
                 rawData.setItemVisual(index, 'color', color);
             });
         });

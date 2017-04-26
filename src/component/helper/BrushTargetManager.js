@@ -244,7 +244,7 @@ define(function(require) {
             var yAxisModels = foundCpts.yAxisModels;
             var gridModels = foundCpts.gridModels;
             // Remove duplicated.
-            var gridModelMap = {};
+            var gridModelMap = zrUtil.createHashMap();
             var xAxesHas = {};
             var yAxesHas = {};
 
@@ -254,21 +254,21 @@ define(function(require) {
 
             each(xAxisModels, function (axisModel) {
                 var gridModel = axisModel.axis.grid.model;
-                gridModelMap[gridModel.id] = gridModel;
+                gridModelMap.set(gridModel.id, gridModel);
                 xAxesHas[gridModel.id] = true;
             });
             each(yAxisModels, function (axisModel) {
                 var gridModel = axisModel.axis.grid.model;
-                gridModelMap[gridModel.id] = gridModel;
+                gridModelMap.set(gridModel.id, gridModel);
                 yAxesHas[gridModel.id] = true;
             });
             each(gridModels, function (gridModel) {
-                gridModelMap[gridModel.id] = gridModel;
+                gridModelMap.set(gridModel.id, gridModel);
                 xAxesHas[gridModel.id] = true;
                 yAxesHas[gridModel.id] = true;
             });
 
-            each(gridModelMap, function (gridModel) {
+            gridModelMap.each(function (gridModel) {
                 var grid = gridModel.coordinateSystem;
                 var cartesians = [];
 

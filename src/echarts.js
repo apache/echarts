@@ -1140,7 +1140,7 @@ define(function (require) {
             }
 
             // Consider: id same and type changed.
-            var viewId = model.id + '_' + model.type;
+            var viewId = '_ec_' + model.id + '_' + model.type;
             var view = viewMap[viewId];
             if (!view) {
                 var classType = parseClassType(model.type);
@@ -1206,7 +1206,8 @@ define(function (require) {
             var data = series.getData();
             if (stack && data.type === 'list') {
                 var previousStack = stackedDataMap[stack];
-                if (previousStack) {
+                // Avoid conflict with Object.prototype
+                if (stackedDataMap.hasOwnProperty(stack) && previousStack) {
                     data.stackedOn = previousStack;
                 }
                 stackedDataMap[stack] = data;

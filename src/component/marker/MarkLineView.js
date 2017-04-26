@@ -200,7 +200,7 @@ define(function (require) {
                         ]);
                     });
 
-                    this.markerGroupMap[seriesModel.name].updateLayout();
+                    this.markerGroupMap.get(seriesModel.name).updateLayout();
 
                 }
             }, this);
@@ -212,10 +212,8 @@ define(function (require) {
             var seriesData = seriesModel.getData();
 
             var lineDrawMap = this.markerGroupMap;
-            var lineDraw = lineDrawMap[seriesName];
-            if (!lineDraw) {
-                lineDraw = lineDrawMap[seriesName] = new LineDraw();
-            }
+            var lineDraw = lineDrawMap.get(seriesName)
+                || lineDrawMap.set(seriesName, new LineDraw());
             this.group.add(lineDraw.group);
 
             var mlData = createList(coordSys, seriesModel, mlModel);

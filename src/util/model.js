@@ -333,22 +333,22 @@ define(function(require) {
         // to specify multi components (like series) by one name.
 
         // Ensure that each id is distinct.
-        var idMap = {};
+        var idMap = zrUtil.createHashMap();
 
         each(mapResult, function (item, index) {
             var existCpt = item.exist;
-            existCpt && (idMap[existCpt.id] = item);
+            existCpt && idMap.set(existCpt.id, item);
         });
 
         each(mapResult, function (item, index) {
             var opt = item.option;
 
             zrUtil.assert(
-                !opt || opt.id == null || !idMap[opt.id] || idMap[opt.id] === item,
+                !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
                 'id duplicates: ' + (opt && opt.id)
             );
 
-            opt && opt.id != null && (idMap[opt.id] = item);
+            opt && opt.id != null && idMap.set(opt.id, item);
             !item.keyInfo && (item.keyInfo = {});
         });
 
@@ -388,10 +388,10 @@ define(function(require) {
                 do {
                     keyInfo.id = '\0' + keyInfo.name + '\0' + idNum++;
                 }
-                while (idMap[keyInfo.id]);
+                while (idMap.get(keyInfo.id));
             }
 
-            idMap[keyInfo.id] = item;
+            idMap.set(keyInfo.id, item);
         });
     };
 

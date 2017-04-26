@@ -260,15 +260,15 @@ define(function (require) {
                 return originRegionArr;
             }
 
-            var dataNameMap = {};
+            var dataNameMap = zrUtil.createHashMap();
             var features = geoJson.features;
             for (var i = 0; i < regionsArr.length; i++) {
-                dataNameMap[regionsArr[i].name] = regionsArr[i];
+                dataNameMap.set(regionsArr[i].name, regionsArr[i]);
             }
 
             for (var i = 0; i < features.length; i++) {
                 var name = features[i].properties.name;
-                if (!dataNameMap[name]) {
+                if (!dataNameMap.get(name)) {
                     regionsArr.push({
                         name: name
                     });

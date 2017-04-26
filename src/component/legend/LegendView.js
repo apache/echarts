@@ -63,7 +63,7 @@ define(function (require) {
                     ? 'right' : 'left';
             }
 
-            var legendDrawedMap = {};
+            var legendDrawedMap = zrUtil.createHashMap();
 
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var name = itemModel.get('name');
@@ -78,7 +78,7 @@ define(function (require) {
 
                 var seriesModel = ecModel.getSeriesByName(name)[0];
 
-                if (legendDrawedMap[name]) {
+                if (legendDrawedMap.get(name)) {
                     // Have been drawed
                     return;
                 }
@@ -109,13 +109,13 @@ define(function (require) {
                         .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api))
                         .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api));
 
-                    legendDrawedMap[name] = true;
+                    legendDrawedMap.set(name, true);
                 }
                 else {
                     // Data legend of pie, funnel
                     ecModel.eachRawSeries(function (seriesModel) {
                         // In case multiple series has same data name
-                        if (legendDrawedMap[name]) {
+                        if (legendDrawedMap.get(name)) {
                             return;
                         }
                         if (seriesModel.legendDataProvider) {
@@ -141,13 +141,13 @@ define(function (require) {
                                 .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api))
                                 .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api));
 
-                            legendDrawedMap[name] = true;
+                            legendDrawedMap.set(name, true);
                         }
                     }, this);
                 }
 
                 if (__DEV__) {
-                    if (!legendDrawedMap[name]) {
+                    if (!legendDrawedMap.get(name)) {
                         console.warn(name + ' series not exists. Legend data should be same with series name or data name.');
                     }
                 }

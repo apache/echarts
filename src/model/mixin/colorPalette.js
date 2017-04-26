@@ -14,7 +14,8 @@ define(function (require) {
             scope = scope || this;
             var colorIdx = get(scope, 'colorIdx') || 0;
             var colorNameMap = get(scope, 'colorNameMap') || set(scope, 'colorNameMap', {});
-            if (colorNameMap[name]) {
+            // Use `hasOwnProperty` to avoid conflict with Object.prototype.
+            if (colorNameMap.hasOwnProperty(name)) {
                 return colorNameMap[name];
             }
             var colorPalette = this.get('color', true) || [];

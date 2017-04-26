@@ -29,7 +29,7 @@ define(function(require) {
          * @type {Object.<string, module:echarts/coord/parallel/Axis>}
          * @private
          */
-        this._axesMap = {};
+        this._axesMap = zrUtil.createHashMap();
 
         /**
          * key: dimension
@@ -79,13 +79,13 @@ define(function(require) {
                 var axisIndex = parallelAxisIndex[idx];
                 var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
 
-                var axis = this._axesMap[dim] = new ParallelAxis(
+                var axis = this._axesMap.set(dim, new ParallelAxis(
                     dim,
                     axisHelper.createScaleByModel(axisModel),
                     [0, 0],
                     axisModel.get('type'),
                     axisIndex
-                );
+                ));
 
                 var isCategory = axis.type === 'category';
                 axis.onBand = isCategory && axisModel.get('boundaryGap');
@@ -139,7 +139,7 @@ define(function(require) {
                 var data = seriesModel.getData();
 
                 each(this.dimensions, function (dim) {
-                    var axis = this._axesMap[dim];
+                    var axis = this._axesMap.get(dim);
                     axis.scale.unionExtentFromData(data, dim);
                     axisHelper.niceScaleExtent(axis.scale, axis.model);
                 }, this);
@@ -310,7 +310,7 @@ define(function(require) {
          * @return {module:echarts/coord/parallel/ParallelAxis} [description]
          */
         getAxis: function (dim) {
-            return this._axesMap[dim];
+            return this._axesMap.get(dim);
         },
 
         /**
@@ -321,7 +321,7 @@ define(function(require) {
          */
         dataToPoint: function (value, dim) {
             return this.axisCoordToPoint(
-                this._axesMap[dim].dataToCoord(value),
+                this._axesMap.get(dim).dataToCoord(value),
                 dim
             );
         },
@@ -349,7 +349,7 @@ define(function(require) {
                     activeState = 'active';
                     for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
                         var dimName = dimensions[j];
-                        var state = axesMap[dimName].model.getActiveState(values[j], j);
+                        var state = axesMap.get(dimName).model.getActiveState(values[j], j);
 
                         if (state === 'inactive') {
                             activeState = 'inactive';
@@ -372,7 +372,7 @@ define(function(require) {
             var hasActiveSet = false;
 
             for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
-                if (axesMap[dimensions[j]].model.getActiveState() !== 'normal') {
+                if (axesMap.get(dimensions[j]).model.getActiveState() !== 'normal') {
                     hasActiveSet = true;
                 }
             }

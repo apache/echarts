@@ -156,7 +156,7 @@ define(function (require) {
             var hoverItemStyleAccessPath = ['itemStyle', 'emphasis'];
             var labelAccessPath = ['label', 'normal'];
             var hoverLabelAccessPath = ['label', 'emphasis'];
-            var nameMap = {};
+            var nameMap = zrUtil.createHashMap();
 
             zrUtil.each(geo.regions, function (region) {
 
@@ -165,8 +165,8 @@ define(function (require) {
                 // colonies). And it is not appropriate to merge them in geo, which
                 // will make them share the same label and bring trouble in label
                 // location calculation.
-                var regionGroup = nameMap[region.name]
-                    || (nameMap[region.name] = new graphic.Group());
+                var regionGroup = nameMap.get(region.name)
+                    || nameMap.set(region.name, new graphic.Group());
 
                 var compoundPath = new graphic.CompoundPath({
                     shape: {

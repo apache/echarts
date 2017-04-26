@@ -155,12 +155,9 @@ define(function (require) {
             var seriesData = seriesModel.getData();
 
             var areaGroupMap = this.markerGroupMap;
-            var polygonGroup = areaGroupMap[seriesName];
-            if (!polygonGroup) {
-                polygonGroup = areaGroupMap[seriesName] = {
-                    group: new graphic.Group()
-                };
-            }
+            var polygonGroup = areaGroupMap.get(seriesName)
+                || areaGroupMap.set(seriesName, {group: new graphic.Group()});
+
             this.group.add(polygonGroup.group);
             polygonGroup.__keep = true;
 
