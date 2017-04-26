@@ -9,7 +9,7 @@ define(function (require) {
 
         type: 'series.scatter',
 
-        dependencies: ['grid', 'polar', 'geo', 'singleAxis'],
+        dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 
         getInitialData: function (option, ecModel) {
             var list = createListFromArray(option.data, this, ecModel);
