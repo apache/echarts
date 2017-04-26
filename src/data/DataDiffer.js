@@ -107,7 +107,7 @@ define(function(require) {
         for (var i = 0; i < arr.length; i++) {
             var key = keyGetter(arr[i], i);
             var existence = map[key];
-            if (existence == null) {
+            if (!map.hasOwnProperty(key)) {
                 keyArr.push(key);
                 map[key] = i;
             }

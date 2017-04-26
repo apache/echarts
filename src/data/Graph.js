@@ -83,7 +83,9 @@ define(function(require) {
 
         var nodesMap = this._nodesMap;
 
-        if (nodesMap[id]) {
+        // id may be function name of Object, so check hasOwnProperty instead
+        // of nodesMap. Otherwise may cause bug on firefox.
+        if (nodesMap.hasOwnProperty(id)) {
             return;
         }
 
