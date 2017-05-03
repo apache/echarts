@@ -1529,6 +1529,7 @@ define(function (require) {
     var idBase = new Date() - 0;
     var groupIdBase = new Date() - 0;
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
+
     /**
      * @alias module:echarts
      */
@@ -1605,9 +1606,21 @@ define(function (require) {
                     + echarts.dependencies.zrender + '+'
                 );
             }
+
             if (!dom) {
                 throw new Error('Initialize failed: invalid dom.');
             }
+        }
+
+        var existInstance = echarts.getInstanceByDom(dom);
+        if (existInstance) {
+            if (__DEV__) {
+                console.warn('There is a chart instance already initialized on the dom.');
+            }
+            return existInstance;
+        }
+
+        if (__DEV__) {
             if (zrUtil.isDom(dom)
                 && dom.nodeName.toUpperCase() !== 'CANVAS'
                 && (
@@ -1623,8 +1636,7 @@ define(function (require) {
         chart.id = 'ec_' + idBase++;
         instances[chart.id] = chart;
 
-        dom.setAttribute &&
-            dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
+        dom.setAttribute && dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
 
         enableConnect(chart);
 
@@ -1691,6 +1703,7 @@ define(function (require) {
         var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
         return instances[key];
     };
+
     /**
      * @param {string} key
      * @return {echarts~ECharts}
