@@ -12,6 +12,7 @@ define(function(require) {
     var vector = require('zrender/core/vector');
     var Transformable = require('zrender/mixin/Transformable');
     var BoundingRect = require('zrender/core/BoundingRect');
+    var formatUtil = require('./format');
 
     var graphic = {};
 
@@ -194,6 +195,16 @@ define(function(require) {
         return (doubledPosition + round(lineWidth)) % 2 === 0
             ? doubledPosition / 2
             : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
+    };
+
+    /**
+     * @param {string} color
+     * @return {string}
+     */
+    graphic.getTooltipDot = function (color) {
+        return '<span style="display:inline-block;margin-right:5px;'
+            + 'border-radius:10px;width:9px;height:9px;background-color:'
+            + formatUtil.encodeHTML(color) + '"></span>';
     };
 
     function hasFillOrStroke(fillOrStroke) {

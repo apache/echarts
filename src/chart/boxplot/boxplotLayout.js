@@ -109,7 +109,7 @@ define(function (require) {
     function layoutSingleSeries(seriesModel, offset, boxWidth) {
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
-        var dimensions = seriesModel.dimensions;
+        var dimensions = data.dimensions;
         var chartLayout = seriesModel.get('layout');
         var halfWidth = boxWidth / 2;
 

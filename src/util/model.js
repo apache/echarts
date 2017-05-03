@@ -597,6 +597,122 @@ define(function(require) {
         return result;
     };
 
+    /**
+     */
+    modelUtil.retrieveDimensionsDefine = function (model) {
+        return zrUtil.map(model.get('dimensions') || [], function (item) {
+            return zrUtil.isString(item) ? {name: item} : zrUtil.clone(item);
+        });
+    };
+
+    /**
+     * Dimension definition:
+     * series: {
+     *     dimensions: ['a', null, {name: 'vv'}]
+     *     encoding: {
+     *         x: 'a',
+     *         y: [3, 'vv']
+     *     }
+     * }
+     */
+    modelUtil.applyDimensionDefine = function (dimensionsInfo, model) {
+        var dimNameMap = zrUtil.createHashMap();
+        var dimsDef = model.get('dimensions') || [];
+        var dimCount = Math.max(dimsDef.length, dimensionsInfo.length);
+        var originNames = [];
+
+        for (var i = 0; i < dimCount; i++) {
+            var dimDefItem = zrUtil.isString(dimsDef[i])
+                ? {name: dimsDef[i]} : (dimsDef[i] || {});
+            var dimItem = dimensionsInfo[i] = dimensionsInfo[i] || {};
+
+            originNames[i] = dimItem.name;
+            if (dimDefItem.name) {
+                dimItem.name = dimDefItem.name;
+            }
+
+            dimNameMap.set(dimItem.name, i);
+        }
+
+        each(model.get('encoding') || {}, function (dataDims, coordDim) {
+            if (!dataDims) {
+                return;
+            }
+            dataDims = zrUtil.isArray(dataDims) ? dataDims : [dataDims];
+
+            // Firstly, clear original defintions (clear default definition)
+            // and disable all label and tooltip show.
+            each(dimensionsInfo, function (dimItem) {
+                setDimItem(dimItem, coordDim, null);
+            });
+
+            // Secondly, set user definitions.
+            each(dataDims, function (dataDim, dimIdx) {
+                // The input dataDim can be dim name or index.
+                zrUtil.isString(dataDim) && (dataDim = dimNameMap.get(dataDim));
+                setDimItem(dimensionsInfo[dataDim], coordDim, dimIdx);
+            });
+        });
+
+        function setDimItem(dimItem, coordDim, dimIdx) {
+            if (coordDim === 'label' || coordDim === 'tooltip') {
+                dimItem[coordDim] = dimIdx != null ? dimIdx : false;
+            }
+            else {
+                dimItem.coordDim = dimIdx != null ? coordDim : null;
+                dimItem.coordDimIndex = dimIdx;
+            }
+        }
+
+        // If use does not define encoding, use original name as coordDim,
+        // because inner created dimension use coord name as dimension name.
+        // See <module:echarts/chart/helper/createListFromArray>
+        each(dimensionsInfo, function (item, index) {
+            if (!item.coordDim && originNames[index]) {
+                item.coordDim = originNames[index];
+                item.coordDimIndex = 0;
+            }
+        });
+    };
+
+    /**
+     * @param {module:echarts/data/List} data
+     * @param {string|number} dataDim
+     * @return {string}
+     */
+    modelUtil.dataDimToCoordDim = function (data, dataDim) {
+        var dimensions = data.dimensions;
+        dataDim = data.getDimension(dataDim);
+        for (var i = 0; i < dimensions.length; i++) {
+            var dimItem = data.getDimensionInfo(dimensions[i]);
+            if (dimItem.name === dataDim) {
+                return dimItem.coordDim;
+            }
+        }
+    };
+
+    /**
+     * @param {module:echarts/data/List} data
+     * @param {string} coordDim Can also be 'label' or 'tooltip'
+     * @return {Array.<string>} dimensions on the axis.
+     */
+    modelUtil.findDataDim = function (data, coordDim) {
+        var dataDim = [];
+        each(data.dimensions, function (dimName) {
+            var dimItem = data.getDimensionInfo(dimName);
+            if ((coordDim === 'label' || coordDim === 'tooltip')
+                // By default all will be displayed in label and tooltip.
+                && dimItem[coordDim] !== false
+            ) {
+                dataDim[dimItem[coordDim]] = dimItem.name;
+            }
+            else if (dimItem.coordDim === coordDim) {
+                dataDim[dimItem.coordDimIndex] = dimItem.name;
+            }
+        });
+        return dataDim;
+    };
+
     function has(obj, prop) {
         return obj && obj.hasOwnProperty(prop);
     }

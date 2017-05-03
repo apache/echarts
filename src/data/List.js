@@ -76,6 +76,8 @@ define(function (require) {
                 dimensionName = dimensions[i];
                 dimensionInfo = {
                     name: dimensionName,
+                    coordDim: dimensionName,
+                    coordDimIndex: 0,
                     stackable: false,
                     // Type can be 'float', 'int', 'number'
                     // Default is number, Precision of float may not enough
@@ -86,6 +88,10 @@ define(function (require) {
                 dimensionInfo = dimensions[i];
                 dimensionName = dimensionInfo.name;
                 dimensionInfo.type = dimensionInfo.type || 'number';
+                if (!dimensionInfo.coordDim) {
+                    dimensionInfo.coordDim = dimensionName;
+                    dimensionInfo.coordDimIndex = 0;
+                }
             }
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;

@@ -51,6 +51,9 @@ define(function(require) {
             dimensions = completeDimensions(dimensions, data, {defaultNames: dimensions.concat(['value'])});
         }
 
+        // Store encoding info in `data`, because the last `data` can be cached after `setOption` performed.
+        modelUtil.applyDimensionDefine(dimensions, seriesModel);
+
         var categoryIndex = axesInfo ? axesInfo.categoryIndex : -1;
 
         var list = new List(dimensions, seriesModel);

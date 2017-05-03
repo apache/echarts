@@ -6,6 +6,10 @@ define(function(require) {
     var completeDimensions = require('../../data/helper/completeDimensions');
     var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
+    var formatUtil = require('../../util/format');
+    var encodeHTML = formatUtil.encodeHTML;
+    var addCommas = formatUtil.addCommas;
 
     function getItemValue(item) {
         return item.value == null ? item : item.value;
@@ -52,11 +56,27 @@ define(function(require) {
                 option.layout = option.layout || 'horizontal';
             }
 
-            this._baseAxisDim = option.layout === 'horizontal' ? 'x' : 'y';
+            var coordDims = ['x', 'y'];
+            var baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
+            var baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
+            var otherAxisDim = coordDims[1 - baseAxisDimIndex];
 
             var data = option.data;
-            var dimensions = this.dimensions = ['base'].concat(this.valueDimensions);
+            var dimensions = [{
+                name: 'base',
+                coordDim: baseAxisDim,
+                coordDimIndex: 0
+            }];
+            zrUtil.each(this.defaultValueDimensions, function (dimName, index) {
+                dimensions.push({
+                    name: dimName,
+                    coordDim: otherAxisDim,
+                    coordDimIndex: index
+                });
+            });
             completeDimensions(dimensions, data);
+
+            modelUtil.applyDimensionDefine(dimensions, this);
 
             var list = new List(dimensions, this);
             list.initData(data, categories ? categories.slice() : null, function (dataItem, dimName, idx, dimIdx) {
@@ -68,46 +88,38 @@ define(function(require) {
         },
 
         /**
-         * Used by Gird.
-         * @param {string} axisDim 'x' or 'y'
-         * @return {Array.<string>} dimensions on the axis.
-         */
-        coordDimToDataDim: function (axisDim) {
-            var dims = this.valueDimensions.slice();
-            var baseDim = ['base'];
-            var map = {
-                horizontal: {x: baseDim, y: dims},
-                vertical: {x: dims, y: baseDim}
-            };
-            return map[this.get('layout')][axisDim];
-        },
-
-        /**
-         * @override
-         * @param {string|number} dataDim
-         * @return {string} coord dimension
-         */
-        dataDimToCoordDim: function (dataDim) {
-            var dim;
-
-            zrUtil.each(['x', 'y'], function (coordDim, index) {
-                var dataDims = this.coordDimToDataDim(coordDim);
-                if (zrUtil.indexOf(dataDims, dataDim) >= 0) {
-                    dim = coordDim;
-                }
-            }, this);
-
-            return dim;
-        },
-
-        /**
          * If horizontal, base axis is x, otherwise y.
          * @override
          */
         getBaseAxis: function () {
             var dim = this._baseAxisDim;
             return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
+        },
+
+        /**
+         * @override
+         */
+        formatTooltip: function (dataIndex, mutipleSeries) {
+            // It rearly use mutiple candlestick series in one cartesian,
+            // so only consider one series in this default tooltip.
+            var data = this.getData();
+            var dimensions = data.dimensions;
+            var valueHTML = [];
+            zrUtil.each(dimensions, function (dimName, index) {
+                // The first dim is "base", which will not be displayed in tooltip.
+                index && valueHTML.push(
+                    '- ' + encodeHTML(dimName + ': ' + addCommas(data.get(dimName, dataIndex)))
+                );
+            });
+            valueHTML = valueHTML.join('<br />');
+
+            var html = [];
+            this.name != null && html.push(encodeHTML(this.name));
+            valueHTML != null && html.push(valueHTML);
+
+            return html.join('<br />');
         }
+
     };
 
     var viewMixin = {

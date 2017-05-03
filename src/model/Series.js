@@ -8,6 +8,7 @@ define(function(require) {
     var modelUtil = require('../util/model');
     var ComponentModel = require('./Component');
     var colorPaletteMixin = require('./mixin/colorPalette');
+    var graphic = require('../util/graphic');
     var env = require('zrender/core/env');
     var layout = require('../util/layout');
 
@@ -182,7 +183,7 @@ define(function(require) {
          * @return {Array.<string>} dimensions on the axis.
          */
         coordDimToDataDim: function (coordDim) {
-            return [coordDim];
+            return modelUtil.findDataDim(this.getData(), coordDim);
         },
 
         /**
@@ -192,7 +193,7 @@ define(function(require) {
          * @return {string}
          */
         dataDimToCoordDim: function (dataDim) {
-            return dataDim;
+            return modelUtil.dataDimToCoordDim(this.getData(), dataDim);
         },
 
         /**
@@ -215,6 +216,8 @@ define(function(require) {
          * @param {number} [dataType]
          */
         formatTooltip: function (dataIndex, multipleSeries, dataType) {
+            // FIXME: consider boxplot and candlestick, where the rawData does not contain
+            // category index.
             function formatArrayValue(value) {
                 var result = [];
 
@@ -253,8 +256,7 @@ define(function(require) {
             }
             color = color || 'transparent';
 
-            var colorEl = '<span style="display:inline-block;margin-right:5px;'
-                + 'border-radius:10px;width:9px;height:9px;background-color:' + encodeHTML(color) + '"></span>';
+            var colorEl = graphic.getTooltipDot(color);
 
             var seriesName = this.name;
             // FIXME

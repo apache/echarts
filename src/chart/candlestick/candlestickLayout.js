@@ -9,7 +9,7 @@ define(function (require) {
 
             var coordSys = seriesModel.coordinateSystem;
             var data = seriesModel.getData();
-            var dimensions = seriesModel.dimensions;
+            var dimensions = data.dimensions;
             var chartLayout = seriesModel.get('layout');
 
             var candleWidth = calculateCandleWidth(seriesModel, data);
