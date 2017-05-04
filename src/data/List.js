@@ -363,11 +363,11 @@ define(function (require) {
         var dataIndex = this.indices[idx];
 
         // If value not exists
-        if (dataIndex == null) {
+        if (dataIndex == null || !storage[dim]) {
             return NaN;
         }
 
-        var value = storage[dim] && storage[dim][dataIndex];
+        var value = storage[dim][dataIndex];
         // FIXME ordinal data type is not stackable
         if (stack) {
             var dimensionInfo = this._dimensionInfos[dim];
@@ -1025,7 +1025,7 @@ define(function (require) {
      * Get visual property of single data item
      * @param {number} idx
      * @param {string} key
-     * @param {boolean} ignoreParent
+     * @param {boolean} [ignoreParent=false]
      */
     listProto.getItemVisual = function (idx, key, ignoreParent) {
         var itemVisual = this._itemVisuals[idx];
