@@ -7,13 +7,6 @@ define(function(require) {
     var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
-    var formatUtil = require('../../util/format');
-    var encodeHTML = formatUtil.encodeHTML;
-    var addCommas = formatUtil.addCommas;
-
-    function getItemValue(item) {
-        return item.value == null ? item : item.value;
-    }
 
     var seriesModelMixin = {
 
@@ -60,16 +53,22 @@ define(function(require) {
             var baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
             var baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
             var otherAxisDim = coordDims[1 - baseAxisDimIndex];
-
             var data = option.data;
+
+            addOrdinal && zrUtil.each(data, function (item, index) {
+                zrUtil.isArray(item) && item.unshift(index);
+            });
+
             var dimensions = [{
                 name: 'base',
+                tooltip: false,
                 coordDim: baseAxisDim,
                 coordDimIndex: 0
             }];
             zrUtil.each(this.defaultValueDimensions, function (dimName, index) {
                 dimensions.push({
                     name: dimName,
+                    tooltipName: dimName,
                     coordDim: otherAxisDim,
                     coordDimIndex: index
                 });
@@ -79,10 +78,7 @@ define(function(require) {
             modelUtil.applyDimensionDefine(dimensions, this);
 
             var list = new List(dimensions, this);
-            list.initData(data, categories ? categories.slice() : null, function (dataItem, dimName, idx, dimIdx) {
-                var value = getItemValue(dataItem);
-                return addOrdinal ? (dimName === 'base' ? idx : value[dimIdx - 1]) : value[dimIdx];
-            });
+            list.initData(data, categories ? categories.slice() : null);
 
             return list;
         },
@@ -94,30 +90,6 @@ define(function(require) {
         getBaseAxis: function () {
             var dim = this._baseAxisDim;
             return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
-        },
-
-        /**
-         * @override
-         */
-        formatTooltip: function (dataIndex, mutipleSeries) {
-            // It rearly use mutiple candlestick series in one cartesian,
-            // so only consider one series in this default tooltip.
-            var data = this.getData();
-            var dimensions = data.dimensions;
-            var valueHTML = [];
-            zrUtil.each(dimensions, function (dimName, index) {
-                // The first dim is "base", which will not be displayed in tooltip.
-                index && valueHTML.push(
-                    '- ' + encodeHTML(dimName + ': ' + addCommas(data.get(dimName, dataIndex)))
-                );
-            });
-            valueHTML = valueHTML.join('<br />');
-
-            var html = [];
-            this.name != null && html.push(encodeHTML(this.name));
-            valueHTML != null && html.push(valueHTML);
-
-            return html.join('<br />');
         }
 
     };

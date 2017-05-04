@@ -628,7 +628,10 @@ define(function(require) {
 
             originNames[i] = dimItem.name;
             if (dimDefItem.name) {
-                dimItem.name = dimDefItem.name;
+                // Only if `series.dimensions` is defined in option, tooltipName
+                // will be set, and dimension will be diplayed vertically in
+                // tooltip by default.
+                dimItem.tooltipName = dimItem.name = dimDefItem.name;
             }
 
             dimNameMap.set(dimItem.name, i);

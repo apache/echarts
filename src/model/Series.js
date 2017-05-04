@@ -216,38 +216,38 @@ define(function(require) {
          * @param {number} [dataType]
          */
         formatTooltip: function (dataIndex, multipleSeries, dataType) {
-            // FIXME: consider boxplot and candlestick, where the rawData does not contain
-            // category index.
             function formatArrayValue(value) {
-                var result = [];
+                var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
+                    var dimItem = data.getDimensionInfo(idx);
+                    return vertially |= dimItem.tooltip !== false && dimItem.tooltipName != null;
+                }, 0);
 
+                var result = [];
                 zrUtil.each(value, function (val, idx) {
                     var dimInfo = data.getDimensionInfo(idx);
-                    var dimType = dimInfo && dimInfo.type;
-                    var valStr;
-
-                    if (dimType === 'ordinal') {
-                        valStr = val + '';
+                    // If `dimInfo.tooltip` is not set, show tooltip.
+                    if (!dimInfo || dimInfo.tooltip === false) {
+                        return;
                     }
-                    else if (dimType === 'time') {
-                        valStr = multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val);
-                    }
-                    else {
-                        valStr = addCommas(val);
-                    }
-
-                    valStr && result.push(valStr);
+                    var dimType = dimInfo.type;
+                    var valStr = (vertially ? '- ' + (dimInfo.tooltipName || dimInfo.name) + ': ' : '')
+                        + (dimType === 'ordinal'
+                            ? val + ''
+                            : dimType === 'time'
+                            ? (multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val))
+                            : addCommas(val)
+                        );
+                    valStr && result.push(encodeHTML(valStr));
                 });
 
-                return result.join(', ');
+                return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
             }
 
             var data = get(this, 'data');
 
             var value = this.getRawValue(dataIndex);
-            var formattedValue = encodeHTML(
-                zrUtil.isArray(value) ? formatArrayValue(value) : addCommas(value)
-            );
+            var formattedValue = zrUtil.isArray(value)
+                ? formatArrayValue(value) : encodeHTML(addCommas(value));
             var name = data.getName(dataIndex);
 
             var color = data.getItemVisual(dataIndex, 'color');
@@ -265,13 +265,13 @@ define(function(require) {
                 seriesName = '';
             }
             return !multipleSeries
-                ? ((seriesName && encodeHTML(seriesName) + '<br />') + colorEl
+                ? ((seriesName && encodeHTML(seriesName) + '<br/>') + colorEl
                     + (name
-                        ? encodeHTML(name) + ' : ' + formattedValue
+                        ? encodeHTML(name) + ': ' + formattedValue
                         : formattedValue
                     )
                   )
-                : (colorEl + encodeHTML(this.name) + ' : ' + formattedValue);
+                : (colorEl + encodeHTML(this.name) + ': ' + formattedValue);
         },
 
         /**
