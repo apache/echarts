@@ -1,0 +1,37 @@
+{
+  "name": "echarts",
+  "version": "3.1.1",
+  "homepage": "https://github.com/ecomfe/echarts",
+  "authors": [
+    {
+      "name": "Kenner",
+      "email": "kener.linfeng@gmail.com"
+    },
+    {
+      "name": "Yi Shen",
+      "url": "https://github.com/pissang"
+    },
+    {
+      "name": "Shuang Su",
+      "url": "https://github.com/100pah"
+    }
+  ],
+  "description": "A powerful charting and visualization library for browser",
+  "main": ["build/echarts-plain-original.js", "build/echarts-plain-original-map.js"],
+  "keywords": [
+    "baidu",
+    "echarts",
+    "canvas"
+  ],
+  "license": "BSD",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "src",
+    "doc",
+    "test",
+    "tests"
+  ]
+}
