@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="linzhifeng@baidu.com">
+    <title>ECharts · Home</title>
+    
+    <link rel="shortcut icon" href="./doc/asset/ico/favicon.png">
+    
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="./doc/asset/css/bootstrap.css" rel="stylesheet">
+    <link href="./doc/asset/css/carousel.css" rel="stylesheet">
+    <link href="./doc/asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+     <!-- Carousel
+    ================================================== -->
+    <div id="myCarousel" class="carousel slide" data-ride="carousel">
+      <!-- Indicators -->
+      <ol class="carousel-indicators">
+        <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+        <li data-target="#myCarousel" data-slide-to="1"></li>
+        <li data-target="#myCarousel" data-slide-to="2"></li>
+        <li data-target="#myCarousel" data-slide-to="3"></li>
+      </ol>
+      <div class="carousel-inner">
+        <div class="item active">
+          <img src="./doc/asset/img/slide-01.png" alt="ECharts"/>
+        </div>
+        <div class="item">
+          <img src="./doc/asset/img/slide-02.png" alt="ECharts"/>
+          <div class="container">
+            <div class="carousel-caption" style="bottom:0;left:25%">
+              <p style="text-align:left;">
+                  <a class="btn btn-lg btn-warning" href="./doc/example.html#gauge" role="button">查看 »</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <img src="./doc/asset/img/slide-03.png" alt="ECharts"/>
+          <div class="container">
+            <div class="carousel-caption" style="bottom:0;left:25%">
+              <p style="text-align:left;">
+                  <a class="btn btn-lg btn-warning" href="./doc/example/bar12.html" role="button">查看 »</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <img src="./doc/asset/img/slide-04.png" alt="ECharts"/>
+          <div class="container">
+            <div class="carousel-caption" style="bottom:0;left:25%">
+              <p style="text-align:left;">
+                  <a class="btn btn-lg btn-warning" href="./doc/example/theme.html" role="button">查看 »</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="left carousel-control" href="#myCarousel" data-slide="prev"><span class="glyphicon glyphicon-chevron-left"></span></a>
+      <a class="right carousel-control" href="#myCarousel" data-slide="next"><span class="glyphicon glyphicon-chevron-right"></span></a>
+    </div><!-- /.carousel -->
+
+    <!-- Marketing messaging and featurettes
+    ================================================== -->
+    <!-- Wrap the rest of the page in another container to center all the content. -->
+
+    <div class="container marketing">
+      <h1 class="text-center" style="margin-bottom:30px;">让数据说话</h1>
+      <!-- Three columns of text below the carousel -->
+      <div class="row">
+        <div class="col-lg-4">
+          <img class="col-lg-12" src="doc/asset/img/feature1.png"  alt="Echarts 拖拽重计算" style="margin-bottom:20px"/>
+          <h2>拖拽重计算</h2>
+          <p class="text-left">&#12288;&#12288;拖拽重计算特性（专利）带来了数据统计图表从未有过的用户体验，允许用户对统计数据进行有效的提取、整合，甚至在多个图表间交换数据，赋予了用户对数据进行挖掘、整合的能力。</p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-4">
+          <img class="col-lg-12" src="doc/asset/img/feature2.png"  alt="Echarts 数据视图" style="margin-bottom:20px"/>
+          <h2>大规模数据模式</h2>
+          <p class="text-left">&#12288;&#12288;如何展现成千上百万的数据？貌似除了用专业的统计工具（如MATLAB）外别无选择？不，在拥有众多交互特性下ECharts依然可以做到直角系图表（折、柱、散点、K线）20万数据秒级出图。</p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-lg-4">
+          <img class="col-lg-12" src="doc/asset/img/feature3.png"  alt="Echarts 值域漫游" style="margin-bottom:20px"/>
+          <h2>值域漫游</h2>
+          <p class="text-left">&#12288;&#12288;基于坐标的图表（如地图、散点图）通过色彩变化表现数值的大小能直观形象的展示数据分布。但如何聚焦到我所关心的数值上？ECharts拥有值域漫游的功能，让你可以轻松进行数值筛选。</p>
+        </div><!-- /.col-lg-4 -->
+        <p class="pull-right"><a href="doc/feature.html">更多 »</a></p>
+      </div><!-- /.row -->
+      
+      <div class="row featurette thx">
+        <h1 class="text-center">感谢有你</h1>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>“ ECharts是中国的，也是世界的。”</p>
+            <br/>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/shearwarp" target="_blank">浙江大学教授 · 陈为</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>“ 期待ECharts 2.0让数据更生动，图表更闪耀，交互更友好，使用更便捷。”</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/u/1688425190" target="_blank">AdMaster CTO · 洪倍</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>“ ECharts，发现数据可视化之美！”</p>
+            <br/>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/shenhaolaoshi" target="_blank">中国传媒大学教授 · 沈浩</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-6">
+          <blockquote>
+            <p>“ ECharts是我接触过的最优秀的可视化工具，也是进步最快的软件，希望它早日成为世界级的开源项目。”</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/u/2006785117" target="_blank">财新传媒CTO · 黄志敏</a></small>
+          </blockquote>
+        </div>
+        
+        <div class="col-lg-6">
+          <blockquote>
+            <p>“ 根据我们多年的国内外图表工具使用经验，ECharts完胜所有免费图表工具，媲美最优秀收费图表软件的好东东。”</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/tiemuyu" target="_blank">水清木华总经理 · 余杰</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-5">
+          <blockquote>
+            <p>“ ECharts是一款开源、功能强大的数据可视化产品，紧跟着大数据时代的步伐！希望ECharts在未来继续发扬开源的力量，让国内外更多的人用上这款数据可视化产品，为企业、社会创造更大的价值。”</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/DataScientistUnion" target="_blank">数盟社区创始人 · 兴宝</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-4">
+          <blockquote>
+            <p>“ ECharts开放、大气、优雅， 1.0就很赞了，更新很快，2.0更是惊艳。我身边的一些美帝朋友们也不辞劳苦，用在线翻译来学习ECharts！”</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/cosname/" target="_blank">统计之都创始人 · 谢益辉</a></small>
+          </blockquote>
+        </div>
+        <div class="col-lg-3">
+          <blockquote>
+            <p>“ ECharts代表了新一代的大数据可视化基础库，希望能早日完善对移动平台的支持，帮助企业将大数据玩于指尖。”</p>
+            <small><i class="fa fa-weibo"></i> <a href="http://weibo.com/austinhu" target="_blank">海智CTO · 胡嵩</a></small>
+          </blockquote>
+        </div>
+        
+        <div class="col-md-12 user text-center">
+            <a href="http://www.baidu.com" target="_blank" ><img src="http://www.baidu.com/img/baidu_jgylogo3.gif" alt="到百度首页" title="到百度首页"></a>
+            <a href="http://dev2.baidu.com/index.do" target="_blank" ><img src="http://dev2.baidu.com/zh/img/zh-logo.jpg" alt="百度商业开发者中心" title="百度商业开发者中心"></a>
+            <a href="http://zhanzhang.baidu.com/" target="_blank" ><img src="http://zhanzhang.baidu.com/static/img/zhanzhang_logo.png" alt="百度站长平台" title="百度站长平台"></a>
+            <a href="http://adm.baidu.com/index.html" target="_blank" ><img src="http://adm.baidu.com/home/common/img/logo.png"></a>
+            <a href="http://jiaoyu.baidu.com/mp/index" target="_blank" ><img src="http://vs-static.baidu.com/edu/newjuhe/asset/img/logo137.png"></a>
+            <a href="http://hui.baidu.com/" target="_blank" ><img src="http://vs-static.baidu.com/baiduhui/asset20140623/common/img/logo.png" alt="百度汇" title="百度汇"></a>
+            <a href="http://sd.baidu.com/zh/" target="_blank" ><img src="http://sd.baidu.com/static/img/common/logo.png"></a>
+            <a href="http://renqi.baidu.com/" target="_blank" ><img src="http://renqi.baidu.com/static/image/logo.png" style="background-color: #0d5ab1"></a>
+            <a href="http://trends.baidu.com/" target="_blank" ><img src="http://trends.baidu.com/static/worldcup/home/logo_646fdc96.png" style="background-color: #264597"></a>
+            <a href="http://msm.zhidao.baidu.com/" target="_blank" ><img src="http://msm.zhidao.baidu.com/static/widget/common/buywhat/buywhat-header/img/logo_1d5d5692.jpg" style="background-color:#4C6EC8"></a>
+            
+            <a href="http://www.admaster.com.cn/" target="_blank" ><img src="http://www.admaster.com.cn/static/img/logo.png"></a>
+            <a href="http://www.mi.com/" target="_blank" ><img src="http://img03.mifile.cn/webfile/images/2014/cn/icon/site-logo.png"></a>
+            <a href="http://www.miaozhen.com/" target="_blank" ><img src="http://www.miaozhen.com/style/images/GW_logo.jpg"></a>
+            <a href="http://www.semidata.com/index.php" target="_blank" ><img src="http://datavisualization.miaozhen.com/SemiData_logo.png"></a>
+            <a href="http://www.sgcc.com.cn/" target="_blank" ><img src="http://www.sgcc.com.cn/images/header/header_logo_0106.png"></a>
+            <a href="http://www.piccnet.com.cn/" target="_blank" ><img src="http://www.piccnet.com.cn/imagess/logo.gif"></a>
+            <a href="http://www.sinopec.com/" target="_blank" ><img src="http://pic.xooob.com/20081041/2008104133532142.jpg"></a>
+            <a href="http://www.lenovo.com.cn/" target="_blank" ><img src="http://img.hc360.com/printing/info/images/200812/200812161055278334.jpg"></a>
+            <a href="http://www.huawei.com/cn/" target="_blank" ><img src="http://www.huawei.com/minisite/mobile_cn/images/Logo.jpg"></a>
+            
+            <a href="http://www.dangdang.com/" target="_blank" ><img src="http://img4.ddimg.cn/00012/dang/logo_dd.gif"></a>
+            <a href="http://lashou.com/" target="_blank" ><img src="http://s1.lashouimg.com/static/img/index/logo02.png"></a>
+            <a href="http://www.vip.com/" target="_blank" ><img src="http://pic.iresearch.cn/news/201304/635018302584062500.jpg"></a>
+            <a href="http://tv.pptv.com/" target="_blank" ><img src="http://photocdn.sohu.com/20120207/Img334013169.jpg"></a>
+            
+            <a href="http://www.caixin.com/" target="_blank" ><img src="http://file.caixin.com/file/content/images/new/logo.png"></a>
+            <a href="http://www.jjckb.cn/" target="_blank" ><img src="http://jjckb.xinhuanet.com/jjimages/jc/images/logo.gif"></a>
+            <a href="http://news.sina.com.cn/" target="_blank" ><img src="http://i2.sinaimg.cn/dy/deco/2012/0613/yocc20120613img01/news_logo.png"></a>
+            <a href="http://news.qq.com/newspedia/all.htm" target="_blank" ><img src="http://mat1.gtimg.com/news/newspedia/images/news_baike.png"></a>
+            <a href="http://news.qq.com/" target="_blank" ><img src="http://mat1.gtimg.com/news/news2013/LOGO.jpg"></a>
+            <a href="http://www.shujubang.com/index.html" target="_blank" ><img src="http://www.shujubang.com/Image_New/2014/Master/logo.png"></a>
+            <a href="http://www.futureweather.cn/" target="_blank" ><img src="http://www.qx17.cn/_c_xKeZGQlsF8eHtUZXc63DP_L01zSR_ao8biwTU2VFqcomEOG4im0Ghomh19TkUeP7kimak9lDWS8Y-8dld2ohLx9bWw6ag9Gu.png"></a>
+            <a href="http://www.ctrip.com/" target="_blank" ><img src="http://pic.c-ctrip.com/common/c_logo2013_2x.png"></a>
+            <a href="http://www.jinjianginns.com/" target="_blank" ><img src="http://www.jinjianginns.com/images2/logo.jpg"></a>
+            <a href="http://www.51job.com/default.php" target="_blank" ><img src="http://img01.51jobcdn.com/im/2009/logo/logo2009.gif"></a>
+            <!--a href="http://www.asiainfo.com/" target="_blank" ><img src="http://www.asiainfo.com/Portals/0/asiaInfo_Logo.png"></a>
+            <a href="http://www.yonyou.com/" target="_blank" ><img src="http://www.yonyou.com/images/logo.jpg"></a-->
+            <div style="font-weight: bolder">...</div>
+        </div>
+      </div>
+      
+      <div class="row featurette" style="padding-bottom: 0;">
+        <div class="col-md-12">
+          <h1 class="text-primary" style="margin-bottom: 20px;"><small>大数据时代</small><br/><strong>重新定义数据图表的时候到了</strong></h1>
+          <p class="lead">&#12288;&#12288;我们只是尽我们所能为你呈现数据<span class="text-primary">真实</span>的一面，并且提供了一些直观、易用的交互方式以方便你对所展现数据进行<span class="text-primary">挖掘、提取、修正或整合</span>，让你可以更加<span class="text-primary">专注</span>于你所关心地方，无论是系列选择、区域缩放还是数值筛选，让你可以有<span class="text-primary">不同的方式解读同样的数据</span>。</p>
+        </div>
+        <div class="col-md-12">
+          <p class="lead" style="margin-bottom: 0;">&#12288;&#12288;浏览<span class="text-primary">ECharts</span>所输出的图表，你不再只是个“读者”，你可以参与其中，这就是<span class="text-primary">ECharts</span>，我们正在打造的一个拥有<strong class="text-primary">互动图形用户界面（GUI）</strong>的数据可视化工具。</p>
+        </div>
+      </div>
+      <div class="jumbotron">
+        <h1 style="font-size: 80px;">现在就出发!</h1>
+        <a class="btn btn-large btn-warning" href="./doc/start.html"><i class="fa fa-paper-plane"></i> Get started</a>
+      </div>
+      <!-- /END THE FEATURETTES -->
+    </div><!-- /.container -->
+
+    <!-- FOOTER -->
+    <footer id="footer"></footer>
+    
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./doc/asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="./doc/asset/js/echartsHome.js"></script>
+    <script src="./doc/asset/js/bootstrap.min.js"></script>
+  </body>
+</html>
