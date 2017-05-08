@@ -109,7 +109,6 @@ define(function (require) {
 
             }
 
-
             var group = this.group;
             var data = seriesModel.getData();
 
@@ -121,90 +120,93 @@ define(function (require) {
             var hoverStl = seriesModel.getModel(hoverItemStyleQuery).getItemStyle();
             var labelModel = seriesModel.getModel('label.normal');
             var hoverLabelModel = seriesModel.getModel('label.emphasis');
+            var coordSysType = coordSys.type;
 
+            var dataDims = coordSysType === 'cartesian2d'
+                ? [
+                    seriesModel.coordDimToDataDim('x')[0],
+                    seriesModel.coordDimToDataDim('y')[0],
+                    seriesModel.coordDimToDataDim('value')[0]
+                ]
+                : [
+                    seriesModel.coordDimToDataDim('time')[0],
+                    seriesModel.coordDimToDataDim('value')[0]
+                ];
 
+            data.each(function (idx) {
+                var rect;
 
-            data.each(
-                coordSys.type === 'cartesian2d' ? ['x', 'y', 'z'] : ['time', 'value'],
+                if (coordSysType === 'cartesian2d') {
+                    // Ignore empty data
+                    if (isNaN(data.get(dataDims[2], idx))) {
+                        return;
+                    }
 
-                function (x, y, z, idx) {
-                    var rect;
+                    var point = coordSys.dataToPoint([
+                        data.get(dataDims[0], idx),
+                        data.get(dataDims[1], idx)
+                    ]);
 
-                    if (coordSys.type === 'cartesian2d') {
-
-                        // Ignore empty data
-                        if (isNaN(z)) {
-                            return;
+                    rect = new graphic.Rect({
+                        shape: {
+                            x: point[0] - width / 2,
+                            y: point[1] - height / 2,
+                            width: width,
+                            height: height
+                        },
+                        style: {
+                            fill: data.getItemVisual(idx, 'color'),
+                            opacity: data.getItemVisual(idx, 'opacity')
                         }
-
-                        var point = coordSys.dataToPoint([x, y]);
-
-                        rect = new graphic.Rect({
-                            shape: {
-                                x: point[0] - width / 2,
-                                y: point[1] - height / 2,
-                                width: width,
-                                height: height
-                            },
-                            style: {
-                                fill: data.getItemVisual(idx, 'color'),
-                                opacity: data.getItemVisual(idx, 'opacity')
-                            }
-                        });
-                    }
-                    else {
-                        // x => time y => value z => idx
-
-                        // Ignore empty data
-                        if (isNaN(y)) {
-                            return;
-                        }
-
-                        idx = z;
-
-                        rect = new graphic.Rect({
-                            z2: 1,
-                            shape: coordSys.dataToRect([x, y]).contentShape,
-                            style: {
-                                fill: data.getItemVisual(idx, 'color'),
-                                opacity: data.getItemVisual(idx, 'opacity')
-                            }
-                        });
-                    }
-
-
-                    var itemModel = data.getItemModel(idx);
-
-                    // Optimization for large datset
-                    if (data.hasItemOption) {
-                        style = itemModel.getModel(itemStyleQuery).getItemStyle(['color']);
-                        hoverStl = itemModel.getModel(hoverItemStyleQuery).getItemStyle();
-                        labelModel = itemModel.getModel(labelQuery);
-                        hoverLabelModel = itemModel.getModel(hoverLabelQuery);
-                    }
-
-                    var rawValue = seriesModel.getRawValue(idx);
-                    var defaultText = '-';
-                    if (rawValue && rawValue[2] != null) {
-                        defaultText = rawValue[2];
-                    }
-                    if (labelModel.getShallow('show')) {
-                        graphic.setText(style, labelModel);
-                        style.text = seriesModel.getFormattedLabel(idx, 'normal') || defaultText;
-                    }
-                    if (hoverLabelModel.getShallow('show')) {
-                        graphic.setText(hoverStl, hoverLabelModel);
-                        hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
-                    }
-
-                    rect.setStyle(style);
-
-                    graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
-
-                    group.add(rect);
-                    data.setItemGraphicEl(idx, rect);
+                    });
                 }
-            );
+                else {
+                    // Ignore empty data
+                    if (isNaN(data.get(dataDims[1], idx))) {
+                        return;
+                    }
+
+                    rect = new graphic.Rect({
+                        z2: 1,
+                        shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
+                        style: {
+                            fill: data.getItemVisual(idx, 'color'),
+                            opacity: data.getItemVisual(idx, 'opacity')
+                        }
+                    });
+                }
+
+                var itemModel = data.getItemModel(idx);
+
+                // Optimization for large datset
+                if (data.hasItemOption) {
+                    style = itemModel.getModel(itemStyleQuery).getItemStyle(['color']);
+                    hoverStl = itemModel.getModel(hoverItemStyleQuery).getItemStyle();
+                    labelModel = itemModel.getModel(labelQuery);
+                    hoverLabelModel = itemModel.getModel(hoverLabelQuery);
+                }
+
+                var rawValue = seriesModel.getRawValue(idx);
+                var defaultText = '-';
+                if (rawValue && rawValue[2] != null) {
+                    defaultText = rawValue[2];
+                }
+                if (labelModel.getShallow('show')) {
+                    graphic.setText(style, labelModel);
+                    style.text = seriesModel.getFormattedLabel(idx, 'normal') || defaultText;
+                }
+                if (hoverLabelModel.getShallow('show')) {
+                    graphic.setText(hoverStl, hoverLabelModel);
+                    hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
+                }
+
+                rect.setStyle(style);
+
+                graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
+
+                group.add(rect);
+                data.setItemGraphicEl(idx, rect);
+            });
         },
 
         _renderOnGeo: function (geo, seriesModel, visualMapModel, api) {

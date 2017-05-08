@@ -140,8 +140,10 @@ define(function (require) {
             });
         });
 
+        // Make sure the first extra dim is 'value'.
+        var extra = opt.extraPrefix || 'value';
+
         // Set dim `name` and other `coordDim` and other props.
-        var extra = opt.extraPrefix || 'extra';
         for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
             var resultItem = result[resultDimIdx] = result[resultDimIdx] || {};
             var coordDim = resultItem.coordDim;

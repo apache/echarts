@@ -77,10 +77,10 @@ describe('completeDimensions', function () {
             },
             {
                 'otherDims': {},
-                'coordDim': 'extra',
+                'coordDim': 'value',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'name': 'extra'
+                'name': 'value'
             }
         ]);
         doTest(['x', 'y', 'z'], [[32, 55]], null, [
@@ -112,10 +112,10 @@ describe('completeDimensions', function () {
             },
             {
                 'otherDims': {},
-                'coordDim': 'extra',
+                'coordDim': 'value',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'name': 'extra'
+                'name': 'value'
             }
         ]);
         doTest(['x', 'y'], [[32, 55], [99, 11]], {dimCount: 4}, [
@@ -133,17 +133,17 @@ describe('completeDimensions', function () {
             },
             {
                 'otherDims': {},
-                'coordDim': 'extra',
+                'coordDim': 'value',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'name': 'extra'
+                'name': 'value'
             },
             {
                 'otherDims': {},
-                'coordDim': 'extra0',
+                'coordDim': 'value0',
                 'coordDimIndex': 0,
                 'isExtraCoord': true,
-                'name': 'extra0'
+                'name': 'value0'
             }
         ]);
     });
@@ -183,24 +183,24 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra1',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra1'
+                    'name': 'value1'
                 }
             ]
         );
@@ -216,31 +216,31 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value1'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra1',
+                    'coordDim': 'value2',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra1'
+                    'name': 'value2'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra2',
+                    'coordDim': 'value3',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra2'
+                    'name': 'value3'
                 }
             ]
         );
@@ -263,24 +263,24 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value1'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra1',
+                    'coordDim': 'value2',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra1'
+                    'name': 'value2'
                 }
             ]
         );
@@ -322,17 +322,17 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 }
             ]
         );
@@ -383,17 +383,17 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 }
             ]
         );
@@ -437,14 +437,14 @@ describe('completeDimensions', function () {
                     'tooltipName': '关闭',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'coordDim': 'extra'
+                    'coordDim': 'value'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
@@ -499,17 +499,17 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value1'
                 }
             ]
         );
@@ -536,24 +536,24 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra0',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value1'
                 },
                 {
                     'otherDims': {},
-                    'coordDim': 'extra1',
+                    'coordDim': 'value2',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra1'
+                    'name': 'value2'
                 }
             ]
         );
@@ -587,9 +587,9 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
-                    'coordDim': 'extra',
+                    'coordDim': 'value',
                     'coordDimIndex': 0,
-                    'name': 'extra',
+                    'name': 'value',
                     'isExtraCoord': true,
                     'type': 'ordinal'
                 },
@@ -611,10 +611,10 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'label': 0
                     },
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
@@ -627,10 +627,10 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'label': 1
                     },
-                    'coordDim': 'extra1',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra1'
+                    'name': 'value1'
                 }
             ]
         );
@@ -651,7 +651,7 @@ describe('completeDimensions', function () {
                     'tooltipName': '挨克思',
                     'name': '挨克思',
                     'type': 'ordinal',
-                    'coordDim': 'extra',
+                    'coordDim': 'value',
                     'coordDimIndex': 0,
                     'isExtraCoord': true
                 },
@@ -674,10 +674,10 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'label': 0
                     },
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 },
                 {
                     'otherDims': {},
@@ -690,10 +690,10 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'label': 1
                     },
-                    'coordDim': 'extra1',
+                    'coordDim': 'value1',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra1'
+                    'name': 'value1'
                 }
             ]
         );
@@ -738,10 +738,10 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'label': 0
                     },
-                    'coordDim': 'extra',
+                    'coordDim': 'value',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra'
+                    'name': 'value'
                 },
                 {
                     'otherDims': {},
@@ -755,10 +755,10 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'label': 1
                     },
-                    'coordDim': 'extra0',
+                    'coordDim': 'value0',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
-                    'name': 'extra0'
+                    'name': 'value0'
                 }
             ]
         );
