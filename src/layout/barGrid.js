@@ -161,6 +161,11 @@ define(function(require) {
 
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
 
+            // Check series coordinate, do layout for cartesian2d only
+            if (seriesModel.coordinateSystem.type !== 'cartesian2d') {
+                return;
+            }
+
             var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;
             var baseAxis = cartesian.getBaseAxis();
