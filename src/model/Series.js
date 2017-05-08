@@ -183,7 +183,7 @@ define(function(require) {
          * @return {Array.<string>} dimensions on the axis.
          */
         coordDimToDataDim: function (coordDim) {
-            return modelUtil.findDataDim(this.getData(), coordDim);
+            return modelUtil.coordDimToDataDim(this.getData(), coordDim);
         },
 
         /**
@@ -223,10 +223,19 @@ define(function(require) {
                 }, 0);
 
                 var result = [];
-                zrUtil.each(value, function (val, idx) {
-                    var dimInfo = data.getDimensionInfo(idx);
+                var tooltipDims = modelUtil.otherDimToDataDim(data, 'tooltip');
+
+                tooltipDims.length
+                    ? zrUtil.each(tooltipDims, function (dimIdx) {
+                        setEachItem(data.get(dimIdx, dataIndex), dimIdx);
+                    })
+                    // By default, all dims is used on tooltip.
+                    : zrUtil.each(value, setEachItem);
+
+                function setEachItem(val, dimIdx) {
+                    var dimInfo = data.getDimensionInfo(dimIdx);
                     // If `dimInfo.tooltip` is not set, show tooltip.
-                    if (!dimInfo || dimInfo.tooltip === false) {
+                    if (!dimInfo || dimInfo.otherDims.tooltip === false) {
                         return;
                     }
                     var dimType = dimInfo.type;
@@ -238,7 +247,7 @@ define(function(require) {
                             : addCommas(val)
                         );
                     valStr && result.push(encodeHTML(valStr));
-                });
+                }
 
                 return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
             }

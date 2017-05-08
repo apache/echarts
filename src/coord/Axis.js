@@ -79,8 +79,7 @@ define(function (require) {
          * @return {Array.<number>}
          */
         getExtent: function () {
-            var ret = this._extent.slice();
-            return ret;
+            return this._extent.slice();
         },
 
         /**

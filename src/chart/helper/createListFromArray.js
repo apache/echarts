@@ -38,8 +38,13 @@ define(function(require) {
         var coordSysName = seriesModel.get('coordinateSystem');
         var creator = creators[coordSysName];
         var registeredCoordSys = CoordinateSystem.get(coordSysName);
+        var completeDimOpt = {
+            encodeDef: seriesModel.get('encode'),
+            dimsDef: seriesModel.get('dimensions')
+        };
+
         // FIXME
-        var axesInfo = creator && creator(data, seriesModel, ecModel);
+        var axesInfo = creator && creator(data, seriesModel, ecModel, completeDimOpt);
         var dimensions = axesInfo && axesInfo.dimensions;
         if (!dimensions) {
             // Get dimensions from registered coordinate system
@@ -48,11 +53,8 @@ define(function(require) {
                     ? registeredCoordSys.getDimensionsInfo()
                     : registeredCoordSys.dimensions.slice()
             )) || ['x', 'y'];
-            dimensions = completeDimensions(dimensions, data, {defaultNames: dimensions.concat(['value'])});
+            dimensions = completeDimensions(dimensions, data, completeDimOpt);
         }
-
-        // Store encoding info in `data`, because the last `data` can be cached after `setOption` performed.
-        modelUtil.applyDimensionDefine(dimensions, seriesModel);
 
         var categoryIndex = axesInfo ? axesInfo.categoryIndex : -1;
 
@@ -121,7 +123,7 @@ define(function(require) {
      */
     var creators = {
 
-        cartesian2d: function (data, seriesModel, ecModel) {
+        cartesian2d: function (data, seriesModel, ecModel, completeDimOpt) {
 
             var axesModels = zrUtil.map(['xAxis', 'yAxis'], function (name) {
                 return ecModel.queryComponents({
@@ -170,7 +172,7 @@ define(function(require) {
             var isXAxisCateogry = xAxisType === 'category';
             var isYAxisCategory = yAxisType === 'category';
 
-            completeDimensions(dimensions, data, {defaultNames: ['x', 'y', 'z']});
+            dimensions = completeDimensions(dimensions, data, completeDimOpt);
 
             var categoryAxesModels = {};
             if (isXAxisCateogry) {
@@ -186,7 +188,7 @@ define(function(require) {
             };
         },
 
-        singleAxis: function (data, seriesModel, ecModel) {
+        singleAxis: function (data, seriesModel, ecModel, completeDimOpt) {
 
             var singleAxisModel = ecModel.queryComponents({
                 mainType: 'singleAxis',
@@ -209,7 +211,7 @@ define(function(require) {
                 stackable: isStackable(singleAxisType)
             }];
 
-            completeDimensions(dimensions, data);
+            dimensions = completeDimensions(dimensions, data, completeDimOpt);
 
             var categoryAxesModels = {};
             if (isCategory) {
@@ -223,7 +225,7 @@ define(function(require) {
             };
         },
 
-        polar: function (data, seriesModel, ecModel) {
+        polar: function (data, seriesModel, ecModel, completeDimOpt) {
             var polarModel = ecModel.queryComponents({
                 mainType: 'polar',
                 index: seriesModel.get('polarIndex'),
@@ -260,7 +262,7 @@ define(function(require) {
             var isAngleAxisCateogry = angleAxisType === 'category';
             var isRadiusAxisCateogry = radiusAxisType === 'category';
 
-            completeDimensions(dimensions, data, {defaultNames: ['radius', 'angle', 'value']});
+            dimensions = completeDimensions(dimensions, data, completeDimOpt);
 
             var categoryAxesModels = {};
             if (isRadiusAxisCateogry) {
@@ -276,14 +278,14 @@ define(function(require) {
             };
         },
 
-        geo: function (data, seriesModel, ecModel) {
+        geo: function (data, seriesModel, ecModel, completeDimOpt) {
             // TODO Region
             // 多个散点图系列在同一个地区的时候
             return {
                 dimensions: completeDimensions([
                     {name: 'lng'},
                     {name: 'lat'}
-                ], data, {defaultNames: ['lng', 'lat', 'value']})
+                ], data, completeDimOpt)
             };
         }
     };

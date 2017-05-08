@@ -19,14 +19,7 @@ define(function (require) {
         },
 
         /**
-         * Complete the dimensions array guessed from the data structure.
-         * @param  {Array.<string>} dimensions Necessary dimensions, like ['x', 'y']
-         * @param  {Array} data Data list. [[1, 2, 3], [2, 3, 4]]
-         * @param  {Object} [opt]
-         * @param  {Array.<string>} [opt.defaultNames] Default names to fill not necessary dimensions, like ['value']
-         * @param  {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
-         * @param  {number} [opt.dimCount] If not specified, guess by the first data item.
-         * @return {Array.<string>}
+         * @see {module:echarts/data/helper/completeDimensions}
          */
         completeDimensions: require('./data/helper/completeDimensions'),
 

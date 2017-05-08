@@ -162,7 +162,7 @@ define(function (require) {
                 }
             }
 
-            completeDimensions(dimensions, data);
+            dimensions = completeDimensions(dimensions, data);
 
             var list = new List(dimensions, this);
 

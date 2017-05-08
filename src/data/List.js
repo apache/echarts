@@ -93,6 +93,7 @@ define(function (require) {
                     dimensionInfo.coordDimIndex = 0;
                 }
             }
+            dimensionInfo.otherDims = dimensionInfo.otherDims || {};
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
         }

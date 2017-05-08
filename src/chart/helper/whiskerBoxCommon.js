@@ -6,7 +6,6 @@ define(function(require) {
     var completeDimensions = require('../../data/helper/completeDimensions');
     var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
     var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
 
     var seriesModelMixin = {
 
@@ -60,22 +59,20 @@ define(function(require) {
             });
 
             var dimensions = [{
-                name: 'base',
-                tooltip: false,
-                coordDim: baseAxisDim,
-                coordDimIndex: 0
+                name: baseAxisDim,
+                otherDims: {
+                    tooltip: false
+                },
+                dimsDef: ['base']
+            }, {
+                name: otherAxisDim,
+                dimsDef: this.defaultValueDimensions.slice()
             }];
-            zrUtil.each(this.defaultValueDimensions, function (dimName, index) {
-                dimensions.push({
-                    name: dimName,
-                    tooltipName: dimName,
-                    coordDim: otherAxisDim,
-                    coordDimIndex: index
-                });
-            });
-            completeDimensions(dimensions, data);
 
-            modelUtil.applyDimensionDefine(dimensions, this);
+            dimensions = completeDimensions(dimensions, data, {
+                encodeDef: this.get('encode'),
+                dimsDef: this.get('dimensions')
+            });
 
             var list = new List(dimensions, this);
             list.initData(data, categories ? categories.slice() : null);

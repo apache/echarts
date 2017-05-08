@@ -12,8 +12,7 @@ define(function (require) {
         dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 
         getInitialData: function (option, ecModel) {
-            var list = createListFromArray(option.data, this, ecModel);
-            return list;
+            return createListFromArray(option.data, this, ecModel);
         },
 
         brushSelector: 'point',
