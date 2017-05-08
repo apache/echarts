@@ -273,14 +273,14 @@ define(function(require) {
                 // Not show '-'
                 seriesName = '';
             }
+            seriesName = seriesName ? encodeHTML(seriesName) : '';
             return !multipleSeries
-                ? ((seriesName && encodeHTML(seriesName) + '<br/>') + colorEl
+                ? seriesName + '<br/>' + colorEl
                     + (name
                         ? encodeHTML(name) + ': ' + formattedValue
                         : formattedValue
                     )
-                  )
-                : (colorEl + encodeHTML(this.name) + ': ' + formattedValue);
+                : (colorEl + encodeHTML(seriesName) + ': ' + formattedValue);
         },
 
         /**

@@ -10,7 +10,7 @@ define(function (require) {
     var defaults = zrUtil.defaults;
     var normalizeToArray = modelUtil.normalizeToArray;
 
-    var OTHER_DIMS = {tooltip: 1, label: 1};
+    var OTHER_DIMS = {tooltip: 1, label: 1, name: 1};
 
     /**
      * Complete the dimensions array, by user defined `dimension` and `encode`,
@@ -39,6 +39,7 @@ define(function (require) {
      *          tooltip: number optional,
      *          label: number optional
      *      },
+     *      isExtraCoord: boolean true or undefined.
      *      other props ...
      * }]
      */
@@ -147,7 +148,8 @@ define(function (require) {
 
             coordDim == null && (
                 resultItem.coordDim = genName(extra, coordDimNameMap),
-                resultItem.coordDimIndex = 0
+                resultItem.coordDimIndex = 0,
+                resultItem.isExtraCoord = true
             );
 
             resultItem.name == null && (resultItem.name = genName(

@@ -79,6 +79,7 @@ describe('completeDimensions', function () {
                 'otherDims': {},
                 'coordDim': 'extra',
                 'coordDimIndex': 0,
+                'isExtraCoord': true,
                 'name': 'extra'
             }
         ]);
@@ -113,6 +114,7 @@ describe('completeDimensions', function () {
                 'otherDims': {},
                 'coordDim': 'extra',
                 'coordDimIndex': 0,
+                'isExtraCoord': true,
                 'name': 'extra'
             }
         ]);
@@ -133,12 +135,14 @@ describe('completeDimensions', function () {
                 'otherDims': {},
                 'coordDim': 'extra',
                 'coordDimIndex': 0,
+                'isExtraCoord': true,
                 'name': 'extra'
             },
             {
                 'otherDims': {},
                 'coordDim': 'extra0',
                 'coordDimIndex': 0,
+                'isExtraCoord': true,
                 'name': 'extra0'
             }
         ]);
@@ -181,18 +185,21 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra1'
                 }
             ]
@@ -211,24 +218,28 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra1'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra2',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra2'
                 }
             ]
@@ -254,18 +265,21 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra1'
                 }
             ]
@@ -310,12 +324,14 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 }
             ]
@@ -369,12 +385,14 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 }
             ]
@@ -418,12 +436,14 @@ describe('completeDimensions', function () {
                     'name': '关闭',
                     'tooltipName': '关闭',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'coordDim': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
@@ -481,12 +501,14 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 }
             ]
@@ -516,18 +538,21 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'extra1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra1'
                 }
             ]
@@ -565,6 +590,7 @@ describe('completeDimensions', function () {
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
                     'name': 'extra',
+                    'isExtraCoord': true,
                     'type': 'ordinal'
                 },
                 {
@@ -587,6 +613,7 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
@@ -602,6 +629,7 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'extra1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra1'
                 }
             ]
@@ -624,7 +652,8 @@ describe('completeDimensions', function () {
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'extra',
-                    'coordDimIndex': 0
+                    'coordDimIndex': 0,
+                    'isExtraCoord': true
                 },
                 {
                     'otherDims': {},
@@ -647,6 +676,7 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 },
                 {
@@ -662,6 +692,7 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'extra1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra1'
                 }
             ]
@@ -709,6 +740,7 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'extra',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra'
                 },
                 {
@@ -725,6 +757,7 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'extra0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'extra0'
                 }
             ]
@@ -763,18 +796,21 @@ describe('completeDimensions', function () {
                     },
                     'coordDim': 'aaa',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'aaa'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'aaa0',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'aaa0'
                 },
                 {
                     'otherDims': {},
                     'coordDim': 'aaa1',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'aaa1',
                     'type': 'ordinal'
                 },
@@ -782,6 +818,7 @@ describe('completeDimensions', function () {
                     'otherDims': {},
                     'coordDim': 'aaa2',
                     'coordDimIndex': 0,
+                    'isExtraCoord': true,
                     'name': 'aaa2'
                 }
             ]

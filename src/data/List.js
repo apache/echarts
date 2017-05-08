@@ -97,6 +97,7 @@ define(function (require) {
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
         }
+
         /**
          * @readOnly
          * @type {Array.<string>}
@@ -142,6 +143,7 @@ define(function (require) {
          * @type {Array.<string>}
          */
         this._idList = [];
+
         /**
          * Models of data option is stored sparse for optimizing memory cost
          * @type {Array.<module:echarts/model/Model>}
@@ -205,6 +207,7 @@ define(function (require) {
     var listProto = List.prototype;
 
     listProto.type = 'list';
+
     /**
      * If each data item has it's own option
      * @type {boolean}
@@ -224,6 +227,7 @@ define(function (require) {
         }
         return dim;
     };
+
     /**
      * Get type and stackable info of particular dimension
      * @param {string|number} dim
@@ -266,12 +270,14 @@ define(function (require) {
 
         var idList = [];
         var nameRepeatCount = {};
+        var nameDimIdx;
 
         nameList = nameList || [];
 
         // Init storage
         for (var i = 0; i < dimensions.length; i++) {
             var dimInfo = dimensionInfoMap[dimensions[i]];
+            dimInfo.otherDims.name === 0 && (nameDimIdx = i);
             var DataCtor = dataCtors[dimInfo.type];
             storage[dimensions[i]] = new DataCtor(size);
         }
@@ -320,9 +326,12 @@ define(function (require) {
         // Use the name in option and create id
         for (var i = 0; i < size; i++) {
             var dataItem = data.getItem(i);
-            if (!nameList[i]) {
-                if (dataItem && dataItem.name != null) {
+            if (!nameList[i] && dataItem) {
+                if (dataItem.name != null) {
                     nameList[i] = dataItem.name;
+                }
+                else if (nameDimIdx != null) {
+                    nameList[i] = storage[dimensions[nameDimIdx]][i];
                 }
             }
             var name = nameList[i] || '';
