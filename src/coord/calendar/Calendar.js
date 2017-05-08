@@ -271,18 +271,35 @@ define(function (require) {
         },
 
         /**
-         * @override
-         * @implements
-         * see {module:echarts/CoodinateSystem}
+         * @inheritDoc
          */
         convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
 
         /**
-         * @override
-         * @implements
-         * see {module:echarts/CoodinateSystem}
+         * @inheritDoc
          */
         convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
+
+        /**
+         * @inheritDoc
+         */
+        prepareInfoForCustomSeries: function () {
+            var rect = this.getRect();
+            return {
+                coordSys: {
+                    type: 'geo',
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                    cellWidth: this.getCellWidth(),
+                    cellHeight: this.getCellHeight()
+                },
+                api: {
+                    coord: zrUtil.bind(this.dataToPoint, this)
+                }
+            };
+        },
 
         /**
          * initRange

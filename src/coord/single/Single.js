@@ -6,6 +6,7 @@ define(function (require) {
     var SingleAxis = require('./SingleAxis');
     var axisHelper = require('../axisHelper');
     var layout = require('../../util/layout');
+    var zrUtil = require('zrender/core/util');
 
     /**
      * Create a single coordinates system.
@@ -167,19 +168,19 @@ define(function (require) {
             var extentSum = axisExtent[0] + axisExtent[1];
             var isHorizontal = axis.isHorizontal();
 
-            axis.toGlobalCoord = isHorizontal ?
-                function (coord) {
+            axis.toGlobalCoord = isHorizontal
+                ? function (coord) {
                     return coord + coordBase;
-                } :
-                function (coord) {
+                }
+                : function (coord) {
                     return extentSum - coord + coordBase;
                 };
 
-            axis.toLocalCoord = isHorizontal ?
-                function (coord) {
+            axis.toLocalCoord = isHorizontal
+                ? function (coord) {
                     return coord - coordBase;
-                } :
-                function (coord) {
+                }
+                : function (coord) {
                     return extentSum - coord + coordBase;
                 };
         },
@@ -266,7 +267,42 @@ define(function (require) {
             pt[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
             pt[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
             return pt;
+        },
+
+        /**
+         * @inheritDoc
+         */
+        dataToCoordSize: function (dataSize, dataItem) {
+            // dataItem is necessary in log axis.
+            var axis = this.getAxis();
+            var val = dataItem instanceof Array ? dataItem[0] : dataItem;
+            var halfSize = (dataSize instanceof Array ? dataSize[0] : dataSize) / 2;
+            return axis.type === 'category'
+                ? axis.getBandWidth()
+                : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
+        },
+
+        /**
+         * @inheritDoc
+         */
+        prepareInfoForCustomSeries: function () {
+            var rect = this.getRect();
+
+            return {
+                coordSys: {
+                    type: 'singleAxis',
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height
+                },
+                api: {
+                    coord: zrUtil.bind(this.dataToPoint, this),
+                    size: zrUtil.bind(this.dataToCoordSize, this)
+                }
+            };
         }
+
     };
 
     return Single;

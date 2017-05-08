@@ -1,0 +1,323 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <h1>Error Chart (Cartesian Bar)</h1>
+        <div class="chart" id="errorChart-cartesian-bar"></div>
+        <h1>Error Chart (Cartesian Scatter)</h1>
+        <div class="chart" id="errorChart-cartesian-scatter"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var categoryData = [];
+                var errorData = [];
+                var barData = [];
+                var dataCount = 100;
+                for (var i = 0; i < dataCount; i++) {
+                    var val = Math.random() * 1000;
+                    categoryData.push('category' + i);
+                    errorData.push([
+                        i,
+                        echarts.number.round(Math.max(0, val - Math.random() * 100)),
+                        echarts.number.round(val + Math.random() * 80)
+                    ]);
+                    barData.push(echarts.number.round(val, 2));
+                }
+
+                function renderItem(params, api) {
+                    var xValue = api.value(0);
+                    var highPoint = api.coord([xValue, api.value(1)]);
+                    var lowPoint = api.coord([xValue, api.value(2)]);
+                    var halfWidth = api.size([1, 0])[0] * 0.1;
+                    var style = api.style({
+                        stroke: api.visual('color'),
+                        fill: null
+                    });
+
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'line',
+                            shape: {
+                                x1: highPoint[0] - halfWidth, y1: highPoint[1],
+                                x2: highPoint[0] + halfWidth, y2: highPoint[1]
+                            },
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: {
+                                x1: highPoint[0], y1: highPoint[1],
+                                x2: lowPoint[0], y2: lowPoint[1]
+                            },
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: {
+                                x1: lowPoint[0] - halfWidth, y1: lowPoint[1],
+                                x2: lowPoint[0] + halfWidth, y2: lowPoint[1]
+                            },
+                            style: style
+                        }]
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        start: 50,
+                        end: 70
+                    }, {
+                        type: 'inside',
+                        start: 50,
+                        end: 70
+                    }],
+                    xAxis: {
+                        data: categoryData
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'bar',
+                        name: 'bar',
+                        data: barData,
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        }
+                    }, {
+                        type: 'custom',
+                        name: 'error',
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 1.5
+                            }
+                        },
+                        renderItem: renderItem,
+                        encode: {
+                            x: 0,
+                            y: [1, 2]
+                        },
+                        data: errorData,
+                        z: 100
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'errorChart-cartesian-bar', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+                // Prime Costs and Prices for ACME Fashion\nCollection "Spring-Summer, 2016"
+                // Data from https://playground.anychart.com/gallery/7.12.0/Error_Charts/Marker_Chart
+                var dimensions = [
+                    'name', 'Price', 'Prime cost', 'Prime cost min', 'Prime cost max', 'Price min', 'Price max'
+                ];
+                var data = [
+                    ['Blouse "Blue Viola"', 101.88, 99.75, 76.75, 116.75, 69.88, 119.88],
+                    ['Dress "Daisy"', 155.8, 144.03, 126.03, 156.03, 129.8, 188.8],
+                    ['Trousers "Cutesy Classic"', 203.25, 173.56, 151.56, 187.56, 183.25, 249.25],
+                    ['Dress "Morning Dew"', 256, 120.5, 98.5, 136.5, 236, 279],
+                    ['Turtleneck "Dark Chocolate"', 408.89, 294.75, 276.75, 316.75, 385.89, 427.89],
+                    ['Jumper "Early Spring"', 427.36, 430.24, 407.24, 452.24, 399.36, 461.36],
+                    ['Breeches "Summer Mood"', 356, 135.5, 123.5, 151.5, 333, 387],
+                    ['Dress "Mauve Chamomile"', 406, 95.5, 73.5, 111.5, 366, 429],
+                    ['Dress "Flying Tits"', 527.36, 503.24, 488.24, 525.24, 485.36, 551.36],
+                    ['Dress "Singing Nightingales"', 587.36, 543.24, 518.24, 555.24, 559.36, 624.36],
+                    ['Sundress "Cloudy weather"', 603.36, 407.24, 392.24, 419.24, 581.36, 627.36],
+                    ['Sundress "East motives"', 633.36, 477.24, 445.24, 487.24, 594.36, 652.36],
+                    ['Sweater "Cold morning"', 517.36, 437.24, 416.24, 454.24, 488.36, 565.36],
+                    ['Trousers "Lavender Fields"', 443.36, 387.24, 370.24, 413.24, 412.36, 484.36],
+                    ['Jumper "Coffee with Milk"', 543.36, 307.24, 288.24, 317.24, 509.36, 574.36],
+                    ['Blouse "Blooming Cactus"', 790.36, 277.24, 254.24, 295.24, 764.36, 818.36],
+                    ['Sweater "Fluffy Comfort"', 790.34, 678.34, 660.34, 690.34, 762.34, 824.34]
+                ];
+
+                function renderItem(params, api) {
+                    var children = [];
+                    var coordDims = ['x', 'y'];
+
+                    for (var baseDimIdx = 0; baseDimIdx < 2; baseDimIdx++) {
+                        var otherDimIdx = 1 - baseDimIdx;
+                        var encode = params.encode;
+                        var baseValue = api.value(encode[coordDims[baseDimIdx]][0]);
+                        var param = [];
+                        param[baseDimIdx] = baseValue;
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][1]);
+                        var highPoint = api.coord(param);
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][2]);
+                        var lowPoint = api.coord(param);
+                        var halfWidth = 5;
+
+                        var style = api.style({
+                            stroke: api.visual('color'),
+                            fill: null
+                        });
+
+                        children.push({
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx] - halfWidth, highPoint[otherDimIdx],
+                                highPoint[baseDimIdx] + halfWidth, highPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx], highPoint[otherDimIdx],
+                                lowPoint[baseDimIdx], lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                lowPoint[baseDimIdx] - halfWidth, lowPoint[otherDimIdx],
+                                lowPoint[baseDimIdx] + halfWidth, lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        });
+                    }
+
+                    function makeShape(baseDimIdx, base1, value1, base2, value2) {
+                        var shape = {};
+                        shape[coordDims[baseDimIdx] + '1'] = base1;
+                        shape[coordDims[1 - baseDimIdx] + '1'] = value1;
+                        shape[coordDims[baseDimIdx] + '2'] = base2;
+                        shape[coordDims[1 - baseDimIdx] + '2'] = value2;
+                        return shape;
+                    }
+
+                    return {
+                        type: 'group',
+                        children: children
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        name: 'error',
+                        data: data,
+                        dimensions: dimensions,
+                        encode: {
+                            x: 2,
+                            y: 1,
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            name: 0
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        }
+                    }, {
+                        type: 'custom',
+                        name: 'error',
+                        renderItem: renderItem,
+                        dimensions: dimensions,
+                        encode: {
+                            x: [2, 3, 4],
+                            y: [1, 5, 6],
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            name: 0
+                        },
+                        data: data,
+                        z: 100
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'errorChart-cartesian-scatter', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+    </body>
+</html>

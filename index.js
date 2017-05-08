@@ -24,6 +24,7 @@ require('./lib/chart/lines');
 require('./lib/chart/heatmap');
 require('./lib/chart/pictorialBar');
 require('./lib/chart/themeRiver');
+require('./lib/chart/custom');
 
 require('./lib/component/graphic');
 require('./lib/component/grid');

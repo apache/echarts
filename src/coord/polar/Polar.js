@@ -7,6 +7,7 @@ define(function(require) {
 
     var RadiusAxis = require('./RadiusAxis');
     var AngleAxis = require('./AngleAxis');
+    var zrUtil = require('zrender/core/util');
 
     /**
      * @alias {module:echarts/coord/polar/Polar}
@@ -251,7 +252,54 @@ define(function(require) {
             var y = -Math.sin(radian) * radius + this.cy;
 
             return [x, y];
+        },
+
+        /**
+         * @inheritDoc
+         */
+        dataToCoordSize: function (dataSize, dataItem) {
+            // dataItem is necessary in log axis.
+            return zrUtil.map(['Radius', 'Angle'], function (dim, dimIdx) {
+                var axis = this['get' + dim + 'Axis']();
+                var val = dataItem[dimIdx];
+                var halfSize = dataSize[dimIdx] / 2;
+                var method = 'dataTo' + dim;
+                return axis.type === 'category'
+                    ? axis.getBandWidth()
+                    : Math.abs(axis[method](val - halfSize) - axis[method](val + halfSize));
+            }, this);
+        },
+
+        /**
+         * @inheritDoc
+         */
+        prepareInfoForCustomSeries: function () {
+            var radiusAxis = this.getRadiusAxis();
+            var angleAxis = this.getAngleAxis();
+            var radius = radiusAxis.getExtent();
+            radius[0] > radius[1] && radius.reverse();
+
+            return {
+                coordSys: {
+                    type: 'polar',
+                    cx: this.cx,
+                    cy: this.cy,
+                    r: radius[1],
+                    r0: radius[0]
+                },
+                api: {
+                    coord: zrUtil.bind(function (data) {
+                        var radius = radiusAxis.dataToRadius(data[0]);
+                        var angle = angleAxis.dataToAngle(data[1]);
+                        var coord = this.coordToPoint([radius, angle]);
+                        coord.push(radius, angle);
+                        return coord;
+                    }, this),
+                    size: zrUtil.bind(this.dataToCoordSize, this)
+                }
+            };
         }
+
     };
 
     return Polar;
