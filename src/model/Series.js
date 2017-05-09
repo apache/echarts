@@ -8,7 +8,6 @@ define(function(require) {
     var modelUtil = require('../util/model');
     var ComponentModel = require('./Component');
     var colorPaletteMixin = require('./mixin/colorPalette');
-    var graphic = require('../util/graphic');
     var env = require('zrender/core/env');
     var layout = require('../util/layout');
 
@@ -265,7 +264,7 @@ define(function(require) {
             }
             color = color || 'transparent';
 
-            var colorEl = graphic.getTooltipDot(color);
+            var colorEl = formatUtil.getTooltipMarker(color);
 
             var seriesName = this.name;
             // FIXME
