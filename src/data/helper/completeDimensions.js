@@ -44,6 +44,7 @@ define(function (require) {
      * }]
      */
     function completeDimensions(sysDims, data, opt) {
+        data = data || [];
         opt = opt || {};
         sysDims = (sysDims || []).slice();
         var dimsDef = (opt.dimsDef || []).slice();
