@@ -41,18 +41,6 @@
  *      @param {boolean} [clamp=false]
  *      @return {Array.<*>} data
  *
- *  + prepareInfoForCustomSeries {Function}: optional
- *      @return {Object} {coordSys: {...}, api: {
- *          coord: function (data, clamp) {}, // return point in global.
- *          size: function (dataSize, dataItem) {} // return size of each axis in coordSys.
- *      }}
- *
- *  + dataToCoordSize {Function}: optional
- *      @param {Array.<number>} dataSize [xSize, ySize]
- *      @param {Array.<number>} dataItem [x, y]
- *      @param {boolean} clamp
- *      @return {Array.<number>} coordSize
- *
  *  + containPoint {Function}: mandatory
  *      @param {Array.<number>} point Point in global pixel coordinate system.
  *      @return {boolean}

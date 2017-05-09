@@ -230,43 +230,7 @@ define(function (require) {
         /**
          * @inheritDoc
          */
-        convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
-
-        /**
-         * @inheritDoc
-         */
-        dataToCoordSize: function (dataSize, dataItem) {
-            return zrUtil.map([0, 1], function (dimIdx) {
-                var val = dataItem[dimIdx];
-                var halfSize = dataSize[dimIdx] / 2;
-                var p1 = [];
-                var p2 = [];
-                p1[dimIdx] = val - halfSize;
-                p2[dimIdx] = val + halfSize;
-                p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
-                return Math.abs(this.dataToPoint(p1)[dimIdx] - this.dataToPoint(p2)[dimIdx]);
-            }, this);
-        },
-
-        /**
-         * @inheritDoc
-         */
-        prepareInfoForCustomSeries: function () {
-            var rect = this.getBoundingRect();
-            return {
-                coordSys: {
-                    type: 'geo',
-                    x: rect.x,
-                    y: rect.y,
-                    width: rect.width,
-                    height: rect.height
-                },
-                api: {
-                    coord: zrUtil.bind(this.dataToPoint, this),
-                    size: zrUtil.bind(this.dataToCoordSize, this)
-                }
-            };
-        }
+        convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
 
     };
 

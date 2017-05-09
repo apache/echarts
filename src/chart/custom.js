@@ -5,12 +5,31 @@ define(function (require) {
     var graphicUtil = require('../util/graphic');
     var labelHelper = require('./helper/labelHelper');
     var createListFromArray = require('./helper/createListFromArray');
+    var barGrid = require('../layout/barGrid');
 
     var ITEM_STYLE_NORMAL_PATH = ['itemStyle', 'normal'];
     var ITEM_STYLE_EMPHASIS_PATH = ['itemStyle', 'emphasis'];
     var LABEL_NORMAL = ['label', 'normal'];
     var LABEL_EMPHASIS = ['label', 'emphasis'];
 
+    /**
+     * To reduce total package size of each coordinate systems, the modules `prepareCustom`
+     * of each coordinate systems are not required by each coordinate systems directly, but
+     * required by the module `custom`.
+     *
+     * prepareInfoForCustomSeries {Function}: optional
+     *     @return {Object} {coordSys: {...}, api: {
+     *         coord: function (data, clamp) {}, // return point in global.
+     *         size: function (dataSize, dataItem) {} // return size of each axis in coordSys.
+     *     }}
+     */
+    var prepareCustoms = {
+        cartesian2d: require('../coord/cartesian/prepareCustom'),
+        geo: require('../coord/geo/prepareCustom'),
+        singleAxis: require('../coord/single/prepareCustom'),
+        polar: require('../coord/polar/prepareCustom'),
+        calendar: require('../coord/calendar/prepareCustom')
+    };
 
     // ------
     // Model
@@ -165,10 +184,10 @@ define(function (require) {
 
         if (__DEV__) {
             zrUtil.assert(renderItem, 'series.render is required.');
-            zrUtil.assert(coordSys.prepareInfoForCustomSeries, 'This coordSys does not support custom series.');
+            zrUtil.assert(prepareCustoms[coordSys.type], 'This coordSys does not support custom series.');
         }
 
-        var prepareResult = coordSys.prepareInfoForCustomSeries();
+        var prepareResult = prepareCustoms[coordSys.type](coordSys);
 
         var userAPI = zrUtil.defaults({
             getWidth: api.getWidth,
@@ -178,7 +197,8 @@ define(function (require) {
             value: value,
             style: style,
             styleEmphasis: styleEmphasis,
-            visual: visual
+            visual: visual,
+            barLayout: barLayout
         }, prepareResult.api);
 
         // Do not support call `api` asynchronously without dataIndexInside input.
@@ -286,6 +306,22 @@ define(function (require) {
         function visual(visualType, dataIndexInside) {
             dataIndexInside == null && (dataIndexInside = currDataIndexInside);
             return data.getItemVisual(dataIndexInside, visualType);
+        }
+
+        /**
+         * @public
+         * @param {number} opt.count Positive interger.
+         * @param {number} [opt.barWidth]
+         * @param {number} [opt.barMaxWidth]
+         * @param {number} [opt.barGap]
+         * @param {number} [opt.barCategoryGap]
+         * @return {Object} {width, offset, offsetCenter} is not support, return undefined.
+         */
+        function barLayout(opt) {
+            if (coordSys.getBaseAxis) {
+                var baseAxis = coordSys.getBaseAxis();
+                return barGrid.getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt), api);
+            }
         }
     }
 
