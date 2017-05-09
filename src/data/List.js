@@ -743,7 +743,10 @@ define(function (require) {
         for (var i = 0; i < indices.length; i++) {
             var keep;
             // Simple optimization
-            if (dimSize === 1) {
+            if (!dimSize) {
+                keep = cb.call(context, i);
+            }
+            else if (dimSize === 1) {
                 keep = cb.call(
                     context, this.get(dimensions[0], i, stack), i
                 );

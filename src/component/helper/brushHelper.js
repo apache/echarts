@@ -1,26 +1,15 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var cursorHelper = require('./cursorHelper');
     var BoundingRect = require('zrender/core/BoundingRect');
-
-    var mathMax = Math.max;
-    var mathMin = Math.min;
+    var graphicUtil = require('../../util/graphic');
 
     var helper = {};
 
     helper.makeRectPanelClipPath = function (rect) {
         rect = normalizeRect(rect);
         return function (localPoints, transform) {
-            return zrUtil.map(localPoints, function (localPoint) {
-                var x = localPoint[0];
-                x = mathMax(x, rect.x);
-                x = mathMin(x, rect.x + rect.width);
-                var y = localPoint[1];
-                y = mathMax(y, rect.y);
-                y = mathMin(y, rect.y + rect.height);
-                return [x, y];
-            });
+            return graphicUtil.clipPointsByRect(localPoints, rect);
         };
     };
 

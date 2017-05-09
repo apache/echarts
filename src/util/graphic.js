@@ -5,14 +5,16 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
 
     var pathTool = require('zrender/tool/path');
-    var round = Math.round;
     var Path = require('zrender/graphic/Path');
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
     var vector = require('zrender/core/vector');
     var Transformable = require('zrender/mixin/Transformable');
     var BoundingRect = require('zrender/core/BoundingRect');
-    var formatUtil = require('./format');
+
+    var round = Math.round;
+    var mathMax = Math.max;
+    var mathMin = Math.min;
 
     var graphic = {};
 
@@ -587,6 +589,44 @@ define(function(require) {
                 // }
             }
         });
+    };
+
+    /**
+     * @param {Array.<Array.<number>>} points Like: [[23, 44], [53, 66], ...]
+     * @param {Object} rect {x, y, width, height}
+     * @return {Array.<Array.<number>>} A new clipped points.
+     */
+    graphic.clipPointsByRect = function (points, rect) {
+        return zrUtil.map(points, function (point) {
+            var x = point[0];
+            x = mathMax(x, rect.x);
+            x = mathMin(x, rect.x + rect.width);
+            var y = point[1];
+            y = mathMax(y, rect.y);
+            y = mathMin(y, rect.y + rect.height);
+            return [x, y];
+        });
+    };
+
+    /**
+     * @param {Object} targetRect {x, y, width, height}
+     * @param {Object} rect {x, y, width, height}
+     * @return {Object} A new clipped rect. If rect size are negative, return undefined.
+     */
+    graphic.clipRectByRect = function (targetRect, rect) {
+        var x = mathMax(targetRect.x, rect.x);
+        var x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
+        var y = mathMax(targetRect.y, rect.y);
+        var y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
+
+        if (x2 >= x && y2 >= y) {
+            return {
+                x: x,
+                y: y,
+                width: x2 - x,
+                height: y2 - y
+            };
+        }
     };
 
     return graphic;

@@ -145,6 +145,7 @@ define(function(require) {
             var rawDataIndex = data.getRawIndex(dataIndex);
             var name = data.getName(dataIndex, true);
             var itemOpt = data.getRawDataItem(dataIndex);
+            var color = data.getItemVisual(dataIndex, 'color');
 
             return {
                 componentType: this.mainType,
@@ -158,7 +159,8 @@ define(function(require) {
                 data: itemOpt,
                 dataType: dataType,
                 value: rawValue,
-                color: data.getItemVisual(dataIndex, 'color'),
+                color: color,
+                marker: formatUtil.getTooltipMarker(color),
 
                 // Param name list for mapping `a`, `b`, `c`, `d`, `e`
                 $vars: ['seriesName', 'name', 'value']

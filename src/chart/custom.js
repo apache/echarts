@@ -156,7 +156,7 @@ define(function (require) {
         el.type === 'image' && el.attr('image', elOption.image);
         el.attr({z2: elOption.z2, silent: elOption.silent});
 
-        el.styleEmphasis !== false && graphicUtil.setHoverStyle(el, el.styleEmphasis || {});
+        el.styleEmphasis !== false && graphicUtil.setHoverStyle(el, el.styleEmphasis);
     }
 
     function makeElOptionGetter(customSeries, data, api) {
