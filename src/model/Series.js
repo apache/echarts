@@ -273,14 +273,16 @@ define(function(require) {
                 // Not show '-'
                 seriesName = '';
             }
-            seriesName = seriesName ? encodeHTML(seriesName) : '';
+            seriesName = seriesName
+                ? encodeHTML(seriesName) + (!multipleSeries ? '<br/>' : ': ')
+                : '';
             return !multipleSeries
-                ? seriesName + '<br/>' + colorEl
+                ? seriesName + colorEl
                     + (name
                         ? encodeHTML(name) + ': ' + formattedValue
                         : formattedValue
                     )
-                : (colorEl + encodeHTML(seriesName) + ': ' + formattedValue);
+                : colorEl + seriesName + formattedValue;
         },
 
         /**
