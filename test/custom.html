@@ -23,10 +23,239 @@
         </style>
 
 
+        <h1>Profile</h1>
+        <div class="chart" id="profile"></div>
+        <h1>Histogram</h1>
+        <div class="chart" id="histogram"></div>
         <h1>Error Chart (Cartesian Bar)</h1>
         <div class="chart" id="errorChart-cartesian-bar"></div>
         <h1>Error Chart (Cartesian Scatter)</h1>
         <div class="chart" id="errorChart-cartesian-scatter"></div>
+        <h1>Cartesian Polygon</h1>
+        <!--<div class="chart" id="cartesian-polygon"></div>-->
+
+
+        bar
+        candlestick
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var data = [];
+                var dataCount = 10;
+                var startTime = +new Date();
+                var categories = ['categoryA', 'categoryB', 'categoryC'];
+                var types = [
+                    {name: 'JS Heap', color: '#7bjce1'},
+                    {name: 'Documents', color: '#bd6d6c'},
+                    {name: 'Nodes', color: '#75d874'},
+                    {name: 'Listeners', color: '#e0bc78'},
+                    {name: 'GPU Memory', color: '#dc77dc'},
+                    {name: 'GPU', color: '#72b362'}
+                ];
+                echarts.util.each(categories, function (category, index) {
+                    var baseTime = startTime;
+                    for (var i = 0; i < dataCount; i++) {
+                        var typeItem = types[Math.round(Math.random() * (types.length - 1))];
+                        var duration = Math.round(Math.random() * 10000);
+                        data.push({
+                            name: typeItem.name,
+                            value: [
+                                index,
+                                baseTime,
+                                baseTime += duration,
+                                duration
+                            ],
+                            itemStyle: {
+                                normal: {
+                                    color: typeItem.color
+                                }
+                            }
+                        });
+                        baseTime += Math.round(Math.random() * 2000);
+                    }
+                });
+
+                function renderItem(params, api) {
+                    var categoryIndex = api.value(0);
+                    var start = api.coord([api.value(1), categoryIndex]);
+                    var end = api.coord([api.value(2), categoryIndex]);
+                    var height = api.size([0, 1])[1] * 0.6;
+                    var style = api.style();
+
+                    return {
+                        type: 'rect',
+                        shape: {
+                            x: start[0],
+                            y: start[1] - height / 2,
+                            width: end[0] - start[0],
+                            height: height
+                        },
+                        style: style
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        formatter: function (params) {
+                            return echarts.graphic.getTooltipDot(params.color)
+                                + params.name + ': ' + params.value[3] + ' ms';
+                        }
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: {
+                        data: categories
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8
+                            }
+                        },
+                        encode: {
+                            x: [1, 2],
+                            y: 0
+                        },
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'profile', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                // See https://github.com/ecomfe/echarts-stat
+                var bins = {"bins":[{"sample":[8.3,8.6,8.8],"x0":8,"x1":10},{"sample":[10.5,10.7,10.8,11,11,11.1,11.2,11.3,11.4,11.4,11.7],"x0":10,"x1":12},{"sample":[12,12.9,12.9,13.3,13.7,13.8],"x0":12,"x1":14},{"sample":[14,14.2,14.5],"x0":14,"x1":16},{"sample":[16,16.3,17.3,17.5,17.9],"x0":16,"x1":18},{"sample":[18,18],"x0":18,"x1":20},{"sample":[20.6],"x0":20,"x1":22}],"data":[[9,3],[11,11],[13,6],[15,3],[17,5],[19,2],[21,1]]};
+                var interval;
+                var min = Infinity;
+                var max = -Infinity;
+                data = echarts.util.map(bins.data, function (item, index) {
+                    var x0 = bins.bins[index].x0;
+                    var x1 = bins.bins[index].x1;
+                    interval = x1 - x0;
+                    min = Math.min(min, x0);
+                    max = Math.max(max, x1);
+                    return [x0, x1, item[1]];
+                });
+
+                function renderItem(params, api) {
+                    var yValue = api.value(2);
+                    var start = api.coord([api.value(0), yValue]);
+                    var size = api.size([api.value(1) - api.value(0), yValue]);
+                    var style = api.style();
+
+                    return {
+                        type: 'rect',
+                        shape: {
+                            x: start[0] + 1,
+                            y: start[1],
+                            width: size[0] - 2,
+                            height: size[1]
+                        },
+                        style: style
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        // formatter: function (params) {
+                        //     return echarts.format.getTooltipMarker(params.color)
+                        //         + params.name + ': ' + params.value[3] + ' ms';
+                        // }
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    xAxis: {
+                        scale: true,
+                        interval: interval,
+                        min: min,
+                        max: max
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'top'
+                            }
+                        },
+                        encode: {
+                            x: [0, 1],
+                            y: 2,
+                            tooltip: 2
+                        },
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'histogram', option);
+            });
+        </script>
+
+
+
+
+
 
 
 
@@ -315,6 +544,77 @@
 
 
 
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var data = [];
+                var dataCount = 10;
+                for (var i = 0; i < dataCount; i++) {
+                    var val = Math.random() * 1000;
+                    data.push([
+                        echarts.number.round(Math.random() * 100),
+                        echarts.number.round(Math.random() * 400)
+                    ]);
+                }
+
+                function renderItem(params, api) {
+                    var xValue = api.value(0);
+                    var highPoint = api.coord([xValue, api.value(1)]);
+                    var lowPoint = api.coord([xValue, api.value(2)]);
+                    var style = api.style({
+                        stroke: api.visual('color'),
+                        fill: null
+                    });
+
+                    return {
+                        type: 'polygon',
+                        shape: {
+                            points: [
+                                api.coord([xValue, api.value(1)])
+                            ]
+                        },
+                        style: style
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'cartesian-polygon', option);
+            });
+        </script>
 
 
 
