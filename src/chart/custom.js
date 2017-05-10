@@ -160,7 +160,8 @@ define(function (require) {
         }
 
         el.type === 'image' && el.attr('image', elOption.image);
-        el.attr({z2: elOption.z2, silent: elOption.silent});
+        // z2 must not be null/undefined, otherwise sort error may occur.
+        el.attr({z2: elOption.z2 || 0, silent: elOption.silent});
 
         el.styleEmphasis !== false && graphicUtil.setHoverStyle(el, el.styleEmphasis);
     }
