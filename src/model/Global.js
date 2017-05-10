@@ -552,6 +552,13 @@ define(function (require) {
         },
 
         /**
+         * @return {Array.<number>}
+         */
+        getCurrentSeriesIndices: function () {
+            return (this._seriesIndices || []).slice();
+        },
+
+        /**
          * @param {Function} cb
          * @param {*} context
          */

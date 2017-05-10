@@ -644,20 +644,23 @@
                 'zrender/vml/vml'
             ], function (echarts) {
 
+                var yearCount = 7;
+                var categoryCount = 30;
+
                 var xAxisData = [];
                 var customData = [];
                 var legendData = [];
                 var dataList = [];
 
-                var yearCount = 9;
                 legendData.push('trend');
+                var encodeY = [];
                 for (var i = 0; i < yearCount; i++) {
                     legendData.push((2010 + i) + '');
                     dataList.push([]);
+                    encodeY.push(1 + i);
                 };
 
-                var dataCount = 30;
-                for (var i = 0; i < dataCount; i++) {
+                for (var i = 0; i < categoryCount; i++) {
                     var val = Math.random() * 1000;
                     xAxisData.push('category' + i);
                     var customVal = [i];
@@ -675,16 +678,20 @@
 
                 function renderItem(params, api) {
                     var xValue = api.value(0);
+                    var currentSeriesIndices = api.currentSeriesIndices();
                     var barLayout = api.barLayout({
-                        barGap: '30%', barCategoryGap: '20%', count: yearCount
+                        barGap: '30%', barCategoryGap: '20%', count: currentSeriesIndices.length - 1
                     });
 
                     var points = [];
-                    for (var i = 0; i < yearCount; i++) {
-                        var point = api.coord([xValue, api.value(1 + i)]);
-                        point[0] += barLayout[i].offsetCenter;
-                        point[1] -= 20;
-                        points.push(point);
+                    for (var i = 0; i < currentSeriesIndices.length; i++) {
+                        var seriesIndex = currentSeriesIndices[i];
+                        if (seriesIndex !== params.seriesIndex) {
+                            var point = api.coord([xValue, api.value(seriesIndex)]);
+                            point[0] += barLayout[i - 1].offsetCenter;
+                            point[1] -= 20;
+                            points.push(point);
+                        }
                     }
                     var style = api.style({
                         stroke: api.visual('color'),
@@ -737,13 +744,14 @@
                         },
                         encode: {
                             x: 0,
-                            y: [1, 2, 3]
+                            y: encodeY
                         },
                         data: customData,
                         z: 100
                     }].concat(echarts.util.map(dataList, function (data, index) {
                         return {
                             type: 'bar',
+                            animation: false,
                             name: legendData[index + 1],
                             itemStyle: {
                                 normal: {

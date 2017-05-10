@@ -87,30 +87,21 @@ define(function (require) {
             var oldData = this._data;
             var data = customSeries.getData();
             var group = this.group;
-            var getElOption = makeElOptionGetter(customSeries, data, api);
+            var getElOption = makeElOptionGetter(customSeries, data, ecModel, api);
 
             data.diff(oldData)
                 .add(function (newIdx) {
                     if (data.hasValue(newIdx)) {
-                        var el = createOrUpdate(
-                            null, newIdx, getElOption(newIdx), customSeries, group, data
-                        );
-                        if (data.hasValue(newIdx)) {
-                            data.setItemGraphicEl(newIdx, el);
-                            group.add(el);
-                        }
+                        createOrUpdate(null, newIdx, getElOption(newIdx), customSeries, group, data);
                     }
                 })
                 .update(function (newIdx, oldIdx) {
                     var el = oldData.getItemGraphicEl(oldIdx);
                     if (data.hasValue(newIdx)) {
-                        el = createOrUpdate(
-                            el, newIdx, getElOption(newIdx), customSeries, group, data
-                        );
-                        data.setItemGraphicEl(newIdx, el);
+                        createOrUpdate(el, newIdx, getElOption(newIdx), customSeries, group, data);
                     }
                     else {
-                        group.remove(el);
+                        el && group.remove(el);
                     }
                 })
                 .remove(function (oldIdx) {
@@ -127,18 +118,14 @@ define(function (require) {
     function createEl(dataIndex, elOption) {
         var graphicType = elOption.type;
 
-        if (__DEV__) {
-            zrUtil.assert(graphicType, 'graphic type MUST be set');
-        }
-
         var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
 
         if (__DEV__) {
-            zrUtil.assert(Clz, 'graphic type can not be found');
+            zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
         }
 
         var el = new Clz();
-        el.__graphicType = graphicType;
+        el.__customGraphicType = graphicType;
 
         return el;
     }
@@ -178,7 +165,7 @@ define(function (require) {
         el.styleEmphasis !== false && graphicUtil.setHoverStyle(el, el.styleEmphasis);
     }
 
-    function makeElOptionGetter(customSeries, data, api) {
+    function makeElOptionGetter(customSeries, data, ecModel, api) {
         var renderItem = customSeries.get('renderItem');
         var coordSys = customSeries.coordinateSystem;
 
@@ -198,7 +185,8 @@ define(function (require) {
             style: style,
             styleEmphasis: styleEmphasis,
             visual: visual,
-            barLayout: barLayout
+            barLayout: barLayout,
+            currentSeriesIndices: currentSeriesIndices
         }, prepareResult.api);
 
         // Do not support call `api` asynchronously without dataIndexInside input.
@@ -222,7 +210,7 @@ define(function (require) {
                 dataIndex: data.getRawIndex(dataIndexInside),
                 coordSys: prepareResult.coordSys,
                 encode: wrapEncodeDef(customSeries.getData())
-            }, userAPI);
+            }, userAPI) || {};
         };
 
         // Do not update cache until api called.
@@ -323,6 +311,14 @@ define(function (require) {
                 return barGrid.getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt), api);
             }
         }
+
+        /**
+         * @public
+         * @return {Array.<number>}
+         */
+        function currentSeriesIndices() {
+            return ecModel.getCurrentSeriesIndices();
+        }
     }
 
     function wrapEncodeDef(data) {
@@ -339,19 +335,27 @@ define(function (require) {
     }
 
     function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
-        if (el && elOption.type !== el.__graphicType) {
+        el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data);
+        el && data.setItemGraphicEl(dataIndex, el);
+    }
+
+    function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
+        if (el && elOption.type !== el.__customGraphicType) {
             group.remove(el);
             el = null;
         }
 
-        var isInit = !el;
-        if (!el) {
-            el = createEl(dataIndex, elOption);
+        // `elOption.type` is undefined when `renderItem` returns nothing.
+        if (elOption.type == null) {
+            return;
         }
+
+        var isInit = !el;
+        !el && (el = createEl(dataIndex, elOption));
         updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
 
         elOption.type === 'group' && zrUtil.each(elOption.children, function (childOption, index) {
-            createOrUpdate(el.childAt(index), dataIndex, childOption, animatableModel, el, data);
+            doCreateOrUpdate(el.childAt(index), dataIndex, childOption, animatableModel, el, data);
         });
 
         group.add(el);
