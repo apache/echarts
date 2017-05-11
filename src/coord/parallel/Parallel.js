@@ -249,7 +249,7 @@ define(function(require) {
             var layoutInfo = this._makeLayoutInfo();
             var layout = layoutInfo.layout;
 
-            each(axes, function (axis) {
+            axes.each(function (axis) {
                 var axisExtent = [0, layoutInfo.axisLength];
                 var idx = axis.inverse ? 1 : 0;
                 axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
@@ -299,7 +299,8 @@ define(function(require) {
                     axisLabelShow: posInfo.axisLabelShow,
                     nameTruncateMaxWidth: posInfo.nameTruncateMaxWidth,
                     tickDirection: 1,
-                    labelDirection: 1
+                    labelDirection: 1,
+                    labelInterval: axes.get(dim).getLabelInterval()
                 };
             }, this);
         },

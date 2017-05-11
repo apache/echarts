@@ -2,7 +2,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Axis = require('../Axis');
-    var axisLabelInterval = require('./axisLabelInterval');
 
     /**
      * Extend axis 2d
@@ -79,17 +78,6 @@ define(function (require) {
 
         getOtherAxis: function () {
             this.grid.getOtherAxis();
-        },
-
-        /**
-         * @return {number}
-         */
-        getLabelInterval: function () {
-            var labelInterval = this._labelInterval;
-            if (!labelInterval) {
-                labelInterval = this._labelInterval = axisLabelInterval(this);
-            }
-            return labelInterval;
         },
 
         /**
