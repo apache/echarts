@@ -277,7 +277,7 @@ define(function (require) {
         // Init storage
         for (var i = 0; i < dimensions.length; i++) {
             var dimInfo = dimensionInfoMap[dimensions[i]];
-            dimInfo.otherDims.name === 0 && (nameDimIdx = i);
+            dimInfo.otherDims.itemName === 0 && (nameDimIdx = i);
             var DataCtor = dataCtors[dimInfo.type];
             storage[dimensions[i]] = new DataCtor(size);
         }

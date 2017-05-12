@@ -10,7 +10,7 @@ define(function (require) {
     var defaults = zrUtil.defaults;
     var normalizeToArray = modelUtil.normalizeToArray;
 
-    var OTHER_DIMS = {tooltip: 1, label: 1, name: 1};
+    var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
 
     /**
      * Complete the dimensions array, by user defined `dimension` and `encode`,
@@ -171,7 +171,7 @@ define(function (require) {
             resultItem.type == null && guessOrdinal(data, resultDimIdx)
                 && (resultItem.type = 'ordinal');
         }
-
+console.log(JSON.stringify(result));
         return result;
 
         function applyDim(resultItem, coordDim, coordDimIndex) {
