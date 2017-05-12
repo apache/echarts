@@ -275,7 +275,7 @@ define(function(require) {
                 var otherNode = e.node1 === currentNode
                     ? e.node2 : e.node1;
                 if (!otherNode.__visited) {
-                    if (cb.call(otherNode, otherNode, currentNode)) {
+                    if (cb.call(context, otherNode, currentNode)) {
                         // Stop traversing
                         return;
                     }
