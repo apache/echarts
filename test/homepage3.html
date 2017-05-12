@@ -1,7 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="../dist/echarts.js"></script>
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
         <script src="./lib/jquery.min.js"></script>
     </head>
 
@@ -15,47 +16,52 @@
                 padding: 0;
                 margin: 0;
             }
-            .demo {
+            .ch-main {
                 position: relative;
                 margin-top: 100px;
                 margin-left: 100px;
             }
-            .pc-chart {
-                width: 540px;
-                height: 300px;
+            .ch-pc-chart {
+                width: 590px;
+                height: 373px;
             }
-            .mobile-box {
+            .ch-mobile-box {
                 position: absolute;
-                left: 280px;
-                top: -40px;
-                width: 215px;
-                height: 360px;
+                left: 433px;
+                top: -58px;
+                width: 259px;
+                height: 482px;
                 z-index: 300;
                 user-select: none;
             }
-            .mobile-content {
+            .ch-mobile-content {
                 position: absolute;
                 overflow: hidden;
-                width: 150px;
-                height: 272px;
-                left: 312px;
-                top: 0;
+                width: 198px;
+                height: 331px;
+                border-bottom-left-radius: 5px;
+                border-bottom-right-radius: 5px;
+                left: 463px;
+                top: 19px;
                 background: #333;
                 z-index: 300;
+                padding: 0;
+                margin: 0;
             }
-            .mobile-chart {
-                position: absolute;
-                top: -95px;
-                left: -75px;
-                width: 300px;
-                height: 460px;
+            .ch-mobile-chart {
+                width: 200%;
+                height: 200%;
+                transform-origin:0 0;
+                transform:scale(0.5);
+                padding: 0;
+                margin: 0;
             }
         </style>
-        <div class="demo">
-            <div class="pc-chart"></div>
-            <img class="mobile-box" src="./data/iphone.png"/>
-            <div class="mobile-content">
-                <div class="mobile-chart" style="transform:scale(0.5)"></div>
+        <div class="ch-main">
+            <div class="ch-pc-chart"></div>
+            <img class="ch-mobile-box" src="./data/iphone.png"/>
+            <div class="ch-mobile-content">
+                <div class="ch-mobile-chart"></div>
             </div>
         </div>
 
@@ -64,7 +70,10 @@
 
 
         <script type="text/javascript">
-            var data = {"years":[1935,1936,1937,1938,1939,1940,1941,1942,1943,1944,1945,1946,1947,1948,1949,1950,1951,1952,1953,1954,1955,1956,1957,1958,1959,1960,1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975,1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015],"lifeExpectancy":[29.5734572,29.5734572,29.5734572,29.5734572,29.5734572,29.5734572,29.5734572,31.12082604,30.20106663,29.93047652,30.74960789,31.40217766,20.5,36.428,41.056,57.084,57.5768,57.9696,58.7624,60.7552,63.148,64.6408,63.7336,66.6264,67.3692,68.382,68.6248,68.2776,68.7404,69.5332,69.116,69.1788,68.9616,68.9144,68.3872,68.5,68.6,68.7,68.7,68.6,68.2,68,67.8,67.7,67.4,67.3,67.5,67.9,67.7,67.4,68.2,69.8,70.1,70,69.8,69.6,69.4,68,65.2,63.6,64.2,65.9,67.4,67.6,66.2,65.4,65.1,64.9,64.8,65,64.8,66.1,67.2,67.6,68.3,68.7,69.4,70.4,71.3,72.21,73.13],"income":[1430,1447,1464,1562,1666,1778,1896,2023,2158,2233,3087,3487,1489,3779,5632,7514,7424,7775,7981,8234,8787,9465,9496,10037,9755,10496,10908,11027,10620,11836,12363,12823,13256,13902,13972,14915,15170,15113,16236,16594,16530,17192,17487,17818,17632,17557,17619,17951,18417,18527,18576,19221,19355,19660,19906,19349,18332,15661,14320,12535,12013,11597,11779,11173,11925,13173,13902,14629,15768,16967,18118,19660,21374,22506,20739,21664,22570,23299,23561,23293,23038],"population":[31088398,31088398,31861526,34134430,37420913,41023821,44966686,49288504,53996807,59151534,64836675,71044207,77871987,85369549,93588981,102798657,104306354,105969442,107729541,109537868,111355224,113152347,114909562,116615781,118266807,119860289,121390327,122842753,124193114,125412397,126483874,127396324,128165823,128837792,129475269,130126383,130808492,131517584,132254362,133012558,133788113,134583945,135406786,136259517,137144808,138063062,139006739,139969243,140951400,141955200,142975753,144016095,145056221,146040116,146895053,147568552,148040354,148322473,148435811,148416292,148293265,148078355,147772805,147385440,146924174,146400951,145818121,145195521,144583147,144043914,143622566,143338407,143180249,143123163,143126660,143158099,143211476,143287536,143367341,143429435,143456918]};
+
+        function render(echarts) {
+            // var data = {"years":[1935,1936,1937,1938,1939,1940,1941,1942,1943,1944,1945,1946,1947,1948,1949,1950,1951,1952,1953,1954,1955,1956,1957,1958,1959,1960,1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975,1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015],"lifeExpectancy":[29.5734572,29.5734572,29.5734572,29.5734572,29.5734572,29.5734572,29.5734572,31.12082604,30.20106663,29.93047652,30.74960789,31.40217766,20.5,36.428,41.056,57.084,57.5768,57.9696,58.7624,60.7552,63.148,64.6408,63.7336,66.6264,67.3692,68.382,68.6248,68.2776,68.7404,69.5332,69.116,69.1788,68.9616,68.9144,68.3872,68.5,68.6,68.7,68.7,68.6,68.2,68,67.8,67.7,67.4,67.3,67.5,67.9,67.7,67.4,68.2,69.8,70.1,70,69.8,69.6,69.4,68,65.2,63.6,64.2,65.9,67.4,67.6,66.2,65.4,65.1,64.9,64.8,65,64.8,66.1,67.2,67.6,68.3,68.7,69.4,70.4,71.3,72.21,73.13],"income":[1430,1447,1464,1562,1666,1778,1896,2023,2158,2233,3087,3487,1489,3779,5632,7514,7424,7775,7981,8234,8787,9465,9496,10037,9755,10496,10908,11027,10620,11836,12363,12823,13256,13902,13972,14915,15170,15113,16236,16594,16530,17192,17487,17818,17632,17557,17619,17951,18417,18527,18576,19221,19355,19660,19906,19349,18332,15661,14320,12535,12013,11597,11779,11173,11925,13173,13902,14629,15768,16967,18118,19660,21374,22506,20739,21664,22570,23299,23561,23293,23038],"population":[31088398,31088398,31861526,34134430,37420913,41023821,44966686,49288504,53996807,59151534,64836675,71044207,77871987,85369549,93588981,102798657,104306354,105969442,107729541,109537868,111355224,113152347,114909562,116615781,118266807,119860289,121390327,122842753,124193114,125412397,126483874,127396324,128165823,128837792,129475269,130126383,130808492,131517584,132254362,133012558,133788113,134583945,135406786,136259517,137144808,138063062,139006739,139969243,140951400,141955200,142975753,144016095,145056221,146040116,146895053,147568552,148040354,148322473,148435811,148416292,148293265,148078355,147772805,147385440,146924174,146400951,145818121,145195521,144583147,144043914,143622566,143338407,143180249,143123163,143126660,143158099,143211476,143287536,143367341,143429435,143456918]};
+            var mainColor = '#dd4541';
             var series1Color = '#c23531';
             var series2Color = 'rgba(4,127,154,1)';
             var series3Color = '#2f4554';
@@ -90,6 +99,20 @@
                 ]
             };
             var minValueSpan = 5;
+            var dataZoomStart = 15;
+            var dataZoomEnd = 50
+
+            var categoryData = [];
+            var series0Data = [];
+            var series1Data = [];
+            var series2Data = [];
+
+            for (var i = 0; i < 30; i++) {
+                categoryData.push('c' + i);
+                series0Data.push(Math.random() * 100);
+                series1Data.push(Math.random() * 100);
+                series2Data.push(Math.random() * 100);
+            }
 
 
             var y3Formatter = function (val) {
@@ -100,7 +123,7 @@
             };
 
             var option = {
-                backgroundColor: '#3aadd1',
+                backgroundColor: '#fff',
                 // textStyle: {
                 //     fontFamily: 'Tahoma'
                 // },
@@ -152,7 +175,7 @@
                             show: false
                         }
                     },
-                    data: data.years
+                    data: categoryData
                 }, {
                     gridIndex: 1,
                     splitLine: {
@@ -175,7 +198,7 @@
                             color: '#ddd'
                         }
                     },
-                    data: data.years
+                    data: categoryData
                 }],
                 yAxis: [{
                     splitNumber: 3,
@@ -213,6 +236,7 @@
                     z: 200
                 }, {
                     position: 'right',
+                    gridIndex: 1,
                     splitNumber: 3,
                     nameTextStyle: {
                         color: '#ccc',
@@ -288,42 +312,51 @@
                     z: 40
                 }],
                 grid: [{
-                    left: 20,
-                    right: 20,
-                    top: 30,
-                    height: 130
+                    left: 50,
+                    right: 38,
+                    bottom: 228,
+                    height: 123
                 }, {
-                    left: 20,
-                    right: 20,
-                    top: 175,
-                    height: 60
+                    left: 50,
+                    right: 38,
+                    bottom: 84,
+                    height: 112
                 }],
                 dataZoom: [{
-                    bottom: 10,
-                    height: 20,
-                    left: 18,
-                    // handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
-                    handleIcon: 'M10.7,11.9H9.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4h1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7v-1.2h6.6z M13.3,22H6.7v-1.2h6.6z M13.3,19.6H6.7v-1.2h6.6z', // jshint ignore:line
-                    handleSize: '80%',
+                    start: dataZoomStart,
+                    end: dataZoomEnd,
+                    left: 50,
+                    right: 38,
+                    bottom: 35,
+                    height: 4,
+                    showDataShadow: false,
+                    borderColor: 'transparent',
+                    backgroundColor: '#e2e2e2',
+                    // handleIcon: 'M10.7,11.9H9.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4h1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7v-1.2h6.6z M13.3,22H6.7v-1.2h6.6z M13.3,19.6H6.7v-1.2h6.6z', // jshint ignore:line
+                    handleIcon: 'M10.93,0.61c5.927,0,10.733,4.762,10.733,10.637S16.857,21.883,10.93,21.883 c-5.928,0-10.733-4.762-10.733-10.636S5.002,0.61,10.93,0.61z M15.646,10.247H6.215v2h9.431V10.247z', // jshint ignore:line
+                    handleSize: 20,
                     handleStyle: {
-                        color: '#ddd'
+                        color: mainColor,
+                        shadowBlur: 6,
+                        shadowOffsetX: 1,
+                        shadowOffsetY: 2,
+                        shadowColor: '#aaa'
                     },
+                    fillerColor: mainColor,
                     labelFormatter: '',
-                    borderColor: 'rgba(0,0,0,0.2)',
+                    // borderColor: 'rgba(0,0,0,0.2)',
                     xAxisIndex: [0, 1],
-                    startValue: '1939',
-                    endValue: '1974',
                     minValueSpan: minValueSpan
                 }, {
+                    start: dataZoomStart,
+                    end: dataZoomEnd,
                     type: 'inside',
                     xAxisIndex: [0, 1],
-                    startValue: '1939',
-                    endValue: '1974',
                     minValueSpan: minValueSpan
                 }],
                 series: [
                     {
-                        type: 'line',
+                        type: 'bar',
                         name: 'seriesA',
                         id: 'gridScatter',
                         showSymbol: false,
@@ -331,21 +364,23 @@
                         hoverAnimation: false,
                         itemStyle: {
                             normal: {
-                                color: series1Color
+                                color: series1Color,
+                                barBorderRadius: 10
                             }
                         },
-                        data: data.lifeExpectancy
+                        data: series0Data
                     },
                     {
-                        type: 'bar',
+                        type: 'line',
                         name: 'seriesB',
                         yAxisIndex: 1,
+                        xAxisIndex: 1,
                         itemStyle: {
                             normal: {
                                 color: barColor
                             }
                         },
-                        data: data.population
+                        data: series1Data
                     },
                     {
                         type: 'line',
@@ -365,11 +400,11 @@
                                 color: series3Color
                             }
                         },
-                        data: data.income
+                        data: series2Data
                     }
                 ]
             };
-            var myChart = echarts.init($('.pc-chart')[0]);
+            var myChart = echarts.init($('.ch-pc-chart')[0]);
             myChart.setOption(option);
 
 
@@ -465,7 +500,7 @@
                             size: 0
                         }
                     },
-                    data: data.years
+                    data: categoryData
                 }, {
                     gridIndex: 1,
                     splitLine: {
@@ -498,7 +533,7 @@
                             size: 30
                         }
                     },
-                    data: data.years
+                    data: categoryData
                 }],
                 yAxis: [{
                     splitNumber: 3,
@@ -528,6 +563,7 @@
                     },
                     z: 200
                 }, {
+                    gridIndex: 1,
                     position: 'right',
                     splitNumber: 3,
                     nameTextStyle: {
@@ -601,15 +637,15 @@
                     height: 100
                 }],
                 dataZoom: [{
+                    start: dataZoomStart,
+                    end: dataZoomEnd,
                     type: 'inside',
                     xAxisIndex: [0, 1],
-                    startValue: '1939',
-                    endValue: '1974',
                     minValueSpan: minValueSpan
                 }],
                 series: [
                     {
-                        type: 'line',
+                        type: 'bar',
                         name: 'seriesA',
                         id: 'gridScatter',
                         showSymbol: false,
@@ -617,21 +653,23 @@
                         hoverAnimation: false,
                         itemStyle: {
                             normal: {
-                                color: series1Color
+                                color: series1Color,
+                                barBorderRadius: 5
                             }
                         },
-                        data: data.lifeExpectancy
+                        data: series0Data
                     },
                     {
-                        type: 'bar',
+                        type: 'line',
                         name: 'seriesB',
                         yAxisIndex: 1,
+                        xAxisIndex: 1,
                         itemStyle: {
                             normal: {
                                 color: barColor
                             }
                         },
-                        data: data.population
+                        data: series1Data
                     },
                     {
                         type: 'line',
@@ -651,11 +689,11 @@
                                 color: series3Color
                             }
                         },
-                        data: data.income
+                        data: series2Data
                     }
                 ]
             };
-            var myChart2 = echarts.init($('.mobile-chart')[0]);
+            var myChart2 = echarts.init($('.ch-mobile-chart')[0]);
             myChart2.setOption(option2);
 
 
@@ -681,8 +719,27 @@
                 });
             }
 
+        }
+
         </script>
 
+
+
+
+        <script type="text/javascript">
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+                render(echarts);
+            });
+        </script>
 
     </body>
 </html>
