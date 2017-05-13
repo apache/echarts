@@ -171,7 +171,7 @@ define(function (require) {
             resultItem.type == null && guessOrdinal(data, resultDimIdx)
                 && (resultItem.type = 'ordinal');
         }
-console.log(JSON.stringify(result));
+
         return result;
 
         function applyDim(resultItem, coordDim, coordDimIndex) {
