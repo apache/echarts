@@ -41,6 +41,7 @@ define(function(require) {
                                     // 'empty': data items which are out of window will be set to empty.
                                     //          This option is applicable when user should not neglect
                                     //          that there are some data items out of window.
+                                    // 'none': Do not filter.
                                     // Taking line chart as an example, line will be broken in
                                     // the filtered points when filterModel is set to 'empty', but
                                     // be connected when set to 'filter'.

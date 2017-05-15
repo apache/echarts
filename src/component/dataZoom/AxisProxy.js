@@ -283,6 +283,10 @@ define(function(require) {
             var filterMode = dataZoomModel.get('filterMode');
             var valueWindow = this._valueWindow;
 
+            if (filterMode === 'none') {
+                return;
+            }
+
             // FIXME
             // Toolbox may has dataZoom injected. And if there are stacked bar chart
             // with NaN data, NaN will be filtered and stack will be wrong.

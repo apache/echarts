@@ -87,22 +87,21 @@ define(function (require) {
             var oldData = this._data;
             var data = customSeries.getData();
             var group = this.group;
-            var getElOption = makeElOptionGetter(customSeries, data, ecModel, api);
+            var renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
             data.diff(oldData)
                 .add(function (newIdx) {
-                    if (data.hasValue(newIdx)) {
-                        createOrUpdate(null, newIdx, getElOption(newIdx), customSeries, group, data);
-                    }
+                    data.hasValue(newIdx) && createOrUpdate(
+                        null, newIdx, renderItem(newIdx), customSeries, group, data
+                    );
                 })
                 .update(function (newIdx, oldIdx) {
                     var el = oldData.getItemGraphicEl(oldIdx);
-                    if (data.hasValue(newIdx)) {
-                        createOrUpdate(el, newIdx, getElOption(newIdx), customSeries, group, data);
-                    }
-                    else {
-                        el && group.remove(el);
-                    }
+                    data.hasValue(newIdx)
+                        ? createOrUpdate(
+                            el, newIdx, renderItem(newIdx), customSeries, group, data
+                        )
+                        : (el && group.remove(el));
                 })
                 .remove(function (oldIdx) {
                     var el = oldData.getItemGraphicEl(oldIdx);
@@ -115,7 +114,7 @@ define(function (require) {
     });
 
 
-    function createEl(dataIndex, elOption) {
+    function createEl(elOption) {
         var graphicType = elOption.type;
 
         var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
@@ -166,7 +165,7 @@ define(function (require) {
         el.styleEmphasis !== false && graphicUtil.setHoverStyle(el, el.styleEmphasis);
     }
 
-    function makeElOptionGetter(customSeries, data, ecModel, api) {
+    function makeRenderItem(customSeries, data, ecModel, api) {
         var renderItem = customSeries.get('renderItem');
         var coordSys = customSeries.coordinateSystem;
 
@@ -190,6 +189,16 @@ define(function (require) {
             currentSeriesIndices: currentSeriesIndices
         }, prepareResult.api);
 
+        var userParams = {
+            context: {},
+            seriesId: customSeries.id,
+            seriesName: customSeries.name,
+            seriesIndex: customSeries.seriesIndex,
+            coordSys: prepareResult.coordSys,
+            dataLength: data.count(),
+            encode: wrapEncodeDef(customSeries.getData())
+        };
+
         // Do not support call `api` asynchronously without dataIndexInside input.
         var currDataIndexInside;
         var currDirty = true;
@@ -202,16 +211,13 @@ define(function (require) {
         return function (dataIndexInside) {
             currDataIndexInside = dataIndexInside;
             currDirty = true;
-
-            return renderItem({
-                seriesId: customSeries.id,
-                seriesName: customSeries.name,
-                seriesIndex: customSeries.seriesIndex,
-                dataIndexInside: dataIndexInside,
-                dataIndex: data.getRawIndex(dataIndexInside),
-                coordSys: prepareResult.coordSys,
-                encode: wrapEncodeDef(customSeries.getData())
-            }, userAPI) || {};
+            return renderItem && renderItem(
+                zrUtil.defaults({
+                    dataIndexInside: dataIndexInside,
+                    dataIndex: data.getRawIndex(dataIndexInside)
+                }, userParams),
+                userAPI
+            ) || {};
         };
 
         // Do not update cache until api called.
@@ -352,7 +358,7 @@ define(function (require) {
         }
 
         var isInit = !el;
-        !el && (el = createEl(dataIndex, elOption));
+        !el && (el = createEl(elOption));
         updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
 
         elOption.type === 'group' && zrUtil.each(elOption.children, function (childOption, index) {

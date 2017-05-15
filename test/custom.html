@@ -36,7 +36,7 @@
         <h1>Bar layout</h1>
         <div class="chart" id="errorChart-cartesian-bar-multi"></div>
         <h1>Cartesian Polygon</h1>
-        <!--<div class="chart" id="cartesian-polygon"></div>-->
+        <div class="chart" id="cartesian-polygon"></div>
 
         polygon
         bar
@@ -788,7 +788,7 @@
             ], function (echarts) {
 
                 var data = [];
-                var dataCount = 10;
+                var dataCount = 7;
                 for (var i = 0; i < dataCount; i++) {
                     var val = Math.random() * 1000;
                     data.push([
@@ -798,22 +798,31 @@
                 }
 
                 function renderItem(params, api) {
-                    var xValue = api.value(0);
-                    var highPoint = api.coord([xValue, api.value(1)]);
-                    var lowPoint = api.coord([xValue, api.value(2)]);
-                    var style = api.style({
-                        stroke: api.visual('color'),
-                        fill: null
-                    });
+                    if (params.context.rendered) {
+                        return;
+                    }
+                    params.context.rendered = true;
+
+                    var points = [];
+                    for (var i = 0; i < data.length; i++) {
+                        points.push(api.coord(data[i]));
+                    }
+                    var color = api.visual('color');
 
                     return {
                         type: 'polygon',
                         shape: {
-                            points: [
-                                api.coord([xValue, api.value(1)])
-                            ]
+                            points: echarts.graphic.clipPointsByRect(points, {
+                                x: params.coordSys.x,
+                                y: params.coordSys.y,
+                                width: params.coordSys.width,
+                                height: params.coordSys.height
+                            })
                         },
-                        style: style
+                        style: api.style({
+                            fill: color,
+                            stroke: echarts.color.lift(color)
+                        })
                     };
                 }
 
@@ -825,9 +834,11 @@
                         data: ['bar', 'error']
                     },
                     dataZoom: [{
-                        type: 'slider'
+                        type: 'slider',
+                        filterMode: 'none'
                     }, {
-                        type: 'inside'
+                        type: 'inside',
+                        filterMode: 'none'
                     }],
                     xAxis: {},
                     yAxis: {},
