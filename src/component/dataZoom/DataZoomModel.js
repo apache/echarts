@@ -30,12 +30,18 @@ define(function(require) {
             xAxisIndex: null,       // Default the first horizontal category axis.
             yAxisIndex: null,       // Default the first vertical category axis.
 
-            filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
-                                    // 'filter': data items which are out of window will be removed.
-                                    //           This option is applicable when filtering outliers.
+            filterMode: 'filter',   // Possible values: 'filter' or 'empty' or 'weakFilter'.
+                                    // 'filter': data items which are out of window will be removed. This option is
+                                    //          applicable when filtering outliers. For each data item, it will be
+                                    //          filtered if one of the relevant dimensions is out of the window.
+                                    // 'weakFilter': data items which are out of window will be removed. This option
+                                    //          is applicable when filtering outliers. For each data item, it will be
+                                    //          filtered only if all  of the relevant dimensions are out of the same
+                                    //          side of the window.
                                     // 'empty': data items which are out of window will be set to empty.
                                     //          This option is applicable when user should not neglect
                                     //          that there are some data items out of window.
+                                    // 'none': Do not filter.
                                     // Taking line chart as an example, line will be broken in
                                     // the filtered points when filterModel is set to 'empty', but
                                     // be connected when set to 'filter'.

@@ -1,0 +1,860 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <h1>Profile</h1>
+        <div class="chart" id="profile"></div>
+        <h1>Histogram</h1>
+        <div class="chart" id="histogram"></div>
+        <h1>Profit</h1>
+        <div class="chart" id="profit"></div>
+        <h1>Error Chart (Cartesian Bar)</h1>
+        <div class="chart" id="errorChart-cartesian-bar"></div>
+        <h1>Error Chart (Cartesian Scatter)</h1>
+        <div class="chart" id="errorChart-cartesian-scatter"></div>
+        <h1>Bar layout</h1>
+        <div class="chart" id="errorChart-cartesian-bar-multi"></div>
+        <h1>Cartesian Polygon</h1>
+        <div class="chart" id="cartesian-polygon"></div>
+
+        polygon
+        bar
+        candlestick
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var data = [];
+                var dataCount = 10;
+                var startTime = +new Date();
+                var categories = ['categoryA', 'categoryB', 'categoryC'];
+                var types = [
+                    {name: 'JS Heap', color: '#7b9ce1'},
+                    {name: 'Documents', color: '#bd6d6c'},
+                    {name: 'Nodes', color: '#75d874'},
+                    {name: 'Listeners', color: '#e0bc78'},
+                    {name: 'GPU Memory', color: '#dc77dc'},
+                    {name: 'GPU', color: '#72b362'}
+                ];
+                echarts.util.each(categories, function (category, index) {
+                    var baseTime = startTime;
+                    for (var i = 0; i < dataCount; i++) {
+                        var typeItem = types[Math.round(Math.random() * (types.length - 1))];
+                        var duration = Math.round(Math.random() * 10000);
+                        data.push({
+                            name: typeItem.name,
+                            value: [
+                                index,
+                                baseTime,
+                                baseTime += duration,
+                                duration
+                            ],
+                            itemStyle: {
+                                normal: {
+                                    color: typeItem.color
+                                }
+                            }
+                        });
+                        baseTime += Math.round(Math.random() * 2000);
+                    }
+                });
+
+                function renderItem(params, api) {
+                    var categoryIndex = api.value(0);
+                    var start = api.coord([api.value(1), categoryIndex]);
+                    var end = api.coord([api.value(2), categoryIndex]);
+                    var height = api.size([0, 1])[1] * 0.6;
+
+                    return {
+                        type: 'rect',
+                        shape: echarts.graphic.clipRectByRect({
+                            x: start[0],
+                            y: start[1] - height / 2,
+                            width: end[0] - start[0],
+                            height: height
+                        }, {
+                            x: params.coordSys.x,
+                            y: params.coordSys.y,
+                            width: params.coordSys.width,
+                            height: params.coordSys.height
+                        }),
+                        style: api.style()
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        formatter: function (params) {
+                            return params.marker + params.name + ': '
+                                + params.value[3] + ' ms';
+                        }
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        filterMode: 'weakFilter'
+                    }, {
+                        type: 'inside',
+                        filterMode: 'weakFilter'
+                    }],
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: {
+                        data: categories
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8
+                            }
+                        },
+                        encode: {
+                            x: [1, 2],
+                            y: 0
+                        },
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'profile', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                // See https://github.com/ecomfe/echarts-stat
+                // var bins = {"bins":[{"sample":[8.3,8.6,8.8],"x0":8,"x1":10},{"sample":[10.5,10.7,10.8,11,11,11.1,11.2,11.3,11.4,11.4,11.7],"x0":10,"x1":12},{"sample":[12,12.9,12.9,13.3,13.7,13.8],"x0":12,"x1":14},{"sample":[14,14.2,14.5],"x0":14,"x1":16},{"sample":[16,16.3,17.3,17.5,17.9],"x0":16,"x1":18},{"sample":[18,18],"x0":18,"x1":20},{"sample":[20.6],"x0":20,"x1":22}],"data":[[9,3],[11,11],[13,6],[15,3],[17,5],[19,2],[21,1]]};
+                var bins = {"bins":[{"sample":[],"x0":0.5,"x1":1},{"sample":[1.4,1.4,1.3,1.4,1.4,1.4,1.4,1.1,1.2,1.3,1.4,1,1.4,1.4,1.2,1.3,1.4,1.3,1.3,1.3,1.3,1.4,1.4,1.4],"x0":1,"x1":1.5},{"sample":[1.5,1.7,1.5,1.5,1.5,1.6,1.5,1.7,1.5,1.7,1.5,1.7,1.9,1.6,1.6,1.5,1.6,1.6,1.5,1.5,1.5,1.5,1.6,1.9,1.6,1.5],"x0":1.5,"x1":2},{"sample":[],"x0":2,"x1":2.5},{"sample":[],"x0":2.5,"x1":3},{"sample":[3.3,3.3,3],"x0":3,"x1":3.5},{"sample":[3.9,3.5,3.6,3.9,3.5,3.8,3.7,3.9],"x0":3.5,"x1":4},{"sample":[4,4.2,4,4.4,4.1,4,4.3,4.4,4.4,4.1,4,4.4,4,4.2,4.2,4.2,4.3,4.1],"x0":4,"x1":4.5},{"sample":[4.7,4.5,4.9,4.6,4.5,4.7,4.6,4.7,4.5,4.5,4.8,4.9,4.7,4.8,4.5,4.5,4.5,4.7,4.6,4.5,4.9,4.9,4.8,4.9,4.8],"x0":4.5,"x1":5},{"sample":[5,5.1,5.1,5.1,5.3,5,5.1,5.3,5,5.1,5.4,5.1,5.1,5.2,5,5.2,5.4,5.1],"x0":5,"x1":5.5},{"sample":[5.9,5.6,5.8,5.8,5.5,5.5,5.7,5.7,5.6,5.8,5.6,5.6,5.6,5.5,5.6,5.9,5.7],"x0":5.5,"x1":6},{"sample":[6,6.3,6.1,6,6.1,6.4,6.1],"x0":6,"x1":6.5},{"sample":[6.6,6.7,6.9,6.7],"x0":6.5,"x1":7}],"data":[[0.75,0],[1.25,24],[1.75,26],[2.25,0],[2.75,0],[3.25,3],[3.75,8],[4.25,18],[4.75,25],[5.25,18],[5.75,17],[6.25,7],[6.75,4]]};
+                var interval;
+                var min = Infinity;
+                var max = -Infinity;
+                data = echarts.util.map(bins.data, function (item, index) {
+                    var x0 = bins.bins[index].x0;
+                    var x1 = bins.bins[index].x1;
+                    interval = x1 - x0;
+                    min = Math.min(min, x0);
+                    max = Math.max(max, x1);
+                    return [x0, x1, item[1]];
+                });
+
+                function renderItem(params, api) {
+                    var yValue = api.value(2);
+                    var start = api.coord([api.value(0), yValue]);
+                    var size = api.size([api.value(1) - api.value(0), yValue]);
+                    var style = api.style();
+
+                    return {
+                        type: 'rect',
+                        shape: {
+                            x: start[0] + 1,
+                            y: start[1],
+                            width: size[0] - 2,
+                            height: size[1]
+                        },
+                        style: style
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    xAxis: {
+                        interval: interval,
+                        min: min,
+                        max: max
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'top'
+                            }
+                        },
+                        encode: {
+                            x: [0, 1],
+                            y: 2,
+                            tooltip: 2
+                        },
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'histogram', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var data = [[10, 16, 3], [16, 18, 15], [18, 26, 12], [26, 32, 22], [32, 56, 7], [56, 62, 17]];
+                var colorList = ['#4f81bd', '#c0504d', '#9bbb59', '#604a7b', '#948a54', '#e46c0b'];
+                data = echarts.util.map(data, function (item, index) {
+                    return {
+                        value: item,
+                        itemStyle: {
+                            normal: {
+                                color: colorList[index]
+                            }
+                        }
+                    };
+                });
+
+                function renderItem(params, api) {
+                    var yValue = api.value(2);
+                    var start = api.coord([api.value(0), yValue]);
+                    var size = api.size([api.value(1) - api.value(0), yValue]);
+                    var style = api.style();
+
+                    return {
+                        type: 'rect',
+                        shape: {
+                            x: start[0],
+                            y: start[1],
+                            width: size[0],
+                            height: size[1]
+                        },
+                        style: style
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    xAxis: {
+                        scale: true
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'top'
+                            }
+                        },
+                        dimensions: ['from', 'to', 'profit'],
+                        encode: {
+                            x: [0, 1],
+                            y: 2,
+                            tooltip: [0, 1, 2]
+                        },
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'profit', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var categoryData = [];
+                var errorData = [];
+                var barData = [];
+                var dataCount = 100;
+                for (var i = 0; i < dataCount; i++) {
+                    var val = Math.random() * 1000;
+                    categoryData.push('category' + i);
+                    errorData.push([
+                        i,
+                        echarts.number.round(Math.max(0, val - Math.random() * 100)),
+                        echarts.number.round(val + Math.random() * 80)
+                    ]);
+                    barData.push(echarts.number.round(val, 2));
+                }
+
+                function renderItem(params, api) {
+                    var xValue = api.value(0);
+                    var highPoint = api.coord([xValue, api.value(1)]);
+                    var lowPoint = api.coord([xValue, api.value(2)]);
+                    var halfWidth = api.size([1, 0])[0] * 0.1;
+                    var style = api.style({
+                        stroke: api.visual('color'),
+                        fill: null
+                    });
+
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'line',
+                            shape: {
+                                x1: highPoint[0] - halfWidth, y1: highPoint[1],
+                                x2: highPoint[0] + halfWidth, y2: highPoint[1]
+                            },
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: {
+                                x1: highPoint[0], y1: highPoint[1],
+                                x2: lowPoint[0], y2: lowPoint[1]
+                            },
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: {
+                                x1: lowPoint[0] - halfWidth, y1: lowPoint[1],
+                                x2: lowPoint[0] + halfWidth, y2: lowPoint[1]
+                            },
+                            style: style
+                        }]
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        start: 50,
+                        end: 70
+                    }, {
+                        type: 'inside',
+                        start: 50,
+                        end: 70
+                    }],
+                    xAxis: {
+                        data: categoryData
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'bar',
+                        name: 'bar',
+                        data: barData,
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        }
+                    }, {
+                        type: 'custom',
+                        name: 'error',
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 1.5
+                            }
+                        },
+                        renderItem: renderItem,
+                        encode: {
+                            x: 0,
+                            y: [1, 2]
+                        },
+                        data: errorData,
+                        z: 100
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'errorChart-cartesian-bar', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+                // Prime Costs and Prices for ACME Fashion\nCollection "Spring-Summer, 2016"
+                // Data from https://playground.anychart.com/gallery/7.12.0/Error_Charts/Marker_Chart
+                var dimensions = [
+                    'name', 'Price', 'Prime cost', 'Prime cost min', 'Prime cost max', 'Price min', 'Price max'
+                ];
+                var data = [
+                    ['Blouse "Blue Viola"', 101.88, 99.75, 76.75, 116.75, 69.88, 119.88],
+                    ['Dress "Daisy"', 155.8, 144.03, 126.03, 156.03, 129.8, 188.8],
+                    ['Trousers "Cutesy Classic"', 203.25, 173.56, 151.56, 187.56, 183.25, 249.25],
+                    ['Dress "Morning Dew"', 256, 120.5, 98.5, 136.5, 236, 279],
+                    ['Turtleneck "Dark Chocolate"', 408.89, 294.75, 276.75, 316.75, 385.89, 427.89],
+                    ['Jumper "Early Spring"', 427.36, 430.24, 407.24, 452.24, 399.36, 461.36],
+                    ['Breeches "Summer Mood"', 356, 135.5, 123.5, 151.5, 333, 387],
+                    ['Dress "Mauve Chamomile"', 406, 95.5, 73.5, 111.5, 366, 429],
+                    ['Dress "Flying Tits"', 527.36, 503.24, 488.24, 525.24, 485.36, 551.36],
+                    ['Dress "Singing Nightingales"', 587.36, 543.24, 518.24, 555.24, 559.36, 624.36],
+                    ['Sundress "Cloudy weather"', 603.36, 407.24, 392.24, 419.24, 581.36, 627.36],
+                    ['Sundress "East motives"', 633.36, 477.24, 445.24, 487.24, 594.36, 652.36],
+                    ['Sweater "Cold morning"', 517.36, 437.24, 416.24, 454.24, 488.36, 565.36],
+                    ['Trousers "Lavender Fields"', 443.36, 387.24, 370.24, 413.24, 412.36, 484.36],
+                    ['Jumper "Coffee with Milk"', 543.36, 307.24, 288.24, 317.24, 509.36, 574.36],
+                    ['Blouse "Blooming Cactus"', 790.36, 277.24, 254.24, 295.24, 764.36, 818.36],
+                    ['Sweater "Fluffy Comfort"', 790.34, 678.34, 660.34, 690.34, 762.34, 824.34]
+                ];
+
+                function renderItem(params, api) {
+                    var children = [];
+                    var coordDims = ['x', 'y'];
+
+                    for (var baseDimIdx = 0; baseDimIdx < 2; baseDimIdx++) {
+                        var otherDimIdx = 1 - baseDimIdx;
+                        var encode = params.encode;
+                        var baseValue = api.value(encode[coordDims[baseDimIdx]][0]);
+                        var param = [];
+                        param[baseDimIdx] = baseValue;
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][1]);
+                        var highPoint = api.coord(param);
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][2]);
+                        var lowPoint = api.coord(param);
+                        var halfWidth = 5;
+
+                        var style = api.style({
+                            stroke: api.visual('color'),
+                            fill: null
+                        });
+
+                        children.push({
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx] - halfWidth, highPoint[otherDimIdx],
+                                highPoint[baseDimIdx] + halfWidth, highPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx], highPoint[otherDimIdx],
+                                lowPoint[baseDimIdx], lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                lowPoint[baseDimIdx] - halfWidth, lowPoint[otherDimIdx],
+                                lowPoint[baseDimIdx] + halfWidth, lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        });
+                    }
+
+                    function makeShape(baseDimIdx, base1, value1, base2, value2) {
+                        var shape = {};
+                        shape[coordDims[baseDimIdx] + '1'] = base1;
+                        shape[coordDims[1 - baseDimIdx] + '1'] = value1;
+                        shape[coordDims[baseDimIdx] + '2'] = base2;
+                        shape[coordDims[1 - baseDimIdx] + '2'] = value2;
+                        return shape;
+                    }
+
+                    return {
+                        type: 'group',
+                        children: children
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        name: 'error',
+                        data: data,
+                        dimensions: dimensions,
+                        encode: {
+                            x: 2,
+                            y: 1,
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            itemName: 0
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        }
+                    }, {
+                        type: 'custom',
+                        name: 'error',
+                        renderItem: renderItem,
+                        dimensions: dimensions,
+                        encode: {
+                            x: [2, 3, 4],
+                            y: [1, 5, 6],
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            itemName: 0
+                        },
+                        data: data,
+                        z: 100
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'errorChart-cartesian-scatter', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var yearCount = 7;
+                var categoryCount = 30;
+
+                var xAxisData = [];
+                var customData = [];
+                var legendData = [];
+                var dataList = [];
+
+                legendData.push('trend');
+                var encodeY = [];
+                for (var i = 0; i < yearCount; i++) {
+                    legendData.push((2010 + i) + '');
+                    dataList.push([]);
+                    encodeY.push(1 + i);
+                };
+
+                for (var i = 0; i < categoryCount; i++) {
+                    var val = Math.random() * 1000;
+                    xAxisData.push('category' + i);
+                    var customVal = [i];
+                    customData.push(customVal);
+
+                    var data = dataList[0];
+                    for (var j = 0; j < dataList.length; j++) {
+                        var value = j === 0
+                            ? echarts.number.round(val, 2)
+                            : echarts.number.round(Math.max(0, dataList[j - 1][i] + (Math.random() - 0.5) * 200), 2);
+                        dataList[j].push(value);
+                        customVal.push(value);
+                    }
+                }
+
+                function renderItem(params, api) {
+                    var xValue = api.value(0);
+                    var currentSeriesIndices = api.currentSeriesIndices();
+                    var barLayout = api.barLayout({
+                        barGap: '30%', barCategoryGap: '20%', count: currentSeriesIndices.length - 1
+                    });
+
+                    var points = [];
+                    for (var i = 0; i < currentSeriesIndices.length; i++) {
+                        var seriesIndex = currentSeriesIndices[i];
+                        if (seriesIndex !== params.seriesIndex) {
+                            var point = api.coord([xValue, api.value(seriesIndex)]);
+                            point[0] += barLayout[i - 1].offsetCenter;
+                            point[1] -= 20;
+                            points.push(point);
+                        }
+                    }
+                    var style = api.style({
+                        stroke: api.visual('color'),
+                        fill: null
+                    });
+
+                    return {
+                        type: 'polyline',
+                        shape: {
+                            points: points
+                        },
+                        style: style
+                    };
+                }
+
+                var barItemStyle = {
+                    normal: {
+                        opacity: 0.5
+                    }
+                };
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: legendData
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        start: 50,
+                        end: 70
+                    }, {
+                        type: 'inside',
+                        start: 50,
+                        end: 70
+                    }],
+                    xAxis: {
+                        data: xAxisData
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'custom',
+                        name: 'trend',
+                        renderItem: renderItem,
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 2
+                            }
+                        },
+                        encode: {
+                            x: 0,
+                            y: encodeY
+                        },
+                        data: customData,
+                        z: 100
+                    }].concat(echarts.util.map(dataList, function (data, index) {
+                        return {
+                            type: 'bar',
+                            animation: false,
+                            name: legendData[index + 1],
+                            itemStyle: {
+                                normal: {
+                                    opacity: 0.5
+                                }
+                            },
+                            data: data
+                        };
+                    }))
+                };
+
+                testHelper.createChart(echarts, 'errorChart-cartesian-bar-multi', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var data = [];
+                var dataCount = 7;
+                for (var i = 0; i < dataCount; i++) {
+                    var val = Math.random() * 1000;
+                    data.push([
+                        echarts.number.round(Math.random() * 100),
+                        echarts.number.round(Math.random() * 400)
+                    ]);
+                }
+
+                function renderItem(params, api) {
+                    if (params.context.rendered) {
+                        return;
+                    }
+                    params.context.rendered = true;
+
+                    var points = [];
+                    for (var i = 0; i < data.length; i++) {
+                        points.push(api.coord(data[i]));
+                    }
+                    var color = api.visual('color');
+
+                    return {
+                        type: 'polygon',
+                        shape: {
+                            points: echarts.graphic.clipPointsByRect(points, {
+                                x: params.coordSys.x,
+                                y: params.coordSys.y,
+                                width: params.coordSys.width,
+                                height: params.coordSys.height
+                            })
+                        },
+                        style: api.style({
+                            fill: color,
+                            stroke: echarts.color.lift(color)
+                        })
+                    };
+                }
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        filterMode: 'none'
+                    }, {
+                        type: 'inside',
+                        filterMode: 'none'
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        data: data
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'cartesian-polygon', option);
+            });
+        </script>
+
+
+
+
+    </body>
+</html>

@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     return require('../../echarts').extendComponentView({
 
         type: 'marker',
@@ -8,18 +10,16 @@ define(function (require) {
             /**
              * Markline grouped by series
              * @private
-             * @type {Object}
+             * @type {module:zrender/core/util.HashMap}
              */
-            this.markerGroupMap = {};
+            this.markerGroupMap = zrUtil.createHashMap();
         },
 
         render: function (markerModel, ecModel, api) {
             var markerGroupMap = this.markerGroupMap;
-            for (var name in markerGroupMap) {
-                if (markerGroupMap.hasOwnProperty(name)) {
-                    markerGroupMap[name].__keep = false;
-                }
-            }
+            markerGroupMap.each(function (item) {
+                item.__keep = false;
+            });
 
             var markerModelKey = this.type + 'Model';
             ecModel.eachSeries(function (seriesModel) {
@@ -27,11 +27,9 @@ define(function (require) {
                 markerModel && this.renderSeries(seriesModel, markerModel, ecModel, api);
             }, this);
 
-            for (var name in markerGroupMap) {
-                if (markerGroupMap.hasOwnProperty(name) && !markerGroupMap[name].__keep) {
-                    this.group.remove(markerGroupMap[name].group);
-                }
-            }
+            markerGroupMap.each(function (item) {
+                !item.__keep && this.group.remove(item.group);
+            }, this);
         },
 
         renderSeries: function () {}

@@ -129,6 +129,18 @@ define(function (require) {
         return tpl;
     };
 
+    /**
+     * @param {string} color
+     * @param {string} [extraCssText]
+     * @return {string}
+     */
+    formatUtil.getTooltipMarker = function (color, extraCssText) {
+        return color
+            ? '<span style="display:inline-block;margin-right:5px;'
+                + 'border-radius:10px;width:9px;height:9px;background-color:'
+                + formatUtil.encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
+            : '';
+    };
 
     /**
      * @param {string} str

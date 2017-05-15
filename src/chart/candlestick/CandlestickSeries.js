@@ -5,9 +5,6 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var SeriesModel = require('../../model/Series');
     var whiskerBoxCommon = require('../helper/whiskerBoxCommon');
-    var formatUtil = require('../../util/format');
-    var encodeHTML = formatUtil.encodeHTML;
-    var addCommas = formatUtil.addCommas;
 
     var CandlestickSeries = SeriesModel.extend({
 
@@ -18,7 +15,7 @@ define(function(require) {
         /**
          * @readOnly
          */
-        valueDimensions: ['open', 'close', 'lowest', 'highest'],
+        defaultValueDimensions: ['open', 'close', 'lowest', 'highest'],
 
         /**
          * @type {Array.<string>}
@@ -72,23 +69,6 @@ define(function(require) {
          */
         getShadowDim: function () {
             return 'open';
-        },
-
-        /**
-         * @override
-         */
-        formatTooltip: function (dataIndex, mutipleSeries) {
-            // It rearly use mutiple candlestick series in one cartesian,
-            // so only consider one series in this default tooltip.
-            var valueHTML = zrUtil.map(this.valueDimensions, function (dim) {
-                return encodeHTML(dim + ': ' + addCommas(this.getData().get(dim, dataIndex)));
-            }, this).join('<br />');
-
-            var html = [];
-            this.name != null && html.push(encodeHTML(this.name));
-            valueHTML != null && html.push(valueHTML);
-
-            return html.join('<br />');
         },
 
         brushSelector: function (dataIndex, data, selectors) {

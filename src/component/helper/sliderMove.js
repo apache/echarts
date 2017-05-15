@@ -23,18 +23,19 @@ define(function (require) {
      */
     return function (delta, handleEnds, extent, handleIndex, minSpan, maxSpan) {
         // Normalize firstly.
-        restrict(handleEnds, 0, extent);
-        restrict(handleEnds, 1, extent);
+        handleEnds[0] = restrict(handleEnds[0], extent);
+        handleEnds[1] = restrict(handleEnds[1], extent);
 
         delta = delta || 0;
 
         var extentSpan = extent[1] - extent[0];
 
         // Notice maxSpan and minSpan can be null/undefined.
-        minSpan < 0 && (minSpan = 0);
-        minSpan > extentSpan && (minSpan = extentSpan);
-        if (maxSpan < minSpan) {
-            maxSpan = minSpan;
+        if (minSpan != null) {
+            minSpan = restrict(minSpan, [0, extentSpan]);
+        }
+        if (maxSpan != null) {
+            maxSpan = Math.max(maxSpan, minSpan != null ? minSpan : 0);
         }
         if (handleIndex === 'all') {
             minSpan = maxSpan = Math.abs(handleEnds[1] - handleEnds[0]);
@@ -49,7 +50,7 @@ define(function (require) {
         var extentMinSpan = minSpan || 0;
         var realExtent = extent.slice();
         originalDistSign.sign < 0 ? (realExtent[0] += extentMinSpan) : (realExtent[1] -= extentMinSpan);
-        restrict(handleEnds, handleIndex, realExtent);
+        handleEnds[handleIndex] = restrict(handleEnds[handleIndex], realExtent);
 
         // Expand span.
         var currDistSign = getSpanSign(handleEnds, handleIndex);
@@ -76,7 +77,7 @@ define(function (require) {
         return {span: Math.abs(dist), sign: dist > 0 ? -1 : dist < 0 ? 1 : handleIndex ? -1 : 1};
     }
 
-    function restrict(handleEnds, handleIndex, extend) {
-        handleEnds[handleIndex] = Math.min(extend[1], Math.max(extend[0], handleEnds[handleIndex]));
+    function restrict(value, extend) {
+        return Math.min(extend[1], Math.max(extend[0], value));
     }
 });

@@ -73,6 +73,8 @@ define(function (require) {
                 dimensionName = dimensions[i];
                 dimensionInfo = {
                     name: dimensionName,
+                    coordDim: dimensionName,
+                    coordDimIndex: 0,
                     stackable: false,
                     // Type can be 'float', 'int', 'number'
                     // Default is number, Precision of float may not enough
@@ -83,10 +85,16 @@ define(function (require) {
                 dimensionInfo = dimensions[i];
                 dimensionName = dimensionInfo.name;
                 dimensionInfo.type = dimensionInfo.type || 'number';
+                if (!dimensionInfo.coordDim) {
+                    dimensionInfo.coordDim = dimensionName;
+                    dimensionInfo.coordDimIndex = 0;
+                }
             }
+            dimensionInfo.otherDims = dimensionInfo.otherDims || {};
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
         }
+
         /**
          * @readOnly
          * @type {Array.<string>}
@@ -132,6 +140,7 @@ define(function (require) {
          * @type {Array.<string>}
          */
         this._idList = [];
+
         /**
          * Models of data option is stored sparse for optimizing memory cost
          * @type {Array.<module:echarts/model/Model>}
@@ -195,6 +204,7 @@ define(function (require) {
     var listProto = List.prototype;
 
     listProto.type = 'list';
+
     /**
      * If each data item has it's own option
      * @type {boolean}
@@ -214,6 +224,7 @@ define(function (require) {
         }
         return dim;
     };
+
     /**
      * Get type and stackable info of particular dimension
      * @param {string|number} dim
@@ -254,12 +265,14 @@ define(function (require) {
 
         var idList = [];
         var nameRepeatCount = {};
+        var nameDimIdx;
 
         nameList = nameList || [];
 
         // Init storage
         for (var i = 0; i < dimensions.length; i++) {
             var dimInfo = dimensionInfoMap[dimensions[i]];
+            dimInfo.otherDims.itemName === 0 && (nameDimIdx = i);
             var DataCtor = dataCtors[dimInfo.type];
             storage[dimensions[i]] = new DataCtor(size);
         }
@@ -308,9 +321,12 @@ define(function (require) {
         // Use the name in option and create id
         for (var i = 0; i < size; i++) {
             var dataItem = data.getItem(i);
-            if (!nameList[i]) {
-                if (dataItem && dataItem.name != null) {
+            if (!nameList[i] && dataItem) {
+                if (dataItem.name != null) {
                     nameList[i] = dataItem.name;
+                }
+                else if (nameDimIdx != null) {
+                    nameList[i] = storage[dimensions[nameDimIdx]][i];
                 }
             }
             var name = nameList[i] || '';
@@ -352,11 +368,11 @@ define(function (require) {
         var dataIndex = this.indices[idx];
 
         // If value not exists
-        if (dataIndex == null) {
+        if (dataIndex == null || !storage[dim]) {
             return NaN;
         }
 
-        var value = storage[dim] && storage[dim][dataIndex];
+        var value = storage[dim][dataIndex];
         // FIXME ordinal data type is not stackable
         if (stack) {
             var dimensionInfo = this._dimensionInfos[dim];
@@ -722,7 +738,10 @@ define(function (require) {
         for (var i = 0; i < indices.length; i++) {
             var keep;
             // Simple optimization
-            if (dimSize === 1) {
+            if (!dimSize) {
+                keep = cb.call(context, i);
+            }
+            else if (dimSize === 1) {
                 keep = cb.call(
                     context, this.get(dimensions[0], i, stack), i
                 );
@@ -1014,7 +1033,7 @@ define(function (require) {
      * Get visual property of single data item
      * @param {number} idx
      * @param {string} key
-     * @param {boolean} ignoreParent
+     * @param {boolean} [ignoreParent=false]
      */
     listProto.getItemVisual = function (idx, key, ignoreParent) {
         var itemVisual = this._itemVisuals[idx];

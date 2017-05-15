@@ -1,16 +1,9 @@
 describe('util/model', function() {
 
     var utHelper = window.utHelper;
-    var modelUtil;
 
-    beforeAll(function (done) { // jshint ignore:line
-        utHelper.resetPackageLoader(function () {
-            window.require(['echarts/util/model'], function (h) {
-                modelUtil = h;
-                done();
-            });
-        });
-    });
+    var testCase = utHelper.prepare(['echarts/util/model', 'echarts/model/Model']);
+
 
     describe('compressBatches', function () {
 
@@ -18,7 +11,7 @@ describe('util/model', function() {
             return {seriesId: seriesId, dataIndex: dataIndex};
         }
 
-        it('base', function (done) {
+        testCase('base', function (modelUtil) {
             // Remove dupliate between A and B
             expect(modelUtil.compressBatches(
                 [item(3, 4), item(3, 5), item(4, 5)],
@@ -79,8 +72,6 @@ describe('util/model', function() {
                 [],
                 []
             ]);
-
-            done();
         });
 
     });

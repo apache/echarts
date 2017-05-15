@@ -237,7 +237,7 @@ define(function(require) {
             var idIndexMap = this._idIndexMap;
 
             if (!idIndexMap) {
-                idIndexMap = this._idIndexMap = {};
+                idIndexMap = this._idIndexMap = zrUtil.createHashMap();
                 /**
                  * @private
                  * @type {number}
@@ -245,9 +245,9 @@ define(function(require) {
                 this._idIndexMapCount = 0;
             }
 
-            var index = idIndexMap[id];
+            var index = idIndexMap.get(id);
             if (index == null) {
-                idIndexMap[id] = index = this._idIndexMapCount++;
+                idIndexMap.set(id, index = this._idIndexMapCount++);
             }
 
             return index;

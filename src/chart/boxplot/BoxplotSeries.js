@@ -21,7 +21,7 @@ define(function(require) {
          * and echarts do not need to know it.
          * @readOnly
          */
-        valueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
+        defaultValueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
 
         /**
          * @type {Array.<string>}

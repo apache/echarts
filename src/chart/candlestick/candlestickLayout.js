@@ -1,5 +1,6 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
     var retrieve = require('zrender/core/util').retrieve;
     var parsePercent = require('../../util/number').parsePercent;
 
@@ -9,18 +10,33 @@ define(function (require) {
 
             var coordSys = seriesModel.coordinateSystem;
             var data = seriesModel.getData();
-            var dimensions = seriesModel.dimensions;
-            var chartLayout = seriesModel.get('layout');
-
             var candleWidth = calculateCandleWidth(seriesModel, data);
+            var chartLayout = seriesModel.get('layout');
+            var variableDim = chartLayout === 'horizontal' ? 0 : 1;
+            var constDim = 1 - variableDim;
+            var coordDims = ['x', 'y'];
+            var vDims = [];
+            var cDim;
 
-            data.each(dimensions, function () {
+            zrUtil.each(data.dimensions, function (dimName) {
+                var dimInfo = data.getDimensionInfo(dimName);
+                var coordDim = dimInfo.coordDim;
+                if (coordDim === coordDims[constDim]) {
+                    vDims.push(dimName);
+                }
+                else if (coordDim === coordDims[variableDim]) {
+                    cDim = dimName;
+                }
+            });
+
+            if (cDim == null || vDims.length < 4) {
+                return;
+            }
+
+            data.each([cDim].concat(vDims), function () {
                 var args = arguments;
-                var dimLen = dimensions.length;
                 var axisDimVal = args[0];
-                var idx = args[dimLen];
-                var variableDim = chartLayout === 'horizontal' ? 0 : 1;
-                var constDim = 1 - variableDim;
+                var idx = args[vDims.length + 1];
 
                 var openVal = args[1];
                 var closeVal = args[2];

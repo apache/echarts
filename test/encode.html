@@ -1,0 +1,360 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+        <h1>define dim name in tooltip</h1>
+        <div class="chart" id="dim"></div>
+        <h1>change tooltip order (Tooltip of the first series should be: median, 1分位, Q3)</h1>
+        <div class="chart" id="order"></div>
+        <h1>define which dim on x or y. encode: {x: 2, y: 1, label: 4}</h1>
+        <div class="chart" id="dimXY"></div>
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'data/security-sh-2013.json',
+                'echarts/chart/line',
+                'echarts/chart/candlestick',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts, rawData) {
+
+                var dom = document.getElementById('dim');
+                if (!dom) {
+                    return;
+                }
+                var chart = echarts.init(dom);
+
+                function splitData(rawData) {
+                    var categoryData = [];
+                    var values = []
+                    for (var i = 0; i < rawData.length; i++) {
+                        categoryData.push(rawData[i].splice(0, 1)[0]);
+                        values.push(rawData[i])
+                    }
+                    return {
+                        categoryData: categoryData,
+                        values: values
+                    };
+                }
+
+                var data = splitData(rawData);
+
+                chart.setOption({
+                    legend: {
+                        data: ['上证指数', '开盘']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        bottom: '15%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.categoryData,
+                        scale: true,
+                        boundaryGap : false,
+                        axisLine: {onZero: false},
+                        splitLine: {show: false},
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        scale: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            start: 50,
+                            end: 100
+                        },
+                        {
+                            show: true,
+                            type: 'slider',
+                            y: '90%',
+                            start: 50,
+                            end: 100
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'line',
+                            type: 'line',
+                            data: (function () {
+                                opens = [];
+                                for (var i = 0, len = data.values.length; i < len; i++) {
+                                    opens.push(data.values[i][0]);
+                                }
+                                return opens;
+                            })(),
+                            smooth: true,
+                            lineStyle: {
+                                normal: {color: '#aaa'}
+                            }
+                        },
+                        {
+                            name: '上证指数',
+                            type: 'candlestick',
+                            dimensions: ['base', '开盘', '收盘', '最高', '最低'],
+                            data: data.values
+                        }
+                    ]
+                });
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var data;
+
+            require([
+                'echarts',
+                'extension/dataTool/prepareBoxplotData',
+                'echarts/chart/boxplot',
+                'echarts/chart/scatter',
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts, prepareBoxplotData) {
+
+                data = [];
+                for (var seriesIndex = 0; seriesIndex < 5; seriesIndex++) {
+                    var seriesData = [];
+                    for (var i = 0; i < 18; i++) {
+                        var cate = [];
+                        for (var j = 0; j < 100; j++) {
+                            cate.push(Math.random() * 200);
+                        }
+                        seriesData.push(cate);
+                    }
+                    data.push(prepareBoxplotData(seriesData, {layout: 'horizontal'}));
+                }
+
+                var option = {
+                    title: [
+                        {
+                            text: 'Multiple Categories',
+                            left: 'center',
+                        }
+                    ],
+                    legend: {
+                        top: '10%',
+                        data: ['category0', 'category1', 'category2', 'category3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        top: '20%',
+                        right: '10%',
+                        bottom: '15%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data[0].axisData,
+                        boundaryGap: true,
+                        nameGap: 30,
+                        splitArea: {
+                            show: true
+                        },
+                        axisLabel: {
+                            formatter: 'expr {value}'
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Value',
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            start: 0,
+                            end: 20
+                        },
+                        {
+                            show: true,
+                            height: 20,
+                            type: 'slider',
+                            bottom: 50,
+                            xAxisIndex: [0],
+                            yAxisIndex: [],
+                            start: 0,
+                            end: 20
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'category0',
+                            type: 'boxplot',
+                            dimensions: [null, '最小', '1分位'],
+                            encode: {
+                                tooltip: [3, 2, 4]
+                            },
+                            data: data[0].boxData
+                        },
+                        {
+                            name: 'category1',
+                            type: 'boxplot',
+                            data: data[1].boxData
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'order', option);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+                data = [
+                    ['Blouse "Blue Viola"', 101.88, 99.75, 23, 17, 32, 18],
+                    ['Dress "Daisy"', 155.8, 144.03, 18, 12, 26, 33],
+                    ['Trousers "Cutesy Classic"', 203.25, 173.56, 22, 14, 20, 46],
+                    ['Dress "Morning Dew"', 256.0, 120.5, 22, 16, 20, 23],
+                    ['Turtleneck "Dark Chocolate"', 408.89, 294.75, 18, 22, 23, 19],
+                    ['Jumper "Early Spring"', 427.36, 430.24, 23, 22, 28, 34],
+                    ['Breeches "Summer Mood"', 356.0, 135.5, 12, 16, 23, 31],
+                    ['Dress "Mauve Chamomile"', 406.0, 95.5, 22, 16, 40, 23],
+                    ['Dress "Flying Tits"', 527.36, 503.24, 15, 22, 42, 24],
+                    ['Dress "Singing Nightingales"', 587.36, 543.24, 25, 12, 28, 37],
+                    ['Sundress "Cloudy weather"', 603.36, 407.24, 15, 12, 22, 24],
+                    ['Sundress "East motives"', 633.36, 477.24, 32, 10, 39, 19],
+                    ['Sweater "Cold morning"', 517.36, 437.24, 21, 17, 29, 48],
+                    ['Trousers "Lavender Fields"', 443.36, 387.24, 17, 26, 31, 41],
+                    ['Jumper "Coffee with Milk"', 543.36, 307.24, 19, 10, 34, 31],
+                    ['Blouse "Blooming Cactus"', 790.36, 277.24, 23, 18, 26, 28],
+                    ['Sweater "Fluffy Comfort"', 790.34, 678.34, 18, 12, 28, 34]
+                ];
+
+                var encode = {
+                    x: 0,
+                    y: [1, 2]
+                };
+
+                var option = {
+                    tooltip: {
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        start: 50,
+                        end: 70
+                    }, {
+                        type: 'inside',
+                        start: 50,
+                        end: 70
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        data: data,
+                        encode: {
+                            x: 2,
+                            y: 1,
+                            label: 4
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        },
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'top',
+                                textStyle: {
+                                    color: '#333'
+                                }
+                            }
+                        }
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'dimXY', option);
+            });
+        </script>
+
+
+
+
+
+
+    </body>
+</html>

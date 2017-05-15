@@ -14,24 +14,25 @@ define(function (require) {
 
         zrUtil.each(datas, function (data) {
             data.each(dims, function (value, idx) {
-                var name = data.getName(idx);
-                dataNameMap[name] = dataNameMap[name] || [];
+                // Add prefix to avoid conflict with Object.prototype.
+                var mapKey = 'ec-' + data.getName(idx);
+                dataNameMap[mapKey] = dataNameMap[mapKey] || [];
                 if (!isNaN(value)) {
-                    dataNameMap[name].push(value);
+                    dataNameMap[mapKey].push(value);
                 }
             });
         });
 
         return datas[0].map(dims, function (value, idx) {
-            var name = datas[0].getName(idx);
+            var mapKey = 'ec-' + datas[0].getName(idx);
             var sum = 0;
             var min = Infinity;
             var max = -Infinity;
-            var len = dataNameMap[name].length;
+            var len = dataNameMap[mapKey].length;
             for (var i = 0; i < len; i++) {
-                min = Math.min(min, dataNameMap[name][i]);
-                max = Math.max(max, dataNameMap[name][i]);
-                sum += dataNameMap[name][i];
+                min = Math.min(min, dataNameMap[mapKey][i]);
+                max = Math.max(max, dataNameMap[mapKey][i]);
+                sum += dataNameMap[mapKey][i];
             }
             var result;
             if (statisticType === 'min') {

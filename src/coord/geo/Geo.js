@@ -36,7 +36,7 @@ define(function (require) {
          */
         this.map = map;
 
-        this._nameCoordMap = {};
+        this._nameCoordMap = zrUtil.createHashMap();
 
         this.loadGeoJson(geoJson, specialAreas, nameMap);
     }
@@ -85,14 +85,14 @@ define(function (require) {
             specialAreas = specialAreas || {};
             nameMap = nameMap || {};
             var regions = this.regions;
-            var regionsMap = {};
+            var regionsMap = zrUtil.createHashMap();
             for (var i = 0; i < regions.length; i++) {
                 var regionName = regions[i].name;
                 // Try use the alias in nameMap
-                regionName = nameMap[regionName] || regionName;
+                regionName = nameMap.hasOwnProperty(regionName) ? nameMap[regionName] : regionName;
                 regions[i].name = regionName;
 
-                regionsMap[regionName] = regions[i];
+                regionsMap.set(regionName, regions[i]);
                 // Add geoJson
                 this.addGeoCoord(regionName, regions[i].center);
 
@@ -144,7 +144,7 @@ define(function (require) {
          * @return {module:echarts/coord/geo/Region}
          */
         getRegion: function (name) {
-            return this._regionsMap[name];
+            return this._regionsMap.get(name);
         },
 
         getRegionByCoord: function (coord) {
@@ -162,7 +162,7 @@ define(function (require) {
          * @param {Array.<number>} geoCoord
          */
         addGeoCoord: function (name, geoCoord) {
-            this._nameCoordMap[name] = geoCoord;
+            this._nameCoordMap.set(name, geoCoord);
         },
 
         /**
@@ -171,7 +171,7 @@ define(function (require) {
          * @return {Array.<number>}
          */
         getGeoCoord: function (name) {
-            return this._nameCoordMap[name];
+            return this._nameCoordMap.get(name);
         },
 
         // Overwrite
@@ -208,7 +208,6 @@ define(function (require) {
             }, this);
         },
 
-        // Overwrite
         /**
          * @param {string|Array.<number>} data
          * @return {Array.<number>}
@@ -224,16 +223,12 @@ define(function (require) {
         },
 
         /**
-         * @override
-         * @implements
-         * see {module:echarts/CoodinateSystem}
+         * @inheritDoc
          */
         convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
 
         /**
-         * @override
-         * @implements
-         * see {module:echarts/CoodinateSystem}
+         * @inheritDoc
          */
         convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
 

@@ -7,6 +7,7 @@ define(function(require) {
 
     var RadiusAxis = require('./RadiusAxis');
     var AngleAxis = require('./AngleAxis');
+    var zrUtil = require('zrender/core/util');
 
     /**
      * @alias {module:echarts/coord/polar/Polar}
@@ -253,6 +254,7 @@ define(function(require) {
 
             return [x, y];
         }
+
     };
 
     return Polar;

@@ -463,7 +463,7 @@ define(function (require) {
 
             var iconStr = dataZoomModel.get('handleIcon');
             each([0, 1], function (handleIndex) {
-                var path = graphic.makePath(iconStr, {
+                var iconOpt = {
                     style: {
                         strokeNoScale: true
                     },
@@ -478,12 +478,21 @@ define(function (require) {
                     ondragend: bind(this._onDragEnd, this),
                     onmouseover: bind(this._showDataInfo, this, true),
                     onmouseout: bind(this._showDataInfo, this, false)
-                }, {
-                    x: -0.5,
-                    y: 0,
-                    width: 1,
-                    height: 1
-                }, 'center');
+                };
+                var iconStyle = {x: -1, y: 0, width: 2, height: 2};
+
+                var path = iconStr.indexOf('image://') === 0
+                    ? (
+                        iconStyle.image = iconStr.slice(8),
+                        iconOpt.style = iconStyle,
+                        new graphic.Image(iconOpt)
+                    )
+                    : graphic.makePath(
+                        iconStr.replace('path://', ''),
+                        iconOpt,
+                        iconStyle,
+                        'center'
+                    );
 
                 var bRect = path.getBoundingRect();
                 this._handleHeight = numberUtil.parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
@@ -573,7 +582,7 @@ define(function (require) {
                 var handle = displaybles.handles[handleIndex];
                 var handleHeight = this._handleHeight;
                 handle.attr({
-                    scale: [handleHeight, handleHeight],
+                    scale: [handleHeight / 2, handleHeight / 2],
                     position: [handleEnds[handleIndex], size[1] / 2 - handleHeight / 2]
                 });
             }, this);

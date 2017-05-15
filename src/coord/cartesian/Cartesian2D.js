@@ -104,6 +104,7 @@ define(function(require) {
         getOtherAxis: function (axis) {
             return this.getAxis(axis.dim === 'x' ? 'y' : 'x');
         }
+
     };
 
     zrUtil.inherits(Cartesian2D, Cartesian);

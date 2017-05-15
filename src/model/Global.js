@@ -158,7 +158,7 @@ define(function (require) {
                 var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
                 var mapResult = modelUtil.mappingToExists(
-                    componentsMap[mainType], newCptOptionList
+                    componentsMap.get(mainType), newCptOptionList
                 );
 
                 modelUtil.makeIdAndName(mapResult);
@@ -177,7 +177,7 @@ define(function (require) {
                 );
 
                 option[mainType] = [];
-                componentsMap[mainType] = [];
+                componentsMap.set(mainType, []);
 
                 each(mapResult, function (resultItem, index) {
                     var componentModel = resultItem.exist;
@@ -227,13 +227,13 @@ define(function (require) {
                         }
                     }
 
-                    componentsMap[mainType][index] = componentModel;
+                    componentsMap.get(mainType)[index] = componentModel;
                     option[mainType][index] = componentModel.option;
                 }, this);
 
                 // Backup series for filtering.
                 if (mainType === 'series') {
-                    this._seriesIndices = createSeriesIndices(componentsMap.series);
+                    this._seriesIndices = createSeriesIndices(componentsMap.get('series'));
                 }
             }
         },
@@ -277,7 +277,7 @@ define(function (require) {
          * @return {module:echarts/model/Component}
          */
         getComponent: function (mainType, idx) {
-            var list = this._componentsMap[mainType];
+            var list = this._componentsMap.get(mainType);
             if (list) {
                 return list[idx || 0];
             }
@@ -303,7 +303,7 @@ define(function (require) {
             var id = condition.id;
             var name = condition.name;
 
-            var cpts = this._componentsMap[mainType];
+            var cpts = this._componentsMap.get(mainType);
 
             if (!cpts || !cpts.length) {
                 return [];
@@ -378,7 +378,7 @@ define(function (require) {
             var queryCond = getQueryCond(query);
             var result = queryCond
                 ? this.queryComponents(queryCond)
-                : this._componentsMap[mainType];
+                : this._componentsMap.get(mainType);
 
             return doFilter(filterBySubType(result, condition));
 
@@ -437,14 +437,14 @@ define(function (require) {
             if (typeof mainType === 'function') {
                 context = cb;
                 cb = mainType;
-                each(componentsMap, function (components, componentType) {
+                componentsMap.each(function (components, componentType) {
                     each(components, function (component, index) {
                         cb.call(context, componentType, component, index);
                     });
                 });
             }
             else if (zrUtil.isString(mainType)) {
-                each(componentsMap[mainType], cb, context);
+                each(componentsMap.get(mainType), cb, context);
             }
             else if (isObject(mainType)) {
                 var queryResult = this.findComponents(mainType);
@@ -457,7 +457,7 @@ define(function (require) {
          * @return {Array.<module:echarts/model/Series>}
          */
         getSeriesByName: function (name) {
-            var series = this._componentsMap.series;
+            var series = this._componentsMap.get('series');
             return filter(series, function (oneSeries) {
                 return oneSeries.name === name;
             });
@@ -468,7 +468,7 @@ define(function (require) {
          * @return {module:echarts/model/Series}
          */
         getSeriesByIndex: function (seriesIndex) {
-            return this._componentsMap.series[seriesIndex];
+            return this._componentsMap.get('series')[seriesIndex];
         },
 
         /**
@@ -476,7 +476,7 @@ define(function (require) {
          * @return {Array.<module:echarts/model/Series>}
          */
         getSeriesByType: function (subType) {
-            var series = this._componentsMap.series;
+            var series = this._componentsMap.get('series');
             return filter(series, function (oneSeries) {
                 return oneSeries.subType === subType;
             });
@@ -486,7 +486,7 @@ define(function (require) {
          * @return {Array.<module:echarts/model/Series>}
          */
         getSeries: function () {
-            return this._componentsMap.series.slice();
+            return this._componentsMap.get('series').slice();
         },
 
         /**
@@ -499,7 +499,7 @@ define(function (require) {
         eachSeries: function (cb, context) {
             assertSeriesInitialized(this);
             each(this._seriesIndices, function (rawSeriesIndex) {
-                var series = this._componentsMap.series[rawSeriesIndex];
+                var series = this._componentsMap.get('series')[rawSeriesIndex];
                 cb.call(context, series, rawSeriesIndex);
             }, this);
         },
@@ -511,7 +511,7 @@ define(function (require) {
          * @param {*} context
          */
         eachRawSeries: function (cb, context) {
-            each(this._componentsMap.series, cb, context);
+            each(this._componentsMap.get('series'), cb, context);
         },
 
         /**
@@ -525,7 +525,7 @@ define(function (require) {
         eachSeriesByType: function (subType, cb, context) {
             assertSeriesInitialized(this);
             each(this._seriesIndices, function (rawSeriesIndex) {
-                var series = this._componentsMap.series[rawSeriesIndex];
+                var series = this._componentsMap.get('series')[rawSeriesIndex];
                 if (series.subType === subType) {
                     cb.call(context, series, rawSeriesIndex);
                 }
@@ -552,13 +552,20 @@ define(function (require) {
         },
 
         /**
+         * @return {Array.<number>}
+         */
+        getCurrentSeriesIndices: function () {
+            return (this._seriesIndices || []).slice();
+        },
+
+        /**
          * @param {Function} cb
          * @param {*} context
          */
         filterSeries: function (cb, context) {
             assertSeriesInitialized(this);
             var filteredSeries = filter(
-                this._componentsMap.series, cb, context
+                this._componentsMap.get('series'), cb, context
             );
             this._seriesIndices = createSeriesIndices(filteredSeries);
         },
@@ -566,10 +573,10 @@ define(function (require) {
         restoreData: function () {
             var componentsMap = this._componentsMap;
 
-            this._seriesIndices = createSeriesIndices(componentsMap.series);
+            this._seriesIndices = createSeriesIndices(componentsMap.get('series'));
 
             var componentTypes = [];
-            each(componentsMap, function (components, componentType) {
+            componentsMap.each(function (components, componentType) {
                 componentTypes.push(componentType);
             });
 
@@ -577,7 +584,7 @@ define(function (require) {
                 componentTypes,
                 ComponentModel.getAllClassMainTypes(),
                 function (componentType, dependencies) {
-                    each(componentsMap[componentType], function (component) {
+                    each(componentsMap.get(componentType), function (component) {
                         component.restoreData();
                     });
                 }
@@ -621,7 +628,7 @@ define(function (require) {
          * @type {Object.<string, Array.<module:echarts/model/Model>>}
          * @private
          */
-        this._componentsMap = {series: []};
+        this._componentsMap = zrUtil.createHashMap({series: []});
 
         /**
          * Mapping between filtered series list and raw series list.
@@ -651,7 +658,7 @@ define(function (require) {
 
         var ret = {};
         each(types, function (type) {
-            ret[type] = (componentsMap[type] || []).slice();
+            ret[type] = (componentsMap.get(type) || []).slice();
         });
 
         return ret;

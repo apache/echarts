@@ -109,17 +109,33 @@ define(function (require) {
     function layoutSingleSeries(seriesModel, offset, boxWidth) {
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
-        var dimensions = seriesModel.dimensions;
-        var chartLayout = seriesModel.get('layout');
         var halfWidth = boxWidth / 2;
+        var chartLayout = seriesModel.get('layout');
+        var variableDim = chartLayout === 'horizontal' ? 0 : 1;
+        var constDim = 1 - variableDim;
+        var coordDims = ['x', 'y'];
+        var vDims = [];
+        var cDim;
 
-        data.each(dimensions, function () {
+        zrUtil.each(data.dimensions, function (dimName) {
+            var dimInfo = data.getDimensionInfo(dimName);
+            var coordDim = dimInfo.coordDim;
+            if (coordDim === coordDims[constDim]) {
+                vDims.push(dimName);
+            }
+            else if (coordDim === coordDims[variableDim]) {
+                cDim = dimName;
+            }
+        });
+
+        if (cDim == null || vDims.length < 5) {
+            return;
+        }
+
+        data.each([cDim].concat(vDims), function () {
             var args = arguments;
-            var dimLen = dimensions.length;
             var axisDimVal = args[0];
-            var idx = args[dimLen];
-            var variableDim = chartLayout === 'horizontal' ? 0 : 1;
-            var constDim = 1 - variableDim;
+            var idx = args[vDims.length + 1];
 
             var median = getPoint(args[3]);
             var end1 = getPoint(args[1]);

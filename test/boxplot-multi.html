@@ -93,8 +93,7 @@
                             trigger: 'axis',
                             axisPointer: {
                                 type: 'shadow'
-                            },
-                            formatter: formatter
+                            }
                         },
                         grid: {
                             left: '10%',
@@ -140,20 +139,6 @@
                         ]
                     });
                 }
-
-                function formatter(params) {
-                    return echarts.util.map(params, function (param) {
-                        return [
-                            'Experiment ' + param.name + ': ',
-                            'upper: ' + param.data[0],
-                            'Q1: ' + param.data[1],
-                            'median: ' + param.data[2],
-                            'Q3: ' + param.data[3],
-                            'lower: ' + param.data[4]
-                        ].join('<br/>');
-                    }).join('<br/><br/>');
-                }
-
 
                 // var gui = new dat.GUI();
                 // var config = {

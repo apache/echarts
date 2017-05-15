@@ -105,7 +105,8 @@ define(function(require) {
 
     function initIndexMap(arr, map, keyArr, keyGetter) {
         for (var i = 0; i < arr.length; i++) {
-            var key = keyGetter(arr[i], i);
+            // Add prefix to avoid conflict with Object.prototype.
+            var key = '_ec_' + keyGetter(arr[i], i);
             var existence = map[key];
             if (existence == null) {
                 keyArr.push(key);

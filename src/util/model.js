@@ -145,6 +145,7 @@ define(function(require) {
             var rawDataIndex = data.getRawIndex(dataIndex);
             var name = data.getName(dataIndex, true);
             var itemOpt = data.getRawDataItem(dataIndex);
+            var color = data.getItemVisual(dataIndex, 'color');
 
             return {
                 componentType: this.mainType,
@@ -158,7 +159,8 @@ define(function(require) {
                 data: itemOpt,
                 dataType: dataType,
                 value: rawValue,
-                color: data.getItemVisual(dataIndex, 'color'),
+                color: color,
+                marker: formatUtil.getTooltipMarker(color),
 
                 // Param name list for mapping `a`, `b`, `c`, `d`, `e`
                 $vars: ['seriesName', 'name', 'value']
@@ -333,22 +335,22 @@ define(function(require) {
         // to specify multi components (like series) by one name.
 
         // Ensure that each id is distinct.
-        var idMap = {};
+        var idMap = zrUtil.createHashMap();
 
         each(mapResult, function (item, index) {
             var existCpt = item.exist;
-            existCpt && (idMap[existCpt.id] = item);
+            existCpt && idMap.set(existCpt.id, item);
         });
 
         each(mapResult, function (item, index) {
             var opt = item.option;
 
             zrUtil.assert(
-                !opt || opt.id == null || !idMap[opt.id] || idMap[opt.id] === item,
+                !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
                 'id duplicates: ' + (opt && opt.id)
             );
 
-            opt && opt.id != null && (idMap[opt.id] = item);
+            opt && opt.id != null && idMap.set(opt.id, item);
             !item.keyInfo && (item.keyInfo = {});
         });
 
@@ -388,10 +390,10 @@ define(function(require) {
                 do {
                     keyInfo.id = '\0' + keyInfo.name + '\0' + idNum++;
                 }
-                while (idMap[keyInfo.id]);
+                while (idMap.get(keyInfo.id));
             }
 
-            idMap[keyInfo.id] = item;
+            idMap.set(keyInfo.id, item);
         });
     };
 
@@ -595,6 +597,60 @@ define(function(require) {
         });
 
         return result;
+    };
+
+    /**
+     * @see {module:echarts/data/helper/completeDimensions}
+     * @param {module:echarts/data/List} data
+     * @param {string|number} dataDim
+     * @return {string}
+     */
+    modelUtil.dataDimToCoordDim = function (data, dataDim) {
+        var dimensions = data.dimensions;
+        dataDim = data.getDimension(dataDim);
+        for (var i = 0; i < dimensions.length; i++) {
+            var dimItem = data.getDimensionInfo(dimensions[i]);
+            if (dimItem.name === dataDim) {
+                return dimItem.coordDim;
+            }
+        }
+    };
+
+    /**
+     * @see {module:echarts/data/helper/completeDimensions}
+     * @param {module:echarts/data/List} data
+     * @param {string} coordDim
+     * @return {Array.<string>} data dimensions on the coordDim.
+     */
+    modelUtil.coordDimToDataDim = function (data, coordDim) {
+        var dataDim = [];
+        each(data.dimensions, function (dimName) {
+            var dimItem = data.getDimensionInfo(dimName);
+            if (dimItem.coordDim === coordDim) {
+                dataDim[dimItem.coordDimIndex] = dimItem.name;
+            }
+        });
+        return dataDim;
+    };
+
+    /**
+     * @see {module:echarts/data/helper/completeDimensions}
+     * @param {module:echarts/data/List} data
+     * @param {string} otherDim Can be `otherDims`
+     *                        like 'label' or 'tooltip'.
+     * @return {Array.<string>} data dimensions on the otherDim.
+     */
+    modelUtil.otherDimToDataDim = function (data, otherDim) {
+        var dataDim = [];
+        each(data.dimensions, function (dimName) {
+            var dimItem = data.getDimensionInfo(dimName);
+            var otherDims = dimItem.otherDims;
+            var dimIndex = otherDims[otherDim];
+            if (dimIndex != null && dimIndex !== false) {
+                dataDim[dimIndex] = dimItem.name;
+            }
+        });
+        return dataDim;
     };
 
     function has(obj, prop) {

@@ -6,48 +6,64 @@ define(function(require) {
     var numberUtil = require('../util/number');
     var parsePercent = numberUtil.parsePercent;
 
+    var STACK_PREFIX = '__ec_stack_';
+
     function getSeriesStackId(seriesModel) {
-        return seriesModel.get('stack') || '__ec_stack_' + seriesModel.seriesIndex;
+        return seriesModel.get('stack') || STACK_PREFIX + seriesModel.seriesIndex;
     }
 
     function getAxisKey(axis) {
         return axis.dim + axis.index;
     }
 
-    function calBarWidthAndOffset(barSeries, api) {
-        // Columns info on each category axis. Key is cartesian name
-        var columnsMap = {};
+    /**
+     * @param {Object} opt
+     * @param {module:echarts/coord/Axis} opt.axis Only support category axis currently.
+     * @param {number} opt.count Positive interger.
+     * @param {number} [opt.barWidth]
+     * @param {number} [opt.barMaxWidth]
+     * @param {number} [opt.barGap]
+     * @param {number} [opt.barCategoryGap]
+     * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
+     */
+    function getLayoutOnAxis(opt, api) {
+        var params = [];
+        var baseAxis = opt.axis;
+        var axisKey = 'axis0';
 
-        zrUtil.each(barSeries, function (seriesModel, idx) {
+        if (baseAxis.type !== 'category') {
+            return;
+        }
+        var bandWidth = baseAxis.getBandWidth();
+
+        for (var i = 0; i < opt.count || 0; i++) {
+            params.push(zrUtil.defaults({
+                bandWidth: bandWidth,
+                axisKey: axisKey,
+                stackId: STACK_PREFIX + i
+            }, opt));
+        }
+        var widthAndOffsets = doCalBarWidthAndOffset(params, api);
+
+        var result = [];
+        for (var i = 0; i < opt.count; i++) {
+            var item = widthAndOffsets[axisKey][STACK_PREFIX + i];
+            item.offsetCenter = item.offset + item.width / 2;
+            result.push(item);
+        }
+
+        return result;
+    }
+
+    function calBarWidthAndOffset(barSeries, api) {
+        var seriesInfoList = zrUtil.map(barSeries, function (seriesModel) {
             var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;
-
             var baseAxis = cartesian.getBaseAxis();
             var axisExtent = baseAxis.getExtent();
             var bandWidth = baseAxis.type === 'category'
                 ? baseAxis.getBandWidth()
                 : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
-
-            var columnsOnAxis = columnsMap[getAxisKey(baseAxis)] || {
-                bandWidth: bandWidth,
-                remainedWidth: bandWidth,
-                autoWidthCount: 0,
-                categoryGap: '20%',
-                gap: '30%',
-                stacks: {}
-            };
-            var stacks = columnsOnAxis.stacks;
-            columnsMap[getAxisKey(baseAxis)] = columnsOnAxis;
-
-            var stackId = getSeriesStackId(seriesModel);
-
-            if (!stacks[stackId]) {
-                columnsOnAxis.autoWidthCount++;
-            }
-            stacks[stackId] = stacks[stackId] || {
-                width: 0,
-                maxWidth: 0
-            };
 
             var barWidth = parsePercent(
                 seriesModel.get('barWidth'), bandWidth
@@ -58,20 +74,66 @@ define(function(require) {
             var barGap = seriesModel.get('barGap');
             var barCategoryGap = seriesModel.get('barCategoryGap');
 
+            return {
+                bandWidth: bandWidth,
+                barWidth: barWidth,
+                barMaxWidth: barMaxWidth,
+                barGap: barGap,
+                barCategoryGap: barCategoryGap,
+                axisKey: getAxisKey(baseAxis),
+                stackId: getSeriesStackId(seriesModel)
+            };
+        });
+
+        return doCalBarWidthAndOffset(seriesInfoList, api);
+    }
+
+    function doCalBarWidthAndOffset(seriesInfoList, api) {
+        // Columns info on each category axis. Key is cartesian name
+        var columnsMap = {};
+
+        zrUtil.each(seriesInfoList, function (seriesInfo, idx) {
+            var axisKey = seriesInfo.axisKey;
+            var bandWidth = seriesInfo.bandWidth;
+            var columnsOnAxis = columnsMap[axisKey] || {
+                bandWidth: bandWidth,
+                remainedWidth: bandWidth,
+                autoWidthCount: 0,
+                categoryGap: '20%',
+                gap: '30%',
+                stacks: {}
+            };
+            var stacks = columnsOnAxis.stacks;
+            columnsMap[axisKey] = columnsOnAxis;
+
+            var stackId = seriesInfo.stackId;
+
+            if (!stacks[stackId]) {
+                columnsOnAxis.autoWidthCount++;
+            }
+            stacks[stackId] = stacks[stackId] || {
+                width: 0,
+                maxWidth: 0
+            };
+
             // Caution: In a single coordinate system, these barGrid attributes
             // will be shared by series. Consider that they have default values,
             // only the attributes set on the last series will work.
             // Do not change this fact unless there will be a break change.
 
             // TODO
+            var barWidth = seriesInfo.barWidth;
             if (barWidth && !stacks[stackId].width) {
                 barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
                 stacks[stackId].width = barWidth;
                 columnsOnAxis.remainedWidth -= barWidth;
             }
 
+            var barMaxWidth = seriesInfo.barMaxWidth;
             barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
+            var barGap = seriesInfo.barGap;
             (barGap != null) && (columnsOnAxis.gap = barGap);
+            var barCategoryGap = seriesInfo.barCategoryGap;
             (barCategoryGap != null) && (columnsOnAxis.categoryGap = barCategoryGap);
         });
 
@@ -251,6 +313,8 @@ define(function(require) {
 
         }, this);
     }
+
+    barLayoutGrid.getLayoutOnAxis = getLayoutOnAxis;
 
     return barLayoutGrid;
 });

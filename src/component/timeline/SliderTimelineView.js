@@ -47,7 +47,7 @@ define(function (require) {
             this._timer;
 
             /**
-             * @type {module:zrende/Element}
+             * @type {module:zrender/Element}
              */
             this._currentPointer;
 

@@ -182,7 +182,7 @@ define(function(require) {
          * @return {Array.<string>} dimensions on the axis.
          */
         coordDimToDataDim: function (coordDim) {
-            return [coordDim];
+            return modelUtil.coordDimToDataDim(this.getData(), coordDim);
         },
 
         /**
@@ -192,7 +192,7 @@ define(function(require) {
          * @return {string}
          */
         dataDimToCoordDim: function (dataDim) {
-            return dataDim;
+            return modelUtil.dataDimToCoordDim(this.getData(), dataDim);
         },
 
         /**
@@ -216,35 +216,46 @@ define(function(require) {
          */
         formatTooltip: function (dataIndex, multipleSeries, dataType) {
             function formatArrayValue(value) {
+                var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
+                    var dimItem = data.getDimensionInfo(idx);
+                    return vertially |= dimItem.tooltip !== false && dimItem.tooltipName != null;
+                }, 0);
+
                 var result = [];
+                var tooltipDims = modelUtil.otherDimToDataDim(data, 'tooltip');
 
-                zrUtil.each(value, function (val, idx) {
-                    var dimInfo = data.getDimensionInfo(idx);
-                    var dimType = dimInfo && dimInfo.type;
-                    var valStr;
+                tooltipDims.length
+                    ? zrUtil.each(tooltipDims, function (dimIdx) {
+                        setEachItem(data.get(dimIdx, dataIndex), dimIdx);
+                    })
+                    // By default, all dims is used on tooltip.
+                    : zrUtil.each(value, setEachItem);
 
-                    if (dimType === 'ordinal') {
-                        valStr = val + '';
+                function setEachItem(val, dimIdx) {
+                    var dimInfo = data.getDimensionInfo(dimIdx);
+                    // If `dimInfo.tooltip` is not set, show tooltip.
+                    if (!dimInfo || dimInfo.otherDims.tooltip === false) {
+                        return;
                     }
-                    else if (dimType === 'time') {
-                        valStr = multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val);
-                    }
-                    else {
-                        valStr = addCommas(val);
-                    }
+                    var dimType = dimInfo.type;
+                    var valStr = (vertially ? '- ' + (dimInfo.tooltipName || dimInfo.name) + ': ' : '')
+                        + (dimType === 'ordinal'
+                            ? val + ''
+                            : dimType === 'time'
+                            ? (multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val))
+                            : addCommas(val)
+                        );
+                    valStr && result.push(encodeHTML(valStr));
+                }
 
-                    valStr && result.push(valStr);
-                });
-
-                return result.join(', ');
+                return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
             }
 
             var data = get(this, 'data');
 
             var value = this.getRawValue(dataIndex);
-            var formattedValue = encodeHTML(
-                zrUtil.isArray(value) ? formatArrayValue(value) : addCommas(value)
-            );
+            var formattedValue = zrUtil.isArray(value)
+                ? formatArrayValue(value) : encodeHTML(addCommas(value));
             var name = data.getName(dataIndex);
 
             var color = data.getItemVisual(dataIndex, 'color');
@@ -253,8 +264,7 @@ define(function(require) {
             }
             color = color || 'transparent';
 
-            var colorEl = '<span style="display:inline-block;margin-right:5px;'
-                + 'border-radius:10px;width:9px;height:9px;background-color:' + encodeHTML(color) + '"></span>';
+            var colorEl = formatUtil.getTooltipMarker(color);
 
             var seriesName = this.name;
             // FIXME
@@ -262,14 +272,16 @@ define(function(require) {
                 // Not show '-'
                 seriesName = '';
             }
+            seriesName = seriesName
+                ? encodeHTML(seriesName) + (!multipleSeries ? '<br/>' : ': ')
+                : '';
             return !multipleSeries
-                ? ((seriesName && encodeHTML(seriesName) + '<br />') + colorEl
+                ? seriesName + colorEl
                     + (name
-                        ? encodeHTML(name) + ' : ' + formattedValue
+                        ? encodeHTML(name) + ': ' + formattedValue
                         : formattedValue
                     )
-                  )
-                : (colorEl + encodeHTML(this.name) + ' : ' + formattedValue);
+                : colorEl + seriesName + formattedValue;
         },
 
         /**

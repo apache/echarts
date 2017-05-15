@@ -7,10 +7,6 @@ define(function(require) {
     var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
     var zrUtil = require('zrender/core/util');
 
-    function getItemValue(item) {
-        return item.value == null ? item : item.value;
-    }
-
     var seriesModelMixin = {
 
         /**
@@ -52,52 +48,36 @@ define(function(require) {
                 option.layout = option.layout || 'horizontal';
             }
 
-            this._baseAxisDim = option.layout === 'horizontal' ? 'x' : 'y';
-
+            var coordDims = ['x', 'y'];
+            var baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
+            var baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
+            var otherAxisDim = coordDims[1 - baseAxisDimIndex];
             var data = option.data;
-            var dimensions = this.dimensions = ['base'].concat(this.valueDimensions);
-            completeDimensions(dimensions, data);
 
-            var list = new List(dimensions, this);
-            list.initData(data, categories ? categories.slice() : null, function (dataItem, dimName, idx, dimIdx) {
-                var value = getItemValue(dataItem);
-                return addOrdinal ? (dimName === 'base' ? idx : value[dimIdx - 1]) : value[dimIdx];
+            addOrdinal && zrUtil.each(data, function (item, index) {
+                zrUtil.isArray(item) && item.unshift(index);
             });
 
+            var dimensions = [{
+                name: baseAxisDim,
+                otherDims: {
+                    tooltip: false
+                },
+                dimsDef: ['base']
+            }, {
+                name: otherAxisDim,
+                dimsDef: this.defaultValueDimensions.slice()
+            }];
+
+            dimensions = completeDimensions(dimensions, data, {
+                encodeDef: this.get('encode'),
+                dimsDef: this.get('dimensions')
+            });
+
+            var list = new List(dimensions, this);
+            list.initData(data, categories ? categories.slice() : null);
+
             return list;
-        },
-
-        /**
-         * Used by Gird.
-         * @param {string} axisDim 'x' or 'y'
-         * @return {Array.<string>} dimensions on the axis.
-         */
-        coordDimToDataDim: function (axisDim) {
-            var dims = this.valueDimensions.slice();
-            var baseDim = ['base'];
-            var map = {
-                horizontal: {x: baseDim, y: dims},
-                vertical: {x: dims, y: baseDim}
-            };
-            return map[this.get('layout')][axisDim];
-        },
-
-        /**
-         * @override
-         * @param {string|number} dataDim
-         * @return {string} coord dimension
-         */
-        dataDimToCoordDim: function (dataDim) {
-            var dim;
-
-            zrUtil.each(['x', 'y'], function (coordDim, index) {
-                var dataDims = this.coordDimToDataDim(coordDim);
-                if (zrUtil.indexOf(dataDims, dataDim) >= 0) {
-                    dim = coordDim;
-                }
-            }, this);
-
-            return dim;
         },
 
         /**
@@ -108,6 +88,7 @@ define(function(require) {
             var dim = this._baseAxisDim;
             return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
         }
+
     };
 
     var viewMixin = {

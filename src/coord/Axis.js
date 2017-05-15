@@ -3,6 +3,7 @@ define(function (require) {
     var numberUtil = require('../util/number');
     var linearMap = numberUtil.linearMap;
     var zrUtil = require('zrender/core/util');
+    var axisHelper = require('./axisHelper');
 
     function fixExtentWithBands(extent, nTick) {
         var size = extent[1] - extent[0];
@@ -47,6 +48,12 @@ define(function (require) {
          * @type {boolean}
          */
         this.onBand = false;
+
+        /**
+         * @private
+         * @type {number}
+         */
+        this._labelInterval;
     };
 
     Axis.prototype = {
@@ -79,8 +86,7 @@ define(function (require) {
          * @return {Array.<number>}
          */
         getExtent: function () {
-            var ret = this._extent.slice();
-            return ret;
+            return this._extent.slice();
         },
 
         /**
@@ -224,6 +230,32 @@ define(function (require) {
             var size = Math.abs(axisExtent[1] - axisExtent[0]);
 
             return Math.abs(size) / len;
+        },
+
+        /**
+         * Get interval of the axis label.
+         * @return {number}
+         */
+        getLabelInterval: function () {
+            var labelInterval = this._labelInterval;
+            if (!labelInterval) {
+                var axisModel = this.model;
+                var labelModel = axisModel.getModel('axisLabel');
+                var interval = labelModel.get('interval');
+                if (!(this.type === 'category' && interval === 'auto')) {
+                    labelInterval = interval === 'auto' ? 0 : interval;
+                }
+                else if (this.isHorizontal){
+                    labelInterval = axisHelper.getAxisLabelInterval(
+                        zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
+                        axisModel.getFormattedLabels(),
+                        labelModel.getModel('textStyle').getFont(),
+                        this.isHorizontal()
+                    );
+                }
+                this._labelInterval = labelInterval;
+            }
+            return labelInterval;
         }
 
     };

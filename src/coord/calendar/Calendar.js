@@ -271,16 +271,12 @@ define(function (require) {
         },
 
         /**
-         * @override
-         * @implements
-         * see {module:echarts/CoodinateSystem}
+         * @inheritDoc
          */
         convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
 
         /**
-         * @override
-         * @implements
-         * see {module:echarts/CoodinateSystem}
+         * @inheritDoc
          */
         convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
 

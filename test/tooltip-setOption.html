@@ -1,0 +1,115 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="lib/testHelper.js"></script>
+        <script src="tooltipTestHelper.js"></script>
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+        <h1>dynamic data update tooltip content and keep show</h1>
+        <div><a target="_blank" href="dynamicData.html">dynamicData.html</a></div>
+        <div><a target="_blank" href="dynamicData2.html">dynamicData2.html</a></div>
+        <div><a target="_blank" href="dynamicData3.html">dynamicData3.html</a></div>
+        <h1>triggerOn click setOption when trigger axis (keep show)</h1>
+        <div class="chart" id="click-setOption1"></div>
+        <h1>triggerOn click setOption when trigger item (keep show)</h1>
+        <div class="chart" id="click-setOption2"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        triggerOn: 'click',
+                        enterable: true,
+                        axisPointer: {
+                            type: 'cross'
+                        },
+                        formatter: function () {
+                            return '<button onclick="console.log(\'click\');window.ecClickSetOptionAxisChart.setOption({tooltip: {}});">click me</button>';
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'click show tip',
+                        tooltip: {
+                            show: true
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                var chart = createChart('click-setOption1', echarts, option, baseTop);
+                window.ecClickSetOptionAxisChart = chart;
+
+                chart.on('showTip', function (params) {
+                    console.log('asdf', params);
+                    chart.setOption({
+                        // tooltip: {}
+                    });
+                });
+            })
+        </script>
+
+
+
+
+    </body>
+</html>
