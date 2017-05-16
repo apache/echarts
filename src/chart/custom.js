@@ -116,14 +116,43 @@ define(function (require) {
 
     function createEl(elOption) {
         var graphicType = elOption.type;
+        var el;
 
-        var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
+        if (graphicType === 'path') {
+            var shape = elOption.shape;
+            el = graphicUtil.makePath(
+                shape.pathData,
+                null,
+                {
+                    x: shape.x || 0,
+                    y: shape.y || 0,
+                    width: shape.width || 0,
+                    height: shape.height || 0
+                },
+                'center'
+            );
+            el.__customPathData = elOption.pathData;
+        }
+        else if (graphicType === 'image') {
+            el = new graphicUtil.Image({
+            });
+            el.__customImagePath = elOption.style.image;
+        }
+        else if (graphicType === 'text') {
+            el = new graphicUtil.Text({
+            });
+            el.__customText = elOption.style.text;
+        }
+        else {
+            var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
 
-        if (__DEV__) {
-            zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
+            if (__DEV__) {
+                zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
+            }
+
+            el = new Clz();
         }
 
-        var el = new Clz();
         el.__customGraphicType = graphicType;
 
         return el;
@@ -131,6 +160,7 @@ define(function (require) {
 
     function updateEl(el, dataIndex, elOption, animatableModel, data, isInit) {
         var targetProps = {};
+        var elOptionStyle = elOption.style || {};
 
         elOption.shape && (targetProps.shape = zrUtil.clone(elOption.shape));
         elOption.position && (targetProps.position = elOption.position.slice());
@@ -138,15 +168,21 @@ define(function (require) {
         elOption.origin && (targetProps.origin = elOption.origin.slice());
         elOption.rotation && (targetProps.rotation = elOption.rotation);
 
-        if (isInit) {
-            el.attr(targetProps);
+        if (el.type === 'image' && elOption.style) {
+            var targetStyle = targetProps.style = {};
+            zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
+                prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
+            });
         }
-        else {
-            graphicUtil.updateProps(el, targetProps, animatableModel, dataIndex);
+
+        if (el.type === 'text' && elOption.style) {
+            var targetStyle = targetProps.style = {};
+            zrUtil.each(['x', 'y'], function (prop) {
+                prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
+            });
         }
 
         if (el.type !== 'group') {
-            var elOptionStyle = elOption.style || {};
             el.useStyle(elOptionStyle);
 
             // Init animation.
@@ -158,11 +194,24 @@ define(function (require) {
             }
         }
 
-        el.type === 'image' && el.attr('image', elOption.image);
+        if (isInit) {
+            el.attr(targetProps);
+        }
+        else {
+            graphicUtil.updateProps(el, targetProps, animatableModel, dataIndex);
+        }
+
         // z2 must not be null/undefined, otherwise sort error may occur.
         el.attr({z2: elOption.z2 || 0, silent: elOption.silent});
 
         el.styleEmphasis !== false && graphicUtil.setHoverStyle(el, el.styleEmphasis);
+    }
+
+    function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, isInit) {
+        if (elOptionStyle[prop] != null && !isInit) {
+            targetStyle[prop] = elOptionStyle[prop];
+            elOptionStyle[prop] = oldElStyle[prop];
+        }
     }
 
     function makeRenderItem(customSeries, data, ecModel, api) {
@@ -186,7 +235,8 @@ define(function (require) {
             styleEmphasis: styleEmphasis,
             visual: visual,
             barLayout: barLayout,
-            currentSeriesIndices: currentSeriesIndices
+            currentSeriesIndices: currentSeriesIndices,
+            font: font
         }, prepareResult.api);
 
         var userParams = {
@@ -326,6 +376,19 @@ define(function (require) {
         function currentSeriesIndices() {
             return ecModel.getCurrentSeriesIndices();
         }
+
+        /**
+         * @public
+         * @param {Object} opt
+         * @param {string} [opt.fontStyle]
+         * @param {number} [opt.fontWeight]
+         * @param {number} [opt.fontSize]
+         * @param {string} [opt.fontFamily]
+         * @return {string} font string
+         */
+        function font(opt) {
+            return graphicUtil.getFont(opt, ecModel);
+        }
     }
 
     function wrapEncodeDef(data) {
@@ -347,13 +410,19 @@ define(function (require) {
     }
 
     function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
-        if (el && elOption.type !== el.__customGraphicType) {
+        var elOptionType = elOption.type;
+        if (el
+            && elOptionType !== el.__customGraphicType
+            && (elOptionType !== 'path' || elOption.pathData !== el.__customPathData)
+            && (elOptionType !== 'image' || elOption.style.image !== el.__customImagePath)
+            && (elOptionType !== 'text' || elOption.style.text !== el.__customText)
+        ) {
             group.remove(el);
             el = null;
         }
 
         // `elOption.type` is undefined when `renderItem` returns nothing.
-        if (elOption.type == null) {
+        if (elOptionType == null) {
             return;
         }
 
@@ -361,7 +430,7 @@ define(function (require) {
         !el && (el = createEl(elOption));
         updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
 
-        elOption.type === 'group' && zrUtil.each(elOption.children, function (childOption, index) {
+        elOptionType === 'group' && zrUtil.each(elOption.children, function (childOption, index) {
             doCreateOrUpdate(el.childAt(index), dataIndex, childOption, animatableModel, el, data);
         });
 
