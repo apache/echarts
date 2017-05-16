@@ -514,6 +514,47 @@ describe('completeDimensions', function () {
             ]
         );
         doTest(
+            ['x', 'y', 'value'], data,
+            {dimsDef: ['挨克思', null, {type: 'ordinal'}]}, // no name but only type
+            [
+                {
+                    'otherDims': {},
+                    'tooltipName': '挨克思',
+                    'name': '挨克思',
+                    'type': 'ordinal',
+                    'coordDim': 'x',
+                    'coordDimIndex': 0
+                },
+                {
+                    'otherDims': {},
+                    'coordDim': 'y',
+                    'coordDimIndex': 0,
+                    'name': 'y'
+                },
+                {
+                    'otherDims': {},
+                    'name': 'value',
+                    'coordDim': 'value',
+                    'type': 'ordinal',
+                    'coordDimIndex': 0
+                },
+                {
+                    'otherDims': {},
+                    'coordDim': 'value0',
+                    'coordDimIndex': 0,
+                    'isExtraCoord': true,
+                    'name': 'value0'
+                },
+                {
+                    'otherDims': {},
+                    'coordDim': 'value1',
+                    'coordDimIndex': 0,
+                    'isExtraCoord': true,
+                    'name': 'value1'
+                }
+            ]
+        );
+        doTest(
             [{name: 'time', type: 'time', stackable: false}, 'value'], data,
             {dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}]},
             [

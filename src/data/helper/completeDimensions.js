@@ -79,9 +79,9 @@ define(function (require) {
                 // will be set, and dimension will be diplayed vertically in
                 // tooltip by default.
                 resultItem.name = resultItem.tooltipName = userDimName;
-                dimDefItem.type != null && (resultItem.type = dimDefItem.type);
                 dataDimNameMap.set(userDimName, i);
             }
+            dimDefItem.type != null && (resultItem.type = dimDefItem.type);
         }
 
         // Set `coordDim` and `coordDimIndex` by `encodeDef` and normalize `encodeDef`.
@@ -209,6 +209,7 @@ define(function (require) {
             }
 
             var value = value[dimIndex];
+            // Consider usage convenience, '1', '2' will be treated as "number".
             if (value != null && isFinite(value)) {
                 return false;
             }
