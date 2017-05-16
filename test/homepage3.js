@@ -161,7 +161,9 @@ function renderHomepage3Demo(echarts) {
                         show: false
                     },
                     shadowStyle: {
-                        color: bgAreaColor
+                        color: '#eee'
+                        // color: bgAreaColor
+                        // color: 'rgba(221,69,65,0.15)'
                     },
                     z: -100
                 },
@@ -442,6 +444,9 @@ function renderHomepage3Demo(echarts) {
         xAxis: getXAxis({
             axisLabel: {
                 textStyle: mobileXAxisTextStyle
+            },
+            axisPointer: {
+                show: true
             }
         }, {
             axisLabel: {
