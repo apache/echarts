@@ -12,7 +12,7 @@ function renderHomepage3Demo(echarts) {
     var bgAreaColor = '#e4e4e4';
     var bgAreaColorTooltip = '#aaa';
 
-    var categoryData = ['03-01','03-02','03-03','03-04','03-05','03-06','03-07','03-08','03-09','03-10','03-11','03-12','03-13','03-14','03-15','03-16','03-17','03-18','03-19','03-20','03-21','03-22','03-23','03-24','03-25','03-26','03-27','03-28','03-29','03-30','03-31','04-01','04-02','04-03','04-04','04-05','04-06','04-07','04-08','04-09','04-10','04-11','04-12','04-13','04-14','04-15','04-16','04-17','04-18','04-19','04-20','04-21','04-22','04-23','04-24','04-25','04-26','04-27','04-28','04-29','04-30','05-01','05-02','05-03','05-04','05-05','05-06','05-07','05-08','05-09','05-10','05-11','05-12','05-13','05-14','05-15']; // jshint ignore:line
+    var categoryData = ['03/01','03/02','03/03','03/04','03/05','03/06','03/07','03/08','03/09','03/10','03/11','03/12','03/13','03/14','03/15','03/16','03/17','03/18','03/19','03/20','03/21','03/22','03/23','03/24','03/25','03/26','03/27','03/28','03/29','03/30','03/31','04/01','04/02','04/03','04/04','04/05','04/06','04/07','04/08','04/09','04/10','04/11','04/12','04/13','04/14','04/15','04/16','04/17','04/18','04/19','04/20','04/21','04/22','04/23','04/24','04/25','04/26','04/27','04/28','04/29','04/30','05/01','05/02','05/03','05/04','05/05','05/06','05/07','05/08','05/09','05/10','05/11','05/12','05/13','05/14','05/15']; // jshint ignore:line
     var series0Data = [23,32.65,61.06,47.84,54.2,65.96,41.47,48.16,27.59,65.96,52.24,37.22,44.73,53.22,60.08,68.24,58.29,74.78,62.2,71.67,66.78,71.18,46.47,56.39,34.02,47.41,47.11,25.67,28.94,34.73,40.29,46.86,52.96,64.82,51.63,72.33,61.39,66.94,60.57,51.27,47.18,56.49,50.12,52.57,42.45,47.18,34.45,38.69,25.63,35.1,31.51,40.82,30.69,34.45,41.31,46.69,48.82,41.31,52.24,55.51,47.51,32.65,37.71,26.78,16.65,21.06,17.31,26.61,32.98,45.06,41.63,53.39,63.67,58.94,43.92,50.29]; // jshint ignore:line
     var series1Data = [0.48,0.54,0.62,0.75,1.05,1.33,1.44,1.38,1.16,0.97,0.77,0.64,0.61,0.67,0.82,1.03,1.25,1.39,1.46,1.41,1.28,1.05,0.80,0.66,0.64,0.72,0.94,1.22,1.38,1.43,1.33,1.1,0.85,0.7,0.73,0.9,1.13,1.26,1.33,1.3,1.18,0.86,0.73,0.69,0.75,0.94,1.26,1.4,1.44,1.45,1.32,1.02,0.72,0.56,0.51,0.59,0.69,0.91,1.16,1.33,1.4,1.38,1.26,1.07,0.74,0.61,0.54,0.58,0.76,1.1,1.3,1.35,1.3,0.98,0.77,0.63]; // jshint ignore:line
     var series2Data = [1.63,1.61,1.58,1.54,1.5,1.47,1.47,1.5,1.57,1.67,1.74,1.83,1.91,1.96,1.98,1.94,1.84,1.68,1.55,1.43,1.32,1.27,1.26,1.31,1.46,1.59,1.67,1.68,1.62,1.56,1.52,1.52,1.64,1.89,2.2,2.39,2.47,2.46,2.37,2.24,2.06,1.92,1.87,1.86,1.92,2.06,2.18,2.24,2.22,2.09,1.93,1.82,1.78,1.79,1.81,1.85,1.94,2,2.01,1.96,1.9,1.76,1.65,1.56,1.49,1.45,1.44,1.46,1.54,1.59,1.57,1.54,1.54,1.62,1.74,1.85]; // jshint ignore:line
@@ -66,11 +66,17 @@ function renderHomepage3Demo(echarts) {
             yAxisIndex: 1,
             xAxisIndex: 1,
             smooth: true,
+            symbolSize: 10,
             showSymbol: false,
+            hoverAnimation: false,
             areaStyle: {
                 normal: {
                     color: mainColor,
-                    opacity: 1
+                    opacity: 1,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 4,
+                    shadowBlur: 30,
+                    shadowColor: '#555'
                 }
             },
             lineStyle: {
@@ -259,6 +265,21 @@ function renderHomepage3Demo(echarts) {
             fontFamily: globalFontFamily,
             fontSize: pcGlobalFontSize
         },
+        toolbox: {
+            show: false
+        },
+        brush: {
+            toolbox: ['lineX'],
+            outOfBrush: {
+                color: bgAreaColor
+            },
+            brushType: 'lineX',
+            brushStyle: {
+                borderWidth: 0,
+                color: 'rgba(0,0,0,0)'
+            },
+            xAxisIndex: 0
+        },
         tooltip: {
             trigger: 'axis',
             axisPointer: {
@@ -370,6 +391,21 @@ function renderHomepage3Demo(echarts) {
             fontFamily: globalFontFamily,
             fontSize: mobileGlobalFontSize
         },
+        toolbox: {
+            show: false
+        },
+        brush: {
+            toolbox: ['lineX'],
+            outOfBrush: {
+                color: bgAreaColor
+            },
+            brushType: 'lineX',
+            brushStyle: {
+                borderWidth: 0,
+                color: 'rgba(0,0,0,0)'
+            },
+            xAxisIndex: 0
+        },
         tooltip: {
             show: true,
             triggerOn: 'none',
@@ -412,10 +448,16 @@ function renderHomepage3Demo(echarts) {
                 textStyle: mobileXAxisTextStyle
             },
             axisPointer: {
-                value: '04-12',
+                value: '04/12',
                 handle: {
                     show: true,
-                    color: mainColor
+                    icon: 'image://./data/handle2.png',
+                    size: [36, 40],
+                    color: mainColor,
+                    shadowBlur: 12,
+                    shadowOffsetX: 2,
+                    shadowOffsetY: 4,
+                    shadowColor: '#aaa'
                 }
             }
         }),
@@ -463,6 +505,17 @@ function renderHomepage3Demo(echarts) {
     bindAction(myChart, myChart2, 'a');
     bindAction(myChart2, myChart, 'b');
 
+    myChart.dispatchAction({
+        type: 'brush',
+        areas: [
+            {
+                xAxisIndex: 0,
+                brushType: 'lineX',
+                coordRange: [17, 27]
+            }
+        ]
+    });
+
     function bindAction(fromChart, toChart, flag) {
         fromChart.on('updateAxisPointer', function (params) {
             toChart.dispatchAction(
@@ -478,6 +531,19 @@ function renderHomepage3Demo(echarts) {
                 dataZoomIndex: 0,
                 start: payload.start,
                 end: payload.end
+            }, true);
+        });
+
+        fromChart.on('brush', function (params) {
+            params.areas[0] && toChart.dispatchAction({
+                type: 'brush',
+                areas: [
+                    {
+                        xAxisIndex: 0,
+                        brushType: 'lineX',
+                        coordRange: params.areas[0].coordRange
+                    }
+                ]
             }, true);
         });
     }
