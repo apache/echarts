@@ -176,7 +176,7 @@ define(function(require) {
             var that = this;
             return data.mapArray(this.dimensions, function (radius, angle) {
                 return that.dataToPoint([radius, angle]);
-            }, this);
+            }, true);
         },
 
         /**

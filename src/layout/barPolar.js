@@ -1,4 +1,4 @@
-define(function(require) {
+define(function (require) {
 
     'use strict';
 
@@ -10,6 +10,10 @@ define(function(require) {
             || '__ec_stack_' + seriesModel.seriesIndex;
     }
 
+    function getAxisKey(axis) {
+        return axis.dim;
+    }
+
     /**
      * @param {string} seriesType
      * @param {module:echarts/model/Global} ecModel
@@ -19,7 +23,6 @@ define(function(require) {
 
         var width = api.getWidth();
         var height = api.getHeight();
-        var size = Math.min(width, height);
 
         var lastStackCoords = {};
         var lastStackCoordsOrigin = {};
@@ -36,8 +39,6 @@ define(function(require) {
         );
 
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-            console.log('');
-
             // Check series coordinate, do layout for polar only
             if (seriesModel.coordinateSystem.type !== 'polar') {
                 return;
@@ -45,12 +46,12 @@ define(function(require) {
 
             var data = seriesModel.getData();
             var polar = seriesModel.coordinateSystem;
+            var angleAxis = polar.getAngleAxis();
             var baseAxis = polar.getBaseAxis();
-            var axisExtent = baseAxis.getExtent();
 
             var stackId = getSeriesStackId(seriesModel);
-            var columnLayoutInfo =
-                barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+            var columnLayoutInfo
+                = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
             var columnOffset = columnLayoutInfo.offset;
             var columnWidth = columnLayoutInfo.width;
             var valueAxis = polar.getOtherAxis(baseAxis);
@@ -58,16 +59,15 @@ define(function(require) {
             var center = seriesModel.get('center') || ['50%', '50%'];
             var cx = parsePercent(center[0], width);
             var cy = parsePercent(center[1], height);
-            var radius = size;
 
             var barMinHeight = seriesModel.get('barMinHeight') || 0;
-            var bandWidth = baseAxis.type === 'category'
-                ? baseAxis.getBandWidth()
-                : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
+            var barMinAngle = seriesModel.get('barMinAngle') || 0;
 
             var valueAxisStart = valueAxis.getExtent()[0];
+            var valueMax = valueAxis.model.get('max');
+            var valueMin = valueAxis.model.get('min');
 
-            var coords = polar.dataToPoints(data, true);
+            var coords = polar.dataToPoints(data);
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
             lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
@@ -88,7 +88,7 @@ define(function(require) {
                 }
                 var sign = value >= 0 ? 'p' : 'n';
                 var coord = polar.pointToCoord(coords[idx]);
-                var lastCoord = lastStackCoords[stackId][idx][sign];
+
                 var lastCoordOrigin = lastStackCoordsOrigin[stackId][idx][sign];
                 var r0;
                 var r;
@@ -99,36 +99,48 @@ define(function(require) {
                     // radial sector
                     r0 = lastCoordOrigin;
                     r = coord[0];
-                    startAngle = (-coord[1] - bandWidth / 2
-                        + (bandWidth - columnWidth) / 2) * Math.PI / 180;
+                    startAngle = (-coord[1] + columnOffset) * Math.PI / 180;
                     endAngle = startAngle + columnWidth * Math.PI / 180;
 
-                    lastStackCoordsOrigin[stackId][idx][sign] += coord[0];
+                    if (Math.abs(r) < barMinHeight) {
+                        r = (r < 0 ? -1 : 1) * barMinHeight;
+                    }
+
+                    lastStackCoordsOrigin[stackId][idx][sign] = r;
                 }
                 else {
                     // tangential sector
-                    r0 = coord[0] - columnWidth / 2;
+                    r0 = coord[0] + columnOffset;
                     r = r0 + columnWidth;
 
-                    var extent = valueAxis.getExtent();
-                    var limit = function (x) {
-                        return Math.ceil(Math.floor(x, extent[1]), extent[0]);
-                    };
-                    startAngle = -limit(lastCoordOrigin) * Math.PI / 180;
-                    endAngle = -limit(coord[1]) * Math.PI / 180;
-                    console.log(lastCoordOrigin, coord[1]);
-
-                    if (startAngle === endAngle) {
-                        // check if need to add a round for endAngle
-                        if (value > 0) {
-                            endAngle += Math.PI * 2;
-                        }
-                        else if (value < 0) {
-                            endAngle -= Math.PI * 2;
-                        }
+                    // clamp data if min or max is defined for valueAxis
+                    if (valueMax != undefined) {
+                        value = Math.min(value, valueMax);
+                    }
+                    if (valueMin != undefined) {
+                        value = Math.max(value, valueMin);
                     }
 
-                    lastStackCoordsOrigin[stackId][idx][sign] = coord[1];
+                    var angle = angleAxis.dataToAngle(value);
+                    if (Math.abs(angle - lastCoordOrigin) < barMinAngle) {
+                        angle = lastCoordOrigin - (value < 0 ? -1 : 1)
+                            * barMinAngle;
+                    }
+
+                    startAngle = -lastCoordOrigin * Math.PI / 180;
+                    endAngle = -angle * Math.PI / 180;
+
+                    // if the previous stack is at the end of the ring,
+                    // add a round to differentiate it from origin
+                    var extent = angleAxis.getExtent();
+                    var stackCoord = angle;
+                    if (stackCoord === extent[0] && value > 0) {
+                        stackCoord = extent[1];
+                    }
+                    else if (stackCoord === extent[1] && value < 0) {
+                        stackCoord = extent[0];
+                    }
+                    lastStackCoordsOrigin[stackId][idx][sign] = stackCoord;
                 }
 
                 data.setItemLayout(idx, {
@@ -140,18 +152,10 @@ define(function(require) {
                     endAngle: endAngle
                 });
 
-            });
+            }, true);
 
         }, this);
 
-    }
-
-    function getSeriesStackId(seriesModel) {
-        return seriesModel.get('stack') || '__ec_stack_' + seriesModel.seriesIndex;
-    }
-
-    function getAxisKey(axis) {
-        return axis.dim;
     }
 
     /**
@@ -165,8 +169,6 @@ define(function(require) {
             var data = seriesModel.getData();
             var polar = seriesModel.coordinateSystem;
 
-            var radiusAxis = polar.getRadiusAxis();
-            var angleAxis = polar.getAngleAxis();
             var baseAxis = polar.getBaseAxis();
 
             var axisExtent = baseAxis.getExtent();
@@ -196,10 +198,12 @@ define(function(require) {
             };
 
             var barWidth = parsePercent(
-                seriesModel.get('barWidth'), bandWidth
+                seriesModel.get('barWidth'),
+                bandWidth
             );
             var barMaxWidth = parsePercent(
-                seriesModel.get('barMaxWidth'), bandWidth
+                seriesModel.get('barMaxWidth'),
+                bandWidth
             );
             var barGap = seriesModel.get('barGap');
             var barCategoryGap = seriesModel.get('barCategoryGap');

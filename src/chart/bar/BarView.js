@@ -164,7 +164,7 @@ define(function (require) {
             var sectorShape = sector.shape;
             var animateProperty = isRadial ? 'r' : 'endAngle';
             var animateTarget = {};
-            sectorShape[animateProperty] = 0;
+            sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             graphic[isUpdate ? 'updateProps' : 'initProps'](sector, {
                 shape: animateTarget
