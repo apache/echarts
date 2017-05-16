@@ -35,7 +35,7 @@ define(function (require) {
             return [{name: 'time', type: 'time'}];
         },
 
-        getHandledRangeInfo: function () {
+        getRangeInfo: function () {
             return this._rangeInfo;
         },
 

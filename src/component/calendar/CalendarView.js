@@ -64,7 +64,7 @@ define(function (require) {
             var coordSys = calendarModel.coordinateSystem;
 
             // range info
-            var rangeData = coordSys.getHandledRangeInfo();
+            var rangeData = coordSys.getRangeInfo();
             var orient = coordSys.getOrient();
 
             this._renderDayRect(calendarModel, rangeData, group);
