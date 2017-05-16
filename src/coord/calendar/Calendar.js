@@ -161,13 +161,14 @@ define(function (require) {
          * Convert a time data(time, value) item to (x, y) point.
          *
          * @override
-         * @param  {Array} data  data
+         * @param  {Array|number} data  data
          * @param  {boolean} noClip  out of range
          * @return {Array}       point
          */
         dataToPoint: function (data, noClip) {
+            zrUtil.isArray(data) && (data = data[0]);
 
-            var dayInfo = this.getDateInfo(data[0]);
+            var dayInfo = this.getDateInfo(data);
             var range = this._rangeInfo;
             var date = dayInfo.formatedDate;
 
