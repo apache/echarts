@@ -58,9 +58,13 @@ define(function(require) {
                     dataZoomInfos: {},
                     count: 0
                 };
-                record.controller = createController(api, dataZoomInfo, record);
+                record.controller = createController(api, record);
                 record.dispatchAction = zrUtil.curry(dispatchAction, api);
             }
+            record.controller.enable(
+                dataZoomInfo.zoomLock ? 'move' : true,
+                dataZoomInfo.keyBindings
+            );
 
             // Consider resize, area should be always updated.
             record.controller.setPointerChecker(dataZoomInfo.containsPoint);
@@ -131,9 +135,8 @@ define(function(require) {
         return zr[ATTR] || (zr[ATTR] = {});
     }
 
-    function createController(api, dataZoomInfo, newRecord) {
+    function createController(api, newRecord) {
         var controller = new RoamController(api.getZr());
-        controller.enable(dataZoomInfo.zoomLock ? 'move' : true, dataZoomInfo.keyBindings);
         controller.on('pan', curry(onPan, newRecord));
         controller.on('zoom', curry(onZoom, newRecord));
 
