@@ -57,7 +57,8 @@ define(function (require) {
                             dataZoomId: dataZoomModel.id,
                             throttleRate: dataZoomModel.get('throttle', true),
                             panGetRange: bind(this._onPan, this, coordInfo, coordSysName),
-                            zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName)
+                            zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName),
+                            zoomLock: dataZoomModel.option.zoomLock
                         }
                     );
                 }, this);

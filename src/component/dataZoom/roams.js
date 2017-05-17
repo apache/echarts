@@ -29,6 +29,7 @@ define(function(require) {
          * @param {number} dataZoomInfo.throttleRate
          * @param {Function} dataZoomInfo.panGetRange
          * @param {Function} dataZoomInfo.zoomGetRange
+         * @param {boolean} dataZoomInfo.zoomLock
          */
         register: function (api, dataZoomInfo) {
             var store = giveStore(api);
@@ -132,7 +133,7 @@ define(function(require) {
 
     function createController(api, dataZoomInfo, newRecord) {
         var controller = new RoamController(api.getZr());
-        controller.enable();
+        controller.enable(dataZoomInfo.zoomLock ? 'move' : true);
         controller.on('pan', curry(onPan, newRecord));
         controller.on('zoom', curry(onZoom, newRecord));
 
