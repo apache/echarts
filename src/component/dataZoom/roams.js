@@ -29,7 +29,8 @@ define(function(require) {
          * @param {number} dataZoomInfo.throttleRate
          * @param {Function} dataZoomInfo.panGetRange
          * @param {Function} dataZoomInfo.zoomGetRange
-         * @param {boolean} dataZoomInfo.zoomLock
+         * @param {boolean} [dataZoomInfo.zoomLock]
+         * @param {boolean} [dataZoomInfo.disabled]
          */
         register: function (api, dataZoomInfo) {
             var store = giveStore(api);
@@ -62,7 +63,7 @@ define(function(require) {
                 record.dispatchAction = zrUtil.curry(dispatchAction, api);
             }
             record.controller.enable(
-                dataZoomInfo.zoomLock ? 'move' : true,
+                dataZoomInfo.disabled ? false : dataZoomInfo.zoomLock ? 'move' : true,
                 dataZoomInfo.keyBindings
             );
 
