@@ -133,7 +133,7 @@ define(function(require) {
 
     function createController(api, dataZoomInfo, newRecord) {
         var controller = new RoamController(api.getZr());
-        controller.enable(dataZoomInfo.zoomLock ? 'move' : true);
+        controller.enable(dataZoomInfo.zoomLock ? 'move' : true, dataZoomInfo.keyBindings);
         controller.on('pan', curry(onPan, newRecord));
         controller.on('zoom', curry(onZoom, newRecord));
 

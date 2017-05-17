@@ -45,6 +45,7 @@ define(function (require) {
 
                 zrUtil.each(coordInfoList, function (coordInfo) {
                     var coordModel = coordInfo.model;
+                    var dataZoomOption = dataZoomModel.option;
 
                     roams.register(
                         api,
@@ -58,7 +59,11 @@ define(function (require) {
                             throttleRate: dataZoomModel.get('throttle', true),
                             panGetRange: bind(this._onPan, this, coordInfo, coordSysName),
                             zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName),
-                            zoomLock: dataZoomModel.option.zoomLock
+                            zoomLock: dataZoomOption.zoomLock,
+                            keyBindings: {
+                                zoomOnMouseWheel: dataZoomOption.zoomOnMouseWheel,
+                                moveOnMouseMove: dataZoomOption.moveOnMouseMove
+                            }
                         }
                     );
                 }, this);

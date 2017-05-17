@@ -27,6 +27,11 @@ define(function (require) {
          */
         this._zr = zr;
 
+        /**
+         * @type {Object}
+         */
+        this._keyBindings = {};
+
         // Avoid two roamController bind the same handler
         var bind = zrUtil.bind;
         var mousedownHandler = bind(mousedown, this);
@@ -54,10 +59,15 @@ define(function (require) {
          * @param  {boolean|string} [controlType=true] Specify the control type,
          *                          which can be null/undefined or true/false
          *                          or 'pan/move' or 'zoom'/'scale'
+         * @param {Object} [keyBindings]
+         * @param {Object} [keyBindings.zoomOnMouseWheel=true]
          */
-        this.enable = function (controlType) {
+        this.enable = function (controlType, keyBindings) {
+
             // Disable previous first
             this.disable();
+
+            this._keyBindings = zrUtil.extend({zoomOnMouseWheel: true}, keyBindings);
 
             if (controlType == null) {
                 controlType = true;
@@ -114,7 +124,7 @@ define(function (require) {
     }
 
     function mousemove(e) {
-        if (!this._dragging) {
+        if (!checkKeyBinding(this, 'moveOnMouseMove', e) || !this._dragging) {
             return;
         }
 
@@ -149,9 +159,10 @@ define(function (require) {
 
     function mousewheel(e) {
         // wheelDelta maybe -0 in chrome mac.
-        if (e.wheelDelta === 0) {
+        if (!checkKeyBinding(this, 'zoomOnMouseWheel', e) || e.wheelDelta === 0) {
             return;
         }
+
         // Convenience:
         // Mac and VM Windows on Mac: scroll up: zoom out.
         // Windows: scroll up: zoom in.
@@ -176,6 +187,12 @@ define(function (require) {
 
             this.trigger('zoom', zoomDelta, zoomX, zoomY);
         }
+    }
+
+    function checkKeyBinding(roamController, prop, e) {
+        var setting = roamController._keyBindings[prop];
+        return setting
+            && (!zrUtil.isString(setting) || e.event[setting + 'Key']);
     }
 
     return RoamController;
