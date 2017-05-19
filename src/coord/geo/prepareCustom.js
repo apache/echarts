@@ -3,6 +3,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
 
     function dataToCoordSize(dataSize, dataItem) {
+        dataItem = dataItem || [0, 0];
         return zrUtil.map([0, 1], function (dimIdx) {
             var val = dataItem[dimIdx];
             var halfSize = dataSize[dimIdx] / 2;
