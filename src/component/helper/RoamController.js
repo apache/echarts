@@ -61,13 +61,17 @@ define(function (require) {
          *                          or 'pan/move' or 'zoom'/'scale'
          * @param {Object} [keyBindings]
          * @param {Object} [keyBindings.zoomOnMouseWheel=true]
+         * @param {Object} [keyBindings.moveOnMouseMove=true]
          */
         this.enable = function (controlType, keyBindings) {
 
             // Disable previous first
             this.disable();
 
-            this._keyBindings = zrUtil.extend({zoomOnMouseWheel: true}, keyBindings);
+            this._keyBindings = zrUtil.extend({
+                zoomOnMouseWheel: true,
+                moveOnMouseMove: true
+            }, keyBindings);
 
             if (controlType == null) {
                 controlType = true;
