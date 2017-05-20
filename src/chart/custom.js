@@ -245,7 +245,7 @@ define(function (require) {
             seriesName: customSeries.name,
             seriesIndex: customSeries.seriesIndex,
             coordSys: prepareResult.coordSys,
-            dataLength: data.count(),
+            dataInsideLength: data.count(),
             encode: wrapEncodeDef(customSeries.getData())
         };
 
