@@ -30,7 +30,7 @@ define(function (require) {
         /**
          * @type {Object}
          */
-        this._keyBindings = {};
+        this._opt = {};
 
         // Avoid two roamController bind the same handler
         var bind = zrUtil.bind;
@@ -59,19 +59,21 @@ define(function (require) {
          * @param  {boolean|string} [controlType=true] Specify the control type,
          *                          which can be null/undefined or true/false
          *                          or 'pan/move' or 'zoom'/'scale'
-         * @param {Object} [keyBindings]
-         * @param {Object} [keyBindings.zoomOnMouseWheel=true]
-         * @param {Object} [keyBindings.moveOnMouseMove=true]
+         * @param {Object} [opt]
+         * @param {Object} [opt.zoomOnMouseWheel=true]
+         * @param {Object} [opt.moveOnMouseMove=true]
+         * @param {Object} [opt.preventDefaultMouseMove=true] When pan.
          */
-        this.enable = function (controlType, keyBindings) {
+        this.enable = function (controlType, opt) {
 
             // Disable previous first
             this.disable();
 
-            this._keyBindings = zrUtil.extend({
+            this._opt = zrUtil.defaults(zrUtil.clone(opt), {
                 zoomOnMouseWheel: true,
-                moveOnMouseMove: true
-            }, keyBindings);
+                moveOnMouseMove: true,
+                preventDefaultMouseMove: true
+            });
 
             if (controlType == null) {
                 controlType = true;
@@ -132,29 +134,29 @@ define(function (require) {
             return;
         }
 
-        eventTool.stop(e.event);
-
-        if (e.gestureEvent !== 'pinch') {
-
-            if (interactionMutex.isTaken(this._zr, 'globalPan')) {
-                return;
-            }
-
-            var x = e.offsetX;
-            var y = e.offsetY;
-
-            var oldX = this._x;
-            var oldY = this._y;
-
-            var dx = x - oldX;
-            var dy = y - oldY;
-
-            this._x = x;
-            this._y = y;
-
-            eventTool.stop(e.event);
-            this.trigger('pan', dx, dy, oldX, oldY, x, y);
+        if (e.gestureEvent === 'pinch') {
+            return;
         }
+
+        if (interactionMutex.isTaken(this._zr, 'globalPan')) {
+            return;
+        }
+
+        var x = e.offsetX;
+        var y = e.offsetY;
+
+        var oldX = this._x;
+        var oldY = this._y;
+
+        var dx = x - oldX;
+        var dy = y - oldY;
+
+        this._x = x;
+        this._y = y;
+
+        this._opt.preventDefaultMouseMove && eventTool.stop(e.event);
+
+        this.trigger('pan', dx, dy, oldX, oldY, x, y);
     }
 
     function mouseup(e) {
@@ -185,7 +187,7 @@ define(function (require) {
     function zoom(e, zoomDelta, zoomX, zoomY) {
         if (this.pointerChecker && this.pointerChecker(e, zoomX, zoomY)) {
             // When mouse is out of roamController rect,
-            // default befavoius should be be disabled, otherwise
+            // default befavoius should not be be disabled, otherwise
             // page sliding is disabled, contrary to expectation.
             eventTool.stop(e.event);
 
@@ -194,7 +196,7 @@ define(function (require) {
     }
 
     function checkKeyBinding(roamController, prop, e) {
-        var setting = roamController._keyBindings[prop];
+        var setting = roamController._opt[prop];
         return setting
             && (!zrUtil.isString(setting) || e.event[setting + 'Key']);
     }

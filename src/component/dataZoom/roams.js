@@ -64,7 +64,7 @@ define(function(require) {
             }
             record.controller.enable(
                 dataZoomInfo.disabled ? false : dataZoomInfo.zoomLock ? 'move' : true,
-                dataZoomInfo.keyBindings
+                dataZoomInfo.roamControllerOpt
             );
 
             // Consider resize, area should be always updated.

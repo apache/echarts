@@ -61,9 +61,10 @@ define(function (require) {
                             zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName),
                             zoomLock: dataZoomOption.zoomLock,
                             disabled: dataZoomOption.disabled,
-                            keyBindings: {
+                            roamControllerOpt: {
                                 zoomOnMouseWheel: dataZoomOption.zoomOnMouseWheel,
-                                moveOnMouseMove: dataZoomOption.moveOnMouseMove
+                                moveOnMouseMove: dataZoomOption.moveOnMouseMove,
+                                preventDefaultMouseMove: dataZoomOption.preventDefaultMouseMove
                             }
                         }
                     );
