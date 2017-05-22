@@ -65,7 +65,7 @@ define(function (require) {
                     group.add(el);
 
                     updateStyle(el, data, dataIndex, itemModel, layout,
-                        seriesModel, isHorizontalOrRadial);
+                        seriesModel, isHorizontalOrRadial, coord.type === 'polar');
                 })
                 .update(function (newIndex, oldIndex) {
                     var el = oldData.getItemGraphicEl(oldIndex);
@@ -83,21 +83,24 @@ define(function (require) {
                     }
                     else {
                         el = createElement(coord, data, dataIndex, itemModel,
-                        layout, isHorizontalOrRadial, animationModel, true);
+                            layout, isHorizontalOrRadial, animationModel, true);
                     }
 
                     data.setItemGraphicEl(newIndex, el);
                     // Add back
                     group.add(el);
 
-                    // TODO: update different coord
                     updateStyle(el, data, newIndex, itemModel, layout,
-                        seriesModel, isHorizontalOrRadial);
+                        seriesModel, isHorizontalOrRadial, coord.type === 'polar');
                 })
                 .remove(function (dataIndex) {
                     var el = oldData.getItemGraphicEl(dataIndex);
-                    // TODO: remove sector
-                    el && removeRect(dataIndex, animationModel, el);
+                    if (coord.type === 'cartesian2d') {
+                        el && removeRect(dataIndex, animationModel, el);
+                    }
+                    else {
+                        el && removeSector(dataIndex, animationModel, el);
+                    }
                 })
                 .execute();
 
@@ -110,7 +113,12 @@ define(function (require) {
             if (ecModel.get('animation')) {
                 if (data) {
                     data.eachItemGraphicEl(function (el) {
-                        removeRect(el.dataIndex, ecModel, el);
+                        if (el.shape.startAngle) {
+                            removeSector(el.dataIndex, ecModel, el);
+                        }
+                        else {
+                            removeRect(el.dataIndex, ecModel, el);
+                        }
                     });
                 }
             }
@@ -157,7 +165,14 @@ define(function (require) {
     function createSector(data, dataIndex, itemModel, layout, isRadial,
         animationModel, isUpdate)
     {
-        var sector = new graphic.Sector({ shape: zrUtil.extend({}, layout) });
+        var sector = new graphic.Sector({
+            shape: zrUtil.extend(
+                {
+                    isRadial: isRadial
+                },
+                layout
+            )
+        });
 
         // Animation
         if (animationModel) {
@@ -182,6 +197,17 @@ define(function (require) {
                 width: 0
             }
         }, animationModel, dataIndex, function () {
+            el.parent && el.parent.remove(el);
+        });
+    }
+
+    function removeSector(dataIndex, animationModel, el) {
+        // Not show text when animating
+        el.style.text = '';
+        var shape = {
+            r: el.shape.r0
+        };
+        graphic.updateProps(el, { shape }, animationModel, dataIndex, function () {
             el.parent && el.parent.remove(el);
         });
     }
@@ -212,11 +238,6 @@ define(function (require) {
 
     function getSectorItemLayout(data, dataIndex, itemModel) {
         var layout = data.getItemLayout(dataIndex);
-        // var fixedLineWidth = getLineWidth(itemModel, layout);
-
-        // fix layout with lineWidth
-        // var signX = layout.width > 0 ? 1 : -1;
-        // var signY = layout.height > 0 ? 1 : -1;
         return {
             cx: layout.cx,
             cy: layout.cy,
@@ -227,13 +248,15 @@ define(function (require) {
         };
     }
 
-    function updateStyle(el, data, dataIndex, itemModel, layout, seriesModel, isHorizontal) {
+    function updateStyle(el, data, dataIndex, itemModel, layout, seriesModel,
+        isHorizontal, isPolar
+    ) {
         var color = data.getItemVisual(dataIndex, 'color');
         var opacity = data.getItemVisual(dataIndex, 'opacity');
         var itemStyleModel = itemModel.getModel('itemStyle.normal');
         var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
 
-        if (isHorizontal) {
+        if (!isPolar && isHorizontal) {
             el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
         }
 
@@ -249,10 +272,12 @@ define(function (require) {
             ? (layout.height > 0 ? 'bottom' : 'top')
             : (layout.width > 0 ? 'left' : 'right');
 
-        helper.setLabel(
-            el.style, hoverStyle, itemModel, color,
-            seriesModel, dataIndex, labelPositionOutside
-        );
+        if (!isPolar) {
+            helper.setLabel(
+                el.style, hoverStyle, itemModel, color,
+                seriesModel, dataIndex, labelPositionOutside
+            );
+        }
 
         graphic.setHoverStyle(el, hoverStyle);
     }

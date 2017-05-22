@@ -61,6 +61,7 @@ define(function (require) {
             var cy = parsePercent(center[1], height);
 
             var barMinHeight = seriesModel.get('barMinHeight') || 0;
+            console.log('barMinHeight', barMinHeight)
             var barMinAngle = seriesModel.get('barMinAngle') || 0;
 
             var valueAxisStart = valueAxis.getExtent()[0];
@@ -96,6 +97,12 @@ define(function (require) {
                 var endAngle;
 
                 if (valueAxis.dim === 'radius') {
+                    // value of barMinHeight
+                    if (barMinHeight) {
+                        // var barMinValue = polar
+                        //TODO
+                    }
+
                     // radial sector
                     r0 = lastCoordOrigin;
                     r = coord[0];
@@ -103,7 +110,7 @@ define(function (require) {
                     endAngle = startAngle + columnWidth * Math.PI / 180;
 
                     if (Math.abs(r) < barMinHeight) {
-                        r = (r < 0 ? -1 : 1) * barMinHeight;
+                        r = r0 + (r < 0 ? -1 : 1) * barMinHeight;
                     }
 
                     lastStackCoordsOrigin[stackId][idx][sign] = r;
