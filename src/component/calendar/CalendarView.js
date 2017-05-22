@@ -64,7 +64,7 @@ define(function (require) {
             var coordSys = calendarModel.coordinateSystem;
 
             // range info
-            var rangeData = coordSys.getHandledRangeInfo();
+            var rangeData = coordSys.getRangeInfo();
             var orient = coordSys.getOrient();
 
             this._renderDayRect(calendarModel, rangeData, group);
@@ -91,7 +91,7 @@ define(function (require) {
                 i = coordSys.getNextNDay(i, 1).time
             ) {
 
-                var point = coordSys.dataToRect([i], true).tl;
+                var point = coordSys.dataToRect([i], false).tl;
 
                 // every rect
                 var rect = new graphic.Rect({
@@ -146,7 +146,7 @@ define(function (require) {
             function addPoints(date) {
 
                 self._firstDayOfMonth.push(coordSys.getDateInfo(date));
-                self._firstDayPoints.push(coordSys.dataToRect([date], true).tl);
+                self._firstDayPoints.push(coordSys.dataToRect([date], false).tl);
 
                 var points = self._getLinePointsOfOneWeek(calendarModel, date, orient);
 
@@ -202,7 +202,7 @@ define(function (require) {
             for (var i = 0; i < 7; i++) {
 
                 var tmpD = coordSys.getNextNDay(date.time, i);
-                var point = coordSys.dataToRect([tmpD.time], true);
+                var point = coordSys.dataToRect([tmpD.time], false);
 
                 points[2 * tmpD.day] = point.tl;
                 points[2 * tmpD.day + 1] = point[orient === 'horizontal' ? 'bl' : 'tr'];
@@ -480,7 +480,7 @@ define(function (require) {
             for (var i = 0; i < 7; i++) {
 
                 var tmpD = coordSys.getNextNDay(start, i);
-                var point = coordSys.dataToRect([tmpD.time], true).center;
+                var point = coordSys.dataToRect([tmpD.time], false).center;
                 var day = i;
                 day = Math.abs((i + firstDayOfWeek) % 7);
                 var weekText = new graphic.Text({

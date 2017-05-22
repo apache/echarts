@@ -45,6 +45,7 @@ define(function (require) {
 
                 zrUtil.each(coordInfoList, function (coordInfo) {
                     var coordModel = coordInfo.model;
+                    var dataZoomOption = dataZoomModel.option;
 
                     roams.register(
                         api,
@@ -57,7 +58,14 @@ define(function (require) {
                             dataZoomId: dataZoomModel.id,
                             throttleRate: dataZoomModel.get('throttle', true),
                             panGetRange: bind(this._onPan, this, coordInfo, coordSysName),
-                            zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName)
+                            zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName),
+                            zoomLock: dataZoomOption.zoomLock,
+                            disabled: dataZoomOption.disabled,
+                            roamControllerOpt: {
+                                zoomOnMouseWheel: dataZoomOption.zoomOnMouseWheel,
+                                moveOnMouseMove: dataZoomOption.moveOnMouseMove,
+                                preventDefaultMouseMove: dataZoomOption.preventDefaultMouseMove
+                            }
                         }
                     );
                 }, this);
@@ -78,10 +86,6 @@ define(function (require) {
          * @private
          */
         _onPan: function (coordInfo, coordSysName, controller, dx, dy, oldX, oldY, newX, newY) {
-            if (this.dataZoomModel.option.disabled) {
-                return this._range;
-            }
-
             var range = this._range.slice();
 
             // Calculate transform by the first axis.
@@ -107,12 +111,6 @@ define(function (require) {
          * @private
          */
         _onZoom: function (coordInfo, coordSysName, controller, scale, mouseX, mouseY) {
-            var option = this.dataZoomModel.option;
-
-            if (option.disabled || option.zoomLock) {
-                return this._range;
-            }
-
             var range = this._range.slice();
 
             // Calculate transform by the first axis.

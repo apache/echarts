@@ -709,7 +709,7 @@ define(function (require) {
         // which make sure that their initialization is after series.
         if (__DEV__) {
             if (!ecModel._seriesIndices) {
-                throw new Error('Series has not been initialized yet.');
+                throw new Error('Option should contains series.');
             }
         }
     }

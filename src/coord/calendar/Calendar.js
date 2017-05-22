@@ -35,7 +35,7 @@ define(function (require) {
             return [{name: 'time', type: 'time'}];
         },
 
-        getHandledRangeInfo: function () {
+        getRangeInfo: function () {
             return this._rangeInfo;
         },
 
@@ -161,18 +161,20 @@ define(function (require) {
          * Convert a time data(time, value) item to (x, y) point.
          *
          * @override
-         * @param  {Array} data  data
-         * @param  {boolean} noClip  out of range
-         * @return {Array}       point
+         * @param  {Array|number} data data
+         * @param  {boolean} [clamp=true] out of range
+         * @return {Array} point
          */
-        dataToPoint: function (data, noClip) {
+        dataToPoint: function (data, clamp) {
+            zrUtil.isArray(data) && (data = data[0]);
+            clamp == null && (clamp = true);
 
-            var dayInfo = this.getDateInfo(data[0]);
+            var dayInfo = this.getDateInfo(data);
             var range = this._rangeInfo;
             var date = dayInfo.formatedDate;
 
             // if not in range return [NaN, NaN]
-            if (!noClip && !(dayInfo.time >= range.start.time && dayInfo.time <= range.end.time)) {
+            if (clamp && !(dayInfo.time >= range.start.time && dayInfo.time <= range.end.time)) {
                 return [NaN, NaN];
             }
 
@@ -212,12 +214,11 @@ define(function (require) {
          * Convert a time date item to (x, y) four point.
          *
          * @param  {Array} data  date[0] is date
-         * @param  {boolean} noClip  out of range
+         * @param  {boolean} [clamp=true]  out of range
          * @return {Object}       point
          */
-        dataToRect: function (data, noClip) {
-
-            var point = this.dataToPoint(data, noClip);
+        dataToRect: function (data, clamp) {
+            var point = this.dataToPoint(data, clamp);
 
             return {
                 contentShape: {

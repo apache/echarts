@@ -410,6 +410,17 @@ define(function(require) {
         });
     };
 
+    graphic.getFont = function (opt, ecModel) {
+        var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
+        return [
+            // FIXME in node-canvas fontWeight is before fontStyle
+            opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',
+            opt.fontWeight || gTextStyleModel && gTextStyleModel.getShallow('fontWeight') || '',
+            (opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || 12) + 'px',
+            opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'
+        ].join(' ');
+    };
+
     function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) {
         if (typeof dataIndex === 'function') {
             cb = dataIndex;

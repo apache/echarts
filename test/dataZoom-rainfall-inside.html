@@ -5,21 +5,40 @@
         <script src="./esl.js"></script>
         <script src="./config.js"></script>
         <script src="./lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="reset.css" />
     </head>
     <body>
         <style>
-            html,
-            body,
-            #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
             }
         </style>
-        <div id="main"></div>
-        <script>
 
+        <h1>rainfall</h1>
+        <div class="chart" id="rainfall"></div>
+        <h1>zoom lock | Should not prevent default when mouse wheel.</h1>
+        <div class="chart" id="zoom-lock"></div>
+        <h1>zoomOnMouseWheel: 'shift', moveOnMouseMove: 'alt' | Should not prevent default when mouse wheel.</h1>
+        <div class="chart" id="zoom-shift"></div>
+
+
+
+
+
+
+
+
+
+        <script>
             require([
                 'data/rainfall.json',
                 'echarts',
@@ -33,28 +52,9 @@
                 'echarts/component/dataZoomInside'
             ], function (data, echarts) {
 
+                var chart = echarts.init(document.getElementById('rainfall'));
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
-
-                chart.showLoading({
-                    text : '正在读取数据中...'
-                });
-
-                var xAxisData = [];
-                var data1 = [];
-                var data2 = [];
-                var data3 = [];
-
-                for (var i = 0; i < 20; i++) {
-                    xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 2);
-                    data2.push(Math.random() * 2);
-                    data3.push(Math.random() * 2);
-                }
-
-                chart.setOption({
+                var option = {
                     tooltip: {
                         trigger: 'axis',
                     },
@@ -168,12 +168,205 @@
                             end: 40
                         }
                     ]
-                });
+                };
 
-                chart.hideLoading();
-
+                testHelper.createChart(echarts, 'rainfall', option);
             })
-
         </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'data/rainfall.json',
+                'echarts',
+                'zrender/vml/vml',
+                'echarts/chart/bar',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/grid',
+                'echarts/component/axis',
+                'echarts/component/dataZoom'
+            ], function (data, echarts) {
+
+                var chart = echarts.init(document.getElementById('zoom-lock'));
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    grid: [
+                        {
+                            show: true,
+                            borderWidth: 0
+                        }
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: true,
+                            axisLabel: {show: true},
+                            splitLine: {show: false},
+                            data: data.category,
+                            gridIndex: 0
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            boundaryGap: false,
+                            axisLabel: {
+                            },
+                            axisLine: {
+                                lineStyle: {
+                                    color: '#666'
+                                }
+                            },
+                            gridIndex: 0
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '降水量',
+                            type: 'line',
+                            data: data.rainfall,
+                            itemStyle: {
+                                normal: {
+                                     areaStyle: {}
+                                }
+                            },
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                        }
+                    ],
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            zoomLock: true,
+                            start: 30,
+                            end: 40
+                        },
+                        {
+                            type: 'slider',
+                            start: 30,
+                            end: 40
+                        },
+                        {
+                            type: 'slider',
+                            yAxisIndex: 0
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'zoom-lock', option);
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'data/rainfall.json',
+                'echarts',
+                'zrender/vml/vml',
+                'echarts/chart/bar',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/grid',
+                'echarts/component/axis',
+                'echarts/component/dataZoom'
+            ], function (data, echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    grid: [
+                        {
+                            show: true,
+                            borderWidth: 0
+                        }
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: true,
+                            axisLabel: {show: true},
+                            splitLine: {show: false},
+                            data: data.category,
+                            gridIndex: 0
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            boundaryGap: false,
+                            axisLabel: {
+                            },
+                            axisLine: {
+                                lineStyle: {
+                                    color: '#666'
+                                }
+                            },
+                            gridIndex: 0
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '降水量',
+                            type: 'line',
+                            data: data.rainfall,
+                            itemStyle: {
+                                normal: {
+                                     areaStyle: {}
+                                }
+                            },
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                        }
+                    ],
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            zoomOnMouseWheel: 'shift',
+                            moveOnMouseMove: 'alt',
+                            start: 30,
+                            end: 40
+                        },
+                        {
+                            type: 'slider',
+                            start: 30,
+                            end: 40
+                        },
+                        {
+                            type: 'slider',
+                            yAxisIndex: 0
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'zoom-shift', option);
+            })
+        </script>
+
+
+
+
+
+
+
     </body>
 </html>
