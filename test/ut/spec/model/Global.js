@@ -30,7 +30,7 @@ describe('modelAndOptionMapping', function() {
     function countModel(chart, type) {
         // FIXME
         // access private
-        return chart.getModel()._componentsMap[type].length;
+        return chart.getModel()._componentsMap.get(type).length;
     }
 
     function getChartView(chart, series) {

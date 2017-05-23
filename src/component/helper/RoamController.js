@@ -69,7 +69,7 @@ define(function (require) {
             // Disable previous first
             this.disable();
 
-            this._opt = zrUtil.defaults(zrUtil.clone(opt), {
+            this._opt = zrUtil.defaults(zrUtil.clone(opt) || {}, {
                 zoomOnMouseWheel: true,
                 moveOnMouseMove: true,
                 preventDefaultMouseMove: true
