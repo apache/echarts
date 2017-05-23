@@ -23,7 +23,6 @@
                 'echarts',
                 'echarts/chart/bar',
                 'echarts/component/polar',
-                'echarts/component/markLine',
                 'zrender/vml/vml'
             ], function (echarts) {
 
@@ -48,24 +47,7 @@
                                 color: '#00f'
                             }
                         },
-                        barWidth: '50%',
-                        markLine : {
-                            itemStyle:{
-                                normal:{
-                                    label: {
-                                        formatter: function (params) {
-                                            console.log(params);
-                                        }
-                                    },
-                                    lineStyle:{
-                                        type: 'dashed'
-                                    }
-                                }
-                            },
-                            data : [
-                                [{type : 'min'}, {type : 'max'}]
-                            ]
-                        }
+                        barWidth: '50%'
                     }]
                 });
 
