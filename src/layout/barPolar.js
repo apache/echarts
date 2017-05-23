@@ -61,7 +61,6 @@ define(function (require) {
             var cy = parsePercent(center[1], height);
 
             var barMinHeight = seriesModel.get('barMinHeight') || 0;
-            console.log('barMinHeight', barMinHeight)
             var barMinAngle = seriesModel.get('barMinAngle') || 0;
 
             var valueAxisStart = valueAxis.getExtent()[0];
@@ -98,10 +97,10 @@ define(function (require) {
 
                 if (valueAxis.dim === 'radius') {
                     // value of barMinHeight
-                    if (barMinHeight) {
+                    // if (barMinHeight) {
                         // var barMinValue = polar
                         //TODO
-                    }
+                    // }
 
                     // radial sector
                     r0 = lastCoordOrigin;
@@ -121,10 +120,10 @@ define(function (require) {
                     r = r0 + columnWidth;
 
                     // clamp data if min or max is defined for valueAxis
-                    if (valueMax != undefined) {
+                    if (valueMax != null) {
                         value = Math.min(value, valueMax);
                     }
-                    if (valueMin != undefined) {
+                    if (valueMin != null) {
                         value = Math.max(value, valueMin);
                     }
 

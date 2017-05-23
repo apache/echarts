@@ -20,8 +20,8 @@ define(function (require) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d'
-                || coordinateSystemType === 'polar')
-            {
+                || coordinateSystemType === 'polar'
+            ) {
                 this._render(seriesModel, ecModel, api);
             }
             else if (__DEV__) {
@@ -58,14 +58,17 @@ define(function (require) {
                     }
 
                     var itemModel = data.getItemModel(dataIndex);
-                    var layout = getLayout(coord, data, dataIndex, itemModel);
-                    var el = createElement(coord, data, dataIndex, itemModel,
-                        layout, isHorizontalOrRadial, animationModel);
+                    var layout = getLayout[coord.type](data, dataIndex, itemModel);
+                    var el = elementCreator[coord.type](
+                        data, dataIndex, itemModel, layout, isHorizontalOrRadial, animationModel
+                    );
                     data.setItemGraphicEl(dataIndex, el);
                     group.add(el);
 
-                    updateStyle(el, data, dataIndex, itemModel, layout,
-                        seriesModel, isHorizontalOrRadial, coord.type === 'polar');
+                    updateStyle(
+                        el, data, dataIndex, itemModel, layout,
+                        seriesModel, isHorizontalOrRadial, coord.type === 'polar'
+                    );
                 })
                 .update(function (newIndex, oldIndex) {
                     var el = oldData.getItemGraphicEl(oldIndex);
@@ -76,22 +79,25 @@ define(function (require) {
                     }
 
                     var itemModel = data.getItemModel(newIndex);
-                    var layout = getLayout(coord, data, newIndex, itemModel);
+                    var layout = getLayout[coord.type](data, newIndex, itemModel);
 
                     if (el) {
                         graphic.updateProps(el, {shape: layout}, animationModel, newIndex);
                     }
                     else {
-                        el = createElement(coord, data, dataIndex, itemModel,
-                            layout, isHorizontalOrRadial, animationModel, true);
+                        el = elementCreator[coord.type](
+                            data, newIndex, itemModel, layout, isHorizontalOrRadial, animationModel, true
+                        );
                     }
 
                     data.setItemGraphicEl(newIndex, el);
                     // Add back
                     group.add(el);
 
-                    updateStyle(el, data, newIndex, itemModel, layout,
-                        seriesModel, isHorizontalOrRadial, coord.type === 'polar');
+                    updateStyle(
+                        el, data, newIndex, itemModel, layout,
+                        seriesModel, isHorizontalOrRadial, coord.type === 'polar'
+                    );
                 })
                 .remove(function (dataIndex) {
                     var el = oldData.getItemGraphicEl(dataIndex);
@@ -113,7 +119,7 @@ define(function (require) {
             if (ecModel.get('animation')) {
                 if (data) {
                     data.eachItemGraphicEl(function (el) {
-                        if (el.shape.startAngle) {
+                        if (el.type === 'sector') {
                             removeSector(el.dataIndex, ecModel, el);
                         }
                         else {
@@ -128,66 +134,50 @@ define(function (require) {
         }
     });
 
-    // Create rect or sector based on coord
-    function createElement(coord, data, dataIndex, itemModel, layout,
-        isHorizontalOrRadial, animationModel, isUpdate)
-    {
-        if (coord.type === 'cartesian2d') {
-            return createRect(data, dataIndex, itemModel, layout,
-                isHorizontalOrRadial, animationModel, isUpdate);
+    var elementCreator = {
+
+        cartesian2d: function (
+            data, dataIndex, itemModel, layout, isHorizontal,
+            animationModel, isUpdate
+        ) {
+            var rect = new graphic.Rect({shape: zrUtil.extend({}, layout)});
+
+            // Animation
+            if (animationModel) {
+                var rectShape = rect.shape;
+                var animateProperty = isHorizontal ? 'height' : 'width';
+                var animateTarget = {};
+                rectShape[animateProperty] = 0;
+                animateTarget[animateProperty] = layout[animateProperty];
+                graphic[isUpdate ? 'updateProps' : 'initProps'](rect, {
+                    shape: animateTarget
+                }, animationModel, dataIndex);
+            }
+
+            return rect;
+        },
+
+        polar: function (
+            data, dataIndex, itemModel, layout, isRadial,
+            animationModel, isUpdate
+        ) {
+            var sector = new graphic.Sector({shape: zrUtil.extend({}, layout)});
+
+            // Animation
+            if (animationModel) {
+                var sectorShape = sector.shape;
+                var animateProperty = isRadial ? 'r' : 'endAngle';
+                var animateTarget = {};
+                sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
+                animateTarget[animateProperty] = layout[animateProperty];
+                graphic[isUpdate ? 'updateProps' : 'initProps'](sector, {
+                    shape: animateTarget
+                }, animationModel, dataIndex);
+            }
+
+            return sector;
         }
-        else if (coord.type === 'polar') {
-            return createSector(data, dataIndex, itemModel, layout,
-                isHorizontalOrRadial, animationModel, isUpdate);
-        }
-    }
-
-    function createRect(data, dataIndex, itemModel, layout, isHorizontal,
-        animationModel, isUpdate)
-    {
-        var rect = new graphic.Rect({shape: zrUtil.extend({}, layout)});
-
-        // Animation
-        if (animationModel) {
-            var rectShape = rect.shape;
-            var animateProperty = isHorizontal ? 'height' : 'width';
-            var animateTarget = {};
-            rectShape[animateProperty] = 0;
-            animateTarget[animateProperty] = layout[animateProperty];
-            graphic[isUpdate ? 'updateProps' : 'initProps'](rect, {
-                shape: animateTarget
-            }, animationModel, dataIndex);
-        }
-
-        return rect;
-    }
-
-    function createSector(data, dataIndex, itemModel, layout, isRadial,
-        animationModel, isUpdate)
-    {
-        var sector = new graphic.Sector({
-            shape: zrUtil.extend(
-                {
-                    isRadial: isRadial
-                },
-                layout
-            )
-        });
-
-        // Animation
-        if (animationModel) {
-            var sectorShape = sector.shape;
-            var animateProperty = isRadial ? 'r' : 'endAngle';
-            var animateTarget = {};
-            sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
-            animateTarget[animateProperty] = layout[animateProperty];
-            graphic[isUpdate ? 'updateProps' : 'initProps'](sector, {
-                shape: animateTarget
-            }, animationModel, dataIndex);
-        }
-
-        return sector;
-    }
+    };
 
     function removeRect(dataIndex, animationModel, el) {
         // Not show text when animating
@@ -204,52 +194,46 @@ define(function (require) {
     function removeSector(dataIndex, animationModel, el) {
         // Not show text when animating
         el.style.text = '';
-        var shape = {
-            r: el.shape.r0
-        };
-        graphic.updateProps(el, { shape }, animationModel, dataIndex, function () {
+        graphic.updateProps(el, {
+            shape: {
+                r: el.shape.r0
+            }
+        }, animationModel, dataIndex, function () {
             el.parent && el.parent.remove(el);
         });
     }
 
-    function getLayout(coord, data, dataIndex, itemModel) {
-        if (coord.type === 'cartesian2d') {
-            return getRectItemLayout(data, dataIndex, itemModel);
+    var getLayout = {
+        cartesian2d: function (data, dataIndex, itemModel) {
+            var layout = data.getItemLayout(dataIndex);
+            var fixedLineWidth = getLineWidth(itemModel, layout);
+
+            // fix layout with lineWidth
+            var signX = layout.width > 0 ? 1 : -1;
+            var signY = layout.height > 0 ? 1 : -1;
+            return {
+                x: layout.x + signX * fixedLineWidth / 2,
+                y: layout.y + signY * fixedLineWidth / 2,
+                width: layout.width - signX * fixedLineWidth,
+                height: layout.height - signY * fixedLineWidth
+            };
+        },
+
+        polar: function (data, dataIndex, itemModel) {
+            var layout = data.getItemLayout(dataIndex);
+            return {
+                cx: layout.cx,
+                cy: layout.cy,
+                r0: layout.r0,
+                r: layout.r,
+                startAngle: layout.startAngle,
+                endAngle: layout.endAngle
+            };
         }
-        else if (coord.type === 'polar') {
-            return getSectorItemLayout(data, dataIndex, itemModel);
-        }
-    }
+    };
 
-    function getRectItemLayout(data, dataIndex, itemModel) {
-        var layout = data.getItemLayout(dataIndex);
-        var fixedLineWidth = getLineWidth(itemModel, layout);
-
-        // fix layout with lineWidth
-        var signX = layout.width > 0 ? 1 : -1;
-        var signY = layout.height > 0 ? 1 : -1;
-        return {
-            x: layout.x + signX * fixedLineWidth / 2,
-            y: layout.y + signY * fixedLineWidth / 2,
-            width: layout.width - signX * fixedLineWidth,
-            height: layout.height - signY * fixedLineWidth
-        };
-    }
-
-    function getSectorItemLayout(data, dataIndex, itemModel) {
-        var layout = data.getItemLayout(dataIndex);
-        return {
-            cx: layout.cx,
-            cy: layout.cy,
-            r0: layout.r0,
-            r: layout.r,
-            startAngle: layout.startAngle,
-            endAngle: layout.endAngle
-        };
-    }
-
-    function updateStyle(el, data, dataIndex, itemModel, layout, seriesModel,
-        isHorizontal, isPolar
+    function updateStyle(
+        el, data, dataIndex, itemModel, layout, seriesModel, isHorizontal, isPolar
     ) {
         var color = data.getItemVisual(dataIndex, 'color');
         var opacity = data.getItemVisual(dataIndex, 'opacity');
