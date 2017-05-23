@@ -10,12 +10,6 @@ define(function(require) {
         type: 'series.__base_bar__',
 
         getInitialData: function (option, ecModel) {
-            if (__DEV__) {
-                var coordSys = option.coordinateSystem;
-                if (coordSys !== 'cartesian2d') {
-                    throw new Error('Bar only support cartesian2d coordinateSystem');
-                }
-            }
             return createListFromArray(option.data, this, ecModel);
         },
 
@@ -47,6 +41,8 @@ define(function(require) {
 
             // 最小高度改为0
             barMinHeight: 0,
+            // 最小角度为0，仅对极坐标系下的柱状图有效
+            barMinAngle: 0,
 
             // barMaxWidth: null,
             // 默认自适应

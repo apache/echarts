@@ -173,9 +173,10 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToPoints: function (data) {
+            var that = this;
             return data.mapArray(this.dimensions, function (radius, angle) {
-                return this.dataToPoint([radius, angle]);
-            }, this);
+                return that.dataToPoint([radius, angle]);
+            }, true);
         },
 
         /**
