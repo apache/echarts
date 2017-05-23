@@ -8,11 +8,9 @@ define(function (require) {
     require('./bar/BarView');
 
     var barLayoutGrid = require('../layout/barGrid');
-    var barLayoutPolar = require('../layout/barPolar');
     var echarts = require('../echarts');
 
     echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
-    echarts.registerLayout(zrUtil.curry(barLayoutPolar, 'bar'));
 
     // Visual coding for legend
     echarts.registerVisual(function (ecModel) {
