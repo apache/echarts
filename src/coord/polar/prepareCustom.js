@@ -9,9 +9,17 @@ define(function(require) {
             var val = dataItem[dimIdx];
             var halfSize = dataSize[dimIdx] / 2;
             var method = 'dataTo' + dim;
-            return axis.type === 'category'
+
+            var result = axis.type === 'category'
                 ? axis.getBandWidth()
                 : Math.abs(axis[method](val - halfSize) - axis[method](val + halfSize));
+
+            if (dim === 'Angle') {
+                result = result * Math.PI / 180;
+            }
+
+            return result;
+
         }, this);
     }
 
@@ -34,7 +42,7 @@ define(function(require) {
                     var radius = radiusAxis.dataToRadius(data[0]);
                     var angle = angleAxis.dataToAngle(data[1]);
                     var coord = coordSys.coordToPoint([radius, angle]);
-                    coord.push(radius, angle);
+                    coord.push(radius, angle * Math.PI / 180);
                     return coord;
                 }),
                 size: zrUtil.bind(dataToCoordSize, coordSys)
