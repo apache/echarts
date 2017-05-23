@@ -24,6 +24,7 @@
                 'echarts/chart/bar',
                 'echarts/chart/line',
                 'echarts/component/legend',
+                'echarts/component/graphic',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
                 'echarts/component/toolbox',
@@ -196,6 +197,21 @@
 
                 chart.on('click', function (params) {
                     console.log(params);
+                });
+
+                chart.on('legendselectchanged', function (params) {
+                    chart.setOption({
+                        // title: {
+                        // },
+                        graphic: [{
+                            type: 'circle',
+                            shape: {
+                                cx: 100,
+                                cy: 100,
+                                r: 20,
+                            }
+                        }]
+                    });
                 });
 
                 window.onresize = chart.resize;

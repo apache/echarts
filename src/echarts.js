@@ -276,14 +276,7 @@ define(function (require) {
             ecModel.init(null, null, theme, optionManager);
         }
 
-        // FIXME
-        // ugly
-        this.__lastOnlyGraphic = !!(option && option.graphic);
-        zrUtil.each(option, function (o, mainType) {
-            mainType !== 'graphic' && (this.__lastOnlyGraphic = false);
-        }, this);
-
-        this._model.setOption(option, optionPreprocessorFuncs, this.__lastOnlyGraphic);
+        this._model.setOption(option, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
             this[OPTION_UPDATED] = {silent: silent};
@@ -809,21 +802,7 @@ define(function (require) {
 
             prepareView.call(this, 'chart', ecModel);
 
-            // FIXME
-            // ugly
-            if (this.__lastOnlyGraphic) {
-                each(this._componentsViews, function (componentView) {
-                    var componentModel = componentView.__model;
-                    if (componentModel && componentModel.mainType === 'graphic') {
-                        componentView.render(componentModel, ecModel, this._api, payload);
-                        updateZ(componentModel, componentView);
-                    }
-                }, this);
-                this.__lastOnlyGraphic = false;
-            }
-            else {
-                updateMethods.update.call(this, payload);
-            }
+            updateMethods.update.call(this, payload);
         }
     };
 
