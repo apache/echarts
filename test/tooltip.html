@@ -40,6 +40,8 @@
         <div class="chart" id="position"></div>
         <h1>triggerOn click</h1>
         <div class="chart" id="click"></div>
+        <!--<h1>alwaysShowContent (check when hover on the last one, the content should not be the previous one)</h1>-->
+        <!--<div class="chart" id="alwaysShowContent"></div>-->
 
 
 
@@ -636,6 +638,74 @@
             })
         </script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!--<script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
+                        },
+                        alwaysShowContent: true
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            data : ['周一','周二','周三','周四','周五','周六','周日']
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
+                            },
+                            areaStyle: {normal: {}},
+                            data:[820, 932, 456, 934, 1290, 1330]
+                        }
+                    ]
+                };
+
+                createChart('alwaysShowContent', echarts, option);
+            })
+        </script>-->
 
 
     </body>
