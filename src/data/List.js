@@ -44,6 +44,9 @@ define(function (require) {
     function DefaultDataProvider(dataArray) {
         this._array = dataArray || [];
     }
+
+    DefaultDataProvider.prototype.pure = false;
+
     DefaultDataProvider.prototype.count = function () {
         return this._array.length;
     };
@@ -242,6 +245,8 @@ define(function (require) {
      * @param {Function} [dimValueGetter] (dataItem, dimName, dataIndex, dimIndex) => number
      */
     listProto.initData = function (data, nameList, dimValueGetter) {
+        data = data || [];
+
         var isDataArray = zrUtil.isArray(data);
         if (isDataArray) {
             data = new DefaultDataProvider(data);
