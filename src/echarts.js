@@ -1615,7 +1615,12 @@ define(function (require) {
         chart.id = 'ec_' + idBase++;
         instances[chart.id] = chart;
 
-        dom.setAttribute && dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
+        if (dom.setAttribute) {
+            dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
+        }
+        else {
+            dom[DOM_ATTRIBUTE_KEY] = chart.id;
+        }
 
         enableConnect(chart);
 
@@ -1663,11 +1668,12 @@ define(function (require) {
      * @param  {module:echarts~ECharts|HTMLDomElement|string} chart
      */
     echarts.dispose = function (chart) {
-        if (zrUtil.isDom(chart)) {
-            chart = echarts.getInstanceByDom(chart);
-        }
-        else if (typeof chart === 'string') {
+        if (typeof chart === 'string') {
             chart = instances[chart];
+        }
+        else if (!(chart instanceof ECharts)){
+            // Try to treat as dom
+            chart = echarts.getInstanceByDom(chart);
         }
         if ((chart instanceof ECharts) && !chart.isDisposed()) {
             chart.dispose();
@@ -1679,7 +1685,13 @@ define(function (require) {
      * @return {echarts~ECharts}
      */
     echarts.getInstanceByDom = function (dom) {
-        var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+        var key;
+        if (dom.getAttribute) {
+            key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+        }
+        else {
+            key = dom[DOM_ATTRIBUTE_KEY];
+        }
         return instances[key];
     };
 
