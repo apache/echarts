@@ -174,7 +174,7 @@ define(function(require) {
          */
         dataToPoints: function (data) {
             return data.mapArray(this.dimensions, function (radius, angle) {
-                return that.dataToPoint([radius, angle]);
+                return this.dataToPoint([radius, angle]);
             }, true, this);
         },
 
