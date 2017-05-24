@@ -96,12 +96,6 @@ define(function (require) {
                 var endAngle;
 
                 if (valueAxis.dim === 'radius') {
-                    // value of barMinHeight
-                    // if (barMinHeight) {
-                        // var barMinValue = polar
-                        //TODO
-                    // }
-
                     // radial sector
                     r0 = lastCoordOrigin;
                     r = coord[0];
