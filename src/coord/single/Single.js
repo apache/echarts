@@ -6,7 +6,6 @@ define(function (require) {
     var SingleAxis = require('./SingleAxis');
     var axisHelper = require('../axisHelper');
     var layout = require('../../util/layout');
-    var zrUtil = require('zrender/core/util');
 
     /**
      * Create a single coordinates system.
