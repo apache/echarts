@@ -28,6 +28,10 @@ define(function (require) {
      *      For example: ['asdf', {name, type}, ...].
      * @param {Object} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
      * @param {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
+     * @param {string} [opt.extraFromZero] If specified, extra dim names will be:
+     *                      extraPrefix + 0, extraPrefix + extraBaseIndex + 1 ...
+     *                      If not specified, extra dim names will be:
+     *                      extraPrefix, extraPrefix + 0, extraPrefix + 1 ...
      * @param {number} [opt.dimCount] If not specified, guess by the first data item.
      * @return {Array.<Object>} [{
      *      name: string mandatory,
@@ -150,7 +154,7 @@ define(function (require) {
             var coordDim = resultItem.coordDim;
 
             coordDim == null && (
-                resultItem.coordDim = genName(extra, coordDimNameMap),
+                resultItem.coordDim = genName(extra, coordDimNameMap, opt.extraFromZero),
                 resultItem.coordDimIndex = 0,
                 resultItem.isExtraCoord = true
             );
@@ -185,8 +189,8 @@ define(function (require) {
             }
         }
 
-        function genName(name, map) {
-            if (map.get(name) != null) {
+        function genName(name, map, fromZero) {
+            if (fromZero || map.get(name) != null) {
                 var i = 0;
                 while (map.get(name + i) != null) {
                     i++;
