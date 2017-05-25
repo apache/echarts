@@ -48,7 +48,7 @@ define(function (require) {
          */
         getInterval: function () {
             if (__DEV__) {
-                if (!this._interval) {
+                if (this._interval == null) {
                     throw new Error('`nice` should be called firstly' );
                 }
             }
@@ -70,7 +70,7 @@ define(function (require) {
          */
         getTicks: function () {
             if (__DEV__) {
-                if (!this._interval) {
+                if (this._interval == null) {
                     throw new Error('`nice` should be called firstly' );
                 }
             }
