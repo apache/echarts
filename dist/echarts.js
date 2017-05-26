@@ -1631,9 +1631,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.6.0',
+	        version: '3.6.1',
 	        dependencies: {
-	            zrender: '3.5.0'
+	            zrender: '3.5.1'
 	        }
 	    };
 
@@ -18034,7 +18034,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.5.0';
+	    zrender.version = '3.5.1';
 
 	    /**
 	     * Initializing a zrender instance
@@ -20209,13 +20209,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 
 	    module.exports = (typeof window !== 'undefined' &&
-	                                    (window.requestAnimationFrame
-	                                    || window.msRequestAnimationFrame
-	                                    || window.mozRequestAnimationFrame
-	                                    || window.webkitRequestAnimationFrame))
-	                                || function (func) {
-	                                    setTimeout(func, 16);
-	                                };
+	                ((window.requestAnimationFrame && window.requestAnimationFrame.bind(window))
+	                // https://github.com/ecomfe/zrender/issues/189#issuecomment-224919809
+	                || (window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window))
+	                || window.mozRequestAnimationFrame
+	                || window.webkitRequestAnimationFrame)
+	            )
+	            || function (func) {
+	                setTimeout(func, 16);
+	            };
 
 
 
@@ -24589,11 +24591,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * Get interval
 	         */
 	        getInterval: function () {
-	            if (true) {
-	                if (this._interval == null) {
-	                    throw new Error('`nice` should be called firstly' );
-	                }
-	            }
 	            return this._interval;
 	        },
 
@@ -24611,11 +24608,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @return {Array.<number>}
 	         */
 	        getTicks: function () {
-	            if (true) {
-	                if (this._interval == null) {
-	                    throw new Error('`nice` should be called firstly' );
-	                }
-	            }
 	            return helper.intervalScaleGetTicks(
 	                this._interval, this._extent, this._niceExtent, this._intervalPrecision
 	            );
@@ -28476,7 +28468,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {module:echarts/coord/cartesian/GridModel} gridModel
 	     * @param {module:echarts/ExtensionAPI} api
 	     */
-	    gridProto.resize = function (gridModel, api) {
+	    gridProto.resize = function (gridModel, api, ignoreContainLabel) {
 
 	        var gridRect = layout.getLayoutRect(
 	            gridModel.getBoxLayoutParams(), {
@@ -28491,7 +28483,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        adjustAxes();
 
 	        // Minus label size
-	        if (gridModel.get('containLabel')) {
+	        if (!ignoreContainLabel && gridModel.get('containLabel')) {
 	            each(axesList, function (axis) {
 	                if (!axis.model.get('axisLabel.inside')) {
 	                    var labelUnionRect = getLabelUnionRect(axis);
@@ -28892,8 +28884,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        ecModel.eachComponent('grid', function (gridModel, idx) {
 	            var grid = new Grid(gridModel, ecModel, api);
 	            grid.name = 'grid_' + idx;
-	            // Postpone `resize` to `update`.
-	            // grid.resize(gridModel, api);
+	            // dataSampling requires axis extent, so resize
+	            // should be performed in create stage.
+	            grid.resize(gridModel, api, true);
 
 	            gridModel.coordinateSystem = grid;
 
