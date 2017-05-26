@@ -47,11 +47,6 @@ define(function (require) {
          * Get interval
          */
         getInterval: function () {
-            if (__DEV__) {
-                if (this._interval == null) {
-                    throw new Error('`nice` should be called firstly' );
-                }
-            }
             return this._interval;
         },
 
@@ -69,11 +64,6 @@ define(function (require) {
          * @return {Array.<number>}
          */
         getTicks: function () {
-            if (__DEV__) {
-                if (this._interval == null) {
-                    throw new Error('`nice` should be called firstly' );
-                }
-            }
             return helper.intervalScaleGetTicks(
                 this._interval, this._extent, this._niceExtent, this._intervalPrecision
             );

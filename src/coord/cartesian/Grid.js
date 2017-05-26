@@ -141,7 +141,7 @@ define(function(require, factory) {
      * @param {module:echarts/coord/cartesian/GridModel} gridModel
      * @param {module:echarts/ExtensionAPI} api
      */
-    gridProto.resize = function (gridModel, api) {
+    gridProto.resize = function (gridModel, api, ignoreContainLabel) {
 
         var gridRect = layout.getLayoutRect(
             gridModel.getBoxLayoutParams(), {
@@ -156,7 +156,7 @@ define(function(require, factory) {
         adjustAxes();
 
         // Minus label size
-        if (gridModel.get('containLabel')) {
+        if (!ignoreContainLabel && gridModel.get('containLabel')) {
             each(axesList, function (axis) {
                 if (!axis.model.get('axisLabel.inside')) {
                     var labelUnionRect = getLabelUnionRect(axis);
@@ -557,8 +557,9 @@ define(function(require, factory) {
         ecModel.eachComponent('grid', function (gridModel, idx) {
             var grid = new Grid(gridModel, ecModel, api);
             grid.name = 'grid_' + idx;
-            // Postpone `resize` to `update`.
-            // grid.resize(gridModel, api);
+            // dataSampling requires axis extent, so resize
+            // should be performed in create stage.
+            grid.resize(gridModel, api, true);
 
             gridModel.coordinateSystem = grid;
 
