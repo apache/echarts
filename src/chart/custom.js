@@ -220,10 +220,15 @@ define(function (require) {
 
         if (__DEV__) {
             zrUtil.assert(renderItem, 'series.render is required.');
-            zrUtil.assert(prepareCustoms[coordSys.type], 'This coordSys does not support custom series.');
+            zrUtil.assert(
+                coordSys.prepareCustoms || prepareCustoms[coordSys.type],
+                'This coordSys does not support custom series.'
+            );
         }
 
-        var prepareResult = prepareCustoms[coordSys.type](coordSys);
+        var prepareResult = coordSys.prepareCustoms
+            ? coordSys.prepareCustoms()
+            : prepareCustoms[coordSys.type](coordSys);
 
         var userAPI = zrUtil.defaults({
             getWidth: api.getWidth,

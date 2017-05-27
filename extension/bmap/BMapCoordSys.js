@@ -1,6 +1,7 @@
 define(function (require) {
 
     var echarts = require('echarts');
+    var zrUtil = echarts.util;
 
     function BMapCoordSys(bmap, api) {
         this._bmap = bmap;
@@ -64,6 +65,38 @@ define(function (require) {
     BMapCoordSys.prototype.getRoamTransform = function () {
         return echarts.matrix.create();
     };
+
+    BMapCoordSys.prototype.prepareCustoms = function (data) {
+        var rect = this.getViewRect();
+        return {
+            coordSys: {
+                // The name exposed to user is always 'cartesian2d' but not 'grid'.
+                type: 'bmap',
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height
+            },
+            api: {
+                coord: zrUtil.bind(this.dataToPoint, this),
+                size: zrUtil.bind(dataToCoordSize, this)
+            }
+        };
+    };
+
+    function dataToCoordSize(dataSize, dataItem) {
+        dataItem = dataItem || [0, 0];
+        return zrUtil.map([0, 1], function (dimIdx) {
+            var val = dataItem[dimIdx];
+            var halfSize = dataSize[dimIdx] / 2;
+            var p1 = [];
+            var p2 = [];
+            p1[dimIdx] = val - halfSize;
+            p2[dimIdx] = val + halfSize;
+            p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
+            return Math.abs(this.dataToPoint(p1)[dimIdx] - this.dataToPoint(p2)[dimIdx]);
+        }, this);
+    }
 
     var Overlay;
 
