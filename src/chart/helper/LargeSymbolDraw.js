@@ -22,6 +22,11 @@ define(function (require) {
             var symbolProxyShape = symbolProxy.shape;
             for (var i = 0; i < points.length; i++) {
                 var pt = points[i];
+
+                if (isNaN(pt[0]) || isNaN(pt[1])) {
+                    continue;
+                }
+
                 var size = sizes[i];
                 if (size[0] < 4) {
                     // Optimize for small symbol
@@ -121,7 +126,7 @@ define(function (require) {
         symbolEl.on('mousemove', function (e) {
             symbolEl.dataIndex = null;
             var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
-            if (dataIndex > 0) {
+            if (dataIndex >= 0) {
                 // Provide dataIndex for tooltip
                 symbolEl.dataIndex = dataIndex;
             }
