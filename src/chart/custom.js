@@ -110,7 +110,12 @@ define(function (require) {
                 .execute();
 
             this._data = data;
-        }
+        },
+
+        /**
+         * @override
+         */
+        dispose: zrUtil.noop
     });
 
 
