@@ -226,155 +226,155 @@
                         roam: true,
                         mapStyle: {
                         styleJson: [{
-                                'featureType': 'water',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#d1d1d1'
-                                }
-                            }, {
-                                'featureType': 'land',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#f3f3f3'
-                                }
-                            }, {
-                                'featureType': 'railway',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'visibility': 'off'
-                                }
-                            }, {
-                                'featureType': 'highway',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#fdfdfd'
-                                }
-                            }, {
-                                'featureType': 'highway',
-                                'elementType': 'labels',
-                                'stylers': {
-                                    'visibility': 'off'
-                                }
-                            }, {
-                                'featureType': 'arterial',
-                                'elementType': 'geometry',
-                                'stylers': {
-                                    'color': '#fefefe'
-                                }
-                            }, {
-                                'featureType': 'arterial',
-                                'elementType': 'geometry.fill',
-                                'stylers': {
-                                    'color': '#fefefe'
-                                }
-                            }, {
-                                'featureType': 'poi',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'visibility': 'off'
-                                }
-                            }, {
-                                'featureType': 'green',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'visibility': 'off'
-                                }
-                            }, {
-                                'featureType': 'subway',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'visibility': 'off'
-                                }
-                            }, {
-                                'featureType': 'manmade',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#d1d1d1'
-                                }
-                            }, {
-                                'featureType': 'local',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#d1d1d1'
-                                }
-                            }, {
-                                'featureType': 'arterial',
-                                'elementType': 'labels',
-                                'stylers': {
-                                    'visibility': 'off'
-                                }
-                            }, {
-                                'featureType': 'boundary',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#fefefe'
-                                }
-                            }, {
-                                'featureType': 'building',
-                                'elementType': 'all',
-                                'stylers': {
-                                    'color': '#d1d1d1'
-                                }
-                            }, {
-                                'featureType': 'label',
-                                'elementType': 'labels.text.fill',
-                                'stylers': {
-                                    'color': 'rgba(0,0,0,0)'
-                                }
-                            }]
-                        }
+                            'featureType': 'water',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#d1d1d1'
+                            }
+                        }, {
+                            'featureType': 'land',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#f3f3f3'
+                            }
+                        }, {
+                            'featureType': 'railway',
+                            'elementType': 'all',
+                            'stylers': {
+                                'visibility': 'off'
+                            }
+                        }, {
+                            'featureType': 'highway',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#999999'
+                            }
+                        }, {
+                            'featureType': 'highway',
+                            'elementType': 'labels',
+                            'stylers': {
+                                'visibility': 'off'
+                            }
+                        }, {
+                            'featureType': 'arterial',
+                            'elementType': 'geometry',
+                            'stylers': {
+                                'color': '#fefefe'
+                            }
+                        }, {
+                            'featureType': 'arterial',
+                            'elementType': 'geometry.fill',
+                            'stylers': {
+                                'color': '#fefefe'
+                            }
+                        }, {
+                            'featureType': 'poi',
+                            'elementType': 'all',
+                            'stylers': {
+                                'visibility': 'off'
+                            }
+                        }, {
+                            'featureType': 'green',
+                            'elementType': 'all',
+                            'stylers': {
+                                'visibility': 'off'
+                            }
+                        }, {
+                            'featureType': 'subway',
+                            'elementType': 'all',
+                            'stylers': {
+                                'visibility': 'off'
+                            }
+                        }, {
+                            'featureType': 'manmade',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#d1d1d1'
+                            }
+                        }, {
+                            'featureType': 'local',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#d1d1d1'
+                            }
+                        }, {
+                            'featureType': 'arterial',
+                            'elementType': 'labels',
+                            'stylers': {
+                                'visibility': 'off'
+                            }
+                        }, {
+                            'featureType': 'boundary',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#fefefe'
+                            }
+                        }, {
+                            'featureType': 'building',
+                            'elementType': 'all',
+                            'stylers': {
+                                'color': '#d1d1d1'
+                            }
+                        }, {
+                            'featureType': 'label',
+                            'elementType': 'labels.text.fill',
+                            'stylers': {
+                                'color': 'rgba(0,0,0,0)'
+                            }
+                        }]
                     }
-                };
-
-                var chart = testHelper.createChart(echarts, 'grid', option);
-
-
-                function generateData() {
-                    var data = [];
-                    for (var i = 0; i < cellCount[1]; i++) {
-                        for (var j = 0; j < cellCount[0]; j++) {
-                            data.push([j, i, COLORS.length - 1]);
-                        }
-                    }
-                    return data;
                 }
+            };
 
-                function generateData3() {
-                    var data = [];
-                    var min = Infinity;
-                    var max = -Infinity;
-                    var center = [
-                        Math.floor(cellCount[0] * 0.45),
-                        Math.floor(cellCount[1] * 0.45)
-                    ];
+            var chart = testHelper.createChart(echarts, 'grid', option);
 
-                    for (var i = 0; i < cellCount[1]; i++) {
-                        for (var j = 0; j < cellCount[0]; j++) {
-                            var x = (j - center[0]);
-                            var y = (i - center[1]);
-                            var value = Math.cos(
-                                Math.pow(x / center[0] * Math.PI, 2)
-                                + Math.pow(y / center[1] * Math.PI, 2)
-                            );
 
-                            min = Math.min(min, value);
-                            max = Math.max(max, value);
-                            data.push([j, i, value]);
-                        }
+            function generateData() {
+                var data = [];
+                for (var i = 0; i < cellCount[1]; i++) {
+                    for (var j = 0; j < cellCount[0]; j++) {
+                        data.push([j, i, COLORS.length - 1]);
                     }
+                }
+                return data;
+            }
 
-                    return {
-                        data: data,
-                        min: min,
-                        max: max
+            function generateData3() {
+                var data = [];
+                var min = Infinity;
+                var max = -Infinity;
+                var center = [
+                    Math.floor(cellCount[0] * 0.45),
+                    Math.floor(cellCount[1] * 0.45)
+                ];
+
+                for (var i = 0; i < cellCount[1]; i++) {
+                    for (var j = 0; j < cellCount[0]; j++) {
+                        var x = (j - center[0]);
+                        var y = (i - center[1]);
+                        var value = Math.cos(
+                            Math.pow(x / center[0] * Math.PI, 2)
+                            + Math.pow(y / center[1] * Math.PI, 2)
+                        );
+
+                        min = Math.min(min, value);
+                        max = Math.max(max, value);
+                        data.push([j, i, value]);
                     }
                 }
 
+                return {
+                    data: data,
+                    min: min,
+                    max: max
+                }
+            }
 
-                initPens(echarts, chart, data);
-            });
 
-        </script>
+            initPens(echarts, chart, data);
+        });
+
+    </script>
 
 
 
