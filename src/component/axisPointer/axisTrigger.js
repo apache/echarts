@@ -14,26 +14,35 @@ define(function(require) {
      * then hide/downplay them.
      *
      * @param {Object} coordSysAxesInfo
-     * @param {string} [currTrigger] 'click' | 'mousemove' | 'leave'
-     * @param {Array.<number>} [point] x and y, which are mandatory, specify a point to
+     * @param {Object} payload
+     * @param {string} [payload.currTrigger] 'click' | 'mousemove' | 'leave'
+     * @param {Array.<number>} [payload.x] x and y, which are mandatory, specify a point to
      *              tigger axisPointer and tooltip.
-     * @param {Object} [finder] {
-     *                  seriesIndex, dataIndex,
-     *                  axesInfo: [{
-     *                      axisDim: 'x'|'y'|'angle'|..., axisIndex: ..., value: ...
-     *                  }, ...]
-     *              }
-     *              These properties, which are optional, restrict target axes.
-     * @param {Function} dispatchAction
+     * @param {Array.<number>} [payload.y] x and y, which are mandatory, specify a point to
+     *              tigger axisPointer and tooltip.
+     * @param {Object} [payload.seriesIndex] finder, optional, restrict target axes.
+     * @param {Object} [payload.dataIndex] finder, restrict target axes.
+     * @param {Object} [payload.axesInfo] finder, restrict target axes.
+     *        [{
+     *          axisDim: 'x'|'y'|'angle'|...,
+     *          axisIndex: ...,
+     *          value: ...
+     *        }, ...]
+     * @param {Function} [payload.dispatchAction]
+     * @param {Object} [payload.tooltipOption]
+     * @param {Object|Array.<number>|Function} [payload.position] Tooltip position,
+     *        which can be specified in dispatchAction
+     * @param {module:echarts/model/Global} ecModel
      * @param {module:echarts/ExtensionAPI} api
-     * @param {Object} [tooltipOption]
      * @return {Object} content of event obj for echarts.connect.
      */
-    function axisTrigger(
-        coordSysAxesInfo, currTrigger, point, finder, dispatchAction,
-        ecModel, api, tooltipOption
-    ) {
-        finder = finder || {};
+    function axisTrigger(payload, ecModel, api) {
+        var currTrigger = payload.currTrigger;
+        var point = [payload.x, payload.y];
+        var finder = payload;
+        var dispatchAction = payload.dispatchAction || zrUtil.bind(api.dispatchAction, api);
+        var coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
+
         if (illegalPoint(point)) {
             // Used in the default behavior of `connection`: use the sample seriesIndex
             // and dataIndex. And also used in the tooltipView trigger.
@@ -107,7 +116,7 @@ define(function(require) {
         });
 
         updateModelActually(showValueMap, axesInfo, outputFinder);
-        dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction);
+        dispatchTooltipActually(dataByCoordSys, point, payload, dispatchAction);
         dispatchHighDownActually(axesInfo, dispatchAction, api);
 
         return outputFinder;
@@ -290,7 +299,7 @@ define(function(require) {
         });
     }
 
-    function dispatchTooltipActually(dataByCoordSys, point, tooltipOption, dispatchAction) {
+    function dispatchTooltipActually(dataByCoordSys, point, payload, dispatchAction) {
         // Basic logic: If no showTip required, hideTip will be dispatched.
         if (illegalPoint(point) || !dataByCoordSys.list.length) {
             dispatchAction({type: 'hideTip'});
@@ -308,7 +317,8 @@ define(function(require) {
             escapeConnect: true,
             x: point[0],
             y: point[1],
-            tooltipOption: tooltipOption,
+            tooltipOption: payload.tooltipOption,
+            position: payload.position,
             dataIndexInside: sampleItem.dataIndexInside,
             dataIndex: sampleItem.dataIndex,
             seriesIndex: sampleItem.seriesIndex,

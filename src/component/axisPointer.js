@@ -43,19 +43,6 @@ define(function (require) {
         type: 'updateAxisPointer',
         event: 'updateAxisPointer',
         update: ':updateAxisPointer'
-    }, function (payload, ecModel, api) {
-        var outputFinder = axisTrigger(
-            ecModel.getComponent('axisPointer').coordSysAxesInfo,
-            payload.currTrigger,
-            [payload.x, payload.y],
-            payload,
-            payload.dispatchAction || zrUtil.bind(api.dispatchAction, api),
-            ecModel,
-            api,
-            payload.tooltipOption
-        );
-
-        return outputFinder;
-    });
+    }, axisTrigger);
 
 });

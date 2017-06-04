@@ -265,7 +265,8 @@ define(function (require) {
             api.dispatchAction({
                 type: 'updateAxisPointer',
                 seriesIndex: seriesIndex,
-                dataIndex: dataIndex
+                dataIndex: dataIndex,
+                position: payload.position
             });
 
             return true;
