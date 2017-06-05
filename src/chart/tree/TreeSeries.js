@@ -16,7 +16,8 @@ define(function (require) {
 
         getInitialData: function (option) {
 
-            var root = option.data[0];
+            //create an virtual root
+            var root = {name: option.name, children: option.data};
 
             return Tree.createTree(root, this).data;
 
@@ -32,6 +33,7 @@ define(function (require) {
             right: '10%',
             bottom: '5%',
 
+            layout: 'orthogonal',
             orient: 'horizontal'
 
         }
