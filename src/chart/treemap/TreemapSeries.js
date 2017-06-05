@@ -146,11 +146,8 @@ define(function(require) {
          * @override
          */
         getInitialData: function (option, ecModel) {
-            var rootName = option.name;
-            rootName == null && (rootName = option.name);
-
             // Create a virtual root.
-            var root = {name: rootName, children: option.data};
+            var root = {name: option.name, children: option.data};
 
             completeTreeValue(root);
 
