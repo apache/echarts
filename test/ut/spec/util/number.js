@@ -324,6 +324,23 @@ describe('util/number', function () {
         });
     });
 
+    describe('getPercentWithPrecision', function () {
+        testCase('basic', function (numberUtil) {
+            expect(numberUtil.getPercentWithPrecision([50.5, 49.5], 0, 0)).toEqual(51);
+            expect(numberUtil.getPercentWithPrecision([50.5, 49.5], 1, 0)).toEqual(49);
+
+            expect(numberUtil.getPercentWithPrecision([12.34, 34.56, 53.1], 0, 1)).toEqual(12.3);
+            expect(numberUtil.getPercentWithPrecision([12.34, 34.56, 53.1], 1, 1)).toEqual(34.6);
+            expect(numberUtil.getPercentWithPrecision([12.34, 34.56, 53.1], 2, 1)).toEqual(53.1);
+
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 0, 0)).toEqual(17);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 1, 0)).toEqual(48);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 2, 0)).toEqual(26);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 3, 0)).toEqual(9);
+        });
+    });
+
+
     describe('nice', function () {
         testCase('extreme', function (numberUtil) {
             // Should not be 0.30000000000000004

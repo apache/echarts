@@ -5,6 +5,7 @@ define(function(require) {
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var numberUtil = require('../../util/number');
     var completeDimensions = require('../../data/helper/completeDimensions');
 
     var dataSelectableMixin = require('../../component/helper/selectableMixin');
@@ -45,11 +46,12 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var data = this.getData();
             var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
-            var sum = data.getSum('value');
             // FIXME toFixed?
-            //
-            // Percent is 0 if sum is 0
-            params.percent = !sum ? 0 : +(data.get('value', dataIndex) / sum * 100).toFixed(2);
+            params.percent = numberUtil.getPercentWithPrecision(
+                data._storage['value'],
+                dataIndex,
+                data.hostModel.get('percentPrecision')
+            );
 
             params.$vars.push('percent');
             return params;
@@ -91,6 +93,8 @@ define(function(require) {
             // selectedMode: false,
             // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             // roseType: null,
+
+            percentPrecision: 2,
 
             // If still show when all data zero.
             stillShowZeroSum: true,

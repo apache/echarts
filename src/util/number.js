@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     var number = {};
 
     var RADIAN_EPSILON = 1e-4;
@@ -183,6 +185,63 @@ define(function (require) {
         // toFixed() digits argument must be between 0 and 20.
         var precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
         return !isFinite(precision) ? 20 : precision;
+    };
+
+    /**
+     * Get a data of given precision, assuring the sum of percentages
+     * in valueList is 1.
+     * The largest remainer method is used.
+     * https://en.wikipedia.org/wiki/Largest_remainder_method
+     *
+     * @param {Array.<number>} valueList a list of all data
+     * @param {number} idx index of the data to be processed in valueList
+     * @param {number} precision integer number showing digits of precision
+     */
+    number.getPercentWithPrecision = function (valueList, idx, precision) {
+        var sum = zrUtil.reduce(valueList, function (acc, val) {
+            return acc + val;
+        }, 0);
+        if (sum === 0) {
+            return 0;
+        }
+
+        var digits = Math.pow(10, precision);
+        var votesPerQuota = zrUtil.map(valueList, function (value) {
+            return value / sum * digits * 100;
+        });
+        var targetSeats = digits * 100;
+
+        var seats = zrUtil.map(votesPerQuota, function (votes) {
+            // automatic seats
+            return Math.floor(votes);
+        });
+        var currentSum = zrUtil.reduce(seats, function (acc, val) {
+            return acc + val;
+        }, 0);
+
+        var remainder = zrUtil.map(votesPerQuota, function (votes, idx) {
+            return votes - seats[idx];
+        });
+
+        // Has remainding votes
+        while (currentSum < targetSeats) {
+            // Find next largest remainder.
+            var max = Number.NEGATIVE_INFINITY;
+            var maxId = null;
+            for (var i = 0, len = remainder.length; i < len; ++i) {
+                if (remainder[i] > max) {
+                    max = remainder[i];
+                    maxId = i;
+                }
+            }
+
+            // Add a vote to max remainder.
+            ++seats[maxId];
+            remainder[maxId] = 0;
+            ++currentSum;
+        }
+
+        return seats[idx] / digits;
     };
 
     // Number.MAX_SAFE_INTEGER, ie do not support.
