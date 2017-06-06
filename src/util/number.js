@@ -196,6 +196,7 @@ define(function (require) {
      * @param {Array.<number>} valueList a list of all data
      * @param {number} idx index of the data to be processed in valueList
      * @param {number} precision integer number showing digits of precision
+     * @return {number} percent ranging from 0 to 100
      */
     number.getPercentWithPrecision = function (valueList, idx, precision) {
         var sum = zrUtil.reduce(valueList, function (acc, val) {
@@ -212,7 +213,7 @@ define(function (require) {
         var targetSeats = digits * 100;
 
         var seats = zrUtil.map(votesPerQuota, function (votes) {
-            // automatic seats
+            // Assign automatic seats.
             return Math.floor(votes);
         });
         var currentSum = zrUtil.reduce(seats, function (acc, val) {
@@ -223,7 +224,7 @@ define(function (require) {
             return votes - seats[idx];
         });
 
-        // Has remainding votes
+        // Has remainding votes.
         while (currentSum < targetSeats) {
             // Find next largest remainder.
             var max = Number.NEGATIVE_INFINITY;

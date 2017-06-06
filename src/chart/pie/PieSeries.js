@@ -47,8 +47,14 @@ define(function(require) {
             var data = this.getData();
             var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
             // FIXME toFixed?
+
+            var valueList = [];
+            data.each('value', function (value) {
+                valueList.push(value);
+            });
+
             params.percent = numberUtil.getPercentWithPrecision(
-                data._storage['value'],
+                valueList,
                 dataIndex,
                 data.hostModel.get('percentPrecision')
             );
