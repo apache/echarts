@@ -356,6 +356,20 @@ describe('util/number', function () {
             expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 2, 0)).toEqual(26);
             expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 3, 0)).toEqual(9);
         });
+
+        testCase('NaN data', function (numberUtil) {
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 0, 0)).toEqual(17);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 1, 0)).toEqual(48);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 2, 0)).toEqual(26);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 3, 0)).toEqual(9);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 4, 0)).toEqual(0);
+
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 0, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 1, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 2, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 3, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 4, 0)).toEqual(0);
+        });
     });
 
 

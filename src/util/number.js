@@ -199,16 +199,20 @@ define(function (require) {
      * @return {number} percent ranging from 0 to 100
      */
     number.getPercentWithPrecision = function (valueList, idx, precision) {
+        if (!valueList[idx]) {
+            return 0;
+        }
+
         var sum = zrUtil.reduce(valueList, function (acc, val) {
-            return acc + val;
+            return acc + (isNaN(val) ? 0 : val);
         }, 0);
         if (sum === 0) {
             return 0;
         }
 
         var digits = Math.pow(10, precision);
-        var votesPerQuota = zrUtil.map(valueList, function (value) {
-            return value / sum * digits * 100;
+        var votesPerQuota = zrUtil.map(valueList, function (val) {
+            return (isNaN(val) ? 0 : val) / sum * digits * 100;
         });
         var targetSeats = digits * 100;
 
