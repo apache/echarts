@@ -101,6 +101,7 @@ define(function (require) {
                         width: sw,
                         height: sh
                     },
+                    cursor: 'default',
                     style: itemRectStyleModel
                 });
 

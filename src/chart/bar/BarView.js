@@ -252,6 +252,9 @@ define(function (require) {
             itemStyleModel.getBarItemStyle()
         ));
 
+        var cursorStyle = itemModel.getShallow('cursor');
+        cursorStyle && el.attr('cursor', cursorStyle);
+
         var labelPositionOutside = isHorizontal
             ? (layout.height > 0 ? 'bottom' : 'top')
             : (layout.width > 0 ? 'left' : 'right');

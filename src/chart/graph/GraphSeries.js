@@ -228,6 +228,7 @@ define(function (require) {
             zoom: 1,
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
+            // cursor: null,
 
             // categories: [],
 
