@@ -22,7 +22,7 @@ define(function(require) {
             symbolRepeatDirection: 'end', // 'end' means from 'start' to 'end'.
 
             symbolClip: false,
-            symbolBoundingData: null,
+            symbolBoundingData: null, // Can be 60 or -40 or [-40, 60]
             symbolPatternSize: 400, // 400 * 400 px
 
             barGap: '-100%',      // In most case, overlap is needed.

@@ -183,18 +183,38 @@ define(function (require) {
         var symbolBoundingData = itemModel.get('symbolBoundingData');
         var valueAxis = opt.coordSys.getOtherAxis(opt.coordSys.getBaseAxis());
         var zeroPx = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+        var pxSignIdx = 1 - +(layout[valueDim.wh] <= 0);
+        var boundingLength;
 
-        var boundingLength = output.boundingLength = symbolBoundingData != null
-            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.scale.parse(symbolBoundingData))) - zeroPx
-            : symbolRepeat
-            ? opt.coordSysExtent[valueDim.index][1 - +(layout[valueDim.wh] <= 0)] - zeroPx
-            : layout[valueDim.wh];
+        if (zrUtil.isArray(symbolBoundingData)) {
+            var symbolBoundingExtent = [
+                convertToCoordOnAxis(valueAxis, symbolBoundingData[0]) - zeroPx,
+                convertToCoordOnAxis(valueAxis, symbolBoundingData[1]) - zeroPx
+            ];
+            symbolBoundingExtent[1] < symbolBoundingExtent[0] && (symbolBoundingExtent.reverse());
+            boundingLength = symbolBoundingExtent[pxSignIdx];
+        }
+        else if (symbolBoundingData != null) {
+            boundingLength = convertToCoordOnAxis(valueAxis, symbolBoundingData) - zeroPx;
+        }
+        else if (symbolRepeat) {
+            boundingLength = opt.coordSysExtent[valueDim.index][pxSignIdx] - zeroPx;
+        }
+        else {
+            boundingLength = layout[valueDim.wh];
+        }
+
+        output.boundingLength = boundingLength;
 
         if (symbolRepeat) {
             output.repeatCutLength = layout[valueDim.wh];
         }
 
         output.pxSign = boundingLength > 0 ? 1 : boundingLength < 0 ? -1 : 0;
+    }
+
+    function convertToCoordOnAxis(axis, value) {
+        return axis.toGlobalCoord(axis.dataToCoord(axis.scale.parse(value)));
     }
 
     // Support ['100%', '100%']
