@@ -105,6 +105,8 @@ define(function(require) {
             // If still show when all data zero.
             stillShowZeroSum: true,
 
+            // cursor: null,
+
             label: {
                 normal: {
                     // If rotate around circle

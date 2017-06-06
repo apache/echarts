@@ -733,6 +733,7 @@ define(function (require) {
         // Because symbol provide setColor individually to set fill and stroke
         var normalStyle = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
         var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+        var cursorStyle = itemModel.getShallow('cursor');
 
         eachPath(bar, function (path) {
             // PENDING setColor should be before setStyle!!!
@@ -746,6 +747,7 @@ define(function (require) {
             ));
             graphic.setHoverStyle(path, hoverStyle);
 
+            cursorStyle && (path.cursor = cursorStyle);
             path.z2 = symbolMeta.z2;
         });
 

@@ -48,7 +48,8 @@ define(function (require) {
             hoverAnimation: seriesModel.get('hoverAnimation'),
 
             labelModel: seriesModel.getModel('label.normal'),
-            hoverLabelModel: seriesModel.getModel('label.emphasis')
+            hoverLabelModel: seriesModel.getModel('label.emphasis'),
+            cursorStyle: seriesModel.get('cursor')
         };
 
         data.diff(oldData)

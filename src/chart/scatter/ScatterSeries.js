@@ -41,6 +41,7 @@ define(function (require) {
             large: false,
             // Available when large is true
             largeThreshold: 2000,
+            // cursor: null,
 
             // label: {
                 // normal: {

@@ -164,6 +164,9 @@ define(function (require) {
         );
         sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
 
+        var cursorStyle = itemModel.getShallow('cursor');
+        cursorStyle && sector.attr('cursor', cursorStyle);
+
         // Toggle selected
         toggleItemSelected(
             this,

@@ -178,6 +178,7 @@ define(function (require) {
         var labelModel = seriesScope && seriesScope.labelModel;
         var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
         var hoverAnimation = seriesScope && seriesScope.hoverAnimation;
+        var cursorStyle = seriesScope && seriesScope.cursorStyle;
 
         if (!seriesScope || data.hasItemOption) {
             var itemModel = data.getItemModel(idx);
@@ -193,6 +194,7 @@ define(function (require) {
             labelModel = itemModel.getModel(normalLabelAccessPath);
             hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
             hoverAnimation = itemModel.getShallow('hoverAnimation');
+            cursorStyle = itemModel.getShallow('cursor');
         }
         else {
             hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
@@ -208,6 +210,8 @@ define(function (require) {
                 numberUtil.parsePercent(symbolOffset[1], symbolSize[1])
             ]);
         }
+
+        cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
         // PENDING setColor before setStyle!!!
         symbolPath.setColor(color);
