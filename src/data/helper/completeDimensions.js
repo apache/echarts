@@ -97,7 +97,6 @@ define(function (require) {
                 if (resultDimIdx != null && resultDimIdx < dimCount) {
                     dataDims[coordDimIndex] = resultDimIdx;
                     applyDim(result[resultDimIdx], coordDim, coordDimIndex);
-                    // coordDim === 'value' && valueCandidate == null && (valueCandidate = resultDimIdx);
                 }
             });
         });
@@ -137,7 +136,6 @@ define(function (require) {
             each(dataDims, function (resultDimIdx, coordDimIndex) {
                 var resultItem = result[resultDimIdx];
                 applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
-                // coordDim === 'value' && valueCandidate == null && (valueCandidate = resultDimIdx);
                 if (resultItem.name == null && sysDimItemDimsDef) {
                     resultItem.name = resultItem.tooltipName = sysDimItemDimsDef[coordDimIndex];
                 }
@@ -160,14 +158,6 @@ define(function (require) {
             );
 
             resultItem.name == null && (resultItem.name = genName(
-                // Ensure At least one value dim.
-                // (dataDimNameMap.get('value') == null
-                //     && (valueCandidate == null || valueCandidate === resultDimIdx)
-                //     // Try to set as 'value' only if coordDim is not set as 'extra'.
-                //     && coordDim == null
-                // )
-                // ? 'value'
-                // :
                 resultItem.coordDim,
                 dataDimNameMap
             ));
