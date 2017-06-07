@@ -208,7 +208,9 @@ define(function(require) {
             // When data.count() is 0, gradient range can not be calculated.
             return;
         }
-
+        if(visualMetaList[0].stops.length==0){
+			return;
+		}
         var visualMeta;
         for (var i = visualMetaList.length - 1; i >= 0; i--) {
             // Can only be x or y
