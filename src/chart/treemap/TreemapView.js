@@ -763,7 +763,10 @@
 
         function prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight) {
             var nodeModel = thisNode.getModel();
-            var text = nodeModel.get('name');
+            var text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(thisNode.dataIndex, 'normal'),
+                nodeModel.get('name')
+            );
             if (thisLayout.isLeafRoot) {
                 var iconChar = seriesModel.get('drillDownIcon', true);
                 text = iconChar ? iconChar + ' ' + text : text;
