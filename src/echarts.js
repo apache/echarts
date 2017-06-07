@@ -1795,6 +1795,20 @@ define(function (require) {
     };
 
     /**
+     * Get dimensions of specified coordinate system.
+     * @param {string} type
+     * @return {Array.<string|Object>}
+     */
+    echarts.getCoordinateSystemDimensions = function (type) {
+        var coordSysCreator = CoordinateSystemManager.get(type);
+        if (coordSysCreator) {
+            return coordSysCreator.getDimensionsInfo
+                    ? coordSysCreator.getDimensionsInfo()
+                    : coordSysCreator.dimensions.slice();
+        }
+    };
+
+    /**
      * Layout is a special stage of visual encoding
      * Most visual encoding like color are common for different chart
      * But each chart has it's own layout algorithm
