@@ -34,7 +34,9 @@ define(function (require) {
             bottom: '5%',
 
             layout: 'orthogonal',
-            orient: 'horizontal'
+            orient: 'horizontal',
+
+            nodeRadius: 2
 
         }
 
