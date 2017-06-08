@@ -240,7 +240,7 @@ define(function (require) {
         var itemStyleModel = itemModel.getModel('itemStyle.normal');
         var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
 
-        if (!isPolar && isHorizontal) {
+        if (!isPolar) {
             el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
         }
 
