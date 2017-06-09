@@ -1,6 +1,7 @@
 /**
  * @file  The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
  *        the tree.
+ * @see  https://github.com/d3/d3-hierarchy
  */
 define(function (require) {
 
@@ -84,7 +85,7 @@ define(function (require) {
     }
 
     /**
-     *
+     * Initialize all computational message for following algorithm
      * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
      */
     function initial(root) {
@@ -126,7 +127,7 @@ define(function (require) {
     }
 
     /**
-     * [eachAfter description]
+     * Traverse the tree from bottom to top and do something
      * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
      * @param  {Function} callback
      */
@@ -151,9 +152,11 @@ define(function (require) {
     }
 
     /**
-     * [firstWalk description]
-     * @param  {[type]} node [description]
-     * @return {[type]}      [description]
+     * Computes a preliminary x coordinate for node. Before that, this function is
+     * applied recursively to the children of node, as well as the function
+     * apportion(). After spacing out the children by calling executeShifts(), the
+     * node is placed to the midpoint of its outermost children.
+     * @param  {module:echarts/data/Tree~TreeNode} node
      */
     function firstWalk(node) {
         var children = node.children;
@@ -177,9 +180,9 @@ define(function (require) {
     }
 
     /**
-     * [executeShifts description]
-     * @param  {[type]} node [description]
-     * @return {[type]}      [description]
+     * All other shifts, applied to the smaller subtrees between w- and w+, are
+     * performed by this function.
+     * @param  {module:echarts/data/Tree~TreeNode} node
      */
     function executeShifts(node) {
         var children = node.children;
@@ -195,16 +198,23 @@ define(function (require) {
         }
     }
 
+
     function separation(node1, node2) {
         return node1.parentNode === node2.parentNode ? 1 : 2;
     }
 
     /**
-     * [apportion description]
-     * @param  {[type]} subtreeV [description]
-     * @param  {[type]} subtreeW [description]
-     * @param  {[type]} ancestor [description]
-     * @return {[type]}          [description]
+     * The core of the algorithm. Here, a new subtree is combined with the
+     * previous subtrees. Threads are used to traverse the inside and outside
+     * contours of the left and right subtree up to the highest common level.
+     * Whenever two nodes of the inside contours conflict, we compute the left
+     * one of the greatest uncommon ancestors using the function nextAncestor()
+     * and call moveSubtree() to shift the subtree and prepare the shifts of
+     * smaller subtrees. Finally, we add a new thread (if necessary).
+     * @param  {module:echarts/data/Tree~TreeNode} subtreeV
+     * @param  {module:echarts/data/Tree~TreeNode} subtreeW
+     * @param  {module:echarts/data/Tree~TreeNode} ancestor
+     * @return {module:echarts/data/Tree~TreeNode}
      */
     function apportion(subtreeV, subtreeW, ancestor) {
         if (subtreeW) {
@@ -249,9 +259,11 @@ define(function (require) {
     }
 
     /**
-     * [nextRight description]
-     * @param  {[type]} node [description]
-     * @return {[type]}      [description]
+     * This function is used to traverse the right contour of a subtree.
+     * It returns the rightmost child of node or the thread of node. The function
+     * returns null if and only if node is on the highest depth of its subtree.
+     * @param  {module:echarts/data/Tree~TreeNode} node
+     * @return {module:echarts/data/Tree~TreeNode}
      */
     function nextRight(node) {
         var children = node.children;
@@ -259,9 +271,11 @@ define(function (require) {
     }
 
     /**
-     * [nextLeft description]
-     * @param  {[type]} node [description]
-     * @return {[type]}      [description]
+     * This function is used to traverse the left contour of a subtree (or a subforest).
+     * It returns the leftmost child of node or the thread of node. The function
+     * returns null if and only if node is on the highest depth of its subtree.
+     * @param  {module:echarts/data/Tree~TreeNode} node
+     * @return {module:echarts/data/Tree~TreeNode}
      */
     function nextLeft(node) {
         var children = node.children;
@@ -269,11 +283,12 @@ define(function (require) {
     }
 
     /**
-     * [nextAncestor description]
-     * @param  {[type]} nodeInLeft [description]
-     * @param  {[type]} node       [description]
-     * @param  {[type]} ancestor   [description]
-     * @return {[type]}            [description]
+     * If nodeInLeft’s ancestor is a sibling of node, returns nodeInLeft’s ancestor.
+     * Otherwise, returns the specified ancestor.
+     * @param  {module:echarts/data/Tree~TreeNode} nodeInLeft
+     * @param  {module:echarts/data/Tree~TreeNode} node
+     * @param  {module:echarts/data/Tree~TreeNode} ancestor
+     * @return {module:echarts/data/Tree~TreeNode}
      */
     function nextAncestor(nodeInLeft, node, ancestor) {
         return nodeInLeft.hierNode.ancestor.parentNode === node.parentNode
@@ -281,11 +296,10 @@ define(function (require) {
     }
 
     /**
-     * [moveSubtree description]
-     * @param  {[type]} wl    [description]
-     * @param  {[type]} wr    [description]
-     * @param  {[type]} shift [description]
-     * @return {[type]}       [description]
+     * Shifts the current subtree rooted at wr. This is done by increasing prelim(w+) and modifier(w+) by shift.
+     * @param  {module:echarts/data/Tree~TreeNode} wl
+     * @param  {module:echarts/data/Tree~TreeNode} wr
+     * @param  {number} shift [description]
      */
     function moveSubtree(wl, wr,shift) {
         var change = shift / (wr.hierNode.i - wl.hierNode.i);
@@ -297,9 +311,9 @@ define(function (require) {
     }
 
     /**
-     * [eachBefore description]
+     * Traverse the tree from top to bottom and do something
      * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
-     * @param  {Function} callback [description]
+     * @param  {Function} callback
      */
     function eachBefore(root, callback) {
         var nodes = [root];
@@ -316,7 +330,7 @@ define(function (require) {
     }
 
     /**
-     * [secondWalk description]
+     * Computes all real x-coordinates by summing up the modifiers recursively.
      * @param  {module:echarts/data/Tree~TreeNode} node [description]
      * @return {[type]}      [description]
      */

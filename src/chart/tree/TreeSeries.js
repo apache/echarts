@@ -1,6 +1,5 @@
 /**
  * @file Create data struct and define tree view's series model
- * @author Deqing Li(annong035@gmail.com)
  */
 
 define(function (require) {
@@ -14,6 +13,12 @@ define(function (require) {
 
         layoutInfo: null,
 
+        /**
+         * Init a tree data structure from data in option series
+         *
+         * @param  {Object} option  the object used to config echarts view
+         * @return {module:echarts/data/List} storage initial data
+         */
         getInitialData: function (option) {
 
             //create an virtual root
@@ -33,9 +38,13 @@ define(function (require) {
             right: '10%',
             bottom: '5%',
 
+            // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
             layout: 'orthogonal',
+
+            // the orient of orthoginal layout, can be setted to 'horizontal' or 'vertical'
             orient: 'horizontal',
 
+            // the radius of the node circle
             nodeRadius: 2
 
         }

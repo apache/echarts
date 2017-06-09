@@ -1,0 +1,35 @@
+{
+"name": "flare",
+"children": [
+    {
+        "name": "data",
+        "children": [
+            {
+                 "name": "converters",
+                 "children": [
+                  {"name": "Converters", "value": 721},
+                  {"name": "DelimitedTextConverter", "value": 4294}
+                 ]
+            },
+            {
+                "name": "DataUtil",
+                "value": 3322
+            }
+        ]
+    },
+    {
+        "name": "display",
+        "children": [
+            {"name": "DirtySprite", "value": 8833},
+            {"name": "LineSprite", "value": 1732},
+            {"name": "RectSprite", "value": 3623}
+       ]
+    },
+    {
+        "name": "flex",
+        "children": [
+            {"name": "FlareVis", "value": 4116}
+        ]
+    }
+ ]
+}
