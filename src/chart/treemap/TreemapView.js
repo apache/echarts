@@ -680,6 +680,7 @@
         var thisViewChildren = thisNode.viewChildren;
         var upperHeight = thisLayout.upperHeight;
         var isParent = thisViewChildren && thisViewChildren.length;
+        var itemStyleEmphasisModel = thisNode.getModel('itemStyle.emphasis');
 
         // End of closure ariables available in "Procedures in renderNode".
         // -----------------------------------------------------------------
@@ -724,28 +725,27 @@
 
             bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
             var visualBorderColor = thisNode.getVisual('borderColor', true);
+            var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
 
             updateStyle(bg, function () {
-                bg.setStyle('fill', visualBorderColor);
+                var normalStyle = {fill: visualBorderColor};
+                var emphasisStyle = {fill: emphasisBorderColor};
 
                 if (useUpperLabel) {
-                    var normalStyle = {fill: visualBorderColor};
-                    var emphasisStyle = {};
                     var upperLabelWidth = thisWidth - 2 * borderWidth;
 
                     prepareText(
                         normalStyle, emphasisStyle, visualBorderColor, upperLabelWidth, upperHeight,
                         {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
                     );
-
-                    bg.setStyle(normalStyle);
-                    graphic.setHoverStyle(bg, emphasisStyle);
                 }
                 // For old bg.
                 else {
-                    bg.setStyle({text: ''});
-                    graphic.setHoverStyle(bg, {text: ''});
+                    normalStyle.text = emphasisStyle.text = '';
                 }
+
+                bg.setStyle(normalStyle);
+                graphic.setHoverStyle(bg, emphasisStyle);
             });
 
             group.add(bg);
@@ -770,7 +770,7 @@
             var visualColor = thisNode.getVisual('color', true);
             updateStyle(content, function () {
                 var normalStyle = {fill: visualColor};
-                var emphasisStyle = thisNode.getModel('itemStyle.emphasis').getItemStyle();
+                var emphasisStyle = itemStyleEmphasisModel.getItemStyle();
 
                 prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
 
