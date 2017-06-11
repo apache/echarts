@@ -84,9 +84,35 @@ define(function(require) {
                 normal: {
                     show: true,
                     position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
+                    // formatter: null,
                     textStyle: {
                         color: '#fff',
                         ellipsis: true
+                        // align
+                        // baseline
+                    }
+                }
+            },
+            upperLabel: {                   // Label when node is parent.
+                normal: {
+                    show: false,
+                    position: [0, '50%'],
+                    height: 20,
+                    // formatter: null,
+                    textStyle: {
+                        color: '#fff',
+                        ellipsis: true,
+                        // align: null,
+                        baseline: 'middle'
+                    }
+                },
+                emphasis: {
+                    show: true,
+                    position: [0, '50%'],
+                    textStyle: {
+                        color: '#fff',
+                        ellipsis: true,
+                        baseline: 'middle'
                     }
                 }
             },

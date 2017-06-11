@@ -95,7 +95,7 @@ define(function (require) {
         },
 
         /**
-         * @param {string|Array.<string>} path
+         * @param {string|Array.<string>} [path]
          * @param {module:echarts/model/Model} [parentModel]
          * @return {module:echarts/model/Model}
          */
@@ -179,6 +179,7 @@ define(function (require) {
         return obj;
     }
 
+    // `path` can be null/undefined
     function getParent(model, path) {
         var getParentMethod = clazzUtil.get(model, 'getParent');
         return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;

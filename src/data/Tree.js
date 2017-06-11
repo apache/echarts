@@ -220,7 +220,7 @@ define(function(require) {
         },
 
         /**
-         * @param {string} path
+         * @param {string} [path]
          * @return {module:echarts/model/Model}
          */
         getModel: function (path) {

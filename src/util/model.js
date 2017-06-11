@@ -173,9 +173,10 @@ define(function(require) {
          * @param {string} [status='normal'] 'normal' or 'emphasis'
          * @param {string} [dataType]
          * @param {number} [dimIndex]
+         * @param {string} [labelProp='label']
          * @return {string}
          */
-        getFormattedLabel: function (dataIndex, status, dataType, dimIndex) {
+        getFormattedLabel: function (dataIndex, status, dataType, dimIndex, labelProp) {
             status = status || 'normal';
             var data = this.getData(dataType);
             var itemModel = data.getItemModel(dataIndex);
@@ -185,7 +186,7 @@ define(function(require) {
                 params.value = params.value[dimIndex];
             }
 
-            var formatter = itemModel.get(['label', status, 'formatter']);
+            var formatter = itemModel.get([labelProp || 'label', status, 'formatter']);
 
             if (typeof formatter === 'function') {
                 params.status = status;

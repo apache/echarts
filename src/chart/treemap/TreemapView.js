@@ -15,8 +15,10 @@
     var each = zrUtil.each;
 
     var DRAG_THRESHOLD = 3;
-    var PATH_LABEL_NORMAL = ['label', 'normal'];
+    var PATH_LABEL_NOAMAL = ['label', 'normal'];
     var PATH_LABEL_EMPHASIS = ['label', 'emphasis'];
+    var PATH_UPPERLABEL_NORMAL = ['upperLabel', 'normal'];
+    var PATH_UPPERLABEL_EMPHASIS = ['upperLabel', 'emphasis'];
     var Z_BASE = 10; // Should bigger than every z.
     var Z_BG = 1;
     var Z_CONTENT = 2;
@@ -658,6 +660,9 @@
             return;
         }
 
+        // -------------------------------------------------------------------
+        // Start of closure variables available in "Procedures in renderNode".
+
         var thisLayout = thisNode.getLayout();
 
         if (!thisLayout || !thisLayout.isInView) {
@@ -666,10 +671,18 @@
 
         var thisWidth = thisLayout.width;
         var thisHeight = thisLayout.height;
+        var borderWidth = thisLayout.borderWidth;
         var thisInvisible = thisLayout.invisible;
 
         var thisRawIndex = thisNode.getRawIndex();
         var oldRawIndex = oldNode && oldNode.getRawIndex();
+
+        var thisViewChildren = thisNode.viewChildren;
+        var upperHeight = thisLayout.upperHeight;
+        var isParent = thisViewChildren && thisViewChildren.length;
+
+        // End of closure ariables available in "Procedures in renderNode".
+        // -----------------------------------------------------------------
 
         // Node group
         var group = giveGraphic('nodeGroup', Group);
@@ -690,20 +703,12 @@
 
         // Background
         var bg = giveGraphic('background', Rect, depth, Z_BG);
-        if (bg) {
-            bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
-            updateStyle(bg, function () {
-                bg.setStyle('fill', thisNode.getVisual('borderColor', true));
-            });
-            group.add(bg);
-        }
-
-        var thisViewChildren = thisNode.viewChildren;
+        bg && renderBackground(group, bg, isParent && thisLayout.upperHeight);
 
         // No children, render content.
-        if (!thisViewChildren || !thisViewChildren.length) {
+        if (!isParent) {
             var content = giveGraphic('content', Rect, depth, Z_CONTENT);
-            content && renderContent(group);
+            content && renderContent(group, content);
         }
 
         return group;
@@ -712,12 +717,45 @@
         // | Procedures in renderNode |
         // ----------------------------
 
-        function renderContent(group) {
+        function renderBackground(group, bg, useUpperLabel) {
+            // For tooltip.
+            bg.dataIndex = thisNode.dataIndex;
+            bg.seriesIndex = seriesModel.seriesIndex;
+
+            bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
+            var visualBorderColor = thisNode.getVisual('borderColor', true);
+
+            updateStyle(bg, function () {
+                bg.setStyle('fill', visualBorderColor);
+
+                if (useUpperLabel) {
+                    var normalStyle = {fill: visualBorderColor};
+                    var emphasisStyle = {};
+                    var upperLabelWidth = thisWidth - 2 * borderWidth;
+
+                    prepareText(
+                        normalStyle, emphasisStyle, visualBorderColor, upperLabelWidth, upperHeight,
+                        {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
+                    );
+
+                    bg.setStyle(normalStyle);
+                    graphic.setHoverStyle(bg, emphasisStyle);
+                }
+                // For old bg.
+                else {
+                    bg.setStyle({text: ''});
+                    graphic.setHoverStyle(bg, {text: ''});
+                }
+            });
+
+            group.add(bg);
+        }
+
+        function renderContent(group, content) {
             // For tooltip.
             content.dataIndex = thisNode.dataIndex;
             content.seriesIndex = seriesModel.seriesIndex;
 
-            var borderWidth = thisLayout.borderWidth;
             var contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
             var contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
 
@@ -761,28 +799,30 @@
             }
         }
 
-        function prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight) {
+        function prepareText(normalStyle, emphasisStyle, visualColor, width, height, upperLabelRect) {
             var nodeModel = thisNode.getModel();
             var text = zrUtil.retrieve(
-                seriesModel.getFormattedLabel(thisNode.dataIndex, 'normal'),
+                seriesModel.getFormattedLabel(
+                    thisNode.dataIndex, 'normal', null, null, upperLabelRect ? 'upperLabel' : 'label'
+                ),
                 nodeModel.get('name')
             );
-            if (thisLayout.isLeafRoot) {
+            if (!upperLabelRect && thisLayout.isLeafRoot) {
                 var iconChar = seriesModel.get('drillDownIcon', true);
                 text = iconChar ? iconChar + ' ' + text : text;
             }
 
             setText(
-                text, normalStyle, nodeModel, PATH_LABEL_NORMAL,
-                visualColor, contentWidth, contentHeight
+                text, normalStyle, nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL,
+                visualColor, width, height, upperLabelRect
             );
             setText(
-                text, emphasisStyle, nodeModel, PATH_LABEL_EMPHASIS,
-                visualColor, contentWidth, contentHeight
+                text, emphasisStyle, nodeModel, upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS,
+                visualColor, width, height, upperLabelRect
             );
         }
 
-        function setText(text, style, nodeModel, labelPath, visualColor, contentWidth, contentHeight) {
+        function setText(text, style, nodeModel, labelPath, visualColor, width, height, upperLabelRect) {
             var labelModel = nodeModel.getModel(labelPath);
             var labelTextStyleModel = labelModel.getModel('textStyle');
 
@@ -793,15 +833,16 @@
             // except in treemap.
             style.textAlign = labelTextStyleModel.get('align');
             style.textVerticalAlign = labelTextStyleModel.get('baseline');
+            upperLabelRect && (style.textPositionRect = zrUtil.clone(upperLabelRect));
 
             var textRect = labelTextStyleModel.getTextRect(text);
-            if (!labelModel.getShallow('show') || textRect.height > contentHeight) {
+            if (!labelModel.getShallow('show') || textRect.height > height) {
                 style.text = '';
             }
-            else if (textRect.width > contentWidth) {
+            else if (textRect.width > width) {
                 style.text = labelTextStyleModel.get('ellipsis')
                     ? labelTextStyleModel.truncateText(
-                        text, contentWidth, null, {minChar: 2}
+                        text, width, null, {minChar: 2}
                     )
                     : '';
             }
