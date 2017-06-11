@@ -57,6 +57,7 @@ define(function (require) {
                     return {
                         w: rep,
                         rep: rep,
+                        fixed: nodeData.getItemModel(idx).get('fixed'),
                         p: (!point || isNaN(point[0]) || isNaN(point[1])) ? null : point
                     };
                 });
