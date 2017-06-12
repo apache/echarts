@@ -13,7 +13,8 @@ define(function (require) {
     var geoFixFuncs = [
         require('./fix/nanhai'),
         require('./fix/textCoord'),
-        require('./fix/geoCoord')
+        require('./fix/geoCoord'),
+        require('./fix/diaoyuIsland')
     ];
 
     /**
