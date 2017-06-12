@@ -27,14 +27,14 @@
                         chart.resize();
                     };
 
-                    $.getJSON('./data/tree-simple.json')
+                    $.getJSON('./data/tree-simple2.json')
                     .done(function (data) {
                         chart.setOption({
 
                             series:[
                                 {
                                     type: 'tree',
-                                    data: data
+                                    data: [data]
 
                                 }
                             ]

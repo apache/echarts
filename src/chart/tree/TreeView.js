@@ -13,7 +13,6 @@ define(function (require) {
 
         render: function (seriesModel, ecModel, api) {
 
-            // var tree = seriesModel.getData().tree;
             var virtualRoot = seriesModel.getData().tree.root;
             var realRoot = virtualRoot.children[0];
             var group = this.group;
@@ -33,6 +32,8 @@ define(function (require) {
 
             if (layout === 'orthogonal') {
                 zrUtil.each(edges, function (edge) {
+
+// console.log(edge);
                     var x1 = edge.source.getLayout().x;
                     var y1 = edge.source.getLayout().y;
                     var x2 = edge.target.getLayout().x;
@@ -45,7 +46,7 @@ define(function (require) {
                     }
                     if (orient === 'vertical') {
                         var cpx1 = x1;
-                        var cpy1 = (x1 + y1) / 2;
+                        var cpy1 = (y1 + y2) / 2;
                         var cpx2 = x2;
                         var cpx2 = y1;
                     }
@@ -65,7 +66,7 @@ define(function (require) {
 
                     curve.dataType = 'edge';
 
-                    group.add(edge);
+                    group.add(curve);
 
                 });
             }
@@ -74,7 +75,9 @@ define(function (require) {
                 var layout = node.getLayout();
                 var radius = seriesModel.get('nodeRadius');
 
-                var circle = new graphic.circle({
+console.log(node.getLayout());
+
+                var circle = new graphic.Circle({
                     shape: {
                         cx: node.getLayout().x,
                         cy: node.getLayout().y,
@@ -86,7 +89,9 @@ define(function (require) {
                 group.add(circle);
 
             });
-        }
+        },
+
+        dispose: function () {}
 
     });
 

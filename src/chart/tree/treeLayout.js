@@ -18,11 +18,19 @@ define(function (require) {
                 var width = layoutInfo.width;
                 var height = layoutInfo.height;
 
+// console.log(width);
+// console.log(height);
+
+
                 var virtualRoot = seriesModel.getData().tree.root;
                 var realRoot = virtualRoot.children[0];
 
                 initial(virtualRoot);
                 eachAfter(realRoot, firstWalk);
+
+// console.log(virtualRoot);
+// console.log(realRoot);
+
                 virtualRoot.hierNode.modifier = - realRoot.hierNode.prelim;
                 eachBefore(realRoot, secondWalk);
 
@@ -50,8 +58,8 @@ define(function (require) {
                     eachBefore(realRoot, function (node) {
                         var coorY = (node.getLayout().x + tx) * ky;
                         var coorX = node.depth * kx;
-                        node.setLayout({x: coorX}, true);
-                        node.setLayout({y: coorY}, true);
+                        node.setLayout({x: coorX, y: coorY}, true);
+                        // node.setLayout({y: coorY}, true);
                     });
                 }
                 if (orient == 'vertical') {
@@ -60,8 +68,8 @@ define(function (require) {
                     eachBefore(realRoot, function (node) {
                         var coorX = (node.getLayout().x + tx) * kx;
                         var coorY = node.depth * ky;
-                        node.setLayout({x: coorX}, true);
-                        node.setLayout({y: coorY}, true);
+                        node.setLayout({x: coorX, y: coorY}, true);
+                        // node.setLayout({y: coorY}, true);
                     });
                 }
             }
@@ -106,7 +114,7 @@ define(function (require) {
 
         while (node = nodes.pop()) {
             children = node.children;
-            if (children) {
+            if (children.length) {
                 var n = children.length;
                 for (var i = n - 1; i >= 0; i--) {
                     var child = children[i];
@@ -132,16 +140,15 @@ define(function (require) {
      * @param  {Function} callback
      */
     function eachAfter(root, callback) {
-        var nodes = [node];
+        var nodes = [root];
         var next = [];
         var node;
 
         while (node = nodes.pop()) {
             next.push(node);
             var children = node.children;
-            if (children) {
-                var n = children.length;
-                for (var i = 0; i < n; i++) {
+            if (children.length) {
+                for (var i = 0; i < children.length; i++) {
                     nodes.push(children[i]);
                 }
             }
@@ -162,9 +169,9 @@ define(function (require) {
         var children = node.children;
         var siblings = node.parentNode.children;
         var subtreeW = node.hierNode.i ? siblings[node.hierNode.i -1] : null;
-        if (children) {
+        if (children.length) {
             executeShifts(node);
-            var midPoint = (children[0].hierNode.prelim + children[children.lenght - 1].hierNode.prelim) / 2;
+            var midPoint = (children[0].hierNode.prelim + children[children.length - 1].hierNode.prelim) / 2;
             if (subtreeW) {
                 node.hierNode.prelim = subtreeW.hierNode.prelim + separation(node, subtreeW);
                 node.hierNode.modifier = node.hierNode.prelim - midPoint;
@@ -189,7 +196,7 @@ define(function (require) {
         var n = children.length;
         var shift = 0;
         var change = 0;
-        while (--n > 0) {
+        while (--n >= 0) {
             var child = children[n];
             child.hierNode.prelim += shift;
             child.hierNode.modifier += shift;
@@ -220,7 +227,7 @@ define(function (require) {
         if (subtreeW) {
             var nodeOutRight = subtreeV;
             var nodeInRight = subtreeV;
-            var nodeOutLeft = nodeOutLeft.parentNode.children[0];
+            var nodeOutLeft = nodeInRight.parentNode.children[0];
             var nodeInLeft = subtreeW;
 
             var sumOutRight = nodeOutRight.hierNode.modifier;
@@ -228,7 +235,7 @@ define(function (require) {
             var sumOutLeft = nodeOutLeft.hierNode.modifier;
             var sumInLeft = nodeInLeft.hierNode.modifier;
 
-            while ((nodeInLeft = nextRight(nodeInLeft)) && (nodeInRight = nextLeft(nodeInRight))) {
+            while (nodeInLeft = nextRight(nodeInLeft), nodeInRight = nextLeft(nodeInRight), nodeInLeft && nodeInRight) {
                 nodeOutRight = nextRight(nodeOutRight);
                 nodeOutLeft = nextLeft(nodeOutLeft);
                 nodeOutRight.hierNode.ancestor = subtreeV;
@@ -267,7 +274,7 @@ define(function (require) {
      */
     function nextRight(node) {
         var children = node.children;
-        return children ? children[children.length - 1] : node.hierNode.thread;
+        return children.length ? children[children.length - 1] : node.hierNode.thread;
     }
 
     /**
@@ -279,7 +286,7 @@ define(function (require) {
      */
     function nextLeft(node) {
         var children = node.children;
-        return children ? children[0] : node.hierNode.thread;
+        return children.length ? children[0] : node.hierNode.thread;
     }
 
     /**
@@ -321,8 +328,8 @@ define(function (require) {
         while (node = nodes.pop()) {
             callback(node);
             var children = node.children;
-            if (children) {
-                for (var i = children.length - 1; i > 0; i--) {
+            if (children.length) {
+                for (var i = children.length - 1; i >= 0; i--) {
                     nodes.push(children[i]);
                 }
             }
