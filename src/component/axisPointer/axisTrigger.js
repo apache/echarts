@@ -17,9 +17,9 @@ define(function(require) {
      * @param {Object} payload
      * @param {string} [payload.currTrigger] 'click' | 'mousemove' | 'leave'
      * @param {Array.<number>} [payload.x] x and y, which are mandatory, specify a point to
-     *              tigger axisPointer and tooltip.
+     *              trigger axisPointer and tooltip.
      * @param {Array.<number>} [payload.y] x and y, which are mandatory, specify a point to
-     *              tigger axisPointer and tooltip.
+     *              trigger axisPointer and tooltip.
      * @param {Object} [payload.seriesIndex] finder, optional, restrict target axes.
      * @param {Object} [payload.dataIndex] finder, restrict target axes.
      * @param {Object} [payload.axesInfo] finder, restrict target axes.
