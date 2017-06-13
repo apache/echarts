@@ -122,9 +122,11 @@ define(function (require) {
             var directionInfo = getDirectionInfo[coordSysName](
                 null, [mouseX, mouseY], axisModel, controller, coordInfo
             );
-
-            var percentPoint = (directionInfo.pixel - directionInfo.pixelStart) /
-                directionInfo.pixelLength * (range[1] - range[0]) + range[0];
+            var percentPoint = (
+                directionInfo.signal > 0
+                    ? (directionInfo.pixelStart + directionInfo.pixelLength - directionInfo.pixel)
+                    : (directionInfo.pixel - directionInfo.pixelStart)
+                ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
             scale = Math.max(1 / scale, 0);
             range[0] = (range[0] - percentPoint) * scale + percentPoint;
