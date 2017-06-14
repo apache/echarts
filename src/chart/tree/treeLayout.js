@@ -18,18 +18,11 @@ define(function (require) {
                 var width = layoutInfo.width;
                 var height = layoutInfo.height;
 
-// console.log(width);
-// console.log(height);
-
-
                 var virtualRoot = seriesModel.getData().tree.root;
                 var realRoot = virtualRoot.children[0];
 
                 initial(virtualRoot);
                 eachAfter(realRoot, firstWalk);
-
-// console.log(virtualRoot);
-// console.log(realRoot);
 
                 virtualRoot.hierNode.modifier = - realRoot.hierNode.prelim;
                 eachBefore(realRoot, secondWalk);
@@ -38,10 +31,11 @@ define(function (require) {
                 var right = realRoot;
                 var bottom = realRoot;
                 eachBefore(realRoot, function (node) {
-                    if (node.getLayout().x < left.getLayout().x) {
+                    var x = node.getLayout().x;
+                    if (x < left.getLayout().x) {
                         left = node;
                     }
-                    if (node.getLayout().x > right.getLayout().x) {
+                    if (x > right.getLayout().x) {
                         right = node;
                     }
                     if (node.depth > bottom.depth) {
@@ -49,27 +43,27 @@ define(function (require) {
                     }
                 });
 
-                var delta = left === right ? 1 : separation(left, right);
+                var delta = left === right ? 1 : separation(left, right) / 2;
                 var tx = delta - left.getLayout().x;
                 var orient = seriesModel.get('orient');
+
                 if (orient === 'horizontal') {
-                    var ky = height / right.getLayout().x + delta + tx;
-                    var kx = width / (bottom.depth || 1);
+                    var ky = height / (right.getLayout().x + delta + tx);
+                    var kx = width / ((bottom.depth - 1) || 1);
                     eachBefore(realRoot, function (node) {
                         var coorY = (node.getLayout().x + tx) * ky;
-                        var coorX = node.depth * kx;
+                        var coorX = (node.depth - 1) * kx;
                         node.setLayout({x: coorX, y: coorY}, true);
-                        // node.setLayout({y: coorY}, true);
                     });
                 }
-                if (orient == 'vertical') {
-                    var kx = width / right.getLayout().x + delta + tx;
-                    var ky = height / (bottom.depth || 1);
+                if (orient === 'vertical') {
+                    var kx = width / (right.getLayout().x + delta + tx);
+                    var ky = height / ((bottom.depth - 1) || 1);
                     eachBefore(realRoot, function (node) {
                         var coorX = (node.getLayout().x + tx) * kx;
-                        var coorY = node.depth * ky;
+                        // here we use (node.depth - 1), bucause the real root's depth is 1
+                        var coorY = (node.depth - 1) * ky;
                         node.setLayout({x: coorX, y: coorY}, true);
-                        // node.setLayout({y: coorY}, true);
                     });
                 }
             }
@@ -97,7 +91,7 @@ define(function (require) {
      * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
      */
     function initial(root) {
-        root.hierNode = root.hierNode || {
+        root.hierNode = {
             defaultAncestor: null,
             ancestor: root,
             prelim: 0,
@@ -118,7 +112,7 @@ define(function (require) {
                 var n = children.length;
                 for (var i = n - 1; i >= 0; i--) {
                     var child = children[i];
-                    child.hierNode = child.hierNode || {
+                    child.hierNode = {
                         defaultAncestor: null,
                         ancestor: child,
                         prelim: 0,
@@ -153,6 +147,7 @@ define(function (require) {
                 }
             }
         }
+
         while (node = next.pop()){
             callback(node);
         }

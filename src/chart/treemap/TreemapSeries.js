@@ -158,10 +158,14 @@ define(function(require) {
 
             levels = option.levels = setDefault(levels, ecModel);
 
+            var treeOption = {};
+
+            treeOption.levels = levels;
+
             // Make sure always a new tree is created when setOption,
             // in TreemapView, we check whether oldTree === newTree
             // to choose mappings approach among old shapes and new shapes.
-            return Tree.createTree(root, this, levels).data;
+            return Tree.createTree(root, this, treeOption).data;
         },
 
         optionUpdated: function () {

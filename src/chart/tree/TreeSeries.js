@@ -24,7 +24,13 @@ define(function (require) {
             //create an virtual root
             var root = {name: option.name, children: option.data};
 
-            return Tree.createTree(root, this).data;
+            var leaves = option.leaves || {};
+
+            var treeOption = {};
+
+            treeOption.leaves = leaves;
+
+            return Tree.createTree(root, this, treeOption).data;
 
         },
 
@@ -33,9 +39,9 @@ define(function (require) {
             z: 2,
 
             // the position of the whole view
-            left: '5%',
+            left: '10%',
             top: '5%',
-            right: '10%',
+            right: '20%',
             bottom: '5%',
 
             // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
@@ -45,8 +51,46 @@ define(function (require) {
             orient: 'horizontal',
 
             // the radius of the node circle
-            nodeRadius: 2
+            nodeRadius: 3,
 
+            lineStyle: {
+                normal: {
+                    borderColor: '#555',
+                    opacity: 0.4,
+                    lineWidth: 1.5
+                }
+            },
+
+            itemStyle: {
+                normal: {
+                    color: '#000'
+                }
+            },
+
+            label: {
+                normal: {
+                    show: true,
+                    position: 'left',
+                    textStyle: {
+                        color: '#000'
+                    }
+                }
+            },
+
+            leaves: {
+                itemStyle: {
+                    normal: {
+                        color: '#999'
+
+                    }
+                },
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'right'
+                    }
+                }
+            }
         }
 
     });
