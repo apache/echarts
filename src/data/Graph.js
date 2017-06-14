@@ -88,6 +88,9 @@ define(function(require) {
         var nodesMap = this._nodesMap;
 
         if (nodesMap[generateNodeKey(id)]) {
+            if (__DEV__) {
+                console.error('Graph nodes have duplicate name or id');
+            }
             return;
         }
 
