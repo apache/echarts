@@ -135,10 +135,6 @@ define(function (require) {
                 })[orient][labelPosOpt];
             }
 
-            // FIXME
-            // 暂没有实现用户传入
-            // var labelAlign = timelineModel.get('label.normal.textStyle.align');
-            // var labelBaseline = timelineModel.get('label.normal.textStyle.baseline');
             var labelAlignMap = {
                 horizontal: 'center',
                 vertical: (labelPosOpt >= 0 || labelPosOpt === '+') ? 'left' : 'right'
@@ -203,8 +199,8 @@ define(function (require) {
                 rotation: rotationMap[orient],
                 labelRotation: labelRotation,
                 labelPosOpt: labelPosOpt,
-                labelAlign: labelAlignMap[orient],
-                labelBaseline: labelBaselineMap[orient],
+                labelAlign: timelineModel.get('label.normal.textStyle.align') || labelAlignMap[orient],
+                labelBaseline: timelineModel.get('label.normal.textStyle.baseline') || labelBaselineMap[orient],
 
                 // Based on mainGroup.
                 playPosition: playPosition,
