@@ -99,10 +99,12 @@ define(function (require) {
             }
             // Polyyon
             else {
-                var realSplitNumber = -1;
+                var realSplitNumber;
                 var axesTicksPoints = zrUtil.map(indicatorAxes, function (indicatorAxis, idx) {
                     var ticksCoords = indicatorAxis.getTicksCoords();
-                    realSplitNumber = Math.max(ticksCoords.length - 1, realSplitNumber);
+                    realSplitNumber = realSplitNumber == null
+                        ? ticksCoords.length - 1
+                        : Math.min(ticksCoords.length - 1, realSplitNumber);
                     return zrUtil.map(ticksCoords, function (tickCoord) {
                         return radar.coordToPoint(tickCoord, idx);
                     });
@@ -123,6 +125,7 @@ define(function (require) {
                             console.error('Can\'t draw value axis ' + i);
                         }
                     }
+
                     if (showSplitLine) {
                         var colorIndex = getColorIndex(splitLines, splitLineColors, i);
                         splitLines[colorIndex].push(new graphic.Polyline({

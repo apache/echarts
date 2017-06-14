@@ -58,6 +58,8 @@ define(function (require) {
             // Dropped auto calculated niceExtent and use user setted extent
             // We assume user wan't to set both interval, min, max to get a better result
             this._niceExtent = this._extent.slice();
+
+            this._intervalPrecision = helper.getIntervalPrecision(interval);
         },
 
         /**

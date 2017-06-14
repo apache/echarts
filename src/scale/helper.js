@@ -25,7 +25,7 @@ define(function (require) {
             interval = result.interval = minInterval;
         }
         // Tow more digital for tick.
-        var precision = result.intervalPrecision = numberUtil.getPrecisionSafe(interval) + 2;
+        var precision = result.intervalPrecision = helper.getIntervalPrecision(interval);
         // Niced extent inside original extent
         var niceTickExtent = result.niceTickExtent = [
             roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
@@ -35,6 +35,15 @@ define(function (require) {
         helper.fixExtent(niceTickExtent, extent);
 
         return result;
+    };
+
+    /**
+     * @param {number} interval
+     * @return {number} interval precision
+     */
+    helper.getIntervalPrecision = function (interval) {
+        // Tow more digital for tick.
+        return numberUtil.getPrecisionSafe(interval) + 2;
     };
 
     function clamp(niceTickExtent, idx, extent) {
