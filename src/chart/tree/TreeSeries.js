@@ -39,10 +39,10 @@ define(function (require) {
             z: 2,
 
             // the position of the whole view
-            left: '10%',
-            top: '5%',
-            right: '20%',
-            bottom: '5%',
+            left: '5%',
+            top: '1%',
+            right: '15%',
+            bottom: '1%',
 
             // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
             layout: 'orthogonal',
@@ -51,19 +51,21 @@ define(function (require) {
             orient: 'horizontal',
 
             // the radius of the node circle
-            nodeRadius: 3,
+            nodeRadius: 2.5,
 
             lineStyle: {
                 normal: {
-                    borderColor: '#555',
+                    Color: '#555',
                     opacity: 0.4,
-                    lineWidth: 1.5
+                    // borderWidth: 10,
+                    lineWidth: 20,
+                    curveness: 0.6,
+
                 }
             },
-
             itemStyle: {
                 normal: {
-                    color: '#000'
+                    color: '#444'
                 }
             },
 
@@ -72,7 +74,7 @@ define(function (require) {
                     show: true,
                     position: 'left',
                     textStyle: {
-                        color: '#000'
+                        color: '#555'
                     }
                 }
             },
@@ -81,7 +83,6 @@ define(function (require) {
                 itemStyle: {
                     normal: {
                         color: '#999'
-
                     }
                 },
                 label: {

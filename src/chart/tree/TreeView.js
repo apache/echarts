@@ -22,7 +22,9 @@ define(function (require) {
             var layoutInfo = seriesModel.layoutInfo;
             var layout = seriesModel.get('layout');
             var orient = seriesModel.get('orient');
-            var lineStyle = seriesModel.getModel('lineStyle.normal').getLineStyle();
+            var lineStyleModel = seriesModel.getModel('lineStyle.normal');
+            var curvature = lineStyleModel.get('curveness');
+            var lineStyle = lineStyleModel.getLineStyle();
 
             group.removeAll();
             group.position = [layoutInfo.x, layoutInfo.y];
@@ -45,15 +47,15 @@ define(function (require) {
                     var cpx2;
                     var cpy2;
                     if (orient === 'horizontal') {
-                        cpx1 = (x1 + x2) / 2;
+                        cpx1 = x1 + (x2 - x1) * curvature * 1.6;
                         cpy1 = y1;
-                        cpx2 = x1;
+                        cpx2 = x2 + (x1 - x2) * curvature;
                         cpy2 = y2;
                     }
                     // vertical
                     if (orient === 'vertical') {
                         cpx1 = x1;
-                        cpy1 = (y1 + y2) / 2;
+                        cpy1 = (y1 + y2) / 2
                         cpx2 = x2;
                         cpy2 = y1;
                     }
@@ -83,6 +85,7 @@ define(function (require) {
 
             realRoot.eachNode('preorder', function (node) {
                 var layout = node.getLayout();
+                // leaf node will get the leavesModel
                 var itemModel = node.getModel();
                 var itemNormalStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
                 var labelModel = itemModel.getModel('label.normal');

@@ -4,6 +4,6 @@ define(function (require) {
 
     require('./tree/TreeSeries');
     require('./tree/TreeView');
-    echarts.registerLayout(require('./tree/treeLayout'));
+    echarts.registerLayout(require('./tree/orthogonalLayout'));
 
 });
