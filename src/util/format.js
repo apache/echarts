@@ -45,12 +45,12 @@ define(function (require) {
      *  [4, 3, 2] => [4, 3, 2, 3]
      * @param {number|Array.<number>} val
      */
-    formatUtil.normalizeCssArray = function (val) {
-        var len = val.length;
+    formatUtil.normalizeCssArray = function (val) {        
         if (typeof (val) === 'number') {
             return [val, val, val, val];
         }
-        else if (len === 2) {
+        var len = val.length;
+        if (len === 2) {
             // vertical | horizontal
             return [val[0], val[1], val[0], val[1]];
         }

@@ -144,7 +144,7 @@ define(function (require) {
      * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
      * @param {module:echarts/data/Graph~Edge} edges  edge of sankey view
      * @param {number} height  the whole height of the area to draw the view
-     * @param {numbber} nodeGap  the vertical distance between two nodes
+     * @param {number} nodeGap  the vertical distance between two nodes
      *     in the same column.
      * @param {number} iterations  the number of iterations for the algorithm
      */

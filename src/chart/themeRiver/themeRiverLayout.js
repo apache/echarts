@@ -103,7 +103,7 @@ define(function (require) {
      * Inspired by Lee Byron's paper Stacked Graphs - Geometry & Aesthetics
      *
      * @param  {Array.<Array>} data  the points in each layer
-     * @return {Array}
+     * @return {Object}
      */
     function computeBaseline(data) {
         var layerNum = data.length;

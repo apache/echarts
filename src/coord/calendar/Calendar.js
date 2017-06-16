@@ -256,7 +256,7 @@ define(function (require) {
         /**
          * Convert a (x, y) point to time date
          *
-         * @param  {string} point point
+         * @param  {Array} point point
          * @return {Object}       date
          */
         pointToDate: function (point) {

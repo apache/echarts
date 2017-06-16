@@ -983,7 +983,7 @@ define(function (require) {
 
     /**
      * Set layout property.
-     * @param {string} key
+     * @param {string|Object} key
      * @param {*} [val]
      */
     listProto.setLayout = function (key, val) {

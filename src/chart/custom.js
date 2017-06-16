@@ -296,7 +296,7 @@ define(function (require) {
 
         /**
          * @public
-         * @param {nubmer|string} dim
+         * @param {number|string} dim
          * @param {number} [dataIndexInside=currDataIndexInside]
          * @return {number|string} value
          */

@@ -476,7 +476,8 @@ define(function(require) {
         if (zrUtil.isObject(lastProps) && zrUtil.isObject(newProps)) {
             var equals = true;
             zrUtil.each(newProps, function (item, key) {
-                equals &= propsEqual(lastProps[key], item);
+                // ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_Operators
+                equals = equals && propsEqual(lastProps[key], item);
             });
             return !!equals;
         }

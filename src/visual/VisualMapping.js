@@ -471,7 +471,7 @@ define(function (require) {
     /**
      * @public
      * @param {Object} obj
-     * @return {Oject} new object containers visual values.
+     * @return {Object} new object containers visual values.
      *                 If no visuals, return null.
      */
     VisualMapping.retrieveVisuals = function (obj) {
