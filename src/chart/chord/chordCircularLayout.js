@@ -47,7 +47,7 @@ define(function (require) {
         if (opts.sort && opts.sort != 'none') {
             groups.sort(compareGroups);
             if (opts.sort === 'descending') {
-                groups.revert();
+                groups.reverse();
             }
         }
 
@@ -58,7 +58,7 @@ define(function (require) {
             if (opts.sortSub && opts.sortSub != 'none') {
                 group.subGroups.sort(compareGroups);
                 if (opts.sortSub === 'descending') {
-                    group.subGroups.revert();
+                    group.subGroups.reverse();
                 }
             }
 

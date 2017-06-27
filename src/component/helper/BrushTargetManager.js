@@ -200,7 +200,7 @@ define(function(require) {
      *
      * @param {Object} area
      * @param {Array} targetInfoList
-     * @return {Obejct|boolean}
+     * @return {Object|boolean}
      */
     proto.findTargetInfo = function (area, ecModel) {
         var targetInfoList = this._targetInfoList;

@@ -26,7 +26,7 @@
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
-                chart.setOption({
+                chart.setOption({                    
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
@@ -36,7 +36,7 @@
                     series: [{
                         name: 'chord',
                         type: 'chord',
-                        sort: 'ascending',
+                        sort: 'descending',
                         data : [
                             {name : 'group1'},
                             {name : 'group2'},

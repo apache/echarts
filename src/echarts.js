@@ -114,7 +114,7 @@ define(function (require) {
          */
         this.group;
         /**
-         * @type {HTMLDomElement}
+         * @type {HTMLElement}
          * @private
          */
         this._dom = dom;
@@ -228,7 +228,7 @@ define(function (require) {
         }
     };
     /**
-     * @return {HTMLDomElement}
+     * @return {HTMLElement}
      */
     echartsProto.getDom = function () {
         return this._dom;
@@ -1564,7 +1564,7 @@ define(function (require) {
     }
 
     /**
-     * @param {HTMLDomElement} dom
+     * @param {HTMLElement} dom
      * @param {Object} [theme]
      * @param {Object} opts
      * @param {number} [opts.devicePixelRatio] Use window.devicePixelRatio by default
@@ -1681,7 +1681,7 @@ define(function (require) {
     };
 
     /**
-     * @param  {HTMLDomElement} dom
+     * @param  {HTMLElement} dom
      * @return {echarts~ECharts}
      */
     echarts.getInstanceByDom = function (dom) {

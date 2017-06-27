@@ -112,7 +112,7 @@ define(function (require) {
 
         // Must reinitialize effect if following configuration changed
         var DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'];
-        for (var i = 0; i < DIFFICULT_PROPS; i++) {
+        for (var i = 0; i < DIFFICULT_PROPS.length; i++) {
             var propName = DIFFICULT_PROPS[i];
             if (oldEffectCfg[propName] !== effectCfg[propName]) {
                 this.stopEffectAnimation();

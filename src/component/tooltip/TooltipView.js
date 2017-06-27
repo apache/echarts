@@ -532,7 +532,7 @@ define(function (require) {
         },
 
         /**
-         * @param  {string|Function|Array.<number>} positionExpr
+         * @param  {string|Function|Array.<number>|Object} positionExpr
          * @param  {number} x Mouse x
          * @param  {number} y Mouse y
          * @param  {boolean} confine Whether confine tooltip content in view rect.

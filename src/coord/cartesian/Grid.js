@@ -190,7 +190,7 @@ define(function(require, factory) {
 
     /**
      * @param {string} axisType
-     * @param {ndumber} [axisIndex]
+     * @param {number} [axisIndex]
      */
     gridProto.getAxis = function (axisType, axisIndex) {
         var axesMapOnDim = this._axesMap[axisType];

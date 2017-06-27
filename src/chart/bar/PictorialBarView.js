@@ -425,7 +425,7 @@ define(function (require) {
             path.__pictorialRepeatTimes = repeatTimes;
             bundle.add(path);
 
-            var target = makeTarget(index, true);
+            var target = makeTarget(index);
 
             updateAttr(
                 path,
