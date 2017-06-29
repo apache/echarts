@@ -158,7 +158,7 @@
                 lastsForAnimation, willInvisibleEls
             );
 
-            // Notice: when thisTree and oldTree are the same tree (see list.cloneShadow),
+            // Notice: when thisTree and oldTree are the same tree (see list.cloneShallow),
             // the oldTree is actually losted, so we can not find all of the old graphic
             // elements from tree. So we use this stragegy: make element storage, move
             // from old storage to new storage, clear old storage.
