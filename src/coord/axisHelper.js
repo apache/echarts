@@ -113,12 +113,16 @@ define(function (require) {
             scale.base = model.get('logBase');
         }
 
+        var scaleType = scale.type;
         scale.setExtent(extent[0], extent[1]);
         scale.niceExtent({
             splitNumber: splitNumber,
             fixMin: fixMin,
             fixMax: fixMax,
-            minInterval: scale.type === 'interval' ? model.get('minInterval') : null
+            minInterval: (scaleType === 'interval' || scaleType === 'time')
+                ? model.get('minInterval') : null,
+            maxInterval: (scaleType === 'interval' || scaleType === 'time')
+                ? model.get('maxInterval') : null
         });
 
         // If some one specified the min, max. And the default calculated interval

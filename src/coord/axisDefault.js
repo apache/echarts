@@ -134,6 +134,7 @@ define(function (require) {
         splitNumber: 5
         // Minimum interval
         // minInterval: null
+        // maxInterval: null
     }, defaultOption);
 
     // FIXME
