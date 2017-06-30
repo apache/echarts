@@ -42,7 +42,7 @@ define(function (require) {
         dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 
         defaultOption: {
-            coordinateSystem: 'cartesian2d',
+            coordinateSystem: 'cartesian2d', // Can be set as 'none'
             zlevel: 0,
             z: 2,
             legendHoverLink: true
@@ -222,18 +222,21 @@ define(function (require) {
     function makeRenderItem(customSeries, data, ecModel, api) {
         var renderItem = customSeries.get('renderItem');
         var coordSys = customSeries.coordinateSystem;
+        var prepareResult = {};
 
-        if (__DEV__) {
-            zrUtil.assert(renderItem, 'series.render is required.');
-            zrUtil.assert(
-                coordSys.prepareCustoms || prepareCustoms[coordSys.type],
-                'This coordSys does not support custom series.'
-            );
+        if (coordSys) {
+            if (__DEV__) {
+                zrUtil.assert(renderItem, 'series.render is required.');
+                zrUtil.assert(
+                    coordSys.prepareCustoms || prepareCustoms[coordSys.type],
+                    'This coordSys does not support custom series.'
+                );
+            }
+
+            prepareResult = coordSys.prepareCustoms
+                ? coordSys.prepareCustoms()
+                : prepareCustoms[coordSys.type](coordSys);
         }
-
-        var prepareResult = coordSys.prepareCustoms
-            ? coordSys.prepareCustoms()
-            : prepareCustoms[coordSys.type](coordSys);
 
         var userAPI = zrUtil.defaults({
             getWidth: api.getWidth,
@@ -247,7 +250,7 @@ define(function (require) {
             barLayout: barLayout,
             currentSeriesIndices: currentSeriesIndices,
             font: font
-        }, prepareResult.api);
+        }, prepareResult.api || {});
 
         var userParams = {
             context: {},
