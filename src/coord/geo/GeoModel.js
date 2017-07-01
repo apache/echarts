@@ -70,7 +70,7 @@ define(function (require) {
 
             ///// Layout with center and size
             // If you wan't to put map in a fixed size box with right aspect ratio
-            // This two properties may more conveninet
+            // This two properties may more convenient
             // layoutCenter: [50%, 50%]
             // layoutSize: 100
 
