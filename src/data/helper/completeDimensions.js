@@ -204,7 +204,8 @@ define(function (require) {
 
             var value = value[dimIndex];
             // Consider usage convenience, '1', '2' will be treated as "number".
-            if (value != null && isFinite(value)) {
+            // `isFinit('')` get `true`.
+            if (value != null && isFinite(value) && value !== '') {
                 return false;
             }
             else if (isString(value) && value !== '-') {
