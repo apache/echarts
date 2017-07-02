@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+text {
+    font: 10px sans-serif;
+    text-anchor: middle;
+}
+
+.node--hover circle {
+    stroke: #000;
+    stroke-width: 1.2px;
+}
+
+#main {
+    width: 1000px;
+    height: 500px;
+}
+</style>
+
+
+<div id="main" style="width:960px; height:960px;"></div>
+
+<svg width="960" height="960"><g transform="translate(1,1)"></g></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="../dist/echarts.js"></script>
+<script>
+
+var stratify = d3.stratify()
+    .parentId(function(d) {
+        return d.id.substring(0, d.id.lastIndexOf("."));
+    });
+
+d3.csv("data/flare.csv", function(error, rawData) {
+    if (error) throw error;
+
+    var root = stratify(rawData)
+        .sum(function(d) {
+            return d.value;
+        })
+        .sort(function(a, b) {
+            return b.value - a.value;
+        });
+    var maxDepth = 0;
+    var seriesData = root.descendants().map(function (node) {
+        maxDepth = Math.max(maxDepth, node.depth);
+        return [
+            node.value,
+            node.depth,
+            node.id
+        ];
+    });
+
+    var chart = echarts.init(document.getElementById('main'));
+
+    function renderItem(params, api) {
+        var context = params.context;
+        if (!context.layout) {
+            d3.pack()
+                .size([api.getWidth() - 2, api.getHeight() - 2])
+                .padding(3)(root);
+
+            context.layout = {};
+            root.descendants().forEach(function (node) {
+                context.layout[node.id] = {
+                    x: node.x,
+                    y: node.y,
+                    r: node.r,
+                    isLeaf: !node.children || !node.children.length
+                };
+            });
+        }
+
+        var nodePath = api.value(2);
+        var itemLayout = context.layout[nodePath];
+
+        var nodeName = '';
+        var textFont = api.font({
+            fontSize: 12,
+            fontFamily: 'Arial'
+        });
+
+        if (itemLayout.isLeaf && itemLayout.r > 10) {
+            nodeName = nodePath.slice(nodePath.lastIndexOf('.') + 1).split(/(?=[A-Z][^A-Z])/g).join('\n');
+            nodeName = echarts.format.truncateText(nodeName, itemLayout.r, textFont, '.');
+        }
+
+        return {
+            type: 'circle',
+            shape: {
+                cx: itemLayout.x,
+                cy: itemLayout.y,
+                r: itemLayout.r
+            },
+            z2: api.value(1) * 2,
+            style: api.style({
+                text: nodeName,
+                textFont: textFont,
+                textPosition: 'inside'
+            }),
+            styleEmphasis: api.style({
+                text: nodeName,
+                textPosition: 'inside',
+                textFont: textFont,
+                stroke: 'rgba(0,0,0,0.5)',
+                lineWidth: 3
+            })
+        };
+    }
+
+    var option = {
+        xAxis: {
+            axisLine: {show: false},
+            axisTick: {show: false},
+            axisLabel: {show: false},
+            splitLine: {show: false}
+        },
+        yAxis: {
+            axisLine: {show: false},
+            axisTick: {show: false},
+            axisLabel: {show: false},
+            splitLine: {show: false}
+        },
+        tooltip: {},
+        visualMap: {
+            show: false,
+            min: 0,
+            max: maxDepth,
+            dimension: 1,
+            inRange: {
+                color: ['#006edd', '#e0ffff']
+            }
+        },
+        series: {
+            type: 'custom',
+            renderItem: renderItem,
+            encode: {
+                tooltip: 0,
+                itemName: 2
+            },
+            data: seriesData
+        }
+    };
+
+    chart.setOption(option);
+
+});
+
+</script>
