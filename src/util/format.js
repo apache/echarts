@@ -45,7 +45,7 @@ define(function (require) {
      *  [4, 3, 2] => [4, 3, 2, 3]
      * @param {number|Array.<number>} val
      */
-    formatUtil.normalizeCssArray = function (val) {        
+    formatUtil.normalizeCssArray = function (val) {
         if (typeof (val) === 'number') {
             return [val, val, val, val];
         }
@@ -205,6 +205,8 @@ define(function (require) {
     };
 
     formatUtil.truncateText = textContain.truncateText;
+
+    formatUtil.getTextRect = textContain.getBoundingRect;
 
     return formatUtil;
 });
