@@ -39,10 +39,9 @@ define(function (require) {
                 else if (indicatorOpt.min != null && indicatorOpt.min < 0 && !indicatorOpt.max) {
                     indicatorOpt.max = 0;
                 }
-                var iNameTextStyle = nameTextStyle
-                if(indicatorOpt.color != null){
-                    iNameTextStyle = zrUtil.clone(nameTextStyle)
-                    iNameTextStyle.color = indicatorOpt.color
+                var iNameTextStyle = nameTextStyle;
+                if(indicatorOpt.color != null) {
+                    iNameTextStyle = zrUtil.defaults({color: indicatorOpt.color}, nameTextStyle);
                 }
                 // Use same configuration
                 indicatorOpt = zrUtil.merge(zrUtil.clone(indicatorOpt), {
