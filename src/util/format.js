@@ -180,7 +180,7 @@ define(function (require) {
         var s = date['get' + utc + 'Seconds']();
 
         tpl = tpl.replace('MM', s2d(M))
-            .toLowerCase()
+            .replace('M', M)
             .replace('yyyy', y)
             .replace('yy', y % 100)
             .replace('dd', s2d(d))
