@@ -34,7 +34,7 @@ define(function (require) {
             var option = this.option;
             var self = this;
 
-            option.regions = geoCreator.getFilledRegions(option.regions, option.map);
+            option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
 
             this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
                 if (regionOpt.name) {

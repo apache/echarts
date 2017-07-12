@@ -82,7 +82,7 @@ define(function (require) {
             // Shallow clone
             option = zrUtil.extend({}, option);
 
-            option.data = geoCreator.getFilledRegions(option.data, mapName);
+            option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
 
             return option;
         },
