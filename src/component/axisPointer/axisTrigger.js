@@ -43,6 +43,12 @@ define(function(require) {
         var dispatchAction = payload.dispatchAction || zrUtil.bind(api.dispatchAction, api);
         var coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
 
+        // Pending
+        // See #6121. But we are not able to reproduce it yet.
+        if (!coordSysAxesInfo) {
+            return;
+        }
+
         if (illegalPoint(point)) {
             // Used in the default behavior of `connection`: use the sample seriesIndex
             // and dataIndex. And also used in the tooltipView trigger.
