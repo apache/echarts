@@ -39,6 +39,7 @@ define(function (require) {
             // 默认显示，属性show控制显示与否
             show: true,
             onZero: true,
+            onZeroAxisIndex: null,
             // 属性lineStyle控制线条样式
             lineStyle: {
                 color: '#333',
