@@ -49,9 +49,7 @@ define(function(require) {
         var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
         var font = textStyleModel.getFont();
-        var textRect = textContain.getBoundingRect(
-            text, font, labelPos.textAlign, labelPos.textBaseline
-        );
+        var textRect = textContain.getBoundingRect(text, font);
 
         var position = labelPos.position;
         var width = textRect.width + paddings[1] + paddings[3];
