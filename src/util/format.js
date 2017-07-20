@@ -37,29 +37,7 @@ define(function (require) {
         return str;
     };
 
-    /**
-     * Normalize css liked array configuration
-     * e.g.
-     *  3 => [3, 3, 3, 3]
-     *  [4, 2] => [4, 2, 4, 2]
-     *  [4, 3, 2] => [4, 3, 2, 3]
-     * @param {number|Array.<number>} val
-     */
-    formatUtil.normalizeCssArray = function (val) {
-        if (typeof (val) === 'number') {
-            return [val, val, val, val];
-        }
-        var len = val.length;
-        if (len === 2) {
-            // vertical | horizontal
-            return [val[0], val[1], val[0], val[1]];
-        }
-        else if (len === 3) {
-            // top | horizontal | bottom
-            return [val[0], val[1], val[2], val[1]];
-        }
-        return val;
-    };
+    formatUtil.normalizeCssArray = zrUtil.normalizeCssArray;
 
     var encodeHTML = formatUtil.encodeHTML = function (source) {
         return String(source)
