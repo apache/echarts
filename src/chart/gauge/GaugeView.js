@@ -213,16 +213,16 @@ define(function (require) {
                             text: label,
                             x: unitX * (r - splitLineLen - distance) + cx,
                             y: unitY * (r - splitLineLen - distance) + cy,
-                            fill: textStyleModel.getTextColor(),
+                            textFill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
                             textVerticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                             textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
                         },
                         silent: true
                     });
-                    if (text.style.fill === 'auto') {
+                    if (text.style.textFill === 'auto') {
                         text.setStyle({
-                            fill: getColor(i / splitNumber)
+                            textFill: getColor(i / splitNumber)
                         });
                     }
 
@@ -363,18 +363,18 @@ define(function (require) {
                         y: y,
                         // FIXME First data name ?
                         text: seriesModel.getData().getName(0),
-                        fill: textStyleModel.getTextColor(),
+                        textFill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont(),
                         textAlign: 'center',
                         textVerticalAlign: 'middle'
                     }
                 });
 
-                if (text.style.fill === 'auto') {
+                if (text.style.textFill === 'auto') {
                     var minVal = +seriesModel.get('min');
                     var maxVal = +seriesModel.get('max');
                     var value = seriesModel.getData().get('value', 0);
-                    text.setStyle('fill', getColor(
+                    text.setStyle('textFill', getColor(
                         numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
                     ));
                 }

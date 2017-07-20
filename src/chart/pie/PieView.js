@@ -100,7 +100,7 @@ define(function (require) {
         var textStyleModel = labelModel.getModel('textStyle');
         var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         return {
-            fill: textStyleModel.getTextColor()
+            textFill: textStyleModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
             opacity: data.getItemVisual(idx, 'opacity'),
             textFont: textStyleModel.getFont(),

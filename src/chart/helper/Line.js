@@ -318,7 +318,7 @@ define(function (require) {
                     defaultText
                 ),
                 textFont: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor() || defaultLabelColor
+                textFill: textStyleModel.getTextColor() || defaultLabelColor
             });
 
             label.__textAlign = textStyleModel.get('align');
@@ -337,7 +337,7 @@ define(function (require) {
                     defaultText
                 ),
                 textFont: textStyleHoverModel.getFont(),
-                fill: textStyleHoverModel.getTextColor() || defaultLabelColor
+                textFill: textStyleHoverModel.getTextColor() || defaultLabelColor
             };
         }
         else {

@@ -134,7 +134,7 @@ define(function (require) {
                     style: {
                         x: p[0],
                         y: p[1],
-                        fill: textStyleModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
+                        textFill: textStyleModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textVerticalAlign: labelTextBaseline,

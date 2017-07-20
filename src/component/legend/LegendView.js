@@ -219,7 +219,7 @@ define(function (require) {
                     text: content,
                     x: textX,
                     y: itemHeight / 2,
-                    fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
+                    textFill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
                     textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textVerticalAlign: 'middle'

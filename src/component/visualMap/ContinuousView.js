@@ -164,7 +164,7 @@ define(function(require) {
                     textAlign: orient === 'horizontal' ? align : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             }));
         },
@@ -239,7 +239,7 @@ define(function(require) {
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             });
             this.group.add(handleLabel);
@@ -275,7 +275,7 @@ define(function(require) {
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             });
             this.group.add(indicatorLabel);

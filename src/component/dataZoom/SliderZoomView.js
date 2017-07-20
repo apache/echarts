@@ -517,7 +517,7 @@ define(function (require) {
                         x: 0, y: 0, text: '',
                         textVerticalAlign: 'middle',
                         textAlign: 'center',
-                        fill: textStyleModel.getTextColor(),
+                        textFill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
                     },
                     z2: 10

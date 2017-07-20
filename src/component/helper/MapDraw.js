@@ -244,14 +244,14 @@ define(function (require) {
                     var text = new graphic.Text({
                         style: {
                             text: showLabel ? (formattedStr || region.name) : '',
-                            fill: textStyleModel.getTextColor(),
+                            textFill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
                             textAlign: 'center',
                             textVerticalAlign: 'middle'
                         },
                         hoverStyle: {
                             text: hoverShowLabel ? (hoverFormattedStr || region.name) : '',
-                            fill: hoverTextStyleModel.getTextColor(),
+                            textFill: hoverTextStyleModel.getTextColor(),
                             textFont: hoverTextStyleModel.getFont()
                         },
                         position: region.center.slice(),

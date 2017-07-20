@@ -316,7 +316,7 @@ define(function (require) {
                     style: {
                         text: content,
                         font: yearLabelStyleModel.getFont(),
-                        fill: yearLabelStyleModel.getTextColor()
+                        textFill: yearLabelStyleModel.getTextColor()
                     }
                 }, this._yearTextPositionControl(posPoints[pos], orient, pos, margin))
             );
@@ -413,7 +413,7 @@ define(function (require) {
                     style: zrUtil.extend({
                         text: content,
                         font: monthLabelStyleModel.getFont(),
-                        fill: monthLabelStyleModel.getTextColor()
+                        textFill: monthLabelStyleModel.getTextColor()
                     }, this._monthTextPositionControl(tmp, isCenter, orient, pos, margin))
                 });
 
@@ -489,7 +489,7 @@ define(function (require) {
                     style: zrUtil.extend({
                         text: nameMap[day],
                         font: dayLabelStyleModel.getFont(),
-                        fill: dayLabelStyleModel.getTextColor()
+                        textFill: dayLabelStyleModel.getTextColor()
                     }, this._weekTextPositionControl(point, orient, pos, margin, cellSize))
                 });
                 group.add(weekText);

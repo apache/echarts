@@ -136,6 +136,7 @@ define(function (require) {
                         ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
                             || data.getName(indices[j - 1])
                         : '',
+                    textFill: textStyleModel.getTextColor(),
                     textFont: textStyleModel.getFont(),
                     textAlign: labelModel.get('textAlign'),
                     textVerticalAlign: 'middle'

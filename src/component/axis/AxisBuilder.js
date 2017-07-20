@@ -298,7 +298,7 @@ define(function (require) {
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
                         textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.textVerticalAlign,
                         textFont: itemTextStyleModel.getFont(),
-                        fill: typeof textColor === 'function'
+                        textFill: typeof textColor === 'function'
                             ? textColor(
                                 // (1) In category axis with data zoom, tick is not the original
                                 // index of axis.data. So tick should not be exposed to user
@@ -433,7 +433,7 @@ define(function (require) {
                 style: {
                     text: truncatedText,
                     textFont: textFont,
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                         || axisModel.get('axisLine.lineStyle.color'),
                     textAlign: labelLayout.textAlign,
                     textVerticalAlign: labelLayout.textVerticalAlign

@@ -43,7 +43,7 @@ define(function (require) {
         var position = labelModel.get('position');
         var isLabelInside = position === 'inside' || position === 'inner' || position === 'center';
         return {
-            fill: textStyleModel.getTextColor()
+            textFill: textStyleModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
             textFont: textStyleModel.getFont(),
             text: zrUtil.retrieve(

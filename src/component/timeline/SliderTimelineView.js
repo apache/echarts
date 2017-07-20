@@ -406,7 +406,7 @@ define(function (require) {
                         textAlign: layoutInfo.labelAlign,
                         textVerticalAlign: layoutInfo.labelBaseline,
                         textFont: itemTextStyleModel.getFont(),
-                        fill: itemTextStyleModel.getTextColor()
+                        textFill: itemTextStyleModel.getTextColor()
                     },
                     position: [tickCoord, 0],
                     rotation: layoutInfo.labelRotation - layoutInfo.rotation,
