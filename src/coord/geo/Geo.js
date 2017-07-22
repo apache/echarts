@@ -193,23 +193,6 @@ define(function (require) {
         },
 
         /**
-         * Convert series data to a list of points
-         * @param {module:echarts/data/List} data
-         * @param {boolean} stack
-         * @return {Array}
-         *  Return list of points. For example:
-         *  `[[10, 10], [20, 20], [30, 30]]`
-         */
-        dataToPoints: function (data) {
-            var item = [];
-            return data.mapArray(['lng', 'lat'], function (lon, lat) {
-                item[0] = lon;
-                item[1] = lat;
-                return this.dataToPoint(item);
-            }, this);
-        },
-
-        /**
          * @param {string|Array.<number>} data
          * @return {Array.<number>}
          */

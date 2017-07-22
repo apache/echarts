@@ -67,11 +67,18 @@ define(function (require) {
             var valueMax = valueAxis.model.get('max');
             var valueMin = valueAxis.model.get('min');
 
-            var coords = polar.dataToPoints(data);
+            var coordDims = [
+                seriesModel.coordDimToDataDim('radius')[0],
+                seriesModel.coordDimToDataDim('angle')[0]
+            ];
+            var coords = data.mapArray(coordDims, function (radius, angle) {
+                return polar.dataToPoint([radius, angle]);
+            }, true);
+
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
             lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
-            data.each(valueAxis.dim, function (value, idx) {
+            data.each(seriesModel.coordDimToDataDim(valueAxis.dim)[0], function (value, idx) {
                 if (isNaN(value)) {
                     return;
                 }
