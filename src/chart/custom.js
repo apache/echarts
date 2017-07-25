@@ -190,6 +190,14 @@ define(function (require) {
             zrUtil.each(['x', 'y'], function (prop) {
                 prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
             });
+            // Compatible with previous: both support
+            // textFill and fill, textStroke and stroke in 'text' element.
+            !elOptionStyle.hasOwnProperty('textFill') && elOptionStyle.fill && (
+                elOptionStyle.textFill = elOptionStyle.fill
+            );
+            !elOptionStyle.hasOwnProperty('textStroke') && elOptionStyle.stroke && (
+                elOptionStyle.textStroke = elOptionStyle.stroke
+            );
         }
 
         if (el.type !== 'group') {
