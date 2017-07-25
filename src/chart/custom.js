@@ -6,11 +6,15 @@ define(function (require) {
     var labelHelper = require('./helper/labelHelper');
     var createListFromArray = require('./helper/createListFromArray');
     var barGrid = require('../layout/barGrid');
+    var DataDiffer = require('../data/DataDiffer');
 
     var ITEM_STYLE_NORMAL_PATH = ['itemStyle', 'normal'];
     var ITEM_STYLE_EMPHASIS_PATH = ['itemStyle', 'emphasis'];
     var LABEL_NORMAL = ['label', 'normal'];
     var LABEL_EMPHASIS = ['label', 'emphasis'];
+    // Use prefix to avoid index to be the same as el.name,
+    // which will cause weird udpate animation.
+    var GROUP_DIFF_PREFIX = 'e\0\0';
 
     /**
      * To reduce total package size of each coordinate systems, the modules `prepareCustom`
@@ -159,6 +163,7 @@ define(function (require) {
         }
 
         el.__customGraphicType = graphicType;
+        el.name = elOption.name;
 
         return el;
     }
@@ -443,13 +448,83 @@ define(function (require) {
         !el && (el = createEl(elOption));
         updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
 
-        elOptionType === 'group' && zrUtil.each(elOption.children, function (childOption, index) {
-            doCreateOrUpdate(el.childAt(index), dataIndex, childOption, animatableModel, el, data);
-        });
+        if (elOptionType === 'group') {
+            var oldChildren = el.children() || [];
+            var newChildren = elOption.children || [];
+
+            if (elOption.diffChildrenByName) {
+                // lower performance.
+                diffGroupChildren({
+                    oldChildren: oldChildren,
+                    newChildren: newChildren,
+                    dataIndex: dataIndex,
+                    animatableModel: animatableModel,
+                    group: el,
+                    data: data
+                });
+            }
+            else {
+                // better performance.
+                var index = 0;
+                for (; index < newChildren.length; index++) {
+                    doCreateOrUpdate(
+                        el.childAt(index),
+                        dataIndex,
+                        newChildren[index],
+                        animatableModel,
+                        el,
+                        data
+                    );
+                }
+                for (; index < oldChildren.length; index++) {
+                    oldChildren[index] && el.remove(oldChildren[index]);
+                }
+            }
+        }
 
         group.add(el);
 
         return el;
+    }
+
+    function diffGroupChildren(context) {
+        (new DataDiffer(
+            context.oldChildren,
+            context.newChildren,
+            getKey,
+            getKey,
+            context
+        ))
+            .add(processAddUpdate)
+            .update(processAddUpdate)
+            .remove(processRemove)
+            .execute();
+    }
+
+    function getKey(item, idx) {
+        var name = item && item.name;
+        return name != null ? name : GROUP_DIFF_PREFIX + idx;
+    }
+
+    function processAddUpdate(newIndex, oldIndex) {
+        var context = this.context;
+        var childOption = newIndex != null ? context.newChildren[newIndex] : null;
+        var child = oldIndex != null ? context.oldChildren[oldIndex] : null;
+
+        doCreateOrUpdate(
+            child,
+            context.dataIndex,
+            childOption,
+            context.animatableModel,
+            context.group,
+            context.data
+        );
+    }
+
+    function processRemove(oldIndex) {
+        var context = this.context;
+        var child = context.oldChildren[oldIndex];
+        child && context.group.remove(child);
     }
 
 });
