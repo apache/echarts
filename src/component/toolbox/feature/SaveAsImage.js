@@ -49,13 +49,14 @@ define(function (require) {
         }
         // IE
         else {
-            var lang = model.get('lang');
-            var html = ''
-                + '<body style="margin:0;">'
-                + '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />'
-                + '</body>';
-            var tab = window.open();
-            tab.document.write(html);
+            var bstr = atob(url.split(',')[1]);
+			var n = bstr.length;
+		    var u8arr = new Uint8Array(n);
+			while(n--) {
+			    u8arr[n] = bstr.charCodeAt(n);
+			}
+			var blob = new Blob([u8arr]);
+		    window.navigator.msSaveOrOpenBlob(blob, title + '.' + type);
         }
     };
 
