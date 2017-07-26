@@ -322,7 +322,7 @@ define(function (require) {
             });
 
             label.__textAlign = textStyleModel.get('align');
-            label.__verticalAlign = textStyleModel.get('baseline');
+            label.__verticalAlign = textStyleModel.get('verticalAlign') || textStyleModel.get('baseline');
             label.__position = labelModel.get('position');
         }
         else {

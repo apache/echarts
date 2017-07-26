@@ -32,7 +32,7 @@ define(function (require) {
                 text,
                 this.getFont(),
                 this.getShallow('align'),
-                this.getShallow('baseline')
+                this.getShallow('verticalAlign') || this.getShallow('baseline')
             );
         },
 

@@ -295,8 +295,10 @@ define(function (require) {
 
                     style: {
                         text: labels[index],
-                        textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
-                        textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.textVerticalAlign,
+                        textAlign: itemTextStyleModel.getShallow('align', true) || labelLayout.textAlign,
+                        textVerticalAlign: itemTextStyleModel.getShallow('verticalAlign', true)
+                            || itemTextStyleModel.getShallow('baseline', true)
+                            || labelLayout.textVerticalAlign,
                         textFont: itemTextStyleModel.getFont(),
                         textFill: typeof textColor === 'function'
                             ? textColor(

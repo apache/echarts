@@ -400,12 +400,19 @@ define(function(require) {
         var labelPosition = labelModel.getShallow('position') || 'inside';
         var labelOffset = labelModel.getShallow('offset');
         var labelColor = labelPosition.indexOf('inside') >= 0 ? 'white' : color;
+        var labelRotate = labelModel.getShallow('rotate');
+        labelRotate != null && (labelRotate *= Math.PI / 180);
         var textStyleModel = labelModel.getModel('textStyle');
+
         zrUtil.extend(textStyle, {
             textDistance: labelModel.getShallow('distance') || 5,
             textFont: textStyleModel.getFont(),
             textPosition: labelPosition,
             textOffset: labelOffset,
+            textRotation: labelRotate,
+            textAlign: textStyleModel.getShallow('align'),
+            textVerticalAlign: textStyleModel.getShallow('verticalAlign')
+                || textStyleModel.getShallow('baseline'),
             textFill: textStyleModel.getTextColor() || labelColor
         });
     };

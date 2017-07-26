@@ -828,11 +828,6 @@
 
             graphic.setText(style, labelModel, visualColor);
 
-            // text.align and text.baseline is not included by graphic.setText,
-            // because in most cases the two attributes are not exposed to user,
-            // except in treemap.
-            style.textAlign = labelTextStyleModel.get('align');
-            style.textVerticalAlign = labelTextStyleModel.get('baseline');
             upperLabelRect && (style.textPositionRect = zrUtil.clone(upperLabelRect));
 
             var textRect = labelTextStyleModel.getTextRect(text);
