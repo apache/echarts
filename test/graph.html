@@ -128,7 +128,8 @@
                                 type: 'unfocusNodeAdjacency',
                                 seriesName: 'Les Miserables'
                             });
-                        }
+                        },
+                        'circular.rotateLabel': false
                     };
 
                     chart.on('click', function (params) {
@@ -156,6 +157,15 @@
                         });
                     gui.add(config, 'manualFocusNodeAdjacency');
                     gui.add(config, 'manualUnfocusNodeAdjacency');
+                    gui.add(config, 'circular.rotateLabel')
+                        .onChange(function (value) {
+                            chart.setOption({
+                                series: [{
+                                    name: 'Les Miserables',
+                                    circular: {rotateLabel: !!value}
+                                }]
+                            });
+                        });
                 });
             });
         </script>
