@@ -938,6 +938,11 @@ define(function (require) {
             return;
         }
 
+        // Avoid dispatch action before setOption. Especially in `connect`.
+        if (!this._model) {
+            return;
+        }
+
         // May dispatchAction in rendering procedure
         if (this[IN_MAIN_PROCESS]) {
             this._pendingActions.push(payload);
