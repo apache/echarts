@@ -143,7 +143,7 @@ define(function (require) {
                     }
                     var textPosition = isLeft ? 'left' : 'right';
                     symbolPath.setStyle({
-                        textRotation: rad,
+                        textRotation: -rad,
                         textPosition: textPosition,
                         textOrigin: 'center'
                     });
