@@ -699,8 +699,8 @@ define(function (require) {
     }
 
     function refixTooltipPosition(x, y, el, viewWidth, viewHeight, gapH, gapV) {
-        var width = el.clientWidth;
-        var height = el.clientHeight;
+        var width = el.offsetWidth;
+        var height = el.offsetHeight;
 
         if (gapH != null) {
             if (x + width + gapH > viewWidth) {
