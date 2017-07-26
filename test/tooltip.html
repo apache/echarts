@@ -38,6 +38,8 @@
         <div class="chart" id="main"></div>
         <h1>set position</h1>
         <div class="chart" id="position"></div>
+        <h1>confine</h1>
+        <div class="chart" id="confine"></div>
         <h1>triggerOn click</h1>
         <div class="chart" id="click"></div>
         <h1>dispatchAciton manually with `position` specified (postion: [10,10])</h1>
@@ -597,6 +599,69 @@
             })
         </script>
 
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/pie',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        confine: true,
+                        borderWidth: 10,
+                        borderColor: 'green',
+                        padding: 20,
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    series: {
+                        name: '访问来源',
+                        type: 'pie',
+                        radius : 1180,
+                        data:[
+                            {
+                                value:335, name:'position: [300, 100]',
+                            },
+                            {
+                                value:310, name:'position: function [p[0] + 10, p[1] - 50]',
+                            },
+                            {
+                                value:234, name:'position: inside',
+                            },
+                            {
+                                value:135, name:'align: right; verticalAlign: bottom',
+                                tooltip: {
+                                    align: 'right',
+                                    verticalAlign: 'bottom'
+                                }
+                            },
+                            {
+                                value:548, name:'position: [30, 140], verticalAlign: bottom',
+                            }
+                        ],
+                        itemStyle: {
+                            emphasis: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                };
+
+                createChart('confine', echarts, option, 500);
+            })
+        </script>
 
 
 
