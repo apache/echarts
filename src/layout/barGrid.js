@@ -124,8 +124,9 @@ define(function(require) {
             // TODO
             var barWidth = seriesInfo.barWidth;
             if (barWidth && !stacks[stackId].width) {
-                barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
+                // See #6312, do not restrict width.
                 stacks[stackId].width = barWidth;
+                barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
                 columnsOnAxis.remainedWidth -= barWidth;
             }
 
