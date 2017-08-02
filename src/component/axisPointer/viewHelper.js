@@ -45,10 +45,9 @@ define(function(require) {
             }
         );
         var labelModel = axisPointerModel.getModel('label');
-        var textStyleModel = labelModel.getModel('textStyle');
         var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
-        var font = textStyleModel.getFont();
+        var font = labelModel.getFont();
         var textRect = textContain.getBoundingRect(text, font);
 
         var position = labelPos.position;
@@ -74,10 +73,11 @@ define(function(require) {
         elOption.label = {
             shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
             position: position.slice(),
+            // TODO: rich
             style: {
                 text: text,
                 textFont: font,
-                textFill: textStyleModel.getTextColor(),
+                textFill: labelModel.getTextColor(),
                 textPosition: 'inside',
                 fill: bgColor,
                 stroke: labelModel.get('borderColor') || 'transparent',

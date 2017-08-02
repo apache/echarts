@@ -38,19 +38,17 @@ define(function (require) {
 
     var funnelPieceProto = FunnelPiece.prototype;
 
-    function getLabelStyle(data, idx, state, labelModel) {
-        var textStyleModel = labelModel.getModel('textStyle');
+    function setLabelStyle(style, data, idx, state, labelModel, specifiedStyle) {
         var position = labelModel.get('position');
         var isLabelInside = position === 'inside' || position === 'inner' || position === 'center';
-        return {
-            textFill: textStyleModel.getTextColor()
+        return graphic.setTextStyle(style, labelModel, zrUtil.extend({
+            textFill: labelModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
-            textFont: textStyleModel.getFont(),
             text: zrUtil.retrieve(
                 data.hostModel.getFormattedLabel(idx, state),
                 data.getName(idx)
             )
-        };
+        }, specifiedStyle), {mergeMode: true});
     }
 
     var opacityAccessPath = ['itemStyle', 'normal', 'opacity'];
@@ -133,11 +131,6 @@ define(function (require) {
             }
         }, seriesModel, idx);
         labelText.attr({
-            style: {
-                textAlign: labelLayout.textAlign,
-                textVerticalAlign: labelLayout.verticalAlign,
-                textFont: labelLayout.font
-            },
             rotation: labelLayout.rotation,
             origin: [labelLayout.x, labelLayout.y],
             z2: 10
@@ -148,7 +141,11 @@ define(function (require) {
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
 
-        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
+        setLabelStyle(labelText.style, data, idx, 'normal', labelModel, {
+            textAlign: labelLayout.textAlign,
+            textVerticalAlign: labelLayout.verticalAlign,
+            textFont: labelLayout.font
+        });
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
         labelText.hoverIgnore = !labelHoverModel.get('show');
@@ -162,7 +159,7 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
+        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel);
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     };
 

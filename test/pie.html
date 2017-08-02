@@ -87,7 +87,43 @@
                             {value:310, name:'邮件营销'},
                             {value:234, name:'联盟广告'},
                             {value:135, name:'视频广告'},
-                            {value:1548, name:'搜索引擎'}
+                            {value:548, name:'搜索引擎', label: {
+                                normal: {
+                                    textStyle: { // compat
+                                        color: 'red'
+                                    },
+                                    formatter: '{a|富文本：}\n{hr|}\n{b|{b}}{c|}',
+                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                    borderColor: '#777',
+                                    borderWidth: 2,
+                                    padding: 5,
+                                    borderRadius: 3,
+                                    rich: {
+                                        a: {
+                                            color: '#334499',
+                                            align: 'left'
+                                        },
+                                        b: {
+                                            fontSize: 20
+                                        },
+                                        hr: {
+                                            tag: 'hr',
+                                            width: '100%outer',
+                                            color: '#999',
+                                            lineWidth: 1,
+                                            lineHeight: 15
+                                        },
+                                        c: {
+                                            backgroundColor: {
+                                                image: './data/hill-Kilimanjaro.png',
+                                            },
+                                            height: 30
+                                        }
+                                    }
+                                },
+                                emphasis: {
+                                }
+                            }}
                         ],
                         itemStyle: itemStyle
                     }]

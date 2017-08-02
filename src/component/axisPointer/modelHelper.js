@@ -182,10 +182,7 @@ define(function(require) {
             // (cross style is dashed by default)
             if (!triggerTooltip) {
                 var crossStyle = volatileOption.lineStyle = tooltipAxisPointerModel.get('crossStyle');
-                crossStyle && zrUtil.defaults(
-                    labelOption.textStyle || (labelOption.textStyle = {}),
-                    crossStyle.textStyle
-                );
+                crossStyle && zrUtil.defaults(labelOption, crossStyle.textStyle);
             }
         }
 

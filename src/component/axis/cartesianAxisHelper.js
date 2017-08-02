@@ -48,7 +48,7 @@ define(function (require) {
         // Tick and label direction, x y is axisDim
         var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
 
-        layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[idx[rawAxisPosition]];
+        layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
         layout.labelOffset = axis.onZero ? posBound[idx[rawAxisPosition]] - posBound[idx['onZero']] : 0;
 
         if (axisModel.get('axisTick.inside')) {

@@ -24,10 +24,8 @@ define(function (require) {
         init: function (option) {
             ComponentModel.prototype.init.apply(this, arguments);
 
-            // Default label emphasis `position` and `show`
-            modelUtil.defaultEmphasis(
-                option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
-            );
+            // Default label emphasis `show`
+            modelUtil.defaultEmphasis(option.label, ['show']);
         },
 
         optionUpdated: function () {

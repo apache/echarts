@@ -3,6 +3,8 @@ define(function (require) {
     var textContain = require('zrender/contain/text');
     var graphicUtil = require('../../util/graphic');
 
+    var PATH_COLOR = ['textStyle', 'color'];
+
     return {
         /**
          * Get color property or get color from option.textStyle.color
@@ -11,7 +13,7 @@ define(function (require) {
         getTextColor: function () {
             var ecModel = this.ecModel;
             return this.getShallow('color')
-                || (ecModel && ecModel.get('textStyle.color'));
+                || (ecModel && ecModel.get(PATH_COLOR));
         },
 
         /**

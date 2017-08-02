@@ -199,9 +199,6 @@ define(function (require) {
                     }
                 }
 
-                var textStyleModel = labelModel.getModel('textStyle');
-                var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
-
                 zrUtil.each(region.geometries, function (geometry) {
                     if (geometry.type !== 'polygon') {
                         return;
@@ -241,26 +238,26 @@ define(function (require) {
                     var query = data ? dataIdx : region.name;
                     var formattedStr = mapOrGeoModel.getFormattedLabel(query, 'normal');
                     var hoverFormattedStr = mapOrGeoModel.getFormattedLabel(query, 'emphasis');
-                    var text = new graphic.Text({
-                        style: {
-                            text: showLabel ? (formattedStr || region.name) : '',
-                            textFill: textStyleModel.getTextColor(),
-                            textFont: textStyleModel.getFont(),
-                            textAlign: 'center',
-                            textVerticalAlign: 'middle'
-                        },
-                        hoverStyle: {
-                            text: hoverShowLabel ? (hoverFormattedStr || region.name) : '',
-                            textFill: hoverTextStyleModel.getTextColor(),
-                            textFont: hoverTextStyleModel.getFont()
-                        },
+                    var textEl = new graphic.Text({
                         position: region.center.slice(),
                         scale: [1 / scale[0], 1 / scale[1]],
                         z2: 10,
                         silent: true
                     });
 
-                    regionGroup.add(text);
+                    graphic.setTextStyle(textEl.style, labelModel, {
+                        text: showLabel ? (formattedStr || region.name) : null,
+                        textFill: labelModel.getTextColor(),
+                        textAlign: 'center',
+                        textVerticalAlign: 'middle'
+                    });
+
+                    graphic.setTextStyle(textEl.hoverStyle = {}, hoverLabelModel, {
+                        text: hoverShowLabel ? (hoverFormattedStr || region.name) : null,
+                        textFill: hoverLabelModel.getTextColor()
+                    });
+
+                    regionGroup.add(textEl);
                 }
 
                 // setItemGraphicEl, setHoverStyle after all polygons and labels

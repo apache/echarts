@@ -250,7 +250,6 @@ define(function (require) {
             }
 
             var labelModel = axisModel.getModel('axisLabel');
-            var textStyleModel = labelModel.getModel('textStyle');
             var labelMargin = labelModel.get('margin');
             var ticks = axis.scale.getTicks();
             var labels = axisModel.getFormattedLabels();
@@ -272,13 +271,12 @@ define(function (require) {
                      return;
                 }
 
-                var itemTextStyleModel = textStyleModel;
                 if (categoryData && categoryData[tickVal] && categoryData[tickVal].textStyle) {
-                    itemTextStyleModel = new Model(
-                        categoryData[tickVal].textStyle, textStyleModel, axisModel.ecModel
+                    labelModel = new Model(
+                        categoryData[tickVal].textStyle, labelModel, axisModel.ecModel
                     );
                 }
-                var textColor = itemTextStyleModel.getTextColor()
+                var textColor = labelModel.getTextColor()
                     || axisModel.get('axisLine.lineStyle.color');
 
                 var tickCoord = axis.dataToCoord(tickVal);
@@ -289,35 +287,34 @@ define(function (require) {
                 var labelStr = axis.scale.getLabel(tickVal);
 
                 var textEl = new graphic.Text({
-
                     // Id for animation
                     anid: 'label_' + tickVal,
-
-                    style: {
-                        text: labels[index],
-                        textAlign: itemTextStyleModel.getShallow('align', true) || labelLayout.textAlign,
-                        textVerticalAlign: itemTextStyleModel.getShallow('verticalAlign', true)
-                            || itemTextStyleModel.getShallow('baseline', true)
-                            || labelLayout.textVerticalAlign,
-                        textFont: itemTextStyleModel.getFont(),
-                        textFill: typeof textColor === 'function'
-                            ? textColor(
-                                // (1) In category axis with data zoom, tick is not the original
-                                // index of axis.data. So tick should not be exposed to user
-                                // in category axis.
-                                // (2) Compatible with previous version, which always returns labelStr.
-                                // But in interval scale labelStr is like '223,445', which maked
-                                // user repalce ','. So we modify it to return original val but remain
-                                // it as 'string' to avoid error in replacing.
-                                axis.type === 'category' ? labelStr : axis.type === 'value' ? tickVal + '' : tickVal,
-                                index
-                            )
-                            : textColor
-                    },
                     position: pos,
                     rotation: labelLayout.rotation,
                     silent: silent,
                     z2: 10
+                });
+
+                graphic.setTextStyle(textEl.style, labelModel, {
+                    text: labels[index],
+                    textAlign: labelModel.getShallow('align', true)
+                        || labelLayout.textAlign,
+                    textVerticalAlign: labelModel.getShallow('verticalAlign', true)
+                        || labelModel.getShallow('baseline', true)
+                        || labelLayout.textVerticalAlign,
+                    textFill: typeof textColor === 'function'
+                        ? textColor(
+                            // (1) In category axis with data zoom, tick is not the original
+                            // index of axis.data. So tick should not be exposed to user
+                            // in category axis.
+                            // (2) Compatible with previous version, which always returns labelStr.
+                            // But in interval scale labelStr is like '223,445', which maked
+                            // user repalce ','. So we modify it to return original val but remain
+                            // it as 'string' to avoid error in replacing.
+                            axis.type === 'category' ? labelStr : axis.type === 'value' ? tickVal + '' : tickVal,
+                            index
+                        )
+                        : textColor
                 });
 
                 // Pack data for mouse event
@@ -425,21 +422,12 @@ define(function (require) {
             formatterParams[mainType + 'Index'] = axisModel.componentIndex;
 
             var textEl = new graphic.Text({
-
                 // Id for animation
                 anid: 'name',
 
                 __fullText: name,
                 __truncatedText: truncatedText,
 
-                style: {
-                    text: truncatedText,
-                    textFont: textFont,
-                    textFill: textStyleModel.getTextColor()
-                        || axisModel.get('axisLine.lineStyle.color'),
-                    textAlign: labelLayout.textAlign,
-                    textVerticalAlign: labelLayout.textVerticalAlign
-                },
                 position: pos,
                 rotation: labelLayout.rotation,
                 silent: isSilent(axisModel),
@@ -453,6 +441,15 @@ define(function (require) {
                         formatterParams: formatterParams
                     }, tooltipOpt)
                     : null
+            });
+
+            graphic.setTextStyle(textEl.style, textStyleModel, {
+                text: truncatedText,
+                textFont: textFont,
+                textFill: textStyleModel.getTextColor()
+                    || axisModel.get('axisLine.lineStyle.color'),
+                textAlign: labelLayout.textAlign,
+                textVerticalAlign: labelLayout.textVerticalAlign
             });
 
             if (axisModel.get('triggerEvent')) {

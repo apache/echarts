@@ -249,7 +249,8 @@ define(function(require) {
             el.__zr && el.__zr.addHover(el, el.__hoverStl);
         }
         else {
-            el.setStyle(el.__hoverStl);
+            el.style.extendFrom(el.__hoverStl, false);
+            el.dirty(false);
             el.z2 += 1;
         }
 
@@ -269,7 +270,10 @@ define(function(require) {
             el.__zr && el.__zr.removeHover(el);
         }
         else {
-            normalStl && el.setStyle(normalStl);
+            normalStl && (
+                el.style.extendFrom(normalStl, false),
+                el.dirty(false)
+            );
             el.z2 -= 1;
         }
 
@@ -391,31 +395,123 @@ define(function(require) {
     };
 
     /**
+     * Set basic textStyle properties.
+     * @param {Object|module:zrender/graphic/Style} style
+     * @param {Object} specifiedTextStyle Can be overrided by settings in model.
+     * @param {module:echarts/model/Model} model
+     * @param {Object} [opt] See `opt` of `setTextStyleCommon`.
+     */
+    graphic.setTextStyle = function (style, textStyleModel, specifiedTextStyle, opt) {
+        setTextStyleCommon(style, textStyleModel, opt);
+        specifiedTextStyle && zrUtil.extend(style, specifiedTextStyle);
+        style.dirty && style.dirty();
+
+        return style;
+    };
+
+    /**
      * Set text option in the style
      * @param {Object} textStyle
      * @param {module:echarts/model/Model} labelModel
      * @param {string} color
      */
     graphic.setText = function (textStyle, labelModel, color) {
-        var labelPosition = labelModel.getShallow('position') || 'inside';
-        var labelOffset = labelModel.getShallow('offset');
-        var labelColor = labelPosition.indexOf('inside') >= 0 ? 'white' : color;
-        var labelRotate = labelModel.getShallow('rotate');
-        labelRotate != null && (labelRotate *= Math.PI / 180);
-        var textStyleModel = labelModel.getModel('textStyle');
+        setTextStyleCommon(textStyle, labelModel, {isRectText: true});
 
-        zrUtil.extend(textStyle, {
-            textDistance: labelModel.getShallow('distance') || 5,
-            textFont: textStyleModel.getFont(),
-            textPosition: labelPosition,
-            textOffset: labelOffset,
-            textRotation: labelRotate,
-            textAlign: textStyleModel.getShallow('align'),
-            textVerticalAlign: textStyleModel.getShallow('verticalAlign')
-                || textStyleModel.getShallow('baseline'),
-            textFill: textStyleModel.getTextColor() || labelColor
-        });
+        textStyle.textFill = textStyle.textFill
+            || (textStyle.textPosition.indexOf('inside') >= 0 ? 'white' : color);
     };
+
+    /**
+     * {
+     *      disableBox: boolean,
+     *      isRectText: boolean,
+     *      autoColor: string, specify a color when color is 'auto',
+     *                 for textFill, textStroke, textBackgroundColor, and textBorderColor
+     *      forceRich: boolean
+     * }
+     */
+    function setTextStyleCommon(textStyle, textStyleModel, opt) {
+        if (opt && opt.isRectText) {
+            textStyle.textPosition = textStyleModel.getShallow('position') || 'inside';
+            textStyle.textOffset = textStyleModel.getShallow('offset');
+            var labelRotate = textStyleModel.getShallow('rotate');
+            labelRotate != null && (labelRotate *= Math.PI / 180);
+            textStyle.textRotation = labelRotate;
+            textStyle.textDistance = textStyleModel.getShallow('distance') || 5;
+        }
+
+        var ecModel = textStyleModel.ecModel;
+        var globalTextStyle = ecModel && ecModel.option.textStyle;
+
+        var rich = textStyleModel.getShallow('rich');
+        var richResult;
+        if (rich) {
+            richResult = {};
+            for (var name in rich) {
+                if (rich.hasOwnProperty(name)) {
+                    // Cascade is supported in rich.
+                    var richTextStyle = textStyleModel.getModel(['rich', name]);
+                    // In rich, never `disableBox`.
+                    setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt);
+                }
+            }
+        }
+        textStyle.rich = richResult;
+
+        setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt);
+
+        if (opt && opt.forceRich && !opt.textStyle) {
+            opt.textStyle = {};
+        }
+
+        return textStyle;
+    }
+
+    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt) {
+        textStyle.textFill = getAutoColor(textStyleModel.getTextColor(), opt);
+        textStyle.textStroke = getAutoColor(
+            textStyleModel.getShallow('textBorderColor')
+                || (globalTextStyle && globalTextStyle.textBorderColor)
+        );
+        textStyle.textLineWidth = textStyleModel.getShallow('textBorderWidth');
+        textStyle.textFont = textStyleModel.getFont();
+
+        textStyle.textAlign = textStyleModel.getShallow('align');
+        textStyle.textVerticalAlign = textStyleModel.getShallow('verticalAlign')
+            || textStyleModel.getShallow('baseline');
+
+        textStyle.textLineHeight = textStyleModel.getShallow('lineHeight');
+        textStyle.textWidth = textStyleModel.getShallow('width');
+        textStyle.textHeight = textStyleModel.getShallow('height');
+        textStyle.textTag = textStyleModel.getShallow('tag');
+
+        if (!opt || !opt.disableBox) {
+            textStyle.textBackgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor'), opt);
+            textStyle.textPadding = textStyleModel.getShallow('padding');
+            textStyle.textBorderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);
+            textStyle.textBorderWidth = textStyleModel.getShallow('borderWidth');
+            textStyle.textBorderRadius = textStyleModel.getShallow('borderRadius');
+
+            textStyle.textBoxShadowColor = textStyleModel.getShallow('shadowColor');
+            textStyle.textBoxShadowBlur = textStyleModel.getShallow('shadowBlur');
+            textStyle.textBoxShadowOffsetX = textStyleModel.getShallow('shadowOffsetX');
+            textStyle.textBoxShadowOffsetY = textStyleModel.getShallow('shadowOffsetY');
+        }
+
+        textStyle.textShadowColor = textStyleModel.getShallow('textShadowColor')
+            || (globalTextStyle && globalTextStyle.textShadowColor);
+        textStyle.textShadowBlur = textStyleModel.getShallow('textShadowBlur')
+            || (globalTextStyle && globalTextStyle.textShadowBlur);
+        textStyle.textShadowOffsetX = textStyleModel.getShallow('textShadowOffsetX')
+            || (globalTextStyle && globalTextStyle.textShadowOffsetX);
+        textStyle.textShadowOffsetY = textStyleModel.getShallow('textShadowOffsetY')
+            || (globalTextStyle && globalTextStyle.textShadowOffsetY);
+    }
+
+    function getAutoColor(color, opt) {
+        return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
+    }
 
     graphic.getFont = function (opt, ecModel) {
         var gTextStyleModel = ecModel && ecModel.getModel('textStyle');

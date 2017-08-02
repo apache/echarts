@@ -98,9 +98,8 @@ define(function(require) {
             );
             zrUtil.merge(option, this.getDefaultOption());
 
-            // Default label emphasis `position` and `show`
-            // FIXME Set label in mergeOption
-            modelUtil.defaultEmphasis(option.label, modelUtil.LABEL_OPTIONS);
+            // Default label emphasis `show`
+            modelUtil.defaultEmphasis(option.label, ['show']);
 
             this.fillDataTextStyle(option.data);
 
@@ -127,13 +126,14 @@ define(function(require) {
         },
 
         fillDataTextStyle: function (data) {
-            // Default data label emphasis `position` and `show`
+            // Default data label emphasis `show`
             // FIXME Tree structure data ?
             // FIXME Performance ?
             if (data) {
+                var props = ['show'];
                 for (var i = 0; i < data.length; i++) {
                     if (data[i] && data[i].label) {
-                        modelUtil.defaultEmphasis(data[i].label, modelUtil.LABEL_OPTIONS);
+                        modelUtil.defaultEmphasis(data[i].label, props);
                     }
                 }
             }

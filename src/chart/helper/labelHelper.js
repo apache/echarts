@@ -41,7 +41,7 @@ define(function (require) {
             );
         }
         else {
-            elStyle.text = '';
+            elStyle.text = null;
         }
     };
 

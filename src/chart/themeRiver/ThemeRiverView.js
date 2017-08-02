@@ -129,16 +129,13 @@ define(function (require) {
 
                 var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
                 var itemStyleModel = itemModel.getModel('itemStyle.normal');
-                var textStyleModel = labelModel.getModel('textStyle');
 
-                text.setStyle({
+                graphic.setTextStyle(text.style, labelModel, {
                     text: labelModel.get('show')
                         ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
                             || data.getName(indices[j - 1])
-                        : '',
-                    textFill: textStyleModel.getTextColor(),
-                    textFont: textStyleModel.getFont(),
-                    textAlign: labelModel.get('textAlign'),
+                        : null,
+                    textFill: labelModel.getTextColor(),
                     textVerticalAlign: 'middle'
                 });
 

@@ -31,7 +31,7 @@ define(function(require, factory) {
     function getLabelUnionRect(axis) {
         var axisModel = axis.model;
         var labels = axisModel.getFormattedLabels();
-        var textStyleModel = axisModel.getModel('axisLabel.textStyle');
+        var axisLabelModel = axisModel.getModel('axisLabel');
         var rect;
         var step = 1;
         var labelCount = labels.length;
@@ -41,7 +41,7 @@ define(function(require, factory) {
         }
         for (var i = 0; i < labelCount; i += step) {
             if (!axis.isLabelIgnored(i)) {
-                var singleRect = textStyleModel.getTextRect(labels[i]);
+                var singleRect = axisLabelModel.getTextRect(labels[i]);
                 // FIXME consider label rotate
                 rect ? rect.union(singleRect) : (rect = singleRect);
             }

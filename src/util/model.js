@@ -29,9 +29,7 @@ define(function(require) {
      *         normal: {
      *             show: false,
      *             position: 'outside',
-     *             textStyle: {
-     *                 fontSize: 18
-     *             }
+     *             fontSize: 18
      *         },
      *         emphasis: {
      *             show: true
@@ -46,18 +44,32 @@ define(function(require) {
             var normalOpt = opt.normal = opt.normal || {};
 
             // Default emphasis option from normal
-            each(subOpts, function (subOptName) {
-                var val = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
-                if (val != null) {
-                    emphasisOpt[subOptName] = val;
+            for (var i = 0, len = subOpts.length; i < len; i++) {
+                var subOptName = subOpts[i];
+                if (!emphasisOpt.hasOwnProperty(subOptName)
+                    && normalOpt.hasOwnProperty(subOptName)
+                ) {
+                    emphasisOpt[subOptName] = normalOpt[subOptName];
                 }
-            });
+            }
         }
     };
 
-    modelUtil.LABEL_OPTIONS = [
-        'position', 'offset', 'rotate', 'show', 'textStyle', 'distance', 'formatter'
+    modelUtil.TEXT_STYLE_OPTIONS = [
+        'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+        'rich', 'tag', 'color', 'textBorderColor', 'textBorderWidth',
+        'width', 'height', 'lineHeight', 'align', 'verticalAlign', 'baseline',
+        'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY',
+        'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY',
+        'backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'padding'
     ];
+
+    // modelUtil.LABEL_OPTIONS = modelUtil.TEXT_STYLE_OPTIONS.concat([
+    //     'position', 'offset', 'rotate', 'origin', 'show', 'distance', 'formatter',
+    //     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+    //     // FIXME: deprecated, check and remove it.
+    //     'textStyle'
+    // ]);
 
     /**
      * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]

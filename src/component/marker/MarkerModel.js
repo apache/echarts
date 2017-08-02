@@ -9,10 +9,7 @@ define(function (require) {
     var encodeHTML = formatUtil.encodeHTML;
 
     function fillLabel(opt) {
-        modelUtil.defaultEmphasis(
-            opt.label,
-            modelUtil.LABEL_OPTIONS
-        );
+        modelUtil.defaultEmphasis(opt.label, ['show']);
     }
     var MarkerModel = require('../../echarts').extendComponentModel({
 

@@ -112,28 +112,23 @@ define(function (require) {
                     var labelModel = itemModel.getModel('label.normal');
                     var hoverLabelModel = itemModel.getModel('label.emphasis');
 
-                    var textStyleModel = labelModel.getModel('textStyle');
-                    var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
-
                     var polygonGroups = fullData.getItemGraphicEl(fullIndex);
                     circle.setStyle({
                         textPosition: 'bottom'
                     });
 
                     var onEmphasis = function () {
-                        circle.setStyle({
-                            text: hoverLabelModel.get('show') ? labelText : '',
-                            textFill: hoverTextStyleModel.getTextColor(),
-                            textFont: hoverTextStyleModel.getFont()
-                        });
+                        graphic.setTextStyle(circle.style, hoverLabelModel, {
+                            text: hoverLabelModel.get('show') ? labelText : null,
+                            textFill: hoverLabelModel.getTextColor()
+                        }, {isRectText: true});
                     };
 
                     var onNormal = function () {
-                        circle.setStyle({
-                            text: labelModel.get('show') ? labelText : '',
-                            textFill: textStyleModel.getTextColor(),
-                            textFont: textStyleModel.getFont()
-                        });
+                        graphic.setTextStyle(circle.style, labelModel, {
+                            text: labelModel.get('show') ? labelText : null,
+                            textFill: labelModel.getTextColor()
+                        }, {isRectText: true});
                     };
 
                     polygonGroups.on('mouseover', onEmphasis)

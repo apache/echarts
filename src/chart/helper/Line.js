@@ -311,33 +311,29 @@ define(function (require) {
 
         // label.afterUpdate = lineAfterUpdate;
         if (showLabel) {
-            var textStyleModel = labelModel.getModel('textStyle');
-            label.setStyle({
+            var labelStyle = graphic.setTextStyle(label.style, labelModel, {
                 text: zrUtil.retrieve(
                     seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
                     defaultText
                 ),
-                textFont: textStyleModel.getFont(),
-                textFill: textStyleModel.getTextColor() || defaultLabelColor
+                textFill: labelModel.getTextColor() || defaultLabelColor
             });
 
-            label.__textAlign = textStyleModel.get('align');
-            label.__verticalAlign = textStyleModel.get('verticalAlign') || textStyleModel.get('baseline');
-            label.__position = labelModel.get('position');
+            label.__textAlign = labelStyle.textAlign;
+            label.__verticalAlign = labelStyle.textVerticalAlign;
+            label.__position = labelStyle.position;
         }
         else {
-            label.setStyle('text', '');
+            label.setStyle('text', null);
         }
         if (hoverShowLabel) {
-            var textStyleHoverModel = hoverLabelModel.getModel('textStyle');
-
             label.hoverStyle = {
                 text: zrUtil.retrieve(
                     seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
                     defaultText
                 ),
-                textFont: textStyleHoverModel.getFont(),
-                textFill: textStyleHoverModel.getTextColor() || defaultLabelColor
+                textFont: hoverLabelModel.getFont(),
+                textFill: hoverLabelModel.getTextColor() || defaultLabelColor
             };
         }
         else {

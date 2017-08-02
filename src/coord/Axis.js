@@ -249,7 +249,7 @@ define(function (require) {
                     labelInterval = axisHelper.getAxisLabelInterval(
                         zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
                         axisModel.getFormattedLabels(),
-                        labelModel.getModel('textStyle').getFont(),
+                        labelModel.getFont(),
                         this.isHorizontal()
                     );
                 }

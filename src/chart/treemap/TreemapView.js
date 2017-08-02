@@ -824,22 +824,21 @@
 
         function setText(text, style, nodeModel, labelPath, visualColor, width, height, upperLabelRect) {
             var labelModel = nodeModel.getModel(labelPath);
-            var labelTextStyleModel = labelModel.getModel('textStyle');
 
             graphic.setText(style, labelModel, visualColor);
 
             upperLabelRect && (style.textPositionRect = zrUtil.clone(upperLabelRect));
 
-            var textRect = labelTextStyleModel.getTextRect(text);
+            var textRect = labelModel.getTextRect(text);
             if (!labelModel.getShallow('show') || textRect.height > height) {
-                style.text = '';
+                style.text = null;
             }
             else if (textRect.width > width) {
-                style.text = labelTextStyleModel.get('ellipsis')
-                    ? labelTextStyleModel.truncateText(
+                style.text = labelModel.get('ellipsis')
+                    ? labelModel.truncateText(
                         text, width, null, {minChar: 2}
                     )
-                    : '';
+                    : null;
             }
             else {
                 style.text = text;

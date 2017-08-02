@@ -71,9 +71,7 @@ define(function (require) {
             margin: 8,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            textStyle: {
-                fontSize: 12
-            }
+            fontSize: 12
         },
         // 分隔线
         splitLine: {

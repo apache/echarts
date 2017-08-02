@@ -214,18 +214,16 @@ define(function (require) {
                 content = formatter(name);
             }
 
-            var text = new graphic.Text({
-                style: {
+            itemGroup.add(new graphic.Text({
+                style: graphic.setTextStyle({}, textStyleModel, {
                     text: content,
                     x: textX,
                     y: itemHeight / 2,
                     textFill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
-                    textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textVerticalAlign: 'middle'
-                }
-            });
-            itemGroup.add(text);
+                })
+            }));
 
             // Add a invisible rect to increase the area of mouse hover
             var hitRect = new graphic.Rect({

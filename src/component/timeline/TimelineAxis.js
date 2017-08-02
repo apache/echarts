@@ -64,7 +64,7 @@ define(function (require) {
                 labelInterval = this._autoLabelInterval = axisHelper.getAxisLabelInterval(
                     zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
                     axisHelper.getFormattedLabels(this, labelModel.get('formatter')),
-                    labelModel.getModel('textStyle').getFont(),
+                    labelModel.getFont(),
                     timelineModel.get('orient') === 'horizontal'
                 );
             }

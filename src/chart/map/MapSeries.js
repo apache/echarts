@@ -216,15 +216,11 @@ define(function (require) {
             label: {
                 normal: {
                     show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
+                    color: '#000'
                 },
                 emphasis: {
                     show: true,
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
+                    color: 'rgb(100,0,0)'
                 }
             },
             // scaleLimit: null,

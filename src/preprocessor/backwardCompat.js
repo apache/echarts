@@ -57,14 +57,15 @@ define(function (require) {
     var each = zrUtil.each;
 
     return function (option) {
-        each(option.series, function (seriesOpt) {
+        compatStyle(option);
+
+        var series = option.series;
+        each(zrUtil.isArray(series) ? series : [series], function (seriesOpt) {
             if (!zrUtil.isObject(seriesOpt)) {
                 return;
             }
 
             var seriesType = seriesOpt.type;
-
-            compatStyle(seriesOpt);
 
             if (seriesType === 'pie' || seriesType === 'gauge') {
                 if (seriesOpt.clockWise != null) {
