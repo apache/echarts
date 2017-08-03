@@ -424,7 +424,7 @@ define(function(require) {
 
     /**
      * {
-     *      disableBox: boolean,
+     *      disableBox: boolean, Whether diable drawing box of block (outer most).
      *      isRectText: boolean,
      *      autoColor: string, specify a color when color is 'auto',
      *                 for textFill, textStroke, textBackgroundColor, and textBorderColor
@@ -459,7 +459,7 @@ define(function(require) {
         }
         textStyle.rich = richResult;
 
-        setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt);
+        setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, true);
 
         if (opt && opt.forceRich && !opt.textStyle) {
             opt.textStyle = {};
@@ -468,7 +468,7 @@ define(function(require) {
         return textStyle;
     }
 
-    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt) {
+    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isBlock) {
         textStyle.textFill = getAutoColor(textStyleModel.getTextColor(), opt);
         textStyle.textStroke = getAutoColor(
             textStyleModel.getShallow('textBorderColor')
@@ -486,7 +486,7 @@ define(function(require) {
         textStyle.textHeight = textStyleModel.getShallow('height');
         textStyle.textTag = textStyleModel.getShallow('tag');
 
-        if (!opt || !opt.disableBox) {
+        if (!opt || !isBlock || !opt.disableBox) {
             textStyle.textBackgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor'), opt);
             textStyle.textPadding = textStyleModel.getShallow('padding');
             textStyle.textBorderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);

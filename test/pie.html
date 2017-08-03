@@ -84,10 +84,115 @@
                         },
                         data:[
                             {value:335, name:'直接访问', cursor: 'move'},
-                            {value:310, name:'邮件营销'},
-                            {value:234, name:'联盟广告'},
-                            {value:135, name:'视频广告'},
-                            {value:548, name:'搜索引擎', label: {
+                            {value:310, name:'邮件营销', label: {
+                                normal: {
+                                    textStyle: { // compat
+                                        color: 'red'
+                                    },
+                                    formatter: '{abg|（居右）背景文字 }\n  {b|{b}}{c|}  ',
+                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                    borderColor: '#777',
+                                    borderWidth: 2,
+                                    borderRadius: 3,
+                                    rich: {
+                                        abg: {
+                                            color: '#eee',
+                                            fontSize: 14,
+                                            backgroundColor: '#333',
+                                            width: '100%',
+                                            align: 'right',
+                                            height: 22,
+                                            borderRadius: [4, 4, 0, 0] // 四角的 borderRadius
+                                        },
+                                        b: {
+                                            fontSize: 20,
+                                            lineHeight: 46
+                                        },
+                                        c: {
+                                            backgroundColor: {
+                                                image: './data/hill-Kilimanjaro.png',
+                                            },
+                                            height: 30
+                                        }
+                                    }
+                                },
+                                emphasis: {
+                                }
+                            }},
+                            {value:234, name:'联盟广告', label: {
+                                normal: {
+                                    textStyle: { // compat
+                                        color: 'red'
+                                    },
+                                    formatter: '{a|（居中）背景文字顺序上有些 triky}{abg|}\n  {b|{b}}{c|}  ',
+                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                    borderColor: '#777',
+                                    borderWidth: 2,
+                                    borderRadius: 3,
+                                    rich: {
+                                        a: {
+                                            color: '#eee',
+                                            fontSize: 14,
+                                            align: 'center'
+                                        },
+                                        abg: {
+                                            backgroundColor: '#333',
+                                            width: '100%',
+                                            align: 'right',
+                                            height: 22,
+                                            borderRadius: [4, 4, 0, 0] // 四角的 borderRadius
+                                        },
+                                        b: {
+                                            fontSize: 20,
+                                            lineHeight: 46
+                                        },
+                                        c: {
+                                            backgroundColor: {
+                                                image: './data/hill-Kilimanjaro.png',
+                                            },
+                                            height: 30
+                                        }
+                                    }
+                                },
+                                emphasis: {
+                                }
+                            }},
+                            {value:135, name:'视频广告', label: {
+                                normal: {
+                                    textStyle: { // compat
+                                        color: 'red'
+                                    },
+                                    formatter: '{abg|（居左）背景文字}\n  {b|{b}}{c|}  ',
+                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                    borderColor: '#777',
+                                    borderWidth: 2,
+                                    borderRadius: 3,
+                                    rich: {
+                                        abg: {
+                                            color: '#eee',
+                                            fontSize: 14,
+                                            backgroundColor: '#333',
+                                            width: '100%',
+                                            align: 'left',
+                                            height: 22,
+                                            borderRadius: [4, 4, 0, 0] // 四角的 borderRadius
+                                        },
+                                        b: {
+                                            fontSize: 20,
+                                            lineHeight: 46
+                                        },
+                                        c: {
+                                            backgroundColor: {
+                                                image: './data/hill-Kilimanjaro.png',
+                                            },
+                                            height: 30
+                                        }
+                                    }
+                                },
+                                emphasis: {
+                                }
+                            }},
+                            {value:148, name:'搜索引擎', label: {
                                 normal: {
                                     textStyle: { // compat
                                         color: 'red'
@@ -107,10 +212,10 @@
                                             fontSize: 20
                                         },
                                         hr: {
-                                            tag: 'hr',
-                                            width: '100%outer',
-                                            color: '#999',
-                                            lineWidth: 1,
+                                            width: '100%',
+                                            borderColor: '#999',
+                                            borderWidth: 0.5,
+                                            height: 0,
                                             lineHeight: 15
                                         },
                                         c: {
@@ -122,6 +227,11 @@
                                     }
                                 },
                                 emphasis: {
+                                    backgroundColor: 'rgba(0,0,0,0.5)',
+                                    shadowOffsetX: 5,
+                                    shadowOffsetY: 5,
+                                    shadowBlur: 5,
+                                    shadowColor: '#333'
                                 }
                             }}
                         ],
