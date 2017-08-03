@@ -428,7 +428,7 @@ define(function (require) {
 
             barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
-                cursor: 'move',
+                cursor: getCursor(this._orient),
                 drift: bind(this._onDragMove, this, 'all'),
                 onmousemove: function (e) {
                     // Fot mobile devicem, prevent screen slider on the button.
@@ -468,7 +468,7 @@ define(function (require) {
                         strokeNoScale: true
                     },
                     rectHover: true,
-                    cursor: this._orient === 'vertical' ? 'ns-resize' : 'ew-resize',
+                    cursor: getCursor(this._orient),
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
                     onmousemove: function (e) {
@@ -795,6 +795,10 @@ define(function (require) {
         // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
         var map = {x: 'y', y: 'x', radius: 'angle', angle: 'radius'};
         return map[thisDim];
+    }
+
+    function getCursor(orient) {
+        return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
     }
 
     return SliderZoomView;
