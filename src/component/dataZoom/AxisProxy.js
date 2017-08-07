@@ -432,6 +432,7 @@ define(function(require) {
 
         // [0, 500]: arbitrary value, guess axis extent.
         var precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
+        precision = Math.min(precision, 20);
         // isRestore or isFull
         var useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
 

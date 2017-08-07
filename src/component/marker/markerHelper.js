@@ -38,6 +38,7 @@ define(function (require) {
         coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex, true);
 
         var precision = getPrecision(data, targetDataDim, dataIndex);
+        precision = Math.min(precision, 20);
         if (precision >= 0) {
             coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
         }

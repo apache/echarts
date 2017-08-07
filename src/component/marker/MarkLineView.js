@@ -54,7 +54,7 @@ define(function (require) {
 
             var precision = mlModel.get('precision');
             if (precision >= 0 && typeof value === 'number') {
-                value = +value.toFixed(precision);
+                value = +value.toFixed(Math.min(precision, 20));
             }
 
             mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
