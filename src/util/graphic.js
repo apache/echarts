@@ -224,7 +224,8 @@ define(function(require) {
 
             var normalStyle = {};
             for (var name in hoverStyle) {
-                if (hoverStyle.hasOwnProperty(name)) {
+                // See comment in `doSingleEnterHover`.
+                if (hoverStyle[name] != null) {
                     normalStyle[name] = el.style[name];
                 }
             }
@@ -249,7 +250,26 @@ define(function(require) {
             el.__zr && el.__zr.addHover(el, el.__hoverStl);
         }
         else {
-            el.style.extendFrom(el.__hoverStl, false);
+            // styles can be:
+            // {
+            //     label: {
+            //         normal: {
+            //             show: false,
+            //             position: 'outside',
+            //             fontSize: 18
+            //         },
+            //         emphasis: {
+            //             show: true
+            //         }
+            //     }
+            // },
+            // where properties of `emphasis` may not appear in `normal`. We previously use 
+            // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
+            // But consider rich text, it is impossible to cover all properties in merge.
+            // So we use merge mode when setting style here, where only properties that 
+            // is not `null/undefined` can be set. The disadventage: null/undefined can not 
+            // be used to remove style any more in `emphasis`.
+            el.style.extendFrom(el.__hoverStl);
             el.dirty(false);
             el.z2 += 1;
         }
@@ -270,10 +290,9 @@ define(function(require) {
             el.__zr && el.__zr.removeHover(el);
         }
         else {
-            normalStl && (
-                el.style.extendFrom(normalStl, false),
-                el.dirty(false)
-            );
+            // Consider null/undefined value, should use 
+            // `setStyle` but not `extendFrom(stl, true)`.
+            normalStl && el.setStyle(normalStl);
             el.z2 -= 1;
         }
 
