@@ -38,7 +38,7 @@ define(function (require) {
 
     var funnelPieceProto = FunnelPiece.prototype;
 
-    function setLabelStyle(style, data, idx, state, labelModel, specifiedStyle) {
+    function setLabelStyle(style, data, idx, state, labelModel, specifiedStyle, isEmphasis) {
         var position = labelModel.get('position');
         var isLabelInside = position === 'inside' || position === 'inner' || position === 'center';
         return graphic.setTextStyle(style, labelModel, zrUtil.extend({
@@ -48,7 +48,7 @@ define(function (require) {
                 data.hostModel.getFormattedLabel(idx, state),
                 data.getName(idx)
             )
-        }, specifiedStyle), {mergeMode: true});
+        }, specifiedStyle), {forMerge: isEmphasis});
     }
 
     var opacityAccessPath = ['itemStyle', 'normal', 'opacity'];
@@ -159,7 +159,7 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel);
+        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel, true);
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     };
 

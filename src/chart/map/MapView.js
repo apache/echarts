@@ -121,7 +121,7 @@ define(function (require) {
                         graphic.setTextStyle(circle.style, hoverLabelModel, {
                             text: hoverLabelModel.get('show') ? labelText : null,
                             textFill: hoverLabelModel.getTextColor()
-                        }, {isRectText: true});
+                        }, {isRectText: true, forMerge: true});
                     };
 
                     var onNormal = function () {

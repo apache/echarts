@@ -255,7 +255,7 @@ define(function (require) {
                     graphic.setTextStyle(textEl.hoverStyle = {}, hoverLabelModel, {
                         text: hoverShowLabel ? (hoverFormattedStr || region.name) : null,
                         textFill: hoverLabelModel.getTextColor()
-                    });
+                    }, {forMerge: true});
 
                     regionGroup.add(textEl);
                 }

@@ -96,7 +96,7 @@ define(function (require) {
 
     var piePieceProto = PiePiece.prototype;
 
-    function setLabelStyle(style, data, idx, state, labelModel, labelPosition, specifiedStyle) {
+    function setLabelStyle(style, data, idx, state, labelModel, labelPosition, specifiedStyle, isEmphasis) {
         var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         return graphic.setTextStyle(style, labelModel, zrUtil.extend({
             textFill: labelModel.getTextColor()
@@ -105,7 +105,7 @@ define(function (require) {
             text: zrUtil.retrieve(
                 data.hostModel.getFormattedLabel(idx, state), data.getName(idx)
             )
-        }, specifiedStyle));
+        }, specifiedStyle), {forMerge: isEmphasis});
     }
 
     piePieceProto.updateData = function (data, idx, firstCreate) {
@@ -262,7 +262,7 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel, labelPosition);
+        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel, labelPosition, true);
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
         var smooth = labelLineModel.get('smooth');

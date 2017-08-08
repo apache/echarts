@@ -148,7 +148,7 @@ define(function (require) {
                             ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id
                             : null,
                         textFill: labelHoverModel.getTextColor()
-                    }, {isRectText: true})
+                    }, {isRectText: true, forMerge: true})
                 ));
 
                 group.add(rect);
