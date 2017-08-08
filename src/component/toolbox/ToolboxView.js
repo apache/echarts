@@ -124,31 +124,19 @@ define(function (require) {
                     titles[featureName] = title;
                 }
                 var iconPaths = featureModel.iconPaths = {};
-                zrUtil.each(icons, function (icon, iconName) {
-                    var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
-                    var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
-
-                    var style = {
-                        x: -itemSize / 2,
-                        y: -itemSize / 2,
-                        width: itemSize,
-                        height: itemSize
-                    };
-                    var path = icon.indexOf('image://') === 0
-                        ? (
-                            style.image = icon.slice(8),
-                            new graphic.Image({style: style})
-                        )
-                        : graphic.makePath(
-                            icon.replace('path://', ''),
-                            {
-                                style: normalStyle,
-                                hoverStyle: hoverStyle,
-                                rectHover: true
-                            },
-                            style,
-                            'center'
-                        );
+                zrUtil.each(icons, function (iconStr, iconName) {
+                    var path = graphic.createIcon(
+                        iconStr,
+                        {},
+                        {
+                            x: -itemSize / 2,
+                            y: -itemSize / 2,
+                            width: itemSize,
+                            height: itemSize
+                        }                        
+                    );
+                    path.setStyle(iconStyleModel.getModel('normal').getItemStyle());
+                    path.hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
 
                     graphic.setHoverStyle(path);
 
