@@ -263,11 +263,11 @@ define(function(require) {
             //         }
             //     }
             // },
-            // where properties of `emphasis` may not appear in `normal`. We previously use 
+            // where properties of `emphasis` may not appear in `normal`. We previously use
             // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
             // But consider rich text, it is impossible to cover all properties in merge.
-            // So we use merge mode when setting style here, where only properties that 
-            // is not `null/undefined` can be set. The disadventage: null/undefined can not 
+            // So we use merge mode when setting style here, where only properties that
+            // is not `null/undefined` can be set. The disadventage: null/undefined can not
             // be used to remove style any more in `emphasis`.
             el.style.extendFrom(el.__hoverStl);
             el.dirty(false);
@@ -290,7 +290,7 @@ define(function(require) {
             el.__zr && el.__zr.removeHover(el);
         }
         else {
-            // Consider null/undefined value, should use 
+            // Consider null/undefined value, should use
             // `setStyle` but not `extendFrom(stl, true)`.
             normalStl && el.setStyle(normalStl);
             el.z2 -= 1;
@@ -416,8 +416,8 @@ define(function(require) {
     /**
      * Set basic textStyle properties.
      * @param {Object|module:zrender/graphic/Style} style
-     * @param {Object} specifiedTextStyle Can be overrided by settings in model.
      * @param {module:echarts/model/Model} model
+     * @param {Object} [specifiedTextStyle] Can be overrided by settings in model.
      * @param {Object} [opt] See `opt` of `setTextStyleCommon`.
      */
     graphic.setTextStyle = function (style, textStyleModel, specifiedTextStyle, opt) {
@@ -433,12 +433,14 @@ define(function(require) {
      * @param {Object} textStyle
      * @param {module:echarts/model/Model} labelModel
      * @param {string} color
+     * @param {boolean} isEmphasis
      */
-    graphic.setText = function (textStyle, labelModel, color) {
-        setTextStyleCommon(textStyle, labelModel, {isRectText: true});
-
-        textStyle.textFill = textStyle.textFill
-            || (textStyle.textPosition.indexOf('inside') >= 0 ? 'white' : color);
+    graphic.setText = function (textStyle, labelModel, color, isEmphasis) {
+        setTextStyleCommon(textStyle, labelModel, {
+            isRectText: true,
+            forMerge: isEmphasis,
+            defaultTextColor: color
+        });
     };
 
     /**
@@ -446,18 +448,23 @@ define(function(require) {
      *      disableBox: boolean, Whether diable drawing box of block (outer most).
      *      isRectText: boolean,
      *      autoColor: string, specify a color when color is 'auto',
-     *                 for textFill, textStroke, textBackgroundColor, and textBorderColor
-     *      forceRich: boolean
+     *                 for textFill, textStroke, textBackgroundColor, and textBorderColor,
+     *      defaultTextColor: defaultTextColor,
+     *      forceRich: boolean,
+     *      forMerge: boolean
      * }
      */
     function setTextStyleCommon(textStyle, textStyleModel, opt) {
+        // Consider there will be abnormal when merge hover style to normal style if given default value.
+        var forMerge = opt && opt.forMerge;
+
         if (opt && opt.isRectText) {
-            textStyle.textPosition = textStyleModel.getShallow('position') || 'inside';
+            textStyle.textPosition = textStyleModel.getShallow('position') || (forMerge ? null : 'inside');
             textStyle.textOffset = textStyleModel.getShallow('offset');
             var labelRotate = textStyleModel.getShallow('rotate');
             labelRotate != null && (labelRotate *= Math.PI / 180);
             textStyle.textRotation = labelRotate;
-            textStyle.textDistance = textStyleModel.getShallow('distance') || 5;
+            textStyle.textDistance = textStyleModel.getShallow('distance') || (forMerge ? null : 5);
         }
 
         var ecModel = textStyleModel.ecModel;
@@ -488,7 +495,15 @@ define(function(require) {
     }
 
     function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isBlock) {
-        textStyle.textFill = getAutoColor(textStyleModel.getTextColor(), opt);
+        var textPosition = textStyle.textPosition;
+        textStyle.textFill = getAutoColor(textStyleModel.getTextColor(), opt) || (
+            (opt && opt.forMerge)
+                ? null
+                : (textPosition && textPosition.indexOf('inside') >= 0)
+                ? '#fff'
+                : (opt && opt.defaultTextColor)
+        );
+
         textStyle.textStroke = getAutoColor(
             textStyleModel.getShallow('textBorderColor')
                 || (globalTextStyle && globalTextStyle.textBorderColor)
@@ -760,6 +775,33 @@ define(function(require) {
                 height: y2 - y
             };
         }
+    };
+
+    /**
+     * @param {string} iconStr Support 'image://' or 'path://' or direct svg path.
+     * @param {Object} [opt] Properties of `module:zrender/Element`, except `style`.
+     * @param {Object} [rect] {x, y, width, height}
+     * @return {module:zrender/Element} Icon path or image element.
+     */
+    graphic.createIcon = function (iconStr, opt, rect) {
+        opt = zrUtil.extend({rectHover: true}, opt);
+        var style = opt.style = {strokeNoScale: true};
+        rect = rect || {x: -1, y: -1, width: 2, height: 2};
+
+        return iconStr.indexOf('image://') === 0
+            ? (
+                style.image = iconStr.slice(8),
+                zrUtil.defaults(style, rect),
+                new graphic.Image(opt)
+            )
+            : (
+                graphic.makePath(
+                    iconStr.replace('path://', ''),
+                    opt,
+                    rect,
+                    'center'
+                )
+            );
     };
 
     return graphic;

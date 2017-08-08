@@ -674,7 +674,7 @@ define(function (require) {
     function removeBar(data, dataIndex, animationModel, bar) {
         // Not show text when animating
         var labelRect = bar.__pictorialBarRect;
-        labelRect && (labelRect.style.text = '');
+        labelRect && (labelRect.style.text = null);
 
         var pathes = [];
         eachPath(bar, function (path) {

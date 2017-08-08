@@ -181,7 +181,7 @@ define(function (require) {
 
     function removeRect(dataIndex, animationModel, el) {
         // Not show text when animating
-        el.style.text = '';
+        el.style.text = null;
         graphic.updateProps(el, {
             shape: {
                 width: 0
@@ -193,7 +193,7 @@ define(function (require) {
 
     function removeSector(dataIndex, animationModel, el) {
         // Not show text when animating
-        el.style.text = '';
+        el.style.text = null;
         graphic.updateProps(el, {
             shape: {
                 r: el.shape.r0

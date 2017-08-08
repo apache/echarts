@@ -22,7 +22,7 @@ define(function (require) {
             );
         }
         else {
-            normalStyle.text = '';
+            normalStyle.text = null;
         }
 
         if (hoverLabelModel.get('show')) {
@@ -32,16 +32,17 @@ define(function (require) {
                     seriesModel.getFormattedLabel(dataIndex, 'emphasis'),
                     seriesModel.getRawValue(dataIndex)
                 ),
-                labelPositionOutside
+                labelPositionOutside,
+                true
             );
         }
         else {
-            hoverStyle.text = '';
+            hoverStyle.text = null;
         }
     };
 
-    function setLabel(style, model, color, labelText, labelPositionOutside) {
-        graphic.setText(style, model, color);
+    function setLabel(style, model, color, labelText, labelPositionOutside, isEmphasis) {
+        graphic.setText(style, model, color, isEmphasis);
         style.text = labelText;
         if (style.textPosition === 'outside') {
             style.textPosition = labelPositionOutside;

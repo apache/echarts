@@ -31,10 +31,10 @@ define(function (require) {
     };
 
     helper.setTextToStyle = function (
-        data, dataIndex, valueDim, elStyle, seriesModel, labelModel, color
+        data, dataIndex, valueDim, elStyle, seriesModel, labelModel, color, isEmphasis
     ) {
         if (valueDim != null && labelModel.getShallow('show')) {
-            graphic.setText(elStyle, labelModel, color);
+            graphic.setText(elStyle, labelModel, color, isEmphasis);
             elStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(dataIndex, 'normal'),
                 data.get(valueDim, dataIndex)

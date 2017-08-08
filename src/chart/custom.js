@@ -362,7 +362,7 @@ define(function (require) {
 
             labelHelper.setTextToStyle(
                 data, dataIndexInside, currLabelValueDim, itemStyle,
-                customSeries, currLabelEmphasisModel, currVisualColor
+                customSeries, currLabelEmphasisModel, currVisualColor, true
             );
 
             extra && zrUtil.extend(itemStyle, extra);

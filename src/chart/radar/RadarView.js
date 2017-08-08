@@ -174,21 +174,25 @@ define(function (require) {
                     var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
                     graphic.setText(symbolPath.style, labelModel, color);
                     symbolPath.setStyle({
-                        text: labelModel.get('show') ? zrUtil.retrieve(
-                            seriesModel.getFormattedLabel(
-                                idx, 'normal', null, symbolPath.__dimIdx
-                            ),
-                            defaultText
-                        ) : ''
+                        text: labelModel.get('show')
+                            ? zrUtil.retrieve(
+                                seriesModel.getFormattedLabel(
+                                    idx, 'normal', null, symbolPath.__dimIdx
+                                ),
+                                defaultText
+                            )
+                            : null
                     });
 
-                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, color);
-                    symbolPath.hoverStyle.text = labelHoverModel.get('show') ? zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(
-                            idx, 'emphasis', null, symbolPath.__dimIdx
-                        ),
-                        defaultText
-                    ) : '';
+                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, color, true);
+                    symbolPath.hoverStyle.text = labelHoverModel.get('show')
+                        ? zrUtil.retrieve(
+                            seriesModel.getFormattedLabel(
+                                idx, 'emphasis', null, symbolPath.__dimIdx
+                            ),
+                            defaultText
+                        )
+                        : null;
                 });
 
                 function onEmphasis() {

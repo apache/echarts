@@ -24,11 +24,13 @@
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
-                'echarts/component/dataZoomInside'
+                'echarts/component/dataZoomInside',
+                'zrender/svg/svg'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
+                    // renderer: 'svg'
                 });
 
                 var xAxisData = [];
@@ -130,9 +132,15 @@
                         type: 'line',
                         stack: 'all',
                         symbol: 'circle',
-                        symbolSize: 10,
+                        symbolSize: 40,
                         data: data1,
                         itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true,
+                                fontSize: 12
+                            }
+                        },
                         lineStyle: {
                             normal: {
                                 shadowBlur: 4,

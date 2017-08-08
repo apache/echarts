@@ -234,18 +234,18 @@ define(function (require) {
                     );
                 }
                 else {
-                    polygon.style.text = '';
+                    polygon.style.text = null;
                 }
 
                 if (labelHoverModel.getShallow('show')) {
-                    graphic.setText(polygon.hoverStyle, labelHoverModel, textColor);
+                    graphic.setTextStyle(polygon.hoverStyle, labelHoverModel, textColor, true);
                     polygon.hoverStyle.text = zrUtil.retrieve(
                         maModel.getFormattedLabel(idx, 'emphasis'),
                         defaultValue
                     );
                 }
                 else {
-                    polygon.hoverStyle.text = '';
+                    polygon.hoverStyle.text = null;
                 }
 
                 graphic.setHoverStyle(polygon, {});

@@ -196,7 +196,7 @@ define(function (require) {
                     style.text = seriesModel.getFormattedLabel(idx, 'normal') || defaultText;
                 }
                 if (hoverLabelModel.getShallow('show')) {
-                    graphic.setText(hoverStl, hoverLabelModel);
+                    graphic.setText(hoverStl, hoverLabelModel, null, true);
                     hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
                 }
 

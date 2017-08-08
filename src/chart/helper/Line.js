@@ -338,7 +338,7 @@ define(function (require) {
         }
         else {
             label.hoverStyle = {
-                text: ''
+                text: null
             };
         }
 

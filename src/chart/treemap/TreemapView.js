@@ -741,7 +741,7 @@
                 }
                 // For old bg.
                 else {
-                    normalStyle.text = emphasisStyle.text = '';
+                    normalStyle.text = emphasisStyle.text = null;
                 }
 
                 bg.setStyle(normalStyle);
@@ -818,14 +818,14 @@
             );
             setText(
                 text, emphasisStyle, nodeModel, upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS,
-                visualColor, width, height, upperLabelRect
+                visualColor, width, height, upperLabelRect, true
             );
         }
 
-        function setText(text, style, nodeModel, labelPath, visualColor, width, height, upperLabelRect) {
+        function setText(text, style, nodeModel, labelPath, visualColor, width, height, upperLabelRect, isEmphasis) {
             var labelModel = nodeModel.getModel(labelPath);
 
-            graphic.setText(style, labelModel, visualColor);
+            graphic.setText(style, labelModel, visualColor, isEmphasis);
 
             upperLabelRect && (style.textPositionRect = zrUtil.clone(upperLabelRect));
 

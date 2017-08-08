@@ -228,7 +228,7 @@ define(function (require) {
             data, idx, valueDim, elStyle, seriesModel, labelModel, color
         );
         labelHelper.setTextToStyle(
-            data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color
+            data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color, true
         );
 
         symbolPath.off('mouseover')
@@ -269,7 +269,7 @@ define(function (require) {
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
-        symbolPath.style.text = '';
+        symbolPath.style.text = null;
         graphic.updateProps(symbolPath, {
             scale: [0, 0]
         }, this._seriesModel, this.dataIndex, cb);
