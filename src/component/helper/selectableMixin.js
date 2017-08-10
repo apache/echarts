@@ -9,21 +9,26 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
+    var _targetList;
+
     return {
 
         updateSelectedMap: function (targetList) {
+            _targetList = targetList;
             this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
                 targetMap.set(target.name, target);
                 return targetMap;
             }, zrUtil.createHashMap());
         },
         /**
-         * @param {string} name
+         * @param {string} nameOrId name or dataIndex
          */
         // PENGING If selectedMode is null ?
-        select: function (name) {
+        select: function (nameOrId) {
             var targetMap = this._selectTargetMap;
-            var target = targetMap.get(name);
+            var target = typeof nameOrId === 'number'
+                ? _targetList[nameOrId]
+                : targetMap.get(nameOrId);
             var selectedMode = this.get('selectedMode');
             if (selectedMode === 'single') {
                 targetMap.each(function (target) {
@@ -34,31 +39,40 @@ define(function (require) {
         },
 
         /**
-         * @param {string} name
+         * @param {string} nameOrId name or dataIndex
          */
-        unSelect: function (name) {
-            var target = this._selectTargetMap.get(name);
+        unSelect: function (nameOrId) {
+            var targetMap = this._selectTargetMap;
+            var target = typeof nameOrId === 'number'
+                ? _targetList[nameOrId]
+                : targetMap.get(nameOrId);
             // var selectedMode = this.get('selectedMode');
             // selectedMode !== 'single' && target && (target.selected = false);
             target && (target.selected = false);
         },
 
         /**
-         * @param {string} name
+         * @param {string} nameOrId name or dataIndex
          */
-        toggleSelected: function (name) {
-            var target = this._selectTargetMap.get(name);
+        toggleSelected: function (nameOrId) {
+            var targetMap = this._selectTargetMap;
+            var target = typeof nameOrId === 'number'
+                ? _targetList[nameOrId]
+                : targetMap.get(nameOrId);
             if (target != null) {
-                this[target.selected ? 'unSelect' : 'select'](name);
+                this[target.selected ? 'unSelect' : 'select'](nameOrId);
                 return target.selected;
             }
         },
 
         /**
-         * @param {string} name
+         * @param {string} nameOrId name or dataIndex
          */
-        isSelected: function (name) {
-            var target = this._selectTargetMap.get(name);
+        isSelected: function (nameOrId) {
+            var targetMap = this._selectTargetMap;
+            var target = typeof nameOrId === 'number'
+                ? _targetList[nameOrId]
+                : targetMap.get(nameOrId);
             return target && target.selected;
         }
     };

@@ -15,7 +15,10 @@ define(function (require) {
                     {mainType: 'series', subType: seriesType, query: payload},
                     function (seriesModel) {
                         if (seriesModel[actionInfo.method]) {
-                            seriesModel[actionInfo.method](payload.name);
+                            var nameOrId = payload.dataIndex == undefined
+                                ? payload.name
+                                : payload.dataIndex;
+                            seriesModel[actionInfo.method](nameOrId);
                         }
                         var data = seriesModel.getData();
                         // Create selected map
