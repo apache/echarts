@@ -586,7 +586,7 @@ define(function(require) {
             }
 
             duration > 0
-                ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
+                ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb, !!cb)
                 : (el.stopAnimation(), el.attr(props), cb && cb());
         }
         else {
