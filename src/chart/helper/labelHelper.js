@@ -37,7 +37,9 @@ define(function (require) {
             graphic.setText(elStyle, labelModel, color);
             elStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(dataIndex, 'normal'),
-                data.get(valueDim, dataIndex)
+                valueDim === 'ecDataItemName'
+                    ? data.getName(dataIndex)
+                    : data.get(valueDim, dataIndex)
             );
         }
         else {

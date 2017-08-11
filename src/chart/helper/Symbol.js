@@ -180,7 +180,7 @@ define(function (require) {
         var hoverAnimation = seriesScope && seriesScope.hoverAnimation;
 
         if (!seriesScope || data.hasItemOption) {
-            var itemModel = data.getItemModel(idx);
+            var itemModel = seriesScope.itemModel ? seriesScope.itemModel : data.getItemModel(idx);
 
             // Color must be excluded.
             // Because symbol provide setColor individually to set fill and stroke
@@ -210,7 +210,7 @@ define(function (require) {
         }
 
         // PENDING setColor before setStyle!!!
-        symbolPath.setColor(color);
+        symbolPath.setColor(color, seriesScope.symbolInnerColor);
 
         symbolPath.setStyle(itemStyle);
 
@@ -219,7 +219,9 @@ define(function (require) {
             elStyle.opacity = opacity;
         }
 
-        var valueDim = labelHelper.findLabelValueDim(data);
+        var valueDim = (seriesScope && seriesScope.useNameLabel)
+            ? 'ecDataItemName'
+            : labelHelper.findLabelValueDim(data);
         labelHelper.setTextToStyle(
             data, idx, valueDim, elStyle, seriesModel, labelModel, color
         );
