@@ -18,8 +18,13 @@ define(function (require) {
                 return targetMap;
             }, zrUtil.createHashMap());
         },
+
         /**
-         * @param {object} payload object containing name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
         // PENGING If selectedMode is null ?
         select: function (name, id) {
@@ -36,7 +41,11 @@ define(function (require) {
         },
 
         /**
-         * @param {object} payload object containing name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
         unSelect: function (name, id) {
             var target = id != null
@@ -48,7 +57,11 @@ define(function (require) {
         },
 
         /**
-         * @param {object} payload object containing name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
         toggleSelected: function (name, id) {
             var target = id != null
@@ -61,7 +74,11 @@ define(function (require) {
         },
 
         /**
-         * @param {object} payload object containing name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
         isSelected: function (name, id) {
             var target = id != null
