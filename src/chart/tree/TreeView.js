@@ -172,13 +172,13 @@ define(function (require) {
             seriesScope.symbolInnerColor = '#fff';
         }
 
-
-
         return seriesScope;
     }
 
 
     function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
+        var isInit = !symbolEl;
+        var method = isInit ? 'initProps' : 'updateProps';
         var node = data.tree.getNodeByDataIndex(dataIndex);
         var itemModel = node.getModel();
         var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
@@ -195,19 +195,30 @@ define(function (require) {
             : sourceLayout;
         var targetLayout = node.getLayout();
 
-        if (!symbolEl) {
+        if (isInit) {
             symbolEl = new Symbol(data, dataIndex, {useNameLabel: true});
             symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
         }
 
         symbolEl.updateData(data, dataIndex, seriesScope);
-        graphic.updateProps(symbolEl, {
-            position: [targetLayout.x, targetLayout.y]
-        }, seriesModel);
-
 
         group.add(symbolEl);
         data.setItemGraphicEl(dataIndex, symbolEl);
+
+        graphic[method](symbolEl, {
+            position: [targetLayout.x, targetLayout.y],
+        }, seriesModel);
+
+        if (isInit) {
+            // var symbolPath = symbolEl.getSymbolPath();
+            // symbolPath.setStyle('opacity', 0.2);
+
+            // graphic[method](symbolPath, {
+            //     style: {
+            //         opacity: 1
+            //     }
+            // }, seriesModel);
+        }
 
         if (node.parentNode && node.parentNode !== virtualRoot) {
             var edge = symbolEl.__edge;
@@ -217,9 +228,8 @@ define(function (require) {
                     style: zrUtil.defaults({opacity: 0}, seriesScope.lineStyle)
                 });
             }
-            // ???? opacity
 
-            graphic.updateProps(edge, {
+            graphic[method](edge, {
                 shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
                 style: {opacity: 1}
             }, seriesModel);
@@ -247,9 +257,6 @@ define(function (require) {
         // var source = node.parentNode || node;
         // var sourceLayout = source.getLayout();
 
-        // do {
-        //     var sourceLayout = source.getLayout();
-        // } while(sourceLayout)
         var sourceLayout;
         while (sourceLayout = source.getLayout(), sourceLayout == null) {
             source = source.parentNode === virtualRoot ? source : source.parentNode || source;

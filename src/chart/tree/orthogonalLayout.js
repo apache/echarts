@@ -25,11 +25,12 @@ define(function (require) {
                 seriesModel.layoutInfo = layoutInfo;
 
                 var width = layoutInfo.width;
+
                 var height = layoutInfo.height;
 
                 var virtualRoot = seriesModel.getData().tree.root;
                 var realRoot = virtualRoot.children[0];
-                var separation= sep();
+                var separation = sep();
 
                 initial(virtualRoot);
                 eachAfter(realRoot, firstWalk, separation);
@@ -39,14 +40,13 @@ define(function (require) {
 
                 eachBefore(realRoot, secondWalk);
                 // realRoot.eachNode('preorder', secondWalk);
-
+                //
                 var left = realRoot;
                 var right = realRoot;
                 var bottom = realRoot;
                 eachBefore(realRoot, function (node) {
                     var x = node.getLayout().x;
 
-    // 这一部分等到调试结束了，讲left 和 right 颠倒一下试试
                     if (x < left.getLayout().x) {
                         left = node;
                     }
@@ -58,14 +58,11 @@ define(function (require) {
                     }
                 });
 
-
-
                 var delta = left === right ? 1 : separation(left, right) / 2;
                 var tx = delta - left.getLayout().x;
                 var orient = seriesModel.get('orient');
 
                 if (orient === 'horizontal') {
-                    // 先不固定y的坐标，看下交互的效果，如果效果不好，再固定y的位置，使得每次layout时，y的位置固定不动
                     var ky = height / (right.getLayout().x + delta + tx);
                     // here we use (node.depth - 1), bucause the real root's depth is 1
                     var kx = width / ((bottom.depth - 1) || 1);

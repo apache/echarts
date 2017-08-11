@@ -89,12 +89,10 @@ define(function (require) {
             layout: 'orthogonal',
 
             // the orient of orthoginal layout, can be setted to 'horizontal' or 'vertical'
-            orient: 'vertical',
+            orient: 'horizontal',
 
             symbol: 'emptyCircle',
 
-            // the radius of the node circle
-            // nodeRadius: 2.5,
             symbolSize: 8,
 
 
