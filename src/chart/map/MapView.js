@@ -119,15 +119,13 @@ define(function (require) {
 
                     var onEmphasis = function () {
                         graphic.setTextStyle(circle.style, hoverLabelModel, {
-                            text: hoverLabelModel.get('show') ? labelText : null,
-                            textFill: hoverLabelModel.getTextColor()
+                            text: hoverLabelModel.get('show') ? labelText : null
                         }, {isRectText: true, forMerge: true});
                     };
 
                     var onNormal = function () {
                         graphic.setTextStyle(circle.style, labelModel, {
-                            text: labelModel.get('show') ? labelText : null,
-                            textFill: labelModel.getTextColor()
+                            text: labelModel.get('show') ? labelText : null
                         }, {isRectText: true});
                     };
 

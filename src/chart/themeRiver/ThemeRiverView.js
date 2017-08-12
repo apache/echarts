@@ -135,7 +135,6 @@ define(function (require) {
                         ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
                             || data.getName(indices[j - 1])
                         : null,
-                    textFill: labelModel.getTextColor(),
                     textVerticalAlign: 'middle'
                 });
 

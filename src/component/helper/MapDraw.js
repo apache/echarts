@@ -247,14 +247,12 @@ define(function (require) {
 
                     graphic.setTextStyle(textEl.style, labelModel, {
                         text: showLabel ? (formattedStr || region.name) : null,
-                        textFill: labelModel.getTextColor(),
                         textAlign: 'center',
                         textVerticalAlign: 'middle'
                     });
 
                     graphic.setTextStyle(textEl.hoverStyle = {}, hoverLabelModel, {
-                        text: hoverShowLabel ? (hoverFormattedStr || region.name) : null,
-                        textFill: hoverLabelModel.getTextColor()
+                        text: hoverShowLabel ? (hoverFormattedStr || region.name) : null
                     }, {forMerge: true});
 
                     regionGroup.add(textEl);

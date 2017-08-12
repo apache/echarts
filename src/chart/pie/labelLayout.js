@@ -211,8 +211,8 @@ define(function (require) {
                 linePoints: linePoints,
                 textAlign: textAlign,
                 verticalAlign: 'middle',
-                font: font,
-                rotation: labelRotate
+                rotation: labelRotate,
+                inside: isLabelInside
             };
 
             // Not layout the inside label

@@ -135,19 +135,17 @@ define(function (require) {
                     text: labelModel.get('show')
                         ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
                         // Use empty string to hide the label
-                        : null,
-                    textFill: labelModel.getTextColor()
+                        : null
                 }, {isRectText: true});
 
                 rect.setStyle('fill', node.getVisual('color'));
 
+                var hoverStyle = node.getModel('itemStyle.emphasis').getItemStyle();
                 graphic.setHoverStyle(rect, zrUtil.extend(
-                    node.getModel('itemStyle.emphasis').getItemStyle(),
-                    graphic.setTextStyle({}, labelHoverModel, {
+                    graphic.setTextStyle(hoverStyle, labelHoverModel, {
                         text: labelHoverModel.get('show')
-                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id
-                            : null,
-                        textFill: labelHoverModel.getTextColor()
+                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis')
+                            : null
                     }, {isRectText: true, forMerge: true})
                 ));
 

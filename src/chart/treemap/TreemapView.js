@@ -812,37 +812,32 @@
                 text = iconChar ? iconChar + ' ' + text : text;
             }
 
-            setText(
-                text, normalStyle, nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL,
-                visualColor, width, height, upperLabelRect
+            var normalLabelModel = nodeModel.getModel(
+                upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
             );
-            setText(
-                text, emphasisStyle, nodeModel, upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS,
-                visualColor, width, height, upperLabelRect, true
-            );
-        }
+            graphic.setText(normalStyle, normalLabelModel, visualColor);
 
-        function setText(text, style, nodeModel, labelPath, visualColor, width, height, upperLabelRect, isEmphasis) {
-            var labelModel = nodeModel.getModel(labelPath);
+            upperLabelRect && (normalStyle.textPositionRect = zrUtil.clone(upperLabelRect));
 
-            graphic.setText(style, labelModel, visualColor, isEmphasis);
-
-            upperLabelRect && (style.textPositionRect = zrUtil.clone(upperLabelRect));
-
-            var textRect = labelModel.getTextRect(text);
-            if (!labelModel.getShallow('show') || textRect.height > height) {
-                style.text = null;
+            var textRect = normalLabelModel.getTextRect(text);
+            if (!normalLabelModel.getShallow('show') || textRect.height > height) {
+                normalStyle.text = null;
             }
             else if (textRect.width > width) {
-                style.text = labelModel.get('ellipsis')
-                    ? labelModel.truncateText(
+                normalStyle.text = normalLabelModel.get('ellipsis')
+                    ? normalLabelModel.truncateText(
                         text, width, null, {minChar: 2}
                     )
                     : null;
             }
             else {
-                style.text = text;
+                normalStyle.text = text;
             }
+
+            var emphasisLabelModel = nodeModel.getModel(
+                upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_UPPERLABEL_EMPHASIS
+            );
+            graphic.setText(emphasisStyle, emphasisLabelModel, false);
         }
 
         function giveGraphic(storageName, Ctor, depth, z) {

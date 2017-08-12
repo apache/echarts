@@ -16,6 +16,8 @@ define(function(require) {
     var mathMax = Math.max;
     var mathMin = Math.min;
 
+    var EMPTY_OBJ = {};
+
     var graphic = {};
 
     graphic.Group = require('zrender/container/Group');
@@ -265,10 +267,10 @@ define(function(require) {
             // },
             // where properties of `emphasis` may not appear in `normal`. We previously use
             // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
-            // But consider rich text, it is impossible to cover all properties in merge.
-            // So we use merge mode when setting style here, where only properties that
-            // is not `null/undefined` can be set. The disadventage: null/undefined can not
-            // be used to remove style any more in `emphasis`.
+            // But consider rich text and setOption in merge mode, it is impossible to cover
+            // all properties in merge. So we use merge mode when setting style here, where
+            // only properties that is not `null/undefined` can be set. The disadventage:
+            // null/undefined can not be used to remove style any more in `emphasis`.
             el.style.extendFrom(el.__hoverStl);
             el.dirty(false);
             el.z2 += 1;
@@ -415,33 +417,44 @@ define(function(require) {
 
     /**
      * Set basic textStyle properties.
-     * @param {Object|module:zrender/graphic/Style} style
+     * @param {Object|module:zrender/graphic/Style} textStyle
      * @param {module:echarts/model/Model} model
      * @param {Object} [specifiedTextStyle] Can be overrided by settings in model.
      * @param {Object} [opt] See `opt` of `setTextStyleCommon`.
      */
-    graphic.setTextStyle = function (style, textStyleModel, specifiedTextStyle, opt) {
-        setTextStyleCommon(style, textStyleModel, opt);
-        specifiedTextStyle && zrUtil.extend(style, specifiedTextStyle);
-        style.dirty && style.dirty();
+    graphic.setTextStyle = function (textStyle, textStyleModel, specifiedTextStyle, opt) {
+        setTextStyleCommon(textStyle, textStyleModel, opt);
+        specifiedTextStyle && zrUtil.extend(textStyle, specifiedTextStyle);
+        textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
-        return style;
+        return textStyle;
     };
 
     /**
      * Set text option in the style
      * @param {Object} textStyle
      * @param {module:echarts/model/Model} labelModel
-     * @param {string} color
-     * @param {boolean} isEmphasis
+     * @param {string|boolean} defaultColor Default text color.
+     *        If set as false, it will be processed as a emphasis style.
      */
-    graphic.setText = function (textStyle, labelModel, color, isEmphasis) {
-        setTextStyleCommon(textStyle, labelModel, {
-            isRectText: true,
-            forMerge: isEmphasis,
-            defaultTextColor: color
-        });
+    graphic.setText = function (textStyle, labelModel, defaultColor) {
+        var opt = {isRectText: true};
+        if (defaultColor === false) {
+            opt.forMerge = true;
+        }
+        else {
+            opt.defaultTextColor = defaultColor;
+            opt.getDefaultTextColor = getDefaultTextColorForSetText;
+        }
+        setTextStyleCommon(textStyle, labelModel, opt);
+        textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
     };
+
+    function getDefaultTextColorForSetText(labelModel, opt, textPosition) {
+        return (textPosition && textPosition.indexOf('inside') >= 0)
+            ? '#fff'
+            : opt.defaultTextColor;
+    }
 
     /**
      * {
@@ -449,22 +462,23 @@ define(function(require) {
      *      isRectText: boolean,
      *      autoColor: string, specify a color when color is 'auto',
      *                 for textFill, textStroke, textBackgroundColor, and textBorderColor,
-     *      defaultTextColor: defaultTextColor,
+     *      defaultTextColor: string,
+     *      getDefaultTextColor: function, higher priority than `defaultTextColor`.
      *      forceRich: boolean,
      *      forMerge: boolean
      * }
      */
     function setTextStyleCommon(textStyle, textStyleModel, opt) {
         // Consider there will be abnormal when merge hover style to normal style if given default value.
-        var forMerge = opt && opt.forMerge;
+        opt = opt || EMPTY_OBJ;
 
-        if (opt && opt.isRectText) {
-            textStyle.textPosition = textStyleModel.getShallow('position') || (forMerge ? null : 'inside');
+        if (opt.isRectText) {
+            textStyle.textPosition = textStyleModel.getShallow('position') || (opt.forMerge ? null : 'inside');
             textStyle.textOffset = textStyleModel.getShallow('offset');
             var labelRotate = textStyleModel.getShallow('rotate');
             labelRotate != null && (labelRotate *= Math.PI / 180);
             textStyle.textRotation = labelRotate;
-            textStyle.textDistance = textStyleModel.getShallow('distance') || (forMerge ? null : 5);
+            textStyle.textDistance = textStyleModel.getShallow('distance') || (opt.forMerge ? null : 5);
         }
 
         var ecModel = textStyleModel.ecModel;
@@ -487,29 +501,38 @@ define(function(require) {
 
         setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, true);
 
-        if (opt && opt.forceRich && !opt.textStyle) {
+        if (opt.forceRich && !opt.textStyle) {
             opt.textStyle = {};
         }
 
         return textStyle;
     }
 
-    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isBlock) {
+    function setTokenTextStyle(textStyle, textStyleModel, defaultTextStyle, opt, isBlock) {
         var textPosition = textStyle.textPosition;
-        textStyle.textFill = getAutoColor(textStyleModel.getTextColor(), opt) || (
-            (opt && opt.forMerge)
+        // In merge mode, default value should not be given.
+        defaultTextStyle = !opt.forMerge && defaultTextStyle || EMPTY_OBJ;
+
+        textStyle.textFill = getAutoColor(textStyleModel.getTextColor(opt.forMerge), opt) || (
+            opt.forMerge
                 ? null
-                : (textPosition && textPosition.indexOf('inside') >= 0)
-                ? '#fff'
-                : (opt && opt.defaultTextColor)
+                : opt.getDefaultTextColor
+                ? opt.getDefaultTextColor(textStyleModel, opt, textPosition)
+                : opt.defaultTextColor
         );
 
         textStyle.textStroke = getAutoColor(
-            textStyleModel.getShallow('textBorderColor')
-                || (globalTextStyle && globalTextStyle.textBorderColor)
+            textStyleModel.getShallow('textBorderColor') || defaultTextStyle.textBorderColor
         );
         textStyle.textLineWidth = textStyleModel.getShallow('textBorderWidth');
-        textStyle.textFont = textStyleModel.getFont();
+
+        // Do not use `getFont` here, because merge should be supported, where
+        // part of these properties may be changed in emphasis style, and the
+        // others should remain their original value got from normal style.
+        textStyle.fontStyle = textStyleModel.getShallow('fontStyle') || defaultTextStyle.fontStyle;
+        textStyle.fontWeight = textStyleModel.getShallow('fontWeight') || defaultTextStyle.fontWeight;
+        textStyle.fontSize = textStyleModel.getShallow('fontSize') || defaultTextStyle.fontSize;
+        textStyle.fontFamily = textStyleModel.getShallow('fontFamily') || defaultTextStyle.fontFamily;
 
         textStyle.textAlign = textStyleModel.getShallow('align');
         textStyle.textVerticalAlign = textStyleModel.getShallow('verticalAlign')
@@ -520,7 +543,7 @@ define(function(require) {
         textStyle.textHeight = textStyleModel.getShallow('height');
         textStyle.textTag = textStyleModel.getShallow('tag');
 
-        if (!opt || !isBlock || !opt.disableBox) {
+        if (!isBlock || !opt.disableBox) {
             textStyle.textBackgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor'), opt);
             textStyle.textPadding = textStyleModel.getShallow('padding');
             textStyle.textBorderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);
@@ -534,13 +557,13 @@ define(function(require) {
         }
 
         textStyle.textShadowColor = textStyleModel.getShallow('textShadowColor')
-            || (globalTextStyle && globalTextStyle.textShadowColor);
+            || defaultTextStyle.textShadowColor;
         textStyle.textShadowBlur = textStyleModel.getShallow('textShadowBlur')
-            || (globalTextStyle && globalTextStyle.textShadowBlur);
+            || defaultTextStyle.textShadowBlur;
         textStyle.textShadowOffsetX = textStyleModel.getShallow('textShadowOffsetX')
-            || (globalTextStyle && globalTextStyle.textShadowOffsetX);
+            || defaultTextStyle.textShadowOffsetX;
         textStyle.textShadowOffsetY = textStyleModel.getShallow('textShadowOffsetY')
-            || (globalTextStyle && globalTextStyle.textShadowOffsetY);
+            || defaultTextStyle.textShadowOffsetY;
     }
 
     function getAutoColor(color, opt) {
@@ -548,7 +571,8 @@ define(function(require) {
     }
 
     graphic.getFont = function (opt, ecModel) {
-        var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
+        // ecModel or default text style model.
+        var gTextStyleModel = ecModel || ecModel.getModel('textStyle');
         return [
             // FIXME in node-canvas fontWeight is before fontStyle
             opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',

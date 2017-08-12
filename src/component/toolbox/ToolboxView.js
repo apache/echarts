@@ -133,7 +133,7 @@ define(function (require) {
                             y: -itemSize / 2,
                             width: itemSize,
                             height: itemSize
-                        }                        
+                        }
                     );
                     path.setStyle(iconStyleModel.getModel('normal').getItemStyle());
                     path.hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
@@ -181,7 +181,7 @@ define(function (require) {
                 // May be background element
                 if (hoverStyle && titleText) {
                     var rect = textContain.getBoundingRect(
-                        titleText, hoverStyle.font
+                        titleText, textContain.makeFont(hoverStyle)
                     );
                     var offsetX = icon.position[0] + group.position[0];
                     var offsetY = icon.position[1] + group.position[1] + itemSize;

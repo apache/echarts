@@ -8,12 +8,13 @@ define(function (require) {
     return {
         /**
          * Get color property or get color from option.textStyle.color
+         * @param {boolean} [noDefault]
          * @return {string}
          */
-        getTextColor: function () {
+        getTextColor: function (noDefault) {
             var ecModel = this.ecModel;
             return this.getShallow('color')
-                || (ecModel && ecModel.get(PATH_COLOR));
+                || (!noDefault && ecModel && ecModel.get(PATH_COLOR));
         },
 
         /**

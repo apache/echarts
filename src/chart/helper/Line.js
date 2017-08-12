@@ -264,7 +264,7 @@ define(function (require) {
         }
 
         var visualColor = lineData.getItemVisual(idx, 'color');
-        var visualOpacity = zrUtil.retrieve(
+        var visualOpacity = zrUtil.retrieve3(
             lineData.getItemVisual(idx, 'opacity'),
             lineStyle.opacity,
             1
@@ -312,12 +312,11 @@ define(function (require) {
         // label.afterUpdate = lineAfterUpdate;
         if (showLabel) {
             var labelStyle = graphic.setTextStyle(label.style, labelModel, {
-                text: zrUtil.retrieve(
+                text: zrUtil.retrieve2(
                     seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
                     defaultText
-                ),
-                textFill: labelModel.getTextColor() || defaultLabelColor
-            });
+                )
+            }, {defaultTextColor: defaultLabelColor});
 
             label.__textAlign = labelStyle.textAlign;
             label.__verticalAlign = labelStyle.textVerticalAlign;
@@ -327,13 +326,19 @@ define(function (require) {
             label.setStyle('text', null);
         }
         if (hoverShowLabel) {
+            // Only these properties supported in this emphasis style here.
             label.hoverStyle = {
-                text: zrUtil.retrieve(
+                text: zrUtil.retrieve2(
                     seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
                     defaultText
                 ),
-                textFont: hoverLabelModel.getFont(),
-                textFill: hoverLabelModel.getTextColor() || defaultLabelColor
+                textFill: hoverLabelModel.getTextColor(true),
+                // For merging hover style to normal style, do not use
+                // `hoverLabelModel.getFont()` here.
+                fontStyle: hoverLabelModel.getShallow('fontStyle'),
+                fontWeight: hoverLabelModel.getShallow('fontWeight'),
+                fontSize: hoverLabelModel.getShallow('fontSize'),
+                fontFamily: hoverLabelModel.getShallow('fontFamily')
             };
         }
         else {

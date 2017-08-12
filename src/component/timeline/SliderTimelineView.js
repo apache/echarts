@@ -403,16 +403,15 @@ define(function (require) {
                 var hoverLabelModel = itemModel.getModel('label.emphasis');
                 var tickCoord = axis.dataToCoord(tick);
                 var textEl = new graphic.Text({
-                    style: graphic.setTextStyle({}, normalLabelModel, {
-                        text: labels[dataIndex],
-                        textAlign: layoutInfo.labelAlign,
-                        textVerticalAlign: layoutInfo.labelBaseline,
-                        textFill: normalLabelModel.getTextColor()
-                    }),
                     position: [tickCoord, 0],
                     rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                     onclick: bind(this._changeTimeline, this, dataIndex),
                     silent: false
+                });
+                graphic.setTextStyle(textEl.style, normalLabelModel, {
+                    text: labels[dataIndex],
+                    textAlign: layoutInfo.labelAlign,
+                    textVerticalAlign: layoutInfo.labelBaseline
                 });
 
                 group.add(textEl);

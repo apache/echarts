@@ -224,12 +224,21 @@ define(function (require) {
         }
 
         var valueDim = labelHelper.findLabelValueDim(data);
-        labelHelper.setTextToStyle(
-            data, idx, valueDim, elStyle, seriesModel, labelModel, color
-        );
-        labelHelper.setTextToStyle(
-            data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color, true
-        );
+
+        if (valueDim != null) {
+            graphic.setText(elStyle, labelModel, color);
+            elStyle.text = labelModel.getShallow('show')
+                ? zrUtil.retrieve2(
+                    seriesModel.getFormattedLabel(idx, 'normal'),
+                    data.get(valueDim, idx)
+                )
+                : null;
+
+            graphic.setText(hoverItemStyle, hoverLabelModel, false);
+            hoverItemStyle.text = hoverLabelModel.getShallow('show')
+                ? seriesModel.getFormattedLabel(idx, 'emphasis')
+                : null;
+        }
 
         symbolPath.off('mouseover')
             .off('mouseout')

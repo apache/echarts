@@ -315,10 +315,7 @@ define(function (require) {
                     this._yearTextPositionControl(posPoints[pos], orient, pos, margin)
                 )
             );
-            graphic.setTextStyle(yearText.style, yearLabel, {
-                text: content,
-                textFill: yearLabel.getTextColor()
-            });
+            graphic.setTextStyle(yearText.style, yearLabel, {text: content});
 
             group.add(yearText);
         },
@@ -408,10 +405,7 @@ define(function (require) {
 
                 var monthText = new graphic.Text({z2: 30});
                 zrUtil.extend(
-                    graphic.setTextStyle(monthText.style, monthLabel, {
-                        text: content,
-                        textFill: monthLabel.getTextColor()
-                    }),
+                    graphic.setTextStyle(monthText.style, monthLabel, {text: content}),
                     this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
                 );
 
@@ -484,10 +478,7 @@ define(function (require) {
                 var weekText = new graphic.Text({z2: 30});
 
                 zrUtil.extend(
-                    graphic.setTextStyle(weekText.style, dayLabel, {
-                        text: nameMap[day],
-                        textFill: dayLabel.getTextColor()
-                    }),
+                    graphic.setTextStyle(weekText.style, dayLabel, {text: nameMap[day]}),
                     this._weekTextPositionControl(point, orient, pos, margin, cellSize)
                 );
                 group.add(weekText);

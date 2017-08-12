@@ -226,27 +226,18 @@ define(function (require) {
                 var defaultValue = areaData.getName(idx) || '';
                 var textColor = color || polygon.style.fill;
 
-                if (labelModel.getShallow('show')) {
-                    graphic.setText(polygon.style, labelModel, textColor);
-                    polygon.style.text = zrUtil.retrieve(
+                graphic.setText(polygon.style, labelModel, textColor);
+                polygon.style.text = labelModel.getShallow('show')
+                    ? zrUtil.retrieve(
                         maModel.getFormattedLabel(idx, 'normal'),
                         defaultValue
-                    );
-                }
-                else {
-                    polygon.style.text = null;
-                }
+                    )
+                    : null;
 
-                if (labelHoverModel.getShallow('show')) {
-                    graphic.setTextStyle(polygon.hoverStyle, labelHoverModel, textColor, true);
-                    polygon.hoverStyle.text = zrUtil.retrieve(
-                        maModel.getFormattedLabel(idx, 'emphasis'),
-                        defaultValue
-                    );
-                }
-                else {
-                    polygon.hoverStyle.text = null;
-                }
+                graphic.setText(polygon.hoverStyle, labelHoverModel, false);
+                polygon.hoverStyle.text = labelHoverModel.getShallow('show')
+                    ? maModel.getFormattedLabel(idx, 'emphasis')
+                    : null;
 
                 graphic.setHoverStyle(polygon, {});
 

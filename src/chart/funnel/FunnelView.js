@@ -38,19 +38,6 @@ define(function (require) {
 
     var funnelPieceProto = FunnelPiece.prototype;
 
-    function setLabelStyle(style, data, idx, state, labelModel, specifiedStyle, isEmphasis) {
-        var position = labelModel.get('position');
-        var isLabelInside = position === 'inside' || position === 'inner' || position === 'center';
-        return graphic.setTextStyle(style, labelModel, zrUtil.extend({
-            textFill: labelModel.getTextColor()
-                || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
-            text: zrUtil.retrieve(
-                data.hostModel.getFormattedLabel(idx, state),
-                data.getName(idx)
-            )
-        }, specifiedStyle), {forMerge: isEmphasis});
-    }
-
     var opacityAccessPath = ['itemStyle', 'normal', 'opacity'];
     funnelPieceProto.updateData = function (data, idx, firstCreate) {
 
@@ -141,10 +128,15 @@ define(function (require) {
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
 
-        setLabelStyle(labelText.style, data, idx, 'normal', labelModel, {
+        graphic.setTextStyle(labelText.style, labelModel, {
             textAlign: labelLayout.textAlign,
             textVerticalAlign: labelLayout.verticalAlign,
-            textFont: labelLayout.font
+            text: zrUtil.retrieve(data.hostModel.getFormattedLabel(idx, 'normal'), data.getName(idx))
+        }, {
+            defaultTextColor: data.getItemVisual(idx, 'color'),
+            getDefaultTextColor: function (model, opt) {
+                return labelLayout.inside ? '#fff' : opt.defaultTextColor;
+            }
         });
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
@@ -159,7 +151,10 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel, true);
+        labelText.hoverStyle = graphic.setTextStyle({}, labelHoverModel, {
+            text: data.hostModel.getFormattedLabel(idx, 'emphasis')
+        }, {forMerge: true});
+
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     };
 

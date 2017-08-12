@@ -96,18 +96,6 @@ define(function (require) {
 
     var piePieceProto = PiePiece.prototype;
 
-    function setLabelStyle(style, data, idx, state, labelModel, labelPosition, specifiedStyle, isEmphasis) {
-        var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
-        return graphic.setTextStyle(style, labelModel, zrUtil.extend({
-            textFill: labelModel.getTextColor()
-                || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
-            opacity: data.getItemVisual(idx, 'opacity'),
-            text: zrUtil.retrieve(
-                data.hostModel.getFormattedLabel(idx, state), data.getName(idx)
-            )
-        }, specifiedStyle), {forMerge: isEmphasis});
-    }
-
     piePieceProto.updateData = function (data, idx, firstCreate) {
 
         var sector = this.childAt(0);
@@ -241,12 +229,17 @@ define(function (require) {
         var labelHoverModel = itemModel.getModel('label.emphasis');
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
-        var labelPosition = labelModel.get('position') || labelHoverModel.get('position');
 
-        setLabelStyle(labelText.style, data, idx, 'normal', labelModel, labelPosition, {
+        graphic.setTextStyle(labelText.style, labelModel, {
             textVerticalAlign: labelLayout.verticalAlign,
             textAlign: labelLayout.textAlign,
-            textFont: labelLayout.font
+            opacity: data.getItemVisual(idx, 'opacity'),
+            text: zrUtil.retrieve(data.hostModel.getFormattedLabel(idx, 'normal'), data.getName(idx))
+        }, {
+            defaultTextColor: data.getItemVisual(idx, 'color'),
+            getDefaultTextColor: function (model, opt) {
+                return labelLayout.inside ? '#fff' : opt.defaultTextColor;
+            }
         });
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
@@ -262,7 +255,10 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = setLabelStyle({}, data, idx, 'emphasis', labelHoverModel, labelPosition, true);
+        labelText.hoverStyle = graphic.setTextStyle({}, labelHoverModel, {
+            text: data.hostModel.getFormattedLabel(idx, 'emphasis')
+        }, {forMerge: true});
+
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
         var smooth = labelLineModel.get('smooth');

@@ -187,13 +187,10 @@ define(function (require) {
                             : null
                     });
 
-                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, color, true);
+                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, true);
                     symbolPath.hoverStyle.text = labelHoverModel.get('show')
-                        ? zrUtil.retrieve(
-                            seriesModel.getFormattedLabel(
-                                idx, 'emphasis', null, symbolPath.__dimIdx
-                            ),
-                            defaultText
+                        ? seriesModel.getFormattedLabel(
+                            idx, 'emphasis', null, symbolPath.__dimIdx
                         )
                         : null;
                 });

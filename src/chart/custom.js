@@ -340,10 +340,15 @@ define(function (require) {
             var opacity = data.getItemVisual(dataIndexInside, 'opacity');
             opacity != null && (itemStyle.opacity = opacity);
 
-            labelHelper.setTextToStyle(
-                data, dataIndexInside, currLabelValueDim, itemStyle,
-                customSeries, currLabelNormalModel, currVisualColor
-            );
+            if (currLabelValueDim != null) {
+                graphicUtil.setText(itemStyle, currLabelNormalModel, currVisualColor);
+                itemStyle.text = currLabelNormalModel.getShallow('show')
+                    ? zrUtil.retrieve2(
+                        customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                        data.get(currLabelValueDim, dataIndexInside)
+                    )
+                    : null;
+            }
 
             extra && zrUtil.extend(itemStyle, extra);
             return itemStyle;
@@ -360,10 +365,12 @@ define(function (require) {
 
             var itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
 
-            labelHelper.setTextToStyle(
-                data, dataIndexInside, currLabelValueDim, itemStyle,
-                customSeries, currLabelEmphasisModel, currVisualColor, true
-            );
+            if (currLabelValueDim != null) {
+                graphicUtil.setText(itemStyle, currLabelEmphasisModel, false);
+                itemStyle.text = currLabelEmphasisModel.getShallow('show')
+                    ? customSeries.getFormattedLabel(dataIndexInside, 'emphasis')
+                    : null;
+            }
 
             extra && zrUtil.extend(itemStyle, extra);
             return itemStyle;
