@@ -9,29 +9,31 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
-    var _targetList;
-
     return {
 
         updateSelectedMap: function (targetList) {
-            _targetList = targetList;
+            this._targetList = targetList.slice();
             this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
                 targetMap.set(target.name, target);
                 return targetMap;
             }, zrUtil.createHashMap());
         },
+
         /**
-         * @param {string} nameOrId name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
         // PENGING If selectedMode is null ?
-        select: function (nameOrId) {
-            var targetMap = this._selectTargetMap;
-            var target = typeof nameOrId === 'number'
-                ? _targetList[nameOrId]
-                : targetMap.get(nameOrId);
+        select: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             var selectedMode = this.get('selectedMode');
             if (selectedMode === 'single') {
-                targetMap.each(function (target) {
+                this._selectTargetMap.each(function (target) {
                     target.selected = false;
                 });
             }
@@ -39,40 +41,49 @@ define(function (require) {
         },
 
         /**
-         * @param {string} nameOrId name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
-        unSelect: function (nameOrId) {
-            var targetMap = this._selectTargetMap;
-            var target = typeof nameOrId === 'number'
-                ? _targetList[nameOrId]
-                : targetMap.get(nameOrId);
+        unSelect: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             // var selectedMode = this.get('selectedMode');
             // selectedMode !== 'single' && target && (target.selected = false);
             target && (target.selected = false);
         },
 
         /**
-         * @param {string} nameOrId name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
-        toggleSelected: function (nameOrId) {
-            var targetMap = this._selectTargetMap;
-            var target = typeof nameOrId === 'number'
-                ? _targetList[nameOrId]
-                : targetMap.get(nameOrId);
+        toggleSelected: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             if (target != null) {
-                this[target.selected ? 'unSelect' : 'select'](nameOrId);
+                this[target.selected ? 'unSelect' : 'select'](name, id);
                 return target.selected;
             }
         },
 
         /**
-         * @param {string} nameOrId name or dataIndex
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
-        isSelected: function (nameOrId) {
-            var targetMap = this._selectTargetMap;
-            var target = typeof nameOrId === 'number'
-                ? _targetList[nameOrId]
-                : targetMap.get(nameOrId);
+        isSelected: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             return target && target.selected;
         }
     };
