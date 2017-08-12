@@ -835,7 +835,7 @@
             }
 
             var emphasisLabelModel = nodeModel.getModel(
-                upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_UPPERLABEL_EMPHASIS
+                upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
             );
             graphic.setText(emphasisStyle, emphasisLabelModel, false);
         }
