@@ -227,24 +227,24 @@ define(function (require) {
 
         },
 
-        _yearTextPositionControl: function (point, orient, position, margin) {
+        _yearTextPositionControl: function (textEl, point, orient, position, margin) {
 
             point = point.slice();
             var aligns = ['center', 'bottom'];
 
-            if (position === 'top') {
-                point[1] -= margin;
-            }
             if (position === 'bottom') {
                 point[1] += margin;
                 aligns = ['center', 'top'];
             }
-            if (position === 'left') {
+            else if (position === 'left') {
                 point[0] -= margin;
             }
-            if (position === 'right') {
+            else if (position === 'right') {
                 point[0] += margin;
                 aligns = ['center', 'top'];
+            }
+            else { // top
+                point[1] -= margin;
             }
 
             var rotate = 0;
@@ -254,10 +254,8 @@ define(function (require) {
 
             return {
                 rotation: rotate,
-                origin: point,
+                position: point,
                 style: {
-                    x: point[0],
-                    y: point[1],
                     textAlign: aligns[0],
                     textVerticalAlign: aligns[1]
                 }
@@ -285,7 +283,6 @@ define(function (require) {
 
             var idx = orient === 'horizontal' ? 0 : 1;
 
-
             var posPoints = {
                 top: [xc, points[idx][1]],
                 bottom: [xc, points[1 - idx][1]],
@@ -309,13 +306,9 @@ define(function (require) {
 
             var content = this._formatterLabel(formatter, params);
 
-            var yearText = new graphic.Text(
-                zrUtil.merge(
-                    {z2: 30},
-                    this._yearTextPositionControl(posPoints[pos], orient, pos, margin)
-                )
-            );
-            graphic.setTextStyle(yearText.style, yearLabel, {text: content});
+            var yearText = new graphic.Text({z2: 30});
+            graphic.setTextStyle(yearText.style, yearLabel, {text: content}),
+            yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
             group.add(yearText);
         },
