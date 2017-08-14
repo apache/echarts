@@ -817,7 +817,7 @@
             );
             graphic.setText(normalStyle, normalLabelModel, visualColor);
 
-            upperLabelRect && (normalStyle.textPositionRect = zrUtil.clone(upperLabelRect));
+            upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
 
             var textRect = normalLabelModel.getTextRect(text);
             if (!normalLabelModel.getShallow('show') || textRect.height > height) {
