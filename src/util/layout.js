@@ -29,6 +29,7 @@ define(function(require) {
     function boxLayout(orient, group, gap, maxWidth, maxHeight) {
         var x = 0;
         var y = 0;
+
         if (maxWidth == null) {
             maxWidth = Infinity;
         }
@@ -36,6 +37,7 @@ define(function(require) {
             maxHeight = Infinity;
         }
         var currentLineMaxSize = 0;
+
         group.eachChild(function (child, idx) {
             var position = child.position;
             var rect = child.getBoundingRect();
@@ -43,10 +45,12 @@ define(function(require) {
             var nextChildRect = nextChild && nextChild.getBoundingRect();
             var nextX;
             var nextY;
+
             if (orient === 'horizontal') {
                 var moveX = rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
                 nextX = x + moveX;
                 // Wrap when width exceeds maxWidth or meet a `newline` group
+                // FIXME compare before adding gap?
                 if (nextX > maxWidth || child.newline) {
                     x = 0;
                     nextX = moveX;
@@ -54,6 +58,7 @@ define(function(require) {
                     currentLineMaxSize = rect.height;
                 }
                 else {
+                    // FIXME: consider rect.y is not `0`?
                     currentLineMaxSize = Math.max(currentLineMaxSize, rect.height);
                 }
             }
@@ -124,7 +129,7 @@ define(function(require) {
      * @param {number|string} [positionInfo.y]
      * @param {number|string} [positionInfo.x2]
      * @param {number|string} [positionInfo.y2]
-     * @param {Object} containerRect
+     * @param {Object} containerRect {width, height}
      * @param {string|number} margin
      * @return {Object} {width, height}
      */
@@ -193,20 +198,23 @@ define(function(require) {
             height = containerHeight - bottom - verticalMargin - top;
         }
 
-        // If width and height are not given
-        // 1. Graph should not exceeds the container
-        // 2. Aspect must be keeped
-        // 3. Graph should take the space as more as possible
-        if (isNaN(width) && isNaN(height)) {
-            if (aspect > containerWidth / containerHeight) {
-                width = containerWidth * 0.8;
-            }
-            else {
-                height = containerHeight * 0.8;
-            }
-        }
-
         if (aspect != null) {
+            // If width and height are not given
+            // 1. Graph should not exceeds the container
+            // 2. Aspect must be keeped
+            // 3. Graph should take the space as more as possible
+            // FIXME
+            // Margin is not considered, because there is no case that both
+            // using margin and aspect so far.
+            if (isNaN(width) && isNaN(height)) {
+                if (aspect > containerWidth / containerHeight) {
+                    width = containerWidth * 0.8;
+                }
+                else {
+                    height = containerHeight * 0.8;
+                }
+            }
+
             // Calculate width or height with given aspect
             if (isNaN(width)) {
                 width = aspect * height;
@@ -247,11 +255,11 @@ define(function(require) {
         top = top || 0;
         if (isNaN(width)) {
             // Width may be NaN if only one value is given except width
-            width = containerWidth - left - (right || 0);
+            width = containerWidth - horizontalMargin - left - (right || 0);
         }
         if (isNaN(height)) {
             // Height may be NaN if only one value is given except height
-            height = containerHeight - top - (bottom || 0);
+            height = containerHeight - verticalMargin - top - (bottom || 0);
         }
 
         var rect = new BoundingRect(left + margin[3], top + margin[0], width, height);
@@ -281,6 +289,8 @@ define(function(require) {
      * @param {number|string} [positionInfo.top]
      * @param {number|string} [positionInfo.right]
      * @param {number|string} [positionInfo.bottom]
+     * @param {number|string} [positionInfo.width] Only for opt.boundingModel: 'raw'
+     * @param {number|string} [positionInfo.height] Only for opt.boundingModel: 'raw'
      * @param {Object} containerRect
      * @param {string|number} margin
      * @param {Object} [opt]
@@ -322,6 +332,7 @@ define(function(require) {
             }
         }
 
+        // The real width and height can not be specified but calculated by the given el.
         positionInfo = layout.getLayoutRect(
             zrUtil.defaults(
                 {width: rect.width, height: rect.height},
@@ -372,7 +383,8 @@ define(function(require) {
      * @param {Object} targetOption
      * @param {Object} newOption
      * @param {Object|string} [opt]
-     * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Some component must has width and height.
+     * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Used for the components
+     *  that width (or height) should not be calculated by left and right (or top and bottom).
      */
     layout.mergeLayoutParam = function (targetOption, newOption, opt) {
         !zrUtil.isObject(opt) && (opt = {});

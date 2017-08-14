@@ -812,20 +812,23 @@ define(function(require) {
         var style = opt.style = {strokeNoScale: true};
         rect = rect || {x: -1, y: -1, width: 2, height: 2};
 
-        return iconStr.indexOf('image://') === 0
-            ? (
-                style.image = iconStr.slice(8),
-                zrUtil.defaults(style, rect),
-                new graphic.Image(opt)
-            )
-            : (
-                graphic.makePath(
-                    iconStr.replace('path://', ''),
-                    opt,
-                    rect,
-                    'center'
+        if (iconStr) {
+            return iconStr.indexOf('image://') === 0
+                ? (
+                    style.image = iconStr.slice(8),
+                    zrUtil.defaults(style, rect),
+                    new graphic.Image(opt)
                 )
-            );
+                : (
+                    graphic.makePath(
+                        iconStr.replace('path://', ''),
+                        opt,
+                        rect,
+                        'center'
+                    )
+                );
+        }
+
     };
 
     return graphic;

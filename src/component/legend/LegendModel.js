@@ -7,12 +7,19 @@ define(function(require) {
 
     var LegendModel = require('../../echarts').extendComponentModel({
 
-        type: 'legend',
+        type: 'legend.plain',
 
         dependencies: ['series'],
 
         layoutMode: {
             type: 'box',
+            // legend.width/height are maxWidth/maxHeight actually,
+            // whereas realy width/height is calculated by its content.
+            // (Setting {left: 10, right: 10} does not make sense).
+            // So consider the case:
+            // `setOption({legend: {left: 10});`
+            // then `setOption({legend: {right: 10});`
+            // The previous `left` should be cleared by setting `ignoreSize`.
             ignoreSize: true
         },
 
@@ -143,8 +150,8 @@ define(function(require) {
             left: 'center',
             // right: 'center',
 
-            top: 'top',
-            // bottom: 'top',
+            top: 0,
+            // bottom: null,
 
             // 水平对齐
             // 'auto' | 'left' | 'right'
@@ -154,6 +161,7 @@ define(function(require) {
             backgroundColor: 'rgba(0,0,0,0)',
             // 图例边框颜色
             borderColor: '#ccc',
+            borderRadius: 0,
             // 图例边框线宽，单位px，默认为0（无边框）
             borderWidth: 0,
             // 图例内边距，单位px，默认各方向内边距为5，

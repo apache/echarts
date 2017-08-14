@@ -172,7 +172,7 @@ define(function (require) {
             listComponentHelper.layout(group, toolboxModel, api);
             // Render background after group is layout
             // FIXME
-            listComponentHelper.addBackground(group, toolboxModel);
+            group.add(listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel));
 
             // Adjust icon title positions to avoid them out of screen
             group.eachChild(function (icon) {

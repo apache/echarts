@@ -4,73 +4,108 @@ define(function (require) {
     var symbolCreator = require('../../util/symbol');
     var graphic = require('../../util/graphic');
     var listComponentHelper = require('../helper/listComponent');
+    var layoutUtil = require('../../util/layout');
 
     var curry = zrUtil.curry;
-
-    function dispatchSelectAction(name, api) {
-        api.dispatchAction({
-            type: 'legendToggleSelect',
-            name: name
-        });
-    }
-
-    function dispatchHighlightAction(seriesModel, dataName, api) {
-        // If element hover will move to a hoverLayer.
-        var el = api.getZr().storage.getDisplayList()[0];
-        if (!(el && el.useHoverLayer)) {
-            seriesModel.get('legendHoverLink') && api.dispatchAction({
-                type: 'highlight',
-                seriesName: seriesModel.name,
-                name: dataName
-            });
-        }
-    }
-
-    function dispatchDownplayAction(seriesModel, dataName, api) {
-        // If element hover will move to a hoverLayer.
-        var el = api.getZr().storage.getDisplayList()[0];
-        if (!(el && el.useHoverLayer)) {
-            seriesModel.get('legendHoverLink') && api.dispatchAction({
-                type: 'downplay',
-                seriesName: seriesModel.name,
-                name: dataName
-            });
-        }
-    }
+    var each = zrUtil.each;
+    var Group = graphic.Group;
 
     return require('../../echarts').extendComponentView({
 
-        type: 'legend',
+        type: 'legend.plain',
 
+        newlineDisabled: false,
+
+        /**
+         * @override
+         */
         init: function () {
-            this._symbolTypeStore = {};
+
+            /**
+             * @private
+             * @type {module:zrender/container/Group}
+             */
+            this.group.add(this._contentGroup = new Group());
+
+            /**
+             * @private
+             * @type {module:zrender/Element}
+             */
+            this._backgroundEl;
         },
 
-        render: function (legendModel, ecModel, api) {
-            var group = this.group;
-            group.removeAll();
+        /**
+         * @protected
+         */
+        getContentGroup: function () {
+            return this._contentGroup;
+        },
 
-            if (!legendModel.get('show')) {
+        /**
+         * @override
+         */
+        render: function (legendModel, ecModel, api) {
+
+            this.resetInner();
+
+            if (!legendModel.get('show', true)) {
                 return;
             }
 
-            var selectMode = legendModel.get('selectedMode');
             var itemAlign = legendModel.get('align');
-
-            if (itemAlign === 'auto') {
-                itemAlign = (legendModel.get('left') === 'right'
-                    && legendModel.get('orient') === 'vertical')
-                    ? 'right' : 'left';
+            if (!itemAlign || itemAlign === 'auto') {
+                itemAlign = (
+                    legendModel.get('left') === 'right'
+                    && legendModel.get('orient') === 'vertical'
+                ) ? 'right' : 'left';
             }
 
-            var legendDrawedMap = zrUtil.createHashMap();
+            this.renderInner(itemAlign, legendModel, ecModel, api);
 
-            zrUtil.each(legendModel.getData(), function (itemModel) {
+            // Perform layout.
+            var positionInfo = legendModel.getBoxLayoutParams();
+            var viewportSize = {width: api.getWidth(), height: api.getHeight()};
+            var padding = legendModel.get('padding');
+
+            var maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
+            var mainRect = this.layoutInner(legendModel, itemAlign, maxSize);
+
+            // Place mainGroup, based on the calculated `mainRect`.
+            var layoutRect = layoutUtil.getLayoutRect(
+                zrUtil.defaults({width: mainRect.width, height: mainRect.height}, positionInfo),
+                viewportSize,
+                padding
+            );
+            this.group.attr('position', [layoutRect.x - mainRect.x, layoutRect.y - mainRect.y]);
+
+            // Render background after group is layout.
+            this.group.add(
+                this._backgroundEl = listComponentHelper.makeBackground(mainRect, legendModel)
+            );
+        },
+
+        /**
+         * @protected
+         */
+        resetInner: function () {
+            this.getContentGroup().removeAll();
+            this._backgroundEl && this.group.remove(this._backgroundEl);
+        },
+
+        /**
+         * @protected
+         */
+        renderInner: function (itemAlign, legendModel, ecModel, api) {
+            var contentGroup = this.getContentGroup();
+            var legendDrawnMap = zrUtil.createHashMap();
+            var selectMode = legendModel.get('selectedMode');
+
+            each(legendModel.getData(), function (itemModel, dataIndex) {
                 var name = itemModel.get('name');
 
                 // Use empty string or \n as a newline string
-                if (name === '' || name === '\n') {
-                    group.add(new graphic.Group({
+                if (!this.newlineDisabled && (name === '' || name === '\n')) {
+                    contentGroup.add(new Group({
                         newline: true
                     }));
                     return;
@@ -78,7 +113,7 @@ define(function (require) {
 
                 var seriesModel = ecModel.getSeriesByName(name)[0];
 
-                if (legendDrawedMap.get(name)) {
+                if (legendDrawnMap.get(name)) {
                     // Have been drawed
                     return;
                 }
@@ -99,7 +134,7 @@ define(function (require) {
                     var symbolType = data.getVisual('symbol');
 
                     var itemGroup = this._createItem(
-                        name, itemModel, legendModel,
+                        name, dataIndex, itemModel, legendModel,
                         legendSymbolType, symbolType,
                         itemAlign, color,
                         selectMode
@@ -109,13 +144,13 @@ define(function (require) {
                         .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api))
                         .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api));
 
-                    legendDrawedMap.set(name, true);
+                    legendDrawnMap.set(name, true);
                 }
                 else {
                     // Data legend of pie, funnel
                     ecModel.eachRawSeries(function (seriesModel) {
                         // In case multiple series has same data name
-                        if (legendDrawedMap.get(name)) {
+                        if (legendDrawnMap.get(name)) {
                             return;
                         }
                         if (seriesModel.legendDataProvider) {
@@ -130,7 +165,7 @@ define(function (require) {
                             var legendSymbolType = 'roundRect';
 
                             var itemGroup = this._createItem(
-                                name, itemModel, legendModel,
+                                name, dataIndex, itemModel, legendModel,
                                 legendSymbolType, null,
                                 itemAlign, color,
                                 selectMode
@@ -141,26 +176,21 @@ define(function (require) {
                                 .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api))
                                 .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api));
 
-                            legendDrawedMap.set(name, true);
+                            legendDrawnMap.set(name, true);
                         }
                     }, this);
                 }
 
                 if (__DEV__) {
-                    if (!legendDrawedMap.get(name)) {
+                    if (!legendDrawnMap.get(name)) {
                         console.warn(name + ' series not exists. Legend data should be same with series name or data name.');
                     }
                 }
             }, this);
-
-            listComponentHelper.layout(group, legendModel, api);
-            // Render background after group is layout
-            // FIXME
-            listComponentHelper.addBackground(group, legendModel);
         },
 
         _createItem: function (
-            name, itemModel, legendModel,
+            name, dataIndex, itemModel, legendModel,
             legendSymbolType, symbolType,
             itemAlign, color, selectMode
         ) {
@@ -169,7 +199,7 @@ define(function (require) {
             var inactiveColor = legendModel.get('inactiveColor');
 
             var isSelected = legendModel.isSelected(name);
-            var itemGroup = new graphic.Group();
+            var itemGroup = new Group();
 
             var textStyleModel = itemModel.getModel('textStyle');
 
@@ -201,7 +231,6 @@ define(function (require) {
                 ));
             }
 
-            // Text
             var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
             var textAlign = itemAlign;
 
@@ -251,13 +280,67 @@ define(function (require) {
 
             hitRect.silent = !selectMode;
 
-
-
-            this.group.add(itemGroup);
+            this.getContentGroup().add(itemGroup);
 
             graphic.setHoverStyle(itemGroup);
 
+            itemGroup.__legendDataIndex = dataIndex;
+
             return itemGroup;
+        },
+
+        /**
+         * @protected
+         */
+        layoutInner: function (legendModel, itemAlign, maxSize) {
+            var contentGroup = this.getContentGroup();
+
+            // Place items in contentGroup.
+            layoutUtil.box(
+                legendModel.get('orient'),
+                contentGroup,
+                legendModel.get('itemGap'),
+                maxSize.width,
+                maxSize.height
+            );
+
+            var contentRect = contentGroup.getBoundingRect();
+            contentGroup.attr('position', [-contentRect.x, -contentRect.y]);
+
+            return this.group.getBoundingRect();
         }
+
     });
+
+    function dispatchSelectAction(name, api) {
+        api.dispatchAction({
+            type: 'legendToggleSelect',
+            name: name
+        });
+    }
+
+    function dispatchHighlightAction(seriesModel, dataName, api) {
+        // If element hover will move to a hoverLayer.
+        var el = api.getZr().storage.getDisplayList()[0];
+        if (!(el && el.useHoverLayer)) {
+            seriesModel.get('legendHoverLink') && api.dispatchAction({
+                type: 'highlight',
+                seriesName: seriesModel.name,
+                name: dataName
+            });
+        }
+    }
+
+    function dispatchDownplayAction(seriesModel, dataName, api) {
+        // If element hover will move to a hoverLayer.
+        var el = api.getZr().storage.getDisplayList()[0];
+        if (!(el && el.useHoverLayer)) {
+            seriesModel.get('legendHoverLink') && api.dispatchAction({
+                type: 'downplay',
+                seriesName: seriesModel.name,
+                name: dataName
+            });
+        }
+    }
+
 });
