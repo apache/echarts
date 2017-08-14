@@ -819,19 +819,18 @@
 
             upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
 
-            var textRect = normalLabelModel.getTextRect(text);
-            if (!normalLabelModel.getShallow('show') || textRect.height > height) {
-                normalStyle.text = null;
-            }
-            else if (textRect.width > width) {
-                normalStyle.text = normalLabelModel.get('ellipsis')
-                    ? normalLabelModel.truncateText(
-                        text, width, null, {minChar: 2}
-                    )
-                    : null;
+            if (!normalLabelModel.getShallow('show')) {
+                normalStyle.text = normalStyle.truncate = null;
             }
             else {
                 normalStyle.text = text;
+                normalStyle.truncate = normalLabelModel.get('ellipsis')
+                    ? {
+                        outerWidth: width,
+                        outerHeight: height,
+                        minChar: 2
+                    }
+                    : null;
             }
 
             var emphasisLabelModel = nodeModel.getModel(

@@ -404,6 +404,8 @@ define(function (require) {
             var maxWidth = retrieve(
                 opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
             );
+            // FIXME
+            // truncate rich text? (consider performance)
             var truncatedText = (ellipsis != null && maxWidth != null)
                 ? formatUtil.truncateText(
                     name, maxWidth, textFont, ellipsis,

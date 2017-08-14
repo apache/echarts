@@ -35,13 +35,10 @@ define(function (require) {
                 text,
                 this.getFont(),
                 this.getShallow('align'),
-                this.getShallow('verticalAlign') || this.getShallow('baseline')
-            );
-        },
-
-        truncateText: function (text, containerWidth, ellipsis, options) {
-            return textContain.truncateText(
-                text, containerWidth, this.getFont(), ellipsis, options
+                this.getShallow('verticalAlign') || this.getShallow('baseline'),
+                this.getShallow('padding'),
+                this.getShallow('rich'),
+                this.getShallow('truncateText')
             );
         }
     };
