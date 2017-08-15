@@ -82,7 +82,24 @@
                                 },
                                 label: {
                                     normal: {
-                                        show: true
+                                        show: true,
+                                        formatter: '{b}：{value|{c}}',
+                                        // position: 'inside',
+                                        backgroundColor: '#fff',
+                                        padding: [3, 5],
+                                        borderRadius: 3,
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(0,0,0,0.5)',
+                                        color: '#777',
+                                        rich: {
+                                            value: {
+                                                color: '#019D2D',
+                                                fontSize: 14,
+                                                // fontWeight: 'bold'
+                                                // textBorderWidth: 2,
+                                                // textBorderColor: '#000'
+                                            }
+                                        }
                                     },
                                     emphasis: {
                                         show: true

@@ -2,6 +2,7 @@ define(function (require) {
 
     // var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
+    var zrUtil = require('zrender/core/util');
 
     var MapDraw = require('../../component/helper/MapDraw');
 
@@ -98,14 +99,15 @@ define(function (require) {
                         r: 3
                     },
                     silent: true,
-                    z2: 10
+                    // Do not overlap the first series, on which labels are displayed.
+                    z2: !offset ? 10 : 8
                 });
 
                 // First data on the same region
                 if (!offset) {
                     var fullData = mapModel.mainSeries.getData();
                     var name = originalData.getName(idx);
-                    var labelText = name;
+
                     var fullIndex = fullData.indexOfName(name);
 
                     var itemModel = originalData.getItemModel(idx);
@@ -116,16 +118,31 @@ define(function (require) {
 
                     var onEmphasis = function () {
                         var hoverStyle = graphic.setTextStyle({}, hoverLabelModel, {
-                            text: hoverLabelModel.get('show') ? labelText : null
+                            text: hoverLabelModel.get('show')
+                                ? mapModel.getFormattedLabel(idx, 'emphasis')
+                                : null
                         }, {isRectText: true, forMerge: true});
                         circle.style.extendFrom(hoverStyle);
+                        // Make label upper than others if overlaps.
+                        circle.__mapOriginalZ2 = circle.z2;
+                        circle.z2 += 1;
                     };
 
                     var onNormal = function () {
                         graphic.setTextStyle(circle.style, labelModel, {
-                            text: labelModel.get('show') ? labelText : null,
-                            textPosition: 'bottom'
+                            text: labelModel.get('show')
+                                ? zrUtil.retrieve2(
+                                    mapModel.getFormattedLabel(idx, 'normal'),
+                                    name
+                                )
+                                : null,
+                            textPosition: labelModel.getShallow('position') || 'bottom'
                         }, {isRectText: true});
+
+                        if (circle.__mapOriginalZ2 != null) {
+                            circle.z2 = circle.__mapOriginalZ2;
+                            circle.__mapOriginalZ2 = null;
+                        }
                     };
 
                     polygonGroups.on('mouseover', onEmphasis)

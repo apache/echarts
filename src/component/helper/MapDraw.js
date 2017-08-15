@@ -236,8 +236,13 @@ define(function (require) {
                  || (itemLayout && itemLayout.showLabel)
                  ) {
                     var query = data ? dataIdx : region.name;
-                    var formattedStr = mapOrGeoModel.getFormattedLabel(query, 'normal');
-                    var hoverFormattedStr = mapOrGeoModel.getFormattedLabel(query, 'emphasis');
+                    var formattedStr;
+                    var hoverFormattedStr;
+                    // Consider dataIdx not found.
+                    if (!data || dataIdx >= 0) {
+                        formattedStr = mapOrGeoModel.getFormattedLabel(query, 'normal');
+                        hoverFormattedStr = mapOrGeoModel.getFormattedLabel(query, 'emphasis');
+                    }
                     var textEl = new graphic.Text({
                         position: region.center.slice(),
                         scale: [1 / scale[0], 1 / scale[1]],
@@ -252,7 +257,7 @@ define(function (require) {
                     });
 
                     graphic.setTextStyle(textEl.hoverStyle = {}, hoverLabelModel, {
-                        text: hoverShowLabel ? (hoverFormattedStr || region.name) : null
+                        text: hoverShowLabel ? hoverFormattedStr : null
                     }, {forMerge: true});
 
                     regionGroup.add(textEl);
