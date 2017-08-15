@@ -113,19 +113,18 @@ define(function (require) {
                     var hoverLabelModel = itemModel.getModel('label.emphasis');
 
                     var polygonGroups = fullData.getItemGraphicEl(fullIndex);
-                    circle.setStyle({
-                        textPosition: 'bottom'
-                    });
 
                     var onEmphasis = function () {
-                        graphic.setTextStyle(circle.style, hoverLabelModel, {
+                        var hoverStyle = graphic.setTextStyle({}, hoverLabelModel, {
                             text: hoverLabelModel.get('show') ? labelText : null
                         }, {isRectText: true, forMerge: true});
+                        circle.style.extendFrom(hoverStyle);
                     };
 
                     var onNormal = function () {
                         graphic.setTextStyle(circle.style, labelModel, {
-                            text: labelModel.get('show') ? labelText : null
+                            text: labelModel.get('show') ? labelText : null,
+                            textPosition: 'bottom'
                         }, {isRectText: true});
                     };
 

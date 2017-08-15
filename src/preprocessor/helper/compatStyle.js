@@ -161,6 +161,10 @@ define(function (require) {
             compatTextStyle(calendarOpt, 'yearLabel');
         });
 
+        each(toArr(option.geo), function (geoOpt) {
+            isObject(geoOpt) && compatLabelTextStyle(geoOpt.label);
+        });
+
         compatLabelTextStyle(toObj(option.timeline).label);
         compatTextStyle(toObj(option.axisPointer), 'label');
         compatTextStyle(toObj(option.tooltip).axisPointer, 'label');
