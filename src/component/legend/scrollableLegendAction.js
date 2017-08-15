@@ -10,7 +10,7 @@ define(function(require) {
      * @property {string} scrollDataIndex
      */
     require('../../echarts').registerAction(
-        'legendScroll', 'legendscrolled',
+        'legendScroll', 'legendscroll',
         function (payload, ecModel) {
             var scrollDataIndex = payload.scrollDataIndex;
 
