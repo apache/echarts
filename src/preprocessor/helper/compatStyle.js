@@ -44,10 +44,7 @@ define(function (require) {
     }
 
     function compatTextStyle(opt, propName) {
-        compatTextStyleSingle(opt && opt[propName]);
-    }
-
-    function compatTextStyleSingle(labelOptSingle) {
+        var labelOptSingle = isObject(opt) && opt[propName];
         var textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
         if (textStyle) {
             for (var i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
@@ -61,8 +58,8 @@ define(function (require) {
 
     function compatLabelTextStyle(labelOpt) {
         if (isObject(labelOpt)) {
-            compatTextStyleSingle(labelOpt.normal);
-            compatTextStyleSingle(labelOpt.emphasis);
+            compatTextStyle(labelOpt, 'normal');
+            compatTextStyle(labelOpt, 'emphasis');
         }
     }
 
@@ -164,7 +161,7 @@ define(function (require) {
             compatTextStyle(calendarOpt, 'yearLabel');
         });
 
-        compatTextStyle(toObj(option.timeline), 'label');
+        compatLabelTextStyle(toObj(option.timeline).label);
         compatTextStyle(toObj(option.axisPointer), 'label');
         compatTextStyle(toObj(option.tooltip).axisPointer, 'label');
     };
