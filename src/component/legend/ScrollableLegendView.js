@@ -242,12 +242,14 @@ define(function (require) {
             var pageText = controllerGroup.childOfName('pageText');
             var pageFormatter = legendModel.get('pageFormatter');
             var pageIndex = pageInfo.pageIndex;
+            var current = pageIndex != null ? pageIndex + 1 : 0;
+            var total = pageIndex.pageCount;
 
             pageText && pageFormatter && pageText.setStyle(
                 'text',
-                pageFormatter
-                    .replace('{current}', pageIndex != null ? pageIndex + 1 : 0)
-                    .replace('{total}', pageInfo.pageCount)
+                zrUtil.isString(pageFormatter)
+                    ? pageFormatter.replace('{current}', current).replace('{total}', total)
+                    : pageFormatter({current: current, total: total})
             );
         },
 
