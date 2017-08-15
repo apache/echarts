@@ -478,7 +478,9 @@ define(function(require) {
             var labelRotate = textStyleModel.getShallow('rotate');
             labelRotate != null && (labelRotate *= Math.PI / 180);
             textStyle.textRotation = labelRotate;
-            textStyle.textDistance = textStyleModel.getShallow('distance') || (opt.forMerge ? null : 5);
+            textStyle.textDistance = zrUtil.retrieve2(
+                textStyleModel.getShallow('distance'), opt.forMerge ? null : 5
+            );
         }
 
         var ecModel = textStyleModel.ecModel;
