@@ -461,12 +461,17 @@
                 var seriesInfo = makeSeries(50, 3);
 
                 var option = {
-                    legend: {
+                    legend: [{
                         type: 'scroll',
                         data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    }, {
+                        type: 'scroll',
+                        bottom: 0,
+                        data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)',
-                        enabled: true
-                    },
+                        pageButtonPosition: 'start'
+                    }],
                     tooltip: {
                     },
                     grid: {

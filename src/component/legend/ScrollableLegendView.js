@@ -217,7 +217,8 @@ define(function (require) {
 
             scrollDataIndex != null && api.dispatchAction({
                 type: 'legendScroll',
-                scrollDataIndex: scrollDataIndex
+                scrollDataIndex: scrollDataIndex,
+                legendId: legendModel.id
             });
         },
 

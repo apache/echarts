@@ -13,11 +13,13 @@ define(function(require) {
         'legendScroll', 'legendscrolled',
         function (payload, ecModel) {
             var scrollDataIndex = payload.scrollDataIndex;
-            var legendModel = ecModel.findComponents({mainType: 'legend', subType: 'scroll'})[0];
 
-            if (scrollDataIndex != null && legendModel) {
-                legendModel.setScrollDataIndex(scrollDataIndex);
-            }
+            scrollDataIndex != null && ecModel.eachComponent(
+                {mainType: 'legend', subType: 'scroll', query: payload},
+                function (legendModel) {
+                    legendModel.setScrollDataIndex(scrollDataIndex);
+                }
+            );
         }
     );
 });
