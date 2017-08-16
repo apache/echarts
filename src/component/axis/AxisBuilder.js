@@ -271,12 +271,14 @@ define(function (require) {
                      return;
                 }
 
+                var itemLabelModel = labelModel;
                 if (categoryData && categoryData[tickVal] && categoryData[tickVal].textStyle) {
-                    labelModel = new Model(
+                    itemLabelModel = new Model(
                         categoryData[tickVal].textStyle, labelModel, axisModel.ecModel
                     );
                 }
-                var textColor = labelModel.getTextColor()
+
+                var textColor = itemLabelModel.getTextColor()
                     || axisModel.get('axisLine.lineStyle.color');
 
                 var tickCoord = axis.dataToCoord(tickVal);
@@ -295,12 +297,12 @@ define(function (require) {
                     z2: 10
                 });
 
-                graphic.setTextStyle(textEl.style, labelModel, {
+                graphic.setTextStyle(textEl.style, itemLabelModel, {
                     text: labels[index],
-                    textAlign: labelModel.getShallow('align', true)
+                    textAlign: itemLabelModel.getShallow('align', true)
                         || labelLayout.textAlign,
-                    textVerticalAlign: labelModel.getShallow('verticalAlign', true)
-                        || labelModel.getShallow('baseline', true)
+                    textVerticalAlign: itemLabelModel.getShallow('verticalAlign', true)
+                        || itemLabelModel.getShallow('baseline', true)
                         || labelLayout.textVerticalAlign,
                     textFill: typeof textColor === 'function'
                         ? textColor(

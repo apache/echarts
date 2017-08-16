@@ -39,7 +39,20 @@
                 var data3 = [];
 
                 for (var i = 0; i < 100; i++) {
-                    xAxisData.push('类目' + i);
+
+                    if (i === 14 || i === 20) {
+                        xAxisData.push({
+                            value: '类目' + i,
+                            textStyle: {
+                                color: 'red'
+                            }
+                        });
+                    } else {
+                        xAxisData.push('类目' + i);
+                    }
+
+
+
                     if (i < 5 && i > 1) {
                         data1.push(0);
                     }
