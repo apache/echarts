@@ -25,7 +25,7 @@ define(function (require) {
             var axisLine = this.get('axisLine');
             var axisTick = this.get('axisTick');
             var axisLabel = this.get('axisLabel');
-            var nameTextStyle = this.get('name.textStyle');
+            var nameTextStyle = this.get('name');
             var showName = this.get('name.show');
             var nameFormatter = this.get('name.formatter');
             var nameGap = this.get('nameGap');

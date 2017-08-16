@@ -161,6 +161,11 @@ define(function (require) {
             compatTextStyle(calendarOpt, 'yearLabel');
         });
 
+        // radar.name.textStyle
+        each(toArr(option.radar), function (radarOpt) {
+            compatTextStyle(radarOpt, 'name');
+        });
+
         each(toArr(option.geo), function (geoOpt) {
             isObject(geoOpt) && compatLabelTextStyle(geoOpt.label);
         });
