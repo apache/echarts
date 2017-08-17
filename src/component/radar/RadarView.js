@@ -18,6 +18,7 @@ define(function (require) {
 
             this._buildAxes(radarModel);
             this._buildSplitLineAndArea(radarModel);
+            this._buildTopLevelEvent(radarModel, ecModel, api);
         },
 
         _buildAxes: function (radarModel) {
@@ -173,6 +174,106 @@ define(function (require) {
                 ));
             }, this);
 
+        },
+
+        _buildTopLevelEvent:function(radarModel, ecModel, api){
+
+            if(radarModel.get('topLevelEvent') === "default"){
+                function _containPixel(points,point){
+
+                    let testx = point[0];
+                    let testy = point[1];
+
+                    let i, j, c = false;
+                    for (i = 0, j = points.length-2; i < points.length-1; j = i++) {
+                        if ( ((points[i][1]>testy) != (points[j][1]>testy)) &&
+                            (testx < (points[j][0]-points[i][0]) * (testy-points[i][1]) /
+                                (points[j][1]-points[i][1]) + points[i][0]) )
+                            c = !c;
+                    }
+
+                    return c;
+
+                }
+
+                api.getZr().on("mousemove",function(){
+                    let mouse_x = arguments[0].offsetX;
+                    let mouse_y = arguments[0].offsetY;
+                    var g_len = null;
+                    var g_idx = null;
+
+                    ecModel.eachSeries(function (seriesModel) {
+
+                        var data = seriesModel.getData();
+                        data.eachItemGraphicEl(function (_itemGroup) {
+
+
+                            let idx = _itemGroup.id;
+                            let points = _itemGroup.childAt(0).shape.points;
+                            if(_containPixel(points,[mouse_x ,mouse_y])
+                            ){
+
+                                let o_len;
+                                for(let i = 0, LEN = points.length-2;i<=LEN;i++){
+                                    let _len = Math.sqrt(Math.pow(points[i][0]-mouse_x,2)+Math.pow(points[i][1]-mouse_y,2))
+                                    console.log(_len);
+                                    if(!o_len){
+                                        o_len = _len;
+                                    }else{
+                                        o_len = Math.min(o_len,_len);
+                                    }
+                                }
+
+                                if(!g_len){
+                                    g_len = o_len;
+                                    g_idx = idx;
+                                }else{
+                                    if(o_len<g_len){
+                                        g_len = o_len
+                                        g_idx =idx
+                                    }
+                                }
+                            }
+
+
+                        })
+
+                    }, this);
+
+                    ecModel.eachSeries(function (seriesModel) {
+
+                        var data = seriesModel.getData();
+                        data.eachItemGraphicEl(function (_itemGroup,data_idx) {
+
+                            var itemModel = data.getItemModel(data_idx);
+
+                            var areaStyleModel = itemModel.getModel('areaStyle.normal');
+                            var hoverAreaStyleModel = itemModel.getModel('areaStyle.emphasis');
+                            var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
+                            var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
+
+                            var polygon = _itemGroup.childAt(1);
+                            function onEmphasis() {
+                                polygon.attr('ignore', hoverPolygonIgnore);
+
+                            }
+
+                            function onNormal() {
+                                polygon.attr('ignore', polygonIgnore);
+                            }
+
+                            let idx = _itemGroup.id;
+                            if(!_itemGroup.childAt(1).ignore && (g_idx != idx || g_idx === null)){
+                                onNormal();
+                            }else if(_itemGroup.childAt(1).ignore && g_idx == idx){
+                                onEmphasis();
+                            }
+                        })
+
+                    }, this);
+
+                })
+            }
         }
     });
 });
