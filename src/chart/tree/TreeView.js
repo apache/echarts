@@ -55,6 +55,7 @@ define(function (require) {
             var oldData = this._data;
 
             var seriesScope = {
+                expandAndCollapse: seriesModel.get('expandAndCollapse'),
                 layout: seriesModel.get('layout'),
                 orient: seriesModel.get('orient'),
                 curvature: seriesModel.get('lineStyle.normal.curveness'),
@@ -93,16 +94,17 @@ define(function (require) {
 
             // TODO
             // view.remove ...
-
-            data.eachItemGraphicEl(function (el, dataIndex) {
-                el.off('click').on('click', function () {
-                    api.dispatchAction({
-                        type: 'treeExpandAndCollapse',
-                        seriesId: seriesModel.id,
-                        dataIndex: dataIndex
+            if (seriesScope.expandAndCollapse === true) {
+                data.eachItemGraphicEl(function (el, dataIndex) {
+                    el.off('click').on('click', function () {
+                        api.dispatchAction({
+                            type: 'treeExpandAndCollapse',
+                            seriesId: seriesModel.id,
+                            dataIndex: dataIndex
+                        });
                     });
                 });
-            });
+            }
 
             this._data = data;
 
@@ -178,7 +180,7 @@ define(function (require) {
 
     function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
         var isInit = !symbolEl;
-        var method = isInit ? 'initProps' : 'updateProps';
+        // var method = isInit ? 'initProps' : 'updateProps';
         var node = data.tree.getNodeByDataIndex(dataIndex);
         var itemModel = node.getModel();
         var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
@@ -191,34 +193,45 @@ define(function (require) {
         var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
         var sourceLayout = source.getLayout();
         var sourceOldLayout = sourceSymbolEl
-            ? {x: sourceSymbolEl.position[0], y: sourceSymbolEl.position[1]}
+            ? {
+                x: sourceSymbolEl.position[0],
+                y: sourceSymbolEl.position[1],
+                rawX: sourceSymbolEl.__radialOldRawX,
+                rawY: sourceSymbolEl.__radialOldRawY
+            }
             : sourceLayout;
         var targetLayout = node.getLayout();
 
         if (isInit) {
             symbolEl = new Symbol(data, dataIndex, {useNameLabel: true});
             symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
+
         }
+
+        symbolEl.__radialOldRawX = symbolEl.__radialRawX;
+        symbolEl.__radialOldRawY = symbolEl.__radialRawY;
+        symbolEl.__radialRawX = targetLayout.rawX;
+        symbolEl.__radialRawY = targetLayout.rawY;
 
         symbolEl.updateData(data, dataIndex, seriesScope);
 
         group.add(symbolEl);
         data.setItemGraphicEl(dataIndex, symbolEl);
 
-        graphic[method](symbolEl, {
-            position: [targetLayout.x, targetLayout.y],
+        graphic.updateProps(symbolEl, {
+            position: [targetLayout.x, targetLayout.y]
         }, seriesModel);
 
-        if (isInit) {
-            // var symbolPath = symbolEl.getSymbolPath();
-            // symbolPath.setStyle('opacity', 0.2);
+        // if (isInit) {
+        //     var symbolPath = symbolEl.getSymbolPath();
+        //     symbolPath.setStyle('opacity', 0.2);
 
-            // graphic[method](symbolPath, {
-            //     style: {
-            //         opacity: 1
-            //     }
-            // }, seriesModel);
-        }
+        //     graphic.updateProps(symbolPath, {
+        //         style: {
+        //             opacity: 1
+        //         }
+        //     }, seriesModel);
+        // }
 
         if (node.parentNode && node.parentNode !== virtualRoot) {
             var edge = symbolEl.__edge;
@@ -229,7 +242,7 @@ define(function (require) {
                 });
             }
 
-            graphic[method](edge, {
+            graphic.updateProps(edge, {
                 shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
                 style: {opacity: 1}
             }, seriesModel);
@@ -263,7 +276,7 @@ define(function (require) {
         }
 
         graphic.updateProps(symbolEl, {
-            position: [sourceLayout.x + 1, sourceLayout.y + 1],
+            position: [sourceLayout.x + 1, sourceLayout.y + 1]
         }, seriesModel, function () {
             group.remove(symbolEl);
         });
@@ -292,10 +305,7 @@ define(function (require) {
     }
 
     function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
-        var x1 = sourceLayout.x;
-        var y1 = sourceLayout.y;
-        var x2 = targetLayout.x;
-        var y2 = targetLayout.y;
+
         var cpx1;
         var cpy1;
         var cpx2;
@@ -303,24 +313,32 @@ define(function (require) {
         var orient = seriesScope.orient;
 
         if (seriesScope.layout === 'radial') {
+            var x1 = sourceLayout.rawX;
+            var y1 = sourceLayout.rawY;
+            var x2 = targetLayout.rawX;
+            var y2 = targetLayout.rawY;
 
             var radialCoor1 = radialCoordinate(x1, y1);
-            var radialCoor2 = radialCoordinate(x1, (y1 + y2) / 2);
-            var radialCoor3 = radialCoordinate(x2, y1);
+            var radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
+            var radialCoor3 = radialCoordinate(x2, y2 + (y1 - y2) * seriesScope.curvature);
             var radialCoor4 = radialCoordinate(x2, y2);
 
             return {
                 x1: radialCoor1.x,
                 y1: radialCoor1.y,
-                x2: radialCoor2.x,
-                y2: radialCoor2.y,
-                cpx1: radialCoor3.x,
-                cpy1: radialCoor3.y,
-                cpx2: radialCoor4.x,
-                cpy2: radialCoor4.y
+                x2: radialCoor4.x,
+                y2: radialCoor4.y,
+                cpx1: radialCoor2.x,
+                cpy1: radialCoor2.y,
+                cpx2: radialCoor3.x,
+                cpy2: radialCoor3.y
             };
         }
         else {
+            var x1 = sourceLayout.x;
+            var y1 = sourceLayout.y;
+            var x2 = targetLayout.x;
+            var y2 = targetLayout.y;
 
             if (orient === 'horizontal') {
                 cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
@@ -330,9 +348,9 @@ define(function (require) {
             }
             if (orient === 'vertical') {
                 cpx1 = x1;
-                cpy1 = (y1 + y2) / 2;
+                cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
                 cpx2 = x2;
-                cpy2 = y1;
+                cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
             }
             return {
                 x1: x1,

@@ -57,13 +57,19 @@ define(function (require) {
                 var tx = delta - left.getLayout().x;
 
                 var kx = width / (right.getLayout().x + delta + tx);
+
                 // here we use (node.depth - 1), bucause the real root's depth is 1
                 var ky = height/ ((bottom.depth - 1) || 1);
                 eachBefore(realRoot, function (node) {
                     var coorX = (node.getLayout().x + tx) * kx;
+console.log(node.name);
+console.log(coorX);
+
                     var coorY = (node.depth - 1) * ky;
+console.log(coorY);
                     var finalCoor = radialCoordinate(coorX, coorY);
-                    node.setLayout({x: finalCoor.x, y: finalCoor.y}, true);
+console.log(finalCoor);
+                    node.setLayout({x: finalCoor.x, y: finalCoor.y, rawX: coorX, rawY: coorY}, true);
                 });
             }
         });

@@ -34,11 +34,21 @@ define(function (require) {
 
             var tree = Tree.createTree(root, this, treeOption);
 
+            var treeDepth = 0;
+
+            tree.eachNode('preorder', function (node) {
+                if (node.depth > treeDepth) {
+                    treeDepth = node.depth;
+                }
+            });
+
+            var expandAndCollapse = option.expandAndCollapse;
+
             // var realRoot = tree.root.children[0];
-            var treeDepth = option.initialTreeDepth >= 1 ? option.initialTreeDepth : 1;
+            var expandTreeDepth = expandAndCollapse ? (option.initialTreeDepth >= 1 ? option.initialTreeDepth : 1) : treeDepth;
 
             tree.root.eachNode('preorder', function (node) {
-                if (node.depth <= treeDepth) {
+                if (node.depth <= expandTreeDepth) {
                     node.isExpand = true;
                 }
                 else {
@@ -104,7 +114,7 @@ define(function (require) {
                 normal: {
                     color: '#ccc',
                     width: 1.5,
-                    curveness: 0.6
+                    curveness: 0.5
                 }
             },
 
