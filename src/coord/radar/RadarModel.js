@@ -25,7 +25,7 @@ define(function (require) {
             var axisLine = this.get('axisLine');
             var axisTick = this.get('axisTick');
             var axisLabel = this.get('axisLabel');
-            var nameTextStyle = this.get('name.textStyle');
+            var nameTextStyle = this.get('name');
             var showName = this.get('name.show');
             var nameFormatter = this.get('name.formatter');
             var nameGap = this.get('nameGap');
@@ -38,6 +38,10 @@ define(function (require) {
                 }
                 else if (indicatorOpt.min != null && indicatorOpt.min < 0 && !indicatorOpt.max) {
                     indicatorOpt.max = 0;
+                }
+                var iNameTextStyle = nameTextStyle;
+                if(indicatorOpt.color != null) {
+                    iNameTextStyle = zrUtil.defaults({color: indicatorOpt.color}, nameTextStyle);
                 }
                 // Use same configuration
                 indicatorOpt = zrUtil.merge(zrUtil.clone(indicatorOpt), {
@@ -52,7 +56,7 @@ define(function (require) {
                     nameLocation: 'end',
                     nameGap: nameGap,
                     // min: 0,
-                    nameTextStyle: nameTextStyle,
+                    nameTextStyle: iNameTextStyle,
                     triggerEvent: triggerEvent
                 }, false);
                 if (!showName) {

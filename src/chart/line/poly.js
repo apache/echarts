@@ -3,6 +3,7 @@ define(function (require) {
 
     var Path = require('zrender/graphic/Path');
     var vec2 = require('zrender/core/vector');
+    var fixClipWithShadow = require('zrender/graphic/helper/fixClipWithShadow');
 
     var vec2Min = vec2.min;
     var vec2Max = vec2.max;
@@ -154,6 +155,8 @@ define(function (require) {
                 stroke: '#000'
             },
 
+            brush: fixClipWithShadow(Path.prototype.brush),
+
             buildPath: function (ctx, shape) {
                 var points = shape.points;
 
@@ -205,6 +208,8 @@ define(function (require) {
 
                 connectNulls: false
             },
+
+            brush: fixClipWithShadow(Path.prototype.brush),
 
             buildPath: function (ctx, shape) {
                 var points = shape.points;

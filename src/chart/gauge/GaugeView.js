@@ -174,7 +174,6 @@ define(function (require) {
 
             var splitLineStyle = splitLineModel.getModel('lineStyle').getLineStyle();
             var tickLineStyle = tickModel.getModel('lineStyle').getLineStyle();
-            var textStyleModel = labelModel.getModel('textStyle');
 
             for (var i = 0; i <= splitNumber; i++) {
                 var unitX = Math.cos(angle);
@@ -207,26 +206,18 @@ define(function (require) {
                         labelModel.get('formatter')
                     );
                     var distance = labelModel.get('distance');
+                    var autoColor = getColor(i / splitNumber);
 
-                    var text = new graphic.Text({
-                        style: {
+                    group.add(new graphic.Text({
+                        style: graphic.setTextStyle({}, labelModel, {
                             text: label,
                             x: unitX * (r - splitLineLen - distance) + cx,
                             y: unitY * (r - splitLineLen - distance) + cy,
-                            fill: textStyleModel.getTextColor(),
-                            textFont: textStyleModel.getFont(),
                             textVerticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                             textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                        },
+                        }, {autoColor: autoColor}),
                         silent: true
-                    });
-                    if (text.style.fill === 'auto') {
-                        text.setStyle({
-                            fill: getColor(i / splitNumber)
-                        });
-                    }
-
-                    group.add(text);
+                    }));
                 }
 
                 // Axis tick
@@ -352,34 +343,28 @@ define(function (require) {
         ) {
             var titleModel = seriesModel.getModel('title');
             if (titleModel.get('show')) {
-                var textStyleModel = titleModel.getModel('textStyle');
                 var offsetCenter = titleModel.get('offsetCenter');
                 var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
                 var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
 
-                var text = new graphic.Text({
-                    style: {
+                var minVal = +seriesModel.get('min');
+                var maxVal = +seriesModel.get('max');
+                var value = seriesModel.getData().get('value', 0);
+                var autoColor = getColor(
+                    numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
+                );
+
+                this.group.add(new graphic.Text({
+                    silent: true,
+                    style: graphic.setTextStyle({}, titleModel, {
                         x: x,
                         y: y,
                         // FIXME First data name ?
                         text: seriesModel.getData().getName(0),
-                        fill: textStyleModel.getTextColor(),
-                        textFont: textStyleModel.getFont(),
                         textAlign: 'center',
                         textVerticalAlign: 'middle'
-                    }
-                });
-
-                if (text.style.fill === 'auto') {
-                    var minVal = +seriesModel.get('min');
-                    var maxVal = +seriesModel.get('max');
-                    var value = seriesModel.getData().get('value', 0);
-                    text.setStyle('fill', getColor(
-                        numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
-                    ));
-                }
-
-                this.group.add(text);
+                    }, {autoColor: autoColor, forceRich: true})
+                }));
             }
         },
 
@@ -390,37 +375,31 @@ define(function (require) {
             var minVal = +seriesModel.get('min');
             var maxVal = +seriesModel.get('max');
             if (detailModel.get('show')) {
-                var textStyleModel = detailModel.getModel('textStyle');
                 var offsetCenter = detailModel.get('offsetCenter');
                 var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
                 var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
                 var width = parsePercent(detailModel.get('width'), posInfo.r);
                 var height = parsePercent(detailModel.get('height'), posInfo.r);
                 var value = seriesModel.getData().get('value', 0);
-                var rect = new graphic.Rect({
-                    shape: {
-                        x: x - width / 2,
-                        y: y - height / 2,
-                        width: width,
-                        height: height
-                    },
-                    style: {
+                var autoColor = getColor(
+                    numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
+                );
+
+                this.group.add(new graphic.Text({
+                    silent: true,
+                    style: graphic.setTextStyle({}, detailModel, {
+                        x: x,
+                        y: y,
                         text: formatLabel(
                             // FIXME First data name ?
                             value, detailModel.get('formatter')
                         ),
-                        fill: detailModel.get('backgroundColor'),
-                        textFill: textStyleModel.getTextColor(),
-                        textFont: textStyleModel.getFont()
-                    }
-                });
-                if (rect.style.textFill === 'auto') {
-                    rect.setStyle('textFill', getColor(
-                        numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
-                    ));
-                }
-                rect.setStyle(detailModel.getItemStyle(['color']));
-                this.group.add(rect);
+                        textWidth: isNaN(width) ? null : width,
+                        textHeight: isNaN(height) ? null : height,
+                        textAlign: 'center',
+                        textVerticalAlign: 'middle'
+                    }, {autoColor: autoColor, forceRich: true})
+                }));
             }
         }
     });

@@ -105,8 +105,6 @@ define(function (require) {
             var categoryData = angleAxisModel.get('data');
 
             var labelModel = angleAxisModel.getModel('axisLabel');
-            var axisTextStyleModel = labelModel.getModel('textStyle');
-
             var labels = angleAxisModel.getFormattedLabels();
 
             var labelMargin = labelModel.get('margin');
@@ -121,27 +119,23 @@ define(function (require) {
 
                 var labelTextAlign = Math.abs(p[0] - cx) / r < 0.3
                     ? 'center' : (p[0] > cx ? 'left' : 'right');
-                var labelTextBaseline = Math.abs(p[1] - cy) / r < 0.3
+                var labelTextVerticalAlign = Math.abs(p[1] - cy) / r < 0.3
                     ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
-                var textStyleModel = axisTextStyleModel;
                 if (categoryData && categoryData[i] && categoryData[i].textStyle) {
-                    textStyleModel = new Model(
-                        categoryData[i].textStyle, axisTextStyleModel
-                    );
+                    labelModel = new Model(categoryData[i].textStyle, labelModel, labelModel.ecModel);
                 }
-                this.group.add(new graphic.Text({
-                    style: {
-                        x: p[0],
-                        y: p[1],
-                        fill: textStyleModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
-                        text: labels[i],
-                        textAlign: labelTextAlign,
-                        textVerticalAlign: labelTextBaseline,
-                        textFont: textStyleModel.getFont()
-                    },
-                    silent: true
-                }));
+
+                var textEl = new graphic.Text({silent: true});
+                this.group.add(textEl);
+                graphic.setTextStyle(textEl.style, labelModel, {
+                    x: p[0],
+                    y: p[1],
+                    textFill: labelModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
+                    text: labels[i],
+                    textAlign: labelTextAlign,
+                    textVerticalAlign: labelTextVerticalAlign
+                });
             }
         },
 

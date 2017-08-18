@@ -81,7 +81,7 @@ define(function (require) {
                 extent[0] = extent[1] - ONE_DAY;
             }
 
-            this.niceTicks(opt.splitNumber);
+            this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
 
             // var extent = this._extent;
             var interval = this._interval;
@@ -97,7 +97,7 @@ define(function (require) {
         /**
          * @override
          */
-        niceTicks: function (approxTickNum) {
+        niceTicks: function (approxTickNum, minInterval, maxInterval) {
             var timezoneOffset = this.getSetting('useUTC')
                 ? 0 : numberUtil.getTimezoneOffset() * 60 * 1000;
             approxTickNum = approxTickNum || 10;
@@ -105,6 +105,14 @@ define(function (require) {
             var extent = this._extent;
             var span = extent[1] - extent[0];
             var approxInterval = span / approxTickNum;
+
+            if (minInterval != null && approxInterval < minInterval) {
+                approxInterval = minInterval;
+            }
+            if (maxInterval != null && approxInterval > maxInterval) {
+                approxInterval = maxInterval;
+            }
+
             var scaleLevelsLen = scaleLevels.length;
             var idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
 

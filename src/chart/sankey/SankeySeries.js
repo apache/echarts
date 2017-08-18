@@ -92,10 +92,8 @@ define(function (require) {
                 normal: {
                     show: true,
                     position: 'right',
-                    textStyle: {
-                        color: '#000',
-                        fontSize: 12
-                    }
+                    color: '#000',
+                    fontSize: 12
                 },
                 emphasis: {
                     show: true

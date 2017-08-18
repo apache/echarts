@@ -5,6 +5,7 @@ define(function(require) {
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var numberUtil = require('../../util/number');
     var completeDimensions = require('../../data/helper/completeDimensions');
 
     var dataSelectableMixin = require('../../component/helper/selectableMixin');
@@ -45,11 +46,18 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var data = this.getData();
             var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
-            var sum = data.getSum('value');
             // FIXME toFixed?
-            //
-            // Percent is 0 if sum is 0
-            params.percent = !sum ? 0 : +(data.get('value', dataIndex) / sum * 100).toFixed(2);
+
+            var valueList = [];
+            data.each('value', function (value) {
+                valueList.push(value);
+            });
+
+            params.percent = numberUtil.getPercentWithPrecision(
+                valueList,
+                dataIndex,
+                data.hostModel.get('percentPrecision')
+            );
 
             params.$vars.push('percent');
             return params;
@@ -92,8 +100,12 @@ define(function(require) {
             // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             // roseType: null,
 
+            percentPrecision: 2,
+
             // If still show when all data zero.
             stillShowZeroSum: true,
+
+            // cursor: null,
 
             label: {
                 normal: {
@@ -103,7 +115,7 @@ define(function(require) {
                     // 'outer', 'inside', 'center'
                     position: 'outer'
                     // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    // 默认使用全局文本样式，详见TEXTSTYLE
                     // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
                 },
                 emphasis: {}

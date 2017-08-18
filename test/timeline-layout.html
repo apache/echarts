@@ -40,7 +40,20 @@
                 'echarts/component/timeline'
             ], function (echarts, zrUtil) {
 
-                makeChart({});
+                makeChart({
+                    timeline: {
+                        label: {
+                            normal: {
+                                position: 10,
+                                rotate: 45,
+                                textStyle: {
+                                    align: 'right',
+                                    baseline: 'middle'
+                                }
+                            }
+                        }
+                    }
+                });
                 makeChart({
                     timeline: {
                         inverse: true,

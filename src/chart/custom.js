@@ -6,11 +6,15 @@ define(function (require) {
     var labelHelper = require('./helper/labelHelper');
     var createListFromArray = require('./helper/createListFromArray');
     var barGrid = require('../layout/barGrid');
+    var DataDiffer = require('../data/DataDiffer');
 
     var ITEM_STYLE_NORMAL_PATH = ['itemStyle', 'normal'];
     var ITEM_STYLE_EMPHASIS_PATH = ['itemStyle', 'emphasis'];
     var LABEL_NORMAL = ['label', 'normal'];
     var LABEL_EMPHASIS = ['label', 'emphasis'];
+    // Use prefix to avoid index to be the same as el.name,
+    // which will cause weird udpate animation.
+    var GROUP_DIFF_PREFIX = 'e\0\0';
 
     /**
      * To reduce total package size of each coordinate systems, the modules `prepareCustom`
@@ -42,7 +46,7 @@ define(function (require) {
         dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 
         defaultOption: {
-            coordinateSystem: 'cartesian2d',
+            coordinateSystem: 'cartesian2d', // Can be set as 'none'
             zlevel: 0,
             z: 2,
             legendHoverLink: true
@@ -159,6 +163,7 @@ define(function (require) {
         }
 
         el.__customGraphicType = graphicType;
+        el.name = elOption.name;
 
         return el;
     }
@@ -185,6 +190,14 @@ define(function (require) {
             zrUtil.each(['x', 'y'], function (prop) {
                 prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
             });
+            // Compatible with previous: both support
+            // textFill and fill, textStroke and stroke in 'text' element.
+            !elOptionStyle.hasOwnProperty('textFill') && elOptionStyle.fill && (
+                elOptionStyle.textFill = elOptionStyle.fill
+            );
+            !elOptionStyle.hasOwnProperty('textStroke') && elOptionStyle.stroke && (
+                elOptionStyle.textStroke = elOptionStyle.stroke
+            );
         }
 
         if (el.type !== 'group') {
@@ -222,18 +235,21 @@ define(function (require) {
     function makeRenderItem(customSeries, data, ecModel, api) {
         var renderItem = customSeries.get('renderItem');
         var coordSys = customSeries.coordinateSystem;
+        var prepareResult = {};
 
-        if (__DEV__) {
-            zrUtil.assert(renderItem, 'series.render is required.');
-            zrUtil.assert(
-                coordSys.prepareCustoms || prepareCustoms[coordSys.type],
-                'This coordSys does not support custom series.'
-            );
+        if (coordSys) {
+            if (__DEV__) {
+                zrUtil.assert(renderItem, 'series.render is required.');
+                zrUtil.assert(
+                    coordSys.prepareCustoms || prepareCustoms[coordSys.type],
+                    'This coordSys does not support custom series.'
+                );
+            }
+
+            prepareResult = coordSys.prepareCustoms
+                ? coordSys.prepareCustoms()
+                : prepareCustoms[coordSys.type](coordSys);
         }
-
-        var prepareResult = coordSys.prepareCustoms
-            ? coordSys.prepareCustoms()
-            : prepareCustoms[coordSys.type](coordSys);
 
         var userAPI = zrUtil.defaults({
             getWidth: api.getWidth,
@@ -247,7 +263,7 @@ define(function (require) {
             barLayout: barLayout,
             currentSeriesIndices: currentSeriesIndices,
             font: font
-        }, prepareResult.api);
+        }, prepareResult.api || {});
 
         var userParams = {
             context: {},
@@ -296,7 +312,7 @@ define(function (require) {
 
         /**
          * @public
-         * @param {nubmer|string} dim
+         * @param {number|string} dim
          * @param {number} [dataIndexInside=currDataIndexInside]
          * @return {number|string} value
          */
@@ -324,10 +340,15 @@ define(function (require) {
             var opacity = data.getItemVisual(dataIndexInside, 'opacity');
             opacity != null && (itemStyle.opacity = opacity);
 
-            labelHelper.setTextToStyle(
-                data, dataIndexInside, currLabelValueDim, itemStyle,
-                customSeries, currLabelNormalModel, currVisualColor
-            );
+            if (currLabelValueDim != null) {
+                graphicUtil.setText(itemStyle, currLabelNormalModel, currVisualColor);
+                itemStyle.text = currLabelNormalModel.getShallow('show')
+                    ? zrUtil.retrieve2(
+                        customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                        data.get(currLabelValueDim, dataIndexInside)
+                    )
+                    : null;
+            }
 
             extra && zrUtil.extend(itemStyle, extra);
             return itemStyle;
@@ -344,10 +365,12 @@ define(function (require) {
 
             var itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
 
-            labelHelper.setTextToStyle(
-                data, dataIndexInside, currLabelValueDim, itemStyle,
-                customSeries, currLabelEmphasisModel, currVisualColor
-            );
+            if (currLabelValueDim != null) {
+                graphicUtil.setText(itemStyle, currLabelEmphasisModel, false);
+                itemStyle.text = currLabelEmphasisModel.getShallow('show')
+                    ? customSeries.getFormattedLabel(dataIndexInside, 'emphasis')
+                    : null;
+            }
 
             extra && zrUtil.extend(itemStyle, extra);
             return itemStyle;
@@ -440,13 +463,83 @@ define(function (require) {
         !el && (el = createEl(elOption));
         updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
 
-        elOptionType === 'group' && zrUtil.each(elOption.children, function (childOption, index) {
-            doCreateOrUpdate(el.childAt(index), dataIndex, childOption, animatableModel, el, data);
-        });
+        if (elOptionType === 'group') {
+            var oldChildren = el.children() || [];
+            var newChildren = elOption.children || [];
+
+            if (elOption.diffChildrenByName) {
+                // lower performance.
+                diffGroupChildren({
+                    oldChildren: oldChildren,
+                    newChildren: newChildren,
+                    dataIndex: dataIndex,
+                    animatableModel: animatableModel,
+                    group: el,
+                    data: data
+                });
+            }
+            else {
+                // better performance.
+                var index = 0;
+                for (; index < newChildren.length; index++) {
+                    doCreateOrUpdate(
+                        el.childAt(index),
+                        dataIndex,
+                        newChildren[index],
+                        animatableModel,
+                        el,
+                        data
+                    );
+                }
+                for (; index < oldChildren.length; index++) {
+                    oldChildren[index] && el.remove(oldChildren[index]);
+                }
+            }
+        }
 
         group.add(el);
 
         return el;
+    }
+
+    function diffGroupChildren(context) {
+        (new DataDiffer(
+            context.oldChildren,
+            context.newChildren,
+            getKey,
+            getKey,
+            context
+        ))
+            .add(processAddUpdate)
+            .update(processAddUpdate)
+            .remove(processRemove)
+            .execute();
+    }
+
+    function getKey(item, idx) {
+        var name = item && item.name;
+        return name != null ? name : GROUP_DIFF_PREFIX + idx;
+    }
+
+    function processAddUpdate(newIndex, oldIndex) {
+        var context = this.context;
+        var childOption = newIndex != null ? context.newChildren[newIndex] : null;
+        var child = oldIndex != null ? context.oldChildren[oldIndex] : null;
+
+        doCreateOrUpdate(
+            child,
+            context.dataIndex,
+            childOption,
+            context.animatableModel,
+            context.group,
+            context.data
+        );
+    }
+
+    function processRemove(oldIndex) {
+        var context = this.context;
+        var child = context.oldChildren[oldIndex];
+        child && context.group.remove(child);
     }
 
 });

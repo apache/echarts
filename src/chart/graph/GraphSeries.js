@@ -37,7 +37,7 @@ define(function (require) {
 
         mergeDefaultAndTheme: function (option) {
             GraphSeries.superApply(this, 'mergeDefaultAndTheme', arguments);
-            modelUtil.defaultEmphasis(option.edgeLabel, modelUtil.LABEL_OPTIONS);
+            modelUtil.defaultEmphasis(option.edgeLabel, ['show']);
         },
 
         getInitialData: function (option, ecModel) {
@@ -228,6 +228,7 @@ define(function (require) {
             zoom: 1,
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
+            // cursor: null,
 
             // categories: [],
 

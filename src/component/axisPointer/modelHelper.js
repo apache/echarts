@@ -182,10 +182,7 @@ define(function(require) {
             // (cross style is dashed by default)
             if (!triggerTooltip) {
                 var crossStyle = volatileOption.lineStyle = tooltipAxisPointerModel.get('crossStyle');
-                crossStyle && zrUtil.defaults(
-                    labelOption.textStyle || (labelOption.textStyle = {}),
-                    crossStyle.textStyle
-                );
+                crossStyle && zrUtil.defaults(labelOption, crossStyle.textStyle);
             }
         }
 
@@ -202,10 +199,12 @@ define(function(require) {
             // Notice this case: this coordSys is `cartesian2D` but not `grid`.
             var coordSys = seriesModel.coordinateSystem;
             var seriesTooltipTrigger = seriesModel.get('tooltip.trigger', true);
+            var seriesTooltipShow = seriesModel.get('tooltip.show', true);
             if (!coordSys
                 || seriesTooltipTrigger === 'none'
                 || seriesTooltipTrigger === false
                 || seriesTooltipTrigger === 'item'
+                || seriesTooltipShow === false
                 || seriesModel.get('axisPointer.show', true) === false
             ) {
                 return;

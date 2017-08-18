@@ -191,7 +191,7 @@ define(function (require) {
 
                 textAlign = isLabelInside ? 'center' : (dx > 0 ? 'left' : 'right');
             }
-            var font = labelModel.getModel('textStyle').getFont();
+            var font = labelModel.getFont();
 
             var labelRotate = labelModel.get('rotate')
                 ? (dx < 0 ? -midAngle + Math.PI : -midAngle) : 0;
@@ -211,8 +211,8 @@ define(function (require) {
                 linePoints: linePoints,
                 textAlign: textAlign,
                 verticalAlign: 'middle',
-                font: font,
-                rotation: labelRotate
+                rotation: labelRotate,
+                inside: isLabelInside
             };
 
             // Not layout the inside label

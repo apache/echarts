@@ -245,11 +245,13 @@ define(function (require) {
          * Fill given regions array
          * @param  {Array.<Object>} originRegionArr
          * @param  {string} mapName
+         * @param  {Object} [nameMap]
          * @return {Array}
          */
-        getFilledRegions: function (originRegionArr, mapName) {
+        getFilledRegions: function (originRegionArr, mapName, nameMap) {
             // Not use the original
             var regionsArr = (originRegionArr || []).slice();
+            nameMap = nameMap || {};
 
             var map = geoCreator.getMap(mapName);
             var geoJson = map && map.geoJson;
@@ -269,6 +271,9 @@ define(function (require) {
             for (var i = 0; i < features.length; i++) {
                 var name = features[i].properties.name;
                 if (!dataNameMap.get(name)) {
+                    if (nameMap.hasOwnProperty(name)) {
+                        name = nameMap[name];
+                    }
                     regionsArr.push({
                         name: name
                     });

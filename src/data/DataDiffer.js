@@ -5,12 +5,21 @@ define(function(require) {
         return item;
     }
 
-    function DataDiffer(oldArr, newArr, oldKeyGetter, newKeyGetter) {
+    /**
+     * @param {Array} oldArr
+     * @param {Array} newArr
+     * @param {Function} oldKeyGetter
+     * @param {Function} newKeyGetter
+     * @param {Object} [context] Can be visited by this.context in callback.
+     */
+    function DataDiffer(oldArr, newArr, oldKeyGetter, newKeyGetter, context) {
         this._old = oldArr;
         this._new = newArr;
 
         this._oldKeyGetter = oldKeyGetter || defaultKeyGetter;
         this._newKeyGetter = newKeyGetter || defaultKeyGetter;
+
+        this.context = context;
     }
 
     DataDiffer.prototype = {
@@ -44,8 +53,6 @@ define(function(require) {
         execute: function () {
             var oldArr = this._old;
             var newArr = this._new;
-            var oldKeyGetter = this._oldKeyGetter;
-            var newKeyGetter = this._newKeyGetter;
 
             var oldDataIndexMap = {};
             var newDataIndexMap = {};
@@ -53,8 +60,8 @@ define(function(require) {
             var newDataKeyArr = [];
             var i;
 
-            initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, oldKeyGetter);
-            initIndexMap(newArr, newDataIndexMap, newDataKeyArr, newKeyGetter);
+            initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, '_oldKeyGetter', this);
+            initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter', this);
 
             // Travel by inverted order to make sure order consistency
             // when duplicate keys exists (consider newDataIndex.pop() below).
@@ -103,10 +110,10 @@ define(function(require) {
         }
     };
 
-    function initIndexMap(arr, map, keyArr, keyGetter) {
+    function initIndexMap(arr, map, keyArr, keyGetterName, dataDiffer) {
         for (var i = 0; i < arr.length; i++) {
             // Add prefix to avoid conflict with Object.prototype.
-            var key = '_ec_' + keyGetter(arr[i], i);
+            var key = '_ec_' + dataDiffer[keyGetterName](arr[i], i);
             var existence = map[key];
             if (existence == null) {
                 keyArr.push(key);

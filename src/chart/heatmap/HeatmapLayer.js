@@ -60,8 +60,15 @@ define(function (require) {
                 ctx.drawImage(brush, x - r, y - r);
             }
 
+            if (!canvas.width || !canvas.height) {
+                // Avoid "Uncaught DOMException: Failed to execute 'getImageData' on
+                // 'CanvasRenderingContext2D': The source height is 0."
+                return canvas;
+            }
+
             // colorize the canvas using alpha value and set with gradient
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
             var pixels = imageData.data;
             var offset = 0;
             var pixelLen = pixels.length;

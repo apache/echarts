@@ -58,6 +58,8 @@ define(function (require) {
             // Dropped auto calculated niceExtent and use user setted extent
             // We assume user wan't to set both interval, min, max to get a better result
             this._niceExtent = this._extent.slice();
+
+            this._intervalPrecision = helper.getIntervalPrecision(interval);
         },
 
         /**
@@ -115,8 +117,9 @@ define(function (require) {
          *
          * @param {number} [splitNumber = 5] Desired number of ticks
          * @param {number} [minInterval]
+         * @param {number} [maxInterval]
          */
-        niceTicks: function (splitNumber, minInterval) {
+        niceTicks: function (splitNumber, minInterval, maxInterval) {
             splitNumber = splitNumber || 5;
             var extent = this._extent;
             var span = extent[1] - extent[0];
@@ -130,7 +133,9 @@ define(function (require) {
                 extent.reverse();
             }
 
-            var result = helper.intervalScaleNiceTicks(extent, splitNumber, minInterval);
+            var result = helper.intervalScaleNiceTicks(
+                extent, splitNumber, minInterval, maxInterval
+            );
 
             this._intervalPrecision = result.intervalPrecision;
             this._interval = result.interval;
@@ -143,7 +148,8 @@ define(function (require) {
          * @param {number} [opt.splitNumber = 5] Given approx tick number
          * @param {boolean} [opt.fixMin=false]
          * @param {boolean} [opt.fixMax=false]
-         * @param {boolean} [opt.minInterval=false]
+         * @param {boolean} [opt.minInterval]
+         * @param {boolean} [opt.maxInterval]
          */
         niceExtent: function (opt) {
             var extent = this._extent;
@@ -176,7 +182,7 @@ define(function (require) {
                 extent[1] = 1;
             }
 
-            this.niceTicks(opt.splitNumber, opt.minInterval);
+            this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
 
             // var extent = this._extent;
             var interval = this._interval;

@@ -43,6 +43,8 @@
         <div class="chart" id="text-image-update"></div>
         <h1>Polar Block</h1>
         <div class="chart" id="polar-block"></div>
+        <h1>Diff group children by name (animation of number icon should be normal)</h1>
+        <div class="chart" id="diff-children-by-name"></div>
 
 
 
@@ -1274,6 +1276,119 @@
                 };
 
                 testHelper.createChart(echarts, 'polar-block', option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/custom',
+                'echarts/component/polar',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var data = [
+                    {name:'广州', value: 50},
+                    {name:'深圳', value: 72},
+                    {name:'珠海', value: 30},
+                    {name:'佛山', value: 38},
+                    {name:'杭州', value: 42},
+                    {name:'舟山', value: 32},
+                    {name:'宁波', value: 52}
+                ];
+
+                var option = {
+                    tooltip : {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        data:['广州','深圳','珠海','佛山','杭州','舟山','宁波'],
+                        top: 0,
+                        left: 'center'
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            data : [0],
+                            axisTick: {show: false},
+                            axisLabel: {show: false}
+                        },
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : echarts.util.map(data, function (item) {
+                        return {
+                            name: item.name,
+                            type: 'bar',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'bottom',
+                                    formatter: function (param) {
+                                        return param.seriesName;
+                                    }
+                                }
+                            },
+                            data: [item.value]
+                        }
+                    }).concat([{
+                        type: 'custom',
+                        renderItem: renderProvinceName,
+                        data: [0]
+                    }])
+                };
+
+                function renderProvinceName(param, api) {
+                    var currentSeriesIndices = api.currentSeriesIndices();
+                    currentSeriesIndices.pop(); // remove custom series;
+
+                    var barLayout = api.barLayout({
+                        barGap: '30%', barCategoryGap: '20%', count: currentSeriesIndices.length
+                    });
+
+                    var nameTexts = echarts.util.map(currentSeriesIndices, function (serIdx, index) {
+                        var point = api.coord([0, 0]);
+                        point[0] += barLayout[index].offsetCenter;
+                        point[1] = api.getHeight() - 20;
+
+                        return {
+                            position: point,
+                            name: serIdx,
+                            type: 'circle',
+                            shape: {
+                                cx: 0, cy: 0, r: 10
+                            },
+                            style: {
+                                text: serIdx,
+                                fill: '#333',
+                                textFill: '#eee',
+                                stroke: null
+                            }
+                        };
+                    });
+
+                    return {
+                        type: 'group',
+                        diffChildrenByName: true,
+                        children: nameTexts
+                    };
+                }
+
+                testHelper.createChart(echarts, 'diff-children-by-name', option);
             });
         </script>
 

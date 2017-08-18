@@ -264,7 +264,7 @@ define(function (require) {
         }
 
         var visualColor = lineData.getItemVisual(idx, 'color');
-        var visualOpacity = zrUtil.retrieve(
+        var visualOpacity = zrUtil.retrieve3(
             lineData.getItemVisual(idx, 'opacity'),
             lineStyle.opacity,
             1
@@ -311,38 +311,39 @@ define(function (require) {
 
         // label.afterUpdate = lineAfterUpdate;
         if (showLabel) {
-            var textStyleModel = labelModel.getModel('textStyle');
-            label.setStyle({
-                text: zrUtil.retrieve(
+            var labelStyle = graphic.setTextStyle(label.style, labelModel, {
+                text: zrUtil.retrieve2(
                     seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
                     defaultText
-                ),
-                textFont: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor() || defaultLabelColor
-            });
+                )
+            }, {defaultTextColor: defaultLabelColor});
 
-            label.__textAlign = textStyleModel.get('align');
-            label.__verticalAlign = textStyleModel.get('baseline');
-            label.__position = labelModel.get('position');
+            label.__textAlign = labelStyle.textAlign;
+            label.__verticalAlign = labelStyle.textVerticalAlign;
+            label.__position = labelStyle.position;
         }
         else {
-            label.setStyle('text', '');
+            label.setStyle('text', null);
         }
         if (hoverShowLabel) {
-            var textStyleHoverModel = hoverLabelModel.getModel('textStyle');
-
+            // Only these properties supported in this emphasis style here.
             label.hoverStyle = {
-                text: zrUtil.retrieve(
+                text: zrUtil.retrieve2(
                     seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
                     defaultText
                 ),
-                textFont: textStyleHoverModel.getFont(),
-                fill: textStyleHoverModel.getTextColor() || defaultLabelColor
+                textFill: hoverLabelModel.getTextColor(true),
+                // For merging hover style to normal style, do not use
+                // `hoverLabelModel.getFont()` here.
+                fontStyle: hoverLabelModel.getShallow('fontStyle'),
+                fontWeight: hoverLabelModel.getShallow('fontWeight'),
+                fontSize: hoverLabelModel.getShallow('fontSize'),
+                fontFamily: hoverLabelModel.getShallow('fontFamily')
             };
         }
         else {
             label.hoverStyle = {
-                text: ''
+                text: null
             };
         }
 

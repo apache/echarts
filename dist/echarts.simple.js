@@ -1586,9 +1586,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.6.1',
+	        version: '3.6.2',
 	        dependencies: {
-	            zrender: '3.5.1'
+	            zrender: '3.5.2'
 	        }
 	    };
 
@@ -1862,6 +1862,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    echarts.registerCoordinateSystem = function (type, CoordinateSystem) {
 	        CoordinateSystemManager.register(type, CoordinateSystem);
+	    };
+
+	    /**
+	     * Get dimensions of specified coordinate system.
+	     * @param {string} type
+	     * @return {Array.<string|Object>}
+	     */
+	    echarts.getCoordinateSystemDimensions = function (type) {
+	        var coordSysCreator = CoordinateSystemManager.get(type);
+	        if (coordSysCreator) {
+	            return coordSysCreator.getDimensionsInfo
+	                    ? coordSysCreator.getDimensionsInfo()
+	                    : coordSysCreator.dimensions.slice();
+	        }
 	    };
 
 	    /**
@@ -3689,9 +3703,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @param {string} [status='normal'] 'normal' or 'emphasis'
 	         * @param {string} [dataType]
 	         * @param {number} [dimIndex]
+	         * @param {string} [labelProp='label']
 	         * @return {string}
 	         */
-	        getFormattedLabel: function (dataIndex, status, dataType, dimIndex) {
+	        getFormattedLabel: function (dataIndex, status, dataType, dimIndex, labelProp) {
 	            status = status || 'normal';
 	            var data = this.getData(dataType);
 	            var itemModel = data.getItemModel(dataIndex);
@@ -3701,7 +3716,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                params.value = params.value[dimIndex];
 	            }
 
-	            var formatter = itemModel.get(['label', status, 'formatter']);
+	            var formatter = itemModel.get([labelProp || 'label', status, 'formatter']);
 
 	            if (typeof formatter === 'function') {
 	                params.status = status;
@@ -4395,7 +4410,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 7 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * 数值处理模块
@@ -4403,6 +4418,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 
+
+	    var zrUtil = __webpack_require__(4);
 
 	    var number = {};
 
@@ -4582,6 +4599,68 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // toFixed() digits argument must be between 0 and 20.
 	        var precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
 	        return !isFinite(precision) ? 20 : precision;
+	    };
+
+	    /**
+	     * Get a data of given precision, assuring the sum of percentages
+	     * in valueList is 1.
+	     * The largest remainer method is used.
+	     * https://en.wikipedia.org/wiki/Largest_remainder_method
+	     *
+	     * @param {Array.<number>} valueList a list of all data
+	     * @param {number} idx index of the data to be processed in valueList
+	     * @param {number} precision integer number showing digits of precision
+	     * @return {number} percent ranging from 0 to 100
+	     */
+	    number.getPercentWithPrecision = function (valueList, idx, precision) {
+	        if (!valueList[idx]) {
+	            return 0;
+	        }
+
+	        var sum = zrUtil.reduce(valueList, function (acc, val) {
+	            return acc + (isNaN(val) ? 0 : val);
+	        }, 0);
+	        if (sum === 0) {
+	            return 0;
+	        }
+
+	        var digits = Math.pow(10, precision);
+	        var votesPerQuota = zrUtil.map(valueList, function (val) {
+	            return (isNaN(val) ? 0 : val) / sum * digits * 100;
+	        });
+	        var targetSeats = digits * 100;
+
+	        var seats = zrUtil.map(votesPerQuota, function (votes) {
+	            // Assign automatic seats.
+	            return Math.floor(votes);
+	        });
+	        var currentSum = zrUtil.reduce(seats, function (acc, val) {
+	            return acc + val;
+	        }, 0);
+
+	        var remainder = zrUtil.map(votesPerQuota, function (votes, idx) {
+	            return votes - seats[idx];
+	        });
+
+	        // Has remainding votes.
+	        while (currentSum < targetSeats) {
+	            // Find next largest remainder.
+	            var max = Number.NEGATIVE_INFINITY;
+	            var maxId = null;
+	            for (var i = 0, len = remainder.length; i < len; ++i) {
+	                if (remainder[i] > max) {
+	                    max = remainder[i];
+	                    maxId = i;
+	                }
+	            }
+
+	            // Add a vote to max remainder.
+	            ++seats[maxId];
+	            remainder[maxId] = 0;
+	            ++currentSum;
+	        }
+
+	        return seats[idx] / digits;
 	    };
 
 	    // Number.MAX_SAFE_INTEGER, ie do not support.
@@ -5839,7 +5918,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * @param {string|Array.<string>} path
+	         * @param {string|Array.<string>} [path]
 	         * @param {module:echarts/model/Model} [parentModel]
 	         * @return {module:echarts/model/Model}
 	         */
@@ -5923,6 +6002,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return obj;
 	    }
 
+	    // `path` can be null/undefined
 	    function getParent(model, path) {
 	        var getParentMethod = clazzUtil.get(model, 'getParent');
 	        return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;
@@ -7565,7 +7645,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            // Draw rect text
 	            if (style.text != null) {
-	                // var rect = this.getBoundingRect();
 	                this.drawRectText(ctx, this.getBoundingRect());
 	            }
 	        },
@@ -8207,6 +8286,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @default 'inside'
 	         */
 	        textPosition: 'inside',
+
+	        /**
+	         * If not specified, use the boundingRect of a `displayable`.
+	         * @type {Object}
+	         */
+	        textPositionRect: null,
 
 	        /**
 	         * [x, y]
@@ -11532,6 +11617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var font = style.textFont || style.font;
 	            var baseline = style.textBaseline;
 	            var verticalAlign = style.textVerticalAlign;
+	            rect = style.textPositionRect || rect;
 
 	            textRect = textRect || textContain.getBoundingRect(text, font, align, baseline);
 
@@ -11616,7 +11702,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            for (var i = 0; i < textLines.length; i++) {
-	                    // Fill after stroke so the outline will not cover the main part.
+	                // Fill after stroke so the outline will not cover the main part.
 	                textStroke && ctx.strokeText(textLines[i], x, y);
 	                textFill && ctx.fillText(textLines[i], x, y);
 	                y += textRect.lineHeight;
@@ -17471,7 +17557,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            function formatArrayValue(value) {
 	                var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
 	                    var dimItem = data.getDimensionInfo(idx);
-	                    return vertially |= dimItem.tooltip !== false && dimItem.tooltipName != null;
+	                    return vertially |= dimItem && dimItem.tooltip !== false && dimItem.tooltipName != null;
 	                }, 0);
 
 	                var result = [];
@@ -17989,7 +18075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.5.1';
+	    zrender.version = '3.5.2';
 
 	    /**
 	     * Initializing a zrender instance
@@ -24557,6 +24643,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Dropped auto calculated niceExtent and use user setted extent
 	            // We assume user wan't to set both interval, min, max to get a better result
 	            this._niceExtent = this._extent.slice();
+
+	            this._intervalPrecision = helper.getIntervalPrecision(interval);
 	        },
 
 	        /**
@@ -24731,7 +24819,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            interval = result.interval = minInterval;
 	        }
 	        // Tow more digital for tick.
-	        var precision = result.intervalPrecision = numberUtil.getPrecisionSafe(interval) + 2;
+	        var precision = result.intervalPrecision = helper.getIntervalPrecision(interval);
 	        // Niced extent inside original extent
 	        var niceTickExtent = result.niceTickExtent = [
 	            roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
@@ -24741,6 +24829,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        helper.fixExtent(niceTickExtent, extent);
 
 	        return result;
+	    };
+
+	    /**
+	     * @param {number} interval
+	     * @return {number} interval precision
+	     */
+	    helper.getIntervalPrecision = function (interval) {
+	        // Tow more digital for tick.
+	        return numberUtil.getPrecisionSafe(interval) + 2;
 	    };
 
 	    function clamp(niceTickExtent, idx, extent) {
@@ -25695,7 +25792,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (resultDimIdx != null && resultDimIdx < dimCount) {
 	                    dataDims[coordDimIndex] = resultDimIdx;
 	                    applyDim(result[resultDimIdx], coordDim, coordDimIndex);
-	                    // coordDim === 'value' && valueCandidate == null && (valueCandidate = resultDimIdx);
 	                }
 	            });
 	        });
@@ -25735,7 +25831,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            each(dataDims, function (resultDimIdx, coordDimIndex) {
 	                var resultItem = result[resultDimIdx];
 	                applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
-	                // coordDim === 'value' && valueCandidate == null && (valueCandidate = resultDimIdx);
 	                if (resultItem.name == null && sysDimItemDimsDef) {
 	                    resultItem.name = resultItem.tooltipName = sysDimItemDimsDef[coordDimIndex];
 	                }
@@ -25758,14 +25853,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            );
 
 	            resultItem.name == null && (resultItem.name = genName(
-	                // Ensure At least one value dim.
-	                // (dataDimNameMap.get('value') == null
-	                //     && (valueCandidate == null || valueCandidate === resultDimIdx)
-	                //     // Try to set as 'value' only if coordDim is not set as 'extra'.
-	                //     && coordDim == null
-	                // )
-	                // ? 'value'
-	                // :
 	                resultItem.coordDim,
 	                dataDimNameMap
 	            ));
@@ -26365,6 +26452,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            // If clip the overflow value
 	            clipOverflow: true,
+	            // cursor: null,
 
 	            label: {
 	                normal: {
@@ -27177,7 +27265,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            hoverAnimation: seriesModel.get('hoverAnimation'),
 
 	            labelModel: seriesModel.getModel('label.normal'),
-	            hoverLabelModel: seriesModel.getModel('label.emphasis')
+	            hoverLabelModel: seriesModel.getModel('label.emphasis'),
+	            cursorStyle: seriesModel.get('cursor')
 	        };
 
 	        data.diff(oldData)
@@ -27439,6 +27528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var labelModel = seriesScope && seriesScope.labelModel;
 	        var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
 	        var hoverAnimation = seriesScope && seriesScope.hoverAnimation;
+	        var cursorStyle = seriesScope && seriesScope.cursorStyle;
 
 	        if (!seriesScope || data.hasItemOption) {
 	            var itemModel = data.getItemModel(idx);
@@ -27454,6 +27544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            labelModel = itemModel.getModel(normalLabelAccessPath);
 	            hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
 	            hoverAnimation = itemModel.getShallow('hoverAnimation');
+	            cursorStyle = itemModel.getShallow('cursor');
 	        }
 	        else {
 	            hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
@@ -27469,6 +27560,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                numberUtil.parsePercent(symbolOffset[1], symbolSize[1])
 	            ]);
 	        }
+
+	        cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
 	        // PENDING setColor before setStyle!!!
 	        symbolPath.setColor(color);
@@ -30813,10 +30906,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Notice this case: this coordSys is `cartesian2D` but not `grid`.
 	            var coordSys = seriesModel.coordinateSystem;
 	            var seriesTooltipTrigger = seriesModel.get('tooltip.trigger', true);
+	            var seriesTooltipShow = seriesModel.get('tooltip.show', true);
 	            if (!coordSys
 	                || seriesTooltipTrigger === 'none'
 	                || seriesTooltipTrigger === false
 	                || seriesTooltipTrigger === 'item'
+	                || seriesTooltipShow === false
 	                || seriesModel.get('axisPointer.show', true) === false
 	            ) {
 	                return;
@@ -31120,6 +31215,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            barMinHeight: 0,
 	            // 最小角度为0，仅对极坐标系下的柱状图有效
 	            barMinAngle: 0,
+	            // cursor: null,
 
 	            // barMaxWidth: null,
 	            // 默认自适应
@@ -31388,7 +31484,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var itemStyleModel = itemModel.getModel('itemStyle.normal');
 	        var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
 
-	        if (!isPolar && isHorizontal) {
+	        if (!isPolar) {
 	            el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
 	        }
 
@@ -31399,6 +31495,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            itemStyleModel.getBarItemStyle()
 	        ));
+
+	        var cursorStyle = itemModel.getShallow('cursor');
+	        cursorStyle && el.attr('cursor', cursorStyle);
 
 	        var labelPositionOutside = isHorizontal
 	            ? (layout.height > 0 ? 'bottom' : 'top')
@@ -31883,6 +31982,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var List = __webpack_require__(98);
 	    var zrUtil = __webpack_require__(4);
 	    var modelUtil = __webpack_require__(5);
+	    var numberUtil = __webpack_require__(7);
 	    var completeDimensions = __webpack_require__(110);
 
 	    var dataSelectableMixin = __webpack_require__(148);
@@ -31923,11 +32023,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        getDataParams: function (dataIndex) {
 	            var data = this.getData();
 	            var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
-	            var sum = data.getSum('value');
 	            // FIXME toFixed?
-	            //
-	            // Percent is 0 if sum is 0
-	            params.percent = !sum ? 0 : +(data.get('value', dataIndex) / sum * 100).toFixed(2);
+
+	            var valueList = [];
+	            data.each('value', function (value) {
+	                valueList.push(value);
+	            });
+
+	            params.percent = numberUtil.getPercentWithPrecision(
+	                valueList,
+	                dataIndex,
+	                data.hostModel.get('percentPrecision')
+	            );
 
 	            params.$vars.push('percent');
 	            return params;
@@ -31970,8 +32077,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
 	            // roseType: null,
 
+	            percentPrecision: 2,
+
 	            // If still show when all data zero.
 	            stillShowZeroSum: true,
+
+	            // cursor: null,
 
 	            label: {
 	                normal: {
@@ -32262,6 +32373,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            )
 	        );
 	        sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+
+	        var cursorStyle = itemModel.getShallow('cursor');
+	        cursorStyle && sector.attr('cursor', cursorStyle);
 
 	        // Toggle selected
 	        toggleItemSelected(

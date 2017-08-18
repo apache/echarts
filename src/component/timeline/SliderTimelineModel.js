@@ -45,15 +45,13 @@ define(function(require) {
                     interval: 'auto',
                     rotate: 0,
                     // formatter: null,
-                    textStyle: {                // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                        color: '#304654'
-                    }
+                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#304654'
                 },
                 emphasis: {
                     show: true,
-                    textStyle: {                // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                        color: '#c23531'
-                    }
+                    // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                    color: '#c23531'
                 }
             },
             itemStyle: {

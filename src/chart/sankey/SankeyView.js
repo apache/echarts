@@ -117,9 +117,7 @@ define(function (require) {
                 var layout = node.getLayout();
                 var itemModel = node.getModel();
                 var labelModel = itemModel.getModel('label.normal');
-                var textStyleModel = labelModel.getModel('textStyle');
                 var labelHoverModel = itemModel.getModel('label.emphasis');
-                var textStyleHoverModel = labelHoverModel.getModel('textStyle');
 
                 var rect = new graphic.Rect({
                     shape: {
@@ -128,36 +126,27 @@ define(function (require) {
                         width: node.getLayout().dx,
                         height: node.getLayout().dy
                     },
-                    style: {
-                        // Get formatted label in label.normal option
-                        //  Use node id if it is not specified
-                        text: labelModel.get('show')
-                            ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
-                            // Use empty string to hide the label
-                            : '',
-                        textFont: textStyleModel.getFont(),
-                        textFill: textStyleModel.getTextColor(),
-                        textPosition: labelModel.get('position')
-                    }
+                    style: itemModel.getModel('itemStyle.normal').getItemStyle()
                 });
 
-                rect.setStyle(zrUtil.defaults(
-                    {
-                        fill: node.getVisual('color')
-                    },
-                    itemModel.getModel('itemStyle.normal').getItemStyle()
-                ));
+                graphic.setTextStyle(rect.style, labelModel, {
+                    // Get formatted label in label.normal option
+                    //  Use node id if it is not specified
+                    text: labelModel.get('show')
+                        ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
+                        // Use empty string to hide the label
+                        : null
+                }, {isRectText: true});
 
+                rect.setStyle('fill', node.getVisual('color'));
+
+                var hoverStyle = node.getModel('itemStyle.emphasis').getItemStyle();
                 graphic.setHoverStyle(rect, zrUtil.extend(
-                    node.getModel('itemStyle.emphasis'),
-                    {
+                    graphic.setTextStyle(hoverStyle, labelHoverModel, {
                         text: labelHoverModel.get('show')
-                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id
-                            : '',
-                        textFont: textStyleHoverModel.getFont(),
-                        textFill: textStyleHoverModel.getTextColor(),
-                        textPosition: labelHoverModel.get('position')
-                    }
+                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis')
+                            : null
+                    }, {isRectText: true, forMerge: true})
                 ));
 
                 group.add(rect);

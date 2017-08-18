@@ -219,10 +219,10 @@ define(function (require) {
             // the sibling of canvas root. So padding of ec container
             // should be considered here.
             var zr = this._zr;
-            var viewportRoot;
-            if (zr && zr.painter && (viewportRoot = zr.painter.getViewportRoot())) {
-                x += viewportRoot.offsetLeft || 0;
-                y += viewportRoot.offsetTop || 0;
+            var viewportRootOffset;
+            if (zr && zr.painter && (viewportRootOffset = zr.painter.getViewportRootOffset())) {
+                x += viewportRootOffset.offsetLeft;
+                y += viewportRootOffset.offsetTop;
             }
 
             var style = this.el.style;

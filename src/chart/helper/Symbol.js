@@ -178,6 +178,7 @@ define(function (require) {
         var labelModel = seriesScope && seriesScope.labelModel;
         var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
         var hoverAnimation = seriesScope && seriesScope.hoverAnimation;
+        var cursorStyle = seriesScope && seriesScope.cursorStyle;
 
         if (!seriesScope || data.hasItemOption) {
             var itemModel = seriesScope.itemModel ? seriesScope.itemModel : data.getItemModel(idx);
@@ -193,6 +194,7 @@ define(function (require) {
             labelModel = itemModel.getModel(normalLabelAccessPath);
             hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
             hoverAnimation = itemModel.getShallow('hoverAnimation');
+            cursorStyle = itemModel.getShallow('cursor');
         }
         else {
             hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
@@ -208,6 +210,8 @@ define(function (require) {
                 numberUtil.parsePercent(symbolOffset[1], symbolSize[1])
             ]);
         }
+
+        cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
         // PENDING setColor before setStyle!!!
         symbolPath.setColor(color, seriesScope.symbolInnerColor);
@@ -228,6 +232,21 @@ define(function (require) {
         labelHelper.setTextToStyle(
             data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color
         );
+
+        if (valueDim != null) {
+            graphic.setText(elStyle, labelModel, color);
+            elStyle.text = labelModel.getShallow('show')
+                ? zrUtil.retrieve2(
+                    seriesModel.getFormattedLabel(idx, 'normal'),
+                    data.get(valueDim, idx)
+                )
+                : null;
+
+            graphic.setText(hoverItemStyle, hoverLabelModel, false);
+            hoverItemStyle.text = hoverLabelModel.getShallow('show')
+                ? seriesModel.getFormattedLabel(idx, 'emphasis')
+                : null;
+        }
 
         symbolPath.off('mouseover')
             .off('mouseout')
@@ -267,7 +286,7 @@ define(function (require) {
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
-        symbolPath.style.text = '';
+        symbolPath.style.text = null;
         graphic.updateProps(symbolPath, {
             scale: [0, 0]
         }, this._seriesModel, this.dataIndex, cb);

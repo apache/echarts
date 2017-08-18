@@ -83,6 +83,14 @@
                         {
                             name: 'a',
                             value: 10,
+                            label: {
+                                normal: {
+                                    formatter: function (params) {
+                                        console.log(params);
+                                        return 'from label formatter';
+                                    }
+                                }
+                            },
                             children: [
                                 {
                                     name: 'a1',

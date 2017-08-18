@@ -100,7 +100,7 @@
                 if (totalWidth > availableSize.width) {
                     totalWidth -= itemWidth - emptyItemWidth;
                     itemWidth = emptyItemWidth;
-                    text = '';
+                    text = null;
                 }
 
                 var el = new graphic.Polygon({

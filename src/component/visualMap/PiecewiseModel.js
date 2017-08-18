@@ -367,7 +367,7 @@ define(function(require) {
         splitNumber: function () {
             var thisOption = this.option;
             var pieceList = this._pieceList;
-            var precision = thisOption.precision;
+            var precision = Math.min(thisOption.precision, 20);
             var dataExtent = this.getExtent();
             var splitNumber = thisOption.splitNumber;
             splitNumber = Math.max(parseInt(splitNumber, 10), 1);

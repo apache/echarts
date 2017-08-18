@@ -57,7 +57,8 @@ define(function(require) {
             minSpan: null,          // 0 ~ 100
             maxSpan: null,          // 0 ~ 100
             minValueSpan: null,     // The range of dataZoom can not be smaller than that.
-            maxValueSpan: null      // The range of dataZoom can not be larger than that.
+            maxValueSpan: null,     // The range of dataZoom can not be larger than that.
+            rangeMode: null         // Array, can be 'value' or 'percent'.
         },
 
         /**
@@ -514,6 +515,7 @@ define(function(require) {
         getRangePropMode: function () {
             return this._rangePropMode.slice();
         }
+
     });
 
     function retrieveRaw(option) {
@@ -528,13 +530,23 @@ define(function(require) {
     }
 
     function updateRangeUse(dataZoomModel, rawOption) {
+        var rangePropMode = dataZoomModel._rangePropMode;
+        var rangeModeInOption = dataZoomModel.get('rangeMode');
+
         each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
-            var rangePropMode = dataZoomModel._rangePropMode;
-            if (rawOption[names[0]] != null) {
+            var percentSpecified = rawOption[names[0]] != null;
+            var valueSpecified = rawOption[names[1]] != null;
+            if (percentSpecified && !valueSpecified) {
                 rangePropMode[index] = 'percent';
             }
-            else if (rawOption[names[1]] != null) {
+            else if (!percentSpecified && valueSpecified) {
                 rangePropMode[index] = 'value';
+            }
+            else if (rangeModeInOption) {
+                rangePropMode[index] = rangeModeInOption[index];
+            }
+            else if (percentSpecified) { // percentSpecified && valueSpecified
+                rangePropMode[index] = 'percent';
             }
             // else remain its original setting.
         });

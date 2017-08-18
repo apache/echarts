@@ -79,4 +79,5 @@ define(function(require) {
         'legendUnSelect', 'legendunselected',
         zrUtil.curry(legendSelectActionHandler, 'unSelect')
     );
+
 });

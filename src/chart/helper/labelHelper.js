@@ -4,7 +4,6 @@
 define(function (require) {
 
     var graphic = require('../../util/graphic');
-    var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
 
     var helper = {};

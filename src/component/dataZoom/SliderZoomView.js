@@ -428,7 +428,7 @@ define(function (require) {
 
             barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
-                cursor: 'move',
+                cursor: getCursor(this._orient),
                 drift: bind(this._onDragMove, this, 'all'),
                 onmousemove: function (e) {
                     // Fot mobile devicem, prevent screen slider on the button.
@@ -461,38 +461,23 @@ define(function (require) {
                 }
             })));
 
-            var iconStr = dataZoomModel.get('handleIcon');
             each([0, 1], function (handleIndex) {
-                var iconOpt = {
-                    style: {
-                        strokeNoScale: true
+                var path = graphic.createIcon(
+                    dataZoomModel.get('handleIcon'),
+                    {
+                        cursor: getCursor(this._orient),
+                        draggable: true,
+                        drift: bind(this._onDragMove, this, handleIndex),
+                        onmousemove: function (e) {
+                            // Fot mobile devicem, prevent screen slider on the button.
+                            eventTool.stop(e.event);
+                        },
+                        ondragend: bind(this._onDragEnd, this),
+                        onmouseover: bind(this._showDataInfo, this, true),
+                        onmouseout: bind(this._showDataInfo, this, false)
                     },
-                    rectHover: true,
-                    cursor: this._orient === 'vertical' ? 'ns-resize' : 'ew-resize',
-                    draggable: true,
-                    drift: bind(this._onDragMove, this, handleIndex),
-                    onmousemove: function (e) {
-                        // Fot mobile devicem, prevent screen slider on the button.
-                        eventTool.stop(e.event);
-                    },
-                    ondragend: bind(this._onDragEnd, this),
-                    onmouseover: bind(this._showDataInfo, this, true),
-                    onmouseout: bind(this._showDataInfo, this, false)
-                };
-                var iconStyle = {x: -1, y: 0, width: 2, height: 2};
-
-                var path = iconStr.indexOf('image://') === 0
-                    ? (
-                        iconStyle.image = iconStr.slice(8),
-                        iconOpt.style = iconStyle,
-                        new graphic.Image(iconOpt)
-                    )
-                    : graphic.makePath(
-                        iconStr.replace('path://', ''),
-                        iconOpt,
-                        iconStyle,
-                        'center'
-                    );
+                    {x: -1, y: 0, width: 2, height: 2}
+                );
 
                 var bRect = path.getBoundingRect();
                 this._handleHeight = numberUtil.parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
@@ -517,7 +502,7 @@ define(function (require) {
                         x: 0, y: 0, text: '',
                         textVerticalAlign: 'middle',
                         textAlign: 'center',
-                        fill: textStyleModel.getTextColor(),
+                        textFill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
                     },
                     z2: 10
@@ -795,6 +780,10 @@ define(function (require) {
         // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
         var map = {x: 'y', y: 'x', radius: 'angle', angle: 'radius'};
         return map[thisDim];
+    }
+
+    function getCursor(orient) {
+        return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
     }
 
     return SliderZoomView;

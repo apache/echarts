@@ -83,11 +83,34 @@ define(function(require) {
             label: {
                 normal: {
                     show: true,
+                    // Do not use textDistance, for ellipsis rect just the same as treemap node rect.
+                    distance: 0,
+                    padding: 5,
                     position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
-                    textStyle: {
-                        color: '#fff',
-                        ellipsis: true
-                    }
+                    // formatter: null,
+                    color: '#fff',
+                    ellipsis: true
+                    // align
+                    // verticalAlign
+                }
+            },
+            upperLabel: {                   // Label when node is parent.
+                normal: {
+                    show: false,
+                    position: [0, '50%'],
+                    height: 20,
+                    // formatter: null,
+                    color: '#fff',
+                    ellipsis: true,
+                    // align: null,
+                    verticalAlign: 'middle'
+                },
+                emphasis: {
+                    show: true,
+                    position: [0, '50%'],
+                    color: '#fff',
+                    ellipsis: true,
+                    verticalAlign: 'middle'
                 }
             },
             itemStyle: {
@@ -146,11 +169,8 @@ define(function(require) {
          * @override
          */
         getInitialData: function (option, ecModel) {
-            var rootName = option.name;
-            rootName == null && (rootName = option.name);
-
             // Create a virtual root.
-            var root = {name: rootName, children: option.data};
+            var root = {name: option.name, children: option.data};
 
             completeTreeValue(root);
 

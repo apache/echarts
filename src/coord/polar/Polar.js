@@ -165,19 +165,6 @@ define(function(require) {
         },
 
         /**
-         * Convert series data to a list of (x, y) points
-         * @param {module:echarts/data/List} data
-         * @return {Array}
-         *  Return list of coordinates. For example:
-         *  `[[10, 10], [20, 20], [30, 30]]`
-         */
-        dataToPoints: function (data) {
-            return data.mapArray(this.dimensions, function (radius, angle) {
-                return this.dataToPoint([radius, angle]);
-            }, true, this);
-        },
-
-        /**
          * Convert a single data item to (x, y) point.
          * Parameter data is an array which the first element is radius and the second is angle
          * @param {Array.<number>} data

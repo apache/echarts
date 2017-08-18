@@ -113,6 +113,7 @@
                             type: 'scatter',
                             coordinateSystem: 'calendar',
                             data: data,
+                            cursor: 'default',
                             symbolSize: function (val) {
                                 return val[1] / 500;
                             },
@@ -126,6 +127,7 @@
                             name: 'Top 12',
                             type: 'effectScatter',
                             coordinateSystem: 'calendar',
+                            cursor: 'default',
                             data: data.sort(function (a, b) {
                                 return b[1] - a[1];
                             }).slice(0, 12),

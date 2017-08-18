@@ -324,6 +324,55 @@ describe('util/number', function () {
         });
     });
 
+    describe('getPercentWithPrecision', function () {
+        testCase('basic', function (numberUtil) {
+
+            // console.log(numberUtil.getPercentWithPrecision([-1.678, -4.783, -2.664, -0.875], 0, 2));
+
+            // var arr = [49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5, 49.5];
+            var arr = [49.5, NaN];
+            var result = [];
+            for (var i = 0; i < arr.length; i++) {
+                result.push(
+                    numberUtil.getPercentWithPrecision(arr, i, 0)
+                );
+            }
+            console.log(result);
+            var sum = 0;
+            for (var i = 0; i < result.length; i++) {
+                sum += result[i];
+            }
+            console.log(sum);
+
+            expect(numberUtil.getPercentWithPrecision([50.5, 49.5], 0, 0)).toEqual(51);
+            expect(numberUtil.getPercentWithPrecision([50.5, 49.5], 1, 0)).toEqual(49);
+
+            expect(numberUtil.getPercentWithPrecision([12.34, 34.56, 53.1], 0, 1)).toEqual(12.3);
+            expect(numberUtil.getPercentWithPrecision([12.34, 34.56, 53.1], 1, 1)).toEqual(34.6);
+            expect(numberUtil.getPercentWithPrecision([12.34, 34.56, 53.1], 2, 1)).toEqual(53.1);
+
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 0, 0)).toEqual(17);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 1, 0)).toEqual(48);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 2, 0)).toEqual(26);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875], 3, 0)).toEqual(9);
+        });
+
+        testCase('NaN data', function (numberUtil) {
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 0, 0)).toEqual(17);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 1, 0)).toEqual(48);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 2, 0)).toEqual(26);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 3, 0)).toEqual(9);
+            expect(numberUtil.getPercentWithPrecision([1.678, 4.783, 2.664, 0.875, '-'], 4, 0)).toEqual(0);
+
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 0, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 1, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 2, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 3, 0)).toEqual(0);
+            expect(numberUtil.getPercentWithPrecision([0, undefined, '-', null, NaN], 4, 0)).toEqual(0);
+        });
+    });
+
+
     describe('nice', function () {
         testCase('extreme', function (numberUtil) {
             // Should not be 0.30000000000000004

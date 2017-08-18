@@ -26,15 +26,18 @@ define(function (require) {
                 if (symbolType === 'none') {
                     return;
                 }
+                var symbolSize = normalizeSymbolSize(
+                    data.getItemVisual(idx, 'symbolSize')
+                );
                 var symbolPath = symbolUtil.createSymbol(
-                    symbolType, -0.5, -0.5, 1, 1, color
+                    symbolType, -1, -1, 2, 2, color
                 );
                 symbolPath.attr({
                     style: {
                         strokeNoScale: true
                     },
                     z2: 100,
-                    scale: normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'))
+                    scale: [symbolSize[0] / 2, symbolSize[1] / 2]
                 });
                 return symbolPath;
             }
@@ -174,21 +177,22 @@ define(function (require) {
                     var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
                     graphic.setText(symbolPath.style, labelModel, color);
                     symbolPath.setStyle({
-                        text: labelModel.get('show') ? zrUtil.retrieve(
-                            seriesModel.getFormattedLabel(
-                                idx, 'normal', null, symbolPath.__dimIdx
-                            ),
-                            defaultText
-                        ) : ''
+                        text: labelModel.get('show')
+                            ? zrUtil.retrieve(
+                                seriesModel.getFormattedLabel(
+                                    idx, 'normal', null, symbolPath.__dimIdx
+                                ),
+                                defaultText
+                            )
+                            : null
                     });
 
-                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, color);
-                    symbolPath.hoverStyle.text = labelHoverModel.get('show') ? zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(
+                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, true);
+                    symbolPath.hoverStyle.text = labelHoverModel.get('show')
+                        ? seriesModel.getFormattedLabel(
                             idx, 'emphasis', null, symbolPath.__dimIdx
-                        ),
-                        defaultText
-                    ) : '';
+                        )
+                        : null;
                 });
 
                 function onEmphasis() {

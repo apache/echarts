@@ -120,7 +120,7 @@ define(function (require) {
 
     /**
      * @param {module:echarts/model/Global}
-     * @return {string}
+     * @return {Object}
      * @inner
      */
     function getContentFromModel(ecModel) {
@@ -157,7 +157,7 @@ define(function (require) {
     var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
     /**
      * @param {string} tsv
-     * @return {Array.<Object>}
+     * @return {Object}
      */
     function parseTSVContents(tsv) {
         var tsvLines = tsv.split(/\n+/g);

@@ -14,9 +14,10 @@ define(function (require) {
      *                                Should be extent[0] < extent[1].
      * @param {number} splitNumber splitNumber should be >= 1.
      * @param {number} [minInterval]
+     * @param {number} [maxInterval]
      * @return {Object} {interval, intervalPrecision, niceTickExtent}
      */
-    helper.intervalScaleNiceTicks = function (extent, splitNumber, minInterval) {
+    helper.intervalScaleNiceTicks = function (extent, splitNumber, minInterval, maxInterval) {
         var result = {};
         var span = extent[1] - extent[0];
 
@@ -24,8 +25,11 @@ define(function (require) {
         if (minInterval != null && interval < minInterval) {
             interval = result.interval = minInterval;
         }
+        if (maxInterval != null && interval > maxInterval) {
+            interval = result.interval = maxInterval;
+        }
         // Tow more digital for tick.
-        var precision = result.intervalPrecision = numberUtil.getPrecisionSafe(interval) + 2;
+        var precision = result.intervalPrecision = helper.getIntervalPrecision(interval);
         // Niced extent inside original extent
         var niceTickExtent = result.niceTickExtent = [
             roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
@@ -35,6 +39,15 @@ define(function (require) {
         helper.fixExtent(niceTickExtent, extent);
 
         return result;
+    };
+
+    /**
+     * @param {number} interval
+     * @return {number} interval precision
+     */
+    helper.getIntervalPrecision = function (interval) {
+        // Tow more digital for tick.
+        return numberUtil.getPrecisionSafe(interval) + 2;
     };
 
     function clamp(niceTickExtent, idx, extent) {

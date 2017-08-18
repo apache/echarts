@@ -13,7 +13,8 @@ define(function (require) {
     var geoFixFuncs = [
         require('./fix/nanhai'),
         require('./fix/textCoord'),
-        require('./fix/geoCoord')
+        require('./fix/geoCoord'),
+        require('./fix/diaoyuIsland')
     ];
 
     /**
@@ -189,23 +190,6 @@ define(function (require) {
             }
             // FIXME Always return new ?
             return (this._rect = rect || new BoundingRect(0, 0, 0, 0));
-        },
-
-        /**
-         * Convert series data to a list of points
-         * @param {module:echarts/data/List} data
-         * @param {boolean} stack
-         * @return {Array}
-         *  Return list of points. For example:
-         *  `[[10, 10], [20, 20], [30, 30]]`
-         */
-        dataToPoints: function (data) {
-            var item = [];
-            return data.mapArray(['lng', 'lat'], function (lon, lat) {
-                item[0] = lon;
-                item[1] = lat;
-                return this.dataToPoint(item);
-            }, this);
         },
 
         /**

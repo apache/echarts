@@ -74,7 +74,7 @@ define(function(require) {
                             textVerticalAlign: 'middle',
                             textAlign: itemAlign,
                             textFont: textFont,
-                            fill: textFill,
+                            textFill: textFill,
                             opacity: visualState === 'outOfRange' ? 0.5 : 1
                         }
                     }));
@@ -144,7 +144,7 @@ define(function(require) {
                     textAlign: showLabel ? itemAlign : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             }));
 

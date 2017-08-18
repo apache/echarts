@@ -29,9 +29,7 @@ define(function(require) {
      *         normal: {
      *             show: false,
      *             position: 'outside',
-     *             textStyle: {
-     *                 fontSize: 18
-     *             }
+     *             fontSize: 18
      *         },
      *         emphasis: {
      *             show: true
@@ -46,16 +44,32 @@ define(function(require) {
             var normalOpt = opt.normal = opt.normal || {};
 
             // Default emphasis option from normal
-            each(subOpts, function (subOptName) {
-                var val = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
-                if (val != null) {
-                    emphasisOpt[subOptName] = val;
+            for (var i = 0, len = subOpts.length; i < len; i++) {
+                var subOptName = subOpts[i];
+                if (!emphasisOpt.hasOwnProperty(subOptName)
+                    && normalOpt.hasOwnProperty(subOptName)
+                ) {
+                    emphasisOpt[subOptName] = normalOpt[subOptName];
                 }
-            });
+            }
         }
     };
 
-    modelUtil.LABEL_OPTIONS = ['position', 'offset', 'show', 'textStyle', 'distance', 'formatter'];
+    modelUtil.TEXT_STYLE_OPTIONS = [
+        'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+        'rich', 'tag', 'color', 'textBorderColor', 'textBorderWidth',
+        'width', 'height', 'lineHeight', 'align', 'verticalAlign', 'baseline',
+        'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY',
+        'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY',
+        'backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'padding'
+    ];
+
+    // modelUtil.LABEL_OPTIONS = modelUtil.TEXT_STYLE_OPTIONS.concat([
+    //     'position', 'offset', 'rotate', 'origin', 'show', 'distance', 'formatter',
+    //     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+    //     // FIXME: deprecated, check and remove it.
+    //     'textStyle'
+    // ]);
 
     /**
      * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
@@ -173,9 +187,10 @@ define(function(require) {
          * @param {string} [status='normal'] 'normal' or 'emphasis'
          * @param {string} [dataType]
          * @param {number} [dimIndex]
+         * @param {string} [labelProp='label']
          * @return {string}
          */
-        getFormattedLabel: function (dataIndex, status, dataType, dimIndex) {
+        getFormattedLabel: function (dataIndex, status, dataType, dimIndex, labelProp) {
             status = status || 'normal';
             var data = this.getData(dataType);
             var itemModel = data.getItemModel(dataIndex);
@@ -185,7 +200,7 @@ define(function(require) {
                 params.value = params.value[dimIndex];
             }
 
-            var formatter = itemModel.get(['label', status, 'formatter']);
+            var formatter = itemModel.get([labelProp || 'label', status, 'formatter']);
 
             if (typeof formatter === 'function') {
                 params.status = status;

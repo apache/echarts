@@ -39,6 +39,7 @@ define(function (require) {
             // 默认显示，属性show控制显示与否
             show: true,
             onZero: true,
+            onZeroAxisIndex: null,
             // 属性lineStyle控制线条样式
             lineStyle: {
                 color: '#333',
@@ -70,9 +71,7 @@ define(function (require) {
             margin: 8,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            textStyle: {
-                fontSize: 12
-            }
+            fontSize: 12
         },
         // 分隔线
         splitLine: {
@@ -134,6 +133,7 @@ define(function (require) {
         splitNumber: 5
         // Minimum interval
         // minInterval: null
+        // maxInterval: null
     }, defaultOption);
 
     // FIXME

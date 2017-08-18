@@ -268,15 +268,20 @@ define(function(require) {
             var isInit;
             if (!this._handle) {
                 isInit = true;
-                handle = this._handle = createIcon(handleModel, {
-                    onmousemove: function (e) {
-                        // Fot mobile devicem, prevent screen slider on the button.
-                        eventTool.stop(e.event);
-                    },
-                    onmousedown: bind(this._onHandleDragMove, this, 0, 0),
-                    drift: bind(this._onHandleDragMove, this),
-                    ondragend: bind(this._onHandleDragEnd, this)
-                });
+                handle = this._handle = graphic.createIcon(
+                    handleModel.get('icon'), 
+                    {
+                        cursor: 'move',
+                        draggable: true,
+                        onmousemove: function (e) {
+                            // Fot mobile devicem, prevent screen slider on the button.
+                            eventTool.stop(e.event);
+                        },
+                        onmousedown: bind(this._onHandleDragMove, this, 0, 0),
+                        drift: bind(this._onHandleDragMove, this),
+                        ondragend: bind(this._onHandleDragEnd, this)
+                    }
+                );
                 zr.add(handle);
             }
 
@@ -476,7 +481,7 @@ define(function(require) {
         if (zrUtil.isObject(lastProps) && zrUtil.isObject(newProps)) {
             var equals = true;
             zrUtil.each(newProps, function (item, key) {
-                equals &= propsEqual(lastProps[key], item);
+                equals = equals && propsEqual(lastProps[key], item);
             });
             return !!equals;
         }
@@ -494,34 +499,6 @@ define(function(require) {
             position: trans.position.slice(),
             rotation: trans.rotation || 0
         };
-    }
-
-    function createIcon(handleModel, handlers) {
-        var iconStr = handleModel.get('icon');
-        var style = {
-            x: -1, y: -1, width: 2, height: 2
-        };
-        var opt = zrUtil.extend({
-            style: {
-                strokeNoScale: true
-            },
-            rectHover: true,
-            cursor: 'move',
-            draggable: true
-        }, handlers);
-
-        return iconStr.indexOf('image://') === 0
-            ? (
-                style.image = iconStr.slice(8),
-                opt.style = style,
-                new graphic.Image(opt)
-            )
-            : graphic.makePath(
-                iconStr.replace('path://', ''),
-                opt,
-                style,
-                'center'
-            );
     }
 
     function updateMandatoryProps(group, axisPointerModel, silent) {

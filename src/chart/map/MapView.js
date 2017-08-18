@@ -2,6 +2,7 @@ define(function (require) {
 
     // var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
+    var zrUtil = require('zrender/core/util');
 
     var MapDraw = require('../../component/helper/MapDraw');
 
@@ -98,42 +99,50 @@ define(function (require) {
                         r: 3
                     },
                     silent: true,
-                    z2: 10
+                    // Do not overlap the first series, on which labels are displayed.
+                    z2: !offset ? 10 : 8
                 });
 
                 // First data on the same region
                 if (!offset) {
                     var fullData = mapModel.mainSeries.getData();
                     var name = originalData.getName(idx);
-                    var labelText = name;
+
                     var fullIndex = fullData.indexOfName(name);
 
                     var itemModel = originalData.getItemModel(idx);
                     var labelModel = itemModel.getModel('label.normal');
                     var hoverLabelModel = itemModel.getModel('label.emphasis');
 
-                    var textStyleModel = labelModel.getModel('textStyle');
-                    var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
-
                     var polygonGroups = fullData.getItemGraphicEl(fullIndex);
-                    circle.setStyle({
-                        textPosition: 'bottom'
-                    });
 
                     var onEmphasis = function () {
-                        circle.setStyle({
-                            text: hoverLabelModel.get('show') ? labelText : '',
-                            textFill: hoverTextStyleModel.getTextColor(),
-                            textFont: hoverTextStyleModel.getFont()
-                        });
+                        var hoverStyle = graphic.setTextStyle({}, hoverLabelModel, {
+                            text: hoverLabelModel.get('show')
+                                ? mapModel.getFormattedLabel(idx, 'emphasis')
+                                : null
+                        }, {isRectText: true, forMerge: true});
+                        circle.style.extendFrom(hoverStyle);
+                        // Make label upper than others if overlaps.
+                        circle.__mapOriginalZ2 = circle.z2;
+                        circle.z2 += 1;
                     };
 
                     var onNormal = function () {
-                        circle.setStyle({
-                            text: labelModel.get('show') ? labelText : '',
-                            textFill: textStyleModel.getTextColor(),
-                            textFont: textStyleModel.getFont()
-                        });
+                        graphic.setTextStyle(circle.style, labelModel, {
+                            text: labelModel.get('show')
+                                ? zrUtil.retrieve2(
+                                    mapModel.getFormattedLabel(idx, 'normal'),
+                                    name
+                                )
+                                : null,
+                            textPosition: labelModel.getShallow('position') || 'bottom'
+                        }, {isRectText: true});
+
+                        if (circle.__mapOriginalZ2 != null) {
+                            circle.z2 = circle.__mapOriginalZ2;
+                            circle.__mapOriginalZ2 = null;
+                        }
                     };
 
                     polygonGroups.on('mouseover', onEmphasis)

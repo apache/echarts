@@ -125,7 +125,8 @@ define(function (require) {
 
             }, this);
 
-            var circularRotateLabel = seriesModel.get('layout') === 'circular' && seriesModel.get('circular.rotateLabel');
+            var circularRotateLabel = seriesModel.get('layout') === 'circular'
+                && seriesModel.get('circular.rotateLabel');
             var cx = data.getLayout('cx');
             var cy = data.getLayout('cy');
             data.eachItemGraphicEl(function (el, idx) {
@@ -142,8 +143,9 @@ define(function (require) {
                     }
                     var textPosition = isLeft ? 'left' : 'right';
                     symbolPath.setStyle({
-                        textRotation: rad,
-                        textPosition: textPosition
+                        textRotation: -rad,
+                        textPosition: textPosition,
+                        textOrigin: 'center'
                     });
                     symbolPath.hoverStyle && (symbolPath.hoverStyle.textPosition = textPosition);
                 }

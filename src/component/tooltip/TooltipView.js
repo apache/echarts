@@ -265,7 +265,8 @@ define(function (require) {
             api.dispatchAction({
                 type: 'updateAxisPointer',
                 seriesIndex: seriesIndex,
-                dataIndex: dataIndex
+                dataIndex: dataIndex,
+                position: payload.position
             });
 
             return true;
@@ -531,7 +532,7 @@ define(function (require) {
         },
 
         /**
-         * @param  {string|Function|Array.<number>} positionExpr
+         * @param  {string|Function|Array.<number>|Object} positionExpr
          * @param  {number} x Mouse x
          * @param  {number} y Mouse y
          * @param  {boolean} confine Whether confine tooltip content in view rect.
@@ -698,8 +699,9 @@ define(function (require) {
     }
 
     function refixTooltipPosition(x, y, el, viewWidth, viewHeight, gapH, gapV) {
-        var width = el.clientWidth;
-        var height = el.clientHeight;
+        var size = getOuterSize(el);
+        var width = size.width;
+        var height = size.height;
 
         if (gapH != null) {
             if (x + width + gapH > viewWidth) {
@@ -721,8 +723,9 @@ define(function (require) {
     }
 
     function confineTooltipPosition(x, y, el, viewWidth, viewHeight) {
-        var width = el.clientWidth;
-        var height = el.clientHeight;
+        var size = getOuterSize(el);
+        var width = size.width;
+        var height = size.height;
 
         x = Math.min(x + width, viewWidth) - width;
         y = Math.min(y + height, viewHeight) - height;
@@ -730,6 +733,25 @@ define(function (require) {
         y = Math.max(y, 0);
 
         return [x, y];
+    }
+
+    function getOuterSize(el) {
+        var width = el.clientWidth;
+        var height = el.clientHeight;
+
+        // Consider browser compatibility.
+        // IE8 does not support getComputedStyle.
+        if (document.defaultView.getComputedStyle) {
+            var stl = document.defaultView.getComputedStyle(el);
+            if (stl) {
+                width += parseInt(stl.paddingLeft, 10) + parseInt(stl.paddingRight, 10)
+                    + parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
+                height += parseInt(stl.paddingTop, 10) + parseInt(stl.paddingBottom, 10)
+                    + parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
+            }
+        }
+
+        return {width: width, height: height};
     }
 
     function calcTooltipPosition(position, rect, contentSize) {

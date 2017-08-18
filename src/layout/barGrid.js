@@ -124,8 +124,9 @@ define(function(require) {
             // TODO
             var barWidth = seriesInfo.barWidth;
             if (barWidth && !stacks[stackId].width) {
-                barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
+                // See #6312, do not restrict width.
                 stacks[stackId].width = barWidth;
+                barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
                 columnsOnAxis.remainedWidth -= barWidth;
             }
 
@@ -244,7 +245,14 @@ define(function(require) {
                 ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
                 : valueAxis.getGlobalExtent()[0];
 
-            var coords = cartesian.dataToPoints(data, true);
+            var coordDims = [
+                seriesModel.coordDimToDataDim('x')[0],
+                seriesModel.coordDimToDataDim('y')[0]
+            ];
+            var coords = data.mapArray(coordDims, function (x, y) {
+                return cartesian.dataToPoint([x, y]);
+            }, true);
+
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
             lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
@@ -253,7 +261,7 @@ define(function(require) {
                 size: columnWidth
             });
 
-            data.each(valueAxis.dim, function (value, idx) {
+            data.each(seriesModel.coordDimToDataDim(valueAxis.dim)[0], function (value, idx) {
                 if (isNaN(value)) {
                     return;
                 }

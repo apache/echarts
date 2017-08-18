@@ -282,7 +282,7 @@ define(function(require) {
                     ? 'min'
                     : val === dataBound[1]
                     ? 'max'
-                    : (+val).toFixed(precision);
+                    : (+val).toFixed(Math.min(precision, 20));
             }
         },
 

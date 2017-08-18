@@ -43,6 +43,7 @@ define(function(require) {
             barMinHeight: 0,
             // 最小角度为0，仅对极坐标系下的柱状图有效
             barMinAngle: 0,
+            // cursor: null,
 
             // barMaxWidth: null,
             // 默认自适应

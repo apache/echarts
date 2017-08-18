@@ -62,10 +62,13 @@ define(function(require) {
                 record.controller = createController(api, record);
                 record.dispatchAction = zrUtil.curry(dispatchAction, api);
             }
-            record.controller.enable(
-                dataZoomInfo.disabled ? false : dataZoomInfo.zoomLock ? 'move' : true,
-                dataZoomInfo.roamControllerOpt
-            );
+
+            // Update reference of dataZoom.
+            !(record.dataZoomInfos[theDataZoomId]) && record.count++;
+            record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
+
+            var controllerParams = mergeControllerParams(record.dataZoomInfos);
+            record.controller.enable(controllerParams.controlType, controllerParams.opt);
 
             // Consider resize, area should be always updated.
             record.controller.setPointerChecker(dataZoomInfo.containsPoint);
@@ -77,10 +80,6 @@ define(function(require) {
                 dataZoomInfo.throttleRate,
                 'fixRate'
             );
-
-            // Update reference of dataZoom.
-            !(record.dataZoomInfos[theDataZoomId]) && record.count++;
-            record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
         },
 
         /**
@@ -170,7 +169,7 @@ define(function(require) {
 
         zrUtil.each(record.dataZoomInfos, function (info) {
             var range = getRange(info);
-            range && batch.push({
+            !info.disabled && range && batch.push({
                 dataZoomId: info.dataZoomId,
                 start: range[0],
                 end: range[1]
@@ -188,6 +187,31 @@ define(function(require) {
             type: 'dataZoom',
             batch: batch
         });
+    }
+
+    /**
+     * Merge roamController settings when multiple dataZooms share one roamController.
+     */
+    function mergeControllerParams(dataZoomInfos) {
+        var controlType;
+        var opt = {};
+        var typePriority = {
+            'true': 2,
+            'move': 1,
+            'false': 0,
+            'undefined': -1
+        };
+        zrUtil.each(dataZoomInfos, function (dataZoomInfo) {
+            var oneType = dataZoomInfo.disabled ? false : dataZoomInfo.zoomLock ? 'move' : true;
+            typePriority[oneType] > typePriority[controlType] && (controlType = oneType);
+            // Do not support that different 'shift'/'ctrl'/'alt' setting used in one coord sys.
+            zrUtil.extend(opt, dataZoomInfo.roamControllerOpt);
+        });
+
+        return {
+            controlType: controlType,
+            opt: opt
+        };
     }
 
     return roams;

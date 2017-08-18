@@ -10,7 +10,7 @@ require('./lib/chart/scatter');
 require('./lib/component/graphic');
 require('./lib/component/tooltip');
 require('./lib/component/axisPointer');
-require('./lib/component/legend');
+require('./lib/component/legendScroll');
 
 require('./lib/component/grid');
 require('./lib/component/title');

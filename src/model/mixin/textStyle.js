@@ -3,15 +3,18 @@ define(function (require) {
     var textContain = require('zrender/contain/text');
     var graphicUtil = require('../../util/graphic');
 
+    var PATH_COLOR = ['textStyle', 'color'];
+
     return {
         /**
          * Get color property or get color from option.textStyle.color
+         * @param {boolean} [noDefault]
          * @return {string}
          */
-        getTextColor: function () {
+        getTextColor: function (noDefault) {
             var ecModel = this.ecModel;
             return this.getShallow('color')
-                || (ecModel && ecModel.get('textStyle.color'));
+                || (!noDefault && ecModel && ecModel.get(PATH_COLOR));
         },
 
         /**
@@ -32,13 +35,10 @@ define(function (require) {
                 text,
                 this.getFont(),
                 this.getShallow('align'),
-                this.getShallow('baseline')
-            );
-        },
-
-        truncateText: function (text, containerWidth, ellipsis, options) {
-            return textContain.truncateText(
-                text, containerWidth, this.getFont(), ellipsis, options
+                this.getShallow('verticalAlign') || this.getShallow('baseline'),
+                this.getShallow('padding'),
+                this.getShallow('rich'),
+                this.getShallow('truncateText')
             );
         }
     };

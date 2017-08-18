@@ -15,13 +15,17 @@ define(function (require) {
                     {mainType: 'series', subType: seriesType, query: payload},
                     function (seriesModel) {
                         if (seriesModel[actionInfo.method]) {
-                            seriesModel[actionInfo.method](payload.name);
+                            seriesModel[actionInfo.method](
+                                payload.name,
+                                payload.dataIndex
+                            );
                         }
                         var data = seriesModel.getData();
                         // Create selected map
                         data.each(function (idx) {
                             var name = data.getName(idx);
-                            selected[name] = seriesModel.isSelected(name) || false;
+                            selected[name] = seriesModel.isSelected(name)
+                                || false;
                         });
                     }
                 );

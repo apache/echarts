@@ -36,6 +36,7 @@ define(function(require) {
 
             // If clip the overflow value
             clipOverflow: true,
+            // cursor: null,
 
             label: {
                 normal: {

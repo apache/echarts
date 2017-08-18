@@ -220,7 +220,7 @@ define(function (require) {
         },
 
         /**
-         * @param {string} path
+         * @param {string} [path]
          * @return {module:echarts/model/Model}
          */
         getModel: function (path) {
@@ -418,7 +418,7 @@ define(function (require) {
      * }
      *
      * @static
-     * @param {Objec} dataRoot Root node.
+     * @param {Object} dataRoot Root node.
      * @param {module:echarts/model/Model} hostModel
      * @param {Object} treeOptions
      * @param {Array.<Object>} treeOptions.levelOptions

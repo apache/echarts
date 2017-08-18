@@ -294,10 +294,8 @@ define(function (require) {
                     textAlign: 'right',
                     show: true,
                     position: 'left',
-                    textStyle: {
-                        color: '#000',
-                        fontSize: 11
-                    }
+                    color: '#000',
+                    fontSize: 11
                 },
                 emphasis: {
                     show: true

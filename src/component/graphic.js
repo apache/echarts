@@ -274,11 +274,23 @@ define(function (require) {
                 var parentId = elOption.parentId;
                 var targetElParent = parentId != null ? elMap.get(parentId) : rootGroup;
 
-                // In top/bottom mode, textVertical should not be used. And textBaseline
-                // should not be 'alphabetic', which cause inaccurately locating.
-                if (elOption.hv && elOption.hv[1] && elOption.type === 'text') {
-                    elOption.style = zrUtil.defaults({textBaseline: 'middle'}, elOption.style);
-                    elOption.style.textVerticalAlign = null;
+                if (elOption.type === 'text') {
+                    var elOptionStyle = elOption.style;
+
+                    // In top/bottom mode, textVerticalAlign should not be used, which cause
+                    // inaccurately locating.
+                    if (elOption.hv && elOption.hv[1]) {
+                        elOptionStyle.textVerticalAlign = elOptionStyle.textBaseline = null;
+                    }
+
+                    // Compatible with previous setting: both support fill and textFill,
+                    // stroke and textStroke.
+                    !elOptionStyle.hasOwnProperty('textFill') && elOptionStyle.fill && (
+                        elOptionStyle.textFill = elOptionStyle.fill
+                    );
+                    !elOptionStyle.hasOwnProperty('textStroke') && elOptionStyle.stroke && (
+                        elOptionStyle.textStroke = elOptionStyle.stroke
+                    );
                 }
 
                 // Remove unnecessary props to avoid potential problems.

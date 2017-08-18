@@ -162,7 +162,7 @@ define(function (require) {
 
             if (fixedMin != null && fixedMax != null) {
                 // User set min, max, divide to get new interval
-                // FIXME precision
+                scale.setExtent(+fixedMin, +fixedMax);
                 scale.setInterval(
                     (fixedMax - fixedMin) / splitNumber
                 );

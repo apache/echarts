@@ -35,7 +35,7 @@ define(function (require) {
         return indices;
     }
 
-    function labelLayout (data) {
+    function labelLayout(data) {
         data.each(function (idx) {
             var itemModel = data.getItemModel(idx);
             var labelModel = itemModel.getModel('label.normal');

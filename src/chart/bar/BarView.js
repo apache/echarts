@@ -181,7 +181,7 @@ define(function (require) {
 
     function removeRect(dataIndex, animationModel, el) {
         // Not show text when animating
-        el.style.text = '';
+        el.style.text = null;
         graphic.updateProps(el, {
             shape: {
                 width: 0
@@ -193,7 +193,7 @@ define(function (require) {
 
     function removeSector(dataIndex, animationModel, el) {
         // Not show text when animating
-        el.style.text = '';
+        el.style.text = null;
         graphic.updateProps(el, {
             shape: {
                 r: el.shape.r0
@@ -240,7 +240,7 @@ define(function (require) {
         var itemStyleModel = itemModel.getModel('itemStyle.normal');
         var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
 
-        if (!isPolar && isHorizontal) {
+        if (!isPolar) {
             el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
         }
 
@@ -251,6 +251,9 @@ define(function (require) {
             },
             itemStyleModel.getBarItemStyle()
         ));
+
+        var cursorStyle = itemModel.getShallow('cursor');
+        cursorStyle && el.attr('cursor', cursorStyle);
 
         var labelPositionOutside = isHorizontal
             ? (layout.height > 0 ? 'bottom' : 'top')

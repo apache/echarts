@@ -191,14 +191,16 @@ define(function (require) {
                 if (rawValue && rawValue[2] != null) {
                     defaultText = rawValue[2];
                 }
-                if (labelModel.getShallow('show')) {
-                    graphic.setText(style, labelModel);
-                    style.text = seriesModel.getFormattedLabel(idx, 'normal') || defaultText;
-                }
-                if (hoverLabelModel.getShallow('show')) {
-                    graphic.setText(hoverStl, hoverLabelModel);
-                    hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
-                }
+
+                graphic.setText(style, labelModel);
+                style.text = labelModel.getShallow('show')
+                    ? seriesModel.getFormattedLabel(idx, 'normal') || defaultText
+                    : null;
+
+                graphic.setText(hoverStl, hoverLabelModel, false);
+                hoverStl.text = hoverLabelModel.getShallow('show')
+                    ? seriesModel.getFormattedLabel(idx, 'emphasis')
+                    : null;
 
                 rect.setStyle(style);
 

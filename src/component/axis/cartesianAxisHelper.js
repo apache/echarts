@@ -21,29 +21,25 @@ define(function (require) {
         var axisPosition = axis.onZero ? 'onZero' : rawAxisPosition;
         var axisDim = axis.dim;
 
-        // [left, right, top, bottom]
         var rect = grid.getRect();
         var rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
-
+        var idx = {left: 0, right: 1, top: 0, bottom: 1, onZero: 2};
         var axisOffset = axisModel.get('offset') || 0;
 
-        var posMap = {
-            x: { top: rectBound[2] - axisOffset, bottom: rectBound[3] + axisOffset },
-            y: { left: rectBound[0] - axisOffset, right: rectBound[1] + axisOffset }
-        };
+        var posBound = axisDim === 'x'
+            ? [rectBound[2] - axisOffset, rectBound[3] + axisOffset]
+            : [rectBound[0] - axisOffset, rectBound[1] + axisOffset];
 
-        posMap.x.onZero = Math.max(Math.min(getZero('y'), posMap.x.bottom), posMap.x.top);
-        posMap.y.onZero = Math.max(Math.min(getZero('x'), posMap.y.right), posMap.y.left);
-
-        function getZero(dim, val) {
-            var theAxis = grid.getAxis(dim);
-            return theAxis.toGlobalCoord(theAxis.dataToCoord(0));
+        if (axis.onZero) {
+            var otherAxis = grid.getAxis(axisDim === 'x' ? 'y' : 'x', axis.onZeroAxisIndex);
+            var onZeroCoord = otherAxis.toGlobalCoord(otherAxis.dataToCoord(0));
+            posBound[idx['onZero']] = Math.max(Math.min(onZeroCoord, posBound[1]), posBound[0]);
         }
 
         // Axis position
         layout.position = [
-            axisDim === 'y' ? posMap.y[axisPosition] : rectBound[0],
-            axisDim === 'x' ? posMap.x[axisPosition] : rectBound[3]
+            axisDim === 'y' ? posBound[idx[axisPosition]] : rectBound[0],
+            axisDim === 'x' ? posBound[idx[axisPosition]] : rectBound[3]
         ];
 
         // Axis rotation
@@ -53,7 +49,7 @@ define(function (require) {
         var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
 
         layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
-        layout.labelOffset = axis.onZero ? posMap[axisDim][rawAxisPosition] - posMap[axisDim].onZero : 0;
+        layout.labelOffset = axis.onZero ? posBound[idx[rawAxisPosition]] - posBound[idx['onZero']] : 0;
 
         if (axisModel.get('axisTick.inside')) {
             layout.tickDirection = -layout.tickDirection;

@@ -58,6 +58,7 @@ define(function(require) {
                 zrUtil.isArray(item) && item.unshift(index);
             });
 
+            var defaultValueDimensions = this.defaultValueDimensions;
             var dimensions = [{
                 name: baseAxisDim,
                 otherDims: {
@@ -66,12 +67,14 @@ define(function(require) {
                 dimsDef: ['base']
             }, {
                 name: otherAxisDim,
-                dimsDef: this.defaultValueDimensions.slice()
+                dimsDef: defaultValueDimensions.slice()
             }];
 
             dimensions = completeDimensions(dimensions, data, {
                 encodeDef: this.get('encode'),
-                dimsDef: this.get('dimensions')
+                dimsDef: this.get('dimensions'),
+                // Consider empty data entry.
+                dimCount: defaultValueDimensions.length + 1
             });
 
             var list = new List(dimensions, this);

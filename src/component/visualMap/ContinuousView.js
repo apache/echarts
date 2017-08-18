@@ -164,7 +164,7 @@ define(function(require) {
                     textAlign: orient === 'horizontal' ? align : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             }));
         },
@@ -185,7 +185,7 @@ define(function(require) {
             barGroup.add(shapes.outOfRange = createPolygon());
             barGroup.add(shapes.inRange = createPolygon(
                 null,
-                useHandle ? 'move' : null,
+                useHandle ? getCursor(this._orient) : null,
                 zrUtil.bind(this._dragHandle, this, 'all', false),
                 zrUtil.bind(this._dragHandle, this, 'all', true)
             ));
@@ -216,7 +216,7 @@ define(function(require) {
             var onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
             var handleThumb = createPolygon(
                 createHandlePoints(handleIndex, textSize),
-                'move',
+                getCursor(this._orient),
                 onDrift,
                 onDragEnd
             );
@@ -239,7 +239,7 @@ define(function(require) {
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             });
             this.group.add(handleLabel);
@@ -275,7 +275,7 @@ define(function(require) {
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             });
             this.group.add(indicatorLabel);
@@ -838,6 +838,10 @@ define(function(require) {
 
     function useHoverLinkOnHandle(visualMapModel) {
         return !visualMapModel.get('realtime') && visualMapModel.get('hoverLinkOnHandle');
+    }
+
+    function getCursor(orient) {
+        return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
     }
 
     return ContinuousView;

@@ -56,9 +56,7 @@ define(function (require) {
                 position: 'start',
                 margin: '50%', // 50% of cellSize
                 nameMap: 'en',
-                textStyle: {
-                    color: '#000'
-                }
+                color: '#000'
             },
 
             // month text style
@@ -75,9 +73,7 @@ define(function (require) {
                 // cn en []
                 nameMap: 'en',
                 formatter: null,
-                textStyle: {
-                    color: '#000'
-                }
+                color: '#000'
             },
 
             // year text style
@@ -88,12 +84,10 @@ define(function (require) {
                 position: null,
                 margin: 30,
                 formatter: null,
-                textStyle: {
-                    color: '#ccc',
-                    fontFamily: 'sans-serif',
-                    fontWeight: 'bolder',
-                    fontSize: 20
-                }
+                color: '#ccc',
+                fontFamily: 'sans-serif',
+                fontWeight: 'bolder',
+                fontSize: 20
             }
         },
 
