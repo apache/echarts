@@ -195,7 +195,8 @@ define(function(require) {
                     x: groupRect.x - padding[3],
                     y: groupRect.y - padding[0],
                     width: groupRect.width + padding[1] + padding[3],
-                    height: groupRect.height + padding[0] + padding[2]
+                    height: groupRect.height + padding[0] + padding[2],
+                    r: titleModel.get('borderRadius')
                 },
                 style: style,
                 silent: true
