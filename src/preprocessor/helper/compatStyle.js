@@ -72,6 +72,8 @@ define(function (require) {
         compatLabelTextStyle(seriesOpt.label);
         // treemap
         compatLabelTextStyle(seriesOpt.upperLabel);
+        // graph
+        compatLabelTextStyle(seriesOpt.edgeLabel);
 
         var markPoint = seriesOpt.markPoint;
         compatItemStyle(markPoint);

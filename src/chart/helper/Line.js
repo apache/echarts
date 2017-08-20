@@ -320,7 +320,8 @@ define(function (require) {
 
             label.__textAlign = labelStyle.textAlign;
             label.__verticalAlign = labelStyle.textVerticalAlign;
-            label.__position = labelStyle.position;
+            // 'start', 'middle', 'end'
+            label.__position = labelModel.get('position') || 'middle';
         }
         else {
             label.setStyle('text', null);
