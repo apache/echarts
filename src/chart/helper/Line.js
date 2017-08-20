@@ -316,7 +316,10 @@ define(function (require) {
                     seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
                     defaultText
                 )
-            }, {defaultTextColor: defaultLabelColor});
+            }, {
+                defaultTextColor: defaultLabelColor,
+                autoColor: defaultLabelColor
+            });
 
             label.__textAlign = labelStyle.textAlign;
             label.__verticalAlign = labelStyle.textVerticalAlign;

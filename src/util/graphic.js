@@ -443,17 +443,16 @@ define(function(require) {
             opt.forMerge = true;
         }
         else {
-            opt.defaultTextColor = defaultColor;
-            opt.getDefaultTextColor = getDefaultTextColorForSetText;
+            // Support setting color as 'auto' to get visual color.
+            opt.defaultTextColor = opt.autoColor = defaultColor;
+            opt.checkInside = checkInsideForSetText;
         }
         setTextStyleCommon(textStyle, labelModel, opt);
         textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
     };
 
-    function getDefaultTextColorForSetText(labelModel, opt, textPosition) {
-        return (textPosition && textPosition.indexOf('inside') >= 0)
-            ? '#fff'
-            : opt.defaultTextColor;
+    function checkInsideForSetText(labelModel, textPosition) {
+        return textPosition && textPosition.indexOf('inside') >= 0;
     }
 
     /**
@@ -463,7 +462,7 @@ define(function(require) {
      *      autoColor: string, specify a color when color is 'auto',
      *                 for textFill, textStroke, textBackgroundColor, and textBorderColor,
      *      defaultTextColor: string,
-     *      getDefaultTextColor: function, higher priority than `defaultTextColor`.
+     *      checkInside: function, higher priority than `defaultTextColor`.
      *      forceRich: boolean,
      *      forMerge: boolean
      * }
@@ -510,31 +509,47 @@ define(function(require) {
         return textStyle;
     }
 
-    function setTokenTextStyle(textStyle, textStyleModel, defaultTextStyle, opt, isBlock) {
-        var textPosition = textStyle.textPosition;
+    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isBlock) {
+        var forMerge = opt.forMerge;
+
         // In merge mode, default value should not be given.
-        defaultTextStyle = !opt.forMerge && defaultTextStyle || EMPTY_OBJ;
+        globalTextStyle = !forMerge && globalTextStyle || EMPTY_OBJ;
 
-        textStyle.textFill = getAutoColor(textStyleModel.getTextColor(opt.forMerge), opt) || (
-            opt.forMerge
-                ? null
-                : opt.getDefaultTextColor
-                ? opt.getDefaultTextColor(textStyleModel, opt, textPosition)
-                : opt.defaultTextColor
-        );
+        var textFill = getAutoColor(textStyleModel.getShallow('color'));
+        var textStroke = getAutoColor(textStyleModel.getShallow('textBorderColor'));
+        var textLineWidth = textStyleModel.getShallow('textBorderWidth');
 
-        textStyle.textStroke = getAutoColor(
-            textStyleModel.getShallow('textBorderColor') || defaultTextStyle.textBorderColor
-        );
-        textStyle.textLineWidth = textStyleModel.getShallow('textBorderWidth');
+        if (!forMerge) {
+            textFill == null && (textFill = globalTextStyle.color);
+            textStroke == null && (textStroke = globalTextStyle.textBorderColor);
+            textLineWidth == null && (textLineWidth = globalTextStyle.textBorderWidth);
+
+            if (textFill == null
+                && opt.checkInside
+                && opt.checkInside(textStyleModel, textStyle.textPosition)
+            ) {
+                textFill = '#fff';
+                // Consider text with #fff overflow its container.
+                if (textStroke == null) {
+                    textStroke = opt.defaultTextColor;
+                    textLineWidth == null && (textLineWidth = 2);
+                }
+            }
+
+            textFill == null && (textFill = opt.defaultTextColor);
+        }
+
+        textStyle.textFill = textFill;
+        textStyle.textStroke = textStroke;
+        textStyle.textLineWidth = textLineWidth;
 
         // Do not use `getFont` here, because merge should be supported, where
         // part of these properties may be changed in emphasis style, and the
         // others should remain their original value got from normal style.
-        textStyle.fontStyle = textStyleModel.getShallow('fontStyle') || defaultTextStyle.fontStyle;
-        textStyle.fontWeight = textStyleModel.getShallow('fontWeight') || defaultTextStyle.fontWeight;
-        textStyle.fontSize = textStyleModel.getShallow('fontSize') || defaultTextStyle.fontSize;
-        textStyle.fontFamily = textStyleModel.getShallow('fontFamily') || defaultTextStyle.fontFamily;
+        textStyle.fontStyle = textStyleModel.getShallow('fontStyle') || globalTextStyle.fontStyle;
+        textStyle.fontWeight = textStyleModel.getShallow('fontWeight') || globalTextStyle.fontWeight;
+        textStyle.fontSize = textStyleModel.getShallow('fontSize') || globalTextStyle.fontSize;
+        textStyle.fontFamily = textStyleModel.getShallow('fontFamily') || globalTextStyle.fontFamily;
 
         textStyle.textAlign = textStyleModel.getShallow('align');
         textStyle.textVerticalAlign = textStyleModel.getShallow('verticalAlign')
@@ -559,13 +574,13 @@ define(function(require) {
         }
 
         textStyle.textShadowColor = textStyleModel.getShallow('textShadowColor')
-            || defaultTextStyle.textShadowColor;
+            || globalTextStyle.textShadowColor;
         textStyle.textShadowBlur = textStyleModel.getShallow('textShadowBlur')
-            || defaultTextStyle.textShadowBlur;
+            || globalTextStyle.textShadowBlur;
         textStyle.textShadowOffsetX = textStyleModel.getShallow('textShadowOffsetX')
-            || defaultTextStyle.textShadowOffsetX;
+            || globalTextStyle.textShadowOffsetX;
         textStyle.textShadowOffsetY = textStyleModel.getShallow('textShadowOffsetY')
-            || defaultTextStyle.textShadowOffsetY;
+            || globalTextStyle.textShadowOffsetY;
     }
 
     function getAutoColor(color, opt) {
