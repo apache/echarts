@@ -14,7 +14,9 @@ define(function (require) {
         getTextColor: function (noDefault) {
             var ecModel = this.ecModel;
             return this.getShallow('color')
-                || (!noDefault && ecModel && ecModel.get(PATH_COLOR));
+                || (
+                    (!noDefault && ecModel) ? ecModel.get(PATH_COLOR) : null
+                );
         },
 
         /**
