@@ -472,7 +472,12 @@ define(function(require) {
         opt = opt || EMPTY_OBJ;
 
         if (opt.isRectText) {
-            textStyle.textPosition = textStyleModel.getShallow('position') || (opt.forMerge ? null : 'inside');
+            var textPosition = textStyleModel.getShallow('position')
+                || (opt.forMerge ? null : 'inside');
+            // 'outside' is not a valid zr textPostion value, but used
+            // in bar series, and magric type should be considered.
+            textPosition === 'outside' && (textPosition = 'top');
+            textStyle.textPosition = textPosition;
             textStyle.textOffset = textStyleModel.getShallow('offset');
             var labelRotate = textStyleModel.getShallow('rotate');
             labelRotate != null && (labelRotate *= Math.PI / 180);
