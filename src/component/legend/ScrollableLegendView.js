@@ -243,7 +243,7 @@ define(function (require) {
             var pageFormatter = legendModel.get('pageFormatter');
             var pageIndex = pageInfo.pageIndex;
             var current = pageIndex != null ? pageIndex + 1 : 0;
-            var total = pageIndex.pageCount;
+            var total = pageInfo.pageCount;
 
             pageText && pageFormatter && pageText.setStyle(
                 'text',
