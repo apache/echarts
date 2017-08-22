@@ -472,7 +472,12 @@ define(function(require) {
         opt = opt || EMPTY_OBJ;
 
         if (opt.isRectText) {
-            textStyle.textPosition = textStyleModel.getShallow('position') || (opt.forMerge ? null : 'inside');
+            var textPosition = textStyleModel.getShallow('position')
+                || (opt.forMerge ? null : 'inside');
+            // 'outside' is not a valid zr textPostion value, but used
+            // in bar series, and magric type should be considered.
+            textPosition === 'outside' && (textPosition = 'top');
+            textStyle.textPosition = textPosition;
             textStyle.textOffset = textStyleModel.getShallow('offset');
             var labelRotate = textStyleModel.getShallow('rotate');
             labelRotate != null && (labelRotate *= Math.PI / 180);
@@ -485,12 +490,28 @@ define(function(require) {
         var ecModel = textStyleModel.ecModel;
         var globalTextStyle = ecModel && ecModel.option.textStyle;
 
-        var rich = textStyleModel.getShallow('rich');
+        // Consider case:
+        // {
+        //     data: [{
+        //         value: 12,
+        //         label: {
+        //             normal: {
+        //                 rich: {
+        //                     // no 'a' here but using parent 'a'.
+        //                 }
+        //             }
+        //         }
+        //     }],
+        //     rich: {
+        //         a: { ... }
+        //     }
+        // }
+        var richItemNames = getRichItemNames(textStyleModel);
         var richResult;
-        if (rich) {
+        if (richItemNames) {
             richResult = {};
-            for (var name in rich) {
-                if (rich.hasOwnProperty(name)) {
+            for (var name in richItemNames) {
+                if (richItemNames.hasOwnProperty(name)) {
                     // Cascade is supported in rich.
                     var richTextStyle = textStyleModel.getModel(['rich', name]);
                     // In rich, never `disableBox`.
@@ -507,6 +528,40 @@ define(function(require) {
         }
 
         return textStyle;
+    }
+
+    // Consider case:
+    // {
+    //     data: [{
+    //         value: 12,
+    //         label: {
+    //             normal: {
+    //                 rich: {
+    //                     // no 'a' here but using parent 'a'.
+    //                 }
+    //             }
+    //         }
+    //     }],
+    //     rich: {
+    //         a: { ... }
+    //     }
+    // }
+    function getRichItemNames(textStyleModel) {
+        // Use object to remove duplicated names.
+        var richItemNameMap;
+        while (textStyleModel && textStyleModel !== textStyleModel.ecModel) {
+            var rich = (textStyleModel.option || EMPTY_OBJ).rich;
+            if (rich) {
+                richItemNameMap = richItemNameMap || {};
+                for (var name in rich) {
+                    if (rich.hasOwnProperty(name)) {
+                        richItemNameMap[name] = 1;
+                    }
+                }
+            }
+            textStyleModel = textStyleModel.parentModel;
+        }
+        return richItemNameMap;
     }
 
     function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isBlock) {

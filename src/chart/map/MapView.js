@@ -119,7 +119,11 @@ define(function (require) {
                     var onEmphasis = function () {
                         var hoverStyle = graphic.setTextStyle({}, hoverLabelModel, {
                             text: hoverLabelModel.get('show')
-                                ? mapModel.getFormattedLabel(idx, 'emphasis')
+                                ? zrUtil.retrieve3(
+                                    mapModel.getFormattedLabel(idx, 'emphasis'),
+                                    mapModel.getFormattedLabel(idx, 'normal'),
+                                    name
+                                )
                                 : null
                         }, {isRectText: true, forMerge: true});
                         circle.style.extendFrom(hoverStyle);

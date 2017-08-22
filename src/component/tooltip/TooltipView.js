@@ -741,7 +741,7 @@ define(function (require) {
 
         // Consider browser compatibility.
         // IE8 does not support getComputedStyle.
-        if (document.defaultView.getComputedStyle) {
+        if (document.defaultView && document.defaultView.getComputedStyle) {
             var stl = document.defaultView.getComputedStyle(el);
             if (stl) {
                 width += parseInt(stl.paddingLeft, 10) + parseInt(stl.paddingRight, 10)
