@@ -71,12 +71,12 @@
                         data: xAxis
                     },
                     yAxis: {
-                        // min: function (value) {
-                        //     return value.min - 20;
-                        // },
-                        // max: function (value) {
-                        //     return value.max + 20;
-                        // }
+                        min: function (value) {
+                            return value.min - 20;
+                        },
+                        max: function (value) {
+                            return value.max + 20;
+                        }
                     },
                     series: [{
                         type: 'bar',
