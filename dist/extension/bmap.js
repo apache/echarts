@@ -228,7 +228,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // TODO Dispose
 	        ecModel.eachComponent('bmap', function (bmapModel) {
-	            var viewportRoot = api.getZr().painter.getViewportRoot();
+	            var painter = api.getZr().painter;
+	            var viewportRoot = painter.getViewportRoot();
 	            if (typeof BMap === 'undefined') {
 	                throw new Error('BMap api is not loaded');
 	            }
@@ -255,6 +256,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                var overlay = new Overlay(viewportRoot);
 	                bmap.addOverlay(overlay);
+
+	                // Override
+	                painter.getViewportRootOffset = function () {
+	                    return {offsetLeft: 0, offsetTop: 0};
+	                };
 	            }
 	            var bmap = bmapModel.__bmap;
 
