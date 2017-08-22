@@ -368,7 +368,11 @@ define(function (require) {
             if (currLabelValueDim != null) {
                 graphicUtil.setText(itemStyle, currLabelEmphasisModel, false);
                 itemStyle.text = currLabelEmphasisModel.getShallow('show')
-                    ? customSeries.getFormattedLabel(dataIndexInside, 'emphasis')
+                    ? zrUtil.retrieve3(
+                        customSeries.getFormattedLabel(dataIndexInside, 'emphasis'),
+                        customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                        data.get(currLabelValueDim, dataIndexInside)
+                    )
                     : null;
             }
 

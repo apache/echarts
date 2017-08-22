@@ -227,16 +227,22 @@ define(function (require) {
 
         if (valueDim != null) {
             graphic.setText(elStyle, labelModel, color);
+            var normalText = seriesModel.getFormattedLabel(idx, 'normal');
+            var value = data.get(valueDim, idx);
             elStyle.text = labelModel.getShallow('show')
                 ? zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(idx, 'normal'),
-                    data.get(valueDim, idx)
+                    normalText,
+                    value
                 )
                 : null;
 
             graphic.setText(hoverItemStyle, hoverLabelModel, false);
             hoverItemStyle.text = hoverLabelModel.getShallow('show')
-                ? seriesModel.getFormattedLabel(idx, 'emphasis')
+                ? zrUtil.retrieve3(
+                    seriesModel.getFormattedLabel(idx, 'emphasis'),
+                    normalText,
+                    value
+                )
                 : null;
         }
 
