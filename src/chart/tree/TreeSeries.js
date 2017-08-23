@@ -114,7 +114,9 @@ define(function (require) {
 
             animationEasing: 'linear',
 
-            animationDuration: 1000
+            animationDuration: 800,
+
+            animationDurationUpdate: 1000
         }
     });
 });
