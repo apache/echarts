@@ -13,8 +13,6 @@ define(function (require) {
 
         layoutInfo: null,
 
-        // nodeToShow: null,
-
         /**
          * Init a tree data structure from data in option series
          *
@@ -59,32 +57,6 @@ define(function (require) {
             return tree.data;
         },
 
-        // /**
-        //  * This function specify the node to be showed initially
-        //  * @param  {Object} option  the series option
-        //  * @return {Array}
-        //  */
-        // getInitialShowNode: function (option) {
-
-        //     var treeDepth = option.initialTreeDepth + 1;
-        //     var tree = this.getData().tree;
-        //     var realRoot = tree.root.children[0];
-
-        //     // var nodeToShow = this.nodeToShow = [];
-
-        //     realRoot.eachNode('preorder', function (node) {
-        //         if (node.depth <= treeDepth) {
-        //             // nodeToShow.push(node);
-        //             node.isExpand = true;
-        //         }
-        //         else {
-        //             node.isExpand = false;
-        //         }
-        //     });
-
-        //     // return nodeToShow;
-        // },
-
         defaultOption: {
             zlevel: 0,
             z: 2,
@@ -103,8 +75,7 @@ define(function (require) {
 
             symbol: 'emptyCircle',
 
-            symbolSize: 8,
-
+            symbolSize: 7,
 
             expandAndCollapse: true,
 
@@ -123,29 +94,27 @@ define(function (require) {
                     color: 'lightsteelblue',
                     borderColor: '#c23531',
                     borderWidth: 1.5
-
+                    // opacity: 0
                 }
             },
 
             label: {
                 normal: {
                     show: true,
-                    fontSize: 9,
-                    position: 'left',
-                    textStyle: {
-                        color: '#555'
-                    }
+                    fontSize: 5,
+                    color: '#555'
                 }
             },
 
             leaves: {
                 label: {
                     normal: {
-                        show: true,
-                        position: 'right'
+                        show: true
                     }
                 }
             },
+
+            animation: true,
 
             animationEasing: 'linear',
 

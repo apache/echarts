@@ -29,7 +29,7 @@
                         chart.resize();
                     };
 
-                    $.getJSON('./data/flare.json')
+                    $.getJSON('./data/tree-simple2.json')
                     .done(function (data) {
                         chart.setOption({
 
@@ -40,11 +40,13 @@
                                     data: [data],
 
                                     left: '50%',
-                                    right: '1%',
-                                    top: '50%',
-                                    bottom: '1%',
+                                    // right: '10%',
+                                    top: '52%',
+                                    bottom: '13%',
 
                                     layout: 'radial',
+
+                                    initialTreeDepth: 2,
 
                                     animationDurationUpdate: 750
 

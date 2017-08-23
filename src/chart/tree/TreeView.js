@@ -110,38 +110,6 @@ define(function (require) {
 
         },
 
-        /**
-         * Render the chart
-         * @override
-         * @param  {module:echarts/model/Series} seriesModel
-         * @param  {module:echarts/model/Global} ecModel
-         * @param  {module:echarts/ExtensionAPI} api
-         * @param  {Object} payload
-         */
-        // render1: function (seriesModel, ecModel, api, payload) {
-
-        //     eachBefore(realRoot, function (node) {
-        //         if (node !== realRoot) {
-        //             edges.push({source: node.parentNode, target: node});
-        //         }
-        //     });
-
-        //     var radius = seriesModel.get('nodeRadius');
-
-        //     eachBefore(realRoot, function (node) {
-        //         var layout = node.getLayout();
-        //         // leaf node will get the leavesModel
-        //         var itemModel = node.getModel();
-        //         var itemNormalStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
-        //         var labelModel = itemModel.getModel('label.normal');
-        //         var textStyleModel = labelModel.getModel('textStyle');
-        //         // var expandAndCollapse = seriesModel.get('expandAndCollapse');
-
-        //         nodeData.setItemGraphicEl(node.dataIndex, circle);
-
-        //     });
-        // },
-
         dispose: function () {}
 
     });
@@ -205,7 +173,7 @@ define(function (require) {
         if (isInit) {
             symbolEl = new Symbol(data, dataIndex, {useNameLabel: true});
             symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
-
+            // symbolEl.getSymbolPath().setStyle('opacity', 0);
         }
 
         symbolEl.__radialOldRawX = symbolEl.__radialRawX;
@@ -222,9 +190,51 @@ define(function (require) {
             position: [targetLayout.x, targetLayout.y]
         }, seriesModel);
 
+        // graphic.updateProps(symbolEl.getSymbolPath(), {
+        //         style: { opacity: 1}
+        //     }, seriesModel);
+
+        if (seriesScope.layout === 'radial') {
+            var realRoot = virtualRoot.children[0];
+            var rootLayout = realRoot.getLayout();
+            var rad = Math.atan2(targetLayout.y - rootLayout.y, targetLayout.x - rootLayout.x);
+            if (rad < 0) {
+                rad = Math.PI * 2 + rad;
+            }
+            var isLeft;
+            if (node.children.length === 0 || (node.children.length !== 0 && node.isExpand === false)) {
+                isLeft = targetLayout.x < rootLayout.x;
+                if (isLeft) {
+                    rad = rad - Math.PI;
+                }
+            }
+            else {
+                if (targetLayout.x === rootLayout.x) {
+                    isLeft = true;
+                    rad = (2 * Math.PI + (-1.8)) - Math.PI;
+                }
+                else {
+                    isLeft = targetLayout.x > rootLayout.x;
+                    if (!isLeft) {
+                        rad = rad - Math.PI;
+                    }
+                }
+            }
+            var textPosition = isLeft ? 'left' : 'right';
+            var symbolPath = symbolEl.getSymbolPath();
+            symbolPath.setStyle({
+                textPosition: textPosition,
+                textRotation: -rad,
+                textOrigin: 'center',
+                verticalAlign: 'middle'
+            });
+        }
+
         // if (isInit) {
         //     var symbolPath = symbolEl.getSymbolPath();
-        //     symbolPath.setStyle('opacity', 0.2);
+        //     symbolPath.setStyle({
+        //         opacity: 0
+        //     });
 
         //     graphic.updateProps(symbolPath, {
         //         style: {
@@ -249,10 +259,6 @@ define(function (require) {
 
             group.add(edge);
         }
-
-        // if (node.isExpand === false && node.children.length !== 0) {
-        //     symbolEl.getSymbolPath().setStyle('fill', seriesScope.itemStyle.fill);
-        // }
 
     }
 
@@ -289,7 +295,6 @@ define(function (require) {
             group.remove(symbolEl);
             data.setItemGraphicEl(dataIndex, null);
         });
-
 
         var edge = symbolEl.__edge;
         if (edge) {
@@ -364,6 +369,5 @@ define(function (require) {
             };
         }
     }
-
 
 });

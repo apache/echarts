@@ -231,7 +231,7 @@ define(function (require) {
             var itemModel = hostTree.data.getItemModel(this.dataIndex);
             var levelModel = this.getLevelModel();
             var leavesModel;
-            if (!levelModel && this.children.length === 0) {
+            if (!levelModel && (this.children.length === 0 || (this.children.length !== 0 && this.isExpand === false))) {
                 leavesModel = this.getLeavesModel();
             }
             return itemModel.getModel(path, (levelModel || leavesModel || hostTree.hostModel).getModel(path));

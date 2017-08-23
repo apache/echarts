@@ -14,5 +14,4 @@ define(function (require) {
     echarts.registerLayout(require('./tree/orthogonalLayout'));
     echarts.registerLayout(require('./tree/radialLayout'));
 
-
 });

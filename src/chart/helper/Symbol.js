@@ -223,22 +223,22 @@ define(function (require) {
             elStyle.opacity = opacity;
         }
 
-        var valueDim = (seriesScope && seriesScope.useNameLabel)
-            ? 'ecDataItemName'
-            : labelHelper.findLabelValueDim(data);
-        labelHelper.setTextToStyle(
-            data, idx, valueDim, elStyle, seriesModel, labelModel, color
-        );
-        labelHelper.setTextToStyle(
-            data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color
-        );
+        var useNameLabel = seriesScope && seriesScope.useNameLabel;
+        var valueDim = !useNameLabel && labelHelper.findLabelValueDim(data);
 
-        if (valueDim != null) {
+        // labelHelper.setTextToStyle(
+        //     data, idx, valueDim, elStyle, seriesModel, labelModel, color
+        // );
+        // labelHelper.setTextToStyle(
+        //     data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color
+        // );
+
+        if (useNameLabel || valueDim != null) {
             graphic.setText(elStyle, labelModel, color);
             elStyle.text = labelModel.getShallow('show')
                 ? zrUtil.retrieve2(
                     seriesModel.getFormattedLabel(idx, 'normal'),
-                    data.get(valueDim, idx)
+                    useNameLabel ? data.getName(idx) : data.get(valueDim, idx)
                 )
                 : null;
 
