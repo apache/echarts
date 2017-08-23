@@ -15,7 +15,6 @@ define(function (require) {
 
         /**
          * Init a tree data structure from data in option series
-         *
          * @param  {Object} option  the object used to config echarts view
          * @return {module:echarts/data/List} storage initial data
          */
@@ -41,8 +40,6 @@ define(function (require) {
             });
 
             var expandAndCollapse = option.expandAndCollapse;
-
-            // var realRoot = tree.root.children[0];
             var expandTreeDepth = expandAndCollapse ? (option.initialTreeDepth >= 1 ? option.initialTreeDepth : 1) : treeDepth;
 
             tree.root.eachNode('preorder', function (node) {
@@ -73,7 +70,7 @@ define(function (require) {
             // the orient of orthoginal layout, can be setted to 'horizontal' or 'vertical'
             orient: 'horizontal',
 
-            symbol: 'emptyCircle',
+            symbol: 'emptyRect',
 
             symbolSize: 7,
 
@@ -94,14 +91,13 @@ define(function (require) {
                     color: 'lightsteelblue',
                     borderColor: '#c23531',
                     borderWidth: 1.5
-                    // opacity: 0
                 }
             },
 
             label: {
                 normal: {
                     show: true,
-                    fontSize: 5,
+                    fontSize: 9,
                     color: '#555'
                 }
             },
@@ -120,7 +116,5 @@ define(function (require) {
 
             animationDuration: 1000
         }
-
     });
-
 });

@@ -1,6 +1,8 @@
 define(function (require) {
 
-   var layoutHelper = {};
+    var layout = require('../../util/layout');
+
+    var layoutHelper = {};
 
     /**
      * Initialize all computational message for following algorithm
@@ -89,13 +91,34 @@ define(function (require) {
         return arguments.length ? cb : defaultSeparation;
     };
 
-    layoutHelper.radialCoordinate = function(x, y) {
+    /**
+     * Transform the common coordinate to radial coordinate
+     * @param  {number} x
+     * @param  {number} y
+     * @return {Object}
+     */
+    layoutHelper.radialCoordinate = function (x, y) {
         var radialCoor = {};
         x -= Math.PI / 2;
         radialCoor.x = y * Math.cos(x);
         radialCoor.y = y * Math.sin(x);
         return radialCoor;
-    }
+    };
+
+    /**
+     * Get the layout position of the whole view
+     * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
+     * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
+     * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
+     */
+    layoutHelper.getViewRect = function (seriesModel, api) {
+        return layout.getLayoutRect(
+            seriesModel.getBoxLayoutParams(), {
+                width: api.getWidth(),
+                height: api.getHeight()
+            }
+        );
+    };
 
     /**
      * All other shifts, applied to the smaller subtrees between w- and w+, are
@@ -225,13 +248,9 @@ define(function (require) {
         wl.hierNode.change += change;
     }
 
-
-
-
     function defaultSeparation(node1, node2) {
         return node1.parentNode === node2.parentNode ? 1 : 2;
     }
-
 
    return layoutHelper;
 

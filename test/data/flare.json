@@ -165,7 +165,7 @@
       {"name": "variance", "value": 335},
       {"name": "where", "value": 299},
       {"name": "xor", "value": 354},
-      {"name": "_", "value": 264}
+      {"name": "-", "value": 264}
      ]
     },
     {"name": "Minimum", "value": 843},

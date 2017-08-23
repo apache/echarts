@@ -6,12 +6,9 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
-    // var helper = require('./traversalHelper');
-    // var eachBefore = helper.eachBefore;
     var Symbol = require('../helper/Symbol');
     var layoutHelper = require('./layoutHelper');
     var radialCoordinate = layoutHelper.radialCoordinate;
-
 
     return require('../../echarts').extendChartView({
 
@@ -48,8 +45,6 @@ define(function (require) {
 
             var group = this._mainGroup;
 
-            // group.removeAll();
-
             group.position = [layoutInfo.x, layoutInfo.y];
 
             var oldData = this._data;
@@ -59,14 +54,9 @@ define(function (require) {
                 layout: seriesModel.get('layout'),
                 orient: seriesModel.get('orient'),
                 curvature: seriesModel.get('lineStyle.normal.curveness'),
-                // itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(),
-                // hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
                 symbolRotate: seriesModel.get('symbolRotate'),
                 symbolOffset: seriesModel.get('symbolOffset'),
                 hoverAnimation: seriesModel.get('hoverAnimation'),
-                // lineStyle: seriesModel.getModel('lineStyle.normal').getLineStyle(),
-                // labelModel: seriesModel.getModel('label.normal'),
-                // hoverLabelModel: seriesModel.getModel('label.emphasis'),
                 useNameLabel: true
             };
 
@@ -122,8 +112,6 @@ define(function (require) {
     }
 
     function getTreeNodeStyle(node, itemModel, seriesScope) {
-
-        // seriesScope.curvature = itemModel.get('lineStyle.normal.curveness');
         seriesScope.itemModel = itemModel;
         seriesScope.itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
         seriesScope.hoverItemStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
@@ -131,11 +119,8 @@ define(function (require) {
         seriesScope.labelModel = itemModel.getModel('label.normal');
         seriesScope.hoverLabelModel = itemModel.getModel('label.emphasis');
 
-
-
         if (node.isExpand === false && node.children.length !== 0) {
             seriesScope.symbolInnerColor = seriesScope.itemStyle.fill;
-            // symbolEl.getSymbolPath().setStyle('fill', seriesScope.itemStyle.fill);
         }
         else {
             seriesScope.symbolInnerColor = '#fff';
@@ -144,19 +129,14 @@ define(function (require) {
         return seriesScope;
     }
 
-
     function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
         var isInit = !symbolEl;
-        // var method = isInit ? 'initProps' : 'updateProps';
         var node = data.tree.getNodeByDataIndex(dataIndex);
         var itemModel = node.getModel();
         var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
-
         var virtualRoot = data.tree.root;
-        var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
 
-        // FIXME
-        // parentNode layout illegal?
+        var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
         var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
         var sourceLayout = source.getLayout();
         var sourceOldLayout = sourceSymbolEl
@@ -196,21 +176,33 @@ define(function (require) {
         if (seriesScope.layout === 'radial') {
             var realRoot = virtualRoot.children[0];
             var rootLayout = realRoot.getLayout();
-            var rad = Math.atan2(targetLayout.y - rootLayout.y, targetLayout.x - rootLayout.x);
-            if (rad < 0) {
-                rad = Math.PI * 2 + rad;
-            }
+            var length = realRoot.children.length;
+            var rad;
             var isLeft;
-            if (node.children.length === 0 || (node.children.length !== 0 && node.isExpand === false)) {
-                isLeft = targetLayout.x < rootLayout.x;
+
+            if (targetLayout.x === rootLayout.x) {
+                var center = {};
+                center.x = (realRoot.children[0].getLayout().x + realRoot.children[length - 1].getLayout().x) / 2;
+                center.y = (realRoot.children[0].getLayout().y + realRoot.children[length - 1].getLayout().y) / 2;
+                rad = Math.atan2(center.y - rootLayout.y, center.x - rootLayout.x);
+                if (rad < 0) {
+                    rad = Math.PI * 2 + rad;
+                }
+                isLeft = center.x < rootLayout.x;
                 if (isLeft) {
                     rad = rad - Math.PI;
                 }
             }
             else {
-                if (targetLayout.x === rootLayout.x) {
-                    isLeft = true;
-                    rad = (2 * Math.PI + (-1.8)) - Math.PI;
+                rad = Math.atan2(targetLayout.y - rootLayout.y, targetLayout.x - rootLayout.x);
+                if (rad < 0) {
+                    rad = Math.PI * 2 + rad;
+                }
+                if (node.children.length === 0 || (node.children.length !== 0 && node.isExpand === false)) {
+                    isLeft = targetLayout.x < rootLayout.x;
+                    if (isLeft) {
+                        rad = rad - Math.PI;
+                    }
                 }
                 else {
                     isLeft = targetLayout.x > rootLayout.x;
@@ -219,8 +211,8 @@ define(function (require) {
                     }
                 }
             }
-            var textPosition = isLeft ? 'left' : 'right';
 
+            var textPosition = isLeft ? 'left' : 'right';
             symbolPath.setStyle({
                 textPosition: textPosition,
                 textRotation: -rad,
@@ -260,9 +252,7 @@ define(function (require) {
 
             group.add(edge);
         }
-
     }
-
 
     function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
         var node = data.tree.getNodeByDataIndex(dataIndex);
@@ -270,13 +260,7 @@ define(function (require) {
         var itemModel = node.getModel();
         var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
-
-        // FIXME
-        // parentNode layout illegal?
         var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
-        // var source = node.parentNode || node;
-        // var sourceLayout = source.getLayout();
-
         var sourceLayout;
         while (sourceLayout = source.getLayout(), sourceLayout == null) {
             source = source.parentNode === virtualRoot ? source : source.parentNode || source;
@@ -311,7 +295,6 @@ define(function (require) {
     }
 
     function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
-
         var cpx1;
         var cpy1;
         var cpx2;

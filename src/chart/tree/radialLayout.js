@@ -1,6 +1,5 @@
 define(function (require) {
 
-    var layout = require('../../util/layout');
     var helper = require('./traversalHelper');
     var eachAfter = helper.eachAfter;
     var eachBefore = helper.eachBefore;
@@ -10,6 +9,7 @@ define(function (require) {
     var secondWalk = layoutHelper.secondWalk;
     var sep = layoutHelper.separation;
     var radialCoordinate = layoutHelper.radialCoordinate;
+    var getViewRect = layoutHelper.getViewRect;
 
     return function (ecModel, api, payload) {
 
@@ -68,23 +68,5 @@ define(function (require) {
             }
         });
     };
-
-    /**
-     * Get the layout position of the whole view
-     *
-     * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
-     * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
-     * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
-     */
-    function getViewRect(seriesModel, api) {
-        return layout.getLayoutRect(
-            seriesModel.getBoxLayoutParams(), {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }
-        );
-    }
-
-
 
 });
