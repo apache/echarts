@@ -82,8 +82,6 @@ define(function (require) {
          * @param {number} height
          */
         setViewRect: function (x, y, width, height) {
-            width = width;
-            height = height;
             this.transformTo(x, y, width, height);
             this._viewRect = new BoundingRect(x, y, width, height);
         },
@@ -253,6 +251,26 @@ define(function (require) {
             return invTransform
                 ? v2ApplyTransform([], point, invTransform)
                 : [point[0], point[1]];
+        },
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        containPoint: function (point) {
+            return this.getViewRectAfterRoam().contain(point[0], point[1]);
         }
 
         /**
@@ -267,6 +285,12 @@ define(function (require) {
     };
 
     zrUtil.mixin(View, Transformable);
+
+    function doConvert(methodName, ecModel, finder, value) {
+        var seriesModel = finder.seriesModel;
+        var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
+        return coordSys === this ? coordSys[methodName](value) : null;
+    }
 
     return View;
 });

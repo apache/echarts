@@ -124,37 +124,27 @@ define(function (require) {
                     titles[featureName] = title;
                 }
                 var iconPaths = featureModel.iconPaths = {};
-                zrUtil.each(icons, function (icon, iconName) {
-                    var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
-                    var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
-
-                    var style = {
-                        x: -itemSize / 2,
-                        y: -itemSize / 2,
-                        width: itemSize,
-                        height: itemSize
-                    };
-                    var path = icon.indexOf('image://') === 0
-                        ? (
-                            style.image = icon.slice(8),
-                            new graphic.Image({style: style})
-                        )
-                        : graphic.makePath(
-                            icon.replace('path://', ''),
-                            {
-                                style: normalStyle,
-                                hoverStyle: hoverStyle,
-                                rectHover: true
-                            },
-                            style,
-                            'center'
-                        );
+                zrUtil.each(icons, function (iconStr, iconName) {
+                    var path = graphic.createIcon(
+                        iconStr,
+                        {},
+                        {
+                            x: -itemSize / 2,
+                            y: -itemSize / 2,
+                            width: itemSize,
+                            height: itemSize
+                        }
+                    );
+                    path.setStyle(iconStyleModel.getModel('normal').getItemStyle());
+                    path.hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
 
                     graphic.setHoverStyle(path);
 
                     if (toolboxModel.get('showTitle')) {
                         path.__title = titles[iconName];
                         path.on('mouseover', function () {
+                                // Should not reuse above hoverStyle, which might be modified.
+                                var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
                                 path.setStyle({
                                     text: titles[iconName],
                                     textPosition: hoverStyle.textPosition || 'bottom',
@@ -182,7 +172,7 @@ define(function (require) {
             listComponentHelper.layout(group, toolboxModel, api);
             // Render background after group is layout
             // FIXME
-            listComponentHelper.addBackground(group, toolboxModel);
+            group.add(listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel));
 
             // Adjust icon title positions to avoid them out of screen
             group.eachChild(function (icon) {
@@ -191,7 +181,7 @@ define(function (require) {
                 // May be background element
                 if (hoverStyle && titleText) {
                     var rect = textContain.getBoundingRect(
-                        titleText, hoverStyle.font
+                        titleText, textContain.makeFont(hoverStyle)
                     );
                     var offsetX = icon.position[0] + group.position[0];
                     var offsetY = icon.position[1] + group.position[1] + itemSize;

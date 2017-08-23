@@ -95,11 +95,10 @@ define(function(require) {
             var textBaseline = titleModel.get('textBaseline');
 
             var textEl = new graphic.Text({
-                style: {
+                style: graphic.setTextStyle({}, textStyleModel, {
                     text: titleModel.get('text'),
-                    textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
-                },
+                    textFill: textStyleModel.getTextColor()
+                }, {disableBox: true}),
                 z2: 10
             });
 
@@ -107,13 +106,12 @@ define(function(require) {
 
             var subText = titleModel.get('subtext');
             var subTextEl = new graphic.Text({
-                style: {
+                style: graphic.setTextStyle({}, subtextStyleModel, {
                     text: subText,
-                    textFont: subtextStyleModel.getFont(),
-                    fill: subtextStyleModel.getTextColor(),
+                    textFill: subtextStyleModel.getTextColor(),
                     y: textRect.height + titleModel.get('itemGap'),
-                    textBaseline: 'top'
-                },
+                    textVerticalAlign: 'top'
+                }, {disableBox: true}),
                 z2: 10
             });
 
@@ -197,7 +195,8 @@ define(function(require) {
                     x: groupRect.x - padding[3],
                     y: groupRect.y - padding[0],
                     width: groupRect.width + padding[1] + padding[3],
-                    height: groupRect.height + padding[0] + padding[2]
+                    height: groupRect.height + padding[0] + padding[2],
+                    r: titleModel.get('borderRadius')
                 },
                 style: style,
                 silent: true

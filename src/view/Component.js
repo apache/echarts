@@ -27,6 +27,7 @@ define(function (require) {
         render: function (componentModel, ecModel, api, payload) {},
 
         dispose: function () {}
+
     };
 
     var componentProto = Component.prototype;

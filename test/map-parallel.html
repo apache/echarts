@@ -9,9 +9,6 @@
     </head>
     <body>
         <style>
-            #main {
-                /*height: 1000px;*/
-            }
         </style>
         <div id="main"></div>
         <script>
@@ -300,7 +297,8 @@ option = {
         itemGap: 0,
         textStyle: {
             color: '#eee'
-        }
+        },
+        z: 200
     },
     tooltip: {
         trigger: 'item',
@@ -319,19 +317,21 @@ option = {
             }
         },
         feature: {
-        }
+        },
+        z: 202
     },
     brush: {
         geoIndex: 0,
         brushLink: 'all',
         inBrush: {
-            opacity: 1
+            opacity: 1,
+            symbolSize: 14
         },
         outOfBrush: {
-            color: '#b99e2a',
-            symbolSize: 4,
-            opacity: 0.1
-        }
+            color: '#000',
+            opacity: 0.2
+        },
+        z: 10
     },
     geo: {
         map: 'world',
@@ -352,7 +352,7 @@ option = {
         top: 40,
         bottom: '54%',
         right: '14%',
-        roam: false,
+        roam: true
         // itemStyle: {
         //     normal: {
         //         areaColor: '#323c48',
@@ -364,32 +364,53 @@ option = {
         // }
     },
     parallelAxis: makeParallelAxis(schema),
+    grid: [{
+        show: true,
+        left: 0,
+        right: 0,
+        top: '48%',
+        bottom: 0,
+        borderColor: 'transparent',
+        backgroundColor: '#404a59',
+        z: 99
+    }, {
+        show: true,
+        left: 0,
+        right: 0,
+        top: 0,
+        height: 28,
+        borderColor: 'transparent',
+        backgroundColor: '#404a59',
+        z: 199
+    }],
     parallel: {
         top: '50%',
         left: 60,
         right: 20,
-        bottom: 80,
-        // top: 10,
-        // left: 10,
-        // width: 300,
-        // bottom: 10,
-        // layout: 'vertical',
+        bottom: 100,
         axisExpandable: true,
         axisExpandCenter: 15,
         axisExpandCount: 10,
-        axisExpandWidth: 50,
+        axisExpandWidth: 60,
+        axisExpandTriggerOn: 'mousemove',
+
+        z: 100,
         parallelAxisDefault: {
             type: 'value',
             nameLocation: 'start',
-            // nameRotate: 45,
+            nameRotate: 25,
             // nameLocation: 'end',
             nameTextStyle: {
                 fontSize: 12
             },
-            nameTruncateLength: 5,
+            nameTruncate: {
+                maxWidth: 170
+            },
             nameGap: 20,
             splitNumber: 3,
-            silent: false,
+            tooltip: {
+                show: true
+            },
             axisLine: {
                 // show: false,
                 lineStyle: {
@@ -402,7 +423,8 @@ option = {
             },
             splitLine: {
                 show: false
-            }
+            },
+            z: 100
         }
     },
     series: [
@@ -423,9 +445,10 @@ option = {
                     show: true
                 }
             },
-            symbolSize: function (data) {
-                return data[2] / 5;
-            },
+            symbolSize: 10,
+            // symbolSize: function (data) {
+            //     return Math.max(5, data[2] / 5);
+            // },
             itemStyle: {
                 normal: {
                     borderColor: '#fff',
@@ -444,12 +467,12 @@ option = {
                     opacity: 0.6
                 }
             },
+            z: 100,
             blendMode: 'lighter',
             data: rawData
         }
     ]
 };
-
 
 
 // -------------------------------------------------------------------

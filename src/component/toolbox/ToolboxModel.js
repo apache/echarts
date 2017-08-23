@@ -42,6 +42,8 @@ define(function (require) {
 
             borderColor: '#ccc',
 
+            borderRadius: 0,
+
             borderWidth: 0,
 
             padding: 5,

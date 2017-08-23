@@ -8,6 +8,7 @@ define(function(require) {
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var helper = require('./helper');
     var modelUtil = require('../../util/model');
+    var eventTool = require('zrender/core/event');
 
     var linearMap = numberUtil.linearMap;
     var each = zrUtil.each;
@@ -163,7 +164,7 @@ define(function(require) {
                     textAlign: orient === 'horizontal' ? align : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             }));
         },
@@ -184,7 +185,7 @@ define(function(require) {
             barGroup.add(shapes.outOfRange = createPolygon());
             barGroup.add(shapes.inRange = createPolygon(
                 null,
-                useHandle ? 'move' : null,
+                useHandle ? getCursor(this._orient) : null,
                 zrUtil.bind(this._dragHandle, this, 'all', false),
                 zrUtil.bind(this._dragHandle, this, 'all', true)
             ));
@@ -215,7 +216,7 @@ define(function(require) {
             var onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
             var handleThumb = createPolygon(
                 createHandlePoints(handleIndex, textSize),
-                'move',
+                getCursor(this._orient),
                 onDrift,
                 onDragEnd
             );
@@ -230,11 +231,15 @@ define(function(require) {
             var handleLabel = new graphic.Text({
                 draggable: true,
                 drift: onDrift,
+                onmousemove: function (e) {
+                    // Fot mobile devicem, prevent screen slider on the button.
+                    eventTool.stop(e.event);
+                },
                 ondragend: onDragEnd,
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             });
             this.group.add(handleLabel);
@@ -270,7 +275,7 @@ define(function(require) {
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
+                    textFill: textStyleModel.getTextColor()
                 }
             });
             this.group.add(indicatorLabel);
@@ -350,16 +355,18 @@ define(function(require) {
             delta = delta || 0;
             var visualMapModel = this.visualMapModel;
             var handleEnds = this._handleEnds;
+            var sizeExtent = [0, visualMapModel.itemSize[1]];
 
             sliderMove(
                 delta,
                 handleEnds,
-                [0, visualMapModel.itemSize[1]],
-                handleIndex === 'all' ? 'rigid' : 'push',
-                handleIndex
+                sizeExtent,
+                handleIndex,
+                // cross is forbiden
+                0
             );
+
             var dataExtent = visualMapModel.getExtent();
-            var sizeExtent = [0, visualMapModel.itemSize[1]];
             // Update data interval.
             this._dataInterval = [
                 linearMap(handleEnds[0], sizeExtent, dataExtent, true),
@@ -418,7 +425,7 @@ define(function(require) {
             var barPoints = this._createBarPoints(handleEnds, symbolSizes);
 
             return {
-                barColor: new LinearGradient(0, 0, 1, 1, colorStops),
+                barColor: new LinearGradient(0, 0, 0, 1, colorStops),
                 barPoints: barPoints,
                 handlesColor: [
                     colorStops[0].color,
@@ -686,8 +693,8 @@ define(function(require) {
             }
 
             var resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
-            this._dispatchHighDown('downplay', resultBatches[0]);
-            this._dispatchHighDown('highlight', resultBatches[1]);
+            this._dispatchHighDown('downplay', helper.convertDataIndex(resultBatches[0]));
+            this._dispatchHighDown('highlight', helper.convertDataIndex(resultBatches[1]));
         },
 
         /**
@@ -695,14 +702,20 @@ define(function(require) {
          */
         _hoverLinkFromSeriesMouseOver: function (e) {
             var el = e.target;
+            var visualMapModel = this.visualMapModel;
 
             if (!el || el.dataIndex == null) {
                 return;
             }
 
-            var dataModel = el.dataModel || this.ecModel.getSeriesByIndex(el.seriesIndex);
+            var dataModel = this.ecModel.getSeriesByIndex(el.seriesIndex);
+
+            if (!visualMapModel.isTargetSeries(dataModel)) {
+                return;
+            }
+
             var data = dataModel.getData(el.dataType);
-            var dim = data.getDimension(this.visualMapModel.getDataDimension(data));
+            var dim = data.getDimension(visualMapModel.getDataDimension(data));
             var value = data.get(dim, el.dataIndex, true);
 
             if (!isNaN(value)) {
@@ -727,7 +740,7 @@ define(function(require) {
 
             var indices = this._hoverLinkDataIndices;
 
-            this._dispatchHighDown('downplay', indices);
+            this._dispatchHighDown('downplay', helper.convertDataIndex(indices));
 
             indices.length = 0;
         },
@@ -788,6 +801,10 @@ define(function(require) {
             draggable: !!onDrift,
             cursor: cursor,
             drift: onDrift,
+            onmousemove: function (e) {
+                // Fot mobile devicem, prevent screen slider on the button.
+                eventTool.stop(e.event);
+            },
             ondragend: onDragEnd
         });
     }
@@ -821,6 +838,10 @@ define(function(require) {
 
     function useHoverLinkOnHandle(visualMapModel) {
         return !visualMapModel.get('realtime') && visualMapModel.get('hoverLinkOnHandle');
+    }
+
+    function getCursor(orient) {
+        return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
     }
 
     return ContinuousView;

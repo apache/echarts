@@ -4,14 +4,21 @@
  */
 define(function(require) {
 
-    var layout = require('../../util/layout');
+    var layoutUtil = require('../../util/layout');
     var axisHelper = require('../../coord/axisHelper');
     var zrUtil = require('zrender/core/util');
     var ParallelAxis = require('./ParallelAxis');
     var graphic = require('../../util/graphic');
     var matrix = require('zrender/core/matrix');
+    var numberUtil = require('../../util/number');
+    var sliderMove = require('../../component/helper/sliderMove');
 
     var each = zrUtil.each;
+    var mathMin = Math.min;
+    var mathMax = Math.max;
+    var mathFloor = Math.floor;
+    var mathCeil = Math.ceil;
+    var round = numberUtil.round;
 
     var PI = Math.PI;
 
@@ -22,7 +29,7 @@ define(function(require) {
          * @type {Object.<string, module:echarts/coord/parallel/Axis>}
          * @private
          */
-        this._axesMap = {};
+        this._axesMap = zrUtil.createHashMap();
 
         /**
          * key: dimension
@@ -72,23 +79,23 @@ define(function(require) {
                 var axisIndex = parallelAxisIndex[idx];
                 var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
 
-                var axis = this._axesMap[dim] = new ParallelAxis(
+                var axis = this._axesMap.set(dim, new ParallelAxis(
                     dim,
                     axisHelper.createScaleByModel(axisModel),
                     [0, 0],
                     axisModel.get('type'),
                     axisIndex
-                );
+                ));
 
                 var isCategory = axis.type === 'category';
                 axis.onBand = isCategory && axisModel.get('boundaryGap');
                 axis.inverse = axisModel.get('inverse');
 
-                // Inject axis into axisModel
+                // Injection
                 axisModel.axis = axis;
-
-                // Inject axisModel into axis
                 axis.model = axisModel;
+                axis.coordinateSystem = axisModel.coordinateSystem = this;
+
             }, this);
         },
 
@@ -99,6 +106,23 @@ define(function(require) {
          */
         update: function (ecModel, api) {
             this._updateAxesFromSeries(this._model, ecModel);
+        },
+
+        /**
+         * @override
+         */
+        containPoint: function (point) {
+            var layoutInfo = this._makeLayoutInfo();
+            var axisBase = layoutInfo.axisBase;
+            var layoutBase = layoutInfo.layoutBase;
+            var pixelDimIndex = layoutInfo.pixelDimIndex;
+            var pAxis = point[1 - pixelDimIndex];
+            var pLayout = point[pixelDimIndex];
+
+            return pAxis >= axisBase
+                && pAxis <= axisBase + layoutInfo.axisLength
+                && pLayout >= layoutBase
+                && pLayout <= layoutBase + layoutInfo.layoutLength;
         },
 
         /**
@@ -115,9 +139,9 @@ define(function(require) {
                 var data = seriesModel.getData();
 
                 each(this.dimensions, function (dim) {
-                    var axis = this._axesMap[dim];
-                    axis.scale.unionExtent(data.getDataExtent(dim));
-                    axisHelper.niceScaleExtent(axis, axis.model);
+                    var axis = this._axesMap.get(dim);
+                    axis.scale.unionExtentFromData(data, dim);
+                    axisHelper.niceScaleExtent(axis.scale, axis.model);
                 }, this);
             }, this);
         },
@@ -128,7 +152,7 @@ define(function(require) {
          * @param {module:echarts/ExtensionAPI} api
          */
         resize: function (parallelModel, api) {
-            this._rect = layout.getLayoutRect(
+            this._rect = layoutUtil.getLayoutRect(
                 parallelModel.getBoxLayoutParams(),
                 {
                     width: api.getWidth(),
@@ -136,7 +160,7 @@ define(function(require) {
                 }
             );
 
-            this._layoutAxes(parallelModel);
+            this._layoutAxes();
         },
 
         /**
@@ -149,88 +173,101 @@ define(function(require) {
         /**
          * @private
          */
-        _layoutAxes: function (parallelModel) {
+        _makeLayoutInfo: function () {
+            var parallelModel = this._model;
             var rect = this._rect;
+            var xy = ['x', 'y'];
+            var wh = ['width', 'height'];
             var layout = parallelModel.get('layout');
+            var pixelDimIndex = layout === 'horizontal' ? 0 : 1;
+            var layoutLength = rect[wh[pixelDimIndex]];
+            var layoutExtent = [0, layoutLength];
+            var axisCount = this.dimensions.length;
+
+            var axisExpandWidth = restrict(parallelModel.get('axisExpandWidth'), layoutExtent);
+            var axisExpandCount = restrict(parallelModel.get('axisExpandCount') || 0, [0, axisCount]);
+            var axisExpandable = parallelModel.get('axisExpandable')
+                && axisCount > 3
+                && axisCount > axisExpandCount
+                && axisExpandCount > 1
+                && axisExpandWidth > 0
+                && layoutLength > 0;
+
+            // `axisExpandWindow` is According to the coordinates of [0, axisExpandLength],
+            // for sake of consider the case that axisCollapseWidth is 0 (when screen is narrow),
+            // where collapsed axes should be overlapped.
+            var axisExpandWindow = parallelModel.get('axisExpandWindow');
+            var winSize;
+            if (!axisExpandWindow) {
+                winSize = restrict(axisExpandWidth * (axisExpandCount - 1), layoutExtent);
+                var axisExpandCenter = parallelModel.get('axisExpandCenter') || mathFloor(axisCount / 2);
+                axisExpandWindow = [axisExpandWidth * axisExpandCenter - winSize / 2];
+                axisExpandWindow[1] = axisExpandWindow[0] + winSize;
+            }
+            else {
+                 winSize = restrict(axisExpandWindow[1] - axisExpandWindow[0], layoutExtent);
+                 axisExpandWindow[1] = axisExpandWindow[0] + winSize;
+            }
+
+            var axisCollapseWidth = (layoutLength - winSize) / (axisCount - axisExpandCount);
+            // Avoid axisCollapseWidth is too small.
+            axisCollapseWidth < 3 && (axisCollapseWidth = 0);
+
+            // Find the first and last indices > ewin[0] and < ewin[1].
+            var winInnerIndices = [
+                mathFloor(round(axisExpandWindow[0] / axisExpandWidth, 1)) + 1,
+                mathCeil(round(axisExpandWindow[1] / axisExpandWidth, 1)) - 1
+            ];
+
+            // Pos in ec coordinates.
+            var axisExpandWindow0Pos = axisCollapseWidth / axisExpandWidth * axisExpandWindow[0];
+
+            return {
+                layout: layout,
+                pixelDimIndex: pixelDimIndex,
+                layoutBase: rect[xy[pixelDimIndex]],
+                layoutLength: layoutLength,
+                axisBase: rect[xy[1 - pixelDimIndex]],
+                axisLength: rect[wh[1 - pixelDimIndex]],
+                axisExpandable: axisExpandable,
+                axisExpandWidth: axisExpandWidth,
+                axisCollapseWidth: axisCollapseWidth,
+                axisExpandWindow: axisExpandWindow,
+                axisCount: axisCount,
+                winInnerIndices: winInnerIndices,
+                axisExpandWindow0Pos: axisExpandWindow0Pos
+            };
+        },
+
+        /**
+         * @private
+         */
+        _layoutAxes: function () {
+            var rect = this._rect;
             var axes = this._axesMap;
             var dimensions = this.dimensions;
+            var layoutInfo = this._makeLayoutInfo();
+            var layout = layoutInfo.layout;
 
-            var size = [rect.width, rect.height];
-            var sizeIdx = layout === 'horizontal' ? 0 : 1;
-            var layoutLength = size[sizeIdx];
-            var axisLength = size[1 - sizeIdx];
-            var axisExtent = [0, axisLength];
-
-            each(axes, function (axis) {
+            axes.each(function (axis) {
+                var axisExtent = [0, layoutInfo.axisLength];
                 var idx = axis.inverse ? 1 : 0;
                 axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
             });
 
-            var axisExpandable = parallelModel.get('axisExpandable');
-            var axisExpandWidth = parallelModel.get('axisExpandWidth');
-            var axisExpandCenter = parallelModel.get('axisExpandCenter');
-            var axisExpandCount = parallelModel.get('axisExpandCount') || 0;
-            var axisExpandWindow;
-
-            if (axisExpandCenter != null) {
-                // Clamp
-                var left = Math.max(0, Math.floor(axisExpandCenter - (axisExpandCount - 1) / 2));
-                var right = left + axisExpandCount - 1;
-                if (right >= dimensions.length) {
-                    right = dimensions.length - 1;
-                    left = Math.max(0, Math.floor(right - axisExpandCount + 1));
-                }
-                axisExpandWindow = [left, right];
-            }
-
-            var getAxisPosition = (axisExpandable && axisExpandWindow && axisExpandWidth)
-                ? function getAxisPosition(axisIndex, layoutLength, axisCount) {
-                    var peekIntervalCount = axisExpandWindow[1] - axisExpandWindow[0];
-                    var otherWidth = (
-                        layoutLength - axisExpandWidth * peekIntervalCount
-                    ) / (axisCount - 1 - peekIntervalCount);
-
-                    var posToWindow = compareToWindow(axisIndex);
-
-                    if (posToWindow < 0) {
-                        return (axisIndex - 1) * otherWidth;
-                    }
-                    else if (posToWindow === 0) {
-                        return axisExpandWindow[0] * otherWidth
-                            + (axisIndex - axisExpandWindow[0]) * axisExpandWidth;
-                    }
-                    else if (axisIndex === axisCount - 1) {
-                        return layoutLength;
-                    }
-                    else {
-                        return axisExpandWindow[0] * otherWidth
-                            + peekIntervalCount * axisExpandWidth
-                            + (axisIndex - axisExpandWindow[1]) * otherWidth;
-                    }
-                }
-                : function (axisIndex, layoutLength, axisCount) {
-                    return layoutLength * axisIndex / (axisCount - 1);
-                };
-
-            function compareToWindow(axisIndex) {
-                return axisIndex < axisExpandWindow[0]
-                    ? -1
-                    : axisIndex > axisExpandWindow[1]
-                    ? 1
-                    : 0;
-            }
-
             each(dimensions, function (dim, idx) {
-                var pos = getAxisPosition(idx, layoutLength, dimensions.length);
+                var posInfo = (layoutInfo.axisExpandable
+                    ? layoutAxisWithExpand : layoutAxisWithoutExpand
+                )(idx, layoutInfo);
 
                 var positionTable = {
                     horizontal: {
-                        x: pos,
-                        y: axisLength
+                        x: posInfo.position,
+                        y: layoutInfo.axisLength
                     },
                     vertical: {
                         x: 0,
-                        y: pos
+                        y: posInfo.position
                     }
                 };
                 var rotationTable = {
@@ -258,9 +295,12 @@ define(function(require) {
                     position: position,
                     rotation: rotation,
                     transform: transform,
+                    axisNameAvailableWidth: posInfo.axisNameAvailableWidth,
+                    axisLabelShow: posInfo.axisLabelShow,
+                    nameTruncateMaxWidth: posInfo.nameTruncateMaxWidth,
                     tickDirection: 1,
                     labelDirection: 1,
-                    axisExpandWindow: axisExpandWindow
+                    labelInterval: axes.get(dim).getLabelInterval()
                 };
             }, this);
         },
@@ -271,7 +311,7 @@ define(function(require) {
          * @return {module:echarts/coord/parallel/ParallelAxis} [description]
          */
         getAxis: function (dim) {
-            return this._axesMap[dim];
+            return this._axesMap.get(dim);
         },
 
         /**
@@ -282,7 +322,7 @@ define(function(require) {
          */
         dataToPoint: function (value, dim) {
             return this.axisCoordToPoint(
-                this._axesMap[dim].dataToCoord(value),
+                this._axesMap.get(dim).dataToCoord(value),
                 dim
             );
         },
@@ -297,7 +337,7 @@ define(function(require) {
         eachActiveState: function (data, callback, context) {
             var dimensions = this.dimensions;
             var axesMap = this._axesMap;
-            var hasActiveSet = this.hasAxisbrushed();
+            var hasActiveSet = this.hasAxisBrushed();
 
             for (var i = 0, len = data.count(); i < len; i++) {
                 var values = data.getValues(dimensions, i);
@@ -310,7 +350,7 @@ define(function(require) {
                     activeState = 'active';
                     for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
                         var dimName = dimensions[j];
-                        var state = axesMap[dimName].model.getActiveState(values[j], j);
+                        var state = axesMap.get(dimName).model.getActiveState(values[j], j);
 
                         if (state === 'inactive') {
                             activeState = 'inactive';
@@ -327,13 +367,13 @@ define(function(require) {
          * Whether has any activeSet.
          * @return {boolean}
          */
-        hasAxisbrushed: function () {
+        hasAxisBrushed: function () {
             var dimensions = this.dimensions;
             var axesMap = this._axesMap;
             var hasActiveSet = false;
 
             for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
-                if (axesMap[dimensions[j]].model.getActiveState() !== 'normal') {
+                if (axesMap.get(dimensions[j]).model.getActiveState() !== 'normal') {
                     hasActiveSet = true;
                 }
             }
@@ -360,29 +400,117 @@ define(function(require) {
             return zrUtil.clone(this._axesLayout[dim]);
         },
 
-        findClosestAxisDim: function (point) {
-            var axisDim;
-            var minDist = Infinity;
+        /**
+         * @param {Array.<number>} point
+         * @return {Object} {axisExpandWindow, delta, behavior: 'jump' | 'slide' | 'none'}.
+         */
+        getSlidedAxisExpandWindow: function (point) {
+            var layoutInfo = this._makeLayoutInfo();
+            var pixelDimIndex = layoutInfo.pixelDimIndex;
+            var axisExpandWindow = layoutInfo.axisExpandWindow.slice();
+            var winSize = axisExpandWindow[1] - axisExpandWindow[0];
+            var extent = [0, layoutInfo.axisExpandWidth * (layoutInfo.axisCount - 1)];
 
-            zrUtil.each(this._axesLayout, function (axisLayout, dim) {
-                var localPoint = graphic.applyTransform(point, axisLayout.transform, true);
-                var extent = this._axesMap[dim].getExtent();
+            // Out of the area of coordinate system.
+            if (!this.containPoint(point)) {
+                return {behavior: 'none', axisExpandWindow: axisExpandWindow};
+            }
 
-                if (localPoint[0] < extent[0] || localPoint[0] > extent[1]) {
-                    return;
+            // Conver the point from global to expand coordinates.
+            var pointCoord = point[pixelDimIndex] - layoutInfo.layoutBase - layoutInfo.axisExpandWindow0Pos;
+
+            // For dragging operation convenience, the window should not be
+            // slided when mouse is the center area of the window.
+            var delta;
+            var behavior = 'slide';
+            var axisCollapseWidth = layoutInfo.axisCollapseWidth;
+            var triggerArea = this._model.get('axisExpandSlideTriggerArea');
+            // But consider touch device, jump is necessary.
+            var useJump = triggerArea[0] != null;
+
+            if (axisCollapseWidth) {
+                if (useJump && axisCollapseWidth && pointCoord < winSize * triggerArea[0]) {
+                    behavior = 'jump';
+                    delta = pointCoord - winSize * triggerArea[2];
                 }
-
-                var dist = Math.abs(localPoint[1]);
-                if (dist < minDist) {
-                    minDist = dist;
-                    axisDim = dim;
+                else if (useJump && axisCollapseWidth && pointCoord > winSize * (1 - triggerArea[0])) {
+                    behavior = 'jump';
+                    delta = pointCoord - winSize * (1 - triggerArea[2]);
                 }
-            }, this);
+                else {
+                    (delta = pointCoord - winSize * triggerArea[1]) >= 0
+                        && (delta = pointCoord - winSize * (1 - triggerArea[1])) <= 0
+                        && (delta = 0);
+                }
+                delta *= layoutInfo.axisExpandWidth / axisCollapseWidth;
+                delta
+                    ? sliderMove(delta, axisExpandWindow, extent, 'all')
+                    // Avoid nonsense triger on mousemove.
+                    : (behavior = 'none');
+            }
+            // When screen is too narrow, make it visible and slidable, although it is hard to interact.
+            else {
+                var winSize = axisExpandWindow[1] - axisExpandWindow[0];
+                var pos = extent[1] * pointCoord / winSize;
+                axisExpandWindow = [mathMax(0, pos - winSize / 2)];
+                axisExpandWindow[1] = mathMin(extent[1], axisExpandWindow[0] + winSize);
+                axisExpandWindow[0] = axisExpandWindow[1] - winSize;
+            }
 
-            return axisDim;
+            return {
+                axisExpandWindow: axisExpandWindow,
+                behavior: behavior
+            };
+        }
+    };
+
+    function restrict(len, extent) {
+        return mathMin(mathMax(len, extent[0]), extent[1]);
+    }
+
+    function layoutAxisWithoutExpand(axisIndex, layoutInfo) {
+        var step = layoutInfo.layoutLength / (layoutInfo.axisCount - 1);
+        return {
+            position: step * axisIndex,
+            axisNameAvailableWidth: step,
+            axisLabelShow: true
+        };
+    }
+
+    function layoutAxisWithExpand(axisIndex, layoutInfo) {
+        var layoutLength = layoutInfo.layoutLength;
+        var axisExpandWidth = layoutInfo.axisExpandWidth;
+        var axisCount = layoutInfo.axisCount;
+        var axisCollapseWidth = layoutInfo.axisCollapseWidth;
+        var winInnerIndices = layoutInfo.winInnerIndices;
+
+        var position;
+        var axisNameAvailableWidth = axisCollapseWidth;
+        var axisLabelShow = false;
+        var nameTruncateMaxWidth;
+
+        if (axisIndex < winInnerIndices[0]) {
+            position = axisIndex * axisCollapseWidth;
+            nameTruncateMaxWidth = axisCollapseWidth;
+        }
+        else if (axisIndex <= winInnerIndices[1]) {
+            position = layoutInfo.axisExpandWindow0Pos
+                + axisIndex * axisExpandWidth - layoutInfo.axisExpandWindow[0];
+            axisNameAvailableWidth = axisExpandWidth;
+            axisLabelShow = true;
+        }
+        else {
+            position = layoutLength - (axisCount - 1 - axisIndex) * axisCollapseWidth;
+            nameTruncateMaxWidth = axisCollapseWidth;
         }
 
-    };
+        return {
+            position: position,
+            axisNameAvailableWidth: axisNameAvailableWidth,
+            axisLabelShow: axisLabelShow,
+            nameTruncateMaxWidth: nameTruncateMaxWidth
+        };
+    }
 
     return Parallel;
 });

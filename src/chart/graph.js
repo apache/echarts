@@ -6,7 +6,7 @@ define(function (require) {
     require('./graph/GraphSeries');
     require('./graph/GraphView');
 
-    require('./graph/roamAction');
+    require('./graph/graphAction');
 
     echarts.registerProcessor(require('./graph/categoryFilter'));
 

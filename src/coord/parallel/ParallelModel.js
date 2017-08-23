@@ -50,6 +50,12 @@ define(function(require) {
             axisExpandCenter: null,
             axisExpandCount: 0,
             axisExpandWidth: 50,      // FIXME '10%' ?
+            axisExpandRate: 17,
+            axisExpandDebounce: 50,
+            // [out, in, jumpTarget]. In percentage. If use [null, 0.05], null means full.
+            // Do not doc to user until necessary.
+            axisExpandSlideTriggerArea: [-0.15, 0.05, 0.4],
+            axisExpandTriggerOn: 'click', // 'mousemove' or 'click'
 
             parallelAxisDefault: null
         },
@@ -87,7 +93,7 @@ define(function(require) {
 
         setAxisExpand: function (opt) {
             zrUtil.each(
-                ['axisExpandable', 'axisExpandCenter', 'axisExpandCount', 'axisExpandWidth'],
+                ['axisExpandable', 'axisExpandCenter', 'axisExpandCount', 'axisExpandWidth', 'axisExpandWindow'],
                 function (name) {
                     if (opt.hasOwnProperty(name)) {
                         this.option[name] = opt[name];

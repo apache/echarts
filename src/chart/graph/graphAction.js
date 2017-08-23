@@ -18,7 +18,6 @@ define(function (require) {
      * @property {number} [originX]
      * @property {number} [originY]
      */
-
     echarts.registerAction(actionInfo, function (payload, ecModel) {
         ecModel.eachComponent({mainType: 'series', query: payload}, function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
@@ -32,4 +31,31 @@ define(function (require) {
                 && seriesModel.setZoom(res.zoom);
         });
     });
+
+
+    /**
+     * @payload
+     * @property {number} [seriesIndex]
+     * @property {string} [seriesId]
+     * @property {string} [seriesName]
+     * @property {number} [dataIndex]
+     */
+    echarts.registerAction({
+        type: 'focusNodeAdjacency',
+        event: 'focusNodeAdjacency',
+        update: 'series.graph:focusNodeAdjacency'
+    }, function () {});
+
+    /**
+     * @payload
+     * @property {number} [seriesIndex]
+     * @property {string} [seriesId]
+     * @property {string} [seriesName]
+     */
+    echarts.registerAction({
+        type: 'unfocusNodeAdjacency',
+        event: 'unfocusNodeAdjacency',
+        update: 'series.graph:unfocusNodeAdjacency'
+    }, function () {});
+
 });

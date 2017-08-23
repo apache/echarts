@@ -23,6 +23,13 @@ define(function (require) {
 
         constructor: RadiusAxis,
 
+        /**
+         * @override
+         */
+        pointToData: function (point, clamp) {
+            return this.polar.pointToData(point, clamp)[this.dim === 'radius' ? 0 : 1];
+        },
+
         dataToRadius: Axis.prototype.dataToCoord,
 
         radiusToData: Axis.prototype.coordToData

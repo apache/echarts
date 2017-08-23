@@ -9,7 +9,7 @@ define(function (require) {
     var bezierCurveProto = graphic.BezierCurve.prototype;
 
     function isLine(shape) {
-        return shape.cpx1 == null || shape.cpy1 == null;
+        return isNaN(+shape.cpx1) || isNaN(+shape.cpy1);
     }
 
     return graphic.extendShape({

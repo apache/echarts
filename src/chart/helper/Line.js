@@ -34,6 +34,7 @@ define(function (require) {
             symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
             symbolSize[0], symbolSize[1], color
         );
+
         symbolPath.name = name;
 
         return symbolPath;
@@ -60,6 +61,10 @@ define(function (require) {
         if (cp1) {
             targetShape.cpx1 = cp1[0];
             targetShape.cpy1 = cp1[1];
+        }
+        else {
+            targetShape.cpx1 = NaN;
+            targetShape.cpy1 = NaN;
         }
     }
 
@@ -259,63 +264,90 @@ define(function (require) {
         }
 
         var visualColor = lineData.getItemVisual(idx, 'color');
-        if (isNaN(defaultText)) {
-            // Use name
-            defaultText = lineData.getName(idx);
-        }
+        var visualOpacity = zrUtil.retrieve3(
+            lineData.getItemVisual(idx, 'opacity'),
+            lineStyle.opacity,
+            1
+        );
+
         line.useStyle(zrUtil.defaults(
             {
                 strokeNoScale: true,
                 fill: 'none',
-                stroke: visualColor
+                stroke: visualColor,
+                opacity: visualOpacity
             },
             lineStyle
         ));
         line.hoverStyle = hoverLineStyle;
 
+        // Update symbol
+        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+            var symbol = this.childOfName(symbolCategory);
+            if (symbol) {
+                symbol.setColor(visualColor);
+                symbol.setStyle({
+                    opacity: visualOpacity
+                });
+            }
+        }, this);
+
         var showLabel = labelModel.getShallow('show');
         var hoverShowLabel = hoverLabelModel.getShallow('show');
-        var defaultText;
+
         var label = this.childOfName('label');
         var defaultLabelColor;
+        var defaultText;
+
         if (showLabel || hoverShowLabel) {
-            defaultText = numberUtil.round(seriesModel.getRawValue(idx));
+            var rawVal = seriesModel.getRawValue(idx);
+            defaultText = rawVal == null
+                ? defaultText = lineData.getName(idx)
+                : isFinite(rawVal)
+                ? numberUtil.round(rawVal)
+                : rawVal;
             defaultLabelColor = visualColor || '#000';
         }
+
         // label.afterUpdate = lineAfterUpdate;
         if (showLabel) {
-            var textStyleModel = labelModel.getModel('textStyle');
-            label.setStyle({
-                text: zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
-                        defaultText
-                    ),
-                textFont: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor() || defaultLabelColor
+            var labelStyle = graphic.setTextStyle(label.style, labelModel, {
+                text: zrUtil.retrieve2(
+                    seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
+                    defaultText
+                )
+            }, {
+                defaultTextColor: defaultLabelColor,
+                autoColor: defaultLabelColor
             });
 
-            label.__textAlign = textStyleModel.get('align');
-            label.__verticalAlign = textStyleModel.get('baseline');
-            label.__position = labelModel.get('position');
+            label.__textAlign = labelStyle.textAlign;
+            label.__verticalAlign = labelStyle.textVerticalAlign;
+            // 'start', 'middle', 'end'
+            label.__position = labelModel.get('position') || 'middle';
         }
         else {
-            label.setStyle('text', '');
+            label.setStyle('text', null);
         }
         if (hoverShowLabel) {
-            var textStyleHoverModel = hoverLabelModel.getModel('textStyle');
-
+            // Only these properties supported in this emphasis style here.
             label.hoverStyle = {
-                text: zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-                        defaultText
-                    ),
-                textFont: textStyleHoverModel.getFont(),
-                fill: textStyleHoverModel.getTextColor() || defaultLabelColor
+                text: zrUtil.retrieve2(
+                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
+                    defaultText
+                ),
+                textFill: hoverLabelModel.getTextColor(true),
+                // For merging hover style to normal style, do not use
+                // `hoverLabelModel.getFont()` here.
+                fontStyle: hoverLabelModel.getShallow('fontStyle'),
+                fontWeight: hoverLabelModel.getShallow('fontWeight'),
+                fontSize: hoverLabelModel.getShallow('fontSize'),
+                fontFamily: hoverLabelModel.getShallow('fontFamily')
             };
         }
         else {
             label.hoverStyle = {
-                text: ''
+                text: null
             };
         }
 

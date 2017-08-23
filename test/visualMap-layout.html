@@ -55,6 +55,21 @@
                 makeChart({
                     show: true,
                     splitNumber: 7,
+                    minOpen: true,
+                    maxOpen: true,
+                    backgroundColor: '#eee',
+                    padding: [10, 30, 5, 40],
+                    visualSelected: {
+                        data: ['red', 'pink']
+                    }
+                });
+                makeChart({
+                    show: true,
+                    splitNumber: 7,
+                    minOpen: true,
+                    maxOpen: true,
+                    showLabel: true,
+                    text: ['Number Result'],
                     backgroundColor: '#eee',
                     padding: [10, 30, 5, 40],
                     visualSelected: {
@@ -87,6 +102,18 @@
                     }
                 });
                 makeChart({
+                    splitNumber: 5,
+                    right: 0,
+                    dimension: 3,
+                    text: ['Number Result'],
+                    showLabel: true,
+                    backgroundColor: '#eee',
+                    visualSelected: {
+                        type: 'symbol',
+                        data: ['roundRect', 'rect', 'diamond', 'line', 'circle']
+                    }
+                });
+                makeChart({
                     splitNumber: 6,
                     top: 0,
                     left: 0,
@@ -101,6 +128,19 @@
                     splitNumber: 5,
                     top: 20,
                     right: 0,
+                    orient: 'horizontal',
+                    dimension: 3,
+                    backgroundColor: '#eee',
+                    visualSelected: {
+                        type: 'colorLightness'
+                    }
+                });
+                makeChart({
+                    splitNumber: 5,
+                    top: 20,
+                    right: 0,
+                    text: ['Number \nRe', 'Number \nRe2'],
+                    showLabel: true,
                     orient: 'horizontal',
                     dimension: 3,
                     backgroundColor: '#eee',

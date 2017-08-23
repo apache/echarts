@@ -4,20 +4,351 @@
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="lib/testHelper.js"></script>
+        <script src="tooltipTestHelper.js"></script>
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
             }
-            #main {
-                width: 1000px;
-                background: #fff;
+            .chart {
+                height: 350px;
             }
         </style>
-        <div id="main"></div>
+
+
+        <h1>category | axisPointer label should not show | legend tooltip | axis name tooltip on 1st grid</h1>
+        <div class="chart" id="category"></div>
+        <h1>global-axis-pointer-style | axisPointer label should not show</h1>
+        <div class="chart" id="global-axis-pointer-style"></div>
+        <h1>cross compatible | tooltip.trigger: 'item' | yAxis pointer precision 3 | crossStyle set | xAxisPointer label show</h1>
+        <div class="chart" id="cross-item"></div>
+        <h1>cross compatible | tooltip.trigger: 'axis' | xAxisPointer label not show</h1>
+        <div class="chart" id="cross-axis"></div>
+        <h1>tooltip.axisPointer.axis is 'y' | auto snap | auto animation when snap</h1>
+        <div class="chart" id="tooltip.axisPointer.axis"></div>
+        <h1>showDelay: 50 | enterable | dynamic callback</h1>
+        <div class="chart" id="main"></div>
+        <h1>set position</h1>
+        <div class="chart" id="position"></div>
+        <h1>confine</h1>
+        <div class="chart" id="confine"></div>
+        <h1>triggerOn click</h1>
+        <div class="chart" id="click"></div>
+        <h1>dispatchAciton manually with `position` specified (postion: [10,10])</h1>
+        <div class="chart" id="positionSpecified"></div>
+        <!--<h1>alwaysShowContent (check when hover on the last one, the content should not be the previous one)</h1>-->
+        <!--<div class="chart" id="alwaysShowContent"></div>-->
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'axisPointer: line\nno item trigger',
+                        tooltip: {show: true}
+                    },
+                    xAxis: {
+                        tooltip: {show: true}
+                    }
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'axisPointer: shadow\nno item trigger'},
+                    xAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'trigger: item \n(only the 1st series item trigger)'},
+                    xAxis: {
+                        axisPointer: {show: false}
+                    },
+                    series: [
+                        {tooltip: {trigger: 'item'}}
+                    ]
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'both axis and item trigger\n(the 1st series can item trigger)'},
+                    xAxis: {
+                        axisPointer: {type: 'shadow'}
+                    },
+                    series: [
+                        {tooltip: {trigger: 'item'}}
+                    ]
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('category');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    axisPointer: {
+                        shadowStyle: {
+                            color: 'red'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'should be red shadow'}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('global-axis-pointer-style');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('cross-axis');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        axisPointer: {
+                            type: 'cross',
+                            crossStyle: {
+                                color: 'blue',
+                                shadowBlur: 4,
+                                shadowColor: '#000',
+                                shadowOffsetX: 3,
+                                shadowOffsetY: 3,
+                                textStyle: {
+                                    color: 'yellow',
+                                    fontSize: 16
+                                }
+                            }
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        axisPointer: {
+                            label: {
+                                precision: 3
+                            }
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('cross-item');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            axis: 'y'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('tooltip.axisPointer.axis');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
         <script>
 
             require([
@@ -28,9 +359,11 @@
                 'echarts/component/tooltip'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var dom = document.getElementById('main');
+                if (!dom) {
+                    return;
+                }
+                var chart = echarts.init(dom);
 
                 var xAxisData = [];
                 var data1 = [];
@@ -47,6 +380,13 @@
                 }
 
                 chart.setOption({
+                    legend: {
+                        data: ['坐标轴触发1', '坐标轴触发2', '数据项触发', '不显示的数据项触发'],
+                        tooltip: {
+                            show: true,
+                            formatter: null
+                        }
+                    },
                     tooltip : {         // Option config. Can be overwrited by series or data
                         trigger: 'axis',
                         //show: true,   //default true
@@ -57,6 +397,7 @@
                         borderColor : '#f50',
                         borderRadius : 8,
                         borderWidth: 2,
+                        enterable: true,
                         padding: 10,    // [5, 10, 15, 20]
                         axisPointer: {
                             type: 'shadow'
@@ -75,17 +416,21 @@
                             fontWeight: 'bold'
                         },
                         formatter: function (params,ticket,callback) {
+                            if (params.componentType === 'legend') {
+                                return params.name;
+                            }
                             var res = 'Function formatter : <br/>' + params[0].name;
                             for (var i = 0, l = params.length; i < l; i++) {
                                 res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
                             }
+                            res += '<br /><a target="_blank" href="http://www.baidu.com">搜索</a>';
                             setTimeout(function (){
                                 // 仅为了模拟异步回调
                                 callback(ticket, res);
                             }, 1000);
                             return 'loading';
                         }
-                        //formatter: "Template formatter: <br/>{b}<br/>{a}:{c}<br/>{a1}:{c1}"
+                        // ,formatter: "Template formatter: <br/>{b}<br/>{a}:{c}<br/>{a1}:{c1}"
                     },
                     toolbox: {
                         show : true,
@@ -119,7 +464,7 @@
                             data:[862, 1018, 964, 1026, 1679, 1600, 157]
                         },
                         {
-                            name:'数据项触发1',
+                            name:'数据项触发',
                             type:'bar',
                             tooltip : {             // Series config.
                                 trigger: 'item',
@@ -129,7 +474,13 @@
                             },
                             stack: '数据项',
                             data:[
-                                120, 132,
+                                {
+                                    value: 120,
+                                    tooltip: '我是一个简单的字符串',
+                                    label: {
+                                        normal: {show: true, formatter: 'formatter is string', textStyle: {color: '#222'}}
+                                    }
+                                }, 132,
                                 {
                                     value: 301,
                                     itemStyle: {normal: {color: 'red'}},
@@ -141,13 +492,19 @@
                                 134, 90,
                                 {
                                     value: 230,
+                                    label: {
+                                        normal: {
+                                            show: true,
+                                            formatter: '我不显示 tooltip'
+                                        }
+                                    },
                                     tooltip: {show: false}
                                 },
                                 210
                             ]
                         },
                         {
-                            name:'数据项触发2',
+                            name:'不显示的数据项触发',
                             type:'bar',
                             tooltip : {
                                 show : false,
@@ -160,5 +517,425 @@
                 });
             });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/pie',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    },
+                    series: {
+                        name: '访问来源',
+                        type: 'pie',
+                        radius : 80,
+                        tooltip: {
+                            formatter: "{a} <br/>{b} : {c} ({d}%)"
+                        },
+                        data:[
+                            {
+                                value:335, name:'position: [300, 100]',
+                                tooltip: {
+                                    position: [300, 100]
+                                }
+                            },
+                            {
+                                value:310, name:'position: function [p[0] + 10, p[1] - 50]',
+                                tooltip: {
+                                    position : function(p) {
+                                        return [p[0] + 10, p[1] - 50];
+                                    }
+                                }
+                            },
+                            {
+                                value:234, name:'position: inside',
+                                tooltip: {
+                                    position : 'inside'
+                                }
+                            },
+                            {
+                                value:135, name:'align: right; verticalAlign: bottom',
+                                tooltip: {
+                                    align: 'right',
+                                    verticalAlign: 'bottom'
+                                }
+                            },
+                            {
+                                value:548, name:'position: [30, 140], verticalAlign: bottom',
+                                tooltip: {
+                                    position: [30, 140],
+                                    verticalAlign: 'bottom'
+                                }
+                            }
+                        ],
+                        itemStyle: {
+                            emphasis: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                };
+
+                createChart('position', echarts, option, 500);
+            })
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/pie',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        confine: true,
+                        borderWidth: 10,
+                        borderColor: 'green',
+                        padding: 20,
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    series: {
+                        name: '访问来源',
+                        type: 'pie',
+                        radius : 1180,
+                        data:[
+                            {
+                                value:335, name:'position: [300, 100]',
+                            },
+                            {
+                                value:310, name:'position: function [p[0] + 10, p[1] - 50]',
+                            },
+                            {
+                                value:234, name:'position: inside',
+                            },
+                            {
+                                value:135, name:'align: right; verticalAlign: bottom',
+                                tooltip: {
+                                    align: 'right',
+                                    verticalAlign: 'bottom'
+                                }
+                            },
+                            {
+                                value:548, name:'position: [30, 140], verticalAlign: bottom',
+                            }
+                        ],
+                        itemStyle: {
+                            emphasis: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                };
+
+                createChart('confine', echarts, option, 500);
+            })
+        </script>
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        triggerOn: 'click',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'click show tip',
+                        tooltip: {
+                            show: true
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('click', echarts, option, baseTop);
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    title: {
+                        text: '未来一周气温变化',
+                        subtext: '纯属虚构'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data:['最高气温','最低气温']
+                    },
+                    toolbox: {
+                        show: true,
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            dataView: {readOnly: false},
+                            magicType: {type: ['line', 'bar']},
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    xAxis:  {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['周一','周二','周三','周四','周五','周六','周日']
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '{value} °C'
+                        }
+                    },
+                    series: [
+                        {
+                            name:'最高气温',
+                            type:'line',
+                            data:[11, 11, 15, 13, 12, 13, 10],
+                            markPoint: {
+                                data: [
+                                    {type: 'max', name: '最大值'},
+                                    {type: 'min', name: '最小值'}
+                                ]
+                            },
+                            markLine: {
+                                data: [
+                                    {type: 'average', name: '平均值'}
+                                ]
+                            }
+                        },
+                        {
+                            name:'最低气温',
+                            type:'line',
+                            data:[1, -2, 2, 5, 3, 2, 0],
+                            markPoint: {
+                                data: [
+                                    {name: '周最低', value: -2, xAxis: 1, yAxis: -1.5}
+                                ]
+                            },
+                            markLine: {
+                                data: [
+                                    {type: 'average', name: '平均值'},
+                                    [{
+                                        symbol: 'none',
+                                        x: '90%',
+                                        yAxis: 'max'
+                                    }, {
+                                        symbol: 'circle',
+                                        label: {
+                                            normal: {
+                                                position: 'start',
+                                                formatter: '最大值'
+                                            }
+                                        },
+                                        type: 'max',
+                                        name: '最高点'
+                                    }]
+                                ]
+                            }
+                        }
+                    ]
+                };
+
+                var chart = createChart('positionSpecified', echarts, option, 500);
+
+                setTimeout(function () {
+                    chart.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 0,
+                        position: function () {
+                            return [10, 10];
+                        }
+                    })
+                }, 1000);
+
+            })
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        triggerOn: 'click',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {
+                        name: 'click show tip',
+                        tooltip: {
+                            show: true
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('click', echarts, option, baseTop);
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!--<script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
+                        },
+                        alwaysShowContent: true
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            data : ['周一','周二','周三','周四','周五','周六','周日']
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
+                            },
+                            areaStyle: {normal: {}},
+                            data:[820, 932, 456, 934, 1290, 1330]
+                        }
+                    ]
+                };
+
+                createChart('alwaysShowContent', echarts, option);
+            })
+        </script>-->
+
+
     </body>
 </html>

@@ -95,9 +95,7 @@ define(function(require) {
          */
         dim: null, // 0, 1, 2, ...
 
-        parallelIndex: null,
-
-        nameTruncateLengthOutExpand: 1,
+        // parallelIndex: null,
 
         areaSelectStyle: {
             width: 20,

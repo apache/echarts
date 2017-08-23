@@ -2,7 +2,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Axis = require('../Axis');
-    var axisHelper = require('../axisHelper');
 
     /**
      * @constructor  module:echarts/coord/single/SingleAxis
@@ -73,29 +72,10 @@ define(function (require) {
         },
 
         /**
-         * Get interval of the axis label.
-         * @return {number}
+         * @override
          */
-        getLabelInterval: function () {
-            var labelInterval = this._labelInterval;
-            if (!labelInterval) {
-                var axisModel = this.model;
-                var labelModel = axisModel.getModel('axisLabel');
-                var interval = labelModel.get('interval');
-                if (!(this.type === 'category' && interval === 'auto')) {
-
-                    labelInterval = this._labelInterval = interval === 'auto' ? 0 : interval;
-                    return labelInterval;
-                }
-                labelInterval = this._labelInterval =
-                    axisHelper.getAxisLabelInterval(
-                        zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
-                        axisModel.getFormattedLabels(),
-                        labelModel.getModel('textStyle').getFont(),
-                        this.isHorizontal()
-                    );
-            }
-            return labelInterval;
+        pointToData: function (point, clamp) {
+            return this.coordinateSystem.pointToData(point, clamp)[0];
         },
 
         /**

@@ -30,7 +30,9 @@
         </style>
         <div id="main"></div>
         <div id="middle">
-            上面是降水量，下面是流量。这是两个echarts实例。
+            上面是降水量，下面是流量。这是三个echarts实例。<br>
+            三个都会 dataZoom 同步。<br>
+            前两个会 tooltip 同步，第三个不 tooltip 同步。
         </div>
         <div id="main2"></div>
         <div id="main3"></div>
@@ -283,6 +285,11 @@
                         }
                     ],
                     series: [
+                        {
+                            name: 'NaN',
+                            type: 'line',
+                            data: data.flow.map(function () { return null; })
+                        },
                         {
                             name: '流量',
                             type: 'line',

@@ -49,9 +49,7 @@ define(function(require) {
             },
             label: {
                 normal: {
-                    textStyle: {
-                        color: '#000'
-                    }
+                    color: '#000'
                 },
                 emphasis: {}
             },

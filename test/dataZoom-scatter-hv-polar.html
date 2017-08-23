@@ -3,14 +3,26 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
     </head>
     <body>
         <style>
             html, body, #main {
+                padding: 0;
+                margin: 0;
                 width: 100%;
-                height: 100%;
+                height: 600px;
+            }
+            .operations {
+                margin-top: 10px;
+                margin-bottom: 30px;
             }
         </style>
+        <div class="operations">
+            <input type="radio" name="inside" value="radius"/> inside zoom radius
+            <input type="radio" name="inside" value="angle" checked="checked"/> inside zoom angle
+            <input type="radio" name="inside" value="all"/> inside zoom all
+        </div>
         <div id="main"></div>
         <script>
 
@@ -51,11 +63,13 @@
                     },
                     dataZoom: [
                         {
+                            id: 'slider-v',
                             show: true,
                             orient: 'vertical',
                             angleAxisIndex: [0]
                         },
                         {
+                            id: 'slider-h',
                             show: true,
                             orient: 'horizontal',
                             radiusAxisIndex: [0]
@@ -89,7 +103,76 @@
                         data: data3
                     }]
                 });
+
+                var radioOption = {
+                    radius: {
+                        dataZoom: [
+                            {
+                                disabled: true,
+                                id: 'inside-a',
+                                type: 'inside',
+                                angleAxisIndex: 0
+                            },
+                            {
+                                disabled: false,
+                                id: 'inside-r',
+                                type: 'inside',
+                                radiusAxisIndex: 0
+                            }
+                        ]
+                    },
+                    angle: {
+                        dataZoom: [
+                            {
+                                disabled: false,
+                                id: 'inside-a',
+                                type: 'inside',
+                                angleAxisIndex: 0
+                            },
+                            {
+                                disabled: true,
+                                id: 'inside-r',
+                                type: 'inside',
+                                radiusAxisIndex: 0
+                            }
+                        ]
+                    },
+                    all: {
+                        dataZoom: [
+                            {
+                                disabled: false,
+                                id: 'inside-a',
+                                type: 'inside',
+                                angleAxisIndex: [0]
+                            },
+                            {
+                                disabled: false,
+                                id: 'inside-r',
+                                type: 'inside',
+                                radiusAxisIndex: [0]
+                            }
+                        ]
+                    }
+                };
+
+                initRadio();
+
+                chart.setOption(radioOption.angle);
+
+                function initRadio() {
+                    $('.operations').on('click', function () {
+                        $('.operations input').each(function (idx, el) {
+                            if (el.checked) {
+                                chart.setOption(radioOption[el.getAttribute('value')]);
+                            }
+                        });
+                    });
+                }
+
+
             })
+
+
 
         </script>
     </body>

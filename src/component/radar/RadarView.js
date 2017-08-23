@@ -42,7 +42,6 @@ define(function (require) {
 
         _buildSplitLineAndArea: function (radarModel) {
             var radar = radarModel.coordinateSystem;
-            var splitNumber = radarModel.get('splitNumber');
             var indicatorAxes = radar.getIndicatorAxes();
             if (!indicatorAxes.length) {
                 return;
@@ -100,21 +99,33 @@ define(function (require) {
             }
             // Polyyon
             else {
+                var realSplitNumber;
                 var axesTicksPoints = zrUtil.map(indicatorAxes, function (indicatorAxis, idx) {
                     var ticksCoords = indicatorAxis.getTicksCoords();
+                    realSplitNumber = realSplitNumber == null
+                        ? ticksCoords.length - 1
+                        : Math.min(ticksCoords.length - 1, realSplitNumber);
                     return zrUtil.map(ticksCoords, function (tickCoord) {
                         return radar.coordToPoint(tickCoord, idx);
                     });
                 });
 
                 var prevPoints = [];
-                for (var i = 0; i <= splitNumber; i++) {
+                for (var i = 0; i <= realSplitNumber; i++) {
                     var points = [];
                     for (var j = 0; j < indicatorAxes.length; j++) {
                         points.push(axesTicksPoints[j][i]);
                     }
                     // Close
-                    points.push(points[0].slice());
+                    if (points[0]) {
+                        points.push(points[0].slice());
+                    }
+                    else {
+                        if (__DEV__) {
+                            console.error('Can\'t draw value axis ' + i);
+                        }
+                    }
+
                     if (showSplitLine) {
                         var colorIndex = getColorIndex(splitLines, splitLineColors, i);
                         splitLines[colorIndex].push(new graphic.Polyline({

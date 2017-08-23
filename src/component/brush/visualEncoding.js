@@ -9,7 +9,7 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var selector = require('./selector');
     var throttle = require('../../util/throttle');
-    var brushHelper = require('../helper/brushHelper');
+    var BrushTargetManager = require('../helper/BrushTargetManager');
 
     var STATE_LIST = ['inBrush', 'outOfBrush'];
     var DISPATCH_METHOD = '__ecBrushSelect';
@@ -26,9 +26,9 @@ define(function (require) {
                 payload.key === 'brush' ? payload.brushOption : {brushType: false}
             );
 
-            brushModel.coordInfoList = brushHelper.makeCoordInfoList(brushModel.option, ecModel);
+            var brushTargetManager = brushModel.brushTargetManager = new BrushTargetManager(brushModel.option, ecModel);
 
-            brushHelper.parseInputRanges(brushModel, ecModel);
+            brushTargetManager.setInputRanges(brushModel.areas, ecModel);
         });
     });
 
@@ -120,7 +120,7 @@ define(function (require) {
 
             function stepAParallel(seriesModel, seriesIndex) {
                 var coordSys = seriesModel.coordinateSystem;
-                hasBrushExists |= coordSys.hasAxisbrushed();
+                hasBrushExists |= coordSys.hasAxisBrushed();
 
                 linkOthers(seriesIndex) && coordSys.eachActiveState(
                     seriesModel.getData(),
@@ -138,7 +138,7 @@ define(function (require) {
 
                 zrUtil.each(areas, function (area) {
                     selectorsByBrushType[area.brushType]
-                        && brushHelper.controlSeries(area, brushModel, seriesModel)
+                        && brushModel.brushTargetManager.controlSeries(area, seriesModel, ecModel)
                         && rangeInfoList.push(area);
                     hasBrushExists |= brushed(rangeInfoList);
                 });
@@ -233,11 +233,10 @@ define(function (require) {
     }
 
     function checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex) {
-        var itemLayout = data.getItemLayout(dataIndex);
         for (var i = 0, len = rangeInfoList.length; i < len; i++) {
             var area = rangeInfoList[i];
             if (selectorsByBrushType[area.brushType](
-                itemLayout, area.selectors, area
+                dataIndex, data, area.selectors, area
             )) {
                 return true;
             }
@@ -249,7 +248,10 @@ define(function (require) {
         if (zrUtil.isString(brushSelector)) {
             var sels = [];
             zrUtil.each(selector, function (selectorsByElementType, brushType) {
-                sels[brushType] = selectorsByElementType[brushSelector];
+                sels[brushType] = function (dataIndex, data, selectors, area) {
+                    var itemLayout = data.getItemLayout(dataIndex);
+                    return selectorsByElementType[brushSelector](itemLayout, selectors, area);
+                };
             });
             return sels;
         }

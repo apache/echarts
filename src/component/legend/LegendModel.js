@@ -7,12 +7,19 @@ define(function(require) {
 
     var LegendModel = require('../../echarts').extendComponentModel({
 
-        type: 'legend',
+        type: 'legend.plain',
 
         dependencies: ['series'],
 
         layoutMode: {
             type: 'box',
+            // legend.width/height are maxWidth/maxHeight actually,
+            // whereas realy width/height is calculated by its content.
+            // (Setting {left: 10, right: 10} does not make sense).
+            // So consider the case:
+            // `setOption({legend: {left: 10});`
+            // then `setOption({legend: {right: 10});`
+            // The previous `left` should be cleared by setting `ignoreSize`.
             ignoreSize: true
         },
 
@@ -114,7 +121,7 @@ define(function(require) {
         toggleSelected: function (name) {
             var selected = this.option.selected;
             // Default is true
-            if (!(name in selected)) {
+            if (!selected.hasOwnProperty(name)) {
                 selected[name] = true;
             }
             this[selected[name] ? 'unSelect' : 'select'](name);
@@ -125,7 +132,7 @@ define(function(require) {
          */
         isSelected: function (name) {
             var selected = this.option.selected;
-            return !((name in selected) && !selected[name])
+            return !(selected.hasOwnProperty(name) && !selected[name])
                 && zrUtil.indexOf(this._availableNames, name) >= 0;
         },
 
@@ -143,8 +150,8 @@ define(function(require) {
             left: 'center',
             // right: 'center',
 
-            top: 'top',
-            // bottom: 'top',
+            top: 0,
+            // bottom: null,
 
             // 水平对齐
             // 'auto' | 'left' | 'right'
@@ -154,6 +161,7 @@ define(function(require) {
             backgroundColor: 'rgba(0,0,0,0)',
             // 图例边框颜色
             borderColor: '#ccc',
+            borderRadius: 0,
             // 图例边框线宽，单位px，默认为0（无边框）
             borderWidth: 0,
             // 图例内边距，单位px，默认各方向内边距为5，
@@ -176,11 +184,16 @@ define(function(require) {
             },
             // formatter: '',
             // 选择模式，默认开启图例开关
-            selectedMode: true
+            selectedMode: true,
             // 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入
             // selected: null,
             // 图例内容（详见legend.data，数组中每一项代表一个item
             // data: [],
+
+            // Tooltip 相关配置
+            tooltip: {
+                show: false
+            }
         }
     });
 

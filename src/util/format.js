@@ -2,75 +2,66 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('./number');
+    var textContain = require('zrender/contain/text');
+
+    var formatUtil = {};
 
     /**
      * 每三位默认加,格式化
-     * @type {string|number} x
+     * @param {string|number} x
+     * @return {string}
      */
-    function addCommas(x) {
+    formatUtil.addCommas = function (x) {
         if (isNaN(x)) {
             return '-';
         }
         x = (x + '').split('.');
         return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
                + (x.length > 1 ? ('.' + x[1]) : '');
-    }
+    };
 
     /**
      * @param {string} str
+     * @param {boolean} [upperCaseFirst=false]
      * @return {string} str
      */
-    function toCamelCase(str) {
-        return str.toLowerCase().replace(/-(.)/g, function(match, group1) {
+    formatUtil.toCamelCase = function (str, upperCaseFirst) {
+        str = (str || '').toLowerCase().replace(/-(.)/g, function(match, group1) {
             return group1.toUpperCase();
         });
-    }
 
-    /**
-     * Normalize css liked array configuration
-     * e.g.
-     *  3 => [3, 3, 3, 3]
-     *  [4, 2] => [4, 2, 4, 2]
-     *  [4, 3, 2] => [4, 3, 2, 3]
-     * @param {number|Array.<number>} val
-     */
-    function normalizeCssArray(val) {
-        var len = val.length;
-        if (typeof (val) === 'number') {
-            return [val, val, val, val];
+        if (upperCaseFirst && str) {
+            str = str.charAt(0).toUpperCase() + str.slice(1);
         }
-        else if (len === 2) {
-            // vertical | horizontal
-            return [val[0], val[1], val[0], val[1]];
-        }
-        else if (len === 3) {
-            // top | horizontal | bottom
-            return [val[0], val[1], val[2], val[1]];
-        }
-        return val;
-    }
 
-    function encodeHTML(source) {
+        return str;
+    };
+
+    formatUtil.normalizeCssArray = zrUtil.normalizeCssArray;
+
+    var encodeHTML = formatUtil.encodeHTML = function (source) {
         return String(source)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-    }
+    };
 
     var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
-    function wrapVar(varName, seriesIdx) {
+    var wrapVar = function (varName, seriesIdx) {
         return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
-    }
+    };
+
     /**
      * Template formatter
-     * @param  {string} tpl
-     * @param  {Array.<Object>|Object} paramsList
+     * @param {string} tpl
+     * @param {Array.<Object>|Object} paramsList
+     * @param {boolean} [encode=false]
      * @return {string}
      */
-    function formatTpl(tpl, paramsList) {
+    formatUtil.formatTpl = function (tpl, paramsList, encode) {
         if (!zrUtil.isArray(paramsList)) {
             paramsList = [paramsList];
         }
@@ -79,30 +70,75 @@ define(function (require) {
             return '';
         }
 
-        var $vars = paramsList[0].$vars;
+        var $vars = paramsList[0].$vars || [];
         for (var i = 0; i < $vars.length; i++) {
             var alias = TPL_VAR_ALIAS[i];
-            tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
+            var val = wrapVar(alias, 0);
+            tpl = tpl.replace(wrapVar(alias), encode ? encodeHTML(val) : val);
         }
         for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
             for (var k = 0; k < $vars.length; k++) {
+                var val = paramsList[seriesIdx][$vars[k]];
                 tpl = tpl.replace(
                     wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                    paramsList[seriesIdx][$vars[k]]
+                    encode ? encodeHTML(val) : val
                 );
             }
         }
 
         return tpl;
-    }
+    };
+
+    /**
+     * simple Template formatter
+     *
+     * @param {string} tpl
+     * @param {Object} param
+     * @param {boolean} [encode=false]
+     * @return {string}
+     */
+    formatUtil.formatTplSimple = function (tpl, param, encode) {
+        zrUtil.each(param, function (value, key) {
+            tpl = tpl.replace(
+                '{' + key + '}',
+                encode ? encodeHTML(value) : value
+            );
+        });
+        return tpl;
+    };
+
+    /**
+     * @param {string} color
+     * @param {string} [extraCssText]
+     * @return {string}
+     */
+    formatUtil.getTooltipMarker = function (color, extraCssText) {
+        return color
+            ? '<span style="display:inline-block;margin-right:5px;'
+                + 'border-radius:10px;width:9px;height:9px;background-color:'
+                + formatUtil.encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
+            : '';
+    };
+
+    /**
+     * @param {string} str
+     * @return {string}
+     * @inner
+     */
+    var s2d = function (str) {
+        return str < 10 ? ('0' + str) : str;
+    };
 
     /**
      * ISO Date format
      * @param {string} tpl
      * @param {number} value
+     * @param {boolean} [isUTC=false] Default in local time.
+     *           see `module:echarts/scale/Time`
+     *           and `module:echarts/util/number#parseDate`.
      * @inner
      */
-    function formatTime(tpl, value) {
+    formatUtil.formatTime = function (tpl, value, isUTC) {
         if (tpl === 'week'
             || tpl === 'month'
             || tpl === 'quarter'
@@ -113,15 +149,16 @@ define(function (require) {
         }
 
         var date = numberUtil.parseDate(value);
-        var y = date.getFullYear();
-        var M = date.getMonth() + 1;
-        var d = date.getDate();
-        var h = date.getHours();
-        var m = date.getMinutes();
-        var s = date.getSeconds();
+        var utc = isUTC ? 'UTC' : '';
+        var y = date['get' + utc + 'FullYear']();
+        var M = date['get' + utc + 'Month']() + 1;
+        var d = date['get' + utc + 'Date']();
+        var h = date['get' + utc + 'Hours']();
+        var m = date['get' + utc + 'Minutes']();
+        var s = date['get' + utc + 'Seconds']();
 
         tpl = tpl.replace('MM', s2d(M))
-            .toLowerCase()
+            .replace('M', M)
             .replace('yyyy', y)
             .replace('yy', y % 100)
             .replace('dd', s2d(d))
@@ -134,29 +171,20 @@ define(function (require) {
             .replace('s', s);
 
         return tpl;
-    }
+    };
 
     /**
+     * Capital first
      * @param {string} str
      * @return {string}
-     * @inner
      */
-    function s2d(str) {
-        return str < 10 ? ('0' + str) : str;
-    }
-
-    return {
-
-        normalizeCssArray: normalizeCssArray,
-
-        addCommas: addCommas,
-
-        toCamelCase: toCamelCase,
-
-        encodeHTML: encodeHTML,
-
-        formatTpl: formatTpl,
-
-        formatTime: formatTime
+    formatUtil.capitalFirst = function (str) {
+        return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
     };
+
+    formatUtil.truncateText = textContain.truncateText;
+
+    formatUtil.getTextRect = textContain.getBoundingRect;
+
+    return formatUtil;
 });

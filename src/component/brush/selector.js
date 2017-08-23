@@ -20,7 +20,7 @@ define(function(require) {
                 return area.boundingRect.contain(itemLayout[0], itemLayout[1]);
             },
             rect: function (itemLayout, selectors, area) {
-                return area.boundingRect.intersect(makeBoundingRect(itemLayout));
+                return area.boundingRect.intersect(itemLayout);
             }
         },
         polygon: {
@@ -29,8 +29,6 @@ define(function(require) {
                     && polygonContain(area.range, itemLayout[0], itemLayout[1]);
             },
             rect: function (itemLayout, selectors, area) {
-                // FIXME
-                // 随意写的，没有考察过效率。
                 var points = area.range;
 
                 if (points.length <= 1) {
@@ -47,7 +45,7 @@ define(function(require) {
                     || polygonContain(points, x + width, y)
                     || polygonContain(points, x, y + height)
                     || polygonContain(points, x + width, y + height)
-                    || makeBoundingRect(itemLayout).contain(p[0], p[1])
+                    || BoundingRect.create(itemLayout).contain(p[0], p[1])
                     || lineIntersectPolygon(x, y, x + width, y, points)
                     || lineIntersectPolygon(x, y, x, y + height, points)
                     || lineIntersectPolygon(x + width, y, x + width, y + height, points)
@@ -71,8 +69,15 @@ define(function(require) {
             },
             rect: function (itemLayout, selectors, area) {
                 var range = area.range;
-                return inLineRange(itemLayout[xy[xyIndex]], range)
-                    || inLineRange(itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]], range);
+                var layoutRange = [
+                    itemLayout[xy[xyIndex]],
+                    itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
+                ];
+                layoutRange[1] < layoutRange[0] && layoutRange.reverse();
+                return inLineRange(layoutRange[0], range)
+                    || inLineRange(layoutRange[1], range)
+                    || inLineRange(range[0], layoutRange)
+                    || inLineRange(range[1], layoutRange);
             }
         };
     }
@@ -81,8 +86,6 @@ define(function(require) {
         return range[0] <= p && p <= range[1];
     }
 
-    // FIXME
-    // 随意写的，没考察过效率。
     function lineIntersectPolygon(lx, ly, l2x, l2y, points) {
         for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
             var p = points[i];
@@ -117,24 +120,6 @@ define(function(require) {
 
     function determinant(v1, v2, v3, v4) {
         return v1 * v4 - v2 * v3;
-    }
-
-    function makeBoundingRect(itemLayout) {
-        var x = itemLayout.x;
-        var y = itemLayout.y;
-        var width = itemLayout.width;
-        var height = itemLayout.height;
-
-        // width and height might be negative.
-        if (width < 0) {
-            x = x + width;
-            width = -width;
-        }
-        if (height < 0) {
-            y = y + height;
-            height = -height;
-        }
-        return new BoundingRect(x, y, width, height);
     }
 
     return selector;

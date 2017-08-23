@@ -5,6 +5,7 @@ define(function (require) {
     var simpleLayoutHelper = require('./simpleLayoutHelper');
     var circularLayoutHelper = require('./circularLayoutHelper');
     var vec2 = require('zrender/core/vector');
+    var zrUtil = require('zrender/core/util');
 
     return function (ecModel) {
         ecModel.eachSeriesByType('graph', function (graphSeries) {
@@ -33,26 +34,43 @@ define(function (require) {
                 }
 
                 var nodeDataExtent = nodeData.getDataExtent('value');
+                var edgeDataExtent = edgeData.getDataExtent('value');
                 // var edgeDataExtent = edgeData.getDataExtent('value');
                 var repulsion = forceModel.get('repulsion');
                 var edgeLength = forceModel.get('edgeLength');
+                if (!zrUtil.isArray(repulsion)) {
+                    repulsion = [repulsion, repulsion];
+                }
+                if (!zrUtil.isArray(edgeLength)) {
+                    edgeLength = [edgeLength, edgeLength];
+                }
+                // Larger value has smaller length
+                edgeLength = [edgeLength[1], edgeLength[0]];
+
                 var nodes = nodeData.mapArray('value', function (value, idx) {
                     var point = nodeData.getItemLayout(idx);
                     // var w = numberUtil.linearMap(value, nodeDataExtent, [0, 50]);
-                    var rep = numberUtil.linearMap(value, nodeDataExtent, [0, repulsion]) || (repulsion / 2);
+                    var rep = numberUtil.linearMap(value, nodeDataExtent, repulsion);
+                    if (isNaN(rep)) {
+                        rep = (repulsion[0] + repulsion[1]) / 2;
+                    }
                     return {
                         w: rep,
                         rep: rep,
+                        fixed: nodeData.getItemModel(idx).get('fixed'),
                         p: (!point || isNaN(point[0]) || isNaN(point[1])) ? null : point
                     };
                 });
                 var edges = edgeData.mapArray('value', function (value, idx) {
                     var edge = graph.getEdgeByIndex(idx);
-                    // var w = numberUtil.linearMap(value, edgeDataExtent, [0, 100]);
+                    var d = numberUtil.linearMap(value, edgeDataExtent, edgeLength);
+                    if (isNaN(d)) {
+                        d = (edgeLength[0] + edgeLength[1]) / 2;
+                    }
                     return {
                         n1: nodes[edge.node1.dataIndex],
                         n2: nodes[edge.node2.dataIndex],
-                        d: edgeLength,
+                        d: d,
                         curveness: edge.getModel().get('lineStyle.normal.curveness') || 0
                     };
                 });
@@ -89,7 +107,7 @@ define(function (require) {
                             points[1] = points[1] || [];
                             vec2.copy(points[0], p1);
                             vec2.copy(points[1], p2);
-                            if (e.curveness > 0) {
+                            if (+e.curveness) {
                                 points[2] = [
                                     (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
                                     (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * e.curveness

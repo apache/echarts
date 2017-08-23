@@ -95,6 +95,10 @@ define(function (require) {
             (t - offsets[frame]) / (offsets[frame + 1] - offsets[frame])
         );
 
+        var tx = points[frame + 1][0] - points[frame][0];
+        var ty = points[frame + 1][1] - points[frame][1];
+        symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
+
         this._lastFrame = frame;
         this._lastFramePercent = t;
 

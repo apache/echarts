@@ -1,0 +1,955 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+        <script src="lib/testHelper.js"></script>
+        <script src="tooltipTestHelper.js"></script>
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #a60;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+        <h1>time axis default | data zoom | animation auto: zoom in has animation, zoom out no animation</h1>
+        <div class="chart" id="time-animation"></div>
+        <h1>category axis default | data zoom | animation auto: zoom in has animation, zoom out no animation</h1>
+        <div class="chart" id="category-animation"></div>
+        <h1>time axis cross | x snap | label show | tooltip show</h1>
+        <div class="chart" id="time-cross"></div>
+        <h1>axis label too long | x axis label rotate | label should not overflow ec container</h1>
+        <div class="chart" id="label-rotate"></div>
+        <h1>two value axes | snap | grid.tooltip setting | snap has animation </h1>
+        <div class="chart" id="two-value-axes"></div>
+        <h1>label style and formatter</h1>
+        <div class="chart" id="label-style"></div>
+        <h1>dual yAxes | label color auto : the same as axisline</h1>
+        <div class="chart" id="dual-yAxes"></div>
+        <h1>dual xAxes | label color auto : the same as axisline</h1>
+        <div class="chart" id="dual-xAxes"></div>
+        <h1>y is category</h1>
+        <div class="chart" id="y-is-category"></div>
+        <h1>value axis as base | y axis should not trigger tooltip | tooltip.trigger: 'none' so item tooltip will not be triggered</h1>
+        <div class="chart" id="value-axis-as-base"></div>
+        <h1>polar category</h1>
+        <div class="chart" id="polar-category"></div>
+        <h1>multiple points with the same axis value | when not snap tooltip should be correct</h1>
+        <div class="chart" id="same-value"></div>
+        <h1>no tooltip</h1>
+        <div class="chart" id="no-tooltip"></div>
+        <h1>axisPointer.type: 'none', but label.show: true</h1>
+        <div class="chart" id="none"></div>
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }]
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 30;
+                makeTimeGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                createChart('time-animation', echarts, option, baseTop + 40);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        start: 40,
+                        end: 60
+                    }, {
+                        type: 'slider',
+                        start: 40,
+                        end: 60
+                    }]
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 30;
+                makeCategoryGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height},
+                    xAxis: {boundaryGap: true}
+                }, false, 100, 'bar');
+                baseTop += height + gap;
+
+                createChart('category-animation', echarts, option, baseTop + 40);
+            })
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'cross'}
+                    }
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 50;
+                makeTimeGrid(option, {
+                    grid: {left: 100, top: baseTop, height: height},
+                    yAxis: {
+                        axisTick: {
+                            inside: true
+                        },
+                        axisLabel: {
+                            inside: true
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('time-cross', echarts, option, baseTop + 100);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'cross'}
+                    }
+                };
+                var baseTop = 90;
+                makeCategoryGrid(option, {
+                    grid: {
+                        containLabel: true, left: 5, right: 10, top: baseTop, height: 140
+                    },
+                    xAxis: {
+                        axisLabel: {
+                            rotate: 30,
+                            formatter: function (value) {
+                                return echarts.format.truncateText(value, 50);
+                            }
+                        }
+                    }
+                }, null, null, null, 'toolonglonglonglonglonglonglong');
+
+                createChart('label-rotate', echarts, option, baseTop + 200);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'none'
+                    }
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 50;
+                makeValueGrid(option, {
+                    grid: {
+                        top: baseTop, height: height,
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross'
+                            }
+                        }
+                    },
+                    yAxis: {name: 'tooltip.trigger: "axis"\nso base axis snap and animate by default'}
+                }, true);
+                baseTop += height + gap;
+                makeValueGrid(option, {
+                    grid: {
+                        top: baseTop, height: height
+                    },
+                    xAxis: {
+                        axisPointer: {
+                            show: true,
+                            snap: true,
+                            triggerTooltip: true
+                        }
+                    },
+                    yAxis: {
+                        name: 'both axes snap\nand so animate by default',
+                        axisPointer: {
+                            show: true,
+                            snap: true,
+                            triggerTooltip: true
+                        }
+                    }
+                }, true);
+                baseTop += height + gap;
+
+                var dom = document.getElementById('two-value-axes');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    axisPointer: {
+                        label: {
+                            backgroundColor: 'blue',
+                            borderColor: 'green',
+                            borderRadius: 5,
+                            borderWidth: 2,
+                            shadowBlur: 6,
+                            shadowOffsetX: 3,
+                            shadowOffsetY: 3,
+                            shadowColor: '#000'
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {show: true}
+                    },
+                    yAxis: {name: 'global style: \nbg: "blue", border: "green", shadow, borderRadius'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            show: true,
+                            label: {
+                                backgroundColor: 'red',
+                                borderWidth: 0
+                            }
+                        }
+                    },
+                    yAxis: {name: 'xAxis style: \nbg: "red", borderWidth: 0'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height
+                    },
+                    xAxis: {
+                        position: 'top',
+                        axisPointer: {
+                            show: true,
+                            label: {
+                                show: true,
+                                formatter: '类别 {value} %'
+                            }
+                        }
+                    },
+                    yAxis: {name: 'axisLabel formatter string'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {
+                        top: baseTop,
+                        height: height
+                    },
+                    xAxis: {
+                        axisPointer: {
+                            show: true,
+                            label: {
+                                show: true,
+                                formatter: function(params) {
+                                    return 'x: ' + params.value + '\n'
+                                        + echarts.util.map(params.seriesData, function (item) {
+                                            return item.name + ': ' + item.value;
+                                        }).join('\n')
+                                }
+                            }
+                        }
+                    },
+                    yAxis: {name: 'axisLabel formatter function'}
+                });
+                baseTop += height + gap + 20;
+
+                var dom = document.getElementById('label-style');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    }
+                };
+                makeCategoryCartesian(option, {
+                }, 0, 0);
+                makeCategoryCartesian(option, {
+                }, 0, 1, 17);
+                makeCategoryCartesian(option, {
+                    yAxis: {
+                        offset: 50
+                    }
+                }, 0, 2, 117);
+                makeCategoryCartesian(option, {
+                    yAxis: {
+                        position: 'left',
+                        offset: 50
+                    }
+                }, 0, 3, 1117);
+
+                var dom = document.getElementById('dual-yAxes');
+                if (dom) {
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    }
+                };
+                makeCategoryCartesian(option, {
+                    xAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                }, 0, 0);
+                makeCategoryCartesian(option, {
+                    xAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                }, 1, 0, 17, 'last');
+
+                var dom = document.getElementById('dual-xAxes');
+                if (dom) {
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            show: true,
+                            triggerTooltip: false
+                        }
+                    }
+                }, true);
+                baseTop += height + gap;
+
+                var dom = document.getElementById('y-is-category');
+                if (dom) {
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'none'
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {
+                        axisPointer: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        axisPointer: {
+                            show: true,
+                            triggerTooltip: false,
+                            animation: true
+                        }
+                    }
+                }, true);
+                baseTop += height + gap;
+
+                var dom = document.getElementById('value-axis-as-base');
+                if (dom) {
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/polar',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'cross'}
+                    }
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 50;
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['25%', baseTop + height / 2],
+                        radius: 120
+                    }
+                }, true);
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['75%', baseTop + height / 2],
+                        radius: 120
+                    },
+                    angleAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                }, true);
+                baseTop += height + gap;
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['25%', baseTop + height / 2],
+                        radius: 120
+                    }
+                });
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['75%', baseTop + height / 2],
+                        radius: 120
+                    },
+                    radiusAxis: {
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                });
+                baseTop += height + gap;
+
+                createChart('polar-category', echarts, option, baseTop);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    xAxis: [{
+                        nameLocation: 'middle',
+                        nameGap: 30,
+                        name: 'snap: show display both value'
+                    }, {
+                        gridIndex: 1,
+                        nameLocation: 'middle',
+                        nameGap: 30,
+                        name: 'not snap: put axis on the middle of the two points, should display only one value.'
+                    }, {
+                        gridIndex: 2,
+                        nameLocation: 'middle',
+                        nameGap: 30,
+                        name: 'step line not snap: should tooltip correct.',
+                        axisPointer: {
+                            snap: false
+                        }
+                    }],
+                    yAxis: [{}, {gridIndex: 1}, {gridIndex: 2}],
+                    grid: [{
+                        top: 10,
+                        height: 100
+                    }, {
+                        top: 200,
+                        height: 100
+                    }, {
+                        top: 400,
+                        height: 200
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [[10, 10], [10, 20], [20, 20]]
+                    }, {
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: [[10, 10], [30, 10]]
+                    }, {
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        name:'Step Start',
+                        type:'line',
+                        step: 'start',
+                        data: echarts.util.map([120, 132, 101, 134, 90, 230, 210], function (value, index) {
+                            return [index * 100, value];
+                        })
+                    }, {
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        name:'Step Middle',
+                        type:'line',
+                        step: 'middle',
+                        data: echarts.util.map([220, 282, 201, 234, 290, 430, 410], function (value, index) {
+                            return [index * 100, value];
+                        })
+                    }, {
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        name:'Step End',
+                        type:'line',
+                        step: 'end',
+                        data: echarts.util.map([450, 432, 401, 454, 590, 530, 510], function (value, index) {
+                            return [index * 100, value];
+                        })
+                    }]
+                };
+
+                createChart('same-value', echarts, option, 700);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    yAxis: {name: 'axisPointer: not show by default'}
+                });
+                baseTop += height + gap;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height},
+                    xAxis: {axisPointer: {show: true}},
+                    yAxis: {name: 'axisPointer: show if specified'}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('no-tooltip');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/chart/themeRiver',
+                'echarts/component/legend',
+                'echarts/component/polar',
+                'echarts/component/tooltip',
+                'echarts/component/singleAxis',
+                'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'none', label: {show: true}}
+                    }
+                };
+                var baseTop = 90;
+                var height = 250;
+                var gap = 50;
+                makeCategoryPolar(option, {
+                    polar: {
+                        center: ['25%', baseTop + height / 2],
+                        radius: 120
+                    }
+                }, true);
+                makeCategoryGrid(option, {
+                    grid: {left: '50%', top: baseTop, height: height},
+                    xAxis: {boundaryGap: true}
+                }, false, 100, 'bar');
+                baseTop += height + gap;
+
+                option.singleAxis = {
+                    axisTick: {},
+                    axisLabel: {},
+                    top: baseTop,
+                    height: height,
+                    bottom: 10,
+                    type: 'time'
+                };
+                option.series.push({
+                    type: 'themeRiver',
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 20,
+                            shadowColor: 'rgba(0, 0, 0, 0.8)'
+                        }
+                    },
+                    data: [['2015/11/08',10,'DQ'],['2015/11/09',15,'DQ'],['2015/11/10',35,'DQ'],
+                    // ['2015/11/11',38,'DQ'],['2015/11/12',22,'DQ'],['2015/11/13',16,'DQ'],
+                    ['2015/11/14',7,'DQ'],['2015/11/15',2,'DQ'],['2015/11/16',17,'DQ'],
+                    ['2015/11/17',33,'DQ'],['2015/11/18',40,'DQ'],['2015/11/19',32,'DQ'],
+                    ['2015/11/20',26,'DQ'],['2015/11/21',35,'DQ'],['2015/11/22',40,'DQ'],
+                    ['2015/11/23',32,'DQ'],['2015/11/24',26,'DQ'],['2015/11/25',22,'DQ'],
+                    // ['2015/11/26',16,'DQ'],['2015/11/27',22,'DQ'],['2015/11/28',10,'DQ'],
+                    ['2015/11/08',35,'TY'],['2015/11/09',36,'TY'],['2015/11/10',37,'TY'],
+                    ['2015/11/11',22,'TY'],['2015/11/12',24,'TY'],['2015/11/13',26,'TY'],
+                    ['2015/11/14',34,'TY'],['2015/11/15',21,'TY'],['2015/11/16',18,'TY'],
+                    ['2015/11/17',45,'TY'],['2015/11/18',32,'TY'],['2015/11/19',35,'TY'],
+                    ['2015/11/20',30,'TY'],['2015/11/21',28,'TY'],['2015/11/22',27,'TY'],
+                    ['2015/11/23',26,'TY'],['2015/11/24',15,'TY'],['2015/11/25',30,'TY'],
+                    ['2015/11/26',35,'TY'],['2015/11/27',42,'TY'],['2015/11/28',42,'TY'],
+                    ['2015/11/08',21,'SS'],['2015/11/09',25,'SS'],['2015/11/10',27,'SS'],
+                    ['2015/11/11',23,'SS'],['2015/11/12',24,'SS'],['2015/11/13',21,'SS'],
+                    ['2015/11/14',35,'SS'],['2015/11/15',39,'SS'],['2015/11/16',40,'SS'],
+                    ['2015/11/17',36,'SS'],['2015/11/18',33,'SS'],['2015/11/19',43,'SS'],
+                    ['2015/11/20',40,'SS'],['2015/11/21',34,'SS'],['2015/11/22',28,'SS'],
+                    // ['2015/11/23',26,'SS'],['2015/11/24',37,'SS'],['2015/11/25',41,'SS'],
+                    // ['2015/11/26',46,'SS'],['2015/11/27',47,'SS'],['2015/11/28',41,'SS'],
+                    // ['2015/11/08',10,'QG'],['2015/11/09',15,'QG'],['2015/11/10',35,'QG'],
+                    // ['2015/11/11',38,'QG'],['2015/11/12',22,'QG'],['2015/11/13',16,'QG'],
+                    ['2015/11/14',7,'QG'],['2015/11/15',2,'QG'],['2015/11/16',17,'QG'],
+                    ['2015/11/17',33,'QG'],['2015/11/18',40,'QG'],['2015/11/19',32,'QG'],
+                    ['2015/11/20',26,'QG'],['2015/11/21',35,'QG'],['2015/11/22',40,'QG'],
+                    ['2015/11/23',32,'QG'],['2015/11/24',26,'QG'],['2015/11/25',22,'QG'],
+                    ['2015/11/26',16,'QG'],['2015/11/27',22,'QG'],['2015/11/28',10,'QG'],
+                    ['2015/11/08',10,'SY'],['2015/11/09',15,'SY'],['2015/11/10',35,'SY'],
+                    ['2015/11/11',38,'SY'],['2015/11/12',22,'SY'],['2015/11/13',16,'SY'],
+                    ['2015/11/14',7,'SY'],['2015/11/15',2,'SY'],['2015/11/16',17,'SY'],
+                    ['2015/11/17',33,'SY'],['2015/11/18',40,'SY'],['2015/11/19',32,'SY'],
+                    ['2015/11/20',26,'SY'],['2015/11/21',35,'SY'],['2015/11/22',4,'SY'],
+                    ['2015/11/23',32,'SY'],['2015/11/24',26,'SY'],['2015/11/25',22,'SY'],
+                    ['2015/11/26',16,'SY'],['2015/11/27',22,'SY'],['2015/11/28',10,'SY'],
+                    ['2015/11/08',10,'DD'],['2015/11/09',15,'DD'],['2015/11/10',35,'DD'],
+                    ['2015/11/11',38,'DD'],['2015/11/12',22,'DD'],['2015/11/13',16,'DD'],
+                    ['2015/11/14',7,'DD'],['2015/11/15',2,'DD'],['2015/11/16',17,'DD'],
+                    ['2015/11/17',33,'DD'],['2015/11/18',4,'DD'],['2015/11/19',32,'DD'],
+                    ['2015/11/20',26,'DD'],['2015/11/21',35,'DD'],['2015/11/22',40,'DD'],
+                    ['2015/11/23',32,'DD'],['2015/11/24',26,'DD'],['2015/11/25',22,'DD'],
+                    ['2015/11/26',16,'DD'],['2015/11/27',22,'DD'],['2015/11/28',10,'DD']]
+                });
+                baseTop += height + gap;
+
+                createChart('none', echarts, option, baseTop);
+            })
+
+        </script>
+
+
+
+
+    </body>
+</html>

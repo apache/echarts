@@ -1,0 +1,120 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+        </style>
+        <div id="main"></div>
+        <script>
+
+            var chart;
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/geo',
+                'map/js/china',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom',
+                'echarts/component/markLine'
+            ], function (echarts) {
+
+                chart = echarts.init(document.getElementById('main'));
+
+                var option = {
+                    grid: {
+                        top: '60%'
+                    },
+                    title : {
+                        text: '动态数据',
+                        subtext: '纯属虚构'
+                    },
+                    tooltip : {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data:['最新成交价']
+                    },
+                    toolbox: {
+                        show : true,
+                        feature : {
+                            dataView : {show: true, readOnly: false},
+                            restore : {show: true},
+                            saveAsImage : {show: true}
+                        }
+                    },
+                    dataZoom : [{
+                        type: 'inside',
+                        start : 0,
+                        end : 100
+                    },
+                    {
+                        type: 'slider',
+                        start : 0,
+                        end : 100
+                    }
+                    ],
+                    xAxis : [
+                        {
+                            type : 'value',
+                            scale: true
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value',
+                            scale: true,
+                            name : '预购量',
+                            boundaryGap: [0.2, 0.2]
+                        }
+                    ],
+                    geo: {
+                        map: 'china',
+                        height: '50%',
+                        top: 0
+                    },
+                    series : [
+                        {
+                            type: 'scatter',
+                            coordinateSystem: 'geo'
+                        },
+                        {
+                            name:'最新成交价',
+                            type:'line',
+                            data:(function (){
+                                var res = [];
+                                var len = 0;
+                                while (len < 10) {
+                                    var n = [
+                                        len,
+                                        (Math.random()*10 + 5).toFixed(1)
+                                    ];
+                                    res.push({name: n[0], value: n});
+                                    len++;
+                                }
+                                return res;
+                            })(),
+                            animation: true,
+                            animationDurationUpdate: 500,
+                            animationEasing: 'linear',
+                            animationEasingUpdate: 'linear'
+                        }
+                    ]
+                };
+
+                chart.setOption(option);
+            });
+
+        </script>
+    </body>
+</html>

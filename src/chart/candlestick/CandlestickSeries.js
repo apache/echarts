@@ -5,9 +5,6 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var SeriesModel = require('../../model/Series');
     var whiskerBoxCommon = require('../helper/whiskerBoxCommon');
-    var formatUtil = require('../../util/format');
-    var encodeHTML = formatUtil.encodeHTML;
-    var addCommas = formatUtil.addCommas;
 
     var CandlestickSeries = SeriesModel.extend({
 
@@ -18,7 +15,7 @@ define(function(require) {
         /**
          * @readOnly
          */
-        valueDimensions: ['open', 'close', 'lowest', 'highest'],
+        defaultValueDimensions: ['open', 'close', 'lowest', 'highest'],
 
         /**
          * @type {Array.<string>}
@@ -37,8 +34,8 @@ define(function(require) {
 
             hoverAnimation: true,
 
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
             layout: null, // 'horizontal' or 'vertical'
 
@@ -57,6 +54,10 @@ define(function(require) {
                 }
             },
 
+            barMaxWidth: null,
+            barMinWidth: null,
+            barWidth: null,
+
             animationUpdate: false,
             animationEasing: 'linear',
             animationDuration: 300
@@ -70,20 +71,8 @@ define(function(require) {
             return 'open';
         },
 
-        /**
-         * @override
-         */
-        formatTooltip: function (dataIndex, mutipleSeries) {
-            // It rearly use mutiple candlestick series in one cartesian,
-            // so only consider one series in this default tooltip.
-            var valueHTMLArr = zrUtil.map(this.valueDimensions, function (dim) {
-                return dim + ': ' + addCommas(this._data.get(dim, dataIndex));
-            }, this);
-
-            return encodeHTML(this.name) + '<br />' + valueHTMLArr.join('<br />');
-        },
-
-        brushSelector: function (itemLayout, selectors) {
+        brushSelector: function (dataIndex, data, selectors) {
+            var itemLayout = data.getItemLayout(dataIndex);
             return selectors.rect(itemLayout.brushRect);
         }
 

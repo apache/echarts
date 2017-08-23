@@ -11,7 +11,11 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            zoomLock: false // Whether disable zoom but only pan.
+            disabled: false,   // Whether disable this inside zoom.
+            zoomLock: false,   // Whether disable zoom but only pan.
+            zoomOnMouseWheel: true, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
+            moveOnMouseMove: true,   // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
+            preventDefaultMouseMove: true
         }
     });
 });

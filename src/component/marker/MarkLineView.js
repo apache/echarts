@@ -53,8 +53,8 @@ define(function (require) {
             mlTo.coord[baseIndex] = Infinity;
 
             var precision = mlModel.get('precision');
-            if (precision >= 0) {
-                value = +value.toFixed(precision);
+            if (precision >= 0 && typeof value === 'number') {
+                value = +value.toFixed(Math.min(precision, 20));
             }
 
             mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
@@ -200,7 +200,7 @@ define(function (require) {
                         ]);
                     });
 
-                    this.markerGroupMap[seriesModel.name].updateLayout();
+                    this.markerGroupMap.get(seriesModel.id).updateLayout();
 
                 }
             }, this);
@@ -208,14 +208,12 @@ define(function (require) {
 
         renderSeries: function (seriesModel, mlModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
-            var seriesName = seriesModel.name;
+            var seriesId = seriesModel.id;
             var seriesData = seriesModel.getData();
 
             var lineDrawMap = this.markerGroupMap;
-            var lineDraw = lineDrawMap[seriesName];
-            if (!lineDraw) {
-                lineDraw = lineDrawMap[seriesName] = new LineDraw();
-            }
+            var lineDraw = lineDrawMap.get(seriesId)
+                || lineDrawMap.set(seriesId, new LineDraw());
             this.group.add(lineDraw.group);
 
             var mlData = createList(coordSys, seriesModel, mlModel);

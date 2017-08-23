@@ -1,0 +1,156 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+        </style>
+        <div id="main"></div>
+
+        <script>
+
+            // Schema:
+            // date,AQIindex,PM2.5,PM10,CO,NO2,SO2
+            var schema = [
+                {name: 'date', index: 0, text: '日期'},
+                {name: 'AQIindex', index: 1, text: 'AQI指数'},
+                {name: 'PM25', index: 2, text: 'PM2.5'},
+                {name: 'PM10', index: 3, text: 'PM10'},
+                {name: 'CO', index: 4, text: '一氧化碳 (CO)'},
+                {name: 'NO2', index: 5, text: '二氧化氮 (NO2)'},
+                {name: 'SO2', index: 6, text: '二氧化硫 (SO2)'}
+            ];
+
+            require([
+                'data/aqi/BJdata',
+                'data/aqi/GZdata',
+                'data/aqi/SHdata',
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/tooltip'
+            ], function (dataBJ, dataGZ, dataSH, echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                var dimSize = 6;
+                var nameList = ['北京', '广州', '上海'];
+
+                var color = ['#5793f3', '#d14a61', '#fd9c35'];
+
+                function update(isLazy) {
+                    var idx = 0;
+                    var axisPointerLinkList = [];
+                    var axisPointerLinkMap = {};
+                    for (var i = 1; i < dimSize; i++) {
+                        for (var j = 1; j < dimSize; j++) {
+                            var id = i + '-' + j;
+
+                            var linkItem = axisPointerLinkMap['x' + i];
+                            if (!linkItem) {
+                                linkItem = axisPointerLinkMap['x' + i] = {xAxisId: []};
+                                axisPointerLinkList.push(linkItem);
+                            }
+                            linkItem.xAxisId.push(id);
+
+                            var linkItem = axisPointerLinkMap['y' + j];
+                            if (!linkItem) {
+                                linkItem = axisPointerLinkMap['y' + j] = {yAxisId: []};
+                                axisPointerLinkList.push(linkItem);
+                            }
+                            linkItem.yAxisId.push(id);
+
+                            chart.setOption({
+                                tooltip: {
+                                    trigger: 'none'
+                                },
+                                axisPointer: {
+                                    show: true,
+                                    snap: true,
+                                    lineStyle: {
+                                        type: 'dashed'
+                                    },
+                                    link: axisPointerLinkList
+                                },
+                                grid: [{
+                                    id: id,
+                                    left: ((i - 1) / dimSize * 100 + 7) + '%',
+                                    top: ((j - 1) / dimSize * 100 + 7) + '%',
+                                    width: '15%',
+                                    height: '15%'
+                                }],
+                                xAxis: [{
+                                    id: id,
+                                    gridId: id,
+                                    // gridIndex: idx,
+                                    axisLabel: {
+                                        show: j === dimSize - 1
+                                    },
+                                    axisTick: {
+                                        show: j === dimSize - 1
+                                    },
+                                    name: j === dimSize - 1 ? schema[i].text : '',
+                                    nameLocation: 'middle',
+                                    nameGap: 30,
+                                    splitNumber: 3
+                                }],
+                                yAxis: [{
+                                    id: id,
+                                    gridId: id,
+                                    // gridIndex: idx,
+                                    axisLabel: {
+                                        show: i === 1
+                                    },
+                                    axisTick: {
+                                        show: i === 1
+                                    },
+                                    name: i === 1 ? schema[j].text : '',
+                                    nameLocation: 'middle',
+                                    nameGap: 30,
+                                    splitNumber: 4
+                                }],
+                                series: [dataBJ, dataGZ, dataSH].map(function (data, dataIdx) {
+                                    return {
+                                        id: id + '-' + dataIdx,
+                                        hoverAnimation: false,
+                                        name: nameList[dataIdx],
+                                        type: 'scatter',
+                                        xAxisId: id,
+                                        yAxisId: id,
+                                        // xAxisIndex: idx,
+                                        // yAxisIndex: idx,
+                                        data: data.map(function (item) {
+                                            return [item[i], item[j]];
+                                        }),
+                                        itemStyle: {
+                                            normal: {
+                                                color: color[dataIdx]
+                                            }
+                                        }
+                                    };
+                                })
+                            }, false, isLazy);
+
+                            idx++;
+                        }
+                    }
+                }
+
+                // console.time('update immediate');
+                // update(false);
+                // console.timeEnd('update immediate');
+
+                // chart.clear();
+
+                setTimeout(function () {
+                    console.time('update lazy');
+                    update(true);
+                    console.timeEnd('update lazy');
+                }, 1000);
+            });
+
+        </script>
+    </body>
+</html>

@@ -35,7 +35,13 @@
                     renderer: 'canvas'
                 });
 
-                var data = [];
+                var data = [{
+                    fixed: true,
+                    x: chart.getWidth() / 2,
+                    y: chart.getHeight() / 2,
+                    symbolSize: 20,
+                    id: '-1'
+                }];
                 var edges = [];
                 chart.setOption({
                     series: [{

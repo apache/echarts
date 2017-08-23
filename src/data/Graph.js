@@ -10,6 +10,10 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
 
+    // id may be function name of Object, add a prefix to avoid this problem.
+    function generateNodeKey (id) {
+        return '_EC_' + id;
+    }
     /**
      * @alias module:echarts/data/Graph
      * @constructor
@@ -83,7 +87,10 @@ define(function(require) {
 
         var nodesMap = this._nodesMap;
 
-        if (nodesMap[id]) {
+        if (nodesMap[generateNodeKey(id)]) {
+            if (__DEV__) {
+                console.error('Graph nodes have duplicate name or id');
+            }
             return;
         }
 
@@ -92,7 +99,7 @@ define(function(require) {
 
         this.nodes.push(node);
 
-        nodesMap[id] = node;
+        nodesMap[generateNodeKey(id)] = node;
         return node;
     };
 
@@ -111,7 +118,7 @@ define(function(require) {
      * @return {module:echarts/data/Graph.Node}
      */
     graphProto.getNodeById = function (id) {
-        return this._nodesMap[id];
+        return this._nodesMap[generateNodeKey(id)];
     };
 
     /**
@@ -134,10 +141,10 @@ define(function(require) {
         }
 
         if (!(n1 instanceof Node)) {
-            n1 = nodesMap[n1];
+            n1 = nodesMap[generateNodeKey(n1)];
         }
         if (!(n2 instanceof Node)) {
-            n2 = nodesMap[n2];
+            n2 = nodesMap[generateNodeKey(n2)];
         }
         if (!n1 || !n2) {
             return;
@@ -244,7 +251,7 @@ define(function(require) {
         cb, startNode, direction, context
     ) {
         if (!(startNode instanceof Node)) {
-            startNode = this._nodesMap[startNode];
+            startNode = this._nodesMap[generateNodeKey(startNode)];
         }
         if (!startNode) {
             return;
@@ -271,7 +278,7 @@ define(function(require) {
                 var otherNode = e.node1 === currentNode
                     ? e.node2 : e.node1;
                 if (!otherNode.__visited) {
-                    if (cb.call(otherNode, otherNode, currentNode)) {
+                    if (cb.call(context, otherNode, currentNode)) {
                         // Stop traversing
                         return;
                     }

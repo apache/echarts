@@ -124,6 +124,13 @@ define(function(require) {
 
             function eachItem(valueOrIndex, index) {
                 dataIndex = dimension == null ? valueOrIndex : index;
+
+                var rawDataItem = data.getRawDataItem(dataIndex);
+                // Consider performance
+                if (rawDataItem && rawDataItem.visualMap === false) {
+                    return;
+                }
+
                 var valueState = getValueState.call(scope, valueOrIndex);
                 var mappings = visualMappings[valueState];
                 var visualTypes = visualTypesMap[valueState];

@@ -225,9 +225,27 @@
                     var yAxisList = option.yAxis = [];
                     var seriesList = option.series = [];
                     var visualMapSeriesIndices = option.visualMap.seriesIndex = [];
+                    var axisPointerLinkList = option.axisPointer.link = [];
+                    var axisPointerLinkMap = {};
 
                     for (var i = 0; i < CROSS_DIM_NUMBER; i++) {
                         for (var j = 0; j < CROSS_DIM_NUMBER; j++) {
+                            var id = i + '-' + j;
+
+                            var linkItem = axisPointerLinkMap['x' + i];
+                            if (!linkItem) {
+                                linkItem = axisPointerLinkMap['x' + i] = {xAxisId: []};
+                                axisPointerLinkList.push(linkItem);
+                            }
+                            linkItem.xAxisId.push(id);
+
+                            var linkItem = axisPointerLinkMap['y' + j];
+                            if (!linkItem) {
+                                linkItem = axisPointerLinkMap['y' + j] = {yAxisId: []};
+                                axisPointerLinkList.push(linkItem);
+                            }
+                            linkItem.yAxisId.push(id);
+
                             gridList.push({
                                 left: BASE_LEFT + i * (GRID_WIDTH + GAP),
                                 top: BASE_TOP + (CROSS_DIM_NUMBER - 1 - j) * (GRID_HEIGHT + GAP),
@@ -235,6 +253,7 @@
                                 height: GRID_HEIGHT
                             });
                             xAxisList.push({
+                                id: id,
                                 axisLine: {
                                     onZero: false
                                 },
@@ -249,6 +268,7 @@
                                 scale: true
                             });
                             yAxisList.push({
+                                id: id,
                                 axisLine: {
                                     onZero: false
                                 },
@@ -282,6 +302,14 @@
                     brush: {
                         brushLink: 'all'
                     },
+                    axisPointer: {
+                        show: true,
+                        snap: true,
+                        link: [],
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    },
                     visualMap: {
                         type: 'piecewise',
                         categories: getCategories(rawData),
@@ -294,7 +322,31 @@
                         }
                     },
                     tooltip: {
-                        trigger: 'item'
+                        trigger: 'item',
+                        extraCssText: 'max-width:400px; white-space: normal;',
+                        formatter: function (params) {
+                            if (echarts.util.isArray(params)) {
+                                var map = {
+                                    x: {items: []},
+                                    y: {items: []}
+                                };
+                                echarts.util.each(params, function (param) {
+                                    var dim = param.axisDim;
+                                    var mapItem = map[dim];
+                                    mapItem.axisValueLabel = param.axisValueLabel;
+                                    mapItem.items.push(
+                                        param.value[dim === 'x' ? 1 : 0]
+                                        + ' ' + param.value[2]
+                                    );
+                                });
+                                return map.x.axisValueLabel + '<br>(' + map.x.items.join(') (') + ')'
+                                    + '<br><br>'
+                                    + map.y.axisValueLabel + '<br>(' + map.y.items.join(') (') + ')';
+                            }
+                            else {
+                                return params.name + ' ' + params.value;
+                            }
+                        }
                     }
                 };
 

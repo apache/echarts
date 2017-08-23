@@ -4,17 +4,6 @@ define(function (require) {
     var formatUtil = require('../../util/format');
     var graphic = require('../../util/graphic');
 
-    function positionGroup(group, model, api) {
-        layout.positionGroup(
-            group, model.getBoxLayoutParams(),
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            },
-            model.get('padding')
-        );
-    }
-
     return {
         /**
          * Layout list like component.
@@ -24,10 +13,16 @@ define(function (require) {
          * @param {module:echarts/ExtensionAPI}
          */
         layout: function (group, componentModel, api) {
-            var rect = layout.getLayoutRect(componentModel.getBoxLayoutParams(), {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }, componentModel.get('padding'));
+            var boxLayoutParams = componentModel.getBoxLayoutParams();
+            var padding = componentModel.get('padding');
+            var viewportSize = {width: api.getWidth(), height: api.getHeight()};
+
+            var rect = layout.getLayoutRect(
+                boxLayoutParams,
+                viewportSize,
+                padding
+            );
+
             layout.box(
                 componentModel.get('orient'),
                 group,
@@ -36,30 +31,38 @@ define(function (require) {
                 rect.height
             );
 
-            positionGroup(group, componentModel, api);
+            layout.positionElement(
+                group,
+                boxLayoutParams,
+                viewportSize,
+                padding
+            );
         },
 
-        addBackground: function (group, componentModel) {
+        makeBackground: function (rect, componentModel) {
             var padding = formatUtil.normalizeCssArray(
                 componentModel.get('padding')
             );
-            var boundingRect = group.getBoundingRect();
             var style = componentModel.getItemStyle(['color', 'opacity']);
             style.fill = componentModel.get('backgroundColor');
             var rect = new graphic.Rect({
                 shape: {
-                    x: boundingRect.x - padding[3],
-                    y: boundingRect.y - padding[0],
-                    width: boundingRect.width + padding[1] + padding[3],
-                    height: boundingRect.height + padding[0] + padding[2]
+                    x: rect.x - padding[3],
+                    y: rect.y - padding[0],
+                    width: rect.width + padding[1] + padding[3],
+                    height: rect.height + padding[0] + padding[2],
+                    r: componentModel.get('borderRadius')
                 },
                 style: style,
                 silent: true,
                 z2: -1
             });
-            graphic.subPixelOptimizeRect(rect);
+            // FIXME
+            // `subPixelOptimizeRect` may bring some gap between edge of viewpart
+            // and background rect when setting like `left: 0`, `top: 0`.
+            // graphic.subPixelOptimizeRect(rect);
 
-            group.add(rect);
+            return rect;
         }
     };
 });

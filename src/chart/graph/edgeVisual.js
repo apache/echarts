@@ -13,11 +13,15 @@ define(function (require) {
             var symbolType = normalize(seriesModel.get('edgeSymbol'));
             var symbolSize = normalize(seriesModel.get('edgeSymbolSize'));
 
+            var colorQuery = 'lineStyle.normal.color'.split('.');
+            var opacityQuery = 'lineStyle.normal.opacity'.split('.');
+
             edgeData.setVisual('fromSymbol', symbolType && symbolType[0]);
             edgeData.setVisual('toSymbol', symbolType && symbolType[1]);
             edgeData.setVisual('fromSymbolSize', symbolSize && symbolSize[0]);
             edgeData.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
-            edgeData.setVisual('color', seriesModel.get('lineStyle.normal.color'));
+            edgeData.setVisual('color', seriesModel.get(colorQuery));
+            edgeData.setVisual('opacity', seriesModel.get(opacityQuery));
 
             edgeData.each(function (idx) {
                 var itemModel = edgeData.getItemModel(idx);
@@ -25,7 +29,8 @@ define(function (require) {
                 var symbolType = normalize(itemModel.getShallow('symbol', true));
                 var symbolSize = normalize(itemModel.getShallow('symbolSize', true));
                 // Edge visual must after node visual
-                var color = itemModel.get('lineStyle.normal.color');
+                var color = itemModel.get(colorQuery);
+                var opacity = itemModel.get(opacityQuery);
                 switch (color) {
                     case 'source':
                         color = edge.node1.getVisual('color');
@@ -41,6 +46,7 @@ define(function (require) {
                 symbolSize[1] && edge.setVisual('toSymbolSize', symbolSize[1]);
 
                 edge.setVisual('color', color);
+                edge.setVisual('opacity', opacity);
             });
         });
     };

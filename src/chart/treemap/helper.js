@@ -37,6 +37,25 @@ define(function (require) {
         aboveViewRoot: function (viewRoot, node) {
             var viewPath = helper.getPathToRoot(viewRoot);
             return zrUtil.indexOf(viewPath, node) >= 0;
+        },
+
+        // From root to the input node (the input node will be included).
+        wrapTreePathInfo: function (node, seriesModel) {
+            var treePathInfo = [];
+
+            while (node) {
+                var nodeDataIndex = node.dataIndex;
+                treePathInfo.push({
+                    name: node.name,
+                    dataIndex: nodeDataIndex,
+                    value: seriesModel.getRawValue(nodeDataIndex)
+                });
+                node = node.parentNode;
+            }
+
+            treePathInfo.reverse();
+
+            return treePathInfo;
         }
     };
 

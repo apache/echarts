@@ -1,9 +1,12 @@
 // FIXME Better way to pack data in graphic element
 define(function (require) {
 
+    require('./axisPointer');
+
     require('./tooltip/TooltipModel');
 
     require('./tooltip/TooltipView');
+
 
     // Show tip action
     /**
@@ -18,7 +21,7 @@ define(function (require) {
         {
             type: 'showTip',
             event: 'showTip',
-            update: 'none'
+            update: 'tooltip:manuallyShowTip'
         },
         // noop
         function () {}
@@ -28,7 +31,7 @@ define(function (require) {
         {
             type: 'hideTip',
             event: 'hideTip',
-            update: 'none'
+            update: 'tooltip:manuallyHideTip'
         },
         // noop
         function () {}

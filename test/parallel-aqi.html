@@ -40,6 +40,7 @@
                 'echarts',
                 'echarts/chart/parallel',
                 'echarts/component/legend',
+                'echarts/component/tooltip',
                 'echarts/component/visualMap',
                 'echarts/component/parallel',
             ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
@@ -106,7 +107,7 @@
                     //     parallelAxisIndex: [0]
                     // },
                     parallelAxis: [
-                        {dim: 0, name: schema[0].text, inverse: true, max: 31, nameLocation: 'start'},
+                        {dim: 0, name: schema[0].text, inverse: true, max: 31, nameLocation: 'end'},
                         {dim: 1, name: schema[1].text},
                         {dim: 2, name: schema[2].text},
                         {dim: 3, name: schema[3].text},
@@ -123,6 +124,9 @@
                             name: 'AQI指数',
                             nameLocation: 'end',
                             nameGap: 20,
+                            tooltip: {
+                                show: true
+                            },
                             nameTextStyle: {
                                 // color: '#fff',
                                 fontSize: 14

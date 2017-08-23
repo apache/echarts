@@ -1,0 +1,146 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css"/>
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+            #chart1, #chart2 {
+                width: 100%;
+                height: 50%;
+            }
+        </style>
+        <div id="main">
+            <div id="chart1"></div>
+            <div id="chart2"></div>
+        </div>
+    <script>
+
+    require([
+        'echarts',
+        'echarts/chart/line',
+        'echarts/chart/scatter',
+        'echarts/component/title',
+        'echarts/component/legend',
+        'echarts/component/dataZoom',
+        'echarts/component/grid',
+        'echarts/component/tooltip'
+    ], function (echarts, rawData, prepareBoxplotData, env) {
+
+
+        var chart1 = echarts.init(document.getElementById('chart1'));
+        var chart2 = echarts.init(document.getElementById('chart2'));
+
+        var data1 = [];
+        var data2 = [];
+
+        var timeBase = +new Date();
+        var hour = 1000 * 60 * 60;
+
+        for (var i = 0; i < 100; i++) {
+            data1.push([timeBase, Math.random() * 4]);
+
+            if (i < 40) {
+                data2.push([timeBase, Math.random() * 14]);
+            }
+
+            timeBase += hour;
+        }
+
+        chart1.setOption({
+            legend: {
+                top: 50,
+                data: ['line']
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{c}'
+            },
+            grid: {
+                top: '26%',
+                bottom: '26%'
+            },
+            xAxis: {
+                type: 'time',
+                max: timeBase
+            },
+            yAxis: {
+                type: 'value'
+            },
+            dataZoom: {
+                type: 'inside'
+            },
+            series: [
+                {
+                    type: 'line',
+                    data: data1
+                }
+            ]
+        });
+
+        chart2.setOption({
+            legend: {
+                top: 50,
+                data: ['line']
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{c}'
+            },
+            grid: {
+                top: '26%',
+                bottom: '26%'
+            },
+            xAxis: {
+                type: 'time',
+                max: timeBase
+            },
+            yAxis: {
+                type: 'value'
+            },
+            dataZoom: {
+                type: 'inside'
+            },
+            series: [
+                {
+                    type: 'line',
+                    data: data2
+                }
+            ]
+        });
+
+        // echarts.connect([chart1, chart2]);
+
+        bindAction(chart1, chart2, data2);
+        bindAction(chart2, chart1, data1);
+
+        function bindAction(fromChart, toChart, toData) {
+            fromChart.on('updateAxisPointer', function (params) {
+                toChart.dispatchAction(
+                    toChart.makeActionFromEvent(params),
+                    true
+                );
+            });
+
+            fromChart.on('dataZoom', function (params) {
+                toChart.dispatchAction({
+                    type: 'dataZoom',
+                    dataZoomIndex: params.batch[0].dataZoomIndex,
+                    start: params.batch[0].start,
+                    end: params.batch[0].end
+                }, true);
+            });
+        }
+
+    });
+    </script>
+    </body>
+</html>

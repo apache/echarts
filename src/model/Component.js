@@ -86,9 +86,15 @@ define(function(require) {
          */
         layoutMode: null,
 
+        $constructor: function (option, parentModel, ecModel, extraOpt) {
+            Model.call(this, option, parentModel, ecModel, extraOpt);
+
+            this.uid = componentUtil.getUID('componentModel');
+        },
+
 
         init: function (option, parentModel, ecModel, extraOpt) {
-            this.mergeDefaultAndTheme(this.option, this.ecModel);
+            this.mergeDefaultAndTheme(option, ecModel);
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -105,7 +111,7 @@ define(function(require) {
             }
         },
 
-        mergeOption: function (option) {
+        mergeOption: function (option, extraOpt) {
             zrUtil.merge(this.option, option, true);
 
             var layoutMode = this.layoutMode;
@@ -118,7 +124,7 @@ define(function(require) {
         optionUpdated: function (newCptOption, isInit) {},
 
         getDefaultOption: function () {
-            if (!this.hasOwnProperty('__defaultOption')) {
+            if (!clazzUtil.hasOwn(this, '__defaultOption')) {
                 var optList = [];
                 var Class = this.constructor;
                 while (Class) {
@@ -131,28 +137,36 @@ define(function(require) {
                 for (var i = optList.length - 1; i >= 0; i--) {
                     defaultOption = zrUtil.merge(defaultOption, optList[i], true);
                 }
-                this.__defaultOption = defaultOption;
+                clazzUtil.set(this, '__defaultOption', defaultOption);
             }
-            return this.__defaultOption;
+            return clazzUtil.get(this, '__defaultOption');
+        },
+
+        getReferringComponents: function (mainType) {
+            return this.ecModel.queryComponents({
+                mainType: mainType,
+                index: this.get(mainType + 'Index', true),
+                id: this.get(mainType + 'Id', true)
+            });
         }
 
     });
 
     // Reset ComponentModel.extend, add preConstruct.
-    clazzUtil.enableClassExtend(
-        ComponentModel,
-        function (option, parentModel, ecModel, extraOpt) {
-            // Set dependentModels, componentIndex, name, id, mainType, subType.
-            zrUtil.extend(this, extraOpt);
+    // clazzUtil.enableClassExtend(
+    //     ComponentModel,
+    //     function (option, parentModel, ecModel, extraOpt) {
+    //         // Set dependentModels, componentIndex, name, id, mainType, subType.
+    //         zrUtil.extend(this, extraOpt);
 
-            this.uid = componentUtil.getUID('componentModel');
+    //         this.uid = componentUtil.getUID('componentModel');
 
-            // this.setReadOnly([
-            //     'type', 'id', 'uid', 'name', 'mainType', 'subType',
-            //     'dependentModels', 'componentIndex'
-            // ]);
-        }
-    );
+    //         // this.setReadOnly([
+    //         //     'type', 'id', 'uid', 'name', 'mainType', 'subType',
+    //         //     'dependentModels', 'componentIndex'
+    //         // ]);
+    //     }
+    // );
 
     // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
     clazzUtil.enableClassManagement(

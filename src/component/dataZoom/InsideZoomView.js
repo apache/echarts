@@ -37,29 +37,40 @@ define(function (require) {
             }
 
             // Reset controllers.
-            var coordInfoList = this.getTargetInfo().cartesians;
-            var allCoordIds = zrUtil.map(coordInfoList, function (coordInfo) {
-                return roams.generateCoordId(coordInfo.model);
-            });
+            zrUtil.each(this.getTargetCoordInfo(), function (coordInfoList, coordSysName) {
 
-            zrUtil.each(coordInfoList, function (coordInfo) {
-                var coordModel = coordInfo.model;
-                roams.register(
-                    api,
-                    {
-                        coordId: roams.generateCoordId(coordModel),
-                        allCoordIds: allCoordIds,
-                        coordinateSystem: coordModel.coordinateSystem,
-                        dataZoomId: dataZoomModel.id,
-                        throttleRate: dataZoomModel.get('throttle', true),
-                        panGetRange: bind(this._onPan, this, coordInfo),
-                        zoomGetRange: bind(this._onZoom, this, coordInfo)
-                    }
-                );
+                var allCoordIds = zrUtil.map(coordInfoList, function (coordInfo) {
+                    return roams.generateCoordId(coordInfo.model);
+                });
+
+                zrUtil.each(coordInfoList, function (coordInfo) {
+                    var coordModel = coordInfo.model;
+                    var dataZoomOption = dataZoomModel.option;
+
+                    roams.register(
+                        api,
+                        {
+                            coordId: roams.generateCoordId(coordModel),
+                            allCoordIds: allCoordIds,
+                            containsPoint: function (e, x, y) {
+                                return coordModel.coordinateSystem.containPoint([x, y]);
+                            },
+                            dataZoomId: dataZoomModel.id,
+                            throttleRate: dataZoomModel.get('throttle', true),
+                            panGetRange: bind(this._onPan, this, coordInfo, coordSysName),
+                            zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName),
+                            zoomLock: dataZoomOption.zoomLock,
+                            disabled: dataZoomOption.disabled,
+                            roamControllerOpt: {
+                                zoomOnMouseWheel: dataZoomOption.zoomOnMouseWheel,
+                                moveOnMouseMove: dataZoomOption.moveOnMouseMove,
+                                preventDefaultMouseMove: dataZoomOption.preventDefaultMouseMove
+                            }
+                        }
+                    );
+                }, this);
+
             }, this);
-
-            // TODO
-            // polar支持
         },
 
         /**
@@ -74,113 +85,139 @@ define(function (require) {
         /**
          * @private
          */
-        _onPan: function (coordInfo, controller, dx, dy) {
-            return (
-                this._range = panCartesian(
-                    [dx, dy], this._range, controller, coordInfo
-                )
+        _onPan: function (coordInfo, coordSysName, controller, dx, dy, oldX, oldY, newX, newY) {
+            var range = this._range.slice();
+
+            // Calculate transform by the first axis.
+            var axisModel = coordInfo.axisModels[0];
+            if (!axisModel) {
+                return;
+            }
+
+            var directionInfo = getDirectionInfo[coordSysName](
+                [oldX, oldY], [newX, newY], axisModel, controller, coordInfo
             );
+
+            var percentDelta = directionInfo.signal
+                * (range[1] - range[0])
+                * directionInfo.pixel / directionInfo.pixelLength;
+
+            sliderMove(percentDelta, range, [0, 100], 'all');
+
+            return (this._range = range);
         },
 
         /**
          * @private
          */
-        _onZoom: function (coordInfo, controller, scale, mouseX, mouseY) {
-            var dataZoomModel = this.dataZoomModel;
+        _onZoom: function (coordInfo, coordSysName, controller, scale, mouseX, mouseY) {
+            var range = this._range.slice();
 
-            if (dataZoomModel.option.zoomLock) {
-                return this._range;
+            // Calculate transform by the first axis.
+            var axisModel = coordInfo.axisModels[0];
+            if (!axisModel) {
+                return;
             }
 
-            return (
-                this._range = scaleCartesian(
-                    1 / scale, [mouseX, mouseY], this._range,
-                    controller, coordInfo, dataZoomModel
-                )
+            var directionInfo = getDirectionInfo[coordSysName](
+                null, [mouseX, mouseY], axisModel, controller, coordInfo
             );
+            var percentPoint = (
+                directionInfo.signal > 0
+                    ? (directionInfo.pixelStart + directionInfo.pixelLength - directionInfo.pixel)
+                    : (directionInfo.pixel - directionInfo.pixelStart)
+                ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
+
+            scale = Math.max(1 / scale, 0);
+            range[0] = (range[0] - percentPoint) * scale + percentPoint;
+            range[1] = (range[1] - percentPoint) * scale + percentPoint;
+
+            // Restrict range.
+            var minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+            sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
+
+            return (this._range = range);
         }
 
     });
 
-    function panCartesian(pixelDeltas, range, controller, coordInfo) {
-        range = range.slice();
+    var getDirectionInfo = {
 
-        // Calculate transform by the first axis.
-        var axisModel = coordInfo.axisModels[0];
-        if (!axisModel) {
-            return;
+        grid: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+            var axis = axisModel.axis;
+            var ret = {};
+            var rect = coordInfo.model.coordinateSystem.getRect();
+            oldPoint = oldPoint || [0, 0];
+
+            if (axis.dim === 'x') {
+                ret.pixel = newPoint[0] - oldPoint[0];
+                ret.pixelLength = rect.width;
+                ret.pixelStart = rect.x;
+                ret.signal = axis.inverse ? 1 : -1;
+            }
+            else { // axis.dim === 'y'
+                ret.pixel = newPoint[1] - oldPoint[1];
+                ret.pixelLength = rect.height;
+                ret.pixelStart = rect.y;
+                ret.signal = axis.inverse ? -1 : 1;
+            }
+
+            return ret;
+        },
+
+        polar: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+            var axis = axisModel.axis;
+            var ret = {};
+            var polar = coordInfo.model.coordinateSystem;
+            var radiusExtent = polar.getRadiusAxis().getExtent();
+            var angleExtent = polar.getAngleAxis().getExtent();
+
+            oldPoint = oldPoint ? polar.pointToCoord(oldPoint) : [0, 0];
+            newPoint = polar.pointToCoord(newPoint);
+
+            if (axisModel.mainType === 'radiusAxis') {
+                ret.pixel = newPoint[0] - oldPoint[0];
+                // ret.pixelLength = Math.abs(radiusExtent[1] - radiusExtent[0]);
+                // ret.pixelStart = Math.min(radiusExtent[0], radiusExtent[1]);
+                ret.pixelLength = radiusExtent[1] - radiusExtent[0];
+                ret.pixelStart = radiusExtent[0];
+                ret.signal = axis.inverse ? 1 : -1;
+            }
+            else { // 'angleAxis'
+                ret.pixel = newPoint[1] - oldPoint[1];
+                // ret.pixelLength = Math.abs(angleExtent[1] - angleExtent[0]);
+                // ret.pixelStart = Math.min(angleExtent[0], angleExtent[1]);
+                ret.pixelLength = angleExtent[1] - angleExtent[0];
+                ret.pixelStart = angleExtent[0];
+                ret.signal = axis.inverse ? -1 : 1;
+            }
+
+            return ret;
+        },
+
+        singleAxis: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+            var axis = axisModel.axis;
+            var rect = coordInfo.model.coordinateSystem.getRect();
+            var ret = {};
+
+            oldPoint = oldPoint || [0, 0];
+
+            if (axis.orient === 'horizontal') {
+                ret.pixel = newPoint[0] - oldPoint[0];
+                ret.pixelLength = rect.width;
+                ret.pixelStart = rect.x;
+                ret.signal = axis.inverse ? 1 : -1;
+            }
+            else { // 'vertical'
+                ret.pixel = newPoint[1] - oldPoint[1];
+                ret.pixelLength = rect.height;
+                ret.pixelStart = rect.y;
+                ret.signal = axis.inverse ? -1 : 1;
+            }
+
+            return ret;
         }
-
-        var directionInfo = getDirectionInfo(pixelDeltas, axisModel, controller);
-
-        var percentDelta = directionInfo.signal
-            * (range[1] - range[0])
-            * directionInfo.pixel / directionInfo.pixelLength;
-
-        sliderMove(
-            percentDelta,
-            range,
-            [0, 100],
-            'rigid'
-        );
-
-        return range;
-    }
-
-    function scaleCartesian(scale, mousePoint, range, controller, coordInfo, dataZoomModel) {
-        range = range.slice();
-
-        // Calculate transform by the first axis.
-        var axisModel = coordInfo.axisModels[0];
-        if (!axisModel) {
-            return;
-        }
-
-        var directionInfo = getDirectionInfo(mousePoint, axisModel, controller);
-
-        var mouse = directionInfo.pixel - directionInfo.pixelStart;
-        var percentPoint = mouse / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
-
-        scale = Math.max(scale, 0);
-        range[0] = (range[0] - percentPoint) * scale + percentPoint;
-        range[1] = (range[1] - percentPoint) * scale + percentPoint;
-
-        return fixRange(range);
-    }
-
-    function getDirectionInfo(xy, axisModel, controller) {
-        var axis = axisModel.axis;
-        var rect = controller.rectProvider();
-        var ret = {};
-
-        if (axis.dim === 'x') {
-            ret.pixel = xy[0];
-            ret.pixelLength = rect.width;
-            ret.pixelStart = rect.x;
-            ret.signal = axis.inverse ? 1 : -1;
-        }
-        else { // axis.dim === 'y'
-            ret.pixel = xy[1];
-            ret.pixelLength = rect.height;
-            ret.pixelStart = rect.y;
-            ret.signal = axis.inverse ? -1 : 1;
-        }
-
-        return ret;
-    }
-
-    function fixRange(range) {
-        // Clamp, using !(<= or >=) to handle NaN.
-        // jshint ignore:start
-        var bound = [0, 100];
-        !(range[0] <= bound[1]) && (range[0] = bound[1]);
-        !(range[1] <= bound[1]) && (range[1] = bound[1]);
-        !(range[0] >= bound[0]) && (range[0] = bound[0]);
-        !(range[1] >= bound[0]) && (range[1] = bound[0]);
-        // jshint ignore:end
-
-        return range;
-    }
+    };
 
     return InsideZoomView;
 });

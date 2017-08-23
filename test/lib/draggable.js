@@ -18,6 +18,7 @@
          * @param {boolean} [opt.lockX=false]
          * @param {boolean} [opt.lockY=false]
          * @param {number} [opt.throttle=false]
+         * @param {boolean} [opt.addPlaceholder=false]
          * @return {type}  description
          */
         init: function (mainEl, chart, opt) {
@@ -29,8 +30,27 @@
             }
 
             var mainEl = $(mainEl);
+            var id = mainEl.attr('data-draggable-id');
 
-            $('.draggable-control').remove();
+            if (opt.addPlaceholder) {
+                var width = mainEl.outerWidth();
+                var height = mainEl.outerHeight();
+                $('<div></div>').css({
+                    width: width,
+                    height: height,
+                    margin: 0,
+                    padding: 0,
+                    visibility: 'hidden'
+                }).insertAfter(mainEl);
+            }
+
+            if (id == null) {
+                id = +Math.random();
+                mainEl.attr('data-draggable-id', id);
+            }
+            else {
+                $('.draggable-control[data-draggable-id=' + id + ']').remove();
+            }
 
             var controlEl = $(
                 '<div class="draggable-control">DRAG<span class="draggable-label"></span></div>'

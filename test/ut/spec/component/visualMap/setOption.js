@@ -171,7 +171,16 @@ describe('vsiaulMap_setOption', function() {
         var option = this.chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
-        expect(!option.visualMap[0].target.inRange).toEqual(true);
+        expect(!!option.visualMap[0].target.inRange).toEqual(true);
+        var onlyColor = true;
+        for (var i in option.visualMap[0].target.inRange) {
+            if (i !== 'color') {
+                onlyColor = false;
+            }
+        }
+        var inRangeColor = option.visualMap[0].target.inRange.color;
+        expect(onlyColor).toEqual(true);
+        expect(inRangeColor).toEqual(['#f6efa6', '#d88273', '#bf444c']);
         expect(option.visualMap[0].controller.outOfRange.symbol).toEqual(['diamond']);
     });
 

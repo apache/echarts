@@ -12,10 +12,10 @@ define(function (require) {
 
     /**
      * @param {string} name
-     * @param {Array} contours
+     * @param {Array} geometries
      * @param {Array.<number>} cp
      */
-    function Region(name, contours, cp) {
+    function Region(name, geometries, cp) {
 
         /**
          * @type {string}
@@ -27,7 +27,7 @@ define(function (require) {
          * @type {Array.<Array>}
          * @readOnly
          */
-        this.contours = contours;
+        this.geometries = geometries;
 
         if (!cp) {
             var rect = this.getBoundingRect();
@@ -49,6 +49,8 @@ define(function (require) {
 
         constructor: Region,
 
+        properties: null,
+
         /**
          * @return {module:zrender/core/BoundingRect}
          */
@@ -63,9 +65,15 @@ define(function (require) {
             var max = [-MAX_NUMBER, -MAX_NUMBER];
             var min2 = [];
             var max2 = [];
-            var contours = this.contours;
-            for (var i = 0; i < contours.length; i++) {
-                bbox.fromPoints(contours[i], min2, max2);
+            var geometries = this.geometries;
+            for (var i = 0; i < geometries.length; i++) {
+                // Only support polygon
+                if (geometries[i].type !== 'polygon') {
+                    continue;
+                }
+                // Doesn't consider hole
+                var exterior = geometries[i].exterior;
+                bbox.fromPoints(exterior, min2, max2);
                 vec2.min(min, min, min2);
                 vec2.max(max, max, max2);
             }
@@ -85,12 +93,25 @@ define(function (require) {
          */
         contain: function (coord) {
             var rect = this.getBoundingRect();
-            var contours = this.contours;
-            if (rect.contain(coord[0], coord[1])) {
-                for (var i = 0, len = contours.length; i < len; i++) {
-                    if (polygonContain.contain(contours[i], coord[0], coord[1])) {
-                        return true;
+            var geometries = this.geometries;
+            if (!rect.contain(coord[0], coord[1])) {
+                return false;
+            }
+            loopGeo: for (var i = 0, len = geometries.length; i < len; i++) {
+                // Only support polygon.
+                if (geometries[i].type !== 'polygon') {
+                    continue;
+                }
+                var exterior = geometries[i].exterior;
+                var interiors = geometries[i].interiors;
+                if (polygonContain.contain(exterior, coord[0], coord[1])) {
+                    // Not in the region if point is in the hole.
+                    for (var k = 0; k < (interiors ? interiors.length : 0); k++) {
+                        if (polygonContain.contain(interiors[k])) {
+                            continue loopGeo;
+                        }
                     }
+                    return true;
                 }
             }
             return false;
@@ -107,10 +128,21 @@ define(function (require) {
             }
             var target = new BoundingRect(x, y, width, height);
             var transform = rect.calculateTransform(target);
-            var contours = this.contours;
-            for (var i = 0; i < contours.length; i++) {
-                for (var p = 0; p < contours[i].length; p++) {
-                    vec2.applyTransform(contours[i][p], contours[i][p], transform);
+            var geometries = this.geometries;
+            for (var i = 0; i < geometries.length; i++) {
+                // Only support polygon.
+                if (geometries[i].type !== 'polygon') {
+                    continue;
+                }
+                var exterior = geometries[i].exterior;
+                var interiors = geometries[i].interiors;
+                for (var p = 0; p < exterior.length; p++) {
+                    vec2.applyTransform(exterior[p], exterior[p], transform);
+                }
+                for (var h = 0; h < (interiors ? interiors.length : 0); h++) {
+                    for (var p = 0; p < interiors[h].length; p++) {
+                        vec2.applyTransform(interiors[h][p], interiors[h][p], transform);
+                    }
                 }
             }
             rect = this._rect;

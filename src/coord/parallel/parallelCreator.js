@@ -23,8 +23,12 @@ define(function(require) {
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.get('coordinateSystem') === 'parallel') {
-                var parallelIndex = seriesModel.get('parallelIndex');
-                seriesModel.coordinateSystem = coordSysList[parallelIndex];
+                var parallelModel = ecModel.queryComponents({
+                    mainType: 'parallel',
+                    index: seriesModel.get('parallelIndex'),
+                    id: seriesModel.get('parallelId')
+                })[0];
+                seriesModel.coordinateSystem = parallelModel.coordinateSystem;
             }
         });
 

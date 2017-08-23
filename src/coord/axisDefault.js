@@ -15,21 +15,31 @@ define(function (require) {
         nameLocation: 'end',
         // 坐标轴名字旋转，degree。
         nameRotate: null, // Adapt to axis rotate, when nameLocation is 'middle'.
-        nameTruncateLength: null, // truncate text when characters more than the given number.
-        nameTruncateEllipsis: '...',
+        nameTruncate: {
+            maxWidth: null,
+            ellipsis: '...',
+            placeholder: '.'
+        },
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
         // 文字与轴线距离
         nameGap: 15,
 
-        // 是否能触发鼠标事件
-        silent: true,
+        silent: false, // Default false to support tooltip.
+        triggerEvent: false, // Default false to avoid legacy user event listener fail.
+
+        tooltip: {
+            show: false
+        },
+
+        axisPointer: {},
 
         // 坐标轴线
         axisLine: {
             // 默认显示，属性show控制显示与否
             show: true,
             onZero: true,
+            onZeroAxisIndex: null,
             // 属性lineStyle控制线条样式
             lineStyle: {
                 color: '#333',
@@ -56,12 +66,12 @@ define(function (require) {
             // 控制文本标签是否在grid里
             inside: false,
             rotate: 0,
+            showMinLabel: null, // true | false | null (auto)
+            showMaxLabel: null, // true | false | null (auto)
             margin: 8,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            textStyle: {
-                fontSize: 12
-            }
+            fontSize: 12
         },
         // 分隔线
         splitLine: {
@@ -88,12 +98,16 @@ define(function (require) {
     var categoryAxis = zrUtil.merge({
         // 类目起始和结束两端空白策略
         boundaryGap: true,
-        // PENDING
+        // splitArea: {
+            // show: false
+        // },
         splitLine: {
             show: false
         },
         // 坐标轴小标记
         axisTick: {
+            // If tick is align with label when boundaryGap is true
+            alignWithLabel: false,
             interval: 'auto'
         },
         // 坐标轴文本标签，详见axis.axisLabel
@@ -119,6 +133,7 @@ define(function (require) {
         splitNumber: 5
         // Minimum interval
         // minInterval: null
+        // maxInterval: null
     }, defaultOption);
 
     // FIXME
@@ -127,8 +142,11 @@ define(function (require) {
         min: 'dataMin',
         max: 'dataMax'
     }, valueAxis);
-    var logAxis = zrUtil.defaults({}, valueAxis);
-    logAxis.scale = true;
+
+    var logAxis = zrUtil.defaults({
+        scale: true,
+        logBase: 10
+    }, valueAxis);
 
     return {
         categoryAxis: categoryAxis,

@@ -29,44 +29,18 @@
 
                 var data1 = [];
                 var data2 = [];
-                var data3 = [];
 
-                var symbolCount = 6;
-
-                // for (var i = 0; i < 100; i++) {
-                //     data1.push([
-                //         Math.random() * 5, Math.random() * 4, Math.random() * 20,
-                //         Math.round(Math.random() * (symbolCount - 1))
-                //     ]);
-                //     data2.push([
-                //         Math.random() * 10, Math.random() * 5, Math.random() * 20,
-                //         Math.round(Math.random() * (symbolCount - 1))
-                //     ]);
-                //     data3.push([
-                //         Math.random() * 15, Math.random() * 10, Math.random() * 20,
-                //         Math.round(Math.random() * (symbolCount - 1))
-                //     ]);
-                // }
                 for (var i = 0; i < 5; i++) {
                     data1.push([
                         i * 5, i * 4, i * 20,
-                        i * 123
+                        Math.random() * 10
                     ]);
-                    // data2.push([
-                    //     i * 10, Math.random() * 5, Math.random() * 20,
-                    //     Math.round(Math.random() * (symbolCount - 1))
-                    // ]);
-                    // data3.push([
-                    //     Math.random() * 15, Math.random() * 10, Math.random() * 20,
-                    //     Math.round(Math.random() * (symbolCount - 1))
-                    // ]);
+                    data2.push([
+                        i * 5, 30, (Math.random() - 0.5) * 100
+                    ])
                 }
 
                 chart.setOption({
-                    legend: {
-                        top: 50,
-                        data: ['scatter', 'scatter2', 'scatter3']
-                    },
                     grid: {
                         top: '26%',
                         bottom: '26%'
@@ -87,73 +61,57 @@
                         {
                             show: true,
                             splitNumber: 7,
-                            // selectedMode: 'single',
                             selectedMode: 'multiple',
                             backgroundColor: '#eee',
+                            dimension: 3,
+                            seriesIndex: 0,
+                            max: 10,
                             color: ['red', 'pink', 'black']
-                            // unselectedSymbol: []
                         },
                         {
+                            right: 0,
                             splitNumber: 3,
-                            x: 'right',
-                            // selectedMode: 'single',
+                            max: 10,
                             selectedMode: 'multiple',
                             dimension: 3,
+                            seriesIndex: 0,
                             backgroundColor: '#eee',
-                            inRange: 'symbol'
+                            inRange: {
+                                symbol: ['rect', 'line', 'path://M 100 100 L 300 100 L 200 300 z']
+                            }
+                        },
+                        {
+                            left: 'center',
+                            min: -50,
+                            max: 50,
+                            dimension: 2,
+                            seriesIndex: 1,
+                            backgroundColor: '#eee',
+                            pieces: [
+                                {
+                                    lt: 0,
+                                    color: 'red',
+                                    symbol: 'path://M 100 100 L 300 100 L 200 300 z'
+                                },
+                                {
+                                    gte: 0,
+                                    color: 'green',
+                                    symbol: 'rect'
+                                }
+                            ]
                         }
                     ],
                     series: [
                         {
                             name: 'scatter',
                             type: 'scatter',
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.8,
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
+                            symbolSize: 40,
                             data: data1
                         },
                         {
-                            name: 'scatter2',
                             type: 'scatter',
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.8,
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
+                            symbolSize: 60,
                             data: data2
-                        },
-                        {
-                            name: 'scatter3',
-                            type: 'scatter',
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.8,
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
-                            data: data3
                         }
                     ]
                 });

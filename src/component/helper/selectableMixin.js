@@ -12,21 +12,28 @@ define(function (require) {
     return {
 
         updateSelectedMap: function (targetList) {
+            this._targetList = targetList.slice();
             this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
-                targetMap[target.name] = target;
+                targetMap.set(target.name, target);
                 return targetMap;
-            }, {});
+            }, zrUtil.createHashMap());
         },
+
         /**
-         * @param {string} name
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
         // PENGING If selectedMode is null ?
-        select: function (name) {
-            var targetMap = this._selectTargetMap;
-            var target = targetMap[name];
+        select: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             var selectedMode = this.get('selectedMode');
             if (selectedMode === 'single') {
-                zrUtil.each(targetMap, function (target) {
+                this._selectTargetMap.each(function (target) {
                     target.selected = false;
                 });
             }
@@ -34,31 +41,49 @@ define(function (require) {
         },
 
         /**
-         * @param {string} name
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
-        unSelect: function (name) {
-            var target = this._selectTargetMap[name];
+        unSelect: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             // var selectedMode = this.get('selectedMode');
             // selectedMode !== 'single' && target && (target.selected = false);
             target && (target.selected = false);
         },
 
         /**
-         * @param {string} name
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
-        toggleSelected: function (name) {
-            var target = this._selectTargetMap[name];
+        toggleSelected: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             if (target != null) {
-                this[target.selected ? 'unSelect' : 'select'](name);
+                this[target.selected ? 'unSelect' : 'select'](name, id);
                 return target.selected;
             }
         },
 
         /**
-         * @param {string} name
+         * Either name or id should be passed as input here.
+         * If both of them are defined, id is used.
+         *
+         * @param {string|undefined} name name of data
+         * @param {number|undefined} id dataIndex of data
          */
-        isSelected: function (name) {
-            var target = this._selectTargetMap[name];
+        isSelected: function (name, id) {
+            var target = id != null
+                ? this._targetList[id]
+                : this._selectTargetMap.get(name);
             return target && target.selected;
         }
     };

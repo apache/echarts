@@ -6,30 +6,52 @@
 
 ECharts is a free, powerful charting and visualization library offering an easy way of adding intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
 
+**[中文官网](http://echarts.baidu.com)** | **[HOMEPAGE EN](http://ecomfe.github.io/echarts-doc/public/en/index.html)**
+
 ## Get ECharts
 
 + Download on [echarts.baidu.com](http://echarts.baidu.com/download.html)
+
 + `npm install echarts --save`
+
+## Get ECharts GL
+
+ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visualization and WebGL acceleration.
+
++ Get from [https://github.com/ecomfe/echarts-gl](https://github.com/ecomfe/echarts-gl)
+
++ `npm install echarts-gl --save`
 
 ## Docs
 
 + [Tutorial](http://echarts.baidu.com/tutorial.html)
     + [中文](http://echarts.baidu.com/tutorial.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/tutorial-en.html)
+    + [English](http://ecomfe.github.io/echarts-doc/public/en/tutorial.html)
 
 + [API](http://echarts.baidu.com/api.html)
     + [中文](http://echarts.baidu.com/api.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/api-en.html)
+    + [English](http://ecomfe.github.io/echarts-doc/public/en/api.html)
 
 + [Option Manual](http://echarts.baidu.com/option.html)
     + [中文](http://echarts.baidu.com/option.html)
-    + English (Under reviewing)
+    + [English](http://ecomfe.github.io/echarts-doc/public/en/option.html)
 
 ## Resources
+
+
+### Awesome ECharts
+
+[https://github.com/ecomfe/awesome-echarts](https://github.com/ecomfe/awesome-echarts)
 
 ### Extensions
 
 + [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
+
++ [水球图 liquidfill](https://github.com/ecomfe/echarts-liquidfill)
+
++ [字符云 wordcloud](https://github.com/ecomfe/echarts-wordcloud)
+
++ [Graph Modularity](https://github.com/ecomfe/echarts-graph-modularity) Graph modularity extension for community detection
 
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
@@ -44,24 +66,32 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [vue-echarts](https://github.com/Justineo/vue-echarts) by Justineo
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
++ [vue-echarts-v3](https://github.com/xlsdg/vue-echarts-v3) by xlsdg
 
 #### React Component
 
 + [echarts-for-react](https://github.com/hustcc/echarts-for-react) by hustcc
 + [react-echarts](https://github.com/somonus/react-echarts) by somonus
 + [re-echarts](https://github.com/liekkas/re-echarts) by liekkas
++ [react-echarts-v3](https://github.com/xlsdg/react-echarts-v3) by xlsdg
++ [d2recharts](https://github.com/leungwensen/d2recharts) by leungwensen
 
+#### React Native Component
+
++ [react-native-echarts](https://github.com/somonus/react-native-echarts) by somonus
 
 ### Other Languages
 #### Python
 
 + [echarts-python](https://github.com/yufeiminds/echarts-python) by yufeiminds
 + [krisk](https://github.com/napjon/krisk) by napjon
++ [pyecharts](https://github.com/chenjiandongx/pyecharts) by chenjiandong
 
 #### R
 
 + [recharts](https://github.com/taiyun/recharts) by taiyun
 + [recharts](https://github.com/yihui/recharts) by yihui
++ [ECharts2Shiny](https://github.com/XD-DENG/ECharts2Shiny) by XD-DENG
 
 #### Julia
 
@@ -83,31 +113,11 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [EChartsSDK](https://github.com/idoku/EChartsSDK) by idoku
 
+#### PHP
+
++ [Echarts-PHP](https://github.com/hisune/Echarts-PHP) by hisune
+
 
 ## License
-Copyright (c) 2013, Baidu Inc.
-All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-The views and conclusions contained in the software and documentation are those
-of the authors and should not be interpreted as representing official policies,
-either expressed or implied, of the FreeBSD Project.
+ECharts is available under the BSD license.

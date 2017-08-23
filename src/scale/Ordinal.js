@@ -80,6 +80,13 @@ define(function (require) {
             return this._extent[1] - this._extent[0] + 1;
         },
 
+        /**
+         * @override
+         */
+        unionExtentFromData: function (data, dim) {
+            this.unionExtent(data.getDataExtent(dim, false));
+        },
+
         niceTicks: zrUtil.noop,
         niceExtent: zrUtil.noop
     });

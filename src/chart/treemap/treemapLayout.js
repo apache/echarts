@@ -13,6 +13,11 @@ define(function (require) {
     var retrieveValue = zrUtil.retrieve;
     var each = zrUtil.each;
 
+    var PATH_BORDER_WIDTH = ['itemStyle', 'normal', 'borderWidth'];
+    var PATH_GAP_WIDTH = ['itemStyle', 'normal', 'gapWidth'];
+    var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'normal', 'show'];
+    var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'normal', 'height'];
+
     /**
      * @public
      */
@@ -26,22 +31,22 @@ define(function (require) {
             var ecHeight = api.getHeight();
             var seriesOption = seriesModel.option;
 
-            var size = seriesOption.size || []; // Compatible with ec2.
-            var containerWidth = parsePercent(
-                retrieveValue(seriesOption.width, size[0]),
-                ecWidth
-            );
-            var containerHeight = parsePercent(
-                retrieveValue(seriesOption.height, size[1]),
-                ecHeight
-            );
-
             var layoutInfo = layout.getLayoutRect(
                 seriesModel.getBoxLayoutParams(),
                 {
                     width: api.getWidth(),
                     height: api.getHeight()
                 }
+            );
+
+            var size = seriesOption.size || []; // Compatible with ec2.
+            var containerWidth = parsePercent(
+                retrieveValue(layoutInfo.width, size[0]),
+                ecWidth
+            );
+            var containerHeight = parsePercent(
+                retrieveValue(layoutInfo.height, size[1]),
+                ecHeight
             );
 
             // Fetch payload info.
@@ -92,7 +97,7 @@ define(function (require) {
                 each(viewAbovePath, function (node, index) {
                     var childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
                     node.setLayout(zrUtil.extend(
-                        {dataExtent: [childValue, childValue], borderWidth: 0},
+                        {dataExtent: [childValue, childValue], borderWidth: 0, upperHeight: 0},
                         viewRootLayout
                     ));
                 });
@@ -146,16 +151,23 @@ define(function (require) {
         height = thisLayout.height;
 
         // Considering border and gap
-        var itemStyleModel = node.getModel('itemStyle.normal');
-        var borderWidth = itemStyleModel.get('borderWidth');
-        var halfGapWidth = itemStyleModel.get('gapWidth') / 2;
+        var nodeModel = node.getModel();
+        var borderWidth = nodeModel.get(PATH_BORDER_WIDTH);
+        var halfGapWidth = nodeModel.get(PATH_GAP_WIDTH) / 2;
+        var upperLabelHeight = getUpperLabelHeight(nodeModel);
+        var upperHeight = Math.max(borderWidth, upperLabelHeight);
         var layoutOffset = borderWidth - halfGapWidth;
+        var layoutOffsetUpper = upperHeight - halfGapWidth;
         var nodeModel = node.getModel();
 
-        node.setLayout({borderWidth: borderWidth}, true);
+        node.setLayout({
+            borderWidth: borderWidth,
+            upperHeight: upperHeight,
+            upperLabelHeight: upperLabelHeight
+        }, true);
 
         width = mathMax(width - 2 * layoutOffset, 0);
-        height = mathMax(height - 2 * layoutOffset, 0);
+        height = mathMax(height - layoutOffset - layoutOffsetUpper, 0);
 
         var totalArea = width * height;
         var viewChildren = initChildren(
@@ -166,7 +178,7 @@ define(function (require) {
             return;
         }
 
-        var rect = {x: layoutOffset, y: layoutOffset, width: width, height: height};
+        var rect = {x: layoutOffset, y: layoutOffsetUpper, width: width, height: height};
         var rowFixedLength = mathMin(width, height);
         var best = Infinity; // the best row score so far
         var row = [];
@@ -301,8 +313,13 @@ define(function (require) {
     function sort(viewChildren, orderBy) {
         if (orderBy) {
             viewChildren.sort(function (a, b) {
-                return orderBy === 'asc'
+                var diff = orderBy === 'asc'
                     ?  a.getValue() - b.getValue() : b.getValue() - a.getValue();
+                return diff === 0
+                    ? (orderBy === 'asc'
+                        ? a.dataIndex - b.dataIndex : b.dataIndex - a.dataIndex
+                    )
+                    : diff;
             });
         }
         return viewChildren;
@@ -454,12 +471,12 @@ define(function (require) {
             }
             area *= sum / currNodeValue;
 
-            var borderWidth = parent.getModel('itemStyle.normal').get('borderWidth');
-
-            if (isFinite(borderWidth)) {
-                // Considering border, suppose aspect ratio is 1.
-                area += 4 * borderWidth * borderWidth + 4 * borderWidth * Math.pow(area, 0.5);
-            }
+            // Considering border, suppose aspect ratio is 1.
+            var parentModel = parent.getModel();
+            var borderWidth = parentModel.get(PATH_BORDER_WIDTH);
+            var upperHeight = Math.max(borderWidth, getUpperLabelHeight(parentModel, borderWidth));
+            area += 4 * borderWidth * borderWidth
+                + (3 * borderWidth + upperHeight) * Math.pow(area, 0.5);
 
             area > numberUtil.MAX_SAFE_INTEGER && (area = numberUtil.MAX_SAFE_INTEGER);
 
@@ -544,6 +561,10 @@ define(function (require) {
         each(node.viewChildren || [], function (child) {
             prunning(child, childClipRect, viewAbovePath, viewRoot, depth + 1);
         });
+    }
+
+    function getUpperLabelHeight(model) {
+        return model.get(PATH_UPPER_LABEL_SHOW) ? model.get(PATH_UPPER_LABEL_HEIGHT) : 0;
     }
 
     return update;

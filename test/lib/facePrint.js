@@ -7,12 +7,15 @@
 
     var count = 0;
 
-    window.facePrint = function (msg, printObj) {
+    /**
+     * @param {string|Object|Array} msg
+     */
+    window.facePrint = function (msg) {
         if (!infoDom) {
             infoDom = createInfoDom();
         }
 
-        if (printObj && isObject(msg)) {
+        if (isObject(msg)) {
             msg = window.facePrint.objToStr(msg);
         }
 
@@ -27,7 +30,8 @@
         // Make some change in view, otherwise user may
         // be not aware that log is still printing.
         for (var i = 0; i < msgs.length; i++) {
-            str += ' #' + (count - msgs.length + i) + ' ' + msgs[i];
+            str += '<span style="background:#555;margin: 0 3px;padding: 0 2px;color:yellow;">'
+                + (count - msgs.length + i) + '</span>' + msgs[i];
         }
         infoDom.innerHTML = str;
     };
@@ -44,14 +48,18 @@
         var dom = document.createElement('div');
 
         dom.style.cssText = [
-            'position: fixed;',
-            'top: 0;',
-            'width: 100%;',
-            'border: 1px solid red;',
-            'height: 20px;',
-            'line-height: 20px;',
-            'z-index: 2147483647'
-        ].join('');
+            'position: fixed',
+            'top: 0',
+            'width: 100%',
+            'min-height: 14px',
+            'line-height: 14px',
+            'z-index: 2147483647',
+            'color: #fff',
+            'font-size: 9px',
+            'background: #000',
+            'word-break:break-all',
+            'word-wrap:break-word'
+        ].join(';') + ';';
 
         document.body.appendChild(dom);
 

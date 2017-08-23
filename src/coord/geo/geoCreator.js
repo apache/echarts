@@ -14,6 +14,21 @@ define(function (require) {
      * @param {module:echarts/ExtensionAPI} api
      */
     function resizeGeo (geoModel, api) {
+
+        var boundingCoords = geoModel.get('boundingCoords');
+        if (boundingCoords != null) {
+            var leftTop = boundingCoords[0];
+            var rightBottom = boundingCoords[1];
+            if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
+                if (__DEV__) {
+                    console.error('Invalid boundingCoords');
+                }
+            }
+            else {
+                this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
+            }
+        }
+
         var rect = this.getBoundingRect();
 
         var boxLayoutOption;
@@ -28,6 +43,7 @@ define(function (require) {
         var aspect = rect.width / rect.height * aspectScale;
 
         var useCenterAndSize = false;
+
         if (center && size) {
             center = [
                 numberUtil.parsePercent(center[0], viewWidth),
@@ -144,11 +160,11 @@ define(function (require) {
             var mapModelGroupBySeries = {};
 
             ecModel.eachSeriesByType('map', function (seriesModel) {
-                var mapType = seriesModel.get('map');
-
-                mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
-
-                mapModelGroupBySeries[mapType].push(seriesModel);
+                if (!seriesModel.getHostGeoModel()) {
+                    var mapType = seriesModel.getMapType();
+                    mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
+                    mapModelGroupBySeries[mapType].push(seriesModel);
+                }
             });
 
             zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
@@ -229,11 +245,13 @@ define(function (require) {
          * Fill given regions array
          * @param  {Array.<Object>} originRegionArr
          * @param  {string} mapName
+         * @param  {Object} [nameMap]
          * @return {Array}
          */
-        getFilledRegions: function (originRegionArr, mapName) {
+        getFilledRegions: function (originRegionArr, mapName, nameMap) {
             // Not use the original
             var regionsArr = (originRegionArr || []).slice();
+            nameMap = nameMap || {};
 
             var map = geoCreator.getMap(mapName);
             var geoJson = map && map.geoJson;
@@ -244,15 +262,18 @@ define(function (require) {
                 return originRegionArr;
             }
 
-            var dataNameMap = {};
+            var dataNameMap = zrUtil.createHashMap();
             var features = geoJson.features;
             for (var i = 0; i < regionsArr.length; i++) {
-                dataNameMap[regionsArr[i].name] = regionsArr[i];
+                dataNameMap.set(regionsArr[i].name, regionsArr[i]);
             }
 
             for (var i = 0; i < features.length; i++) {
                 var name = features[i].properties.name;
-                if (!dataNameMap[name]) {
+                if (!dataNameMap.get(name)) {
+                    if (nameMap.hasOwnProperty(name)) {
+                        name = nameMap[name];
+                    }
                     regionsArr.push({
                         name: name
                     });
@@ -268,6 +289,8 @@ define(function (require) {
     echarts.registerMap = geoCreator.registerMap;
 
     echarts.getMap = geoCreator.getMap;
+
+    echarts.parseGeoJSON = require('./parseGeoJson');
 
     // TODO
     echarts.loadMap = function () {};

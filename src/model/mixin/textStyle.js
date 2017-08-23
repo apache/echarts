@@ -1,20 +1,22 @@
 define(function (require) {
 
     var textContain = require('zrender/contain/text');
+    var graphicUtil = require('../../util/graphic');
 
-    function getShallow(model, path) {
-        return model && model.getShallow(path);
-    }
+    var PATH_COLOR = ['textStyle', 'color'];
 
     return {
         /**
          * Get color property or get color from option.textStyle.color
+         * @param {boolean} [noDefault]
          * @return {string}
          */
-        getTextColor: function () {
+        getTextColor: function (noDefault) {
             var ecModel = this.ecModel;
             return this.getShallow('color')
-                || (ecModel && ecModel.get('textStyle.color'));
+                || (
+                    (!noDefault && ecModel) ? ecModel.get(PATH_COLOR) : null
+                );
         },
 
         /**
@@ -22,30 +24,23 @@ define(function (require) {
          * @return {string}
          */
         getFont: function () {
-            var ecModel = this.ecModel;
-            var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
-            return [
-                // FIXME in node-canvas fontWeight is before fontStyle
-                this.getShallow('fontStyle') || getShallow(gTextStyleModel, 'fontStyle'),
-                this.getShallow('fontWeight') || getShallow(gTextStyleModel, 'fontWeight'),
-                (this.getShallow('fontSize') || getShallow(gTextStyleModel, 'fontSize') || 12) + 'px',
-                this.getShallow('fontFamily') || getShallow(gTextStyleModel, 'fontFamily') || 'sans-serif'
-            ].join(' ');
+            return graphicUtil.getFont({
+                fontStyle: this.getShallow('fontStyle'),
+                fontWeight: this.getShallow('fontWeight'),
+                fontSize: this.getShallow('fontSize'),
+                fontFamily: this.getShallow('fontFamily')
+            }, this.ecModel);
         },
 
         getTextRect: function (text) {
-            var textStyle = this.get('textStyle') || {};
             return textContain.getBoundingRect(
                 text,
                 this.getFont(),
-                textStyle.align,
-                textStyle.baseline
-            );
-        },
-
-        ellipsis: function (text, containerWidth, options) {
-            return textContain.ellipsis(
-                text, this.getFont(), containerWidth, options
+                this.getShallow('align'),
+                this.getShallow('verticalAlign') || this.getShallow('baseline'),
+                this.getShallow('padding'),
+                this.getShallow('rich'),
+                this.getShallow('truncateText')
             );
         }
     };

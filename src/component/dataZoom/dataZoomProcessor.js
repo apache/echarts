@@ -42,7 +42,7 @@ define(function (require) {
                 end: percentRange[1],
                 startValue: valueRange[0],
                 endValue: valueRange[1]
-            });
+            }, true);
         });
     });
 

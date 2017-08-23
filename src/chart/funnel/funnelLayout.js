@@ -23,13 +23,19 @@ define(function (require) {
         for (var i = 0, len = data.count(); i < len; i++) {
             indices[i] = i;
         }
-        indices.sort(function (a, b) {
-            return isAscending ? valueArr[a] - valueArr[b] : valueArr[b] - valueArr[a];
-        });
+
+        // Add custom sortable function & none sortable opetion by "options.sort"
+        if (typeof sort === 'function') {
+            indices.sort(sort);
+        } else if (sort !== 'none') {
+            indices.sort(function (a, b) {
+                return isAscending ? valueArr[a] - valueArr[b] : valueArr[b] - valueArr[a];
+            });
+        }
         return indices;
     }
 
-    function labelLayout (data) {
+    function labelLayout(data) {
         data.each(function (idx) {
             var itemModel = data.getItemModel(idx);
             var labelModel = itemModel.getModel('label.normal');

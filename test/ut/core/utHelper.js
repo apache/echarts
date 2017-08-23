@@ -44,6 +44,8 @@
      *     // this.els[1] can be visited.
      * });
      *
+     * testCase.createChart(1, 300, 200)(...);
+     *
      *
      * @public
      * @params {Array.<string>} [requireId] Like:
@@ -102,9 +104,13 @@
                 return wrapTestCaseFn(genContext({requireId: requireId}, context));
             };
 
-            testCase.createChart = function (chartCount) {
+            testCase.createChart = function (chartCount, width, height) {
                 chartCount == null && (chartCount = 1);
-                return wrapTestCaseFn(genContext({chartCount: chartCount}, context));
+                return wrapTestCaseFn(genContext({
+                    chartCount: chartCount,
+                    width: width,
+                    height: height
+                }, context));
             };
 
             return testCase;
@@ -135,6 +141,14 @@
             for (var i = 0; i < context.chartCount || 0; i++) {
                 var el = document.createElement('div');
                 document.body.appendChild(el);
+                el.style.cssText = [
+                    'visibility:hidden',
+                    'width:' + (context.width || '500') + 'px',
+                    'height:' + (context.height || '400') + 'px',
+                    'position:absolute',
+                    'bottom:0',
+                    'right:0'
+                ].join(';');
                 els.push(el);
                 charts.push(echarts.init(el, null, {renderer: 'canvas'}));
             }
@@ -282,6 +296,13 @@
 
     /**
      * @public
+     */
+    helper.isValueFinite = function (val) {
+        return val != null && val !== '' && isFinite(val);
+    };
+
+    /**
+     * @public
      * @param {Array.<string>} deps
      * @param {Array.<Function>} testFnList
      * @param {Function} done All done callback.
@@ -306,5 +327,51 @@
         }
     };
 
+    helper.getGraphicElements = function (chartOrGroup, mainType, index) {
+        if (chartOrGroup.type === 'group') {
+            return chartOrGroup.children();
+        }
+        else {
+            var viewGroup = helper.getViewGroup(chartOrGroup, mainType, index);
+            if (viewGroup) {
+                var list = [viewGroup];
+                viewGroup.traverse(function (el) {
+                    list.push(el);
+                });
+                return list;
+            }
+            else {
+                return [];
+            }
+        }
+    };
+
+    helper.getViewGroup = function (chart, mainType, index) {
+        var component = chart.getModel().getComponent(mainType, index);
+        return component ? chart[
+            mainType === 'series' ? '_chartsMap' : '_componentsMap'
+        ][component.__viewId].group : null;
+    };
+
+    /**
+     * @public
+     */
+    helper.printElement = function (el) {
+        var result = {};
+        var props = ['position', 'scale', 'rotation', 'style', 'shape'];
+        for (var i = 0; i < props.length; i++) {
+            result[props[i]] = el[props[i]];
+        }
+        return window.JSON.stringify(result, null, 4);
+    };
+
+    /**
+     * @public
+     */
+    helper.print = function (str) {
+        if (typeof console !== 'undefined') {
+            console.log(str);
+        }
+    };
 
 })(window);

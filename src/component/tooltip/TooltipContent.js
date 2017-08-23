@@ -62,8 +62,6 @@ define(function (require) {
      */
     function assembleCssText(tooltipModel) {
 
-        tooltipModel = tooltipModel;
-
         var cssText = [];
 
         var transitionDuration = tooltipModel.get('transitionDuration');
@@ -71,7 +69,7 @@ define(function (require) {
         var textStyleModel = tooltipModel.getModel('textStyle');
         var padding = tooltipModel.get('padding');
 
-        // Animation transition
+        // Animation transition. Do not animate when transitionDuration is 0.
         transitionDuration &&
             cssText.push(assembleTransition(transitionDuration));
 
@@ -114,7 +112,7 @@ define(function (require) {
      */
     function TooltipContent(container, api) {
         var el = document.createElement('div');
-        var zr = api.getZr();
+        var zr = this._zr = api.getZr();
 
         this.el = el;
 
@@ -135,68 +133,48 @@ define(function (require) {
         var self = this;
         el.onmouseenter = function () {
             // clear the timeout in hideLater and keep showing tooltip
-            if (self.enterable) {
+            if (self._enterable) {
                 clearTimeout(self._hideTimeout);
                 self._show = true;
             }
             self._inContent = true;
         };
         el.onmousemove = function (e) {
-            if (!self.enterable) {
+            e = e || window.event;
+            if (!self._enterable) {
                 // Try trigger zrender event to avoid mouse
                 // in and out shape too frequently
                 var handler = zr.handler;
-                eventUtil.normalizeEvent(container, e);
+                eventUtil.normalizeEvent(container, e, true);
                 handler.dispatch('mousemove', e);
             }
         };
         el.onmouseleave = function () {
-            if (self.enterable) {
+            if (self._enterable) {
                 if (self._show) {
                     self.hideLater(self._hideDelay);
                 }
             }
             self._inContent = false;
         };
-
-        compromiseMobile(el, container);
-    }
-
-    function compromiseMobile(tooltipContentEl, container) {
-        // Prevent default behavior on mobile. For example,
-        // default pinch gesture will cause browser zoom.
-        // We do not preventing event on tooltip contnet el,
-        // because user may need customization in tooltip el.
-        eventUtil.addEventListener(container, 'touchstart', preventDefault);
-        eventUtil.addEventListener(container, 'touchmove', preventDefault);
-        eventUtil.addEventListener(container, 'touchend', preventDefault);
-
-        function preventDefault(e) {
-            if (contains(e.target)) {
-                e.preventDefault();
-            }
-        }
-
-        function contains(targetEl) {
-            while (targetEl && targetEl !== container) {
-                if (targetEl === tooltipContentEl) {
-                    return true;
-                }
-                targetEl = targetEl.parentNode;
-            }
-        }
     }
 
     TooltipContent.prototype = {
 
         constructor: TooltipContent,
 
-        enterable: true,
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _enterable: true,
 
         /**
          * Update when tooltip is rendered
          */
         update: function () {
+            // FIXME
+            // Move this logic to ec main?
             var container = this._container;
             var stl = container.currentStyle
                 || document.defaultView.getComputedStyle(container);
@@ -224,12 +202,29 @@ define(function (require) {
         },
 
         setContent: function (content) {
+            this.el.innerHTML = content == null ? '' : content;
+        },
+
+        setEnterable: function (enterable) {
+            this._enterable = enterable;
+        },
+
+        getSize: function () {
             var el = this.el;
-            el.innerHTML = content;
-            el.style.display = content ? 'block' : 'none';
+            return [el.clientWidth, el.clientHeight];
         },
 
         moveTo: function (x, y) {
+            // xy should be based on canvas root. But tooltipContent is
+            // the sibling of canvas root. So padding of ec container
+            // should be considered here.
+            var zr = this._zr;
+            var viewportRootOffset;
+            if (zr && zr.painter && (viewportRootOffset = zr.painter.getViewportRootOffset())) {
+                x += viewportRootOffset.offsetLeft;
+                y += viewportRootOffset.offsetTop;
+            }
+
             var style = this.el.style;
             style.left = x + 'px';
             style.top = y + 'px';
@@ -243,10 +238,8 @@ define(function (require) {
             this._show = false;
         },
 
-        // showLater: function ()
-
         hideLater: function (time) {
-            if (this._show && !(this._inContent && this.enterable)) {
+            if (this._show && !(this._inContent && this._enterable)) {
                 if (time) {
                     this._hideDelay = time;
                     // Set show false to avoid invoke hideLater mutiple times

@@ -131,7 +131,7 @@ define(function (require) {
             }
             var data = radarSeries.getData();
             zrUtil.each(indicatorAxes, function (indicatorAxis) {
-                indicatorAxis.scale.unionExtent(data.getDataExtent(indicatorAxis.dim));
+                indicatorAxis.scale.unionExtentFromData(data, indicatorAxis.dim);
             });
         }, this);
 
@@ -151,18 +151,18 @@ define(function (require) {
         }
         // Force all the axis fixing the maxSplitNumber.
         zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-            var rawExtent = axisHelper.getScaleExtent(indicatorAxis, indicatorAxis.model);
-            axisHelper.niceScaleExtent(indicatorAxis, indicatorAxis.model);
+            var rawExtent = axisHelper.getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+            axisHelper.niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
             var axisModel = indicatorAxis.model;
             var scale = indicatorAxis.scale;
-            var fixedMin = axisModel.get('min');
-            var fixedMax = axisModel.get('max');
+            var fixedMin = axisModel.getMin();
+            var fixedMax = axisModel.getMax();
             var interval = scale.getInterval();
 
             if (fixedMin != null && fixedMax != null) {
                 // User set min, max, divide to get new interval
-                // FIXME precision
+                scale.setExtent(+fixedMin, +fixedMax);
                 scale.setInterval(
                     (fixedMax - fixedMin) / splitNumber
                 );

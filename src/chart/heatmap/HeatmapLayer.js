@@ -60,8 +60,15 @@ define(function (require) {
                 ctx.drawImage(brush, x - r, y - r);
             }
 
+            if (!canvas.width || !canvas.height) {
+                // Avoid "Uncaught DOMException: Failed to execute 'getImageData' on
+                // 'CanvasRenderingContext2D': The source height is 0."
+                return canvas;
+            }
+
             // colorize the canvas using alpha value and set with gradient
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
             var pixels = imageData.data;
             var offset = 0;
             var pixelLen = pixels.length;
@@ -131,7 +138,7 @@ define(function (require) {
         _getGradient: function (data, colorFunc, state) {
             var gradientPixels = this._gradientPixels;
             var pixelsSingleState = gradientPixels[state] || (gradientPixels[state] = new Uint8ClampedArray(256 * 4));
-            var color = [];
+            var color = [0, 0, 0, 0];
             var off = 0;
             for (var i = 0; i < 256; i++) {
                 colorFunc[state](i / 255, true, color);

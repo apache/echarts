@@ -31,7 +31,7 @@ define(function(require) {
                     return;
                 }
                 var isItemSelected = legendModel.isSelected(name);
-                if (name in selectedMap) {
+                if (selectedMap.hasOwnProperty(name)) {
                     // Unselected if any legend is unselected
                     selectedMap[name] = selectedMap[name] && isItemSelected;
                 }
@@ -79,4 +79,5 @@ define(function(require) {
         'legendUnSelect', 'legendunselected',
         zrUtil.curry(legendSelectActionHandler, 'unSelect')
     );
+
 });

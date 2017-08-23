@@ -29,6 +29,11 @@
                         data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）']
                     },
                     radar: {
+                        name: {
+                            formatter:'【{value}】',
+                            color:'#72ACD1'
+                        },
+                        triggerEvent: true,
                         // shape: 'circle',
                         indicator: [
                            { text: '销售（sales）', max: 6500},

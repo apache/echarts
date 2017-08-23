@@ -1,0 +1,64 @@
+/**
+ * Coordinate System Interface:
+ *
+ *
+ * Class members:
+ *
+ *  + dimensions {Array.<strign>}: mandatory
+ *
+ *
+ * Instance members:
+ *
+ *  + dimensions {Array.<strign>}: mandatory
+ *
+ *  + model {module:echarts/model/Model}: mandatory
+ *
+ *  + create: mandatory
+ *     @param {module:echarts/model/Global} ecModel
+ *     @param {module:echarts/ExtensionAPI} api
+ *     @return {Object} coordinate system instance
+ *
+ *  + update: mandatory
+ *     @param {module:echarts/model/Global} ecModel
+ *     @param {module:echarts/ExtensionAPI} api
+ *
+ *  + getAxis {Function}: mandatory
+ *      @param {string} dim
+ *      @return {module:echarts/coord/Axis}
+ *
+ *  + getAxes: {Function}: optional
+ *      @return {Array.<module:echarts/coord/Axis>}
+ *
+ *  + axisPointerEnabled {boolean}
+ *
+ *  + dataToPoint {Function}: mandatory
+ *      @param {Array.<*>} data
+ *      @param {boolean} [clamp=false]
+ *      @return {Array.<number>} point Point in global pixel coordinate system.
+ *
+ *  + pointToData {Function}: mandatory
+ *      @param {Array.<number>} point Point in global pixel coordinate system.
+ *      @param {boolean} [clamp=false]
+ *      @return {Array.<*>} data
+ *
+ *  + containPoint {Function}: mandatory
+ *      @param {Array.<number>} point Point in global pixel coordinate system.
+ *      @return {boolean}
+ *
+ *  + getDimensionsInfo {Function}: optional
+ *      @return {Array.<string|Object>} dimensionsInfo
+ *              Like [{name: ..., type: ...}, 'xxx', ...]
+ *
+ *  + convertToPixel:
+ *  + convertFromPixel:
+ *        These two methods is also responsible for determine whether this
+ *        coodinate system is applicable to the given `finder`.
+ *        Each coordinate system will be tried, util one returns none
+ *        null/undefined value.
+ *        @param {module:echarts/model/Global} ecModel
+ *        @param {Object} finder
+ *        @param {Array|number} value
+ *        @return {Array|number} convert result.
+ *
+ *
+ */

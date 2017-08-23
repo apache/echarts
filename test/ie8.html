@@ -1,7 +1,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="../dist/echarts.min.js"></script>
+        <script src="../dist/echarts.js"></script>
         <script src="../map/js/china.js"></script>
     </head>
     <body>
@@ -36,12 +36,34 @@
                     }
                 }
 
-                chart.setOption({
+                var option = {
                     tooltip : {
                         trigger: 'axis'
                     },
                     legend: {
                         data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    toolbox: {
+                        top: 25,
+                        feature: {
+                            magicType: {
+                                type: ['line', 'bar', 'stack', 'tiled']
+                            },
+                            dataView: {},
+                            restore: {},
+                            saveAsImage: {
+                                pixelRatio: 2
+                            },
+                            myTool1: {
+                                show: true,
+                                title: '自定义扩展方法：重新加载 option',
+                                icon: 'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
+                                onclick: function (){
+                                    chart.setOption(option);
+                                    alert('chart.setOption(option) DONE!')
+                                }
+                            }
+                        }
                     },
                     xAxis : [
                         {
@@ -92,7 +114,9 @@
                             data:[820, 932, 901, 934, 1290, 1330, 1320]
                         }
                     ]
-                });
+                }
+
+                chart.setOption(option);
             }
             function makeBar () {
                 var chart = makeChart();
@@ -374,10 +398,36 @@
             function makeMap() {
                 var chart = makeChart();
                 chart.setOption({
+                    tooltip: {},
+                    legend: {
+                        data: ['a', 'b']
+                    },
                     series: [{
+                        name: 'a',
                         type: 'map',
                         map: 'china',
-                        data: []
+                        data: [
+                            {name: '北京',value: Math.round(Math.random()*1000)},
+                            {name: '天津',value: Math.round(Math.random()*1000)},
+                            {name: '上海',value: Math.round(Math.random()*1000)},
+                            {name: '重庆',value: Math.round(Math.random()*1000)},
+                            {name: '河北',value: Math.round(Math.random()*1000)},
+                            {name: '河南',value: Math.round(Math.random()*1000)},
+                            {name: '云南',value: Math.round(Math.random()*1000)}
+                        ]
+                    }, {
+                        name: 'b',
+                        type: 'map',
+                        map: 'china',
+                        data: [
+                            {name: '北京',value: Math.round(Math.random()*1000)},
+                            {name: '天津',value: Math.round(Math.random()*1000)},
+                            {name: '上海',value: Math.round(Math.random()*1000)},
+                            {name: '重庆',value: Math.round(Math.random()*1000)},
+                            {name: '河北',value: Math.round(Math.random()*1000)},
+                            {name: '河南',value: Math.round(Math.random()*1000)},
+                            {name: '云南',value: Math.round(Math.random()*1000)}
+                        ]
                     }]
                 });
             }
@@ -516,6 +566,40 @@
                 });
             }
 
+            function makeExtremePie() {
+                var chart = makeChart();
+                chart.setOption({
+                    "tooltip": {
+                        "trigger": "item",
+                        "formatter": "{b} : {c}吨 ({d}%)"
+                    },
+                    "series": [
+                        {
+                            "type": "pie",
+                            "radius": "60%",
+                            "center": ["50%", "50%" ],
+                            "data": [
+                                {
+                                    "value": "6000",
+                                    "name": "aaa"
+                                },
+                                {
+                                    "value": "123456790246912.12345",
+                                    "name": "bbb"
+                                }
+                            ],
+                            "itemStyle": {
+                                "emphasis": {
+                                    "shadowBlur": 10,
+                                    "shadowOffsetX": 0,
+                                    "shadowColor": "rgba(0, 0, 0, 0.5)"
+                                }
+                            }
+                        }
+                    ]
+                });
+            }
+
             function makeSinglePie() {
                 var chart = makeChart();
                 chart.setOption({
@@ -556,18 +640,21 @@
                         subtext: '抽样调查来自: Heinz  2003'
                     },
                     tooltip : {
-                        trigger: 'axis',
+                        // trigger: 'axis',
                         showDelay : 0,
                         formatter : function (params) {
-                            if (params.value.length > 1) {
-                                return params.seriesName + ' :<br/>'
-                                   + params.value[0] + 'cm '
-                                   + params.value[1] + 'kg ';
-                            }
-                            else {
-                                return params.seriesName + ' :<br/>'
-                                   + params.name + ' : '
-                                   + params.value + 'kg ';
+                            console.log(params);
+                            if (params.value) {
+                                if (params.value.length > 1) {
+                                    return params.seriesName + ' :<br/>'
+                                    + params.value[0] + 'cm '
+                                    + params.value[1] + 'kg ';
+                                }
+                                else {
+                                    return params.seriesName + ' :<br/>'
+                                    + params.name + ' : '
+                                    + params.value + 'kg ';
+                                }
                             }
                         },
                         axisPointer:{
@@ -749,17 +836,6 @@
                 });
             }
 
-            function makeMap() {
-                var chart = makeChart();
-                chart.setOption({
-                    series: [{
-                        type: 'map',
-                        map: 'china',
-                        data: []
-                    }]
-                });
-            }
-
             function makeFunnel() {
                 var chart = makeChart();
                 chart.setOption({
@@ -929,6 +1005,9 @@
             setTimeout(function () {
                 makePie();
             }, 1500);
+            setTimeout(function () {
+                makeExtremePie();
+            }, 1600);
             setTimeout(function () {
                 makeSinglePie();
             }, 1800);

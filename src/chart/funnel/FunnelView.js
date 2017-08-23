@@ -38,21 +38,6 @@ define(function (require) {
 
     var funnelPieceProto = FunnelPiece.prototype;
 
-    function getLabelStyle(data, idx, state, labelModel) {
-        var textStyleModel = labelModel.getModel('textStyle');
-        var position = labelModel.get('position');
-        var isLabelInside = position === 'inside' || position === 'inner' || position === 'center';
-        return {
-            fill: textStyleModel.getTextColor()
-                || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
-            textFont: textStyleModel.getFont(),
-            text: zrUtil.retrieve(
-                data.hostModel.getFormattedLabel(idx, state),
-                data.getName(idx)
-            )
-        };
-    }
-
     var opacityAccessPath = ['itemStyle', 'normal', 'opacity'];
     funnelPieceProto.updateData = function (data, idx, firstCreate) {
 
@@ -96,6 +81,7 @@ define(function (require) {
         polygon.setStyle(
             zrUtil.defaults(
                 {
+                    lineJoin: 'round',
                     fill: visualColor
                 },
                 itemStyleModel.getModel('normal').getItemStyle(['opacity'])
@@ -132,11 +118,6 @@ define(function (require) {
             }
         }, seriesModel, idx);
         labelText.attr({
-            style: {
-                textAlign: labelLayout.textAlign,
-                textVerticalAlign: labelLayout.verticalAlign,
-                textFont: labelLayout.font
-            },
             rotation: labelLayout.rotation,
             origin: [labelLayout.x, labelLayout.y],
             z2: 10
@@ -146,8 +127,19 @@ define(function (require) {
         var labelHoverModel = itemModel.getModel('label.emphasis');
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+        var visualColor = data.getItemVisual(idx, 'color');
 
-        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
+        graphic.setTextStyle(labelText.style, labelModel, {
+            textAlign: labelLayout.textAlign,
+            textVerticalAlign: labelLayout.verticalAlign,
+            text: zrUtil.retrieve(data.hostModel.getFormattedLabel(idx, 'normal'), data.getName(idx))
+        }, {
+            defaultTextColor: visualColor,
+            autoColor: visualColor,
+            checkInside: function (model, opt) {
+                return labelLayout.inside;
+            }
+        });
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
         labelText.hoverIgnore = !labelHoverModel.get('show');
@@ -161,7 +153,10 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
+        labelText.hoverStyle = graphic.setTextStyle({}, labelHoverModel, {
+            text: data.hostModel.getFormattedLabel(idx, 'emphasis')
+        }, {forMerge: true});
+
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     };
 
@@ -206,7 +201,9 @@ define(function (require) {
         remove: function () {
             this.group.removeAll();
             this._data = null;
-        }
+        },
+
+        dispose: function () {}
     });
 
     return Funnel;

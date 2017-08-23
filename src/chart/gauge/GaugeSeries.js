@@ -76,9 +76,7 @@ define(function (require) {
                 show: true,
                 distance: 5,
                 // formatter: null,
-                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                    color: 'auto'
-                }
+                color: 'auto'
             },
             pointer: {
                 show: true,
@@ -95,10 +93,8 @@ define(function (require) {
                 // x, y，单位px
                 offsetCenter: [0, '-40%'],
                 // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                textStyle: {
-                    color: '#333',
-                    fontSize: 15
-                }
+                color: '#333',
+                fontSize: 15
             },
             detail: {
                 show: true,
@@ -106,15 +102,14 @@ define(function (require) {
                 borderWidth: 0,
                 borderColor: '#ccc',
                 width: 100,
-                height: 40,
+                height: null, // self-adaption
+                padding: [5, 10],
                 // x, y，单位px
                 offsetCenter: [0, '40%'],
                 // formatter: null,
                 // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                textStyle: {
-                    color: 'auto',
-                    fontSize: 30
-                }
+                color: 'auto',
+                fontSize: 30
             }
         }
     });

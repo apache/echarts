@@ -29,13 +29,14 @@ define(function(require) {
 
             hoverAnimation: true,
             // stack: null
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
-            polarIndex: 0,
+            // polarIndex: 0,
 
             // If clip the overflow value
             clipOverflow: true,
+            // cursor: null,
 
             label: {
                 normal: {

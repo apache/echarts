@@ -1,6 +1,8 @@
 define(function (require) {
 
     return function (ecModel) {
+
+        var paletteScope = {};
         ecModel.eachSeriesByType('graph', function (seriesModel) {
             var categoriesData = seriesModel.getCategoriesData();
             var data = seriesModel.getData();
@@ -9,11 +11,12 @@ define(function (require) {
 
             categoriesData.each(function (idx) {
                 var name = categoriesData.getName(idx);
-                categoryNameIdxMap[name] = idx;
+                // Add prefix to avoid conflict with Object.prototype.
+                categoryNameIdxMap['ec-' + name] = idx;
 
                 var itemModel = categoriesData.getItemModel(idx);
                 var color = itemModel.get('itemStyle.normal.color')
-                    || seriesModel.getColorFromPalette(name);
+                    || seriesModel.getColorFromPalette(name, paletteScope);
                 categoriesData.setItemVisual(idx, 'color', color);
             });
 
@@ -24,7 +27,7 @@ define(function (require) {
                     var category = model.getShallow('category');
                     if (category != null) {
                         if (typeof category === 'string') {
-                            category = categoryNameIdxMap[category];
+                            category = categoryNameIdxMap['ec-' + category];
                         }
                         if (!data.getItemVisual(idx, 'color', true)) {
                             data.setItemVisual(

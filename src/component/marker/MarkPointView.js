@@ -53,21 +53,19 @@ define(function (require) {
                 var mpModel = seriesModel.markPointModel;
                 if (mpModel) {
                     updateMarkerLayout(mpModel.getData(), seriesModel, api);
-                    this.markerGroupMap[seriesModel.name].updateLayout(mpModel);
+                    this.markerGroupMap.get(seriesModel.id).updateLayout(mpModel);
                 }
             }, this);
         },
 
         renderSeries: function (seriesModel, mpModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
-            var seriesName = seriesModel.name;
+            var seriesId = seriesModel.id;
             var seriesData = seriesModel.getData();
 
             var symbolDrawMap = this.markerGroupMap;
-            var symbolDraw = symbolDrawMap[seriesName];
-            if (!symbolDraw) {
-                symbolDraw = symbolDrawMap[seriesName] = new SymbolDraw();
-            }
+            var symbolDraw = symbolDrawMap.get(seriesId)
+                || symbolDrawMap.set(seriesId, new SymbolDraw());
 
             var mpData = createList(coordSys, seriesModel, mpModel);
 

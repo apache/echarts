@@ -23,14 +23,19 @@ define(function (require) {
         graph.eachNode(function (node) {
             var value = node.getValue('value');
 
-            angle += unitAngle * (sum ? value : 2) / 2;
+            angle += unitAngle * (sum ? value : 1) / 2;
 
             node.setLayout([
                 r * Math.cos(angle) + cx,
                 r * Math.sin(angle) + cy
             ]);
 
-            angle += unitAngle * (sum ? value : 2) / 2;
+            angle += unitAngle * (sum ? value : 1) / 2;
+        });
+
+        nodeData.setLayout({
+            cx: cx,
+            cy: cy
         });
 
         graph.eachEdge(function (edge) {
@@ -40,7 +45,7 @@ define(function (require) {
             var cp1;
             var x12 = (p1[0] + p2[0]) / 2;
             var y12 = (p1[1] + p2[1]) / 2;
-            if (curveness > 0) {
+            if (+curveness) {
                 curveness *= 3;
                 cp1 = [
                     cx * curveness + x12 * (1 - curveness),

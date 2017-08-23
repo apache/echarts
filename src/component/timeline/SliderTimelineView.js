@@ -47,7 +47,7 @@ define(function (require) {
             this._timer;
 
             /**
-             * @type {module:zrende/Element}
+             * @type {module:zrender/Element}
              */
             this._currentPointer;
 
@@ -97,7 +97,6 @@ define(function (require) {
                 );
 
                 this._renderAxisLabel(layoutInfo, labelGroup, axis, timelineModel);
-
                 this._position(layoutInfo, timelineModel);
             }
 
@@ -136,10 +135,6 @@ define(function (require) {
                 })[orient][labelPosOpt];
             }
 
-            // FIXME
-            // 暂没有实现用户传入
-            // var labelAlign = timelineModel.get('label.normal.textStyle.align');
-            // var labelBaseline = timelineModel.get('label.normal.textStyle.baseline');
             var labelAlignMap = {
                 horizontal: 'center',
                 vertical: (labelPosOpt >= 0 || labelPosOpt === '+') ? 'left' : 'right'
@@ -204,8 +199,10 @@ define(function (require) {
                 rotation: rotationMap[orient],
                 labelRotation: labelRotation,
                 labelPosOpt: labelPosOpt,
-                labelAlign: labelAlignMap[orient],
-                labelBaseline: labelBaselineMap[orient],
+                labelAlign: timelineModel.get('label.normal.align') || labelAlignMap[orient],
+                labelBaseline: timelineModel.get('label.normal.verticalAlign')
+                    || timelineModel.get('label.normal.baseline')
+                    || labelBaselineMap[orient],
 
                 // Based on mainGroup.
                 playPosition: playPosition,
@@ -402,25 +399,25 @@ define(function (require) {
                 }
 
                 var itemModel = data.getItemModel(dataIndex);
-                var itemTextStyleModel = itemModel.getModel('label.normal.textStyle');
-                var hoverTextStyleModel = itemModel.getModel('label.emphasis.textStyle');
+                var normalLabelModel = itemModel.getModel('label.normal');
+                var hoverLabelModel = itemModel.getModel('label.emphasis');
                 var tickCoord = axis.dataToCoord(tick);
                 var textEl = new graphic.Text({
-                    style: {
-                        text: labels[dataIndex],
-                        textAlign: layoutInfo.labelAlign,
-                        textVerticalAlign: layoutInfo.labelBaseline,
-                        textFont: itemTextStyleModel.getFont(),
-                        fill: itemTextStyleModel.getTextColor()
-                    },
                     position: [tickCoord, 0],
                     rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                     onclick: bind(this._changeTimeline, this, dataIndex),
                     silent: false
                 });
+                graphic.setTextStyle(textEl.style, normalLabelModel, {
+                    text: labels[dataIndex],
+                    textAlign: layoutInfo.labelAlign,
+                    textVerticalAlign: layoutInfo.labelBaseline
+                });
 
                 group.add(textEl);
-                graphic.setHoverStyle(textEl, hoverTextStyleModel.getItemStyle());
+                graphic.setHoverStyle(
+                    textEl, graphic.setTextStyle({}, hoverLabelModel)
+                );
 
             }, this);
         },
@@ -631,35 +628,61 @@ define(function (require) {
 
     /**
      * Create symbol or update symbol
+     * opt: basic position and event handlers
      */
     function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
-        var symbolType = hostModel.get('symbol');
         var color = itemStyleModel.get('color');
-        var symbolSize = hostModel.get('symbolSize');
-        var halfSymbolSize = symbolSize / 2;
-        var itemStyle = itemStyleModel.getItemStyle(['color', 'symbol', 'symbolSize']);
 
         if (!symbol) {
-            symbol = symbolUtil.createSymbol(
-                symbolType, -halfSymbolSize, -halfSymbolSize, symbolSize, symbolSize, color
-            );
+            var symbolType = hostModel.get('symbol');
+            symbol = symbolUtil.createSymbol(symbolType, -1, -1, 2, 2, color);
+            symbol.setStyle('strokeNoScale', true);
             group.add(symbol);
             callback && callback.onCreate(symbol);
         }
         else {
-            symbol.setStyle(itemStyle);
             symbol.setColor(color);
             group.add(symbol); // Group may be new, also need to add.
             callback && callback.onUpdate(symbol);
         }
 
+        // Style
+        var itemStyle = itemStyleModel.getItemStyle(['color', 'symbol', 'symbolSize']);
+        symbol.setStyle(itemStyle);
+
+        // Transform and events.
         opt = zrUtil.merge({
             rectHover: true,
-            style: itemStyle,
             z2: 100
         }, opt, true);
 
+        var symbolSize = hostModel.get('symbolSize');
+        symbolSize = symbolSize instanceof Array
+            ? symbolSize.slice()
+            : [+symbolSize, +symbolSize];
+        symbolSize[0] /= 2;
+        symbolSize[1] /= 2;
+        opt.scale = symbolSize;
+
+        var symbolOffset = hostModel.get('symbolOffset');
+        if (symbolOffset) {
+            var pos = opt.position = opt.position || [0, 0];
+            pos[0] += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
+            pos[1] += numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
+        }
+
+        var symbolRotate = hostModel.get('symbolRotate');
+        opt.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
+
         symbol.attr(opt);
+
+        // FIXME
+        // (1) When symbol.style.strokeNoScale is true and updateTransform is not performed,
+        // getBoundingRect will return wrong result.
+        // (This is supposed to be resolved in zrender, but it is a little difficult to
+        // leverage performance and auto updateTransform)
+        // (2) All of ancesters of symbol do not scale, so we can just updateTransform symbol.
+        symbol.updateTransform();
 
         return symbol;
     }

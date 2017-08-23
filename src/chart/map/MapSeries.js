@@ -17,6 +17,8 @@ define(function (require) {
 
         type: 'series.map',
 
+        dependencies: ['geo'],
+
         layoutMode: 'box',
 
         /**
@@ -33,7 +35,7 @@ define(function (require) {
 
         init: function (option) {
 
-            option = this._fillOption(option, option.map);
+            option = this._fillOption(option, this.getMapType());
             this.option = option;
 
             MapSeries.superApply(this, 'init', arguments);
@@ -53,7 +55,7 @@ define(function (require) {
 
         mergeOption: function (newOption) {
             if (newOption.data) {
-                newOption = this._fillOption(newOption, this.option.map);
+                newOption = this._fillOption(newOption, this.getMapType());
             }
 
             MapSeries.superCall(this, 'mergeOption', newOption);
@@ -61,11 +63,26 @@ define(function (require) {
             this.updateSelectedMap(this.option.data);
         },
 
+        /**
+         * If no host geo model, return null, which means using a
+         * inner exclusive geo model.
+         */
+        getHostGeoModel: function () {
+            var geoIndex = this.option.geoIndex;
+            return geoIndex != null
+                ? this.dependentModels.geo[geoIndex]
+                : null;
+        },
+
+        getMapType: function () {
+            return (this.getHostGeoModel() || this).option.map;
+        },
+
         _fillOption: function (option, mapName) {
             // Shallow clone
             option = zrUtil.extend({}, option);
 
-            option.data = geoCreator.getFilledRegions(option.data, mapName);
+            option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
 
             return option;
         },
@@ -73,7 +90,7 @@ define(function (require) {
         getRawValue: function (dataIndex) {
             // Use value stored in data instead because it is calculated from multiple series
             // FIXME Provide all value of multiple series ?
-            return this._data.get('value', dataIndex);
+            return this.getData().get('value', dataIndex);
         },
 
         /**
@@ -109,7 +126,28 @@ define(function (require) {
             }
 
             return seriesNames.join(', ') + '<br />'
-                + name + ' : ' + formattedValue;
+                + encodeHTML(name + ' : ' + formattedValue);
+        },
+
+        /**
+         * @implement
+         */
+        getTooltipPosition: function (dataIndex) {
+            if (dataIndex != null) {
+                var name = this.getData().getName(dataIndex);
+                var geo = this.coordinateSystem;
+                var region = geo.getRegion(name);
+
+                return region && geo.dataToPoint(region.center);
+            }
+        },
+
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
+        },
+
+        setCenter: function (center) {
+            this.option.center = center;
         },
 
         defaultOption: {
@@ -117,9 +155,16 @@ define(function (require) {
             zlevel: 0,
             // 二级层叠
             z: 2,
+
             coordinateSystem: 'geo',
-            // 各省的 map 暂时都用中文
-            map: 'china',
+
+            // map should be explicitly specified since ec3.
+            map: '',
+
+            // If `geoIndex` is not specified, a exclusive geo will be
+            // created. Otherwise use the specified geo component, and
+            // `map` and `mapType` are ignored.
+            // geoIndex: 0,
 
             // 'center' | 'left' | 'right' | 'x%' | {number}
             left: 'center',
@@ -156,6 +201,11 @@ define(function (require) {
             // 是否开启缩放及漫游模式
             // roam: false,
 
+            // Define left-top, right-bottom coords to control view
+            // For example, [ [180, 90], [-180, -90] ],
+            // higher priority than center and zoom
+            boundingCoords: null,
+
             // Default on center of map
             center: null,
 
@@ -166,15 +216,11 @@ define(function (require) {
             label: {
                 normal: {
                     show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
+                    color: '#000'
                 },
                 emphasis: {
                     show: true,
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
+                    color: 'rgb(100,0,0)'
                 }
             },
             // scaleLimit: null,
@@ -190,15 +236,8 @@ define(function (require) {
                     areaColor: 'rgba(255,215,0,0.8)'
                 }
             }
-        },
-
-        setZoom: function (zoom) {
-            this.option.zoom = zoom;
-        },
-
-        setCenter: function (center) {
-            this.option.center = center;
         }
+
     });
 
     zrUtil.mixin(MapSeries, dataSelectableMixin);

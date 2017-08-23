@@ -1,0 +1,667 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+            .chart {
+                position: relative;
+                height: 500px;
+                max-width: 1000px;
+                margin: 0 auto;
+            }
+            h2 {
+                text-align: center;
+                font-size: 16px;
+                line-height: 40px;
+                font-weight: normal;
+                background: #078302;
+                color: #eee;
+            }
+        </style>
+
+        <h2>scatter</h2>
+        <div class="chart" id="main1"></div>
+        <h2>Test: (1) click zoom btn (2) select (3) click zoom btn, expect: not change</h2>
+        <div class="chart" id="main-test-y-range"></div>
+        <h2>Multiple Y axis (default)</h2>
+        <div class="chart" id="main-multiple-y-axis-default"></div>
+        <h2>Specify Y axis (yAxisIndex: [1, 2, 4], xAxisIndex: false, should be 'lineY' brush)</h2>
+        <div class="chart" id="main-specify-y-axis"></div>
+        <h2>Specify Y axis (yAxisIndex: false, should be 'lineX' brush)</h2>
+        <div class="chart" id="main-specify-x-axis"></div>
+
+        <script>
+
+            var lastChart;
+
+            function makeChart(id, option, cb) {
+                require([
+                    'echarts',
+                    'echarts/model/globalDefault',
+                    'echarts/chart/scatter',
+                    'echarts/chart/line',
+                    'echarts/chart/bar',
+                    'echarts/chart/scatter',
+                    'echarts/component/grid',
+                    'echarts/component/markLine',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip',
+                    'echarts/component/toolbox',
+                    'echarts/component/dataZoom'
+                ], function (echarts, globalDefault) {
+                    var main = document.getElementById(id);
+                    if (main) {
+                        var chartMain = document.createElement('div');
+                        chartMain.style.cssText = 'height:100%';
+                        main.appendChild(chartMain);
+                        var chart = lastChart = echarts.init(chartMain);
+
+                        if (typeof option === 'function') {
+                            option = option(echarts, globalDefault);
+                        }
+
+                        chart.setOption(option);
+
+                        window.addEventListener('resize', chart.resize);
+
+                        cb && cb(echarts, chart);
+                    }
+
+                });
+            }
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            var data1 = [];
+            var data2 = [];
+            var data3 = [];
+
+            function random(max) {
+                return (Math.random() * max).toFixed(3);
+            };
+
+            for (var i = 0; i < 100; i++) {
+                data1.push([random(15), random(10), random(1)]);
+                // data1.push([i, 10, i]);
+                data2.push([random(10), random(10), random(1)]);
+                data3.push([random(15), random(10), random(1)]);
+            }
+
+            makeChart('main1', {
+                legend: {
+                    data: ['scatter', 'scatter2', 'scatter3']
+                },
+                animationDuration: 1000,
+                animationDurationUpdate: 1000,
+                toolbox: {
+                    feature: {
+                        dataView: {},
+                        dataZoom: {
+                            show: true,
+                            yAxisIndex: null
+                        },
+                        restore: {show: true},
+                        saveAsImage: {}
+                    }
+                },
+                tooltip: {
+                },
+                xAxis: {
+                    type: 'value',
+                    min: 'dataMin',
+                    max: 'dataMax',
+                    splitLine: {
+                        show: true
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 'dataMin',
+                    max: 'dataMax',
+                    splitLine: {
+                        show: true
+                    }
+                },
+                dataZoom: [
+                    {
+                        show: true,
+                        xAxisIndex: [0],
+                        start: 10,
+                        end: 70
+                    },
+                    {
+                        show: true,
+                        yAxisIndex: [0],
+                        start: 0,
+                        end: 20
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: [0],
+                        start: 10,
+                        end: 70
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: [0],
+                        start: 0,
+                        end: 20
+                    }
+                ],
+                series: [
+                    {
+                        name: 'scatter',
+                        type: 'scatter',
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8,
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 40;
+                        },
+                        data: data1
+                    },
+                    {
+                        name: 'scatter2',
+                        type: 'scatter',
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 40;
+                        },
+                        data: data2
+                    },
+                    {
+                        name: 'scatter3',
+                        type: 'scatter',
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8,
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 40;
+                        },
+                        data: data3
+                    }
+                ]
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            makeChart('main-test-y-range', function (echarts, globalDefault) {
+                return {
+                    tooltip: {},
+                    toolbox: {
+                        feature: {
+                            dataZoom: {},
+                            restore: {}
+                        }
+                    },
+                    legend: {
+                        data: ['A1', 'A2', 'A3', 'B1', 'B2']
+                    },
+                    grid: [{
+                        left: 40,
+                        width: 300,
+                    }],
+                    xAxis: [{
+                        data: ['z', 'y', 'x', 'w', 'v', 'u']
+                    }],
+                    yAxis: [{
+                        type: 'value',
+                        position: 'left',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[0]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[1]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        offset: 80,
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[2]
+                            }
+                        }
+                    }],
+                    dataZoom: [{
+                        type: 'slider',
+                        height: 20
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 1,
+                        orient: 'vertical',
+                        left: 365,
+                        width: 20
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 2,
+                        orient: 'vertical',
+                        left: 445,
+                        width: 20
+                    }],
+                    series: [{
+                        name: 'A1',
+                        type: 'line',
+                        data: [5, 1, 5, 1, 5, 10]
+                    }, {
+                        name: 'A2',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }, {
+                        name: 'A3',
+                        type: 'line',
+                        yAxisIndex: 2,
+                        data: [3, 8, 1, 4, 2, 5]
+                    }]
+                };
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            makeChart('main-multiple-y-axis-default', function (echarts, globalDefault) {
+                return {
+                    tooltip: {},
+                    toolbox: {
+                        feature: {
+                            dataZoom: {},
+                            restore: {}
+                        }
+                    },
+                    legend: {
+                        data: ['A1', 'A2', 'A3', 'B1', 'B2']
+                    },
+                    grid: [{
+                        left: 40,
+                        width: 300,
+                    }, {
+                        left: 550,
+                        right: 40
+                    }],
+                    xAxis: [{
+                        data: ['z', 'y', 'x', 'w', 'v', 'u']
+                    }, {
+                        data: ['z', 'y', 'x', 'w', 'v', 'u'],
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
+                        type: 'value',
+                        position: 'left',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[0]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[1]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        offset: 80,
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[2]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'left',
+                        gridIndex: 1,
+                        boundaryGap: ['20%', '20%'],
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[3]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        gridIndex: 1,
+                        boundaryGap: ['20%', '20%'],
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[4]
+                            }
+                        }
+                    }],
+                    dataZoom: [{
+                        type: 'slider',
+                        height: 20
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 1,
+                        orient: 'vertical',
+                        left: 365,
+                        width: 20
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 2,
+                        orient: 'vertical',
+                        left: 445,
+                        width: 20
+                    }],
+                    series: [{
+                        name: 'A1',
+                        type: 'line',
+                        data: [5, 1, 5, 1, 5, 10]
+                    }, {
+                        name: 'A2',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }, {
+                        name: 'A3',
+                        type: 'line',
+                        yAxisIndex: 2,
+                        data: [3, 8, 1, 4, 2, 5]
+                    }, {
+                        name: 'B1',
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 3,
+                        data: [5, 1, 5, 1, 5, 3]
+                    }, {
+                        name: 'B2',
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 4,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }]
+                };
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            makeChart('main-specify-y-axis', function (echarts, globalDefault) {
+                return {
+                    tooltip: {},
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: [1, 2, 4],
+                                xAxisIndex: false
+                            },
+                            restore: {}
+                        }
+                    },
+                    legend: {
+                        data: ['A1', 'A2', 'A3', 'B1', 'B2']
+                    },
+                    grid: [{
+                        left: 40,
+                        width: 300,
+                    }, {
+                        left: 550,
+                        right: 40
+                    }],
+                    xAxis: [{
+                        data: ['z', 'y', 'x', 'w', 'v', 'u']
+                    }, {
+                        data: ['z', 'y', 'x', 'w', 'v', 'u'],
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
+                        type: 'value',
+                        position: 'left',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[0]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[1]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        offset: 80,
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[2]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'left',
+                        gridIndex: 1,
+                        boundaryGap: ['20%', '20%'],
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[3]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        gridIndex: 1,
+                        boundaryGap: ['20%', '20%'],
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[4]
+                            }
+                        }
+                    }],
+                    series: [{
+                        name: 'A1',
+                        type: 'line',
+                        data: [5, 1, 5, 1, 5, 10]
+                    }, {
+                        name: 'A2',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }, {
+                        name: 'A3',
+                        type: 'line',
+                        yAxisIndex: 2,
+                        data: [3, 8, 1, 4, 2, 5]
+                    }, {
+                        name: 'B1',
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 3,
+                        data: [5, 1, 5, 1, 5, 10]
+                    }, {
+                        name: 'B2',
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 4,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }]
+                };
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+            makeChart('main-specify-x-axis', function (echarts, globalDefault) {
+                return {
+                    tooltip: {},
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
+                            restore: {}
+                        }
+                    },
+                    legend: {
+                        data: ['A1', 'A2', 'A3', 'B1', 'B2']
+                    },
+                    grid: [{
+                        left: 40,
+                        width: 300,
+                    }, {
+                        left: 550,
+                        right: 40
+                    }],
+                    xAxis: [{
+                        data: ['z', 'y', 'x', 'w', 'v', 'u']
+                    }, {
+                        data: ['z', 'y', 'x', 'w', 'v', 'u'],
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
+                        type: 'value',
+                        position: 'left',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[0]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[1]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        offset: 80,
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[2]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'left',
+                        gridIndex: 1,
+                        boundaryGap: ['20%', '20%'],
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[3]
+                            }
+                        }
+                    }, {
+                        type: 'value',
+                        position: 'right',
+                        gridIndex: 1,
+                        boundaryGap: ['20%', '20%'],
+                        axisLine: {
+                            lineStyle: {
+                                color: globalDefault.color[4]
+                            }
+                        }
+                    }],
+                    series: [{
+                        name: 'A1',
+                        type: 'line',
+                        data: [5, 1, 5, 1, 5, 10]
+                    }, {
+                        name: 'A2',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }, {
+                        name: 'A3',
+                        type: 'line',
+                        yAxisIndex: 2,
+                        data: [3, 8, 1, 4, 2, 5]
+                    }, {
+                        name: 'B1',
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 3,
+                        data: [5, 1, 5, 1, 5, 10]
+                    }, {
+                        name: 'B2',
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 4,
+                        data: [1, 5, 1, 5, 1, 10]
+                    }]
+                };
+            });
+        </script>
+
+
+
+
+    </body>
+</html>

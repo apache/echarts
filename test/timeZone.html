@@ -1,0 +1,293 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 350px;
+            }
+        </style>
+
+
+        <h1>time scale label shoule in local time when timestamp (in UTC) input, tick should align with day.</h1>
+        <div class="chart" id="chart0"></div>
+
+        <h1>time scale label shoule in UTC time when option.useUTC is `true`, tick should not align with day.</h1>
+        <div class="chart" id="chart1"></div>
+
+        <h1>useUTC: null, should display '00:00 01-03' in tooltip on the 1st point</h1>
+        <div class="chart" id="chart2"></div>
+
+        <h1>useUTC: true, should display '16:00 01-02' in tooltip on the 1st point</h1>
+        <div class="chart" id="chart3"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            var dataTimestamp = [
+                [1486656000000, 20000],
+                [1486742400000, 30000],
+                [1486828800000, 10000],
+                [1486915200000, 290000],
+                [1487001600000, 123355],
+                [1487088000000, 198128],
+                [1487174400000, 123124]
+            ];
+
+            var dataTimeString = [
+                ['2012-01-03', 20000],
+                ['2012-01-04', 30000],
+                ['2012-01-05', 10000],
+                ['2012-01-06', 290000]
+            ];
+
+            function makeTimeScaleOption(data, useUTC) {
+                return {
+                    useUTC: useUTC,
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: [{
+                        type: 'time',
+                        splitNumber: 7,
+                        axisLabel: {
+                            formatter: function (value) {
+                                return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value, useUTC);
+                            },
+                            rotate: 10
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    }],
+                    yAxis: [{
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    }],
+                    series: [{
+                        type: 'line',
+                        smooth: true,
+                        data: data,
+                        label: {
+                            normal: {
+                                show: true,
+                                formatter: function (params) {
+                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', params.value[0], useUTC);
+                                }
+                            }
+                        }
+                    }]
+                };
+            }
+
+
+        </script>
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts',
+                'zrender/tool/color',
+                'echarts/chart/line',
+                'echarts/component/grid',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = ct;
+                var dom = document.getElementById('chart0');
+                if (!dom) {
+                    return;
+                }
+                chart = myChart = echarts.init(dom);
+
+                var option = makeTimeScaleOption(dataTimestamp);
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts',
+                'zrender/tool/color',
+                'echarts/chart/line',
+                'echarts/component/grid',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = ct;
+                var dom = document.getElementById('chart1');
+                if (!dom) {
+                    return;
+                }
+                chart = myChart = echarts.init(dom);
+
+                var option = makeTimeScaleOption(dataTimestamp, true);
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts',
+                'zrender/tool/color',
+                'echarts/chart/line',
+                'echarts/component/grid',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = ct;
+                var dom = document.getElementById('chart2');
+                if (!dom) {
+                    return;
+                }
+                chart = myChart = echarts.init(dom);
+
+                var option = makeTimeScaleOption(dataTimeString);
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts',
+                'zrender/tool/color',
+                'echarts/chart/line',
+                'echarts/component/grid',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap',
+                'echarts/component/dataZoom'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = ct;
+                var dom = document.getElementById('chart3');
+                if (!dom) {
+                    return;
+                }
+                chart = myChart = echarts.init(dom);
+
+                var option = makeTimeScaleOption(dataTimeString, true);
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+
+
+    </body>
+</html>

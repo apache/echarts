@@ -1,5 +1,3 @@
-// TODO minAngle
-
 define(function (require) {
 
     var numberUtil = require('../../util/number');
@@ -36,13 +34,19 @@ define(function (require) {
 
             var minAngle = seriesModel.get('minAngle') * RADIAN;
 
+            var validDataCount = 0;
+            data.each('value', function (value) {
+                !isNaN(value) && validDataCount++;
+            });
+
             var sum = data.getSum('value');
             // Sum may be 0
-            var unitRadian = Math.PI / (sum || data.count()) * 2;
+            var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
             var clockwise = seriesModel.get('clockwise');
 
             var roseType = seriesModel.get('roseType');
+            var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
             // [0...max]
             var extent = data.getDataExtent('value');
@@ -53,16 +57,33 @@ define(function (require) {
             var valueSumLargerThanMinAngle = 0;
 
             var currentAngle = startAngle;
-
             var dir = clockwise ? 1 : -1;
+
             data.each('value', function (value, idx) {
                 var angle;
+                if (isNaN(value)) {
+                    data.setItemLayout(idx, {
+                        angle: NaN,
+                        startAngle: NaN,
+                        endAngle: NaN,
+                        clockwise: clockwise,
+                        cx: cx,
+                        cy: cy,
+                        r0: r0,
+                        r: roseType
+                            ? NaN
+                            : r
+                    });
+                    return;
+                }
+
                 // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？
                 if (roseType !== 'area') {
-                    angle = sum === 0 ? unitRadian : (value * unitRadian);
+                    angle = (sum === 0 && stillShowZeroSum)
+                        ? unitRadian : (value * unitRadian);
                 }
                 else {
-                    angle = PI2 / (data.count() || 1);
+                    angle = PI2 / validDataCount;
                 }
 
                 if (angle < minAngle) {
@@ -92,27 +113,32 @@ define(function (require) {
 
             // Some sector is constrained by minAngle
             // Rest sectors needs recalculate angle
-            if (restAngle < PI2) {
+            if (restAngle < PI2 && validDataCount) {
                 // Average the angle if rest angle is not enough after all angles is
                 // Constrained by minAngle
                 if (restAngle <= 1e-3) {
-                    var angle = PI2 / data.count();
-                    data.each(function (idx) {
-                        var layout = data.getItemLayout(idx);
-                        layout.startAngle = startAngle + dir * idx * angle;
-                        layout.endAngle = startAngle + dir * (idx + 1) * angle;
+                    var angle = PI2 / validDataCount;
+                    data.each('value', function (value, idx) {
+                        if (!isNaN(value)) {
+                            var layout = data.getItemLayout(idx);
+                            layout.angle = angle;
+                            layout.startAngle = startAngle + dir * idx * angle;
+                            layout.endAngle = startAngle + dir * (idx + 1) * angle;
+                        }
                     });
                 }
                 else {
                     unitRadian = restAngle / valueSumLargerThanMinAngle;
                     currentAngle = startAngle;
                     data.each('value', function (value, idx) {
-                        var layout = data.getItemLayout(idx);
-                        var angle = layout.angle === minAngle
-                            ? minAngle : value * unitRadian;
-                        layout.startAngle = currentAngle;
-                        layout.endAngle = currentAngle + dir * angle;
-                        currentAngle += angle;
+                        if (!isNaN(value)) {
+                            var layout = data.getItemLayout(idx);
+                            var angle = layout.angle === minAngle
+                                ? minAngle : value * unitRadian;
+                            layout.startAngle = currentAngle;
+                            layout.endAngle = currentAngle + dir * angle;
+                            currentAngle += dir * angle;
+                        }
                     });
                 }
             }

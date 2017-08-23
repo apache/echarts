@@ -18,9 +18,12 @@ define(function (require) {
             y2: end[1]
         };
     }
-    require('../../echarts').extendComponentView({
+
+    require('./AxisView').extend({
 
         type: 'angleAxis',
+
+        axisPointerClass: 'PolarAxisPointer',
 
         render: function (angleAxisModel, ecModel) {
             this.group.removeAll();
@@ -28,9 +31,8 @@ define(function (require) {
                 return;
             }
 
-            var polarModel = ecModel.getComponent('polar', angleAxisModel.get('polarIndex'));
             var angleAxis = angleAxisModel.axis;
-            var polar = polarModel.coordinateSystem;
+            var polar = angleAxis.polar;
             var radiusExtent = polar.getRadiusAxis().getExtent();
             var ticksAngles = angleAxis.getTicksCoords();
 
@@ -40,7 +42,9 @@ define(function (require) {
             }
 
             zrUtil.each(elementList, function (name) {
-                if (angleAxisModel.get(name +'.show')) {
+                if (angleAxisModel.get(name +'.show')
+                    && (!angleAxis.scale.isBlank() || name === 'axisLine')
+                ) {
                     this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent);
                 }
             }, this);
@@ -101,8 +105,6 @@ define(function (require) {
             var categoryData = angleAxisModel.get('data');
 
             var labelModel = angleAxisModel.getModel('axisLabel');
-            var axisTextStyleModel = labelModel.getModel('textStyle');
-
             var labels = angleAxisModel.getFormattedLabels();
 
             var labelMargin = labelModel.get('margin');
@@ -117,27 +119,23 @@ define(function (require) {
 
                 var labelTextAlign = Math.abs(p[0] - cx) / r < 0.3
                     ? 'center' : (p[0] > cx ? 'left' : 'right');
-                var labelTextBaseline = Math.abs(p[1] - cy) / r < 0.3
+                var labelTextVerticalAlign = Math.abs(p[1] - cy) / r < 0.3
                     ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
-                var textStyleModel = axisTextStyleModel;
                 if (categoryData && categoryData[i] && categoryData[i].textStyle) {
-                    textStyleModel = new Model(
-                        categoryData[i].textStyle, axisTextStyleModel
-                    );
+                    labelModel = new Model(categoryData[i].textStyle, labelModel, labelModel.ecModel);
                 }
-                this.group.add(new graphic.Text({
-                    style: {
-                        x: p[0],
-                        y: p[1],
-                        fill: textStyleModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
-                        text: labels[i],
-                        textAlign: labelTextAlign,
-                        textVerticalAlign: labelTextBaseline,
-                        textFont: textStyleModel.getFont()
-                    },
-                    silent: true
-                }));
+
+                var textEl = new graphic.Text({silent: true});
+                this.group.add(textEl);
+                graphic.setTextStyle(textEl.style, labelModel, {
+                    x: p[0],
+                    y: p[1],
+                    textFill: labelModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
+                    text: labels[i],
+                    textAlign: labelTextAlign,
+                    textVerticalAlign: labelTextVerticalAlign
+                });
             }
         },
 

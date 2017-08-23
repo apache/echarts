@@ -5,12 +5,21 @@ define(function(require) {
         return item;
     }
 
-    function DataDiffer(oldArr, newArr, oldKeyGetter, newKeyGetter) {
+    /**
+     * @param {Array} oldArr
+     * @param {Array} newArr
+     * @param {Function} oldKeyGetter
+     * @param {Function} newKeyGetter
+     * @param {Object} [context] Can be visited by this.context in callback.
+     */
+    function DataDiffer(oldArr, newArr, oldKeyGetter, newKeyGetter, context) {
         this._old = oldArr;
         this._new = newArr;
 
         this._oldKeyGetter = oldKeyGetter || defaultKeyGetter;
         this._newKeyGetter = newKeyGetter || defaultKeyGetter;
+
+        this.context = context;
     }
 
     DataDiffer.prototype = {
@@ -44,21 +53,21 @@ define(function(require) {
         execute: function () {
             var oldArr = this._old;
             var newArr = this._new;
-            var oldKeyGetter = this._oldKeyGetter;
-            var newKeyGetter = this._newKeyGetter;
 
             var oldDataIndexMap = {};
             var newDataIndexMap = {};
+            var oldDataKeyArr = [];
+            var newDataKeyArr = [];
             var i;
 
-            initIndexMap(oldArr, oldDataIndexMap, oldKeyGetter);
-            initIndexMap(newArr, newDataIndexMap, newKeyGetter);
+            initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, '_oldKeyGetter', this);
+            initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter', this);
 
             // Travel by inverted order to make sure order consistency
             // when duplicate keys exists (consider newDataIndex.pop() below).
             // For performance consideration, these code below do not look neat.
             for (i = 0; i < oldArr.length; i++) {
-                var key = oldKeyGetter(oldArr[i], i);
+                var key = oldDataKeyArr[i];
                 var idx = newDataIndexMap[key];
 
                 // idx can never be empty array here. see 'set null' logic below.
@@ -80,7 +89,8 @@ define(function(require) {
                 }
             }
 
-            for (var key in newDataIndexMap) {
+            for (var i = 0; i < newDataKeyArr.length; i++) {
+                var key = newDataKeyArr[i];
                 if (newDataIndexMap.hasOwnProperty(key)) {
                     var idx = newDataIndexMap[key];
                     if (idx == null) {
@@ -91,8 +101,8 @@ define(function(require) {
                         this._add && this._add(idx);
                     }
                     else {
-                        for (var i = 0, len = idx.length; i < len; i++) {
-                            this._add && this._add(idx[i]);
+                        for (var j = 0, len = idx.length; j < len; j++) {
+                            this._add && this._add(idx[j]);
                         }
                     }
                 }
@@ -100,11 +110,13 @@ define(function(require) {
         }
     };
 
-    function initIndexMap(arr, map, keyGetter) {
+    function initIndexMap(arr, map, keyArr, keyGetterName, dataDiffer) {
         for (var i = 0; i < arr.length; i++) {
-            var key = keyGetter(arr[i], i);
+            // Add prefix to avoid conflict with Object.prototype.
+            var key = '_ec_' + dataDiffer[keyGetterName](arr[i], i);
             var existence = map[key];
             if (existence == null) {
+                keyArr.push(key);
                 map[key] = i;
             }
             else {

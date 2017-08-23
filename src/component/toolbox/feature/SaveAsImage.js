@@ -39,7 +39,7 @@ define(function (require) {
         });
         $a.href = url;
         // Chrome and Firefox
-        if (typeof MouseEvent === 'function') {
+        if (typeof MouseEvent === 'function' && !env.browser.ie && !env.browser.edge) {
             var evt = new MouseEvent('click', {
                 view: window,
                 bubbles: true,

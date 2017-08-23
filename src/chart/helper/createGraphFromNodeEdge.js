@@ -19,14 +19,16 @@ define(function (require) {
 
         var linkNameList = [];
         var validEdges = [];
+        var linkCount = 0;
         for (var i = 0; i < edges.length; i++) {
             var link = edges[i];
             var source = link.source;
             var target = link.target;
             // addEdge may fail when source or target not exists
-            if (graph.addEdge(source, target, i)) {
+            if (graph.addEdge(source, target, linkCount)) {
                 validEdges.push(link);
                 linkNameList.push(zrUtil.retrieve(link.id, source + ' > ' + target));
+                linkCount++;
             }
         }
 

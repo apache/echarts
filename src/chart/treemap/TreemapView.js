@@ -15,8 +15,10 @@
     var each = zrUtil.each;
 
     var DRAG_THRESHOLD = 3;
-    var PATH_LABEL_NORMAL = ['label', 'normal'];
+    var PATH_LABEL_NOAMAL = ['label', 'normal'];
     var PATH_LABEL_EMPHASIS = ['label', 'emphasis'];
+    var PATH_UPPERLABEL_NORMAL = ['upperLabel', 'normal'];
+    var PATH_UPPERLABEL_EMPHASIS = ['upperLabel', 'emphasis'];
     var Z_BASE = 10; // Should bigger than every z.
     var Z_BG = 1;
     var Z_CONTENT = 2;
@@ -156,7 +158,7 @@
                 lastsForAnimation, willInvisibleEls
             );
 
-            // Notice: when thisTree and oldTree are the same tree (see list.cloneShadow),
+            // Notice: when thisTree and oldTree are the same tree (see list.cloneShallow),
             // the oldTree is actually losted, so we can not find all of the old graphic
             // elements from tree. So we use this stragegy: make element storage, move
             // from old storage to new storage, clear old storage.
@@ -375,9 +377,9 @@
             }
 
             var rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
-            controller.rectProvider = function () {
-                return rect;
-            };
+            controller.setPointerChecker(function (e, x, y) {
+                return rect.contain(x, y);
+            });
         },
 
         /**
@@ -386,7 +388,7 @@
         _clearController: function () {
             var controller = this._controller;
             if (controller) {
-                controller.off('pan').off('zoom');
+                controller.dispose();
                 controller = null;
             }
         },
@@ -532,16 +534,20 @@
          */
         _renderBreadcrumb: function (seriesModel, api, targetInfo) {
             if (!targetInfo) {
-                // Find breadcrumb tail on center of containerGroup.
-                targetInfo = this.findTarget(api.getWidth() / 2, api.getHeight() / 2);
+                targetInfo = seriesModel.get('leafDepth', true) != null
+                    ? {node: seriesModel.getViewRoot()}
+                    // FIXME
+                    // better way?
+                    // Find breadcrumb tail on center of containerGroup.
+                    : this.findTarget(api.getWidth() / 2, api.getHeight() / 2);
 
                 if (!targetInfo) {
                     targetInfo = {node: seriesModel.getData().tree.root};
                 }
             }
 
-            (this._breadcrumb || (this._breadcrumb = new Breadcrumb(this.group, bind(onSelect, this))))
-                .render(seriesModel, api, targetInfo.node);
+            (this._breadcrumb || (this._breadcrumb = new Breadcrumb(this.group)))
+                .render(seriesModel, api, targetInfo.node, bind(onSelect, this));
 
             function onSelect(node) {
                 if (this._state !== 'animating') {
@@ -654,6 +660,9 @@
             return;
         }
 
+        // -------------------------------------------------------------------
+        // Start of closure variables available in "Procedures in renderNode".
+
         var thisLayout = thisNode.getLayout();
 
         if (!thisLayout || !thisLayout.isInView) {
@@ -662,10 +671,19 @@
 
         var thisWidth = thisLayout.width;
         var thisHeight = thisLayout.height;
+        var borderWidth = thisLayout.borderWidth;
         var thisInvisible = thisLayout.invisible;
 
         var thisRawIndex = thisNode.getRawIndex();
         var oldRawIndex = oldNode && oldNode.getRawIndex();
+
+        var thisViewChildren = thisNode.viewChildren;
+        var upperHeight = thisLayout.upperHeight;
+        var isParent = thisViewChildren && thisViewChildren.length;
+        var itemStyleEmphasisModel = thisNode.getModel('itemStyle.emphasis');
+
+        // End of closure ariables available in "Procedures in renderNode".
+        // -----------------------------------------------------------------
 
         // Node group
         var group = giveGraphic('nodeGroup', Group);
@@ -686,20 +704,12 @@
 
         // Background
         var bg = giveGraphic('background', Rect, depth, Z_BG);
-        if (bg) {
-            bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
-            updateStyle(bg, function () {
-                bg.setStyle('fill', thisNode.getVisual('borderColor', true));
-            });
-            group.add(bg);
-        }
-
-        var thisViewChildren = thisNode.viewChildren;
+        bg && renderBackground(group, bg, isParent && thisLayout.upperHeight);
 
         // No children, render content.
-        if (!thisViewChildren || !thisViewChildren.length) {
+        if (!isParent) {
             var content = giveGraphic('content', Rect, depth, Z_CONTENT);
-            content && renderContent(group);
+            content && renderContent(group, content);
         }
 
         return group;
@@ -708,12 +718,44 @@
         // | Procedures in renderNode |
         // ----------------------------
 
-        function renderContent(group) {
+        function renderBackground(group, bg, useUpperLabel) {
+            // For tooltip.
+            bg.dataIndex = thisNode.dataIndex;
+            bg.seriesIndex = seriesModel.seriesIndex;
+
+            bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
+            var visualBorderColor = thisNode.getVisual('borderColor', true);
+            var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
+
+            updateStyle(bg, function () {
+                var normalStyle = {fill: visualBorderColor};
+                var emphasisStyle = {fill: emphasisBorderColor};
+
+                if (useUpperLabel) {
+                    var upperLabelWidth = thisWidth - 2 * borderWidth;
+
+                    prepareText(
+                        normalStyle, emphasisStyle, visualBorderColor, upperLabelWidth, upperHeight,
+                        {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
+                    );
+                }
+                // For old bg.
+                else {
+                    normalStyle.text = emphasisStyle.text = null;
+                }
+
+                bg.setStyle(normalStyle);
+                graphic.setHoverStyle(bg, emphasisStyle);
+            });
+
+            group.add(bg);
+        }
+
+        function renderContent(group, content) {
             // For tooltip.
             content.dataIndex = thisNode.dataIndex;
             content.seriesIndex = seriesModel.seriesIndex;
 
-            var borderWidth = thisLayout.borderWidth;
             var contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
             var contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
 
@@ -728,7 +770,7 @@
             var visualColor = thisNode.getVisual('color', true);
             updateStyle(content, function () {
                 var normalStyle = {fill: visualColor};
-                var emphasisStyle = thisNode.getModel('itemStyle.emphasis').getItemStyle();
+                var emphasisStyle = itemStyleEmphasisModel.getItemStyle();
 
                 prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
 
@@ -757,47 +799,44 @@
             }
         }
 
-        function prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight) {
+        function prepareText(normalStyle, emphasisStyle, visualColor, width, height, upperLabelRect) {
             var nodeModel = thisNode.getModel();
-            var text = nodeModel.get('name');
-            if (thisLayout.isLeafRoot) {
+            var text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(
+                    thisNode.dataIndex, 'normal', null, null, upperLabelRect ? 'upperLabel' : 'label'
+                ),
+                nodeModel.get('name')
+            );
+            if (!upperLabelRect && thisLayout.isLeafRoot) {
                 var iconChar = seriesModel.get('drillDownIcon', true);
-                text = iconChar ? iconChar + ' ' + text : test;
+                text = iconChar ? iconChar + ' ' + text : text;
             }
 
-            setText(
-                text, normalStyle, nodeModel, PATH_LABEL_NORMAL,
-                visualColor, contentWidth, contentHeight
+            var normalLabelModel = nodeModel.getModel(
+                upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
             );
-            setText(
-                text, emphasisStyle, nodeModel, PATH_LABEL_EMPHASIS,
-                visualColor, contentWidth, contentHeight
-            );
-        }
+            graphic.setText(normalStyle, normalLabelModel, visualColor);
 
-        function setText(text, style, nodeModel, labelPath, visualColor, contentWidth, contentHeight) {
-            var labelModel = nodeModel.getModel(labelPath);
-            var labelTextStyleModel = labelModel.getModel('textStyle');
+            upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
 
-            graphic.setText(style, labelModel, visualColor);
-
-            // text.align and text.baseline is not included by graphic.setText,
-            // because in most cases the two attributes are not exposed to user,
-            // except in treemap.
-            style.textAlign = labelTextStyleModel.get('align');
-            style.textVerticalAlign = labelTextStyleModel.get('baseline');
-
-            var textRect = labelTextStyleModel.getTextRect(text);
-            if (!labelModel.getShallow('show') || textRect.height > contentHeight) {
-                style.text = '';
-            }
-            else if (textRect.width > contentWidth) {
-                style.text = labelTextStyleModel.get('ellipsis')
-                    ? labelTextStyleModel.ellipsis(text, contentWidth) : '';
+            if (!normalLabelModel.getShallow('show')) {
+                normalStyle.text = normalStyle.truncate = null;
             }
             else {
-                style.text = text;
+                normalStyle.text = text;
+                normalStyle.truncate = normalLabelModel.get('ellipsis')
+                    ? {
+                        outerWidth: width,
+                        outerHeight: height,
+                        minChar: 2
+                    }
+                    : null;
             }
+
+            var emphasisLabelModel = nodeModel.getModel(
+                upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
+            );
+            graphic.setText(emphasisStyle, emphasisLabelModel, false);
         }
 
         function giveGraphic(storageName, Ctor, depth, z) {

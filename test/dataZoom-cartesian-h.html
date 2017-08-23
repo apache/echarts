@@ -6,25 +6,39 @@
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
+            html, body{
+                padding: 0;
+                margin: 0;
+            }
+            #main {
+                height: 500px;
             }
             body {
                 margin: 0;
             }
+            h3 {
+                text-align: center;
+                background: #eee;
+                line-height: 30px;
+            }
         </style>
+        <h3>
+            Check the highlighted label while data zooming.<br>
+            Check the minSpan and maxSpan (both in slider and inside and toolbox zoom).
+        </h3>
         <div id="main"></div>
         <script>
 
             require([
                 'echarts',
                 'echarts/chart/bar',
+                'echarts/chart/line',
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/axis',
                 'echarts/component/dataZoom',
                 'echarts/component/tooltip',
+                'echarts/component/toolbox',
                 'echarts/component/markPoint',
                 'echarts/component/markLine'
             ], function (echarts) {
@@ -39,29 +53,69 @@
                 var data3 = [];
 
                 for (var i = 0; i < 200; i++) {
-                    xAxisData.push('类目' + i);
+                    var data1Val;
+                    var data2Val;
+                    var data3Val;
+
                     if (Math.random() < 0.03) {
-                        data1.push('-');
-                        data2.push('-');
-                        data3.push('-');
+                        data1Val = '-';
+                        data2Val = '-';
+                        data3Val = '-';
                     }
                     else {
-                        data1.push((Math.random() + 0.1).toFixed(2));
-                        data2.push(Math.random().toFixed(2));
-                        data3.push(Math.random().toFixed(2));
+                        data1Val = (Math.random() + 0.1).toFixed(2);
+                        data2Val = (Math.random() + 1).toFixed(2);
+                        data3Val = Math.random().toFixed(2);
+                    }
+
+                    if (i === 10 || i === 16) {
+                        xAxisData.push({
+                            value: '类目' + i,
+                            textStyle: {
+                                fontSize: 14,
+                                color: 'red',
+                                fontWeight: 'bold'
+                            }
+                        });
+                        data1.push({
+                            value: data1Val,
+                            itemStyle: {
+                                normal: {
+                                    color: 'yellow'
+                                }
+                            }
+                        });
+                        data2.push(data2Val);
+                        data3.push(data3Val);
+                    }
+                    else {
+                        xAxisData.push(i);
+                        data1.push(data1Val);
+                        data2.push(data2Val);
+                        data3.push(data3Val);
                     }
                 }
 
                 chart.setOption({
                     legend: {
-                        data: ['bar', 'bar2', 'bar3']
+                        data: ['bar', 'line', 'bar3']
                     },
                     tooltip: {
                         trigger: 'axis'
                     },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                show: true,
+                                xAxisIndex: false
+                            },
+                            saveAsImage: {},
+                            restore: {show: true}
+                        }
+                    },
                     yAxis: {
-                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
                         data: xAxisData,
+                        // inverse: true,
                         boundaryGap: false
                     },
                     xAxis: {
@@ -70,9 +124,9 @@
                     },
                     series: [
                         {
-                            name: 'bar2',
-                            type: 'bar',
-                            stack: 'all',
+                            name: 'line',
+                            type: 'line',
+                            // stack: 'all',
                             data: data2,
                             smooth: true
                         },
@@ -110,13 +164,26 @@
                             }
                         }
                     ],
-                    dataZoom: {
-                        show: true,
-                        end: 30,
-                        borderColor: 'rgba(0,0,0,0.15)',
-                        backgroundColor: 'rgba(200,200,200,0)',
-                        yAxisIndex: 0
-                    }
+                    dataZoom: [
+                        {
+                            show: true,
+                            startValue: 2,
+                            end: 30,
+                            borderColor: 'rgba(0,0,0,0.15)',
+                            backgroundColor: 'rgba(200,200,200,0)',
+                            yAxisIndex: 0,
+                            minValueSpan: 5,
+                            maxValueSpan: 80
+                        },
+                        {
+                            type: 'inside',
+                            startValue: 2,
+                            end: 30,
+                            yAxisIndex: 0,
+                            minSpan: 5,
+                            maxSpan: 80
+                        }
+                    ]
                 });
             })
 

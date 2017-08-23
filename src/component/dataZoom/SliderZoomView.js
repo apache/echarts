@@ -9,6 +9,8 @@ define(function (require) {
     var linearMap = numberUtil.linearMap;
     var layout = require('../../util/layout');
     var sliderMove = require('../helper/sliderMove');
+    var eventTool = require('zrender/core/event');
+
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
     // var mathMax = Math.max;
@@ -246,11 +248,12 @@ define(function (require) {
             return [0, this._size[0]];
         },
 
-        _renderBackground : function () {
+        _renderBackground: function () {
             var dataZoomModel = this.dataZoomModel;
             var size = this._size;
+            var barGroup = this._displayables.barGroup;
 
-            this._displayables.barGroup.add(new Rect({
+            barGroup.add(new Rect({
                 silent: true,
                 shape: {
                     x: 0, y: 0, width: size[0], height: size[1]
@@ -259,6 +262,18 @@ define(function (require) {
                     fill: dataZoomModel.get('backgroundColor')
                 },
                 z2: -40
+            }));
+
+            // Click panel, over shadow, below handles.
+            barGroup.add(new Rect({
+                shape: {
+                    x: 0, y: 0, width: size[0], height: size[1]
+                },
+                style: {
+                    fill: 'transparent'
+                },
+                z2: 0,
+                onclick: zrUtil.bind(this._onClickPanelClick, this)
             }));
         },
 
@@ -275,6 +290,10 @@ define(function (require) {
             var otherDim = seriesModel.getShadowDim
                 ? seriesModel.getShadowDim() // @see candlestick
                 : info.otherDim;
+
+            if (otherDim == null) {
+                return;
+            }
 
             var otherDataExtent = data.getDataExtent(otherDim);
             // Nice extent.
@@ -294,22 +313,38 @@ define(function (require) {
 
             // Optimize for large data shadow
             var stride = Math.round(data.count() / size[0]);
+            var lastIsEmpty;
             data.each([otherDim], function (value, index) {
                 if (stride > 0 && (index % stride)) {
                     thisCoord += step;
                     return;
                 }
+
                 // FIXME
-                // 应该使用统计的空判断？还是在list里进行空判断？
-                var otherCoord = (value == null || isNaN(value) || value === '')
-                    ? null
-                    : linearMap(value, otherDataExtent, otherShadowExtent, true);
-                if (otherCoord != null) {
-                    areaPoints.push([thisCoord, otherCoord]);
-                    linePoints.push([thisCoord, otherCoord]);
+                // Should consider axis.min/axis.max when drawing dataShadow.
+
+                // FIXME
+                // 应该使用统一的空判断？还是在list里进行空判断？
+                var isEmpty = value == null || isNaN(value) || value === '';
+                // See #4235.
+                var otherCoord = isEmpty
+                    ? 0 : linearMap(value, otherDataExtent, otherShadowExtent, true);
+
+                // Attempt to draw data shadow precisely when there are empty value.
+                if (isEmpty && !lastIsEmpty && index) {
+                    areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
+                    linePoints.push([linePoints[linePoints.length - 1][0], 0]);
+                }
+                else if (!isEmpty && lastIsEmpty) {
+                    areaPoints.push([thisCoord, 0]);
+                    linePoints.push([thisCoord, 0]);
                 }
 
+                areaPoints.push([thisCoord, otherCoord]);
+                linePoints.push([thisCoord, otherCoord]);
+
                 thisCoord += step;
+                lastIsEmpty = isEmpty;
             });
 
             var dataZoomModel = this.dataZoomModel;
@@ -360,17 +395,20 @@ define(function (require) {
                         return;
                     }
 
-                    var otherDim = getOtherDim(dimNames.name);
-
                     var thisAxis = ecModel.getComponent(dimNames.axis, axisIndex).axis;
+                    var otherDim = getOtherDim(dimNames.name);
+                    var otherAxisInverse;
+                    var coordSys = seriesModel.coordinateSystem;
+                    if (otherDim != null && coordSys.getOtherAxis) {
+                        otherAxisInverse = coordSys.getOtherAxis(thisAxis).inverse;
+                    }
 
                     result = {
                         thisAxis: thisAxis,
                         series: seriesModel,
                         thisDim: dimNames.name,
                         otherDim: otherDim,
-                        otherAxisInverse: seriesModel
-                            .coordinateSystem.getOtherAxis(thisAxis).inverse
+                        otherAxisInverse: otherAxisInverse
                     };
 
                 }, this);
@@ -390,8 +428,12 @@ define(function (require) {
 
             barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
-                cursor: 'move',
+                cursor: getCursor(this._orient),
                 drift: bind(this._onDragMove, this, 'all'),
+                onmousemove: function (e) {
+                    // Fot mobile devicem, prevent screen slider on the button.
+                    eventTool.stop(e.event);
+                },
                 ondragstart: bind(this._showDataInfo, this, true),
                 ondragend: bind(this._onDragEnd, this),
                 onmouseover: bind(this._showDataInfo, this, true),
@@ -419,25 +461,23 @@ define(function (require) {
                 }
             })));
 
-            var iconStr = dataZoomModel.get('handleIcon');
             each([0, 1], function (handleIndex) {
-                var path = graphic.makePath(iconStr, {
-                    style: {
-                        strokeNoScale: true
+                var path = graphic.createIcon(
+                    dataZoomModel.get('handleIcon'),
+                    {
+                        cursor: getCursor(this._orient),
+                        draggable: true,
+                        drift: bind(this._onDragMove, this, handleIndex),
+                        onmousemove: function (e) {
+                            // Fot mobile devicem, prevent screen slider on the button.
+                            eventTool.stop(e.event);
+                        },
+                        ondragend: bind(this._onDragEnd, this),
+                        onmouseover: bind(this._showDataInfo, this, true),
+                        onmouseout: bind(this._showDataInfo, this, false)
                     },
-                    rectHover: true,
-                    cursor: this._orient === 'vertical' ? 'ns-resize' : 'ew-resize',
-                    draggable: true,
-                    drift: bind(this._onDragMove, this, handleIndex),
-                    ondragend: bind(this._onDragEnd, this),
-                    onmouseover: bind(this._showDataInfo, this, true),
-                    onmouseout: bind(this._showDataInfo, this, false)
-                }, {
-                    x: -0.5,
-                    y: 0,
-                    width: 1,
-                    height: 1
-                }, 'center');
+                    {x: -1, y: 0, width: 2, height: 2}
+                );
 
                 var bRect = path.getBoundingRect();
                 this._handleHeight = numberUtil.parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
@@ -462,7 +502,7 @@ define(function (require) {
                         x: 0, y: 0, text: '',
                         textVerticalAlign: 'middle',
                         textAlign: 'center',
-                        fill: textStyleModel.getTextColor(),
+                        textFill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
                     },
                     z2: 10
@@ -487,32 +527,36 @@ define(function (require) {
         /**
          * @private
          * @param {(number|string)} handleIndex 0 or 1 or 'all'
-         * @param {number} dx
-         * @param {number} dy
+         * @param {number} delta
          */
         _updateInterval: function (handleIndex, delta) {
+            var dataZoomModel = this.dataZoomModel;
             var handleEnds = this._handleEnds;
             var viewExtend = this._getViewExtent();
+            var minMaxSpan = dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+            var percentExtent = [0, 100];
 
             sliderMove(
                 delta,
                 handleEnds,
                 viewExtend,
-                (handleIndex === 'all' || this.dataZoomModel.get('zoomLock'))
-                    ? 'rigid' : 'cross',
-                handleIndex
+                dataZoomModel.get('zoomLock') ? 'all' : handleIndex,
+                minMaxSpan.minSpan != null
+                    ? linearMap(minMaxSpan.minSpan, percentExtent, viewExtend, true) : null,
+                minMaxSpan.maxSpan != null
+                    ? linearMap(minMaxSpan.maxSpan, percentExtent, viewExtend, true) : null
             );
 
             this._range = asc([
-                linearMap(handleEnds[0], viewExtend, [0, 100], true),
-                linearMap(handleEnds[1], viewExtend, [0, 100], true)
+                linearMap(handleEnds[0], viewExtend, percentExtent, true),
+                linearMap(handleEnds[1], viewExtend, percentExtent, true)
             ]);
         },
 
         /**
          * @private
          */
-        _updateView: function () {
+        _updateView: function (nonRealtime) {
             var displaybles = this._displayables;
             var handleEnds = this._handleEnds;
             var handleInterval = asc(handleEnds.slice());
@@ -523,7 +567,7 @@ define(function (require) {
                 var handle = displaybles.handles[handleIndex];
                 var handleHeight = this._handleHeight;
                 handle.attr({
-                    scale: [handleHeight, handleHeight],
+                    scale: [handleHeight / 2, handleHeight / 2],
                     position: [handleEnds[handleIndex], size[1] / 2 - handleHeight / 2]
                 });
             }, this);
@@ -536,13 +580,13 @@ define(function (require) {
                 height: size[1]
             });
 
-            this._updateDataInfo();
+            this._updateDataInfo(nonRealtime);
         },
 
         /**
          * @private
          */
-        _updateDataInfo: function () {
+        _updateDataInfo: function (nonRealtime) {
             var dataZoomModel = this.dataZoomModel;
             var displaybles = this._displayables;
             var handleLabels = displaybles.handleLabels;
@@ -552,19 +596,19 @@ define(function (require) {
             // FIXME
             // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
             if (dataZoomModel.get('showDetail')) {
-                var dataInterval;
-                var axis;
-                dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-                    // Using dataInterval of the first axis.
-                    if (!dataInterval) {
-                        dataInterval = dataZoomModel
-                            .getAxisProxy(dimNames.name, axisIndex)
-                            .getDataValueWindow();
-                        axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
-                    }
-                }, this);
+                var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 
-                if (dataInterval) {
+                if (axisProxy) {
+                    var axis = axisProxy.getAxisModel().axis;
+                    var range = this._range;
+
+                    var dataInterval = nonRealtime
+                        // See #4434, data and axis are not processed and reset yet in non-realtime mode.
+                        ? axisProxy.calculateDataWindow({
+                            start: range[0], end: range[1]
+                        }).valueWindow
+                        : axisProxy.getDataValueWindow();
+
                     labelTexts = [
                         this._formatLabel(dataInterval[0], axis),
                         this._formatLabel(dataInterval[1], axis)
@@ -611,16 +655,13 @@ define(function (require) {
         _formatLabel: function (value, axis) {
             var dataZoomModel = this.dataZoomModel;
             var labelFormatter = dataZoomModel.get('labelFormatter');
-            if (zrUtil.isFunction(labelFormatter)) {
-                return labelFormatter(value);
-            }
 
             var labelPrecision = dataZoomModel.get('labelPrecision');
             if (labelPrecision == null || labelPrecision === 'auto') {
                 labelPrecision = axis.getPixelPrecision();
             }
 
-            value = (value == null && isNaN(value))
+            var valueStr = (value == null || isNaN(value))
                 ? ''
                 // FIXME Glue code
                 : (axis.type === 'category' || axis.type === 'time')
@@ -628,11 +669,11 @@ define(function (require) {
                     // param of toFixed should less then 20.
                     : value.toFixed(Math.min(labelPrecision, 20));
 
-            if (zrUtil.isString(labelFormatter)) {
-                value = labelFormatter.replace('{value}', value);
-            }
-
-            return value;
+            return zrUtil.isFunction(labelFormatter)
+                ? labelFormatter(value, valueStr)
+                : zrUtil.isString(labelFormatter)
+                ? labelFormatter.replace('{value}', valueStr)
+                : valueStr;
         },
 
         /**
@@ -652,19 +693,41 @@ define(function (require) {
             this._dragging = true;
 
             // Transform dx, dy to bar coordination.
-            var vertex = this._applyBarTransform([dx, dy], true);
+            var barTransform = this._displayables.barGroup.getLocalTransform();
+            var vertex = graphic.applyTransform([dx, dy], barTransform, true);
 
             this._updateInterval(handleIndex, vertex[0]);
-            this._updateView();
 
-            if (this.dataZoomModel.get('realtime')) {
-                this._dispatchZoomAction();
+            var realtime = this.dataZoomModel.get('realtime');
+
+            this._updateView(!realtime);
+
+            if (realtime) {
+                realtime && this._dispatchZoomAction();
             }
         },
 
         _onDragEnd: function () {
             this._dragging = false;
             this._showDataInfo(false);
+            this._dispatchZoomAction();
+        },
+
+        _onClickPanelClick: function (e) {
+            var size = this._size;
+            var localPoint = this._displayables.barGroup.transformCoordToLocal(e.offsetX, e.offsetY);
+
+            if (localPoint[0] < 0 || localPoint[0] > size[0]
+                || localPoint[1] < 0 || localPoint[1] > size[1]
+            ) {
+                return;
+            }
+
+            var handleEnds = this._handleEnds;
+            var center = (handleEnds[0] + handleEnds[1]) / 2;
+
+            this._updateInterval('all', localPoint[0] - center);
+            this._updateView();
             this._dispatchZoomAction();
         },
 
@@ -687,27 +750,16 @@ define(function (require) {
         /**
          * @private
          */
-        _applyBarTransform: function (vertex, inverse) {
-            var barTransform = this._displayables.barGroup.getLocalTransform();
-            return graphic.applyTransform(vertex, barTransform, inverse);
-        },
-
-        /**
-         * @private
-         */
         _findCoordRect: function () {
             // Find the grid coresponding to the first axis referred by dataZoom.
-            var targetInfo = this.getTargetInfo();
-
-            // FIXME
-            // 判断是catesian还是polar
             var rect;
-            if (targetInfo.cartesians.length) {
-                rect = targetInfo.cartesians[0].model.coordinateSystem.getRect();
-            }
-            else { // Polar
-                // FIXME
-                // 暂时随便写的
+            each(this.getTargetCoordInfo(), function (coordInfoList) {
+                if (!rect && coordInfoList.length) {
+                    var coordSys = coordInfoList[0].model.coordinateSystem;
+                    rect = coordSys.getRect && coordSys.getRect();
+                }
+            });
+            if (!rect) {
                 var width = this.api.getWidth();
                 var height = this.api.getHeight();
                 rect = {
@@ -726,7 +778,12 @@ define(function (require) {
     function getOtherDim(thisDim) {
         // FIXME
         // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
-        return thisDim === 'x' ? 'y' : 'x';
+        var map = {x: 'y', y: 'x', radius: 'angle', angle: 'radius'};
+        return map[thisDim];
+    }
+
+    function getCursor(orient) {
+        return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
     }
 
     return SliderZoomView;

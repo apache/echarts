@@ -21,14 +21,11 @@
                 'echarts',
                 'echarts/chart/themeRiver',
                 'echarts/component/legend',
-                'echarts/component/single',
+                'echarts/component/singleAxis',
                 'echarts/component/tooltip',
-                'echarts/component/axis'
                 ], function (echarts) {
 
-                    var chart = echarts.init(document.getElementById('main'), null, {
-                        renderer: 'canvas'
-                    });
+                    var chart = echarts.init(document.getElementById('main'));
 
                     window.onresize = function () {
                         chart.resize();
@@ -37,15 +34,7 @@
                     chart.setOption({
 
                         tooltip: {
-                            trigger: 'axis',
-                            axisPointer: {
-                                type: 'line',
-                                lineStyle: {
-                                    color: 'rgba(0,0,0,0.2)',
-                                    width: 1,
-                                    type: 'solid'
-                                }
-                            }
+                            trigger: 'axis'
                         },
 
                         legend: {

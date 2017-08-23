@@ -1,0 +1,307 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            .main {
+                margin: 0 auto;
+                width: 85%;
+                height: 300px;
+                border: 10px solid rgba(0,0,0,0.5);
+            }
+            h2, h3, h4 {
+                color: red;
+                margin-top: 0;
+                margin-bottom: 3px;
+            }
+        </style>
+
+        <h1>Test touch slide on Mobile!</h1>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+
+        <h3>This page should be able to scroll when sliding on pie!</h3>
+        <div class="main" id="main1"></div>
+
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+
+        <h3>Tooltip should be move smoothly when sliding in grid!</h3>
+        <h3>This page should be able to scroll when sliding out of grid!</h3>
+        <div class="main" id="main2"></div>
+
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+
+        <h3>DataZoom should be smooth when sliding or pinching on line!</h3>
+        <h3>This page should be able to scroll when sliding out of grid!</h3>
+        <div class="main" id="main3"></div>
+
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text<br>
+        some text
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+        require([
+            'echarts',
+            'echarts/chart/pie',
+            'echarts/component/legendScroll',
+            'echarts/component/grid',
+            'echarts/component/tooltip',
+            'echarts/component/toolbox'
+        ], function (echarts) {
+
+            var el = document.getElementById('main1');
+            if (!el) {
+                return;
+            }
+            var chart = echarts.init(el);
+
+            var data = [
+                {value:335, name:'直接访问'},
+                {value:310, name:'邮件营销'},
+                {value:234, name:'联盟广告'},
+                {value:135, name:'视频广告'},
+                {value:1548, name:'搜索引擎'},
+                {value:1548, name:'搜索引擎2'},
+                {value:1548, name:'搜索引擎3'},
+                {value:1548, name:'搜索引擎4'},
+                {value:1548, name:'搜索引擎5'},
+                {value:1548, name:'搜索引擎6'},
+                {value:1548, name:'搜索引擎7'},
+                {value:1548, name:'搜索引擎8'},
+                {value:1548, name:'搜索引擎9'},
+                {value:1548, name:'搜索引擎10'}
+            ];
+            chart.setOption({
+                legend: {
+                    type: 'scroll',
+                    right: 0,
+                    orient: 'vertical',
+                    data: echarts.util.map(data, function (item) {
+                        return item.name;
+                    })
+                },
+                toolbox: {
+                    left: 'left',
+                    feature: {
+                        dataView: {},
+                        saveAsImage: {}
+                    }
+                },
+                tooltip: {
+                    confine: true
+                },
+                series: [{
+                    name: 'pie',
+                    type: 'pie',
+                    data: data
+                }]
+            });
+        })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+        require([
+            'echarts',
+            'echarts/chart/line',
+            'echarts/component/legend',
+            'echarts/component/grid',
+            'echarts/component/tooltip',
+            'echarts/component/toolbox'
+        ], function (echarts) {
+
+            var el = document.getElementById('main2');
+            if (!el) {
+                return;
+            }
+            var chart = echarts.init(el);
+            var data = [];
+            var baseTime = +new Date();
+            var day = 3600 * 60 * 24 * 1000;
+
+            for (var i = 0; i < 100; i++) {
+                baseTime += day;
+                data.push([baseTime, Math.random() * 10]);
+            }
+
+            chart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    confine: true,
+                    axisPointer: {
+                        animation: false
+                    }
+                },
+                xAxis: {
+                    type: 'time',
+                    splitLine: {
+                        show: false
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    boundaryGap: [0, '100%'],
+                    splitLine: {
+                        show: false
+                    }
+                },
+                grid: {
+                    show: true,
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    top: 90,
+                    bottom: 90
+                },
+                series: [{
+                    name: '模拟数据',
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    data: data
+                }]
+            });
+
+        });
+
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+        require([
+            'echarts',
+            'echarts/chart/line',
+            'echarts/component/legend',
+            'echarts/component/grid',
+            'echarts/component/tooltip',
+            'echarts/component/toolbox',
+            'echarts/component/dataZoom'
+        ], function (echarts) {
+
+            var el = document.getElementById('main3');
+            if (!el) {
+                return;
+            }
+            var chart = echarts.init(el);
+            var data = [];
+            var baseTime = +new Date();
+            var day = 3600 * 60 * 24 * 1000;
+
+            for (var i = 0; i < 100; i++) {
+                baseTime += day;
+                data.push([baseTime, Math.random() * 10]);
+            }
+
+            chart.setOption({
+                tooltip: {
+                    triggerOn: 'none',
+                    confine: true
+                },
+                xAxis: {
+                    type: 'time',
+                    splitLine: {
+                        show: false
+                    },
+                    axisPointer: {
+                        handle: {show: true}
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    boundaryGap: [0, '100%'],
+                    splitLine: {
+                        show: false
+                    }
+                },
+                grid: {
+                    show: true,
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    top: 90,
+                    bottom: 90
+                },
+                dataZoom: {
+                    type: 'inside',
+                    start: 30,
+                    end: 70,
+                    preventDefaultMouseMove: false
+                },
+                series: [{
+                    name: '模拟数据',
+                    type: 'line',
+                    showSymbol: false,
+                    hoverAnimation: false,
+                    data: data
+                }]
+            });
+
+        });
+
+        </script>
+
+
+    </body>
+</html>

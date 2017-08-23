@@ -2,6 +2,7 @@
 define(function (require) {
 
     var Region = require('../Region');
+    var zrUtil = require('zrender/core/util');
 
     var geoCoord = [126, 25];
 
@@ -33,7 +34,13 @@ define(function (require) {
     return function (geo) {
         if (geo.map === 'china') {
             geo.regions.push(new Region(
-                '南海诸岛', points, geoCoord
+                '南海诸岛',
+                zrUtil.map(points, function (exterior) {
+                    return {
+                        type: 'polygon',
+                        exterior: exterior
+                    };
+                }), geoCoord
             ));
         }
     };

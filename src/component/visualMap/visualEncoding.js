@@ -6,6 +6,7 @@ define(function (require) {
     var echarts = require('../../echarts');
     var visualSolution = require('../../visual/visualSolution');
     var VisualMapping = require('../../visual/VisualMapping');
+    var zrUtil = require('zrender/core/util');
 
     echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT, function (ecModel) {
         ecModel.eachComponent('visualMap', function (visualMapModel) {
@@ -38,10 +39,11 @@ define(function (require) {
 
             ecModel.eachComponent('visualMap', function (visualMapModel) {
                 if (visualMapModel.isTargetSeries(seriesModel)) {
-                    var visualMeta = {};
-                    visualMetaList.push(visualMeta);
-                    visualMeta.stops = visualMapModel.getStops(seriesModel, getColorVisual);
+                    var visualMeta = visualMapModel.getVisualMeta(
+                        zrUtil.bind(getColorVisual, null, seriesModel, visualMapModel)
+                    ) || {stops: [], outerColors: []};
                     visualMeta.dimension = visualMapModel.getDataDimension(data);
+                    visualMetaList.push(visualMeta);
                 }
             });
 
@@ -52,15 +54,18 @@ define(function (require) {
 
     // FIXME
     // performance and export for heatmap?
-    function getColorVisual(visualMapModel, value, valueState) {
+    // value can be Infinity or -Infinity
+    function getColorVisual(seriesModel, visualMapModel, value, valueState) {
         var mappings = visualMapModel.targetVisuals[valueState];
         var visualTypes = VisualMapping.prepareVisualTypes(mappings);
-        var resultVisual = {};
+        var resultVisual = {
+            color: seriesModel.getData().getVisual('color') // default color.
+        };
 
         for (var i = 0, len = visualTypes.length; i < len; i++) {
             var type = visualTypes[i];
             var mapping = mappings[
-                type === 'colorAlpha' ? '__alphaForOpacity' : type
+                type === 'opacity' ? '__alphaForOpacity' : type
             ];
             mapping && mapping.applyVisual(value, getVisual, setVisual);
         }

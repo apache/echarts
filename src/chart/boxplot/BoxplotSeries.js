@@ -21,7 +21,7 @@ define(function(require) {
          * and echarts do not need to know it.
          * @readOnly
          */
-        valueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
+        defaultValueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
 
         /**
          * @type {Array.<string>}
@@ -40,8 +40,8 @@ define(function(require) {
 
             hoverAnimation: true,
 
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
             layout: null,               // 'horizontal' or 'vertical'
             boxWidth: [7, 50],       // [min, max] can be percent of band width.

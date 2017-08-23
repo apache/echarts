@@ -24,9 +24,11 @@
                 'echarts/chart/bar',
                 'echarts/chart/line',
                 'echarts/component/legend',
+                'echarts/component/graphic',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
                 'echarts/component/toolbox',
+                'echarts/component/title',
                 'zrender/vml/vml'
             ], function (echarts) {
 
@@ -58,6 +60,7 @@
                         label: {
                             position: 'outside'
                         },
+                        barBorderColor: '#fff',
                         barBorderWidth: 1,
                         shadowBlur: 10,
                         shadowOffsetX: 0,
@@ -68,6 +71,10 @@
 
                 chart.setOption({
                     backgroundColor: '#eee',
+                    title: {
+                        text: '我是柱状图',
+                        padding: 20
+                    },
                     legend: {
                         inactiveColor: '#abc',
                         borderWidth: 1,
@@ -80,10 +87,15 @@
                         // orient: 'vertical',
                         // x: 'right',
                         // y: 'bottom',
-                        align: 'left'
+                        align: 'left',
+
+                        tooltip: {
+                            show: true
+                        }
                     },
                     toolbox: {
-                        // y: 'bottom',
+                        top: 25,
+                        // right: 20,
                         feature: {
                             magicType: {
                                 type: ['line', 'bar', 'stack', 'tiled']
@@ -108,6 +120,13 @@
                                     alert('myToolHandler2')
                                 }
                             }
+                        },
+
+                        iconStyle: {
+                            emphasis: {
+                                textPosition: 'top'
+                                // textAlign: 'right'
+                            }
                         }
                     },
                     tooltip: {},
@@ -115,18 +134,36 @@
                         data: xAxisData,
                         name: '横轴',
                         silent: false,
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        // axisTick: {
+                        //     show: false
+                        // },
                         axisLine: {
                             onZero: true
                         },
                         splitLine: {
-                            show: false
+                            show: true
                         },
                         splitArea: {
-                            show: false
+                            show: true
                         }
                     },
                     yAxis: {
                         inverse: true,
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        axisTick: {
+                            show: false
+                        },
+                        // splitLine: {
+                        //     show: false
+                        // },
                         splitArea: {
                             show: false
                         }
@@ -136,12 +173,14 @@
                         type: 'bar',
                         stack: 'one',
                         itemStyle: itemStyle,
+                        cursor: 'move',
                         data: data1
                     }, {
                         name: 'bar2',
                         type: 'bar',
                         stack: 'one',
                         itemStyle: itemStyle,
+                        cursor: 'default',
                         data: data2
                     }, {
                         name: 'bar3',
@@ -160,6 +199,21 @@
 
                 chart.on('click', function (params) {
                     console.log(params);
+                });
+
+                chart.on('legendselectchanged', function (params) {
+                    chart.setOption({
+                        // title: {
+                        // },
+                        graphic: [{
+                            type: 'circle',
+                            shape: {
+                                cx: 100,
+                                cy: 100,
+                                r: 20,
+                            }
+                        }]
+                    });
                 });
 
                 window.onresize = chart.resize;

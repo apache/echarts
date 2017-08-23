@@ -16,7 +16,7 @@ define(function(require) {
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
             this.legendDataProvider = function () {
-                return this._dataBeforeProcessed;
+                return this.getRawData();
             };
             // Extend labelLine emphasis
             this._defaultLabelLine(option);
@@ -40,6 +40,18 @@ define(function(require) {
                 && option.label.normal.show;
             labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
                 && option.label.emphasis.show;
+        },
+
+        // Overwrite
+        getDataParams: function (dataIndex) {
+            var data = this.getData();
+            var params = FunnelSeries.superCall(this, 'getDataParams', dataIndex);
+            var sum = data.getSum('value');
+            // Percent is 0 if sum is 0
+            params.percent = !sum ? 0 : +(data.get('value', dataIndex) / sum * 100).toFixed(2);
+
+            params.$vars.push('percent');
+            return params;
         },
 
         defaultOption: {
@@ -66,7 +78,6 @@ define(function(require) {
                     show: true,
                     position: 'outer'
                     // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 },
                 emphasis: {
                     show: true

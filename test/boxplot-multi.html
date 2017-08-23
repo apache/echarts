@@ -90,7 +90,7 @@
                             data: ['category0', 'category1', 'category2', 'category3']
                         },
                         tooltip: {
-                            trigger: 'item',
+                            trigger: 'axis',
                             axisPointer: {
                                 type: 'shadow'
                             }
@@ -124,36 +124,21 @@
                             {
                                 name: 'category0',
                                 type: 'boxplot',
-                                data: data[0].boxData,
-                                tooltip: {formatter: formatter}
+                                data: data[0].boxData
                             },
                             {
                                 name: 'category1',
                                 type: 'boxplot',
-                                data: data[1].boxData,
-                                tooltip: {formatter: formatter}
+                                data: data[1].boxData
                             },
                             {
                                 name: 'category2',
                                 type: 'boxplot',
-                                data: data[2].boxData,
-                                tooltip: {formatter: formatter}
+                                data: data[2].boxData
                             }
                         ]
                     });
                 }
-
-                function formatter(param) {
-                    return [
-                        'Experiment ' + param.name + ': ',
-                        'upper: ' + param.data[0],
-                        'Q1: ' + param.data[1],
-                        'median: ' + param.data[2],
-                        'Q3: ' + param.data[3],
-                        'lower: ' + param.data[4]
-                    ].join('<br/>')
-                }
-
 
                 // var gui = new dat.GUI();
                 // var config = {

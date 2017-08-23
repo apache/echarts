@@ -3,6 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var AxisBuilder = require('./AxisBuilder');
     var BrushController = require('../helper/BrushController');
+    var brushHelper = require('../helper/brushHelper');
     var graphic = require('../../util/graphic');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'axisName'];
@@ -45,9 +46,8 @@ define(function (require) {
                 return;
             }
 
-            var coordSys = ecModel.getComponent(
-                'parallel', axisModel.get('parallelIndex')
-            ).coordinateSystem;
+            var coordSysModel = getCoordSysModel(axisModel, ecModel);
+            var coordSys = coordSysModel.coordinateSystem;
 
             var areaSelectStyle = axisModel.getAreaSelectStyle();
             var areaWidth = areaSelectStyle.width;
@@ -55,30 +55,8 @@ define(function (require) {
             var dim = axisModel.axis.dim;
             var axisLayout = coordSys.getAxisLayout(dim);
 
-            // Fetch from axisModel by default.
-            var axisNameTruncateLength;
-            var axisNameTruncateEllipsis;
-            var axisLabelShow;
-            var axisIndex = zrUtil.indexOf(coordSys.dimensions, dim);
-
-            var axisExpandWindow = axisLayout.axisExpandWindow;
-            if (axisExpandWindow
-                && (axisIndex <= axisExpandWindow[0] || axisIndex >= axisExpandWindow[1])
-            ) {
-                axisNameTruncateLength = axisModel.get('nameTruncateLengthOutExpand');
-                axisNameTruncateEllipsis = '';
-                axisLabelShow = false;
-            }
-
             var builderOpt = zrUtil.extend(
-                {
-                    axisLabelShow: axisLabelShow,
-                    axisNameTruncateLength: axisNameTruncateLength,
-                    axisNameTruncateEllipsis: axisNameTruncateEllipsis,
-                    strokeContainThreshold: areaWidth,
-                    // lineWidth === 0 or no value.
-                    axisLineSilent: !(areaWidth > 0) // jshint ignore:line
-                },
+                {strokeContainThreshold: areaWidth},
                 axisLayout
             );
 
@@ -88,33 +66,40 @@ define(function (require) {
 
             this._axisGroup.add(axisBuilder.getGroup());
 
-            this._refreshBrushController(builderOpt, areaSelectStyle, axisModel, areaWidth);
+            this._refreshBrushController(
+                builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
+            );
 
-            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+            var animationModel = (payload && payload.animation === false) ? null : axisModel;
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
         },
 
-        _refreshBrushController: function (builderOpt, areaSelectStyle, axisModel, areaWidth) {
-            // After filtering, axis may change, select area needs to be update.
-            var axis = axisModel.axis;
-            var coverInfoList = zrUtil.map(axisModel.activeIntervals, function (interval) {
-                return {
-                    brushType: 'lineX',
-                    panelId: 'pl',
-                    range: [
-                        axis.dataToCoord(interval[0], true),
-                        axis.dataToCoord(interval[1], true)
-                    ]
-                };
-            });
+        /**
+         * @override
+         */
+        updateVisual: function (axisModel, ecModel, api, payload) {
+            this._brushController && this._brushController
+                .updateCovers(getCoverInfoList(axisModel));
+        },
 
-            var extent = axis.getExtent();
-            var extra = 30; // Arbitrary value.
-            var rect = {
-                x: extent[0] - extra,
+        _refreshBrushController: function (
+            builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
+        ) {
+            // After filtering, axis may change, select area needs to be update.
+            var extent = axisModel.axis.getExtent();
+            var extentLen = extent[1] - extent[0];
+            var extra = Math.min(30, Math.abs(extentLen) * 0.1); // Arbitrary value.
+
+            // width/height might be negative, which will be
+            // normalized in BoundingRect.
+            var rect = graphic.BoundingRect.create({
+                x: extent[0],
                 y: -areaWidth / 2,
-                width: extent[1] - extent[0] + 2 * extra,
+                width: extentLen,
                 height: areaWidth
-            };
+            });
+            rect.x -= extra;
+            rect.width += 2 * extra;
 
             this._brushController
                 .mount({
@@ -124,21 +109,22 @@ define(function (require) {
                 })
                 .setPanels([{
                     panelId: 'pl',
-                    rect: rect
+                    clipPath: brushHelper.makeRectPanelClipPath(rect),
+                    isTargetByCursor: brushHelper.makeRectIsTargetByCursor(rect, api, coordSysModel),
+                    getLinearBrushOtherExtent: brushHelper.makeLinearBrushOtherExtent(rect, 0)
                 }])
                 .enableBrush({
                     brushType: 'lineX',
                     brushStyle: areaSelectStyle,
                     removeOnClick: true
                 })
-                .updateCovers(coverInfoList);
+                .updateCovers(getCoverInfoList(axisModel));
         },
 
         _onBrush: function (coverInfoList, opt) {
             // Do not cache these object, because the mey be changed.
             var axisModel = this.axisModel;
             var axis = axisModel.axis;
-
             var intervals = zrUtil.map(coverInfoList, function (coverInfo) {
                 return [
                     axis.coordToData(coverInfo.range[0], true),
@@ -172,6 +158,26 @@ define(function (require) {
             && ecModel.findComponents(
                 {mainType: 'parallelAxis', query: payload}
             )[0] === axisModel;
+    }
+
+    function getCoverInfoList(axisModel) {
+        var axis = axisModel.axis;
+        return zrUtil.map(axisModel.activeIntervals, function (interval) {
+            return {
+                brushType: 'lineX',
+                panelId: 'pl',
+                range: [
+                    axis.dataToCoord(interval[0], true),
+                    axis.dataToCoord(interval[1], true)
+                ]
+            };
+        });
+    }
+
+    function getCoordSysModel(axisModel, ecModel) {
+        return ecModel.getComponent(
+            'parallel', axisModel.get('parallelIndex')
+        );
     }
 
     return AxisView;

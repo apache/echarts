@@ -164,63 +164,84 @@ define(function(require) {
             return result;
         },
 
-        getStops: function (seriesModel, getColorVisual) {
-            var result = [];
-            insertStopList(this, 'outOfRange', this.getExtent(), result);
-            insertStopList(this, 'inRange', this.option.range.slice(), result);
+        /**
+         * @implement
+         */
+        getVisualMeta: function (getColorVisual) {
+            var oVals = getColorStopValues(this, 'outOfRange', this.getExtent());
+            var iVals = getColorStopValues(this, 'inRange', this.option.range.slice());
+            var stops = [];
 
-            zrUtil.each(result, function (item) {
-                item.color = getColorVisual(this, item.value, item.valueState);
-            }, this);
+            function setStop(value, valueState) {
+                stops.push({
+                    value: value,
+                    color: getColorVisual(value, valueState)
+                });
+            }
 
-            return result;
+            // Format to: outOfRange -- inRange -- outOfRange.
+            var iIdx = 0;
+            var oIdx = 0;
+            var iLen = iVals.length;
+            var oLen = oVals.length;
+
+            for (; oIdx < oLen && (!iVals.length || oVals[oIdx] <= iVals[0]); oIdx++) {
+                // If oVal[oIdx] === iVals[iIdx], oVal[oIdx] should be ignored.
+                if (oVals[oIdx] < iVals[iIdx]) {
+                    setStop(oVals[oIdx], 'outOfRange');
+                }
+            }
+            for (var first = 1; iIdx < iLen; iIdx++, first = 0) {
+                // If range is full, value beyond min, max will be clamped.
+                // make a singularity
+                first && stops.length && setStop(iVals[iIdx], 'outOfRange');
+                setStop(iVals[iIdx], 'inRange');
+            }
+            for (var first = 1; oIdx < oLen; oIdx++) {
+                if (!iVals.length || iVals[iVals.length - 1] < oVals[oIdx]) {
+                    // make a singularity
+                    if (first) {
+                        stops.length && setStop(stops[stops.length - 1].value, 'outOfRange');
+                        first = 0;
+                    }
+                    setStop(oVals[oIdx], 'outOfRange');
+                }
+            }
+
+            var stopsLen = stops.length;
+
+            return {
+                stops: stops,
+                outerColors: [
+                    stopsLen ? stops[0].color : 'transparent',
+                    stopsLen ? stops[stopsLen - 1].color : 'transparent'
+                ]
+            };
         }
 
     });
 
     function getColorStopValues(visualMapModel, valueState, dataExtent) {
-        var mapping = visualMapModel.targetVisuals[valueState].color;
-
-        if (!mapping) {
+        if (dataExtent[0] === dataExtent[1]) {
             return dataExtent.slice();
         }
 
-        var count = mapping.option.visual.length;
+        // When using colorHue mapping, it is not linear color any more.
+        // Moreover, canvas gradient seems not to be accurate linear.
+        // FIXME
+        // Should be arbitrary value 100? or based on pixel size?
+        var count = 200;
+        var step = (dataExtent[1] - dataExtent[0]) / count;
 
-        if (count <= 1 || dataExtent[0] === dataExtent[1]) {
-            return dataExtent.slice();
-        }
-
-        // We only use linear mappping for color, so we can do inverse mapping:
-        var step = (dataExtent[1] - dataExtent[0]) / (count - 1);
         var value = dataExtent[0];
         var stopValues = [];
-        for (var i = 0; i < count && value < dataExtent[1]; i++) {
+        for (var i = 0; i <= count && value < dataExtent[1]; i++) {
             stopValues.push(value);
             value += step;
         }
         stopValues.push(dataExtent[1]);
 
         return stopValues;
-    }
-
-    function insertStopList(visualMapModel, valueState, dataExtent, result) {
-        var stops = getColorStopValues(visualMapModel, valueState, dataExtent);
-
-        zrUtil.each(stops, function (val) {
-            var stop = {value: val, valueState: valueState};
-            var inRange = 0;
-            for (var i = 0; i < result.length; i++) {
-                // Format to: outOfRange -- inRange -- outOfRange.
-                inRange |= result[i].valueState === 'inRange';
-                if (val < result[i].value) {
-                    result.splice(i, 0, stop);
-                    return;
-                }
-                inRange && (result[i].valueState = 'inRange');
-            }
-            result.push(stop);
-        });
     }
 
     return ContinuousModel;

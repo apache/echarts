@@ -118,13 +118,19 @@ define(function(require) {
                 var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
                 if (categoryAxis) {
                     var axisDim = categoryAxis.dim;
-                    var axisIndex = seriesModel.get(axisDim + 'AxisIndex');
-                    var axisKey = axisDim + 'Axis';
-                    newOption[axisKey] = newOption[axisKey] || [];
+                    var axisType = axisDim + 'Axis';
+                    var axisModel = ecModel.queryComponents({
+                        mainType: axisType,
+                        index: seriesModel.get(name + 'Index'),
+                        id: seriesModel.get(name + 'Id')
+                    })[0];
+                    var axisIndex = axisModel.componentIndex;
+
+                    newOption[axisType] = newOption[axisType] || [];
                     for (var i = 0; i <= axisIndex; i++) {
-                        newOption[axisKey][axisIndex] = newOption[axisKey][axisIndex] || {};
+                        newOption[axisType][axisIndex] = newOption[axisType][axisIndex] || {};
                     }
-                    newOption[axisKey][axisIndex].boundaryGap = type === 'bar' ? true : false;
+                    newOption[axisType][axisIndex].boundaryGap = type === 'bar' ? true : false;
                 }
             }
         };

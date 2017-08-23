@@ -37,6 +37,8 @@ define(function (require) {
 
         remove: function (ecModel, api) {
             this._symbolDraw && this._symbolDraw.remove(api, true);
-        }
+        },
+
+        dispose: function () {}
     });
 });

@@ -130,21 +130,20 @@ define(function (require) {
              */
             getColorMapper: function () {
                 var thisOption = this.option;
-                var parsedVisual = zrUtil.map(thisOption.visual, zrColor.parse);
 
                 return zrUtil.bind(
                     thisOption.mappingMethod === 'category'
                         ? function (value, isNormalized) {
                             !isNormalized && (value = this._normalizeData(value));
-                            return doMapCategory(this, value);
+                            return doMapCategory.call(this, value);
                         }
                         : function (value, isNormalized, out) {
                             // If output rgb array
                             // which will be much faster and useful in pixel manipulation
                             var returnRGBArray = !!out;
                             !isNormalized && (value = this._normalizeData(value));
-                            out = zrColor.fastMapToColor(value, parsedVisual, out);
-                            return returnRGBArray ? out : zrUtil.stringify(out, 'rgba');
+                            out = zrColor.fastMapToColor(value, thisOption.parsedVisual, out);
+                            return returnRGBArray ? out : zrColor.stringify(out, 'rgba');
                         },
                     this
                 );
@@ -152,13 +151,19 @@ define(function (require) {
 
             _doMap: {
                 linear: function (normalized) {
-                    return zrColor.mapToColor(normalized, this.option.visual);
+                    return zrColor.stringify(
+                        zrColor.fastMapToColor(normalized, this.option.parsedVisual),
+                        'rgba'
+                    );
                 },
                 category: doMapCategory,
                 piecewise: function (normalized, value) {
                     var result = getSpecifiedVisual.call(this, value);
                     if (result == null) {
-                        result = zrColor.mapToColor(normalized, this.option.visual);
+                        result = zrColor.stringify(
+                            zrColor.fastMapToColor(normalized, this.option.parsedVisual),
+                            'rgba'
+                        );
                     }
                     return result;
                 },
@@ -260,7 +265,7 @@ define(function (require) {
                 visualArr[CATEGORY_DEFAULT_VISUAL_INDEX] = visual;
             }
 
-            visual = thisOption.visual = visualArr;
+            visual = setVisualToOption(thisOption, visualArr);
         }
 
         // Remove categories that has no visual,
@@ -290,13 +295,13 @@ define(function (require) {
 
         if (!isCategory
             && visualArr.length === 1
-            && !(thisOption.type in doNotNeedPair)
+            && !doNotNeedPair.hasOwnProperty(thisOption.type)
         ) {
             // Do not care visualArr.length === 0, which is illegal.
             visualArr[1] = visualArr[0];
         }
 
-        thisOption.visual = visualArr;
+        setVisualToOption(thisOption, visualArr);
     }
 
     function makePartialColorVisualHandler(applyValue) {
@@ -310,7 +315,7 @@ define(function (require) {
         };
     }
 
-    function doMapToArray(arr, normalized) {
+    function doMapToArray(normalized) {
         var visual = this.option.visual;
         return visual[
             Math.round(linearMap(normalized, [0, 1], [0, visual.length - 1], true))
@@ -365,6 +370,16 @@ define(function (require) {
         }
     }
 
+    function setVisualToOption(thisOption, visualArr) {
+        thisOption.visual = visualArr;
+        if (thisOption.type === 'color') {
+            thisOption.parsedVisual = zrUtil.map(visualArr, function (item) {
+                return zrColor.parse(item);
+            });
+        }
+        return visualArr;
+    }
+
 
     /**
      * Normalizers by mapping methods.
@@ -394,6 +409,20 @@ define(function (require) {
     };
 
 
+
+    /**
+     * List available visual types.
+     *
+     * @public
+     * @return {Array.<string>}
+     */
+    VisualMapping.listVisualTypes = function () {
+        var visualTypes = [];
+        zrUtil.each(visualHandlers, function (handler, key) {
+            visualTypes.push(key);
+        });
+        return visualTypes;
+    };
 
     /**
      * @public
@@ -442,7 +471,7 @@ define(function (require) {
     /**
      * @public
      * @param {Object} obj
-     * @return {Oject} new object containers visual values.
+     * @return {Object} new object containers visual values.
      *                 If no visuals, return null.
      */
     VisualMapping.retrieveVisuals = function (obj) {
@@ -522,7 +551,14 @@ define(function (require) {
         for (var i = 0, len = pieceList.length; i < len; i++) {
             var pieceValue = pieceList[i].value;
             if (pieceValue != null) {
-                if (pieceValue === value) {
+                if (pieceValue === value
+                    // FIXME
+                    // It is supposed to compare value according to value type of dimension,
+                    // but currently value type can exactly be string or number.
+                    // Compromise for numeric-like string (like '12'), especially
+                    // in the case that visualMap.categories is ['22', '33'].
+                    || (typeof pieceValue === 'string' && pieceValue === value + '')
+                ) {
                     return i;
                 }
                 findClosestWhenOutside && updatePossible(pieceValue, i);

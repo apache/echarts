@@ -56,20 +56,6 @@ define(function(require) {
         },
 
         /**
-         * Convert series data to an array of points
-         * @param {module:echarts/data/List} data
-         * @param {boolean} stack
-         * @return {Array}
-         *  Return array of points. For example:
-         *  `[[10, 10], [20, 20], [30, 30]]`
-         */
-        dataToPoints: function (data, stack) {
-            return data.mapArray(['x', 'y'], function (x, y) {
-                return this.dataToPoint([x, y]);
-            }, stack, this);
-        },
-
-        /**
          * @param {Array.<number>} data
          * @param {boolean} [clamp=false]
          * @return {Array.<number>}
@@ -104,6 +90,7 @@ define(function(require) {
         getOtherAxis: function (axis) {
             return this.getAxis(axis.dim === 'x' ? 'y' : 'x');
         }
+
     };
 
     zrUtil.inherits(Cartesian2D, Cartesian);

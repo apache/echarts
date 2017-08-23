@@ -88,6 +88,21 @@
                     visibleMin: 300,
                     data: data.children,
                     leafDepth: 2,
+                    label: {
+                        normal: {
+                            formatter: '{a|{a}} {b}\n{c|{c}}',
+                            rich: {
+                                a: {
+                                    // color: '#ffff00',
+                                    fontSize: 18
+                                },
+                                c: {
+                                    fontSize: 20,
+                                    color: '#918543'
+                                }
+                            }
+                        }
+                    },
                     levels: [
                         {
                             itemStyle: {
@@ -110,11 +125,17 @@
                     ]
                 }]
             });
+
+            chart.on('click', function (params) {
+                console.log(params);
+            });
         }
 
         $(window).resize(function () {
             chart && chart.resize();
-        })
+        });
+
+
     </script>
 </body>
 </html>

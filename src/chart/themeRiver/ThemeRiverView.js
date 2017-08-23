@@ -1,3 +1,7 @@
+/**
+ * @file  The file used to draw themeRiver view
+ * @author  Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     var poly = require('../line/poly');
@@ -65,9 +69,7 @@ define(function (require) {
                     points0.push([x, y0]);
                     points1.push([x, y0 + y]);
 
-                    color = rawData.getItemVisual(
-                        data.getRawIndex(indices[j]), 'color'
-                    );
+                    color = rawData.getItemVisual(indices[j], 'color');
                 }
 
                 var polygon;
@@ -126,16 +128,13 @@ define(function (require) {
                 }
 
                 var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
-                var itemStyleModel = itemModel.getModel('itemStyle.nomral');
-                var textStyleModel = labelModel.getModel('textStyle');
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
-                text.setStyle({
+                graphic.setTextStyle(text.style, labelModel, {
                     text: labelModel.get('show')
                         ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
                             || data.getName(indices[j - 1])
-                        : '',
-                    textFont: textStyleModel.getFont(),
-                    textAlign: labelModel.get('textAlign'),
+                        : null,
                     textVerticalAlign: 'middle'
                 });
 
@@ -148,10 +147,12 @@ define(function (require) {
 
             this._layersSeries = layerSeries;
             this._layers = newLayersGroups;
-        }
+        },
+
+        dispose: function () {}
     });
 
-    //add animation to the view
+    // add animation to the view
     function createGridClipShape(rect, seriesModel, cb) {
         var rectEl = new graphic.Rect({
             shape: {
