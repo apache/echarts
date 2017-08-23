@@ -107,7 +107,6 @@ define(function (require) {
             }
 
             this._data = data;
-
         },
 
         dispose: function () {}
@@ -182,10 +181,8 @@ define(function (require) {
         symbolEl.__radialRawY = targetLayout.rawY;
 
         symbolEl.updateData(data, dataIndex, seriesScope);
-
         group.add(symbolEl);
         data.setItemGraphicEl(dataIndex, symbolEl);
-
         graphic.updateProps(symbolEl, {
             position: [targetLayout.x, targetLayout.y]
         }, seriesModel);
@@ -193,6 +190,8 @@ define(function (require) {
         // graphic.updateProps(symbolEl.getSymbolPath(), {
         //         style: { opacity: 1}
         //     }, seriesModel);
+
+        var symbolPath = symbolEl.getSymbolPath();
 
         if (seriesScope.layout === 'radial') {
             var realRoot = virtualRoot.children[0];
@@ -221,7 +220,7 @@ define(function (require) {
                 }
             }
             var textPosition = isLeft ? 'left' : 'right';
-            var symbolPath = symbolEl.getSymbolPath();
+
             symbolPath.setStyle({
                 textPosition: textPosition,
                 textRotation: -rad,
@@ -231,17 +230,19 @@ define(function (require) {
         }
 
         // if (isInit) {
-        //     var symbolPath = symbolEl.getSymbolPath();
-        //     symbolPath.setStyle({
-        //         opacity: 0
-        //     });
+        //     // var symbolPath = symbolEl.getSymbolPath();
 
+        //     // symbolPath.setStyle({
+        //     //     opacity: 0
+        //     // });
         //     graphic.updateProps(symbolPath, {
-        //         style: {
-        //             opacity: 1
-        //         }
-        //     }, seriesModel);
+        //         style: {opacity: 0}
+        //     }, seriesModel, dataIndex);
         // }
+
+        // graphic.updateProps(symbolPath, {
+        //     style: {opacity: 1}
+        // }, seriesModel, dataIndex);
 
         if (node.parentNode && node.parentNode !== virtualRoot) {
             var edge = symbolEl.__edge;
