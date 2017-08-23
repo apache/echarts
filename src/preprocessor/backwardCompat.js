@@ -56,8 +56,8 @@ define(function (require) {
 
     var each = zrUtil.each;
 
-    return function (option) {
-        compatStyle(option);
+    return function (option, isTheme) {
+        compatStyle(option, isTheme);
 
         var series = option.series;
         each(zrUtil.isArray(series) ? series : [series], function (seriesOpt) {

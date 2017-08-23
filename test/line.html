@@ -19,6 +19,7 @@
 
             require([
                 'echarts',
+                'theme/infographic',
                 'echarts/chart/line',
                 'echarts/component/title',
                 'echarts/component/legend',
@@ -28,7 +29,7 @@
                 'zrender/svg/svg'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+                var chart = echarts.init(document.getElementById('main'), 'infographic', {
                     renderer: 'canvas'
                     // renderer: 'svg'
                 });

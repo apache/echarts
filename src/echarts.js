@@ -33,6 +33,7 @@ define(function (require) {
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
     var OptionManager = require('./model/OptionManager');
+    var backwardCompat = require('./preprocessor/backwardCompat');
 
     var ComponentModel = require('./model/Component');
     var SeriesModel = require('./model/Series');
@@ -140,7 +141,7 @@ define(function (require) {
          * @type {Object}
          * @private
          */
-        this._theme = zrUtil.clone(theme);
+        backwardCompat(this._theme = zrUtil.clone(theme), true);
 
         /**
          * @type {Array.<module:echarts/view/Chart>}
@@ -1940,7 +1941,7 @@ define(function (require) {
     };
 
     echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
-    echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
+    echarts.registerPreprocessor(backwardCompat);
     echarts.registerLoading('default', require('./loading/default'));
 
     // Default action

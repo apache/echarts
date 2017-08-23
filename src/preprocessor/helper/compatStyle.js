@@ -134,13 +134,16 @@ define(function (require) {
         return (zrUtil.isArray(o) ? o[0] : o) || {};
     }
 
-    return function (option) {
+    return function (option, isTheme) {
         each(toArr(option.series), function (seriesOpt) {
             isObject(seriesOpt) && processSeries(seriesOpt);
         });
 
+        var axes = ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'];
+        isTheme && axes.push('valueAxis', 'categoryAxis', 'logAxis', 'timeAxis');
+
         each(
-            ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'],
+            axes,
             function (axisName) {
                 each(toArr(option[axisName]), function (axisOpt) {
                     if (axisOpt) {
