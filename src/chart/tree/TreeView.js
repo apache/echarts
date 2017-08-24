@@ -57,7 +57,8 @@ define(function (require) {
                 symbolRotate: seriesModel.get('symbolRotate'),
                 symbolOffset: seriesModel.get('symbolOffset'),
                 hoverAnimation: seriesModel.get('hoverAnimation'),
-                useNameLabel: true
+                useNameLabel: true,
+                fadeIn: true
             };
 
             data.diff(oldData)
@@ -150,9 +151,11 @@ define(function (require) {
         var targetLayout = node.getLayout();
 
         if (isInit) {
-            symbolEl = new Symbol(data, dataIndex, {useNameLabel: true});
+            symbolEl = new Symbol(data, dataIndex, seriesScope);
             symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
-            // symbolEl.getSymbolPath().setStyle('opacity', 0);
+        }
+        else {
+            symbolEl.updateData(data, dataIndex, seriesScope);
         }
 
         symbolEl.__radialOldRawX = symbolEl.__radialRawX;
@@ -160,16 +163,11 @@ define(function (require) {
         symbolEl.__radialRawX = targetLayout.rawX;
         symbolEl.__radialRawY = targetLayout.rawY;
 
-        symbolEl.updateData(data, dataIndex, seriesScope);
         group.add(symbolEl);
         data.setItemGraphicEl(dataIndex, symbolEl);
         graphic.updateProps(symbolEl, {
             position: [targetLayout.x, targetLayout.y]
         }, seriesModel);
-
-        // graphic.updateProps(symbolEl.getSymbolPath(), {
-        //         style: { opacity: 1}
-        //     }, seriesModel);
 
         var symbolPath = symbolEl.getSymbolPath();
 
@@ -270,16 +268,10 @@ define(function (require) {
             position: [sourceLayout.x + 1, sourceLayout.y + 1]
         }, seriesModel, function () {
             group.remove(symbolEl);
-        });
-
-        graphic.updateProps(symbolEl.getSymbolPath(), {
-            style: {
-                opacity: 0
-            }
-        }, seriesModel, function () {
-            group.remove(symbolEl);
             data.setItemGraphicEl(dataIndex, null);
         });
+
+        symbolEl.fadeOut();
 
         var edge = symbolEl.__edge;
         if (edge) {

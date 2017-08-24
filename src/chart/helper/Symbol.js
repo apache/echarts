@@ -43,7 +43,6 @@ define(function (require) {
         // Remove paths created before
         this.removeAll();
 
-        var seriesModel = data.hostModel;
         var color = data.getItemVisual(idx, 'color');
 
         // var symbolPath = symbolUtil.createSymbol(
@@ -59,14 +58,11 @@ define(function (require) {
         symbolPath.attr({
             z2: 100,
             culling: true,
-            scale: [0, 0]
+            scale: getScale(symbolSize)
         });
         // Rewrite drift method
         symbolPath.drift = driftSymbol;
 
-        graphic.initProps(symbolPath, {
-            scale: getScale(symbolSize)
-        }, seriesModel, idx);
         this._symbolType = symbolType;
 
         this.add(symbolPath);
@@ -81,7 +77,13 @@ define(function (require) {
     };
 
     /**
-     * Get symbol path element
+     * FIXME:
+     * Caution: This method breaks the encapsulation of this module,
+     * but it indeed brings convenience. So do not use the method
+     * unless you detailedly know all the implements of `Symbol`,
+     * especially animation.
+     *
+     * Get symbol path element.
      */
     symbolProto.getSymbolPath = function () {
         return this.childAt(0);
@@ -127,8 +129,20 @@ define(function (require) {
 
     /**
      * Update symbol properties
-     * @param  {module:echarts/data/List} data
-     * @param  {number} idx
+     * @param {module:echarts/data/List} data
+     * @param {number} idx
+     * @param {Object} [seriesScope]
+     * @param {Object} [seriesScope.itemStyle]
+     * @param {Object} [seriesScope.hoverItemStyle]
+     * @param {Object} [seriesScope.symbolRotate]
+     * @param {Object} [seriesScope.symbolOffset]
+     * @param {module:echarts/model/Model} [seriesScope.labelModel]
+     * @param {module:echarts/model/Model} [seriesScope.hoverLabelModel]
+     * @param {boolean} [seriesScope.hoverAnimation]
+     * @param {Object} [seriesScope.cursorStyle]
+     * @param {module:echarts/model/Model} [seriesScope.itemModel]
+     * @param {string} [seriesScope.symbolInnerColor]
+     * @param {Object} [seriesScope.fadeIn=false]
      */
     symbolProto.updateData = function (data, idx, seriesScope) {
         this.silent = false;
@@ -136,8 +150,9 @@ define(function (require) {
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         var seriesModel = data.hostModel;
         var symbolSize = getSymbolSize(data, idx);
+        var isInit = symbolType !== this._symbolType;
 
-        if (symbolType !== this._symbolType) {
+        if (isInit) {
             this._createSymbol(symbolType, data, idx, symbolSize);
         }
         else {
@@ -147,7 +162,22 @@ define(function (require) {
                 scale: getScale(symbolSize)
             }, seriesModel, idx);
         }
+
         this._updateCommon(data, idx, symbolSize, seriesScope);
+
+        if (isInit) {
+            var symbolPath = this.childAt(0);
+            var fadeIn = seriesScope && seriesScope.fadeIn;
+
+            var target = {scale: symbolPath.scale.slice()};
+            fadeIn && (target.style = {opacity: symbolPath.style.opacity});
+
+            symbolPath.scale = [0, 0];
+            fadeIn && (symbolPath.style.opacity = 0);
+
+            graphic.initProps(symbolPath, target, seriesModel, idx);
+        }
+
         this._seriesModel = seriesModel;
     };
 
@@ -168,8 +198,6 @@ define(function (require) {
                 strokeNoScale: true
             });
         }
-
-        seriesScope = seriesScope || null;
 
         var itemStyle = seriesScope && seriesScope.itemStyle;
         var hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
@@ -214,7 +242,7 @@ define(function (require) {
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
         // PENDING setColor before setStyle!!!
-        symbolPath.setColor(color, seriesScope.symbolInnerColor);
+        seriesScope && symbolPath.setColor(color, seriesScope.symbolInnerColor);
 
         symbolPath.setStyle(itemStyle);
 
@@ -281,15 +309,26 @@ define(function (require) {
         }
     };
 
+    /**
+     * @param {Function} cb
+     */
     symbolProto.fadeOut = function (cb) {
         var symbolPath = this.childAt(0);
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
         symbolPath.style.text = null;
-        graphic.updateProps(symbolPath, {
-            scale: [0, 0]
-        }, this._seriesModel, this.dataIndex, cb);
+
+        graphic.updateProps(
+            symbolPath,
+            {
+                style: {opacity: 0},
+                scale: [0, 0]
+            },
+            this._seriesModel,
+            this.dataIndex,
+            cb
+        );
     };
 
     zrUtil.inherits(Symbol, graphic.Group);
