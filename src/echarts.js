@@ -137,11 +137,13 @@ define(function (require) {
          */
         this._throttledZrFlush = throttle.throttle(zrUtil.bind(zr.flush, zr), 17);
 
+        var theme = zrUtil.clone(theme);
+        theme && backwardCompat(theme, true);
         /**
          * @type {Object}
          * @private
          */
-        backwardCompat(this._theme = zrUtil.clone(theme), true);
+        this._theme = theme;
 
         /**
          * @type {Array.<module:echarts/view/Chart>}
