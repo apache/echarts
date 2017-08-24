@@ -219,21 +219,6 @@ define(function (require) {
             });
         }
 
-        // if (isInit) {
-        //     // var symbolPath = symbolEl.getSymbolPath();
-
-        //     // symbolPath.setStyle({
-        //     //     opacity: 0
-        //     // });
-        //     graphic.updateProps(symbolPath, {
-        //         style: {opacity: 0}
-        //     }, seriesModel, dataIndex);
-        // }
-
-        // graphic.updateProps(symbolPath, {
-        //     style: {opacity: 1}
-        // }, seriesModel, dataIndex);
-
         if (node.parentNode && node.parentNode !== virtualRoot) {
             var edge = symbolEl.__edge;
             if (!edge) {

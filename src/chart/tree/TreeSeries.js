@@ -70,7 +70,7 @@ define(function (require) {
             // the orient of orthoginal layout, can be setted to 'horizontal' or 'vertical'
             orient: 'horizontal',
 
-            symbol: 'emptyRect',
+            symbol: 'emptyCircle',
 
             symbolSize: 7,
 
@@ -114,7 +114,7 @@ define(function (require) {
 
             animationEasing: 'linear',
 
-            animationDuration: 800,
+            animationDuration: 700,
 
             animationDurationUpdate: 1000
         }
