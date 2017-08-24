@@ -180,7 +180,7 @@ define(function (require) {
             var rad;
             var isLeft;
 
-            if (targetLayout.x === rootLayout.x) {
+            if (targetLayout.x === rootLayout.x && node.isExpand === true) {
                 var center = {};
                 center.x = (realRoot.children[0].getLayout().x + realRoot.children[length - 1].getLayout().x) / 2;
                 center.y = (realRoot.children[0].getLayout().y + realRoot.children[length - 1].getLayout().y) / 2;
