@@ -256,7 +256,7 @@ define(function (require) {
             data.setItemGraphicEl(dataIndex, null);
         });
 
-        symbolEl.fadeOut();
+        symbolEl.fadeOut(null, {keepLabel: true});
 
         var edge = symbolEl.__edge;
         if (edge) {
