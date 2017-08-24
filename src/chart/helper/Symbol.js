@@ -209,7 +209,8 @@ define(function (require) {
         var cursorStyle = seriesScope && seriesScope.cursorStyle;
 
         if (!seriesScope || data.hasItemOption) {
-            var itemModel = seriesScope.itemModel ? seriesScope.itemModel : data.getItemModel(idx);
+            var itemModel = (seriesScope && seriesScope.itemModel)
+                ? seriesScope.itemModel : data.getItemModel(idx);
 
             // Color must be excluded.
             // Because symbol provide setColor individually to set fill and stroke
