@@ -137,7 +137,6 @@ define(function(require) {
      * @return {Object} Modified param
      */
     graphic.subPixelOptimizeLine = function (param) {
-        var subPixelOptimize = graphic.subPixelOptimize;
         var shape = param.shape;
         var lineWidth = param.style.lineWidth;
 
@@ -164,7 +163,6 @@ define(function(require) {
      * @return {Object} Modified param
      */
     graphic.subPixelOptimizeRect = function (param) {
-        var subPixelOptimize = graphic.subPixelOptimize;
         var shape = param.shape;
         var lineWidth = param.style.lineWidth;
         var originX = shape.x;
@@ -192,7 +190,7 @@ define(function(require) {
      * @param {boolean=} positiveOrNegative Default false (negative).
      * @return {number} Optimized position.
      */
-    graphic.subPixelOptimize = function (position, lineWidth, positiveOrNegative) {
+    var subPixelOptimize = graphic.subPixelOptimize = function (position, lineWidth, positiveOrNegative) {
         // Assure that (position + lineWidth / 2) is near integer edge,
         // otherwise line will be fuzzy in canvas.
         var doubledPosition = round(position * 2);
