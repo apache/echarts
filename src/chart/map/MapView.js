@@ -116,16 +116,19 @@ define(function (require) {
 
                     var polygonGroups = fullData.getItemGraphicEl(fullIndex);
 
+                    var normalText = zrUtil.retrieve2(
+                        mapModel.getFormattedLabel(idx, 'normal'),
+                        name
+                    );
+                    var emphasisText = zrUtil.retrieve2(
+                        mapModel.getFormattedLabel(idx, 'emphasis'),
+                        normalText
+                    );
+
                     var onEmphasis = function () {
                         var hoverStyle = graphic.setTextStyle({}, hoverLabelModel, {
-                            text: hoverLabelModel.get('show')
-                                ? zrUtil.retrieve3(
-                                    mapModel.getFormattedLabel(idx, 'emphasis'),
-                                    mapModel.getFormattedLabel(idx, 'normal'),
-                                    name
-                                )
-                                : null
-                        }, {isRectText: true, forMerge: true});
+                            text: hoverLabelModel.get('show') ? emphasisText : null
+                        }, {isRectText: true, checkInside: false}, true);
                         circle.style.extendFrom(hoverStyle);
                         // Make label upper than others if overlaps.
                         circle.__mapOriginalZ2 = circle.z2;
@@ -134,14 +137,9 @@ define(function (require) {
 
                     var onNormal = function () {
                         graphic.setTextStyle(circle.style, labelModel, {
-                            text: labelModel.get('show')
-                                ? zrUtil.retrieve2(
-                                    mapModel.getFormattedLabel(idx, 'normal'),
-                                    name
-                                )
-                                : null,
+                            text: labelModel.get('show') ? normalText : null,
                             textPosition: labelModel.getShallow('position') || 'bottom'
-                        }, {isRectText: true});
+                        }, {isRectText: true, checkInside: false});
 
                         if (circle.__mapOriginalZ2 != null) {
                             circle.z2 = circle.__mapOriginalZ2;

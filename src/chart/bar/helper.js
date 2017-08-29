@@ -1,6 +1,5 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
     var helper = {};
@@ -11,35 +10,22 @@ define(function (require) {
         var labelModel = itemModel.getModel('label.normal');
         var hoverLabelModel = itemModel.getModel('label.emphasis');
 
-        if (labelModel.get('show')) {
-            setLabel(
-                normalStyle, labelModel, color,
-                zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(dataIndex, 'normal'),
-                    seriesModel.getRawValue(dataIndex)
-                ),
-                labelPositionOutside
-            );
-        }
-        else {
-            normalStyle.text = null;
-        }
+        graphic.setLabelStyle(
+            normalStyle, hoverStyle, labelModel, hoverLabelModel,
+            {
+                labelFetcher: seriesModel,
+                labelDataIndex: dataIndex,
+                defaultText: seriesModel.getRawValue(dataIndex),
+                isRectText: true,
+                autoColor: color
+            }
+        );
 
-        if (hoverLabelModel.get('show')) {
-            setLabel(
-                hoverStyle, hoverLabelModel, false,
-                seriesModel.getFormattedLabel(dataIndex, 'emphasis'),
-                labelPositionOutside
-            );
-        }
-        else {
-            hoverStyle.text = null;
-        }
+        fixPosition(normalStyle);
+        fixPosition(hoverStyle);
     };
 
-    function setLabel(style, model, defaultColor, labelText, labelPositionOutside) {
-        graphic.setText(style, model, defaultColor);
-        style.text = labelText;
+    function fixPosition(style, labelPositionOutside) {
         if (style.textPosition === 'outside') {
             style.textPosition = labelPositionOutside;
         }

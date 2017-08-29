@@ -223,21 +223,16 @@ define(function (require) {
 
                 polygon.hoverStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
 
-                var defaultValue = areaData.getName(idx) || '';
-                var textColor = color || polygon.style.fill;
-
-                graphic.setText(polygon.style, labelModel, textColor);
-                polygon.style.text = labelModel.getShallow('show')
-                    ? zrUtil.retrieve(
-                        maModel.getFormattedLabel(idx, 'normal'),
-                        defaultValue
-                    )
-                    : null;
-
-                graphic.setText(polygon.hoverStyle, labelHoverModel, false);
-                polygon.hoverStyle.text = labelHoverModel.getShallow('show')
-                    ? maModel.getFormattedLabel(idx, 'emphasis')
-                    : null;
+                graphic.setLabelStyle(
+                    polygon.style, polygon.hoverStyle, labelModel, labelHoverModel,
+                    {
+                        labelFetcher: maModel,
+                        labelDataIndex: idx,
+                        defaultText: areaData.getName(idx) || '',
+                        isRectText: true,
+                        autoColor: color
+                    }
+                );
 
                 graphic.setHoverStyle(polygon, {});
 

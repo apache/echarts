@@ -226,24 +226,16 @@ define(function (require) {
         var valueDim = labelHelper.findLabelValueDim(data);
 
         if (valueDim != null) {
-            graphic.setText(elStyle, labelModel, color);
-            var normalText = seriesModel.getFormattedLabel(idx, 'normal');
-            var value = data.get(valueDim, idx);
-            elStyle.text = labelModel.getShallow('show')
-                ? zrUtil.retrieve2(
-                    normalText,
-                    value
-                )
-                : null;
-
-            graphic.setText(hoverItemStyle, hoverLabelModel, false);
-            hoverItemStyle.text = hoverLabelModel.getShallow('show')
-                ? zrUtil.retrieve3(
-                    seriesModel.getFormattedLabel(idx, 'emphasis'),
-                    normalText,
-                    value
-                )
-                : null;
+            graphic.setLabelStyle(
+                elStyle, hoverItemStyle, labelModel, hoverLabelModel,
+                {
+                    labelFetcher: seriesModel,
+                    labelDataIndex: idx,
+                    defaultText: data.get(valueDim, idx),
+                    isRectText: true,
+                    autoColor: color
+                }
+            );
         }
 
         symbolPath.off('mouseover')

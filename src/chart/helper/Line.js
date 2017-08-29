@@ -298,6 +298,8 @@ define(function (require) {
         var label = this.childOfName('label');
         var defaultLabelColor;
         var defaultText;
+        var normalText;
+        var emphasisText;
 
         if (showLabel || hoverShowLabel) {
             var rawVal = seriesModel.getRawValue(idx);
@@ -307,17 +309,22 @@ define(function (require) {
                 ? numberUtil.round(rawVal)
                 : rawVal;
             defaultLabelColor = visualColor || '#000';
+
+            normalText = zrUtil.retrieve2(
+                seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
+                defaultText
+            );
+            emphasisText = zrUtil.retrieve2(
+                seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
+                normalText
+            );
         }
 
         // label.afterUpdate = lineAfterUpdate;
-        if (showLabel) {
+        if (showLabel || hoverShowLabel) {
             var labelStyle = graphic.setTextStyle(label.style, labelModel, {
-                text: zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
-                    defaultText
-                )
+                text: normalText
             }, {
-                defaultTextColor: defaultLabelColor,
                 autoColor: defaultLabelColor
             });
 
@@ -329,13 +336,11 @@ define(function (require) {
         else {
             label.setStyle('text', null);
         }
+
         if (hoverShowLabel) {
             // Only these properties supported in this emphasis style here.
             label.hoverStyle = {
-                text: zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-                    defaultText
-                ),
+                text: emphasisText,
                 textFill: hoverLabelModel.getTextColor(true),
                 // For merging hover style to normal style, do not use
                 // `hoverLabelModel.getFont()` here.

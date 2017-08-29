@@ -815,28 +815,30 @@
             var normalLabelModel = nodeModel.getModel(
                 upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
             );
-            graphic.setText(normalStyle, normalLabelModel, visualColor);
-
-            upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
-
-            if (!normalLabelModel.getShallow('show')) {
-                normalStyle.text = normalStyle.truncate = null;
-            }
-            else {
-                normalStyle.text = text;
-                normalStyle.truncate = normalLabelModel.get('ellipsis')
-                    ? {
-                        outerWidth: width,
-                        outerHeight: height,
-                        minChar: 2
-                    }
-                    : null;
-            }
-
             var emphasisLabelModel = nodeModel.getModel(
                 upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
             );
-            graphic.setText(emphasisStyle, emphasisLabelModel, false);
+
+            var isShow = normalLabelModel.getShallow('show');
+
+            graphic.setLabelStyle(
+                normalStyle, emphasisStyle, normalLabelModel, emphasisLabelModel,
+                {
+                    defaultText: isShow ? text : null,
+                    autoColor: visualColor,
+                    isRectText: true
+                }
+            );
+
+            upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
+
+            normalStyle.truncate = (isShow && normalLabelModel.get('ellipsis'))
+                ? {
+                    outerWidth: width,
+                    outerHeight: height,
+                    minChar: 2
+                }
+                : null;
         }
 
         function giveGraphic(storageName, Ctor, depth, z) {

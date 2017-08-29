@@ -5,7 +5,6 @@
 define(function (require) {
 
     var graphic = require('../../util/graphic');
-    var zrUtil = require('zrender/core/util');
 
     var SankeyShape = graphic.extendShape({
         shape: {
@@ -129,25 +128,21 @@ define(function (require) {
                     style: itemModel.getModel('itemStyle.normal').getItemStyle()
                 });
 
-                graphic.setTextStyle(rect.style, labelModel, {
-                    // Get formatted label in label.normal option
-                    //  Use node id if it is not specified
-                    text: labelModel.get('show')
-                        ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
-                        // Use empty string to hide the label
-                        : null
-                }, {isRectText: true});
+                var hoverStyle = node.getModel('itemStyle.emphasis').getItemStyle();
+
+                graphic.setLabelStyle(
+                    rect.style, hoverStyle, labelModel, labelHoverModel,
+                    {
+                        labelFetcher: seriesModel,
+                        labelDataIndex: node.dataIndex,
+                        defaultText: node.id,
+                        isRectText: true
+                    }
+                );
 
                 rect.setStyle('fill', node.getVisual('color'));
 
-                var hoverStyle = node.getModel('itemStyle.emphasis').getItemStyle();
-                graphic.setHoverStyle(rect, zrUtil.extend(
-                    graphic.setTextStyle(hoverStyle, labelHoverModel, {
-                        text: labelHoverModel.get('show')
-                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis')
-                            : null
-                    }, {isRectText: true, forMerge: true})
-                ));
+                graphic.setHoverStyle(rect, hoverStyle);
 
                 group.add(rect);
 
