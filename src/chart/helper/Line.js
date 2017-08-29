@@ -321,7 +321,7 @@ define(function (require) {
         }
 
         // label.afterUpdate = lineAfterUpdate;
-        if (showLabel || hoverShowLabel) {
+        if (showLabel) {
             var labelStyle = graphic.setTextStyle(label.style, labelModel, {
                 text: normalText
             }, {

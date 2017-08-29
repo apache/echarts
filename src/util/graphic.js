@@ -250,6 +250,14 @@ define(function(require) {
             el.__zr && el.__zr.addHover(el, el.__hoverStl);
         }
         else {
+            var style = el.style;
+            var insideRollbackOpt = style.insideRollbackOpt;
+
+            // Consider case: only `position: 'top'` is set on emphasis, then text
+            // color should be returned to `autoColor`, rather than remain '#fff'.
+            // So we should rollback then apply again after style merging.
+            insideRollbackOpt && rollbackInsideStyle(style);
+
             // styles can be:
             // {
             //     label: {
@@ -269,7 +277,18 @@ define(function(require) {
             // all properties in merge. So we use merge mode when setting style here, where
             // only properties that is not `null/undefined` can be set. The disadventage:
             // null/undefined can not be used to remove style any more in `emphasis`.
-            el.style.extendFrom(el.__hoverStl);
+            style.extendFrom(el.__hoverStl);
+
+            // Do not save `insideRollback`.
+            if (insideRollbackOpt) {
+                applyInsideStyle(style, insideRollbackOpt);
+
+                // textFill may be rollbacked to null.
+                if (style.textFill == null) {
+                    style.textFill = insideRollbackOpt.autoColor;
+                }
+            }
+
             el.dirty(false);
             el.z2 += 1;
         }
@@ -443,8 +462,13 @@ define(function(require) {
         // This scenario, `label.normal.show = true; label.emphasis.show = false`,
         // is not supported util someone requests.
 
+        var showNormal = normalModel.getShallow('show');
+        var showEmphasis = emphasisModel.getShallow('show');
+
         // Consider performance, only fetch label when necessary.
-        var normalStyleText = normalModel.getShallow('show')
+        // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
+        // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
+        var baseText = (showNormal || showEmphasis)
             ? zrUtil.retrieve2(
                 labelFetcher
                     ? labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex)
@@ -452,12 +476,13 @@ define(function(require) {
                 opt.defaultText
             )
             : null;
-        var emphasisStyleText = emphasisModel.getShallow('show')
+        var normalStyleText = showNormal ? baseText : null;
+        var emphasisStyleText = showEmphasis
             ? zrUtil.retrieve2(
                 labelFetcher
                     ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
                     : null,
-                normalStyleText
+                baseText
             )
             : null;
 
@@ -483,12 +508,12 @@ define(function(require) {
      * @param {module:echarts/model/Model} model
      * @param {Object} [specifiedTextStyle] Can be overrided by settings in model.
      * @param {Object} [opt] See `opt` of `setTextStyleCommon`.
-     * @param {boolean} [noDefault]
+     * @param {boolean} [isEmphasis]
      */
     var setTextStyle = graphic.setTextStyle = function (
-        textStyle, textStyleModel, specifiedTextStyle, opt, noDefault
+        textStyle, textStyleModel, specifiedTextStyle, opt, isEmphasis
     ) {
-        setTextStyleCommon(textStyle, textStyleModel, opt, noDefault);
+        setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis);
         specifiedTextStyle && zrUtil.extend(textStyle, specifiedTextStyle);
         textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
@@ -505,43 +530,42 @@ define(function(require) {
      */
     graphic.setText = function (textStyle, labelModel, defaultColor) {
         var opt = {isRectText: true};
-        var noDefault;
+        var isEmphasis;
 
         if (defaultColor === false) {
-            noDefault = true;
+            isEmphasis = true;
         }
         else {
             // Support setting color as 'auto' to get visual color.
             opt.autoColor = defaultColor;
-            opt.checkInside = defaultCheckInside;
         }
-        setTextStyleCommon(textStyle, labelModel, opt, noDefault);
+        setTextStyleCommon(textStyle, labelModel, opt, isEmphasis);
         textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
     };
-
-    function defaultCheckInside(labelModel, textPosition) {
-        return textPosition && textPosition.indexOf('inside') >= 0;
-    }
 
     /**
      * {
      *      disableBox: boolean, Whether diable drawing box of block (outer most).
      *      isRectText: boolean,
      *      autoColor: string, specify a color when color is 'auto',
-     *                 for textFill, textStroke, textBackgroundColor, and textBorderColor.
-     *                 If autoColor specified, it is used as default textFill.
-     *      checkInside: function, if not set as `false` and not a function and isRectText is `true` and
-     *                 use defaultCheckInside by default.
+     *              for textFill, textStroke, textBackgroundColor, and textBorderColor.
+     *              If autoColor specified, it is used as default textFill.
+     *      useInsideStyle:
+     *              `true`: Use inside style (textFill, textStroke, textLineWidth)
+     *                  if `textFill` is not specified.
+     *              `false`: Do not use inside style.
+     *              `null/undefined`: use inside style if `isRectText` is true and
+     *                  `textFill` is not specified and textPosition contains `'inside'`.
      *      forceRich: boolean
      * }
      */
-    function setTextStyleCommon(textStyle, textStyleModel, opt, noDefault) {
+    function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
         // Consider there will be abnormal when merge hover style to normal style if given default value.
         opt = opt || EMPTY_OBJ;
 
         if (opt.isRectText) {
             var textPosition = textStyleModel.getShallow('position')
-                || (noDefault ? null : 'inside');
+                || (isEmphasis ? null : 'inside');
             // 'outside' is not a valid zr textPostion value, but used
             // in bar series, and magric type should be considered.
             textPosition === 'outside' && (textPosition = 'top');
@@ -551,7 +575,7 @@ define(function(require) {
             labelRotate != null && (labelRotate *= Math.PI / 180);
             textStyle.textRotation = labelRotate;
             textStyle.textDistance = zrUtil.retrieve2(
-                textStyleModel.getShallow('distance'), noDefault ? null : 5
+                textStyleModel.getShallow('distance'), isEmphasis ? null : 5
             );
         }
 
@@ -583,13 +607,13 @@ define(function(require) {
                     // Cascade is supported in rich.
                     var richTextStyle = textStyleModel.getModel(['rich', name]);
                     // In rich, never `disableBox`.
-                    setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, noDefault);
+                    setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis);
                 }
             }
         }
         textStyle.rich = richResult;
 
-        setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, noDefault, true);
+        setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, true);
 
         if (opt.forceRich && !opt.textStyle) {
             opt.textStyle = {};
@@ -632,42 +656,31 @@ define(function(require) {
         return richItemNameMap;
     }
 
-    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, noDefault, isBlock) {
+    function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, isBlock) {
         // In merge mode, default value should not be given.
-        globalTextStyle = !noDefault && globalTextStyle || EMPTY_OBJ;
+        globalTextStyle = !isEmphasis && globalTextStyle || EMPTY_OBJ;
 
-        var textFill = getAutoColor(textStyleModel.getShallow('color'), opt);
-        var textStroke = getAutoColor(textStyleModel.getShallow('textBorderColor'), opt);
-        var textLineWidth = textStyleModel.getShallow('textBorderWidth');
+        textStyle.textFill = getAutoColor(textStyleModel.getShallow('color'), opt)
+            || globalTextStyle.color;
+        textStyle.textStroke = getAutoColor(textStyleModel.getShallow('textBorderColor'), opt)
+            || globalTextStyle.textBorderColor;
+        textStyle.textLineWidth = zrUtil.retrieve2(
+            textStyleModel.getShallow('textBorderWidth'),
+            globalTextStyle.textBorderWidth
+        );
 
-        if (!noDefault) {
-            textFill == null && (textFill = globalTextStyle.color);
-            textStroke == null && (textStroke = globalTextStyle.textBorderColor);
-            textLineWidth == null && (textLineWidth = globalTextStyle.textBorderWidth);
-
-            var checkInside = opt.checkInside;
-            !checkInside && opt.isRectText && checkInside !== false && (
-                checkInside = defaultCheckInside
-            );
-
-            if (textFill == null
-                && checkInside
-                && checkInside(textStyleModel, textStyle.textPosition)
-            ) {
-                textFill = '#fff';
-                // Consider text with #fff overflow its container.
-                if (textStroke == null) {
-                    textStroke = opt.autoColor;
-                    textLineWidth == null && (textLineWidth = 2);
-                }
+        if (!isEmphasis) {
+            if (isBlock) {
+                // Always set `insideRollback`, for clearing previous.
+                textStyle.insideRollback = applyInsideStyle(textStyle, opt);
+                textStyle.insideRollbackOpt = opt;
             }
 
-            textFill == null && (textFill = opt.autoColor);
+            // Set default finally.
+            if (textStyle.textFill == null) {
+                textStyle.textFill = opt.autoColor;
+            }
         }
-
-        textStyle.textFill = textFill;
-        textStyle.textStroke = textStroke;
-        textStyle.textLineWidth = textLineWidth;
 
         // Do not use `getFont` here, because merge should be supported, where
         // part of these properties may be changed in emphasis style, and the
@@ -711,6 +724,42 @@ define(function(require) {
 
     function getAutoColor(color, opt) {
         return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
+    }
+
+    function applyInsideStyle(textStyle, opt) {
+        var useInsideStyle = opt.useInsideStyle;
+        var textPosition = textStyle.textPosition;
+        var insideRollback;
+
+        if (textStyle.textFill == null
+            && useInsideStyle !== false
+            && (useInsideStyle === true
+                || (opt.isRectText && textPosition && textPosition.indexOf('inside') >= 0)
+            )
+        ) {
+            insideRollback = {
+                textFill: null,
+                textStroke: textStyle.textStroke,
+                textLineWidth: textStyle.textLineWidth
+            };
+            textStyle.textFill = '#fff';
+            // Consider text with #fff overflow its container.
+            if (textStyle.textStroke == null) {
+                textStyle.textStroke = opt.autoColor;
+                textStyle.textLineWidth == null && (textStyle.textLineWidth = 2);
+            }
+        }
+
+        return insideRollback;
+    }
+
+    function rollbackInsideStyle(style) {
+        var insideRollback = style.insideRollback;
+        if (insideRollback) {
+            style.textFill = insideRollback.textFill;
+            style.textStroke = insideRollback.textStroke;
+            style.textLineWidth = insideRollback.textLineWidth;
+        }
     }
 
     graphic.getFont = function (opt, ecModel) {

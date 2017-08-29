@@ -238,9 +238,7 @@ define(function (require) {
                 labelDataIndex: idx,
                 defaultText: data.getName(idx),
                 autoColor: visualColor,
-                checkInside: function (model, opt) {
-                    return labelLayout.inside;
-                }
+                useInsideStyle: !!labelLayout.inside
             },
             {
                 textAlign: labelLayout.textAlign,

@@ -256,7 +256,7 @@ define(function (require) {
                             labelFetcher: labelFetcher,
                             labelDataIndex: query,
                             defaultText: region.name,
-                            checkInside: false
+                            useInsideStyle: false
                         },
                         {
                             textAlign: 'center',

@@ -128,7 +128,7 @@ define(function (require) {
                     var onEmphasis = function () {
                         var hoverStyle = graphic.setTextStyle({}, hoverLabelModel, {
                             text: hoverLabelModel.get('show') ? emphasisText : null
-                        }, {isRectText: true, checkInside: false}, true);
+                        }, {isRectText: true, useInsideStyle: false}, true);
                         circle.style.extendFrom(hoverStyle);
                         // Make label upper than others if overlaps.
                         circle.__mapOriginalZ2 = circle.z2;
@@ -139,7 +139,7 @@ define(function (require) {
                         graphic.setTextStyle(circle.style, labelModel, {
                             text: labelModel.get('show') ? normalText : null,
                             textPosition: labelModel.getShallow('position') || 'bottom'
-                        }, {isRectText: true, checkInside: false});
+                        }, {isRectText: true, useInsideStyle: false});
 
                         if (circle.__mapOriginalZ2 != null) {
                             circle.z2 = circle.__mapOriginalZ2;
