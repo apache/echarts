@@ -172,7 +172,12 @@ define(function (require) {
         });
 
         each(toArr(option.geo), function (geoOpt) {
-            isObject(geoOpt) && compatLabelTextStyle(geoOpt.label);
+            if (isObject(geoOpt)) {
+                compatLabelTextStyle(geoOpt.label);
+                each(toArr(geoOpt.regions), function (regionObj) {
+                    compatLabelTextStyle(regionObj.label);
+                });
+            }
         });
 
         compatLabelTextStyle(toObj(option.timeline).label);
