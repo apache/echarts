@@ -33,7 +33,11 @@
         },
 
         resizable: function (chart) {
-            window.addEventListener('resize', chart.resize);
+            if (window.attachEvent) {
+                window.attachEvent('onresize', chart.resize);
+            } else if (window.addEventListener) {
+                window.addEventListener('resize', chart.resize, false);
+            }
         }
     };
 
