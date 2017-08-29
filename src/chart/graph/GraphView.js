@@ -18,6 +18,35 @@ define(function (require) {
         return item.getVisual('opacity') || item.getModel().get(opacityPath);
     }
 
+    function fadeOutItem(item, opacityPath, opacityRatio) {
+        var el = item.getGraphicEl();
+
+        var opacity = getItemOpacity(item, opacityPath);
+        if (opacityRatio != null) {
+            opacity == null && (opacity = 1);
+            opacity *= opacityRatio;
+        }
+
+        el.downplay && el.downplay();
+        el.traverse(function (child) {
+            if (child.type !== 'group') {
+                child.setStyle('opacity', opacity);
+            }
+        });
+    }
+
+    function fadeInItem(item, opacityPath) {
+        var opacity = getItemOpacity(item, opacityPath);
+        var el = item.getGraphicEl();
+
+        el.highlight && el.highlight();
+        el.traverse(function (child) {
+            if (child.type !== 'group') {
+                child.setStyle('opacity', opacity);
+            }
+        });
+    }
+
     require('../../echarts').extendChartView({
 
         type: 'graph',
@@ -176,38 +205,12 @@ define(function (require) {
             var graph = data.graph;
             var dataType = el.dataType;
 
-            function fadeOutItem(item, opacityPath) {
-                var opacity = getItemOpacity(item, opacityPath);
-                var el = item.getGraphicEl();
-                if (opacity == null) {
-                    opacity = 1;
-                }
-
-                el.traverse(function (child) {
-                    child.trigger('normal');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity * 0.1);
-                    }
-                });
-            }
-
-            function fadeInItem(item, opacityPath) {
-                var opacity = getItemOpacity(item, opacityPath);
-                var el = item.getGraphicEl();
-
-                el.traverse(function (child) {
-                    child.trigger('emphasis');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity);
-                    }
-                });
-            }
             if (dataIndex !== null && dataType !== 'edge') {
                 graph.eachNode(function (node) {
-                    fadeOutItem(node, nodeOpacityPath);
+                    fadeOutItem(node, nodeOpacityPath, 0.1);
                 });
                 graph.eachEdge(function (edge) {
-                    fadeOutItem(edge, lineOpacityPath);
+                    fadeOutItem(edge, lineOpacityPath, 0.1);
                 });
 
                 var node = graph.getNodeByIndex(dataIndex);
@@ -225,23 +228,12 @@ define(function (require) {
 
         unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
             var graph = this._model.getData().graph;
+
             graph.eachNode(function (node) {
-                var opacity = getItemOpacity(node, nodeOpacityPath);
-                node.getGraphicEl().traverse(function (child) {
-                    child.trigger('normal');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity);
-                    }
-                });
+                fadeOutItem(node, nodeOpacityPath);
             });
             graph.eachEdge(function (edge) {
-                var opacity = getItemOpacity(edge, lineOpacityPath);
-                edge.getGraphicEl().traverse(function (child) {
-                    child.trigger('normal');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity);
-                    }
-                });
+                fadeOutItem(edge, lineOpacityPath);
             });
         },
 

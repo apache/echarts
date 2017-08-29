@@ -356,6 +356,14 @@ define(function (require) {
         graphic.setHoverStyle(this);
     };
 
+    lineProto.highlight = function () {
+        this.trigger('emphasis');
+    };
+
+    lineProto.downplay = function () {
+        this.trigger('normal');
+    };
+
     lineProto.updateLayout = function (lineData, idx) {
         this.setLinePoints(lineData.getItemLayout(idx));
     };

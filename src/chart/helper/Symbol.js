@@ -253,6 +253,8 @@ define(function (require) {
 
         symbolPath.hoverStyle = hoverItemStyle;
 
+        // FIXME
+        // Do not use symbol.trigger('emphasis'), but use symbol.highlight() instead.
         graphic.setHoverStyle(symbolPath);
 
         var scale = getScale(symbolSize);
