@@ -1,3 +1,8 @@
+/**
+ * @file  The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
+ *        the tree.
+ * @see  https://github.com/d3/d3-hierarchy
+ */
 define(function (require) {
 
     var layout = require('../../util/layout');
@@ -8,7 +13,7 @@ define(function (require) {
      * Initialize all computational message for following algorithm
      * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
      */
-    layoutHelper.initial = function (root) {
+    layoutHelper.init = function (root) {
         root.hierNode = {
             defaultAncestor: null,
             ancestor: root,

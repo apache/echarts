@@ -13,6 +13,10 @@ define(function (require) {
 
         layoutInfo: null,
 
+        // can support the position parameters 'left', 'top','right','bottom', 'width',
+        // 'height' in the setOption() with 'merge' mode normal.
+        layoutMode: 'box',
+
         /**
          * Init a tree data structure from data in option series
          * @param  {Object} option  the object used to config echarts view
@@ -109,8 +113,6 @@ define(function (require) {
                     }
                 }
             },
-
-            animation: true,
 
             animationEasing: 'linear',
 

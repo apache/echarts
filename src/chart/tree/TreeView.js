@@ -45,13 +45,20 @@ define(function (require) {
 
             var group = this._mainGroup;
 
-            group.position = [layoutInfo.x, layoutInfo.y];
+            var layout = seriesModel.get('layout');
+
+            if (layout === 'radial') {
+                group.attr('position', [layoutInfo.x + layoutInfo.width / 2, layoutInfo.y + layoutInfo.height / 2]);
+            }
+            else {
+                group.attr('position', [layoutInfo.x, layoutInfo.y]);
+            }
 
             var oldData = this._data;
 
             var seriesScope = {
                 expandAndCollapse: seriesModel.get('expandAndCollapse'),
-                layout: seriesModel.get('layout'),
+                layout: layout,
                 orient: seriesModel.get('orient'),
                 curvature: seriesModel.get('lineStyle.normal.curveness'),
                 symbolRotate: seriesModel.get('symbolRotate'),
@@ -83,8 +90,6 @@ define(function (require) {
                 })
                 .execute();
 
-            // TODO
-            // view.remove ...
             if (seriesScope.expandAndCollapse === true) {
                 data.eachItemGraphicEl(function (el, dataIndex) {
                     el.off('click').on('click', function () {

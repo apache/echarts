@@ -11,12 +11,8 @@ define(function (require) {
             var dataIndex = payload.dataIndex;
             var tree = seriesModel.getData().tree;
             var node = tree.getNodeByDataIndex(dataIndex);
-            if (node.isExpand) {
-                node.isExpand = false;
-            }
-            else {
-                node.isExpand = true;
-            }
+            node.isExpand = !node.isExpand;
+
         });
     });
 

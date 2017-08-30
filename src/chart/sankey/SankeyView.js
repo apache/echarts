@@ -56,7 +56,7 @@ define(function (require) {
 
             group.removeAll();
 
-            group.position = [layoutInfo.x, layoutInfo.y];
+            group.attr('position', [layoutInfo.x, layoutInfo.y]);
 
             // generate a bezire Curve for each edge
             graph.eachEdge(function (edge) {
