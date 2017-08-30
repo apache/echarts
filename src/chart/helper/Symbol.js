@@ -209,7 +209,8 @@ define(function (require) {
         var cursorStyle = seriesScope && seriesScope.cursorStyle;
 
         if (!seriesScope || data.hasItemOption) {
-            var itemModel = seriesScope.itemModel ? seriesScope.itemModel : data.getItemModel(idx);
+            var itemModel = (seriesScope && seriesScope.itemModel)
+                ? seriesScope.itemModel : data.getItemModel(idx);
 
             // Color must be excluded.
             // Because symbol provide setColor individually to set fill and stroke
@@ -311,13 +312,15 @@ define(function (require) {
 
     /**
      * @param {Function} cb
+     * @param {Object} [opt]
+     * @param {Object} [opt.keepLabel=true]
      */
-    symbolProto.fadeOut = function (cb) {
+    symbolProto.fadeOut = function (cb, opt) {
         var symbolPath = this.childAt(0);
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
-        symbolPath.style.text = null;
+        !(opt && opt.keepLabel) && (symbolPath.style.text = null);
 
         graphic.updateProps(
             symbolPath,
