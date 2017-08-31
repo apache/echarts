@@ -281,7 +281,7 @@ define(function(require) {
 
             // Do not save `insideRollback`.
             if (insideRollbackOpt) {
-                applyInsideStyle(style, insideRollbackOpt);
+                applyInsideStyle(style, style.insideOriginalTextPosition, insideRollbackOpt);
 
                 // textFill may be rollbacked to null.
                 if (style.textFill == null) {
@@ -672,7 +672,11 @@ define(function(require) {
         if (!isEmphasis) {
             if (isBlock) {
                 // Always set `insideRollback`, for clearing previous.
-                textStyle.insideRollback = applyInsideStyle(textStyle, opt);
+                var originalTextPosition = textStyle.textPosition;
+                textStyle.insideRollback = applyInsideStyle(textStyle, originalTextPosition, opt);
+                // Save original textPosition, because style.textPosition will be repalced by
+                // real location (like [10, 30]) in zrender.
+                textStyle.insideOriginalTextPosition = originalTextPosition;
                 textStyle.insideRollbackOpt = opt;
             }
 
@@ -726,15 +730,19 @@ define(function(require) {
         return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
     }
 
-    function applyInsideStyle(textStyle, opt) {
+    function applyInsideStyle(textStyle, textPosition, opt) {
         var useInsideStyle = opt.useInsideStyle;
-        var textPosition = textStyle.textPosition;
         var insideRollback;
 
         if (textStyle.textFill == null
             && useInsideStyle !== false
             && (useInsideStyle === true
-                || (opt.isRectText && textPosition && textPosition.indexOf('inside') >= 0)
+                || (opt.isRectText
+                    && textPosition
+                    // textPosition can be [10, 30]
+                    && typeof textPosition === 'string'
+                    && textPosition.indexOf('inside') >= 0
+                )
             )
         ) {
             insideRollback = {
