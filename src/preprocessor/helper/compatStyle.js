@@ -97,30 +97,31 @@ define(function (require) {
                 compatItemStyle(data[i]);
                 compatLabelTextStyle(data[i] && data[i].label);
             }
-            // mark point data
-            var markPoint = seriesOpt.markPoint;
-            if (markPoint && markPoint.data) {
-                var mpData = markPoint.data;
-                for (var i = 0; i < mpData.length; i++) {
-                    compatItemStyle(mpData[i]);
-                    compatLabelTextStyle(mpData[i] && mpData[i].label);
-                }
+        }
+
+        // mark point data
+        var markPoint = seriesOpt.markPoint;
+        if (markPoint && markPoint.data) {
+            var mpData = markPoint.data;
+            for (var i = 0; i < mpData.length; i++) {
+                compatItemStyle(mpData[i]);
+                compatLabelTextStyle(mpData[i] && mpData[i].label);
             }
-            // mark line data
-            var markLine = seriesOpt.markLine;
-            if (markLine && markLine.data) {
-                var mlData = markLine.data;
-                for (var i = 0; i < mlData.length; i++) {
-                    if (zrUtil.isArray(mlData[i])) {
-                        compatItemStyle(mlData[i][0]);
-                        compatLabelTextStyle(mlData[i][0] && mlData[i][0].label);
-                        compatItemStyle(mlData[i][1]);
-                        compatLabelTextStyle(mlData[i][1] && mlData[i][1].label);
-                    }
-                    else {
-                        compatItemStyle(mlData[i]);
-                        compatLabelTextStyle(mlData[i] && mlData[i].label);
-                    }
+        }
+        // mark line data
+        var markLine = seriesOpt.markLine;
+        if (markLine && markLine.data) {
+            var mlData = markLine.data;
+            for (var i = 0; i < mlData.length; i++) {
+                if (zrUtil.isArray(mlData[i])) {
+                    compatItemStyle(mlData[i][0]);
+                    compatLabelTextStyle(mlData[i][0] && mlData[i][0].label);
+                    compatItemStyle(mlData[i][1]);
+                    compatLabelTextStyle(mlData[i][1] && mlData[i][1].label);
+                }
+                else {
+                    compatItemStyle(mlData[i]);
+                    compatLabelTextStyle(mlData[i] && mlData[i].label);
                 }
             }
         }
