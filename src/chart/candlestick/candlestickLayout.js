@@ -34,6 +34,8 @@ define(function (require) {
                 return;
             }
 
+            var dataIndex = 0;
+
             data.each([cDim].concat(vDims), function () {
                 var args = arguments;
                 var axisDimVal = args[0];
@@ -67,15 +69,38 @@ define(function (require) {
                 addBodyEnd(ocHighPoint, 0);
                 addBodyEnd(ocLowPoint, 1);
 
+                var sign;
+                if (openVal > closeVal) {
+                    sign = -1;
+                }
+                else if (openVal < closeVal) {
+                    sign = 1;
+                }
+                else {
+                    // If close === open, compare with close of last record
+                    if (dataIndex > 0) {
+                        sign = data.getItemModel(dataIndex - 1).get()[2]
+                            <= closeVal
+                                ? 1
+                                : -1;
+                    }
+                    else {
+                        // No record of previous, set to be positive
+                        sign = 1;
+                    }
+                }
+
                 data.setItemLayout(idx, {
                     chartLayout: chartLayout,
-                    sign: openVal > closeVal ? -1 : openVal < closeVal ? 1 : 0,
+                    sign: sign,
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[constDim] : ocLowPoint[constDim], // open point.
                     bodyEnds: bodyEnds,
                     whiskerEnds: whiskerEnds,
                     brushRect: makeBrushRect()
                 });
+
+                ++dataIndex;
 
                 function getPoint(val) {
                     var p = [];
