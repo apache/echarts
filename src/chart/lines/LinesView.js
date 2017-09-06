@@ -88,6 +88,9 @@ define(function (require) {
 
         remove: function (ecModel, api) {
             this._lineDraw && this._lineDraw.remove(api, true);
+            // Clear motion when lineDraw is removed
+            var zr = api.getZr();
+            zr.painter.getLayer(this._lastZlevel).clear(true);
         },
 
         dispose: function () {}
