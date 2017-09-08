@@ -67,12 +67,6 @@
              * @private
              */
             this._state = 'ready';
-
-            /**
-             * @private
-             * @type {boolean}
-             */
-            this._mayClick;
         },
 
         /**
@@ -397,8 +391,6 @@
          * @private
          */
         _onPan: function (dx, dy) {
-            this._mayClick = false;
-
             if (this._state !== 'animating'
                 && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
             ) {
@@ -431,8 +423,6 @@
          * @private
          */
         _onZoom: function (scale, mouseX, mouseY) {
-            this._mayClick = false;
-
             if (this._state !== 'animating') {
                 // These param must not be cached.
                 var root = this.seriesModel.getData().tree.root;
@@ -480,25 +470,11 @@
          * @private
          */
         _initEvents: function (containerGroup) {
-            // FIXME
-            // 不用click以及silent的原因是，animate时视图设置silent true来避免click生效，
-            // 但是animate中，按下鼠标，animate结束后（silent设回为false）松开鼠标，
-            // 还是会触发click，期望是不触发。
-
-            // Mousedown occurs when drag start, and mouseup occurs when drag end,
-            // click event should not be triggered in that case.
-
-            containerGroup.on('mousedown', function (e) {
-                this._state === 'ready' && (this._mayClick = true);
-            }, this);
-            containerGroup.on('mouseup', function (e) {
-                if (this._mayClick) {
-                    this._mayClick = false;
-                    this._state === 'ready' && onClick.call(this, e);
+            containerGroup.on('click', function (e) {
+                if (this._state !== 'ready') {
+                    return;
                 }
-            }, this);
 
-            function onClick(e) {
                 var nodeClick = this.seriesModel.get('nodeClick', true);
 
                 if (!nodeClick) {
@@ -526,7 +502,8 @@
                         link && window.open(link, linkTarget);
                     }
                 }
-            }
+
+            }, this);
         },
 
         /**
