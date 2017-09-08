@@ -77,7 +77,7 @@ define(function (require) {
             // If there are no data and extent are [Infinity, -Infinity]
             if (extent[1] === -Infinity && extent[0] === Infinity) {
                 var d = new Date();
-                extent[1] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
                 extent[0] = extent[1] - ONE_DAY;
             }
 
@@ -98,8 +98,6 @@ define(function (require) {
          * @override
          */
         niceTicks: function (approxTickNum, minInterval, maxInterval) {
-            var timezoneOffset = this.getSetting('useUTC')
-                ? 0 : numberUtil.getTimezoneOffset() * 60 * 1000;
             approxTickNum = approxTickNum || 10;
 
             var extent = this._extent;
@@ -129,9 +127,11 @@ define(function (require) {
                 interval *= yearStep;
             }
 
+            var timezoneOffset = this.getSetting('useUTC')
+                ? 0 : (new Date(+extent[0] || +extent[1])).getTimezoneOffset() * 60 * 1000;
             var niceExtent = [
                 Math.round(mathCeil((extent[0] - timezoneOffset) / interval) * interval + timezoneOffset),
-                Math.round(mathFloor((extent[1] - timezoneOffset)/ interval) * interval + timezoneOffset)
+                Math.round(mathFloor((extent[1] - timezoneOffset) / interval) * interval + timezoneOffset)
             ];
 
             scaleHelper.fixExtent(niceExtent, extent);
