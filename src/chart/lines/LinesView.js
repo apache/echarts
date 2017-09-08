@@ -48,9 +48,13 @@ define(function (require) {
             var zr = api.getZr();
             // Avoid the drag cause ghost shadow
             // FIXME Better way ?
-            zr.painter.getLayer(zlevel).clear(true);
+            // SVG doesn't support
+            var isSvg = zr.painter.getType() === 'svg';
+            if (!isSvg) {
+                zr.painter.getLayer(zlevel).clear(true);
+            }
             // Config layer with motion blur
-            if (this._lastZlevel != null) {
+            if (this._lastZlevel != null && !isSvg) {
                 zr.configLayer(this._lastZlevel, {
                     motionBlur: false
                 });
@@ -66,10 +70,12 @@ define(function (require) {
                     notInIndividual && console.warn('Lines with trail effect should have an individual zlevel');
                 }
 
-                zr.configLayer(zlevel, {
-                    motionBlur: true,
-                    lastFrameAlpha: Math.max(Math.min(trailLength / 10 + 0.9, 1), 0)
-                });
+                if (!isSvg) {
+                    zr.configLayer(zlevel, {
+                        motionBlur: true,
+                        lastFrameAlpha: Math.max(Math.min(trailLength / 10 + 0.9, 1), 0)
+                    });
+                }
             }
 
             this.group.add(lineDraw.group);
@@ -83,14 +89,20 @@ define(function (require) {
             this._lineDraw.updateLayout(seriesModel);
             // Not use motion when dragging or zooming
             var zr = api.getZr();
-            zr.painter.getLayer(this._lastZlevel).clear(true);
+            var isSvg = zr.painter.getType() === 'svg';
+            if (!isSvg) {
+                zr.painter.getLayer(this._lastZlevel).clear(true);
+            }
         },
 
         remove: function (ecModel, api) {
             this._lineDraw && this._lineDraw.remove(api, true);
             // Clear motion when lineDraw is removed
             var zr = api.getZr();
-            zr.painter.getLayer(this._lastZlevel).clear(true);
+            var isSvg = zr.painter.getType() === 'svg';
+            if (!isSvg) {
+                zr.painter.getLayer(this._lastZlevel).clear(true);
+            }
         },
 
         dispose: function () {}
