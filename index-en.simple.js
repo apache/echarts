@@ -3,4 +3,6 @@
  */
 module.exports = require('./lib/echarts');
 
-require('./index/part.common');
+require('./lib/lang/en');
+
+require('./index/part.simple');

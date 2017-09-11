@@ -43,12 +43,14 @@ define(function (require) {
     var graphic = require('./util/graphic');
     var modelUtil = require('./util/model');
     var throttle = require('./util/throttle');
+    var langDefault = require('./lang/default');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
     var colorTool = require('zrender/tool/color');
     var Eventful = require('zrender/mixin/Eventful');
     var timsort = require('zrender/core/timsort');
+
 
     var each = zrUtil.each;
     var parseClassType = ComponentModel.parseClassType;
@@ -74,6 +76,8 @@ define(function (require) {
     var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
     var OPTION_UPDATED = '__optionUpdated';
     var ACTION_REG = /^[a-zA-Z0-9_]+$/;
+
+    var langSet = zrUtil.clone(langDefault);
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -1942,6 +1946,21 @@ define(function (require) {
         zrUtil.createCanvas = creator;
     };
 
+    /**
+     * @param {Object} langObj
+     */
+    echarts.setLang = function (langObj) {
+        langSet = langSet || {};
+        zrUtil.merge(langSet, langObj, true);
+    };
+
+    /**
+     * @return {Ojbect} Lang set.
+     */
+    echarts.getLang = function () {
+        return langSet;
+    };
+
     echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
     echarts.registerPreprocessor(backwardCompat);
     echarts.registerLoading('default', require('./loading/default'));
@@ -1957,7 +1976,6 @@ define(function (require) {
         event: 'downplay',
         update: 'downplay'
     }, zrUtil.noop);
-
 
     // --------
     // Exports

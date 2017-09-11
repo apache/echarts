@@ -3,6 +3,7 @@ define(function(require) {
 
     var featureManager = require('../featureManager');
     var zrUtil = require('zrender/core/util');
+    var lang = require('../../../echarts').getLang().toolbox.brush;
 
     function Brush(model, ecModel, api) {
         this.model = model;
@@ -33,14 +34,8 @@ define(function(require) {
             keep: 'M4,10.5V1h10.3 M20.7,1h6.1 M33,1h6.1 M55.4,10.5V1H45.2 M4,17.3v6.6 M55.6,17.3v6.6 M4,30.5V40h10.3 M20.7,40 h6.1 M33,40h6.1 M55.4,30.5V40H45.2 M21,18.9h62.9v48.6H21V18.9z', // jshint ignore:line
             clear: 'M22,14.7l30.9,31 M52.9,14.7L22,45.7 M4.7,16.8V4.2h13.1 M26,4.2h7.8 M41.6,4.2h7.8 M70.3,16.8V4.2H57.2 M4.7,25.9v8.6 M70.3,25.9v8.6 M4.7,43.2v12.6h13.1 M26,55.8h7.8 M41.6,55.8h7.8 M70.3,43.2v12.6H57.2' // jshint ignore:line
         },
-        title: {
-            rect: '矩形选择',
-            polygon: '圈选',
-            lineX: '横向选择',
-            lineY: '纵向选择',
-            keep: '保持选择',
-            clear: '清除选择'
-        }
+        // `rect`, `polygon`, `lineX`, `lineY`, `keep`, `clear`
+        title: zrUtil.clone(lang.title)
     };
 
     var proto = Brush.prototype;
