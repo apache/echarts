@@ -551,7 +551,7 @@ define(function(require) {
      *              for textFill, textStroke, textBackgroundColor, and textBorderColor.
      *              If autoColor specified, it is used as default textFill.
      *      useInsideStyle:
-     *              `true`: Use inside style (textFill, textStroke, textLineWidth)
+     *              `true`: Use inside style (textFill, textStroke, textStrokeWidth)
      *                  if `textFill` is not specified.
      *              `false`: Do not use inside style.
      *              `null/undefined`: use inside style if `isRectText` is true and
@@ -664,7 +664,7 @@ define(function(require) {
             || globalTextStyle.color;
         textStyle.textStroke = getAutoColor(textStyleModel.getShallow('textBorderColor'), opt)
             || globalTextStyle.textBorderColor;
-        textStyle.textLineWidth = zrUtil.retrieve2(
+        textStyle.textStrokeWidth = zrUtil.retrieve2(
             textStyleModel.getShallow('textBorderWidth'),
             globalTextStyle.textBorderWidth
         );
@@ -748,13 +748,13 @@ define(function(require) {
             insideRollback = {
                 textFill: null,
                 textStroke: textStyle.textStroke,
-                textLineWidth: textStyle.textLineWidth
+                textStrokeWidth: textStyle.textStrokeWidth
             };
             textStyle.textFill = '#fff';
             // Consider text with #fff overflow its container.
             if (textStyle.textStroke == null) {
                 textStyle.textStroke = opt.autoColor;
-                textStyle.textLineWidth == null && (textStyle.textLineWidth = 2);
+                textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
             }
         }
 
@@ -766,7 +766,7 @@ define(function(require) {
         if (insideRollback) {
             style.textFill = insideRollback.textFill;
             style.textStroke = insideRollback.textStroke;
-            style.textLineWidth = insideRollback.textLineWidth;
+            style.textStrokeWidth = insideRollback.textStrokeWidth;
         }
     }
 
