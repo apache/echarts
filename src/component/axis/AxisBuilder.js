@@ -189,13 +189,21 @@ define(function (require) {
             var ticksCoords = axis.getTicksCoords(tickModel.get('alignWithLabel'));
             var ticks = axis.scale.getTicks();
 
+            var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+            var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+
             var pt1 = [];
             var pt2 = [];
             var matrix = this._transform;
 
-            for (var i = 0; i < ticksCoords.length; i++) {
+            var tickEls = [];
+
+            var ticksCnt = ticksCoords.length;
+            for (var i = 0; i < ticksCnt; i++) {
                 // Only ordinal scale support tick interval
-                if (ifIgnoreOnTick(axis, i, tickInterval)) {
+                if (ifIgnoreOnTick(axis, i, tickInterval, ticksCnt,
+                    showMinLabel, showMaxLabel)
+                ) {
                      continue;
                 }
 
@@ -211,8 +219,7 @@ define(function (require) {
                     v2ApplyTransform(pt2, pt2, matrix);
                 }
                 // Tick line, Not use group transform to have better line draw
-                this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
-
+                var tickEl = new graphic.Line(graphic.subPixelOptimizeLine({
                     // Id for animation
                     anid: 'tick_' + ticks[i],
 
@@ -230,8 +237,12 @@ define(function (require) {
                     ),
                     z2: 2,
                     silent: true
-                })));
+                }));
+                this.group.add(tickEl);
+                tickEls.push(tickEl);
             }
+
+            fixMinMaxLabelShow(axisModel, this.textEls, tickEls);
         },
 
         /**
@@ -262,12 +273,17 @@ define(function (require) {
             var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
             var categoryData = axisModel.get('data');
 
-            var textEls = [];
+            this.textEls = [];
             var silent = isSilent(axisModel);
             var triggerEvent = axisModel.get('triggerEvent');
 
+            var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+            var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+
             zrUtil.each(ticks, function (tickVal, index) {
-                if (ifIgnoreOnTick(axis, index, opt.labelInterval)) {
+                if (ifIgnoreOnTick(axis, index, opt.labelInterval, ticks.length,
+                    showMinLabel, showMaxLabel)
+                ) {
                      return;
                 }
 
@@ -330,14 +346,12 @@ define(function (require) {
                 this._dumbGroup.add(textEl);
                 textEl.updateTransform();
 
-                textEls.push(textEl);
+                this.textEls.push(textEl);
                 this.group.add(textEl);
 
                 textEl.decomposeTransform();
 
             }, this);
-
-            fixMinMaxLabelShow(axisModel, textEls);
         },
 
         /**
@@ -559,29 +573,50 @@ define(function (require) {
             );
     }
 
-    function fixMinMaxLabelShow(axisModel, textEls) {
+    function fixMinMaxLabelShow(axisModel, textEls, tickEls) {
         // If min or max are user set, we need to check
         // If the tick on min(max) are overlap on their neighbour tick
         // If they are overlapped, we need to hide the min(max) tick label
         var showMinLabel = axisModel.get('axisLabel.showMinLabel');
         var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+
         var firstLabel = textEls[0];
         var nextLabel = textEls[1];
         var lastLabel = textEls[textEls.length - 1];
         var prevLabel = textEls[textEls.length - 2];
 
+        var firstTick = tickEls[0];
+        var nextTick = tickEls[1];
+        var lastTick = tickEls[tickEls.length - 1];
+        var prevTick = tickEls[tickEls.length - 2];
+
         if (showMinLabel === false) {
             firstLabel.ignore = true;
+            tickEls[0].ignore = true;
         }
         else if (axisModel.getMin() != null && isTwoLabelOverlapped(firstLabel, nextLabel)) {
-            showMinLabel ? (nextLabel.ignore = true) : (firstLabel.ignore = true);
+            if (showMinLabel) {
+                nextLabel.ignore = true;
+                nextTick.ignore = true;
+            }
+            else {
+                firstLabel.ignore = true;
+                firstTick.ignore = true;
+            }
         }
 
         if (showMaxLabel === false) {
             lastLabel.ignore = true;
         }
         else if (axisModel.getMax() != null && isTwoLabelOverlapped(prevLabel, lastLabel)) {
-            showMaxLabel ? (prevLabel.ignore = true) : (lastLabel.ignore = true);
+            if (showMaxLabel) {
+                prevLabel.ignore = true;
+                prevTick.ignore = true;
+            }
+            else {
+                lastLabel.ignore = true;
+                lastTick.ignore = true;
+            }
         }
     }
 
@@ -609,7 +644,18 @@ define(function (require) {
     /**
      * @static
      */
-    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick = function (axis, i, interval) {
+    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick = function (
+        axis,
+        i,
+        interval,
+        ticksCnt,
+        showMinLabel,
+        showMaxLabel
+    ) {
+        if (i === 0 && showMinLabel || i === ticksCnt - 1 && showMaxLabel) {
+            return false;
+        }
+
         var rawTick;
         var scale = axis.scale;
         return scale.type === 'ordinal'

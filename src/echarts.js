@@ -45,7 +45,7 @@ define(function (require) {
     var throttle = require('./util/throttle');
     var langDefault = require('./lang/default');
 
-    var zrender = require('zrender');
+    var zrender = require('zrender/zrender');
     var zrUtil = require('zrender/core/util');
     var colorTool = require('zrender/tool/color');
     var Eventful = require('zrender/mixin/Eventful');

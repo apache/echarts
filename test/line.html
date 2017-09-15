@@ -123,6 +123,10 @@
                         },
                         splitLine: {
                             show: false
+                        },
+                        axisLabel: {
+                            showMaxLabel: true,
+                            showMinLabel: true
                         }
                     },
                     grid: {
@@ -189,6 +193,8 @@
                         step: 'end'
                     }]
                 });
+
+                window.onresize = chart.resize;
             })
 
         </script>

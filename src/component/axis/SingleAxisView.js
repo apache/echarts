@@ -66,8 +66,13 @@ define(function (require) {
             var p1 = [];
             var p2 = [];
 
+            var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+            var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+
             for (var i = 0; i < ticksCoords.length; ++i) {
-                if (ifIgnoreOnTick(axis, i, lineInterval)) {
+                if (ifIgnoreOnTick(axis, i, lineInterval, ticksCoords.length,
+                    showMinLabel, showMaxLabel
+                )) {
                     continue;
                 }
                 var tickCoord = axis.toGlobalCoord(ticksCoords[i]);
