@@ -2,7 +2,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var lang = require('../../../echarts').getLang().toolbox.magicType;
+    var lang = require('../../../lang').toolbox.magicType;
 
     function MagicType(model) {
         this.model = model;

@@ -3,7 +3,7 @@ define(function(require) {
 
     var featureManager = require('../featureManager');
     var zrUtil = require('zrender/core/util');
-    var lang = require('../../../echarts').getLang().toolbox.brush;
+    var lang = require('../../../lang').toolbox.brush;
 
     function Brush(model, ecModel, api) {
         this.model = model;

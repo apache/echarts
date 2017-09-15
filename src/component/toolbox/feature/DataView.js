@@ -6,7 +6,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var eventTool = require('zrender/core/event');
-    var lang = require('../../../echarts').getLang().toolbox.dataView;
+    var lang = require('../../../lang').toolbox.dataView;
 
     var BLOCK_SPLITER = new Array(60).join('-');
     var ITEM_SPLITER = '\t';

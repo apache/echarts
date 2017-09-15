@@ -1,7 +1,7 @@
 define(function (require) {
 
     var env = require('zrender/core/env');
-    var lang = require('../../../echarts').getLang().toolbox.saveAsImage;
+    var lang = require('../../../lang').toolbox.saveAsImage;
 
     function SaveAsImage (model) {
         this.model = model;

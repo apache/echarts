@@ -2,7 +2,7 @@ define(function(require) {
     'use strict';
 
     var history = require('../../dataZoom/history');
-    var lang = require('../../../echarts').getLang().toolbox.restore;
+    var lang = require('../../../lang').toolbox.restore;
 
     function Restore(model) {
         this.model = model;

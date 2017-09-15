@@ -6,7 +6,7 @@ define(function(require) {
     var BrushTargetManager = require('../../helper/BrushTargetManager');
     var history = require('../../dataZoom/history');
     var sliderMove = require('../../helper/sliderMove');
-    var lang = require('../../../echarts').getLang().toolbox.dataZoom;
+    var lang = require('../../../lang').toolbox.dataZoom;
 
     var each = zrUtil.each;
 
