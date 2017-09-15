@@ -119,24 +119,31 @@
 
         // echarts.connect([chart1, chart2]);
 
-        bindAction(chart1, chart2, data2);
-        bindAction(chart2, chart1, data1);
+        bindAction([chart1, chart2]);
 
-        function bindAction(fromChart, toChart, toData) {
-            fromChart.on('updateAxisPointer', function (params) {
-                toChart.dispatchAction(
-                    toChart.makeActionFromEvent(params),
-                    true
-                );
-            });
+        function bindAction(chartList) {
+            echarts.util.each(chartList, function (fromChart) {
+                echarts.util.each(chartList, function (toChart) {
+                    if (fromChart === toChart) {
+                        return;
+                    }
 
-            fromChart.on('dataZoom', function (params) {
-                toChart.dispatchAction({
-                    type: 'dataZoom',
-                    dataZoomIndex: params.batch[0].dataZoomIndex,
-                    start: params.batch[0].start,
-                    end: params.batch[0].end
-                }, true);
+                    fromChart.on('updateAxisPointer', function (params) {
+                        toChart.dispatchAction(
+                            toChart.makeActionFromEvent(params),
+                            true
+                        );
+                    });
+
+                    fromChart.on('dataZoom', function (params) {
+                        toChart.dispatchAction({
+                            type: 'dataZoom',
+                            dataZoomIndex: params.batch[0].dataZoomIndex,
+                            start: params.batch[0].start,
+                            end: params.batch[0].end
+                        }, true);
+                    });
+                });
             });
         }
 

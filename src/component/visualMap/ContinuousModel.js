@@ -29,7 +29,8 @@ define(function(require) {
             itemWidth: null,        // The length of the other side.
             hoverLink: true,        // Enable hover highlight.
             hoverLinkDataSize: null,// The size of hovered data.
-            hoverLinkOnHandle: true // Whether trigger hoverLink when hover handle.
+            hoverLinkOnHandle: null // Whether trigger hoverLink when hover handle.
+                                    // If not specified, follow the value of `realtime`.
         },
 
         /**
