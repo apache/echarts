@@ -318,5 +318,6 @@ function barLayoutGrid(seriesType, ecModel, api) {
 }
 
 barLayoutGrid.getLayoutOnAxis = getLayoutOnAxis;
+barLayoutGrid.calBarWidthAndOffset = calBarWidthAndOffset;
 
 export default barLayoutGrid;

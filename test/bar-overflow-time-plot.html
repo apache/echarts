@@ -1,0 +1,159 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 600px;
+            }
+        </style>
+
+        <h1>
+            <input type="button" onclick="testHelper.setURLParam(['cn', 'en'], 'cn')" value="CN"/>
+            <input type="button" onclick="testHelper.setURLParam(['cn', 'en'], 'en')" value="EN"/>
+        </h1>
+
+        <div id="main" class="chart"></div>
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    'echarts/chart/bar',
+                    'echarts/chart/line',
+                    'echarts/component/legend',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/tooltip',
+                    'echarts/component/brush',
+                    'echarts/component/toolbox',
+                    'echarts/component/title',
+                    'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                var data1 = [[new Date(1498258800000), 10], [new Date(1498345200000), 15], [new Date(1498431600000), 15], [new Date(1498518000000), 15]];
+                var data2 = [[new Date(1498258800000), 15], [new Date(1498345200000), 20], [new Date(1498431600000), 15], [new Date(1498518000000), 15]];
+
+
+                var itemStyle = {
+                    normal: {
+                        barBorderRadius: 5,
+                        label: {
+                            show: true,
+                            position: 'outside'
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position: 'outside'
+                        },
+                        barBorderColor: '#fff',
+                        barBorderWidth: 1,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0,0,0,0.5)'
+                    }
+                };
+
+                chart.setOption({
+                    backgroundColor: '#eee',
+                    title: {
+                        text: '酒吧在时间轴上',
+                        padding: 20
+                    },
+                    legend: {
+                        left: 150,
+                        inactiveColor: '#abc',
+                        borderWidth: 1,
+                        selected: {
+                            // 'bar': false
+                        },
+                        // orient: 'vertical',
+                        // x: 'right',
+                        // y: 'bottom',
+                        align: 'left',
+                        tooltip: {
+                            show: true
+                        }
+
+                    },
+                    xAxis: {
+                        type: 'time',
+                        name: '横轴',
+                    },
+                    yAxis: {
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        axisTick: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        data: data1
+                    }, {
+                        name: 'bar2',
+                        type: 'bar',
+                        data: data2
+                    }]
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
+                chart.on('legendselectchanged', function (params) {
+                    chart.setOption({
+                        // title: {
+                        // },
+                        graphic: [{
+                            type: 'circle',
+                            shape: {
+                                cx: 100,
+                                cy: 100,
+                                r: 20,
+                            }
+                        }]
+                    });
+                });
+
+                window.onresize = chart.resize;
+            }
+        );
+        </script>
+    </body>
+</html>
