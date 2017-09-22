@@ -168,7 +168,7 @@ define(function (require) {
             sector.stopAnimation(true);
             sector.animateTo({
                 shape: {
-                    r: layout.r + 10
+                    r: layout.r + seriesModel.get('hoverOffset')
                 }
             }, 300, 'elasticOut');
         }

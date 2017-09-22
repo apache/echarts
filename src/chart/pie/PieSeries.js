@@ -90,8 +90,10 @@ define(function(require) {
             startAngle: 90,
             // 最小角度改为0
             minAngle: 0,
-            // 选中是扇区偏移量
+            // 选中时扇区偏移量
             selectedOffset: 10,
+            // 高亮扇区偏移量
+            hoverOffset: 10,
 
             // If use strategy to avoid label overlapping
             avoidLabelOverlap: true,
