@@ -49,7 +49,7 @@ define(function (require) {
      * @param {Object} opt Standard axis parameters.
      * @param {Array.<number>} opt.position [x, y]
      * @param {number} opt.rotation by radian
-     * @param {number} [opt.nameDirection=1] 1 or -1 Used when nameLocation is 'middle'.
+     * @param {number} [opt.nameDirection=1] 1 or -1 Used when nameLocation is 'middle' or 'center'.
      * @param {number} [opt.tickDirection=1] 1 or -1
      * @param {number} [opt.labelDirection=1] 1 or -1
      * @param {number} [opt.labelOffset=0] Usefull when onZero.
@@ -380,7 +380,7 @@ define(function (require) {
                     ? extent[1] + gapSignal * gap
                     : (extent[0] + extent[1]) / 2, // 'middle'
                 // Reuse labelOffset.
-                nameLocation === 'middle' ? opt.labelOffset + nameDirection * gap : 0
+                isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
             ];
 
             var labelLayout;
@@ -392,7 +392,7 @@ define(function (require) {
 
             var axisNameAvailableWidth;
 
-            if (nameLocation === 'middle') {
+            if (isNameLocationCenter(nameLocation)) {
                 labelLayout = innerTextLayout(
                     opt.rotation,
                     nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
@@ -640,6 +640,9 @@ define(function (require) {
         return firstRect.intersect(nextRect);
     }
 
+    function isNameLocationCenter(nameLocation) {
+        return nameLocation === 'middle' || nameLocation === 'center';
+    }
 
     /**
      * @static
