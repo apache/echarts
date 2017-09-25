@@ -6,6 +6,7 @@ define(function (require) {
 
     var SeriesModel = require('../../model/Series');
     var Tree = require('../../data/Tree');
+    var encodeHTML = require('../../util/format').encodeHTML;
 
     return SeriesModel.extend({
 
@@ -57,6 +58,24 @@ define(function (require) {
 
             return tree.data;
         },
+
+        /**
+         * @override
+         * @param {number} dataIndex
+         * @param {boolean} [mutipleSeries=false]
+         */
+        // formatTooltip: function (dataIndex) {
+        //     var tree = this.getData().tree;
+        //     var realRoot = tree.root.children[0];
+        //     var node = tree.getNodeByDataIndex(dataIndex);
+        //     var name = node.name;
+        //     while (node.parentNode !== realRoot) {
+        //         name = node.parentNode.name + '.' + name;
+        //     }
+        //     name = realRoot.name + '.' + name;
+        //     var value = this.getValue(dataIndex);
+        //     return encodeHTML(name + ':' + value);
+        // },
 
         defaultOption: {
             zlevel: 0,

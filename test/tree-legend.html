@@ -20,7 +20,8 @@
             require([
                 'echarts',
                 'echarts/chart/tree',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/legend'
                 ], function (echarts) {
                     var chart = echarts.init(document.getElementById('main'), null, {
                         renderer: 'canvas'
@@ -33,24 +34,6 @@
                     $.getJSON('./data/flare.json')
                     .done(function (data) {
                         chart.setOption({
-
-                            tooltip: {
-                                trigger: 'item',
-                                triggerOn: 'mousemove',
-                                formatter: function (params) {
-                                    var data = params.data;
-                                    var tree = this.getData().tree;
-                                    var realRoot = tree.root.children[0];
-                                    var node = tree.getNodeByDataIndex(dataIndex);
-                                    var name = node.name;
-                                    while (node.parentNode !== realRoot) {
-                                        name = node.parentNode.name + '.' + name;
-                                    }
-                                    name = realRoot.name + '.' + name;
-                                    var value = this.getValue(dataIndex);
-                                    return encodeHTML(name + ':' + value);
-                                }
-                            },
 
                             series:[
                                 {
@@ -85,7 +68,14 @@
                                         }
                                     },
 
+                                    legend: {
+                                        data: []
+                                    },
 
+                                    tooltip: {
+                                        trigger: 'item',
+                                        triggerOn: 'mousemove'
+                                    },
 
                                     expandAndCollapse: true,
 
