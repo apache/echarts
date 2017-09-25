@@ -43,7 +43,6 @@ define(function (require) {
     var graphic = require('./util/graphic');
     var modelUtil = require('./util/model');
     var throttle = require('./util/throttle');
-    var langDefault = require('./lang/default');
 
     var zrender = require('zrender/zrender');
     var zrUtil = require('zrender/core/util');
@@ -77,7 +76,6 @@ define(function (require) {
     var OPTION_UPDATED = '__optionUpdated';
     var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
-    var langSet = zrUtil.clone(langDefault);
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -1944,21 +1942,6 @@ define(function (require) {
      */
     echarts.setCanvasCreator = function (creator) {
         zrUtil.createCanvas = creator;
-    };
-
-    /**
-     * @param {Object} langObj
-     */
-    echarts.setLang = function (langObj) {
-        langSet = langSet || {};
-        zrUtil.merge(langSet, langObj, true);
-    };
-
-    /**
-     * @return {Ojbect} Lang set.
-     */
-    echarts.getLang = function () {
-        return langSet;
     };
 
     echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
