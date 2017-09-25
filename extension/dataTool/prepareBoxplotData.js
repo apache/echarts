@@ -34,13 +34,33 @@ define(function (require) {
             var Q2 = quantile(ascList, 0.5);
             var Q3 = quantile(ascList, 0.75);
             var IQR = Q3 - Q1;
+            var whiskerMin = Q1 - (boundIQR == null ? 1.5 : boundIQR) * IQR;
+            var whiskerMax = Q3 + (boundIQR == null ? 1.5 : boundIQR) * IQR;
 
             var low = boundIQR === 'none'
                 ? ascList[0]
-                : Q1 - (boundIQR == null ? 1.5 : boundIQR) * IQR;
+                : getWhiskerMin();
+
             var high = boundIQR === 'none'
                 ? ascList[ascList.length - 1]
-                : Q3 + (boundIQR == null ? 1.5 : boundIQR) * IQR;
+                : getWhiskerMax();
+
+
+            function getWhiskerMin(){
+                var diffList = ascList.map(function (dataPoint){
+                                                return Math.abs(dataPoint - whiskerMin);});
+                var minValue = Math.min.apply(null, diffList);
+                var minArg = diffList.indexOf(minValue);
+                return ascList[minArg]
+            }
+
+            function getWhiskerMax(){
+                var diffList = ascList.map(function (dataPoint){
+                                                return Math.abs(whiskerMax - dataPoint);});
+                var maxValue = Math.min.apply(null, diffList);
+                var maxArg = diffList.indexOf(maxValue);
+                return ascList[maxArg]
+            }
 
             boxData.push([low, Q1, Q2, Q3, high]);
 
