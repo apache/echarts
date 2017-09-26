@@ -64,7 +64,8 @@ define(function(require) {
             zlevel: 0,
             z: 4,
 
-            seriesIndex: null,       // 所控制的series indices，默认所有有value的series.
+            seriesIndex: 'all',     // 'all' or null/undefined: all series.
+                                    // A number or an array of number: the specified series.
 
                                     // set min: 0, max: 200, only for campatible with ec2.
                                     // In fact min max should not have default value.
@@ -181,26 +182,31 @@ define(function(require) {
             );
         },
 
-
         /**
          * @protected
+         * @return {Array.<number>} An array of series indices.
          */
-        resetTargetSeries: function () {
-            var thisOption = this.option;
-            var allSeriesIndex = thisOption.seriesIndex == null;
-            thisOption.seriesIndex = allSeriesIndex
-                ? [] : modelUtil.normalizeToArray(thisOption.seriesIndex);
+        getTargetSeriesIndices: function () {
+            var optionSeriesIndex = this.option.seriesIndex;
+            var seriesIndices = [];
 
-            allSeriesIndex && this.ecModel.eachSeries(function (seriesModel, index) {
-                thisOption.seriesIndex.push(index);
-            });
+            if (optionSeriesIndex == null || optionSeriesIndex === 'all') {
+                this.ecModel.eachSeries(function (seriesModel, index) {
+                    seriesIndices.push(index);
+                });
+            }
+            else {
+                seriesIndices = modelUtil.normalizeToArray(optionSeriesIndex);
+            }
+
+            return seriesIndices;
         },
 
         /**
          * @public
          */
         eachTargetSeries: function (callback, context) {
-            zrUtil.each(this.option.seriesIndex, function (seriesIndex) {
+            zrUtil.each(this.getTargetSeriesIndices(), function (seriesIndex) {
                 callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex));
             }, this);
         },
