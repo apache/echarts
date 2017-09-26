@@ -221,7 +221,7 @@ define(function (require) {
                     )
                 );
 
-                polygon.hoverStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
+                polygon.hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
 
                 graphic.setLabelStyle(
                     polygon.style, polygon.hoverStyle, labelModel, labelHoverModel,
