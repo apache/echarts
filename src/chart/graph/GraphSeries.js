@@ -190,7 +190,7 @@ define(function (require) {
             force: {
                 initLayout: null,
                 // Node repulsion. Can be an array to represent range.
-                repulsion: [1, 50],
+                repulsion: [0, 50],
                 gravity: 0.1,
 
                 // Edge length. Can be an array to represent range.
