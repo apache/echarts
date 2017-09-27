@@ -49,10 +49,14 @@ define(function (require) {
 
                 var nodes = nodeData.mapArray('value', function (value, idx) {
                     var point = nodeData.getItemLayout(idx);
-                    // var w = numberUtil.linearMap(value, nodeDataExtent, [0, 50]);
                     var rep = numberUtil.linearMap(value, nodeDataExtent, repulsion);
+                    var halfRep = (repulsion[0] + repulsion[1]) / 2;
                     if (isNaN(rep)) {
-                        rep = (repulsion[0] + repulsion[1]) / 2;
+                        rep = halfRep;
+                    }
+                    // rep can not be 0.
+                    if (rep <= 0) {
+                        rep = Math.max(1e-4, Math.min(1, halfRep));
                     }
                     return {
                         w: rep,
