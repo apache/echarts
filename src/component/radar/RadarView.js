@@ -5,7 +5,7 @@ define(function (require) {
     var graphic = require('../../util/graphic');
 
     var axisBuilderAttrs = [
-        'axisLine', 'axisLabel', 'axisTick', 'axisName'
+        'axisLine', 'axisTickLabel', 'axisName'
     ];
 
     return require('../../echarts').extendComponentView({
