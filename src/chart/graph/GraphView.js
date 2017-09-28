@@ -110,6 +110,7 @@ define(function (require) {
             if (forceLayout) {
                 this._startForceLayoutIteration(forceLayout, layoutAnimation);
             }
+
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
                 // Update draggable
@@ -150,9 +151,33 @@ define(function (require) {
                             seriesId: seriesModel.id
                         });
                     });
+
                 }
 
             }, this);
+
+            data.graph.eachEdge(function (edge) {
+                var el = edge.getGraphicEl();
+
+                el.off('mouseover', el.__focusNodeAdjacency);
+                el.off('mouseout', el.__unfocusNodeAdjacency);
+
+                if (edge.getModel().get('focusNodeAdjacency')) {
+                    el.on('mouseover', el.__focusNodeAdjacency = function () {
+                        api.dispatchAction({
+                            type: 'focusNodeAdjacency',
+                            seriesId: seriesModel.id,
+                            edgeDataIndex: edge.dataIndex
+                        });
+                    });
+                    el.on('mouseout', el.__unfocusNodeAdjacency = function () {
+                        api.dispatchAction({
+                            type: 'unfocusNodeAdjacency',
+                            seriesId: seriesModel.id
+                        });
+                    });
+                }
+            });
 
             var circularRotateLabel = seriesModel.get('layout') === 'circular'
                 && seriesModel.get('circular.rotateLabel');
@@ -195,34 +220,39 @@ define(function (require) {
 
         focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
             var data = this._model.getData();
+            var graph = data.graph;
             var dataIndex = payload.dataIndex;
-            var el = data.getItemGraphicEl(dataIndex);
+            var edgeDataIndex = payload.edgeDataIndex;
 
-            if (!el) {
+            var node = graph.getNodeByIndex(dataIndex);
+            var edge = graph.getEdgeByIndex(edgeDataIndex);
+
+            if (!node && !edge) {
                 return;
             }
 
-            var graph = data.graph;
-            var dataType = el.dataType;
+            graph.eachNode(function (node) {
+                fadeOutItem(node, nodeOpacityPath, 0.1);
+            });
+            graph.eachEdge(function (edge) {
+                fadeOutItem(edge, lineOpacityPath, 0.1);
+            });
 
-            if (dataIndex !== null && dataType !== 'edge') {
-                graph.eachNode(function (node) {
-                    fadeOutItem(node, nodeOpacityPath, 0.1);
-                });
-                graph.eachEdge(function (edge) {
-                    fadeOutItem(edge, lineOpacityPath, 0.1);
-                });
-
-                var node = graph.getNodeByIndex(dataIndex);
+            if (node) {
                 fadeInItem(node, nodeOpacityPath);
-                zrUtil.each(node.edges, function (edge) {
-                    if (edge.dataIndex < 0) {
+                zrUtil.each(node.edges, function (adjacentEdge) {
+                    if (adjacentEdge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node1, nodeOpacityPath);
-                    fadeInItem(edge.node2, nodeOpacityPath);
+                    fadeInItem(adjacentEdge, lineOpacityPath);
+                    fadeInItem(adjacentEdge.node1, nodeOpacityPath);
+                    fadeInItem(adjacentEdge.node2, nodeOpacityPath);
                 });
+            }
+            if (edge) {
+                fadeInItem(edge, lineOpacityPath);
+                fadeInItem(edge.node1, nodeOpacityPath);
+                fadeInItem(edge.node2, nodeOpacityPath);
             }
         },
 
