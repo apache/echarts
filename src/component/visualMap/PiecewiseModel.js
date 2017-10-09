@@ -81,7 +81,6 @@ define(function(require) {
              */
             this._pieceList = [];
 
-            this.resetTargetSeries();
             this.resetExtent();
 
             /**

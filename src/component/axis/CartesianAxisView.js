@@ -9,7 +9,7 @@ define(function (require) {
     var getInterval = AxisBuilder.getInterval;
 
     var axisBuilderAttrs = [
-        'axisLine', 'axisLabel', 'axisTick', 'axisName'
+        'axisLine', 'axisTickLabel', 'axisName'
     ];
     var selfBuilderAttrs = [
         'splitArea', 'splitLine'
@@ -106,7 +106,8 @@ define(function (require) {
             // Batching the lines if color are the same
             var lineStyle = lineStyleModel.getLineStyle();
             for (var i = 0; i < ticksCoords.length; i++) {
-                if (ifIgnoreOnTick(axis, i, lineInterval, ticksCoords.length,
+                if (ifIgnoreOnTick(
+                    axis, i, lineInterval, ticksCoords.length,
                     showMinLabel, showMaxLabel
                 )) {
                     continue;
@@ -183,7 +184,8 @@ define(function (require) {
             var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
 
             for (var i = 1; i < ticksCoords.length; i++) {
-                if (ifIgnoreOnTick(axis, i, areaInterval, ticksCoords.length,
+                if (ifIgnoreOnTick(
+                    axis, i, areaInterval, ticksCoords.length,
                     showMinLabel, showMaxLabel
                 )) {
                     continue;

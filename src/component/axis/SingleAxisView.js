@@ -8,7 +8,7 @@ define(function (require) {
     var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 
     var axisBuilderAttrs = [
-        'axisLine', 'axisLabel', 'axisTick', 'axisName'
+        'axisLine', 'axisTickLabel', 'axisName'
     ];
 
     var selfBuilderAttr = 'splitLine';
@@ -70,7 +70,8 @@ define(function (require) {
             var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
 
             for (var i = 0; i < ticksCoords.length; ++i) {
-                if (ifIgnoreOnTick(axis, i, lineInterval, ticksCoords.length,
+                if (ifIgnoreOnTick(
+                    axis, i, lineInterval, ticksCoords.length,
                     showMinLabel, showMaxLabel
                 )) {
                     continue;

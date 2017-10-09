@@ -7,7 +7,7 @@ define(function (require) {
     var AxisBuilder = require('./AxisBuilder');
 
     var axisBuilderAttrs = [
-        'axisLine', 'axisLabel', 'axisTick', 'axisName'
+        'axisLine', 'axisTickLabel', 'axisName'
     ];
     var selfBuilderAttrs = [
         'splitLine', 'splitArea'

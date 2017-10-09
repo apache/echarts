@@ -42805,38 +42805,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	        toolbox: {
 	            brush: {
 	                title: {
-	                    rect: '矩形选择',
-	                    polygon: '圈选',
-	                    lineX: '横向选择',
-	                    lineY: '纵向选择',
-	                    keep: '保持选择',
-	                    clear: '清除选择'
+	                    rect: 'Box Select',
+	                    polygon: 'Lasso Select',
+	                    lineX: 'Horizontally Select',
+	                    lineY: 'Vertically Select',
+	                    keep: 'Keep Selections',
+	                    clear: 'Clear Selections'
 	                }
 	            },
 	            dataView: {
-	                title: '数据视图',
-	                lang: ['数据视图', '关闭', '刷新']
+	                title: 'Data View',
+	                lang: ['Data View', 'Close', 'Refresh']
 	            },
 	            dataZoom: {
 	                title: {
-	                    zoom: '区域缩放',
-	                    back: '区域缩放还原'
+	                    zoom: 'Zoom',
+	                    back: 'Zoom Reset'
 	                }
 	            },
 	            magicType: {
 	                title: {
-	                    line: '切换为折线图',
-	                    bar: '切换为柱状图',
-	                    stack: '切换为堆叠',
-	                    tiled: '切换为平铺'
+	                    line: 'Switch to Line Chart',
+	                    bar: 'Switch to Bar Chart',
+	                    stack: 'Stack',
+	                    tiled: 'Tile'
 	                }
 	            },
 	            restore: {
-	                title: '还原'
+	                title: 'Restore'
 	            },
 	            saveAsImage: {
-	                title: '保存为图片',
-	                lang: ['右键另存为图片']
+	                title: 'Save as Image',
+	                lang: ['Right Click to Save Image']
 	            }
 	        }
 	    };

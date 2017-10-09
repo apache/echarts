@@ -39,7 +39,6 @@ define(function(require) {
         optionUpdated: function (newOption, isInit) {
             ContinuousModel.superApply(this, 'optionUpdated', arguments);
 
-            this.resetTargetSeries();
             this.resetExtent();
 
             this.resetVisual(function (mappingOption) {
