@@ -30,15 +30,15 @@ define(function (require) {
             });
 
             (new DataDiffer(this._featureNames || [], featureNames))
-                .add(process)
-                .update(process)
-                .remove(zrUtil.curry(process, null))
+                .add(processFeature)
+                .update(processFeature)
+                .remove(zrUtil.curry(processFeature, null))
                 .execute();
 
             // Keep for diff.
             this._featureNames = featureNames;
 
-            function process(newIndex, oldIndex) {
+            function processFeature(newIndex, oldIndex) {
                 var featureName = featureNames[newIndex];
                 var oldName = featureNames[oldIndex];
                 var featureOpt = featureOpts[featureName];
