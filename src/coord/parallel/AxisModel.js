@@ -33,7 +33,7 @@ define(function(require) {
                     ['width', 'width'],
                     ['opacity', 'opacity']
                 ]
-            ).call(this.getModel('areaSelectStyle'));
+            )(this.getModel('areaSelectStyle'));
         },
 
         /**
