@@ -9,6 +9,8 @@
     var BoundingRect = require('zrender/core/BoundingRect');
     var matrix = require('zrender/core/matrix');
     var animationUtil = require('../../util/animation');
+    var makeStyleMapper = require('../../model/mixin/makeStyleMapper');
+
     var bind = zrUtil.bind;
     var Group = graphic.Group;
     var Rect = graphic.Rect;
@@ -22,6 +24,25 @@
     var Z_BASE = 10; // Should bigger than every z.
     var Z_BG = 1;
     var Z_CONTENT = 2;
+
+    var getItemStyleEmphasis = makeStyleMapper([
+        ['fill', 'color'],
+        // `borderColor` and `borderWidth` has been occupied,
+        // so use `stroke` to indicate the stroke of the rect.
+        ['stroke', 'strokeColor'],
+        ['lineWidth', 'strokeWidth'],
+        ['shadowBlur'],
+        ['shadowOffsetX'],
+        ['shadowOffsetY'],
+        ['shadowColor']
+    ]);
+    var getItemStyleNormal = function (model) {
+        // Normal style props should include emphasis style props.
+        var itemStyle = getItemStyleEmphasis(model);
+        // Clear styles set by emphasis.
+        itemStyle.stroke = itemStyle.fill = itemStyle.lineWidth = null;
+        return itemStyle;
+    };
 
     return require('../../echarts').extendChartView({
 
@@ -657,6 +678,7 @@
         var thisViewChildren = thisNode.viewChildren;
         var upperHeight = thisLayout.upperHeight;
         var isParent = thisViewChildren && thisViewChildren.length;
+        var itemStyleNormalModel = thisNode.getModel('itemStyle.normal');
         var itemStyleEmphasisModel = thisNode.getModel('itemStyle.emphasis');
 
         // End of closure ariables available in "Procedures in renderNode".
@@ -705,8 +727,10 @@
             var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
 
             updateStyle(bg, function () {
-                var normalStyle = {fill: visualBorderColor};
-                var emphasisStyle = {fill: emphasisBorderColor};
+                var normalStyle = getItemStyleNormal(itemStyleNormalModel);
+                normalStyle.fill = visualBorderColor;
+                var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
+                emphasisStyle.fill = emphasisBorderColor;
 
                 if (useUpperLabel) {
                     var upperLabelWidth = thisWidth - 2 * borderWidth;
@@ -746,8 +770,9 @@
 
             var visualColor = thisNode.getVisual('color', true);
             updateStyle(content, function () {
-                var normalStyle = {fill: visualColor};
-                var emphasisStyle = itemStyleEmphasisModel.getItemStyle();
+                var normalStyle = getItemStyleNormal(itemStyleNormalModel);
+                normalStyle.fill = visualColor;
+                var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
 
                 prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
 
