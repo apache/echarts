@@ -86,14 +86,16 @@ define(function(require) {
             var tanX = Math.sin(angle);
             var tanY = Math.cos(angle);
 
+            var cpLen = r * 0.6;
+            var cpLen2 = r * 0.7;
+
+            path.moveTo(x - dx, cy + dy);
+
             path.arc(
                 x, cy, r,
                 Math.PI - angle,
                 Math.PI * 2 + angle
             );
-
-            var cpLen = r * 0.6;
-            var cpLen2 = r * 0.7;
             path.bezierCurveTo(
                 x + dx - tanX * cpLen, cy + dy + tanY * cpLen,
                 x, y - cpLen2,
