@@ -18,7 +18,7 @@ define(function (require) {
                     var children = node.children;
                     if (children.length) {
                         for (var i = 0; i < children.length; i++) {
-                        nodes.push(children[i]);
+                            nodes.push(children[i]);
                         }
                     }
                 }

@@ -20,6 +20,7 @@
             require([
                 'echarts',
                 'echarts/chart/tree',
+                'echarts/component/tooltip'
                 ], function (echarts) {
                     var chart = echarts.init(document.getElementById('main'), null, {
                         renderer: 'canvas'
@@ -33,13 +34,19 @@
                     .done(function (data) {
                         chart.setOption({
 
+                            tooltip: {
+                                trigger: 'item',
+                                triggerOn: 'mousemove'
+                            },
+
                             series:[
                                 {
                                     type: 'tree',
 
                                     data: [data],
 
-                                    top: '16%',
+                                    top: '18%',
+                                    bottom: '14%',
 
                                     layout: 'radial',
 

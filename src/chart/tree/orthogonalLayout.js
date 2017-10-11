@@ -5,7 +5,7 @@ define(function (require) {
 
     return function (ecModel, api) {
         ecModel.eachSeriesByType('tree', function (seriesModel) {
-                commonLayout(seriesModel, api);
+            commonLayout(seriesModel, api);
         });
     };
 });

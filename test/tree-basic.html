@@ -30,26 +30,40 @@
                         chart.resize();
                     };
 
-                    $.getJSON('./data/flare.json')
-                    .done(function (data) {
+                    $.getJSON('./data/ec-option-doc-statistics-201604.json')
+                    .done(function (rawData) {
+
+                        function convert(source, target, basePath) {
+
+                            for (var key in source) {
+                                var path = key;
+                                if (key.match(/^\$/)) {
+
+                                }
+                                else {
+                                    target.children = target.children || [];
+                                    var child = {
+                                        name: path
+                                    };
+                                    target.children.push(child);
+                                    convert(source[key], child, path);
+                                }
+                            }
+
+                            if (!target.children) {
+                                target.value = source.$count || 1;
+                            }
+                        }
+
+                        var data = {name: 'option'};
+
+                        convert(rawData, data, '');
+
                         chart.setOption({
 
                             tooltip: {
                                 trigger: 'item',
-                                triggerOn: 'mousemove',
-                                formatter: function (params) {
-                                    var data = params.data;
-                                    var tree = this.getData().tree;
-                                    var realRoot = tree.root.children[0];
-                                    var node = tree.getNodeByDataIndex(dataIndex);
-                                    var name = node.name;
-                                    while (node.parentNode !== realRoot) {
-                                        name = node.parentNode.name + '.' + name;
-                                    }
-                                    name = realRoot.name + '.' + name;
-                                    var value = this.getValue(dataIndex);
-                                    return encodeHTML(name + ':' + value);
-                                }
+                                triggerOn: 'mousemove'
                             },
 
                             series:[
@@ -85,13 +99,9 @@
                                         }
                                     },
 
-
-
                                     expandAndCollapse: true,
-
                                     animationDuration: 550,
                                     animationDurationUpdate: 750
-
                                 }
                             ]
                         });

@@ -20,6 +20,7 @@
             require([
                 'echarts',
                 'echarts/chart/tree',
+                'echarts/component/tooltip'
                 ], function (echarts) {
                     var chart = echarts.init(document.getElementById('main'), null, {
                         renderer: 'canvas'
@@ -32,6 +33,11 @@
                     $.getJSON('./data/flare.json')
                     .done(function (data) {
                         chart.setOption({
+
+                            tooltip: {
+                                trigger: 'item',
+                                triggerOn: 'mousemove'
+                            },
 
                             series:[
                                 {

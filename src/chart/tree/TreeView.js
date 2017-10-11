@@ -105,7 +105,12 @@ define(function (require) {
             this._data = data;
         },
 
-        dispose: function () {}
+        dispose: function () {},
+
+        remove: function () {
+            this._mainGroup.removeAll();
+            this._data = null;
+        }
 
     });
 
