@@ -172,10 +172,25 @@ define(function (require) {
         ['hh:mm\nMM-dd',6,      ONE_HOUR * 6],    // 6h
         ['hh:mm\nMM-dd',12,     ONE_HOUR * 12],   // 12h
         ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
+        ['MM-dd\nyyyy', 2,      ONE_DAY * 2],   // 2d
+        ['MM-dd\nyyyy', 3,      ONE_DAY * 3],   // 3d
+        ['MM-dd\nyyyy', 4,      ONE_DAY * 4],   // 4d
+        ['MM-dd\nyyyy', 5,      ONE_DAY * 5],   // 5d
+        ['MM-dd\nyyyy', 6,      ONE_DAY * 6],   // 6d
         ['week',        7,      ONE_DAY * 7],        // 7d
+        ['MM-dd\nyyyy', 10,      ONE_DAY * 10],      // 10d
+        ['week',        14,      ONE_DAY * 14],      // 2w
+        ['week',        21,      ONE_DAY * 21],      // 3w
         ['month',       1,      ONE_DAY * 31],       // 1M
+        ['week',        42,      ONE_DAY * 42],      // 6w
+        ['month',       2,      ONE_DAY * 62],       // 2M
+        ['week',        70,      ONE_DAY * 42],      // 10w
         ['quarter',     3,      ONE_DAY * 380 / 4],  // 3M
+        ['month',       4,      ONE_DAY * 31 * 4],   // 4M
+        ['month',       5,      ONE_DAY * 31 * 5],   // 5M
         ['half-year',   6,      ONE_DAY * 380 / 2],  // 6M
+        ['month',       8,      ONE_DAY * 31 * 8],   // 8M
+        ['month',       10,      ONE_DAY * 31 * 10], // 10M
         ['year',        1,      ONE_DAY * 380]       // 1Y
     ];
 
