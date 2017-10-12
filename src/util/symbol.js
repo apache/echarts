@@ -281,7 +281,7 @@ define(function(require) {
     });
 
     // Provide setColor helper method to avoid determine if set the fill or stroke outside
-    var symbolPathSetColor = function (color) {
+    var symbolPathSetColor = function (color, innerColor) {
         if (this.type !== 'image') {
             var symbolStyle = this.style;
             var symbolShape = this.shape;
@@ -290,7 +290,7 @@ define(function(require) {
             }
             else if (this.__isEmptyBrush) {
                 symbolStyle.stroke = color;
-                symbolStyle.fill = '#fff';
+                symbolStyle.fill = innerColor || '#fff';
             }
             else {
                 // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?

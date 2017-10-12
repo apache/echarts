@@ -4,6 +4,7 @@
 define(function (require) {
 
     var modelUtil = require('../../util/model');
+    var zrUtil = require('zrender/core/util');
 
     var helper = {};
 
@@ -26,6 +27,23 @@ define(function (require) {
         }
 
         return valueDim;
+    };
+
+    helper.setTextToStyle = function (
+        data, dataIndex, valueDim, elStyle, seriesModel, labelModel, color
+    ) {
+        if (valueDim != null && labelModel.getShallow('show')) {
+            graphic.setText(elStyle, labelModel, color);
+            elStyle.text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(dataIndex, 'normal'),
+                valueDim === 'ecDataItemName'
+                    ? data.getName(dataIndex)
+                    : data.get(valueDim, dataIndex)
+            );
+        }
+        else {
+            elStyle.text = '';
+        }
     };
 
     return helper;

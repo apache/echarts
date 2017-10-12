@@ -864,7 +864,13 @@ define(function(require) {
     }
 
     /**
-     * Update graphic element properties with or without animation according to the configuration in series
+     * Update graphic element properties with or without animation according to the
+     * configuration in series.
+     *
+     * Caution: this method will stop previous animation.
+     * So if do not use this method to one element twice before
+     * animation starts, unless you know what you are doing.
+     *
      * @param {module:zrender/Element} el
      * @param {Object} props
      * @param {module:echarts/model/Model} [animatableModel]
@@ -884,7 +890,13 @@ define(function(require) {
     };
 
     /**
-     * Init graphic element properties with or without animation according to the configuration in series
+     * Init graphic element properties with or without animation according to the
+     * configuration in series.
+     *
+     * Caution: this method will stop previous animation.
+     * So if do not use this method to one element twice before
+     * animation starts, unless you know what you are doing.
+     *
      * @param {module:zrender/Element} el
      * @param {Object} props
      * @param {module:echarts/model/Model} [animatableModel]

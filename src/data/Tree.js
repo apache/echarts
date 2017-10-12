@@ -3,7 +3,7 @@
  *
  * @module echarts/data/Tree
  */
-define(function(require) {
+define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('../model/Model');
@@ -230,8 +230,11 @@ define(function(require) {
             var hostTree = this.hostTree;
             var itemModel = hostTree.data.getItemModel(this.dataIndex);
             var levelModel = this.getLevelModel();
-
-            return itemModel.getModel(path, (levelModel || hostTree.hostModel).getModel(path));
+            var leavesModel;
+            if (!levelModel && (this.children.length === 0 || (this.children.length !== 0 && this.isExpand === false))) {
+                leavesModel = this.getLeavesModel();
+            }
+            return itemModel.getModel(path, (levelModel || leavesModel || hostTree.hostModel).getModel(path));
         },
 
         /**
@@ -239,6 +242,13 @@ define(function(require) {
          */
         getLevelModel: function () {
             return (this.hostTree.levelModels || [])[this.depth];
+        },
+
+        /**
+         * @return {module:echarts/model/Model}
+         */
+        getLeavesModel: function () {
+            return this.hostTree.leavesModel;
         },
 
         /**
@@ -282,8 +292,9 @@ define(function(require) {
      * @alias module:echarts/data/Tree
      * @param {module:echarts/model/Model} hostModel
      * @param {Array.<Object>} levelOptions
+     * @param {Object} leavesOption
      */
-    function Tree(hostModel, levelOptions) {
+    function Tree(hostModel, levelOptions, leavesOption) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
          * @readOnly
@@ -318,6 +329,8 @@ define(function(require) {
         this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
             return new Model(levelDefine, hostModel, hostModel.ecModel);
         });
+
+        this.leavesModel = new Model(leavesOption || {}, hostModel, hostModel.ecModel);
     }
 
     Tree.prototype = {
@@ -407,12 +420,13 @@ define(function(require) {
      * @static
      * @param {Object} dataRoot Root node.
      * @param {module:echarts/model/Model} hostModel
-     * @param {Array.<Object>} levelOptions
+     * @param {Object} treeOptions
+     * @param {Array.<Object>} treeOptions.levelOptions
      * @return module:echarts/data/Tree
      */
-    Tree.createTree = function (dataRoot, hostModel, levelOptions) {
+    Tree.createTree = function (dataRoot, hostModel, treeOptions) {
 
-        var tree = new Tree(hostModel, levelOptions);
+        var tree = new Tree(hostModel, treeOptions.levelOptions, treeOptions.leaves);
         var listData = [];
         var dimMax = 1;
 
