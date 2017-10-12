@@ -41,7 +41,8 @@
                 'echarts/component/grid',
                 'echarts/component/tooltip',
                 'zrender/vml/vml'
-            ], function (echarts, rawData, prepareBoxplotData, env) {
+            ],
+                function (echarts, rawData, prepareBoxplotData, env) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
@@ -53,10 +54,15 @@
                 initControlPanel(env);
 
                 function update(layout) {
-
+                    var rawData =  [[850, 740, 900, 1070, 930, 850, 950, 980, 980, 880, 1000, 980, 930, 650, 760, 810, 1000, 1000, 960, 960],
+                                    [960, 940, 960, 940, 880, 800, 850, 880, 900, 840, 830, 790, 810, 880, 880, 830, 800, 790, 760, 800],
+                                    [880, 880, 880, 860, 720, 720, 620, 860, 970, 950, 880, 910, 850, 870, 840, 840, 850, 840, 840, 840],
+                                    [890, 810, 810, 820, 800, 770, 760, 740, 750, 760, 910, 920, 890, 860, 880, 720, 840, 850, 850, 780],
+                                    [890, 840, 780, 810, 760, 810, 790, 810, 820, 850, 870, 870, 810, 740, 810, 940, 950, 800, 810, 870]]
                     data = prepareBoxplotData(rawData, {
                         layout: layout
                     });
+                    console.log(data)
                     mean = calculateMean(rawData);
 
                     var categoryAxis = {
@@ -82,120 +88,80 @@
                         }
                     };
 
+
                     chart.setOption({
-                        title: [
-                            {
-                                text: 'Michelson-Morley Experiment',
-                                left: 'center'
+                    title: [
+                        {
+                            text: 'Michelson-Morley Experiment',
+                            left: 'center',
+                        },
+                        {
+                            text: 'upper: Q3 + 1.5 * IRQ \nlower: Q1 - 1.5 * IRQ',
+                            borderColor: '#999',
+                            borderWidth: 1,
+                            textStyle: {
+                                fontSize: 14
                             },
-                            {
-                                text: 'upper: Q3 + 1.5 * IRQ \nlower: Q1 - 1.5 * IRQ',
-                                borderColor: '#999',
-                                borderWidth: 1,
-                                textStyle: {
-                                    fontSize: 14
-                                },
-                                left: '10%',
-                                top: '90%'
-                            }
-                        ],
-                        legend: {
-                            data: ['line', 'line2', 'line3']
-                        },
-                        tooltip: {
-                            trigger: 'item',
-                            axisPointer: {
-                                type: 'shadow'
-                            }
-                        },
-                        grid: {
                             left: '10%',
-                            right: '10%',
-                            bottom: '15%'
+                            top: '90%'
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'item',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        bottom: '15%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.axisData,
+                        boundaryGap: true,
+                        nameGap: 30,
+                        splitArea: {
+                            show: false
                         },
-                        xAxis: layout === 'horizontal' ? categoryAxis : valueAxis,
-                        yAxis: layout === 'vertical' ? categoryAxis : valueAxis,
-                        series: [
-                            {
-                                name: 'boxplot',
-                                type: 'boxplot',
-                                data: data.boxData,
-
-                                markPoint: {
-                                    data: [
-                                        {
-                                            name: '某个坐标',
-                                            coord: [2, 300]
-                                        },
-                                        {
-                                            name: '某个屏幕坐标',
-                                            x: 100,
-                                            y: 200,
-                                            label: {
-                                                normal: {
-                                                    show: false,
-                                                    formatter: 'asdf'
-                                                },
-                                                emphasis: {
-                                                    show: true,
-                                                    position: 'top',
-                                                    formatter: 'zxcv'
-                                                }
-                                            }
-                                        },
-                                        {
-                                            name: 'max value (default)',
-                                            type: 'max'
-                                        },
-                                        {
-                                            name: 'min value (default)',
-                                            type: 'min'
-                                        },
-                                        {
-                                            name: 'max value (dim:Q1)',
-                                            type: 'max',
-                                            valueDim: 'Q1'
-                                        },
-                                        {
-                                            name: 'average value (dim:Q1)',
-                                            type: 'average',
-                                            valueDim: 'Q1'
-                                        }
-                                    ]
-                                },
-
-                                markLine: {
-                                    data: [
-                                        [
-                                            {name: '两个坐标之间的标线', coord: [1, 240]},
-                                            {coord: [2, 260]}
-                                        ],
-                                        [
-                                            {name: '两个屏幕坐标之间的标线', x: 50, y: 60},
-                                            {x: 70, y: 90}
-                                        ],
-                                        [
-                                            {name: 'max - min', type: 'max'},
-                                            {type: 'min'}
-                                        ],
-                                        {
-                                            name: 'min line',
-                                            type: 'min'
-                                        },
-                                        {
-                                            name: 'max line on dim:Q3',
-                                            type: 'max',
-                                            valueDim: 'Q3'
-                                        }
-                                    ]
+                        axisLabel: {
+                            formatter: 'expr {value}'
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'km/s minus 299,000',
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'boxplot',
+                            type: 'boxplot',
+                            data: data.boxData,
+                            tooltip: {
+                                formatter: function (param) {
+                                    return [
+                                        'Experiment ' + param.name + ': ',
+                                        'upper: ' + param.data[5],
+                                        'Q3: ' + param.data[4],
+                                        'median: ' + param.data[3],
+                                        'Q1: ' + param.data[2],
+                                        'lower: ' + param.data[1]
+                                    ].join('<br/>')
                                 }
-
-                            },
-                            {
-                                name: 'outlier',
-                                type: 'scatter',
-                                data: data.outliers
                             }
+                        },
+                        {
+                            name: 'outlier',
+                            type: 'scatter',
+                            data: data.outliers
+                        }
                         ]
                     });
                 }
