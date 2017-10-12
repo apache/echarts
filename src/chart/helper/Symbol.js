@@ -255,13 +255,6 @@ define(function (require) {
         var useNameLabel = seriesScope && seriesScope.useNameLabel;
         var valueDim = !useNameLabel && labelHelper.findLabelValueDim(data);
 
-        // labelHelper.setTextToStyle(
-        //     data, idx, valueDim, elStyle, seriesModel, labelModel, color
-        // );
-        // labelHelper.setTextToStyle(
-        //     data, idx, valueDim, hoverItemStyle, seriesModel, hoverLabelModel, color
-        // );
-
         if (useNameLabel || valueDim != null) {
             graphic.setLabelStyle(
                 elStyle, hoverItemStyle, labelModel, hoverLabelModel,
