@@ -80,29 +80,70 @@ define(function(require) {
             var aspect = boundingRect.width / boundingRect.height;
 
             if (layout === 'center') {
-                // Set rect to center, keep width / height ratio.
-                var width = rect.height * aspect;
-                var height;
-                if (width <= rect.width) {
-                    height = rect.height;
-                }
-                else {
-                    width = rect.width;
-                    height = width / aspect;
-                }
-                var cx = rect.x + rect.width / 2;
-                var cy = rect.y + rect.height / 2;
-
-                rect.x = cx - width / 2;
-                rect.y = cy - height / 2;
-                rect.width = width;
-                rect.height = height;
+                rect = centerGraphic(rect, boundingRect);
             }
 
             graphic.resizePath(path, rect);
         }
         return path;
     };
+
+    graphic.makeImage = function (imageUrl, rect, layout) {
+        var path = new graphic.Image({
+            style: {
+                image: imageUrl,
+                x: rect.x,
+                y: rect.y,
+                width: rect.w,
+                height: rect.h
+            },
+            onload: function (img) {
+                if (layout === 'center') {
+                    var boundingRect = {
+                        width: img.width,
+                        height: img.height
+                    };
+
+                    var r = centerGraphic(rect, boundingRect);
+                    path.style.x = r.x;
+                    path.style.y = r.y;
+                    path.style.width = r.width;
+                    path.style.height = r.height;
+                }
+            }
+        });
+        return path;
+    };
+
+    /**
+     * Get position of centered element in bounding box.
+     *
+     * @param  {Object} rect         element local bounding box
+     * @param  {Object} boundingRect constraint bounding box
+     * @return {Object} element position containing x, y, width, and height
+     */
+    function centerGraphic(rect, boundingRect) {
+        // Set rect to center, keep width / height ratio.
+        var aspect = boundingRect.width / boundingRect.height;
+        var width = rect.height * aspect;
+        var height;
+        if (width <= rect.width) {
+            height = rect.height;
+        }
+        else {
+            width = rect.width;
+            height = width / aspect;
+        }
+        var cx = rect.x + rect.width / 2;
+        var cy = rect.y + rect.height / 2;
+
+        return {
+            x: cx - width / 2,
+            y: cy - height / 2,
+            width: width,
+            height: height
+        };
+    }
 
     graphic.mergePath = pathTool.mergePath,
 

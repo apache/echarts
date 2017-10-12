@@ -323,15 +323,11 @@ define(function(require) {
             var symbolPath;
 
             if (symbolType.indexOf('image://') === 0) {
-                symbolPath = new graphic.Image({
-                    style: {
-                        image: symbolType.slice(8),
-                        x: x,
-                        y: y,
-                        width: w,
-                        height: h
-                    }
-                });
+                symbolPath = graphic.makeImage(
+                    symbolType.slice(8),
+                    new BoundingRect(x, y, w, h),
+                    keepAspect ? 'center' : 'cover'
+                );
             }
             else if (symbolType.indexOf('path://') === 0) {
                 symbolPath = graphic.makePath(
