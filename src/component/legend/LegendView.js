@@ -211,7 +211,13 @@ define(function (require) {
             // Use user given icon first
             legendSymbolType = itemIcon || legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
-                legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : inactiveColor
+                legendSymbolType,
+                0,
+                0,
+                itemWidth,
+                itemHeight,
+                isSelected ? color : inactiveColor,
+                true
             ));
 
             // Compose symbols
