@@ -310,8 +310,10 @@ define(function(require) {
          * @param {number} w
          * @param {number} h
          * @param {string} color
+         * @param {boolean} [keepAspect=false] whether to keep the ratio of w/h,
+         *                            for path and image only.
          */
-        createSymbol: function (symbolType, x, y, w, h, color) {
+        createSymbol: function (symbolType, x, y, w, h, color, keepAspect) {
             // TODO Support image object, DynamicImage.
 
             var isEmpty = symbolType.indexOf('empty') === 0;
@@ -321,18 +323,19 @@ define(function(require) {
             var symbolPath;
 
             if (symbolType.indexOf('image://') === 0) {
-                symbolPath = new graphic.Image({
-                    style: {
-                        image: symbolType.slice(8),
-                        x: x,
-                        y: y,
-                        width: w,
-                        height: h
-                    }
-                });
+                symbolPath = graphic.makeImage(
+                    symbolType.slice(8),
+                    new BoundingRect(x, y, w, h),
+                    keepAspect ? 'center' : 'cover'
+                );
             }
             else if (symbolType.indexOf('path://') === 0) {
-                symbolPath = graphic.makePath(symbolType.slice(7), {}, new BoundingRect(x, y, w, h));
+                symbolPath = graphic.makePath(
+                    symbolType.slice(7),
+                    {},
+                    new BoundingRect(x, y, w, h),
+                    keepAspect ? 'center' : 'cover'
+                );
             }
             else {
                 symbolPath = new Symbol({
