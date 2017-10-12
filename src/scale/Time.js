@@ -35,7 +35,7 @@ define(function (require) {
     var bisect = function (a, x, lo, hi) {
         while (lo < hi) {
             var mid = lo + hi >>> 1;
-            if (a[mid][2] < x) {
+            if (a[mid][1] < x) {
                 lo = mid + 1;
             }
             else {
@@ -77,7 +77,7 @@ define(function (require) {
             // If there are no data and extent are [Infinity, -Infinity]
             if (extent[1] === -Infinity && extent[0] === Infinity) {
                 var d = new Date();
-                extent[1] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
                 extent[0] = extent[1] - ONE_DAY;
             }
 
@@ -98,8 +98,6 @@ define(function (require) {
          * @override
          */
         niceTicks: function (approxTickNum, minInterval, maxInterval) {
-            var timezoneOffset = this.getSetting('useUTC')
-                ? 0 : numberUtil.getTimezoneOffset() * 60 * 1000;
             approxTickNum = approxTickNum || 10;
 
             var extent = this._extent;
@@ -117,7 +115,7 @@ define(function (require) {
             var idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
 
             var level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
-            var interval = level[2];
+            var interval = level[1];
             // Same with interval scale if span is much larger than 1 year
             if (level[0] === 'year') {
                 var yearSpan = span / interval;
@@ -129,9 +127,11 @@ define(function (require) {
                 interval *= yearStep;
             }
 
+            var timezoneOffset = this.getSetting('useUTC')
+                ? 0 : (new Date(+extent[0] || +extent[1])).getTimezoneOffset() * 60 * 1000;
             var niceExtent = [
                 Math.round(mathCeil((extent[0] - timezoneOffset) / interval) * interval + timezoneOffset),
-                Math.round(mathFloor((extent[1] - timezoneOffset)/ interval) * interval + timezoneOffset)
+                Math.round(mathFloor((extent[1] - timezoneOffset) / interval) * interval + timezoneOffset)
             ];
 
             scaleHelper.fixExtent(niceExtent, extent);
@@ -156,27 +156,42 @@ define(function (require) {
 
     // Steps from d3
     var scaleLevels = [
-        // Format       step    interval
-        ['hh:mm:ss',    1,      ONE_SECOND],           // 1s
-        ['hh:mm:ss',    5,      ONE_SECOND * 5],       // 5s
-        ['hh:mm:ss',    10,     ONE_SECOND * 10],      // 10s
-        ['hh:mm:ss',    15,     ONE_SECOND * 15],      // 15s
-        ['hh:mm:ss',    30,     ONE_SECOND * 30],      // 30s
-        ['hh:mm\nMM-dd',1,      ONE_MINUTE],          // 1m
-        ['hh:mm\nMM-dd',5,      ONE_MINUTE * 5],      // 5m
-        ['hh:mm\nMM-dd',10,     ONE_MINUTE * 10],     // 10m
-        ['hh:mm\nMM-dd',15,     ONE_MINUTE * 15],     // 15m
-        ['hh:mm\nMM-dd',30,     ONE_MINUTE * 30],     // 30m
-        ['hh:mm\nMM-dd',1,      ONE_HOUR],        // 1h
-        ['hh:mm\nMM-dd',2,      ONE_HOUR * 2],    // 2h
-        ['hh:mm\nMM-dd',6,      ONE_HOUR * 6],    // 6h
-        ['hh:mm\nMM-dd',12,     ONE_HOUR * 12],   // 12h
-        ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
-        ['week',        7,      ONE_DAY * 7],        // 7d
-        ['month',       1,      ONE_DAY * 31],       // 1M
-        ['quarter',     3,      ONE_DAY * 380 / 4],  // 3M
-        ['half-year',   6,      ONE_DAY * 380 / 2],  // 6M
-        ['year',        1,      ONE_DAY * 380]       // 1Y
+        // Format              interval
+        ['hh:mm:ss', ONE_SECOND],          // 1s
+        ['hh:mm:ss', ONE_SECOND * 5],      // 5s
+        ['hh:mm:ss', ONE_SECOND * 10],     // 10s
+        ['hh:mm:ss', ONE_SECOND * 15],     // 15s
+        ['hh:mm:ss', ONE_SECOND * 30],     // 30s
+        ['hh:mm\nMM-dd', ONE_MINUTE],      // 1m
+        ['hh:mm\nMM-dd', ONE_MINUTE * 5],  // 5m
+        ['hh:mm\nMM-dd', ONE_MINUTE * 10], // 10m
+        ['hh:mm\nMM-dd', ONE_MINUTE * 15], // 15m
+        ['hh:mm\nMM-dd', ONE_MINUTE * 30], // 30m
+        ['hh:mm\nMM-dd', ONE_HOUR],        // 1h
+        ['hh:mm\nMM-dd', ONE_HOUR * 2],    // 2h
+        ['hh:mm\nMM-dd', ONE_HOUR * 6],    // 6h
+        ['hh:mm\nMM-dd', ONE_HOUR * 12],   // 12h
+        ['MM-dd\nyyyy', ONE_DAY],          // 1d
+        ['MM-dd\nyyyy', ONE_DAY * 2],      // 2d
+        ['MM-dd\nyyyy', ONE_DAY * 3],      // 3d
+        ['MM-dd\nyyyy', ONE_DAY * 4],      // 4d
+        ['MM-dd\nyyyy', ONE_DAY * 5],      // 5d
+        ['MM-dd\nyyyy', ONE_DAY * 6],      // 6d
+        ['week', ONE_DAY * 7],             // 7d
+        ['MM-dd\nyyyy', ONE_DAY * 10],     // 10d
+        ['week', ONE_DAY * 14],            // 2w
+        ['week', ONE_DAY * 21],            // 3w
+        ['month', ONE_DAY * 31],           // 1M
+        ['week', ONE_DAY * 42],            // 6w
+        ['month', ONE_DAY * 62],           // 2M
+        ['week', ONE_DAY * 42],            // 10w
+        ['quarter', ONE_DAY * 380 / 4],    // 3M
+        ['month', ONE_DAY * 31 * 4],       // 4M
+        ['month', ONE_DAY * 31 * 5],       // 5M
+        ['half-year', ONE_DAY * 380 / 2],  // 6M
+        ['month', ONE_DAY * 31 * 8],       // 8M
+        ['month', ONE_DAY * 31 * 10],      // 10M
+        ['year', ONE_DAY * 380]            // 1Y
     ];
 
     /**

@@ -263,18 +263,16 @@ define(function (require) {
         // );
 
         if (useNameLabel || valueDim != null) {
-            graphic.setText(elStyle, labelModel, color);
-            elStyle.text = labelModel.getShallow('show')
-                ? zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(idx, 'normal'),
-                    useNameLabel ? data.getName(idx) : data.get(valueDim, idx)
-                )
-                : null;
-
-            graphic.setText(hoverItemStyle, hoverLabelModel, false);
-            hoverItemStyle.text = hoverLabelModel.getShallow('show')
-                ? seriesModel.getFormattedLabel(idx, 'emphasis')
-                : null;
+            graphic.setLabelStyle(
+                elStyle, hoverItemStyle, labelModel, hoverLabelModel,
+                {
+                    labelFetcher: seriesModel,
+                    labelDataIndex: idx,
+                    defaultText: useNameLabel ? data.getName(idx) : data.get(valueDim, idx),
+                    isRectText: true,
+                    autoColor: color
+                }
+            );
         }
 
         symbolPath.off('mouseover')
@@ -284,6 +282,8 @@ define(function (require) {
 
         symbolPath.hoverStyle = hoverItemStyle;
 
+        // FIXME
+        // Do not use symbol.trigger('emphasis'), but use symbol.highlight() instead.
         graphic.setHoverStyle(symbolPath);
 
         var scale = getScale(symbolSize);

@@ -12,7 +12,7 @@ define(function (require) {
     );
     return {
         getLineStyle: function (excludes) {
-            var style = getLineStyle.call(this, excludes);
+            var style = getLineStyle(this, excludes);
             var lineDash = this.getLineDash(style.lineWidth);
             lineDash && (style.lineDash = lineDash);
             return style;

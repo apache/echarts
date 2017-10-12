@@ -174,25 +174,17 @@ define(function (require) {
                     symbolPath.setStyle(itemStyle);
                     symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);
 
-                    var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
-                    graphic.setText(symbolPath.style, labelModel, color);
-                    symbolPath.setStyle({
-                        text: labelModel.get('show')
-                            ? zrUtil.retrieve(
-                                seriesModel.getFormattedLabel(
-                                    idx, 'normal', null, symbolPath.__dimIdx
-                                ),
-                                defaultText
-                            )
-                            : null
-                    });
-
-                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, true);
-                    symbolPath.hoverStyle.text = labelHoverModel.get('show')
-                        ? seriesModel.getFormattedLabel(
-                            idx, 'emphasis', null, symbolPath.__dimIdx
-                        )
-                        : null;
+                    graphic.setLabelStyle(
+                        symbolPath.style, symbolPath.hoverStyle, labelModel, labelHoverModel,
+                        {
+                            labelFetcher: data.hostModel,
+                            labelDataIndex: idx,
+                            labelDimIndex: symbolPath.__dimIdx,
+                            defaultText: data.get(data.dimensions[symbolPath.__dimIdx], idx),
+                            autoColor: color,
+                            isRectText: true
+                        }
+                    );
                 });
 
                 function onEmphasis() {

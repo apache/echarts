@@ -3,7 +3,6 @@
  */
 define(function (require) {
 
-    var graphic = require('../../util/graphic');
     var modelUtil = require('../../util/model');
     var zrUtil = require('zrender/core/util');
 

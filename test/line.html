@@ -19,6 +19,7 @@
 
             require([
                 'echarts',
+                'theme/infographic',
                 'echarts/chart/line',
                 'echarts/component/title',
                 'echarts/component/legend',
@@ -28,7 +29,7 @@
                 'zrender/svg/svg'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+                var chart = echarts.init(document.getElementById('main'), 'infographic', {
                     renderer: 'canvas'
                     // renderer: 'svg'
                 });
@@ -122,6 +123,10 @@
                         },
                         splitLine: {
                             show: false
+                        },
+                        axisLabel: {
+                            showMaxLabel: true,
+                            showMinLabel: true
                         }
                     },
                     grid: {
@@ -163,6 +168,12 @@
                         },
                         step: 'end'
                     }, {
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'outside'
+                            }
+                        },
                         name: 'line2',
                         type: 'line',
                         stack: 'all',
@@ -182,6 +193,8 @@
                         step: 'end'
                     }]
                 });
+
+                window.onresize = chart.resize;
             })
 
         </script>

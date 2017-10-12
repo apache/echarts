@@ -6,6 +6,7 @@ define(function(require) {
     var BrushTargetManager = require('../../helper/BrushTargetManager');
     var history = require('../../dataZoom/history');
     var sliderMove = require('../../helper/sliderMove');
+    var lang = require('../../../lang').toolbox.dataZoom;
 
     var each = zrUtil.each;
 
@@ -39,10 +40,8 @@ define(function(require) {
             zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
             back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
         },
-        title: {
-            zoom: '区域缩放',
-            back: '区域缩放还原'
-        }
+        // `zoom`, `back`
+        title: zrUtil.clone(lang.title)
     };
 
     var proto = DataZoom.prototype;

@@ -18,7 +18,7 @@ define(function (require) {
     );
     return {
         getBarItemStyle: function (excludes) {
-            var style = getBarItemStyle.call(this, excludes);
+            var style = getBarItemStyle(this, excludes);
             if (this.getBorderLineDash) {
                 var lineDash = this.getBorderLineDash();
                 lineDash && (style.lineDash = lineDash);

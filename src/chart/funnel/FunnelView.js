@@ -127,17 +127,22 @@ define(function (require) {
         var labelHoverModel = itemModel.getModel('label.emphasis');
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+        var visualColor = data.getItemVisual(idx, 'color');
 
-        graphic.setTextStyle(labelText.style, labelModel, {
-            textAlign: labelLayout.textAlign,
-            textVerticalAlign: labelLayout.verticalAlign,
-            text: zrUtil.retrieve(data.hostModel.getFormattedLabel(idx, 'normal'), data.getName(idx))
-        }, {
-            defaultTextColor: data.getItemVisual(idx, 'color'),
-            getDefaultTextColor: function (model, opt) {
-                return labelLayout.inside ? '#fff' : opt.defaultTextColor;
+        graphic.setLabelStyle(
+            labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
+            {
+                labelFetcher: data.hostModel,
+                labelDataIndex: idx,
+                defaultText: data.getName(idx),
+                autoColor: visualColor,
+                useInsideStyle: !!labelLayout.inside
+            },
+            {
+                textAlign: labelLayout.textAlign,
+                textVerticalAlign: labelLayout.verticalAlign
             }
-        });
+        );
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
         labelText.hoverIgnore = !labelHoverModel.get('show');
@@ -150,10 +155,6 @@ define(function (require) {
             stroke: visualColor
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
-        labelText.hoverStyle = graphic.setTextStyle({}, labelHoverModel, {
-            text: data.hostModel.getFormattedLabel(idx, 'emphasis')
-        }, {forMerge: true});
 
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     };

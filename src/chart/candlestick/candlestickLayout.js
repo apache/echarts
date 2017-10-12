@@ -3,6 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var retrieve = require('zrender/core/util').retrieve;
     var parsePercent = require('../../util/number').parsePercent;
+    var graphic = require('../../util/graphic');
 
     return function (ecModel) {
 
@@ -33,6 +34,8 @@ define(function (require) {
                 return;
             }
 
+            var dataIndex = 0;
+
             data.each([cDim].concat(vDims), function () {
                 var args = arguments;
                 var axisDimVal = args[0];
@@ -52,23 +55,52 @@ define(function (require) {
                 var highestPoint = getPoint(highestVal);
 
                 var whiskerEnds = [
-                    [highestPoint, ocHighPoint],
-                    [lowestPoint, ocLowPoint]
+                    [
+                        subPixelOptimizePoint(highestPoint),
+                        subPixelOptimizePoint(ocHighPoint)
+                    ],
+                    [
+                        subPixelOptimizePoint(lowestPoint),
+                        subPixelOptimizePoint(ocLowPoint)
+                    ]
                 ];
 
                 var bodyEnds = [];
                 addBodyEnd(ocHighPoint, 0);
                 addBodyEnd(ocLowPoint, 1);
 
+                var sign;
+                if (openVal > closeVal) {
+                    sign = -1;
+                }
+                else if (openVal < closeVal) {
+                    sign = 1;
+                }
+                else {
+                    // If close === open, compare with close of last record
+                    if (dataIndex > 0) {
+                        sign = data.getItemModel(dataIndex - 1).get()[2]
+                            <= closeVal
+                                ? 1
+                                : -1;
+                    }
+                    else {
+                        // No record of previous, set to be positive
+                        sign = 1;
+                    }
+                }
+
                 data.setItemLayout(idx, {
                     chartLayout: chartLayout,
-                    sign: openVal > closeVal ? -1 : openVal < closeVal ? 1 : 0,
+                    sign: sign,
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[constDim] : ocLowPoint[constDim], // open point.
                     bodyEnds: bodyEnds,
                     whiskerEnds: whiskerEnds,
                     brushRect: makeBrushRect()
                 });
+
+                ++dataIndex;
 
                 function getPoint(val) {
                     var p = [];
@@ -82,8 +114,14 @@ define(function (require) {
                 function addBodyEnd(point, start) {
                     var point1 = point.slice();
                     var point2 = point.slice();
-                    point1[variableDim] += candleWidth / 2;
-                    point2[variableDim] -= candleWidth / 2;
+
+                    point1[variableDim] = graphic.subPixelOptimize(
+                        point1[variableDim] + candleWidth / 2, 1, false
+                    );
+                    point2[variableDim] = graphic.subPixelOptimize(
+                        point2[variableDim] - candleWidth / 2, 1, true
+                    );
+
                     start
                         ? bodyEnds.push(point1, point2)
                         : bodyEnds.push(point2, point1);
@@ -102,6 +140,11 @@ define(function (require) {
                         width: constDim ? candleWidth : pmax[0] - pmin[0],
                         height: constDim ? pmax[1] - pmin[1] : candleWidth
                     };
+                }
+
+                function subPixelOptimizePoint(point) {
+                    point[variableDim] = graphic.subPixelOptimize(point[variableDim], 1);
+                    return point;
                 }
 
             }, true);
@@ -132,6 +175,6 @@ define(function (require) {
             ? parsePercent(barWidth, bandWidth)
             // Put max outer to ensure bar visible in spite of overlap.
             : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
-    }
+        }
 
 });

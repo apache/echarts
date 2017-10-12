@@ -7,7 +7,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     // (24*60*60*1000)
-    var ONE_DAY = 86400000;
+    var PROXIMATE_ONE_DAY = 86400000;
 
     /**
      * Calendar
@@ -76,7 +76,16 @@ define(function (require) {
          * get date info
          *
          * @param  {string|number} date date
-         * @return {Object}      info
+         * @return {Object}
+         * {
+         *      y: string, local full year, eg., '1940',
+         *      m: string, local month, from '01' ot '12',
+         *      d: string, local date, from '01' to '31' (if exists),
+         *      day: It is not date.getDay(). It is the location of the cell in a week, from 0 to 6,
+         *      time: timestamp,
+         *      formatedDate: string, yyyy-MM-dd,
+         *      date: original date object.
+         * }
          */
         getDateInfo: function (date) {
 
@@ -111,9 +120,10 @@ define(function (require) {
                 return this.getDateInfo(date);
             }
 
-            var time = this.getDateInfo(date).time;
+            date = new Date(this.getDateInfo(date).time);
+            date.setDate(date.getDate() + n);
 
-            return this.getDateInfo(time + ONE_DAY * n);
+            return this.getDateInfo(date);
         },
 
         update: function (ecModel, api) {
@@ -179,18 +189,18 @@ define(function (require) {
             }
 
             var week = dayInfo.day;
-            var nthWeek = this._getRangeInfo([range.start.time, date]).weeks;
+            var nthWeek = this._getRangeInfo([range.start.time, date]).nthWeek;
 
             if (this._orient === 'vertical') {
                 return [
                     this._rect.x + week * this._sw + this._sw / 2,
-                    this._rect.y + (nthWeek - 1) * this._sh + this._sh / 2
+                    this._rect.y + nthWeek * this._sh + this._sh / 2
                 ];
 
             }
 
             return [
-                this._rect.x + (nthWeek - 1) * this._sw + this._sw / 2,
+                this._rect.x + nthWeek * this._sw + this._sw / 2,
                 this._rect.y + week * this._sh + this._sh / 2
             ];
 
@@ -328,25 +338,60 @@ define(function (require) {
          *
          * @private
          * @param  {Array} range range ['2017-01-01', '2017-07-08']
+         *  If range[0] > range[1], they will not be reversed.
          * @return {Object}       obj
          */
         _getRangeInfo: function (range) {
+            range = [
+                this.getDateInfo(range[0]),
+                this.getDateInfo(range[1])
+            ];
 
-            var start = this.getDateInfo(range[0]);
-            var end = this.getDateInfo(range[1]);
+            var reversed;
+            if (range[0].time > range[1].time) {
+                reversed = true;
+                range.reverse();
+            }
 
-            var allDay = Math.floor(end.time / ONE_DAY) - Math.floor(start.time / ONE_DAY) + 1;
+            var allDay = Math.floor(range[1].time / PROXIMATE_ONE_DAY)
+                - Math.floor(range[0].time / PROXIMATE_ONE_DAY) + 1;
 
-            var weeks = Math.floor((allDay + start.day + 6) / 7);
+            // Consider case:
+            // Firstly set system timezone as "Time Zone: America/Toronto",
+            // ```
+            // var first = new Date(1478412000000 - 3600 * 1000 * 2.5);
+            // var second = new Date(1478412000000);
+            // var allDays = Math.floor(second / ONE_DAY) - Math.floor(first / ONE_DAY) + 1;
+            // ```
+            // will get wrong result because of DST. So we should fix it.
+            var date = new Date(range[0].time);
+            var startDateNum = date.getDate();
+            var endDateNum = range[1].date.getDate();
+            date.setDate(startDateNum + allDay - 1);
+            // The bias can not over a month, so just compare date.
+            if (date.getDate() !== endDateNum) {
+                var sign = date.getTime() - range[1].time > 0 ? 1 : -1;
+                while (date.getDate() !== endDateNum && (date.getTime() - range[1].time) * sign > 0) {
+                    allDay -= sign;
+                    date.setDate(startDateNum + allDay - 1);
+                }
+            }
+
+            var weeks = Math.floor((allDay + range[0].day + 6) / 7);
+            var nthWeek = reversed ? -weeks + 1: weeks - 1;
+
+            reversed && range.reverse();
 
             return {
-                range: [start.formatedDate, end.formatedDate],
-                start: start,
-                end: end,
+                range: [range[0].formatedDate, range[1].formatedDate],
+                start: range[0],
+                end: range[1],
                 allDay: allDay,
                 weeks: weeks,
-                fweek: start.day,
-                lweek: end.day
+                // From 0.
+                nthWeek: nthWeek,
+                fweek: range[0].day,
+                lweek: range[1].day
             };
         },
 
@@ -370,11 +415,10 @@ define(function (require) {
             }
 
             var nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
+            var date = new Date(rangeInfo.start.time);
+            date.setDate(rangeInfo.start.d + nthDay);
 
-            var time = rangeInfo.start.time + nthDay * ONE_DAY;
-
-            return this.getDateInfo(time);
-
+            return this.getDateInfo(date);
         }
     };
 

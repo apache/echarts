@@ -94,15 +94,11 @@ define(function (require) {
             label: {
                 normal: {
                     show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
+                    color: '#000'
                 },
                 emphasis: {
                     show: true,
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
+                    color: 'rgb(100,0,0)'
                 }
             },
 
@@ -147,8 +143,7 @@ define(function (require) {
                 return formatter(params);
             }
             else if (typeof formatter === 'string') {
-                var serName = params.seriesName;
-                return formatter.replace('{a}', serName != null ? serName : '');
+                return formatter.replace('{a}', name != null ? name : '');
             }
         },
 

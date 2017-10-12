@@ -40,7 +40,13 @@
                             roam: true
                         },
 
+                        legend: {
+                            show: true,
+                            data: ['a', 'b']
+                        },
+
                         series: [{
+                            name: 'a',
                             type: 'lines',
                             coordinateSystem: 'geo',
                             polyline: true,
@@ -80,6 +86,7 @@
                             }]
                         },
                         {
+                            name: 'b',
                             type: 'lines',
                             coordinateSystem: 'geo',
                             effect: {

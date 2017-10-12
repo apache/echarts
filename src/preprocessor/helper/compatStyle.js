@@ -72,6 +72,8 @@ define(function (require) {
         compatLabelTextStyle(seriesOpt.label);
         // treemap
         compatLabelTextStyle(seriesOpt.upperLabel);
+        // graph
+        compatLabelTextStyle(seriesOpt.edgeLabel);
 
         var markPoint = seriesOpt.markPoint;
         compatItemStyle(markPoint);
@@ -95,30 +97,31 @@ define(function (require) {
                 compatItemStyle(data[i]);
                 compatLabelTextStyle(data[i] && data[i].label);
             }
-            // mark point data
-            var markPoint = seriesOpt.markPoint;
-            if (markPoint && markPoint.data) {
-                var mpData = markPoint.data;
-                for (var i = 0; i < mpData.length; i++) {
-                    compatItemStyle(mpData[i]);
-                    compatLabelTextStyle(mpData[i] && mpData[i].label);
-                }
+        }
+
+        // mark point data
+        var markPoint = seriesOpt.markPoint;
+        if (markPoint && markPoint.data) {
+            var mpData = markPoint.data;
+            for (var i = 0; i < mpData.length; i++) {
+                compatItemStyle(mpData[i]);
+                compatLabelTextStyle(mpData[i] && mpData[i].label);
             }
-            // mark line data
-            var markLine = seriesOpt.markLine;
-            if (markLine && markLine.data) {
-                var mlData = markLine.data;
-                for (var i = 0; i < mlData.length; i++) {
-                    if (zrUtil.isArray(mlData[i])) {
-                        compatItemStyle(mlData[i][0]);
-                        compatLabelTextStyle(mlData[i][0] && mlData[i][0].label);
-                        compatItemStyle(mlData[i][1]);
-                        compatLabelTextStyle(mlData[i][1] && mlData[i][1].label);
-                    }
-                    else {
-                        compatItemStyle(mlData[i]);
-                        compatLabelTextStyle(mlData[i] && mlData[i].label);
-                    }
+        }
+        // mark line data
+        var markLine = seriesOpt.markLine;
+        if (markLine && markLine.data) {
+            var mlData = markLine.data;
+            for (var i = 0; i < mlData.length; i++) {
+                if (zrUtil.isArray(mlData[i])) {
+                    compatItemStyle(mlData[i][0]);
+                    compatLabelTextStyle(mlData[i][0] && mlData[i][0].label);
+                    compatItemStyle(mlData[i][1]);
+                    compatLabelTextStyle(mlData[i][1] && mlData[i][1].label);
+                }
+                else {
+                    compatItemStyle(mlData[i]);
+                    compatLabelTextStyle(mlData[i] && mlData[i].label);
                 }
             }
         }
@@ -132,13 +135,16 @@ define(function (require) {
         return (zrUtil.isArray(o) ? o[0] : o) || {};
     }
 
-    return function (option) {
+    return function (option, isTheme) {
         each(toArr(option.series), function (seriesOpt) {
             isObject(seriesOpt) && processSeries(seriesOpt);
         });
 
+        var axes = ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'];
+        isTheme && axes.push('valueAxis', 'categoryAxis', 'logAxis', 'timeAxis');
+
         each(
-            ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'],
+            axes,
             function (axisName) {
                 each(toArr(option[axisName]), function (axisOpt) {
                     if (axisOpt) {
@@ -167,7 +173,12 @@ define(function (require) {
         });
 
         each(toArr(option.geo), function (geoOpt) {
-            isObject(geoOpt) && compatLabelTextStyle(geoOpt.label);
+            if (isObject(geoOpt)) {
+                compatLabelTextStyle(geoOpt.label);
+                each(toArr(geoOpt.regions), function (regionObj) {
+                    compatLabelTextStyle(regionObj.label);
+                });
+            }
         });
 
         compatLabelTextStyle(toObj(option.timeline).label);

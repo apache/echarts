@@ -15,7 +15,7 @@ define(function (require) {
     );
     return {
         getItemStyle: function (excludes, includes) {
-            var style = getItemStyle.call(this, excludes, includes);
+            var style = getItemStyle(this, excludes, includes);
             var lineDash = this.getBorderLineDash();
             lineDash && (style.lineDash = lineDash);
             return style;

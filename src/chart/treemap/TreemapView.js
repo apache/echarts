@@ -9,6 +9,8 @@
     var BoundingRect = require('zrender/core/BoundingRect');
     var matrix = require('zrender/core/matrix');
     var animationUtil = require('../../util/animation');
+    var makeStyleMapper = require('../../model/mixin/makeStyleMapper');
+
     var bind = zrUtil.bind;
     var Group = graphic.Group;
     var Rect = graphic.Rect;
@@ -22,6 +24,25 @@
     var Z_BASE = 10; // Should bigger than every z.
     var Z_BG = 1;
     var Z_CONTENT = 2;
+
+    var getItemStyleEmphasis = makeStyleMapper([
+        ['fill', 'color'],
+        // `borderColor` and `borderWidth` has been occupied,
+        // so use `stroke` to indicate the stroke of the rect.
+        ['stroke', 'strokeColor'],
+        ['lineWidth', 'strokeWidth'],
+        ['shadowBlur'],
+        ['shadowOffsetX'],
+        ['shadowOffsetY'],
+        ['shadowColor']
+    ]);
+    var getItemStyleNormal = function (model) {
+        // Normal style props should include emphasis style props.
+        var itemStyle = getItemStyleEmphasis(model);
+        // Clear styles set by emphasis.
+        itemStyle.stroke = itemStyle.fill = itemStyle.lineWidth = null;
+        return itemStyle;
+    };
 
     return require('../../echarts').extendChartView({
 
@@ -67,12 +88,6 @@
              * @private
              */
             this._state = 'ready';
-
-            /**
-             * @private
-             * @type {boolean}
-             */
-            this._mayClick;
         },
 
         /**
@@ -397,8 +412,6 @@
          * @private
          */
         _onPan: function (dx, dy) {
-            this._mayClick = false;
-
             if (this._state !== 'animating'
                 && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
             ) {
@@ -431,8 +444,6 @@
          * @private
          */
         _onZoom: function (scale, mouseX, mouseY) {
-            this._mayClick = false;
-
             if (this._state !== 'animating') {
                 // These param must not be cached.
                 var root = this.seriesModel.getData().tree.root;
@@ -480,25 +491,11 @@
          * @private
          */
         _initEvents: function (containerGroup) {
-            // FIXME
-            // 不用click以及silent的原因是，animate时视图设置silent true来避免click生效，
-            // 但是animate中，按下鼠标，animate结束后（silent设回为false）松开鼠标，
-            // 还是会触发click，期望是不触发。
-
-            // Mousedown occurs when drag start, and mouseup occurs when drag end,
-            // click event should not be triggered in that case.
-
-            containerGroup.on('mousedown', function (e) {
-                this._state === 'ready' && (this._mayClick = true);
-            }, this);
-            containerGroup.on('mouseup', function (e) {
-                if (this._mayClick) {
-                    this._mayClick = false;
-                    this._state === 'ready' && onClick.call(this, e);
+            containerGroup.on('click', function (e) {
+                if (this._state !== 'ready') {
+                    return;
                 }
-            }, this);
 
-            function onClick(e) {
                 var nodeClick = this.seriesModel.get('nodeClick', true);
 
                 if (!nodeClick) {
@@ -526,7 +523,8 @@
                         link && window.open(link, linkTarget);
                     }
                 }
-            }
+
+            }, this);
         },
 
         /**
@@ -680,6 +678,7 @@
         var thisViewChildren = thisNode.viewChildren;
         var upperHeight = thisLayout.upperHeight;
         var isParent = thisViewChildren && thisViewChildren.length;
+        var itemStyleNormalModel = thisNode.getModel('itemStyle.normal');
         var itemStyleEmphasisModel = thisNode.getModel('itemStyle.emphasis');
 
         // End of closure ariables available in "Procedures in renderNode".
@@ -728,8 +727,10 @@
             var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
 
             updateStyle(bg, function () {
-                var normalStyle = {fill: visualBorderColor};
-                var emphasisStyle = {fill: emphasisBorderColor};
+                var normalStyle = getItemStyleNormal(itemStyleNormalModel);
+                normalStyle.fill = visualBorderColor;
+                var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
+                emphasisStyle.fill = emphasisBorderColor;
 
                 if (useUpperLabel) {
                     var upperLabelWidth = thisWidth - 2 * borderWidth;
@@ -769,8 +770,9 @@
 
             var visualColor = thisNode.getVisual('color', true);
             updateStyle(content, function () {
-                var normalStyle = {fill: visualColor};
-                var emphasisStyle = itemStyleEmphasisModel.getItemStyle();
+                var normalStyle = getItemStyleNormal(itemStyleNormalModel);
+                normalStyle.fill = visualColor;
+                var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
 
                 prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
 
@@ -815,28 +817,30 @@
             var normalLabelModel = nodeModel.getModel(
                 upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
             );
-            graphic.setText(normalStyle, normalLabelModel, visualColor);
-
-            upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
-
-            if (!normalLabelModel.getShallow('show')) {
-                normalStyle.text = normalStyle.truncate = null;
-            }
-            else {
-                normalStyle.text = text;
-                normalStyle.truncate = normalLabelModel.get('ellipsis')
-                    ? {
-                        outerWidth: width,
-                        outerHeight: height,
-                        minChar: 2
-                    }
-                    : null;
-            }
-
             var emphasisLabelModel = nodeModel.getModel(
                 upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
             );
-            graphic.setText(emphasisStyle, emphasisLabelModel, false);
+
+            var isShow = normalLabelModel.getShallow('show');
+
+            graphic.setLabelStyle(
+                normalStyle, emphasisStyle, normalLabelModel, emphasisLabelModel,
+                {
+                    defaultText: isShow ? text : null,
+                    autoColor: visualColor,
+                    isRectText: true
+                }
+            );
+
+            upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
+
+            normalStyle.truncate = (isShow && normalLabelModel.get('ellipsis'))
+                ? {
+                    outerWidth: width,
+                    outerHeight: height,
+                    minChar: 2
+                }
+                : null;
         }
 
         function giveGraphic(storageName, Ctor, depth, z) {

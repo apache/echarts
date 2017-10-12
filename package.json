@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "3.6.2",
+  "version": "3.7.2",
   "description": "A powerful charting and visualization library for browser",
   "keywords": [
     "visualization",
@@ -32,10 +32,10 @@
     "url": "https://github.com/ecomfe/echarts.git"
   },
   "scripts": {
-    "prepublish": "node build/amd2common.js"
+    "prepublish": "rm -r lib; node build/amd2common.js"
   },
   "dependencies": {
-    "zrender": "^3.5.2"
+    "zrender": "^3.6.2"
   },
   "devDependencies": {
     "coordtransform": "^2.0.2",
@@ -45,6 +45,6 @@
     "fs-extra": "^0.26.5",
     "glob": "^7.0.0",
     "webpack": "^1.12.13",
-    "zrender": "^3.5.2"
+    "zrender": "^3.6.2"
   }
 }

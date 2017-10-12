@@ -3,34 +3,54 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
             }
-            #main {
-                background: #fff;
+            .chart {
+                height: 600px;
             }
         </style>
-        <div id="main"></div>
+
+        <div id="main" class="chart"></div>
         <script>
 
-            require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/graphic',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/title',
-                'zrender/vml/vml'
-            ], function (echarts) {
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    'echarts/chart/bar',
+                    'echarts/chart/line',
+                    'echarts/component/legend',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/tooltip',
+                    'echarts/component/brush',
+                    'echarts/component/toolbox',
+                    'echarts/component/title',
+                    'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 
@@ -76,6 +96,7 @@
                         padding: 20
                     },
                     legend: {
+                        left: 150,
                         inactiveColor: '#abc',
                         borderWidth: 1,
                         data: [{
@@ -93,6 +114,9 @@
                             show: true
                         }
                     },
+                    brush: {
+                        xAxisIndex: 0
+                    },
                     toolbox: {
                         top: 25,
                         // right: 20,
@@ -104,6 +128,11 @@
                             saveAsImage: {
                                 pixelRatio: 2
                             },
+                            brush: {
+                                type: ['rect', 'polygon', 'lineX', 'lineY', 'keep', 'clear']
+                            },
+                            restore: {},
+                            dataZoom: {},
                             myTool1: {
                                 show: true,
                                 title: '自定义扩展方法1',
@@ -217,7 +246,8 @@
                 });
 
                 window.onresize = chart.resize;
-            });
+            }
+        );
         </script>
     </body>
 </html>

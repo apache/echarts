@@ -142,7 +142,7 @@ define(function (require) {
                             // which will be much faster and useful in pixel manipulation
                             var returnRGBArray = !!out;
                             !isNormalized && (value = this._normalizeData(value));
-                            out = zrColor.fastMapToColor(value, thisOption.parsedVisual, out);
+                            out = zrColor.fastLerp(value, thisOption.parsedVisual, out);
                             return returnRGBArray ? out : zrColor.stringify(out, 'rgba');
                         },
                     this
@@ -152,7 +152,7 @@ define(function (require) {
             _doMap: {
                 linear: function (normalized) {
                     return zrColor.stringify(
-                        zrColor.fastMapToColor(normalized, this.option.parsedVisual),
+                        zrColor.fastLerp(normalized, this.option.parsedVisual),
                         'rgba'
                     );
                 },
@@ -161,7 +161,7 @@ define(function (require) {
                     var result = getSpecifiedVisual.call(this, value);
                     if (result == null) {
                         result = zrColor.stringify(
-                            zrColor.fastMapToColor(normalized, this.option.parsedVisual),
+                            zrColor.fastLerp(normalized, this.option.parsedVisual),
                             'rgba'
                         );
                     }

@@ -54,8 +54,20 @@ define(function(require) {
     function getStackedOnPoints(coordSys, data) {
         var baseAxis = coordSys.getBaseAxis();
         var valueAxis = coordSys.getOtherAxis(baseAxis);
-        var valueStart = baseAxis.onZero
-            ? 0 : valueAxis.scale.getExtent()[0];
+
+        var valueStart = 0;
+        if (!baseAxis.onZero) {
+            var extent = valueAxis.scale.getExtent();
+            if (extent[0] > 0) {
+                // Both positive
+                valueStart = extent[0];
+            }
+            else if (extent[1] < 0) {
+                // Both negative
+                valueStart = extent[1];
+            }
+            // If is one positive, and one negative, onZero shall be true
+        }
 
         var valueDim = valueAxis.dim;
 

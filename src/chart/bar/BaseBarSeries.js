@@ -58,10 +58,10 @@ define(function(require) {
             //     }
             // },
             itemStyle: {
-                normal: {
+                // normal: {
                     // color: '各异'
-                },
-                emphasis: {}
+                // },
+                // emphasis: {}
             }
         }
     });

@@ -198,13 +198,13 @@ define(function (require) {
             this.stopEffectAnimation();
             var symbol = this.childAt(0);
             var onEmphasis = function () {
-                symbol.trigger('emphasis');
+                symbol.highlight();
                 if (effectCfg.showEffectOn !== 'render') {
                     this.startEffectAnimation(effectCfg);
                 }
             };
             var onNormal = function () {
-                symbol.trigger('normal');
+                symbol.downplay();
                 if (effectCfg.showEffectOn !== 'render') {
                     this.stopEffectAnimation();
                 }

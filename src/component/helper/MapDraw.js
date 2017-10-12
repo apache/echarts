@@ -123,8 +123,8 @@ define(function (require) {
 
             var isGeo = mapOrGeoModel.mainType === 'geo';
 
-            // map series has data, geo model that controlled by map series
-            // has no data, otherwise data exists.
+            // Map series has data. GEO model that controlled by map series
+            // will be assigned with map data. Other GEO model has no data.
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
             isGeo && ecModel.eachComponent({mainType: 'series', subType: 'map'}, function (mapSeries) {
                 if (!data && mapSeries.getHostGeoModel() === mapOrGeoModel) {
@@ -235,14 +235,14 @@ define(function (require) {
                     (isGeo || isDataNaN && (showLabel || hoverShowLabel))
                  || (itemLayout && itemLayout.showLabel)
                  ) {
-                    var query = data ? dataIdx : region.name;
-                    var formattedStr;
-                    var hoverFormattedStr;
+                    var query = !isGeo ? dataIdx : region.name;
+                    var labelFetcher;
+
                     // Consider dataIdx not found.
                     if (!data || dataIdx >= 0) {
-                        formattedStr = mapOrGeoModel.getFormattedLabel(query, 'normal');
-                        hoverFormattedStr = mapOrGeoModel.getFormattedLabel(query, 'emphasis');
+                        labelFetcher = mapOrGeoModel;
                     }
+
                     var textEl = new graphic.Text({
                         position: region.center.slice(),
                         scale: [1 / scale[0], 1 / scale[1]],
@@ -250,15 +250,19 @@ define(function (require) {
                         silent: true
                     });
 
-                    graphic.setTextStyle(textEl.style, labelModel, {
-                        text: showLabel ? (formattedStr || region.name) : null,
-                        textAlign: 'center',
-                        textVerticalAlign: 'middle'
-                    });
-
-                    graphic.setTextStyle(textEl.hoverStyle = {}, hoverLabelModel, {
-                        text: hoverShowLabel ? hoverFormattedStr : null
-                    }, {forMerge: true});
+                    graphic.setLabelStyle(
+                        textEl.style, textEl.hoverStyle = {}, labelModel, hoverLabelModel,
+                        {
+                            labelFetcher: labelFetcher,
+                            labelDataIndex: query,
+                            defaultText: region.name,
+                            useInsideStyle: false
+                        },
+                        {
+                            textAlign: 'center',
+                            textVerticalAlign: 'middle'
+                        }
+                    );
 
                     regionGroup.add(textEl);
                 }
