@@ -7,9 +7,10 @@ define(function (require) {
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
-    function getAxisLineShape(polar, r0, r, angle) {
-        var start = polar.coordToPoint([r0, angle]);
-        var end = polar.coordToPoint([r, angle]);
+    function getAxisLineShape(polar, rExtent, angle) {
+        rExtent[1] > rExtent[0] && (rExtent = rExtent.slice().reverse());
+        var start = polar.coordToPoint([rExtent[0], angle]);
+        var end = polar.coordToPoint([rExtent[1], angle]);
 
         return {
             x1: start[0],
@@ -17,6 +18,11 @@ define(function (require) {
             x2: end[0],
             y2: end[1]
         };
+    }
+
+    function getRadiusIdx(polar) {
+        var radiusAxis = polar.getRadiusAxis();
+        return radiusAxis.inverse ? 0 : 1;
     }
 
     require('./AxisView').extend({
@@ -60,7 +66,7 @@ define(function (require) {
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: radiusExtent[1]
+                    r: radiusExtent[getRadiusIdx(polar)]
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,
@@ -78,10 +84,11 @@ define(function (require) {
             var tickModel = angleAxisModel.getModel('axisTick');
 
             var tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
+            var radius = radiusExtent[getRadiusIdx(polar)];
 
             var lines = zrUtil.map(ticksAngles, function (tickAngle) {
                 return new graphic.Line({
-                    shape: getAxisLineShape(polar, radiusExtent[1], radiusExtent[1] + tickLen, tickAngle)
+                    shape: getAxisLineShape(polar, [radius, radius + tickLen], tickAngle)
                 });
             });
             this.group.add(graphic.mergePath(
@@ -112,7 +119,7 @@ define(function (require) {
 
             // Use length of ticksAngles because it may remove the last tick to avoid overlapping
             for (var i = 0; i < ticksAngles.length; i++) {
-                var r = radiusExtent[1];
+                var r = radiusExtent[getRadiusIdx(polar)];
                 var p = polar.coordToPoint([r + labelMargin, labelsAngles[i]]);
                 var cx = polar.cx;
                 var cy = polar.cy;
@@ -156,7 +163,7 @@ define(function (require) {
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
                 splitLines[colorIndex].push(new graphic.Line({
-                    shape: getAxisLineShape(polar, radiusExtent[0], radiusExtent[1], ticksAngles[i])
+                    shape: getAxisLineShape(polar, radiusExtent, ticksAngles[i])
                 }));
             }
 

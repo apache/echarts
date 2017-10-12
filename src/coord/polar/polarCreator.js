@@ -4,8 +4,9 @@ define(function (require) {
     var Polar = require('./Polar');
     var numberUtil = require('../../util/number');
     var zrUtil = require('zrender/core/util');
-
     var axisHelper = require('../../coord/axisHelper');
+
+    var parsePercent = numberUtil.parsePercent;
     var niceScaleExtent = axisHelper.niceScaleExtent;
 
     // 依赖 PolarModel 做预处理
@@ -16,20 +17,20 @@ define(function (require) {
      * @param {module:echarts/coord/polar/PolarModel} polarModel
      * @param {module:echarts/ExtensionAPI} api
      */
-    function resizePolar(polarModel, api) {
+    function resizePolar(polar, polarModel, api) {
         var center = polarModel.get('center');
-        var radius = polarModel.get('radius');
         var width = api.getWidth();
         var height = api.getHeight();
-        var parsePercent = numberUtil.parsePercent;
 
-        this.cx = parsePercent(center[0], width);
-        this.cy = parsePercent(center[1], height);
+        polar.cx = parsePercent(center[0], width);
+        polar.cy = parsePercent(center[1], height);
 
-        var radiusAxis = this.getRadiusAxis();
+        var radiusAxis = polar.getRadiusAxis();
         var size = Math.min(width, height) / 2;
-        // var idx = radiusAxis.inverse ? 1 : 0;
-        radiusAxis.setExtent(0, parsePercent(radius, size));
+        var radius = parsePercent(polarModel.get('radius'), size);
+        radiusAxis.inverse
+            ? radiusAxis.setExtent(radius, 0)
+            : radiusAxis.setExtent(0, radius);
     }
 
     /**
@@ -73,11 +74,11 @@ define(function (require) {
         axis.type = axisModel.get('type');
         axis.scale = axisHelper.createScaleByModel(axisModel);
         axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
+        axis.inverse = axisModel.get('inverse');
 
-        // FIXME Radius axis not support inverse axis
         if (axisModel.mainType === 'angleAxis') {
+            axis.inverse ^= axisModel.get('clockwise');
             var startAngle = axisModel.get('startAngle');
-            axis.inverse = axisModel.get('inverse') ^ axisModel.get('clockwise');
             axis.setExtent(startAngle, startAngle + (axis.inverse ? -360 : 360));
         }
 
@@ -96,7 +97,6 @@ define(function (require) {
             ecModel.eachComponent('polar', function (polarModel, idx) {
                 var polar = new Polar(idx);
                 // Inject resize and update method
-                polar.resize = resizePolar;
                 polar.update = updatePolarScale;
 
                 var radiusAxis = polar.getRadiusAxis();
@@ -108,7 +108,8 @@ define(function (require) {
                 setAxis(radiusAxis, radiusAxisModel);
                 setAxis(angleAxis, angleAxisModel);
 
-                polar.resize(polarModel, api);
+                resizePolar(polar, polarModel, api);
+
                 polarList.push(polar);
 
                 polarModel.coordinateSystem = polar;
