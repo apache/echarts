@@ -25,7 +25,7 @@ define(function () {
             // PENDING
             fontFamily: platform.match(/^Win/) ? 'Microsoft YaHei' : 'sans-serif',
             // fontFamily: 'Arial, Verdana, sans-serif',
-            fontSize: 8,
+            fontSize: 12,
             fontStyle: 'normal',
             fontWeight: 'normal'
         },

@@ -119,7 +119,6 @@ define(function (require) {
             label: {
                 normal: {
                     show: true,
-                    fontSize: 9,
                     color: '#555'
                 }
             },
