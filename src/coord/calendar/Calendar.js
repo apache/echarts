@@ -128,7 +128,7 @@ define(function (require) {
 
         update: function (ecModel, api) {
 
-            this._firstDayOfWeek = this._model.getModel('dayLabel').get('firstDay');
+            this._firstDayOfWeek = +this._model.getModel('dayLabel').get('firstDay');
             this._orient = this._model.get('orient');
             this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 0;
 
