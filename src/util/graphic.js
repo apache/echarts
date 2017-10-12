@@ -88,14 +88,21 @@ define(function(require) {
         return path;
     };
 
+    /**
+     * Create a image element from image url
+     * @param {string} imageUrl image url
+     * @param {Object} opts options
+     * @param {module:zrender/core/BoundingRect} rect constrain rect
+     * @param {string} [layout=cover] 'center' or 'cover'
+     */
     graphic.makeImage = function (imageUrl, rect, layout) {
         var path = new graphic.Image({
             style: {
                 image: imageUrl,
                 x: rect.x,
                 y: rect.y,
-                width: rect.w,
-                height: rect.h
+                width: rect.width,
+                height: rect.height
             },
             onload: function (img) {
                 if (layout === 'center') {
@@ -103,12 +110,7 @@ define(function(require) {
                         width: img.width,
                         height: img.height
                     };
-
-                    var r = centerGraphic(rect, boundingRect);
-                    path.style.x = r.x;
-                    path.style.y = r.y;
-                    path.style.width = r.width;
-                    path.style.height = r.height;
+                    path.setStyle(centerGraphic(rect, boundingRect));
                 }
             }
         });
