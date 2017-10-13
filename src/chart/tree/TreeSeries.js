@@ -98,7 +98,7 @@ define(function (require) {
 
             expandAndCollapse: true,
 
-            initialTreeDepth: 1,
+            initialTreeDepth: 2,
 
             lineStyle: {
                 normal: {

@@ -156,15 +156,25 @@
                         "name": "flare",
                         "children": [
                             {
-                                "name": "data",
+                                "name": "flex",
                                 "children": [
-                                    {
-                                         "name": "converters",
-                                         "children": [
-                                          {"name": "DelimitedTextConverter", "value": 4294}
-                                         ]
-                                    }
+                                    {"name": "FlareVis", "value": 4116}
                                 ]
+                            },
+                            {
+                                "name": "scale",
+                                "children": [
+                                    {"name": "IScaleMap", "value": 2105},
+                                    {"name": "LinearScale", "value": 1316},
+                                    {"name": "LogScale", "value": 3151},
+                                    {"name": "OrdinalScale", "value": 3770},
+                                    {"name": "QuantileScale", "value": 2435},
+                                    {"name": "QuantitativeScale", "value": 4839},
+                                    {"name": "RootScale", "value": 1756},
+                                    {"name": "Scale", "value": 4268},
+                                    {"name": "ScaleType", "value": 1821},
+                                    {"name": "TimeScale", "value": 5833}
+                               ]
                             },
                             {
                                 "name": "display",
@@ -212,8 +222,6 @@
 
                                 symbolSize: 7,
 
-                                initialTreeDepth: 2,
-
                                 label: {
                                     normal: {
                                         position: 'left',
@@ -243,14 +251,12 @@
                                 name: 'tree2',
                                 data: [data2],
 
-                                top: '5%',
+                                top: '20%',
                                 left: '60%',
-                                bottom: '2%',
-                                right: '20%',
+                                bottom: '22%',
+                                right: '18%',
 
                                 symbolSize: 7,
-
-                                initialTreeDepth: 1,
 
                                 label: {
                                     normal: {

@@ -30,34 +30,8 @@
                         chart.resize();
                     };
 
-                    $.getJSON('./data/ec-option-doc-statistics-201604.json')
-                    .done(function (rawData) {
-
-                        function convert(source, target, basePath) {
-
-                            for (var key in source) {
-                                var path = key;
-                                if (key.match(/^\$/)) {
-
-                                }
-                                else {
-                                    target.children = target.children || [];
-                                    var child = {
-                                        name: path
-                                    };
-                                    target.children.push(child);
-                                    convert(source[key], child, path);
-                                }
-                            }
-
-                            if (!target.children) {
-                                target.value = source.$count || 1;
-                            }
-                        }
-
-                        var data = {name: 'option'};
-
-                        convert(rawData, data, '');
+                    $.getJSON('./data/flare.json')
+                    .done(function (data) {
 
                         chart.setOption({
 
@@ -72,14 +46,12 @@
 
                                     data: [data],
 
-                                    top: '2%',
+                                    top: '1%',
                                     left: '7%',
-                                    bottom: '2%',
+                                    bottom: '1%',
                                     right: '20%',
 
                                     symbolSize: 7,
-
-                                    initialTreeDepth: 1,
 
                                     label: {
                                         normal: {
