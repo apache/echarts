@@ -1,21 +1,19 @@
-define(function (require) {
+import echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
 
-    var zrUtil = require('zrender/core/util');
+import '../coord/cartesian/Grid';
+import './bar/PictorialBarSeries';
+import './bar/PictorialBarView';
 
-    require('../coord/cartesian/Grid');
+import barLayoutGrid from '../layout/barGrid';
+import visualSymbol from '../visual/symbol';
 
-    require('./bar/PictorialBarSeries');
-    require('./bar/PictorialBarView');
+// In case developer forget to include grid component
+import '../component/gridSimple';
 
-    var barLayoutGrid = require('../layout/barGrid');
-    var echarts = require('../echarts');
-
-    echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'pictorialBar'));
-
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'pictorialBar', 'roundRect', null
-    ));
-
-    // In case developer forget to include grid component
-    require('../component/gridSimple');
-});
+echarts.registerLayout(zrUtil.curry(
+    barLayoutGrid, 'pictorialBar'
+));
+echarts.registerVisual(zrUtil.curry(
+    visualSymbol, 'pictorialBar', 'roundRect', null
+));

@@ -1,24 +1,23 @@
-define(function (require) {
+import echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
 
-    var zrUtil = require('zrender/core/util');
-    var echarts = require('../echarts');
-    var PRIORITY = echarts.PRIORITY;
+import './line/LineSeries';
+import './line/LineView';
+import visualSymbol from '../visual/symbol';
+import layoutPoints from '../layout/points';
+import dataSample from '../processor/dataSample';
 
-    require('./line/LineSeries');
-    require('./line/LineView');
+// In case developer forget to include grid component
+import '../component/gridSimple';
 
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'line', 'circle', 'line'
-    ));
-    echarts.registerLayout(zrUtil.curry(
-        require('../layout/points'), 'line'
-    ));
+echarts.registerVisual(zrUtil.curry(
+    visualSymbol, 'line', 'circle', 'line'
+));
+echarts.registerLayout(zrUtil.curry(
+    layoutPoints, 'line'
+));
 
-    // Down sample after filter
-    echarts.registerProcessor(PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(
-        require('../processor/dataSample'), 'line'
-    ));
-
-    // In case developer forget to include grid component
-    require('../component/gridSimple');
-});
+// Down sample after filter
+echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(
+    dataSample, 'line'
+));

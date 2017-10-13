@@ -4,12 +4,17 @@ import uglify from 'rollup-plugin-uglify';
 
 function plugins(production) {
     let plugins = [
-        resolve(),
+        resolve({
+            extensions: ['.js'],
+            jsnext: true,
+            main: true
+        }),
         commonjs()
     ];
     if (production) {
         plugins.push(uglify({
             compress: {
+                // Eliminate __DEV__ code.
                 global_defs: {
                     __DEV__: true
                 }
@@ -18,6 +23,11 @@ function plugins(production) {
     }
     return plugins;
 }
+
+
+// ??????????
+// en lang
+
 
 function createBuild(type, production) {
     if (type) {
@@ -28,11 +38,18 @@ function createBuild(type, production) {
         postfix = '.min';
     }
     return {
-        entry: `./index${type}.js`,
-        format: 'umd',
-        moduleName: 'echarts',
+        input: `./index${type}.js`,
+        name: 'echarts',
         plugins: plugins(production),
-        dest: `dist/echarts${type}${postfix}.js`
+        legacy: true, // Support IE8-
+        output: {
+            format: 'umd',
+            sourcemap: true,
+            file: `dist/echarts${type}${postfix}.js`
+        },
+        watch: {
+            include: ['./src/**', './index*.js']
+        }
     };
 }
 

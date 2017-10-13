@@ -1,13 +1,12 @@
-define(function (require) {
+    import echarts from '../../echarts';
+    import LineDraw from '../helper/LineDraw';
+    import EffectLine from '../helper/EffectLine';
+    import Line from '../helper/Line';
+    import Polyline from '../helper/Polyline';
+    import EffectPolyline from '../helper/EffectPolyline';
+    import LargeLineDraw from '../helper/LargeLineDraw';
 
-    var LineDraw = require('../helper/LineDraw');
-    var EffectLine = require('../helper/EffectLine');
-    var Line = require('../helper/Line');
-    var Polyline = require('../helper/Polyline');
-    var EffectPolyline = require('../helper/EffectPolyline');
-    var LargeLineDraw = require('../helper/LargeLineDraw');
-
-    require('../../echarts').extendChartView({
+    echarts.extendChartView({
 
         type: 'lines',
 
@@ -107,4 +106,3 @@ define(function (require) {
 
         dispose: function () {}
     });
-});

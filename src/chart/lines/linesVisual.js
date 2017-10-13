@@ -1,4 +1,3 @@
-define(function (require) {
 
     function normalize(a) {
         if (!(a instanceof Array)) {
@@ -6,7 +5,8 @@ define(function (require) {
         }
         return a;
     }
-    return function (ecModel) {
+
+    export default function (ecModel) {
         ecModel.eachSeriesByType('lines', function (seriesModel) {
             var data = seriesModel.getData();
             var symbolType = normalize(seriesModel.get('symbol'));
@@ -34,5 +34,4 @@ define(function (require) {
                 data.setItemVisual(idx, 'opacity', opacity);
             });
         });
-    };
-});
+    }

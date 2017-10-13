@@ -1,25 +1,21 @@
-define(function (require) {
+import {util as zrUtil} from 'zrender';
+import '../coord/cartesian/Grid';
+import './bar/BarSeries';
+import './bar/BarView';
 
-    var zrUtil = require('zrender/core/util');
+import barLayoutGrid from '../layout/barGrid';
+import echarts from '../echarts';
 
-    require('../coord/cartesian/Grid');
+// In case developer forget to include grid component
+import '../component/gridSimple';
 
-    require('./bar/BarSeries');
-    require('./bar/BarView');
 
-    var barLayoutGrid = require('../layout/barGrid');
-    var echarts = require('../echarts');
+echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
 
-    echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
-
-    // Visual coding for legend
-    echarts.registerVisual(function (ecModel) {
-        ecModel.eachSeriesByType('bar', function (seriesModel) {
-            var data = seriesModel.getData();
-            data.setVisual('legendSymbol', 'roundRect');
-        });
+// Visual coding for legend
+echarts.registerVisual(function (ecModel) {
+    ecModel.eachSeriesByType('bar', function (seriesModel) {
+        var data = seriesModel.getData();
+        data.setVisual('legendSymbol', 'roundRect');
     });
-
-    // In case developer forget to include grid component
-    require('../component/gridSimple');
 });

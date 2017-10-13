@@ -1,11 +1,9 @@
-define(function (require) {
 
-    var echarts = require('../echarts');
+import echarts from '../echarts';
+import './boxplot/BoxplotSeries';
+import './boxplot/BoxplotView';
+import boxplotVisual from './boxplot/boxplotVisual';
+import boxplotLayout from './boxplot/boxplotLayout';
 
-    require('./boxplot/BoxplotSeries');
-    require('./boxplot/BoxplotView');
-
-    echarts.registerVisual(require('./boxplot/boxplotVisual'));
-    echarts.registerLayout(require('./boxplot/boxplotLayout'));
-
-});
+echarts.registerVisual(boxplotVisual);
+echarts.registerLayout(boxplotLayout);

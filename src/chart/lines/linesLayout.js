@@ -1,6 +1,5 @@
-define(function (require) {
 
-    return function (ecModel) {
+    export default function (ecModel) {
         ecModel.eachSeriesByType('lines', function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
             var lineData = seriesModel.getData();
@@ -39,5 +38,4 @@ define(function (require) {
                 lineData.setItemLayout(idx, pts);
             });
         });
-    };
-});
+    }

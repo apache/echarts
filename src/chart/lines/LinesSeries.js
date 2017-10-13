@@ -1,12 +1,9 @@
-define(function (require) {
 
-    'use strict';
-
-    var SeriesModel = require('../../model/Series');
-    var List = require('../../data/List');
-    var zrUtil = require('zrender/core/util');
-    var formatUtil = require('../../util/format');
-    var CoordinateSystem = require('../../CoordinateSystem');
+    import SeriesModel from '../../model/Series';
+    import List from '../../data/List';
+    import {util as zrUtil} from 'zrender';
+    import {encodeHTML} from '../../util/format';
+    import CoordinateSystem from '../../CoordinateSystem';
 
     // Convert [ [{coord: []}, {coord: []}] ]
     // to [ { coords: [[]] } ]
@@ -96,7 +93,7 @@ define(function (require) {
             fromName != null && html.push(fromName);
             toName != null && html.push(toName);
 
-            return formatUtil.encodeHTML(html.join(' > '));
+            return encodeHTML(html.join(' > '));
         },
 
         defaultOption: {
@@ -156,4 +153,3 @@ define(function (require) {
             }
         }
     });
-});

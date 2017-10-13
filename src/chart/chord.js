@@ -1,13 +1,14 @@
-define(function (require) {
 
-    require('./chord/ChordSeries');
-    require('./chord/ChordView');
+import './chord/ChordSeries';
+import './chord/ChordView';
 
-    var echarts = require('../echarts');
-    var zrUtil = require('zrender/core/util');
-    echarts.registerLayout(require('./chord/chordCircularLayout'));
+import echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
 
-    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'chord'));
+import chordCircularLayout from './chord/chordCircularLayout';
+import dataColor from '../visual/dataColor';
+import dataFilter from '../processor/dataFilter';
 
-    echarts.registerProcessor(zrUtil.curry(require('../processor/dataFilter'), 'pie'));
-});
+echarts.registerLayout(chordCircularLayout);
+echarts.registerVisual(zrUtil.curry(dataColor, 'chord'));
+echarts.registerProcessor(zrUtil.curry(dataFilter, 'pie'));

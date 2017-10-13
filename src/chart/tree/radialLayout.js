@@ -1,10 +1,8 @@
-define(function (require) {
 
-    var commonLayout = require('./commonLayout');
+import commonLayout from './commonLayout';
 
-    return function (ecModel, api) {
-        ecModel.eachSeriesByType('tree', function (seriesModel) {
-            commonLayout(seriesModel, api);
-        });
-    };
-});
+export default function (ecModel, api) {
+    ecModel.eachSeriesByType('tree', function (seriesModel) {
+        commonLayout(seriesModel, api);
+    });
+}
