@@ -79,8 +79,21 @@ define(function (require) {
         if (min === 'dataMin') {
             min = originalExtent[0];
         }
+        else if (typeof min === 'function') {
+            min = min({
+                min: originalExtent[0],
+                max: originalExtent[1]
+            });
+        }
+
         if (max === 'dataMax') {
             max = originalExtent[1];
+        }
+        else if (typeof max === 'function') {
+            max = max({
+                min: originalExtent[0],
+                max: originalExtent[1]
+            });
         }
 
         (min == null || !isFinite(min)) && (min = NaN);

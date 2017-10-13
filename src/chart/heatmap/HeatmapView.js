@@ -192,18 +192,17 @@ define(function (require) {
                     defaultText = rawValue[2];
                 }
 
-                graphic.setText(style, labelModel);
-                style.text = labelModel.getShallow('show')
-                    ? seriesModel.getFormattedLabel(idx, 'normal') || defaultText
-                    : null;
-
-                graphic.setText(hoverStl, hoverLabelModel, false);
-                hoverStl.text = hoverLabelModel.getShallow('show')
-                    ? seriesModel.getFormattedLabel(idx, 'emphasis')
-                    : null;
+                graphic.setLabelStyle(
+                    style, hoverStl, labelModel, hoverLabelModel,
+                    {
+                        labelFetcher: seriesModel,
+                        labelDataIndex: idx,
+                        defaultText: defaultText,
+                        isRectText: true
+                    }
+                );
 
                 rect.setStyle(style);
-
                 graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
 
                 group.add(rect);

@@ -41,6 +41,12 @@ define(function (require) {
              * @type {module:zrender/container/Group}
              */
             this.group.add(this._controllerGroup = new Group());
+
+            /**
+             *
+             * @private
+             */
+            this._showController;
         },
 
         /**
@@ -140,7 +146,7 @@ define(function (require) {
 
             var contentRect = contentGroup.getBoundingRect();
             var controllerRect = controllerGroup.getBoundingRect();
-            var showController = contentRect[wh] > maxSize[wh];
+            var showController = this._showController = contentRect[wh] > maxSize[wh];
 
             var contentPos = [-contentRect.x, -contentRect.y];
             // Remain contentPos when scroll animation perfroming.
@@ -204,7 +210,11 @@ define(function (require) {
             // Content translate animation.
             var pageInfo = this._getPageInfo(legendModel);
             pageInfo.pageIndex != null && graphic.updateProps(
-                contentGroup, {position: pageInfo.contentPosition}, legendModel
+                contentGroup,
+                {position: pageInfo.contentPosition},
+                // When switch from "show controller" to "not show controller", view should be
+                // updated immediately without animation, otherwise causes weird efffect.
+                showController ? legendModel : false
             );
 
             this._updatePageInfoView(legendModel, pageInfo);
@@ -243,7 +253,7 @@ define(function (require) {
             var pageFormatter = legendModel.get('pageFormatter');
             var pageIndex = pageInfo.pageIndex;
             var current = pageIndex != null ? pageIndex + 1 : 0;
-            var total = pageIndex.pageCount;
+            var total = pageInfo.pageCount;
 
             pageText && pageFormatter && pageText.setStyle(
                 'text',
@@ -281,11 +291,16 @@ define(function (require) {
             var pageNextDataIndex;
 
             var targetItemGroup;
-            contentGroup.eachChild(function (child) {
-                if (child.__legendDataIndex === currDataIndex) {
-                    targetItemGroup = child;
-                }
-            });
+            if (this._showController) {
+                contentGroup.eachChild(function (child) {
+                    if (child.__legendDataIndex === currDataIndex) {
+                        targetItemGroup = child;
+                    }
+                });
+            }
+            else {
+                targetItemGroup = contentGroup.childAt(0);
+            }
 
             var pageCount = containerRectSize ? Math.ceil(contentRect[wh] / containerRectSize) : 0;
 

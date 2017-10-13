@@ -10,7 +10,7 @@ define(function (require) {
                properties[i][1] = properties[i][0];
             }
         }
-        return function (excludes, includes) {
+        return function (model, excludes, includes) {
             var style = {};
             for (var i = 0; i < properties.length; i++) {
                 var propName = properties[i][1];
@@ -19,7 +19,7 @@ define(function (require) {
                 ) {
                     continue;
                 }
-                var val = this.getShallow(propName);
+                var val = model.getShallow(propName);
                 if (val != null) {
                     style[properties[i][0]] = val;
                 }

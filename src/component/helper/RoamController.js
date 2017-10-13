@@ -113,7 +113,9 @@ define(function (require) {
 
 
     function mousedown(e) {
-        if (e.target && e.target.draggable) {
+        if (eventTool.notLeftMouse(e)
+            || (e.target && e.target.draggable)
+        ) {
             return;
         }
 
@@ -130,15 +132,12 @@ define(function (require) {
     }
 
     function mousemove(e) {
-        if (!checkKeyBinding(this, 'moveOnMouseMove', e) || !this._dragging) {
-            return;
-        }
-
-        if (e.gestureEvent === 'pinch') {
-            return;
-        }
-
-        if (interactionMutex.isTaken(this._zr, 'globalPan')) {
+        if (eventTool.notLeftMouse(e)
+            || !checkKeyBinding(this, 'moveOnMouseMove', e)
+            || !this._dragging
+            || e.gestureEvent === 'pinch'
+            || interactionMutex.isTaken(this._zr, 'globalPan')
+        ) {
             return;
         }
 
@@ -160,7 +159,9 @@ define(function (require) {
     }
 
     function mouseup(e) {
-        this._dragging = false;
+        if (!eventTool.notLeftMouse(e)) {
+            this._dragging = false;
+        }
     }
 
     function mousewheel(e) {

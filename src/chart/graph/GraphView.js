@@ -18,6 +18,35 @@ define(function (require) {
         return item.getVisual('opacity') || item.getModel().get(opacityPath);
     }
 
+    function fadeOutItem(item, opacityPath, opacityRatio) {
+        var el = item.getGraphicEl();
+
+        var opacity = getItemOpacity(item, opacityPath);
+        if (opacityRatio != null) {
+            opacity == null && (opacity = 1);
+            opacity *= opacityRatio;
+        }
+
+        el.downplay && el.downplay();
+        el.traverse(function (child) {
+            if (child.type !== 'group') {
+                child.setStyle('opacity', opacity);
+            }
+        });
+    }
+
+    function fadeInItem(item, opacityPath) {
+        var opacity = getItemOpacity(item, opacityPath);
+        var el = item.getGraphicEl();
+
+        el.highlight && el.highlight();
+        el.traverse(function (child) {
+            if (child.type !== 'group') {
+                child.setStyle('opacity', opacity);
+            }
+        });
+    }
+
     require('../../echarts').extendChartView({
 
         type: 'graph',
@@ -81,6 +110,7 @@ define(function (require) {
             if (forceLayout) {
                 this._startForceLayoutIteration(forceLayout, layoutAnimation);
             }
+
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
                 // Update draggable
@@ -121,9 +151,33 @@ define(function (require) {
                             seriesId: seriesModel.id
                         });
                     });
+
                 }
 
             }, this);
+
+            data.graph.eachEdge(function (edge) {
+                var el = edge.getGraphicEl();
+
+                el.off('mouseover', el.__focusNodeAdjacency);
+                el.off('mouseout', el.__unfocusNodeAdjacency);
+
+                if (edge.getModel().get('focusNodeAdjacency')) {
+                    el.on('mouseover', el.__focusNodeAdjacency = function () {
+                        api.dispatchAction({
+                            type: 'focusNodeAdjacency',
+                            seriesId: seriesModel.id,
+                            edgeDataIndex: edge.dataIndex
+                        });
+                    });
+                    el.on('mouseout', el.__unfocusNodeAdjacency = function () {
+                        api.dispatchAction({
+                            type: 'unfocusNodeAdjacency',
+                            seriesId: seriesModel.id
+                        });
+                    });
+                }
+            });
 
             var circularRotateLabel = seriesModel.get('layout') === 'circular'
                 && seriesModel.get('circular.rotateLabel');
@@ -166,82 +220,50 @@ define(function (require) {
 
         focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
             var data = this._model.getData();
+            var graph = data.graph;
             var dataIndex = payload.dataIndex;
-            var el = data.getItemGraphicEl(dataIndex);
+            var edgeDataIndex = payload.edgeDataIndex;
 
-            if (!el) {
+            var node = graph.getNodeByIndex(dataIndex);
+            var edge = graph.getEdgeByIndex(edgeDataIndex);
+
+            if (!node && !edge) {
                 return;
             }
 
-            var graph = data.graph;
-            var dataType = el.dataType;
+            graph.eachNode(function (node) {
+                fadeOutItem(node, nodeOpacityPath, 0.1);
+            });
+            graph.eachEdge(function (edge) {
+                fadeOutItem(edge, lineOpacityPath, 0.1);
+            });
 
-            function fadeOutItem(item, opacityPath) {
-                var opacity = getItemOpacity(item, opacityPath);
-                var el = item.getGraphicEl();
-                if (opacity == null) {
-                    opacity = 1;
-                }
-
-                el.traverse(function (child) {
-                    child.trigger('normal');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity * 0.1);
-                    }
-                });
-            }
-
-            function fadeInItem(item, opacityPath) {
-                var opacity = getItemOpacity(item, opacityPath);
-                var el = item.getGraphicEl();
-
-                el.traverse(function (child) {
-                    child.trigger('emphasis');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity);
-                    }
-                });
-            }
-            if (dataIndex !== null && dataType !== 'edge') {
-                graph.eachNode(function (node) {
-                    fadeOutItem(node, nodeOpacityPath);
-                });
-                graph.eachEdge(function (edge) {
-                    fadeOutItem(edge, lineOpacityPath);
-                });
-
-                var node = graph.getNodeByIndex(dataIndex);
+            if (node) {
                 fadeInItem(node, nodeOpacityPath);
-                zrUtil.each(node.edges, function (edge) {
-                    if (edge.dataIndex < 0) {
+                zrUtil.each(node.edges, function (adjacentEdge) {
+                    if (adjacentEdge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node1, nodeOpacityPath);
-                    fadeInItem(edge.node2, nodeOpacityPath);
+                    fadeInItem(adjacentEdge, lineOpacityPath);
+                    fadeInItem(adjacentEdge.node1, nodeOpacityPath);
+                    fadeInItem(adjacentEdge.node2, nodeOpacityPath);
                 });
+            }
+            if (edge) {
+                fadeInItem(edge, lineOpacityPath);
+                fadeInItem(edge.node1, nodeOpacityPath);
+                fadeInItem(edge.node2, nodeOpacityPath);
             }
         },
 
         unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
             var graph = this._model.getData().graph;
+
             graph.eachNode(function (node) {
-                var opacity = getItemOpacity(node, nodeOpacityPath);
-                node.getGraphicEl().traverse(function (child) {
-                    child.trigger('normal');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity);
-                    }
-                });
+                fadeOutItem(node, nodeOpacityPath);
             });
             graph.eachEdge(function (edge) {
-                var opacity = getItemOpacity(edge, lineOpacityPath);
-                edge.getGraphicEl().traverse(function (child) {
-                    child.trigger('normal');
-                    if (child.type !== 'group') {
-                        child.setStyle('opacity', opacity);
-                    }
-                });
+                fadeOutItem(edge, lineOpacityPath);
             });
         },
 

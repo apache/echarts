@@ -8,13 +8,15 @@ define(function (require) {
     return {
         /**
          * Get color property or get color from option.textStyle.color
-         * @param {boolean} [noDefault]
+         * @param {boolean} [isEmphasis]
          * @return {string}
          */
-        getTextColor: function (noDefault) {
+        getTextColor: function (isEmphasis) {
             var ecModel = this.ecModel;
             return this.getShallow('color')
-                || (!noDefault && ecModel && ecModel.get(PATH_COLOR));
+                || (
+                    (!isEmphasis && ecModel) ? ecModel.get(PATH_COLOR) : null
+                );
         },
 
         /**

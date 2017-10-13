@@ -49,7 +49,6 @@ define(function (require) {
 
                 var nodes = nodeData.mapArray('value', function (value, idx) {
                     var point = nodeData.getItemLayout(idx);
-                    // var w = numberUtil.linearMap(value, nodeDataExtent, [0, 50]);
                     var rep = numberUtil.linearMap(value, nodeDataExtent, repulsion);
                     if (isNaN(rep)) {
                         rep = (repulsion[0] + repulsion[1]) / 2;

@@ -9,7 +9,7 @@ define(function (require) {
     var getInterval = AxisBuilder.getInterval;
 
     var axisBuilderAttrs = [
-        'axisLine', 'axisLabel', 'axisTick', 'axisName'
+        'axisLine', 'axisTickLabel', 'axisName'
     ];
     var selfBuilderAttrs = [
         'splitArea', 'splitLine'
@@ -97,13 +97,19 @@ define(function (require) {
             );
             var ticks = axis.scale.getTicks();
 
+            var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+            var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+
             var p1 = [];
             var p2 = [];
             // Simple optimization
             // Batching the lines if color are the same
             var lineStyle = lineStyleModel.getLineStyle();
             for (var i = 0; i < ticksCoords.length; i++) {
-                if (ifIgnoreOnTick(axis, i, lineInterval)) {
+                if (ifIgnoreOnTick(
+                    axis, i, lineInterval, ticksCoords.length,
+                    showMinLabel, showMaxLabel
+                )) {
                     continue;
                 }
 
@@ -174,8 +180,14 @@ define(function (require) {
             var areaStyle = areaStyleModel.getAreaStyle();
             areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
 
+            var showMinLabel = axisModel.get('axisLabel.showMinLabel');
+            var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+
             for (var i = 1; i < ticksCoords.length; i++) {
-                if (ifIgnoreOnTick(axis, i, areaInterval)) {
+                if (ifIgnoreOnTick(
+                    axis, i, areaInterval, ticksCoords.length,
+                    showMinLabel, showMaxLabel
+                )) {
                     continue;
                 }
 

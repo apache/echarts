@@ -1,10 +1,10 @@
 // Fix for 钓鱼岛
 define(function (require) {
 
-    var Region = require('../Region');
-    var zrUtil = require('zrender/core/util');
+    // var Region = require('../Region');
+    // var zrUtil = require('zrender/core/util');
 
-    var geoCoord = [126, 25];
+    // var geoCoord = [126, 25];
 
     var points = [
         [

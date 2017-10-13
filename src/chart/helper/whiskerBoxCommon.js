@@ -55,7 +55,11 @@ define(function(require) {
             var data = option.data;
 
             addOrdinal && zrUtil.each(data, function (item, index) {
-                zrUtil.isArray(item) && item.unshift(index);
+                if (item.value && zrUtil.isArray(item.value)) {
+                    item.value.unshift(index);
+                } else {
+                    zrUtil.isArray(item) && item.unshift(index);
+                }
             });
 
             var defaultValueDimensions = this.defaultValueDimensions;

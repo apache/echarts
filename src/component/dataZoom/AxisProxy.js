@@ -392,7 +392,7 @@ define(function(require) {
         var isCategoryAxis = axisModel.get('type') === 'category';
         var axisDataLen = isCategoryAxis && (axisModel.get('data') || []).length;
 
-        if (min != null && min !== 'dataMin') {
+        if (min != null && min !== 'dataMin' && typeof min !== 'function') {
             dataExtent[0] = min;
         }
         else if (isCategoryAxis) {
@@ -400,7 +400,7 @@ define(function(require) {
         }
 
         var max = axisModel.getMax(true);
-        if (max != null && max !== 'dataMax') {
+        if (max != null && max !== 'dataMax' && typeof max !== 'function') {
             dataExtent[1] = max;
         }
         else if (isCategoryAxis) {

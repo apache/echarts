@@ -6,7 +6,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var eventTool = require('zrender/core/event');
-
+    var lang = require('../../../lang').toolbox.dataView;
 
     var BLOCK_SPLITER = new Array(60).join('-');
     var ITEM_SPLITER = '\t';
@@ -277,8 +277,8 @@ define(function (require) {
         contentToOption: null,
 
         icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
-        title: '数据视图',
-        lang: ['数据视图', '关闭', '刷新'],
+        title: zrUtil.clone(lang.title),
+        lang: zrUtil.clone(lang.lang),
         backgroundColor: '#fff',
         textColor: '#000',
         textareaColor: '#fff',

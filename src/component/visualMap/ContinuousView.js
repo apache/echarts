@@ -606,7 +606,6 @@ define(function(require) {
                         // For hover link show when hover handle, which might be
                         // below or upper than sizeExtent.
                         pos[1] = mathMin(mathMax(0, pos[1]), itemSize[1]);
-
                         self._doHoverLinkToSeries(
                             pos[1],
                             0 <= pos[0] && pos[0] <= itemSize[0]
@@ -693,6 +692,7 @@ define(function(require) {
             }
 
             var resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
+
             this._dispatchHighDown('downplay', helper.convertDataIndex(resultBatches[0]));
             this._dispatchHighDown('highlight', helper.convertDataIndex(resultBatches[1]));
         },
@@ -739,7 +739,6 @@ define(function(require) {
             this._hideIndicator();
 
             var indices = this._hoverLinkDataIndices;
-
             this._dispatchHighDown('downplay', helper.convertDataIndex(indices));
 
             indices.length = 0;
@@ -837,7 +836,8 @@ define(function(require) {
     }
 
     function useHoverLinkOnHandle(visualMapModel) {
-        return !visualMapModel.get('realtime') && visualMapModel.get('hoverLinkOnHandle');
+        var hoverLinkOnHandle = visualMapModel.get('hoverLinkOnHandle');
+        return !!(hoverLinkOnHandle == null ? visualMapModel.get('realtime') : hoverLinkOnHandle);
     }
 
     function getCursor(orient) {

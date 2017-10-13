@@ -92,6 +92,14 @@ define(function(require) {
             var inputPositionParams = layoutMode
                 ? layout.getLayoutParams(option) : {};
 
+            // Backward compat: using subType on theme.
+            // But if name duplicate between series subType
+            // (for example: parallel) add component mainType,
+            // add suffix 'Series'.
+            var themeSubType = this.subType;
+            if (ComponentModel.hasClass(themeSubType)) {
+                themeSubType += 'Series';
+            }
             zrUtil.merge(
                 option,
                 ecModel.getTheme().get(this.subType)

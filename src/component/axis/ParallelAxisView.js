@@ -6,7 +6,7 @@ define(function (require) {
     var brushHelper = require('../helper/brushHelper');
     var graphic = require('../../util/graphic');
 
-    var elementList = ['axisLine', 'axisLabel', 'axisTick', 'axisName'];
+    var elementList = ['axisLine', 'axisTickLabel', 'axisName'];
 
     var AxisView = require('../../echarts').extendComponentView({
 

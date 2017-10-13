@@ -33,6 +33,7 @@ define(function (require) {
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
     var OptionManager = require('./model/OptionManager');
+    var backwardCompat = require('./preprocessor/backwardCompat');
 
     var ComponentModel = require('./model/Component');
     var SeriesModel = require('./model/Series');
@@ -43,11 +44,12 @@ define(function (require) {
     var modelUtil = require('./util/model');
     var throttle = require('./util/throttle');
 
-    var zrender = require('zrender');
+    var zrender = require('zrender/zrender');
     var zrUtil = require('zrender/core/util');
     var colorTool = require('zrender/tool/color');
     var Eventful = require('zrender/mixin/Eventful');
     var timsort = require('zrender/core/timsort');
+
 
     var each = zrUtil.each;
     var parseClassType = ComponentModel.parseClassType;
@@ -73,6 +75,7 @@ define(function (require) {
     var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
     var OPTION_UPDATED = '__optionUpdated';
     var ACTION_REG = /^[a-zA-Z0-9_]+$/;
+
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -136,11 +139,13 @@ define(function (require) {
          */
         this._throttledZrFlush = throttle.throttle(zrUtil.bind(zr.flush, zr), 17);
 
+        var theme = zrUtil.clone(theme);
+        theme && backwardCompat(theme, true);
         /**
          * @type {Object}
          * @private
          */
-        this._theme = zrUtil.clone(theme);
+        this._theme = theme;
 
         /**
          * @type {Array.<module:echarts/view/Chart>}
@@ -1521,9 +1526,9 @@ define(function (require) {
         /**
          * @type {number}
          */
-        version: '3.6.2',
+        version: '3.7.2',
         dependencies: {
-            zrender: '3.5.2'
+            zrender: '3.6.2'
         }
     };
 
@@ -1940,7 +1945,7 @@ define(function (require) {
     };
 
     echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
-    echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
+    echarts.registerPreprocessor(backwardCompat);
     echarts.registerLoading('default', require('./loading/default'));
 
     // Default action
@@ -1954,7 +1959,6 @@ define(function (require) {
         event: 'downplay',
         update: 'downplay'
     }, zrUtil.noop);
-
 
     // --------
     // Exports

@@ -298,6 +298,8 @@ define(function (require) {
         var label = this.childOfName('label');
         var defaultLabelColor;
         var defaultText;
+        var normalText;
+        var emphasisText;
 
         if (showLabel || hoverShowLabel) {
             var rawVal = seriesModel.getRawValue(idx);
@@ -307,31 +309,38 @@ define(function (require) {
                 ? numberUtil.round(rawVal)
                 : rawVal;
             defaultLabelColor = visualColor || '#000';
+
+            normalText = zrUtil.retrieve2(
+                seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
+                defaultText
+            );
+            emphasisText = zrUtil.retrieve2(
+                seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
+                normalText
+            );
         }
 
         // label.afterUpdate = lineAfterUpdate;
         if (showLabel) {
             var labelStyle = graphic.setTextStyle(label.style, labelModel, {
-                text: zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
-                    defaultText
-                )
-            }, {defaultTextColor: defaultLabelColor});
+                text: normalText
+            }, {
+                autoColor: defaultLabelColor
+            });
 
             label.__textAlign = labelStyle.textAlign;
             label.__verticalAlign = labelStyle.textVerticalAlign;
-            label.__position = labelStyle.position;
+            // 'start', 'middle', 'end'
+            label.__position = labelModel.get('position') || 'middle';
         }
         else {
             label.setStyle('text', null);
         }
+
         if (hoverShowLabel) {
             // Only these properties supported in this emphasis style here.
             label.hoverStyle = {
-                text: zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-                    defaultText
-                ),
+                text: emphasisText,
                 textFill: hoverLabelModel.getTextColor(true),
                 // For merging hover style to normal style, do not use
                 // `hoverLabelModel.getFont()` here.
@@ -350,6 +359,14 @@ define(function (require) {
         label.ignore = !showLabel && !hoverShowLabel;
 
         graphic.setHoverStyle(this);
+    };
+
+    lineProto.highlight = function () {
+        this.trigger('emphasis');
+    };
+
+    lineProto.downplay = function () {
+        this.trigger('normal');
     };
 
     lineProto.updateLayout = function (lineData, idx) {

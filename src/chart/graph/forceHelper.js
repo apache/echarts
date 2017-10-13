@@ -83,6 +83,11 @@ define(function (require) {
                     vec2.sub(v12, n2.p, n1.p);
                     var d = vec2.len(v12) - e.d;
                     var w = n2.w / (n1.w + n2.w);
+
+                    if (isNaN(w)) {
+                        w = 0;
+                    }
+
                     vec2.normalize(v12, v12);
 
                     !n1.fixed && scaleAndAdd(n1.p, n1.p, v12, w * d * friction);
