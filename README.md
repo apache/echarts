@@ -117,6 +117,9 @@ ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visu
 
 + [Echarts-PHP](https://github.com/hisune/Echarts-PHP) by hisune
 
+#### Node
+
++ [Node-Echarts](https://github.com/suxiaoxin/node-echarts) by suxiaoxin
 
 ## License
 
