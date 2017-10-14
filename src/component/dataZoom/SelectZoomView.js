@@ -1,9 +1,6 @@
-define(function (require) {
 
-    return require('./DataZoomView').extend({
+return require('./DataZoomView').extend({
 
-        type: 'dataZoom.select'
-
-    });
+    type: 'dataZoom.select'
 
 });

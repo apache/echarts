@@ -1,127 +1,124 @@
-define(function(require) {
 
-    var polygonContain = require('zrender/contain/polygon').contain;
-    var BoundingRect = require('zrender/core/BoundingRect');
+var polygonContain = require('zrender/contain/polygon').contain;
+var BoundingRect = require('zrender/core/BoundingRect');
 
-    // Key of the first level is brushType: `line`, `rect`, `polygon`.
-    // Key of the second level is chart element type: `point`, `rect`.
-    // See moudule:echarts/component/helper/BrushController
-    // function param:
-    //      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
-    //      {Object} selectors {point: selector, rect: selector, ...}
-    //      {Object} area {range: [[], [], ..], boudingRect}
-    // function return:
-    //      {boolean} Whether in the given brush.
-    var selector = {
-        lineX: getLineSelectors(0),
-        lineY: getLineSelectors(1),
-        rect: {
-            point: function (itemLayout, selectors, area) {
-                return area.boundingRect.contain(itemLayout[0], itemLayout[1]);
-            },
-            rect: function (itemLayout, selectors, area) {
-                return area.boundingRect.intersect(itemLayout);
-            }
+// Key of the first level is brushType: `line`, `rect`, `polygon`.
+// Key of the second level is chart element type: `point`, `rect`.
+// See moudule:echarts/component/helper/BrushController
+// function param:
+//      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
+//      {Object} selectors {point: selector, rect: selector, ...}
+//      {Object} area {range: [[], [], ..], boudingRect}
+// function return:
+//      {boolean} Whether in the given brush.
+var selector = {
+    lineX: getLineSelectors(0),
+    lineY: getLineSelectors(1),
+    rect: {
+        point: function (itemLayout, selectors, area) {
+            return area.boundingRect.contain(itemLayout[0], itemLayout[1]);
         },
-        polygon: {
-            point: function (itemLayout, selectors, area) {
-                return area.boundingRect.contain(itemLayout[0], itemLayout[1])
-                    && polygonContain(area.range, itemLayout[0], itemLayout[1]);
-            },
-            rect: function (itemLayout, selectors, area) {
-                var points = area.range;
-
-                if (points.length <= 1) {
-                    return false;
-                }
-
-                var x = itemLayout.x;
-                var y = itemLayout.y;
-                var width = itemLayout.width;
-                var height = itemLayout.height;
-                var p = points[0];
-
-                if (polygonContain(points, x, y)
-                    || polygonContain(points, x + width, y)
-                    || polygonContain(points, x, y + height)
-                    || polygonContain(points, x + width, y + height)
-                    || BoundingRect.create(itemLayout).contain(p[0], p[1])
-                    || lineIntersectPolygon(x, y, x + width, y, points)
-                    || lineIntersectPolygon(x, y, x, y + height, points)
-                    || lineIntersectPolygon(x + width, y, x + width, y + height, points)
-                    || lineIntersectPolygon(x, y + height, x + width, y + height, points)
-                ) {
-                    return true;
-                }
-            }
+        rect: function (itemLayout, selectors, area) {
+            return area.boundingRect.intersect(itemLayout);
         }
-    };
+    },
+    polygon: {
+        point: function (itemLayout, selectors, area) {
+            return area.boundingRect.contain(itemLayout[0], itemLayout[1])
+                && polygonContain(area.range, itemLayout[0], itemLayout[1]);
+        },
+        rect: function (itemLayout, selectors, area) {
+            var points = area.range;
 
-    function getLineSelectors(xyIndex) {
-        var xy = ['x', 'y'];
-        var wh = ['width', 'height'];
-
-        return {
-            point: function (itemLayout, selectors, area) {
-                var range = area.range;
-                var p = itemLayout[xyIndex];
-                return inLineRange(p, range);
-            },
-            rect: function (itemLayout, selectors, area) {
-                var range = area.range;
-                var layoutRange = [
-                    itemLayout[xy[xyIndex]],
-                    itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
-                ];
-                layoutRange[1] < layoutRange[0] && layoutRange.reverse();
-                return inLineRange(layoutRange[0], range)
-                    || inLineRange(layoutRange[1], range)
-                    || inLineRange(range[0], layoutRange)
-                    || inLineRange(range[1], layoutRange);
+            if (points.length <= 1) {
+                return false;
             }
-        };
-    }
 
-    function inLineRange(p, range) {
-        return range[0] <= p && p <= range[1];
-    }
+            var x = itemLayout.x;
+            var y = itemLayout.y;
+            var width = itemLayout.width;
+            var height = itemLayout.height;
+            var p = points[0];
 
-    function lineIntersectPolygon(lx, ly, l2x, l2y, points) {
-        for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
-            var p = points[i];
-            if (lineIntersect(lx, ly, l2x, l2y, p[0], p[1], p2[0], p2[1])) {
+            if (polygonContain(points, x, y)
+                || polygonContain(points, x + width, y)
+                || polygonContain(points, x, y + height)
+                || polygonContain(points, x + width, y + height)
+                || BoundingRect.create(itemLayout).contain(p[0], p[1])
+                || lineIntersectPolygon(x, y, x + width, y, points)
+                || lineIntersectPolygon(x, y, x, y + height, points)
+                || lineIntersectPolygon(x + width, y, x + width, y + height, points)
+                || lineIntersectPolygon(x, y + height, x + width, y + height, points)
+            ) {
                 return true;
             }
-            p2 = p;
         }
     }
+};
 
-    // Code from <http://blog.csdn.net/rickliuxiao/article/details/6259322> with some fix.
-    // See <https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection>
-    function lineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
-        var delta = determinant(a2x - a1x, b1x - b2x, a2y - a1y, b1y - b2y);
-        if (nearZero(delta)) { // parallel
-            return false;
+function getLineSelectors(xyIndex) {
+    var xy = ['x', 'y'];
+    var wh = ['width', 'height'];
+
+    return {
+        point: function (itemLayout, selectors, area) {
+            var range = area.range;
+            var p = itemLayout[xyIndex];
+            return inLineRange(p, range);
+        },
+        rect: function (itemLayout, selectors, area) {
+            var range = area.range;
+            var layoutRange = [
+                itemLayout[xy[xyIndex]],
+                itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
+            ];
+            layoutRange[1] < layoutRange[0] && layoutRange.reverse();
+            return inLineRange(layoutRange[0], range)
+                || inLineRange(layoutRange[1], range)
+                || inLineRange(range[0], layoutRange)
+                || inLineRange(range[1], layoutRange);
         }
-        var namenda = determinant(b1x - a1x, b1x - b2x, b1y - a1y, b1y - b2y) / delta;
-        if (namenda < 0 || namenda > 1) {
-            return false;
+    };
+}
+
+function inLineRange(p, range) {
+    return range[0] <= p && p <= range[1];
+}
+
+function lineIntersectPolygon(lx, ly, l2x, l2y, points) {
+    for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
+        var p = points[i];
+        if (lineIntersect(lx, ly, l2x, l2y, p[0], p[1], p2[0], p2[1])) {
+            return true;
         }
-        var miu = determinant(a2x - a1x, b1x - a1x, a2y - a1y, b1y - a1y) / delta;
-        if (miu < 0 || miu > 1) {
-            return false;
-        }
-        return true;
+        p2 = p;
     }
+}
 
-    function nearZero(val) {
-        return val <= (1e-6) && val >= -(1e-6);
+// Code from <http://blog.csdn.net/rickliuxiao/article/details/6259322> with some fix.
+// See <https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection>
+function lineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
+    var delta = determinant(a2x - a1x, b1x - b2x, a2y - a1y, b1y - b2y);
+    if (nearZero(delta)) { // parallel
+        return false;
     }
-
-    function determinant(v1, v2, v3, v4) {
-        return v1 * v4 - v2 * v3;
+    var namenda = determinant(b1x - a1x, b1x - b2x, b1y - a1y, b1y - b2y) / delta;
+    if (namenda < 0 || namenda > 1) {
+        return false;
     }
+    var miu = determinant(a2x - a1x, b1x - a1x, a2y - a1y, b1y - a1y) / delta;
+    if (miu < 0 || miu > 1) {
+        return false;
+    }
+    return true;
+}
 
-    return selector;
+function nearZero(val) {
+    return val <= (1e-6) && val >= -(1e-6);
+}
 
-});
+function determinant(v1, v2, v3, v4) {
+    return v1 * v4 - v2 * v3;
+}
+
+return selector;

@@ -1,9 +1,6 @@
-define(function(require) {
 
-    require('./gridSimple');
+require('./gridSimple');
 
-    require('./axisPointer/CartesianAxisPointer');
+require('./axisPointer/CartesianAxisPointer');
 
-    require('./axisPointer');
-
-});
+require('./axisPointer');
