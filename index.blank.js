@@ -1,4 +1,4 @@
 /**
  * Export echarts as CommonJS module
  */
-module.exports = require('./lib/echarts');
+module.exports = require('./src/echarts');

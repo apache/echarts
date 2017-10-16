@@ -1,9 +1,9 @@
 /**
  * Export echarts as CommonJS module
  */
-module.exports = require('./lib/echarts');
+module.exports = require('./src/echarts');
 
-require('./lib/chart/line');
-require('./lib/chart/bar');
-require('./lib/chart/pie');
-require('./lib/component/gridSimple');
+require('./src/chart/line');
+require('./src/chart/bar');
+require('./src/chart/pie');
+require('./src/component/gridSimple');

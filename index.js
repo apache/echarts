@@ -1,53 +1,53 @@
 /**
  * Export echarts as CommonJS module
  */
-module.exports = require('./lib/echarts');
+module.exports = require('./src/echarts');
 
 // Import all charts and components
-require('./lib/chart/line');
-require('./lib/chart/bar');
-require('./lib/chart/pie');
-require('./lib/chart/scatter');
-require('./lib/chart/radar');
+require('./src/chart/line');
+require('./src/chart/bar');
+require('./src/chart/pie');
+require('./src/chart/scatter');
+require('./src/chart/radar');
 
-require('./lib/chart/map');
-require('./lib/chart/treemap');
-require('./lib/chart/graph');
-require('./lib/chart/gauge');
-require('./lib/chart/funnel');
-require('./lib/chart/parallel');
-require('./lib/chart/sankey');
-require('./lib/chart/boxplot');
-require('./lib/chart/candlestick');
-require('./lib/chart/effectScatter');
-require('./lib/chart/lines');
-require('./lib/chart/heatmap');
-require('./lib/chart/pictorialBar');
-require('./lib/chart/themeRiver');
-require('./lib/chart/custom');
+require('./src/chart/map');
+require('./src/chart/treemap');
+require('./src/chart/graph');
+require('./src/chart/gauge');
+require('./src/chart/funnel');
+require('./src/chart/parallel');
+require('./src/chart/sankey');
+require('./src/chart/boxplot');
+require('./src/chart/candlestick');
+require('./src/chart/effectScatter');
+require('./src/chart/lines');
+require('./src/chart/heatmap');
+require('./src/chart/pictorialBar');
+require('./src/chart/themeRiver');
+require('./src/chart/custom');
 
-require('./lib/component/graphic');
-require('./lib/component/grid');
-require('./lib/component/legendScroll');
-require('./lib/component/tooltip');
-require('./lib/component/axisPointer');
-require('./lib/component/polar');
-require('./lib/component/geo');
-require('./lib/component/parallel');
-require('./lib/component/singleAxis');
-require('./lib/component/brush');
-require('./lib/component/calendar');
+require('./src/component/graphic');
+require('./src/component/grid');
+require('./src/component/legendScroll');
+require('./src/component/tooltip');
+require('./src/component/axisPointer');
+require('./src/component/polar');
+require('./src/component/geo');
+require('./src/component/parallel');
+require('./src/component/singleAxis');
+require('./src/component/brush');
+require('./src/component/calendar');
 
-require('./lib/component/title');
+require('./src/component/title');
 
-require('./lib/component/dataZoom');
-require('./lib/component/visualMap');
+require('./src/component/dataZoom');
+require('./src/component/visualMap');
 
-require('./lib/component/markPoint');
-require('./lib/component/markLine');
-require('./lib/component/markArea');
+require('./src/component/markPoint');
+require('./src/component/markLine');
+require('./src/component/markArea');
 
-require('./lib/component/timeline');
-require('./lib/component/toolbox');
+require('./src/component/timeline');
+require('./src/component/toolbox');
 
 require('zrender/lib/vml/vml');
