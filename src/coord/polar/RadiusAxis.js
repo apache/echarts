@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../Axis');
+import {util as zrUtil} from 'zrender';
+import Axis from '../Axis';
 
 function RadiusAxis(scale, radiusExtent) {
 
@@ -35,4 +34,4 @@ RadiusAxis.prototype = {
 
 zrUtil.inherits(RadiusAxis, Axis);
 
-return RadiusAxis;
+export default RadiusAxis;

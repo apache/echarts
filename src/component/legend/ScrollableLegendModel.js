@@ -1,6 +1,8 @@
-
-var LegendModel = require('./LegendModel');
-var layout = require('../../util/layout');
+import LegendModel from './LegendModel';
+import {
+    mergeLayoutParam,
+    getLayoutParams
+} from '../../util/layout';
 
 var ScrollableLegendModel = LegendModel.extend({
 
@@ -37,7 +39,7 @@ var ScrollableLegendModel = LegendModel.extend({
      * @override
      */
     init: function (option, parentModel, ecModel, extraOpt) {
-        var inputPositionParams = layout.getLayoutParams(option);
+        var inputPositionParams = getLayoutParams(option);
 
         ScrollableLegendModel.superCall(this, 'init', option, parentModel, ecModel, extraOpt);
 
@@ -66,9 +68,9 @@ function mergeAndNormalizeLayoutParams(legendModel, target, raw) {
     var orient = legendModel.getOrient();
     var ignoreSize = [1, 1];
     ignoreSize[orient.index] = 0;
-    layout.mergeLayoutParam(target, raw, {
+    mergeLayoutParam(target, raw, {
         type: 'box', ignoreSize: ignoreSize
     });
 }
 
-return ScrollableLegendModel;
+export default ScrollableLegendModel;

@@ -1,7 +1,7 @@
+import MapDraw from '../helper/MapDraw';
+import * as echarts from '../../echarts';
 
-var MapDraw = require('../helper/MapDraw');
-
-return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'geo',
 

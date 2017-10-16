@@ -1,6 +1,9 @@
+import * as echarts from '../../../echarts';
+import {util as zrUtil} from 'zrender';
+import lang from '../../../lang';
+import * as featureManager from '../featureManager';
 
-var zrUtil = require('zrender/core/util');
-var lang = require('../../../lang').toolbox.magicType;
+var magicTypeLang = lang.toolbox.magicType;
 
 function MagicType(model) {
     this.model = model;
@@ -17,7 +20,7 @@ MagicType.defaultOption = {
         tiled: 'M2.3,2.2h22.8V25H2.3V2.2z M35,2.2h22.8V25H35V2.2zM2.3,35h22.8v22.8H2.3V35z M35,35h22.8v22.8H35V35z'
     },
     // `line`, `bar`, `stack`, `tiled`
-    title: zrUtil.clone(lang.title),
+    title: zrUtil.clone(magicTypeLang.title),
     option: {},
     seriesIndex: {}
 };
@@ -155,7 +158,6 @@ proto.onclick = function (ecModel, api, type) {
     });
 };
 
-var echarts = require('../../../echarts');
 echarts.registerAction({
     type: 'changeMagicType',
     event: 'magicTypeChanged',
@@ -164,6 +166,6 @@ echarts.registerAction({
     ecModel.mergeOption(payload.newOption);
 });
 
-require('../featureManager').register('magicType', MagicType);
+featureManager.register('magicType', MagicType);
 
-return MagicType;
+export default MagicType;

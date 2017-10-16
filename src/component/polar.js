@@ -1,17 +1,17 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
+import barPolar from '../layout/barPolar';
 
-var zrUtil = require('zrender/core/util');
-
-require('../coord/polar/polarCreator');
-require('./angleAxis');
-require('./radiusAxis');
-require('./axisPointer');
-
-require('./axisPointer/PolarAxisPointer');
+import '../coord/polar/polarCreator';
+import './angleAxis';
+import './radiusAxis';
+import './axisPointer';
+import './axisPointer/PolarAxisPointer';
 
 // For reducing size of echarts.min, barLayoutPolar is required by polar.
-require('../echarts').registerLayout(zrUtil.curry(require('../layout/barPolar'), 'bar'));
+echarts.registerLayout(zrUtil.curry(barPolar, 'bar'));
 
 // Polar view
-require('../echarts').extendComponentView({
+echarts.extendComponentView({
     type: 'polar'
 });

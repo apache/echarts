@@ -1,13 +1,9 @@
-/**
- * @file Data zoom model
- */
+import * as echarts from '../../echarts';
+import {util as zrUtil, env} from 'zrender';
+import * as modelUtil from '../../util/model';
+import * as helper from './helper';
+import AxisProxy from './AxisProxy';
 
-var zrUtil = require('zrender/core/util');
-var env = require('zrender/core/env');
-var echarts = require('../../echarts');
-var modelUtil = require('../../util/model');
-var helper = require('./helper');
-var AxisProxy = require('./AxisProxy');
 var each = zrUtil.each;
 var eachAxisDim = helper.eachAxisDim;
 
@@ -551,4 +547,4 @@ function updateRangeUse(dataZoomModel, rawOption) {
     });
 }
 
-return DataZoomModel;
+export default DataZoomModel;

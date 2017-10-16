@@ -1,10 +1,6 @@
-/**
- * @file Silder timeline model
- */
-
-var TimelineModel = require('./TimelineModel');
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
+import {util as zrUtil} from 'zrender';
+import TimelineModel from './TimelineModel';
+import * as modelUtil from '../../util/model';
 
 var SliderTimelineModel = TimelineModel.extend({
 
@@ -104,4 +100,4 @@ var SliderTimelineModel = TimelineModel.extend({
 
 zrUtil.mixin(SliderTimelineModel, modelUtil.dataFormatMixin);
 
-return SliderTimelineModel;
+export default SliderTimelineModel;

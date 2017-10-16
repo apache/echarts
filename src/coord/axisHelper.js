@@ -1,20 +1,17 @@
+import {util as zrUtil, contain} from 'zrender';
+import OrdinalScale from '../scale/Ordinal';
+import IntervalScale from '../scale/Interval';
+import Scale from '../scale/Scale';
+import * as numberUtil from '../util/number';
 
-var OrdinalScale = require('../scale/Ordinal');
-var IntervalScale = require('../scale/Interval');
-require('../scale/Time');
-require('../scale/Log');
-var Scale = require('../scale/Scale');
-
-var numberUtil = require('../util/number');
-var zrUtil = require('zrender/core/util');
-var textContain = require('zrender/contain/text');
-var axisHelper = {};
+import '../scale/Time';
+import '../scale/Log';
 
 /**
  * Get axis scale extent before niced.
  * Item of returned array can only be number (including Infinity and NaN).
  */
-axisHelper.getScaleExtent = function (scale, model) {
+export function getScaleExtent(scale, model) {
     var scaleType = scale.type;
 
     var min = model.getMin();
@@ -113,10 +110,10 @@ axisHelper.getScaleExtent = function (scale, model) {
     }
 
     return [min, max];
-};
+}
 
-axisHelper.niceScaleExtent = function (scale, model) {
-    var extent = axisHelper.getScaleExtent(scale, model);
+export function niceScaleExtent(scale, model) {
+    var extent = getScaleExtent(scale, model);
     var fixMin = model.getMin() != null;
     var fixMax = model.getMax() != null;
     var splitNumber = model.get('splitNumber');
@@ -146,14 +143,14 @@ axisHelper.niceScaleExtent = function (scale, model) {
     if (interval != null) {
         scale.setInterval && scale.setInterval(interval);
     }
-};
+}
 
 /**
  * @param {module:echarts/model/Model} model
  * @param {string} [axisType] Default retrieve from model.type
  * @return {module:echarts/scale/*}
  */
-axisHelper.createScaleByModel = function(model, axisType) {
+export function createScaleByModel(model, axisType) {
     axisType = axisType || model.get('type');
     if (axisType) {
         switch (axisType) {
@@ -169,17 +166,17 @@ axisHelper.createScaleByModel = function(model, axisType) {
                 return (Scale.getClass(axisType) || IntervalScale).create(model);
         }
     }
-};
+}
 
 /**
  * Check if the axis corss 0
  */
-axisHelper.ifAxisCrossZero = function (axis) {
+export function ifAxisCrossZero(axis) {
     var dataExtent = axis.scale.getExtent();
     var min = dataExtent[0];
     var max = dataExtent[1];
     return !((min > 0 && max > 0) || (min < 0 && max < 0));
-};
+}
 
 /**
  * @param {Array.<number>} tickCoords In axis self coordinate.
@@ -188,7 +185,7 @@ axisHelper.ifAxisCrossZero = function (axis) {
  * @param {boolean} isAxisHorizontal
  * @return {number}
  */
-axisHelper.getAxisLabelInterval = function (tickCoords, labels, font, isAxisHorizontal) {
+export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal) {
     // FIXME
     // 不同角的axis和label，不只是horizontal和vertical.
 
@@ -204,7 +201,7 @@ axisHelper.getAxisLabelInterval = function (tickCoords, labels, font, isAxisHori
 
     for (var i = 0; i < tickCoords.length; i += step) {
         var tickCoord = tickCoords[i];
-        var rect = textContain.getBoundingRect(
+        var rect = contain.text.getBoundingRect(
             labels[i], font, 'center', 'top'
         );
         rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
@@ -228,14 +225,14 @@ axisHelper.getAxisLabelInterval = function (tickCoords, labels, font, isAxisHori
         return step;
     }
     return (autoLabelInterval + 1) * step - 1;
-};
+}
 
 /**
  * @param {Object} axis
  * @param {Function} labelFormatter
  * @return {Array.<string>}
  */
-axisHelper.getFormattedLabels = function (axis, labelFormatter) {
+export function getFormattedLabels(axis, labelFormatter) {
     var scale = axis.scale;
     var labels = scale.getTicksLabels();
     var ticks = scale.getTicks();
@@ -251,7 +248,7 @@ axisHelper.getFormattedLabels = function (axis, labelFormatter) {
     else if (typeof labelFormatter === 'function') {
         return zrUtil.map(ticks, function (tick, idx) {
             return labelFormatter(
-                axisHelper.getAxisRawValue(axis, tick),
+                getAxisRawValue(axis, tick),
                 idx
             );
         }, this);
@@ -259,13 +256,11 @@ axisHelper.getFormattedLabels = function (axis, labelFormatter) {
     else {
         return labels;
     }
-};
+}
 
-axisHelper.getAxisRawValue = function (axis, value) {
+export function getAxisRawValue(axis, value) {
     // In category axis with data zoom, tick is not the original
     // index of axis.data. So tick should not be exposed to user
     // in category axis.
     return axis.type === 'category' ? axis.scale.getLabel(value) : value;
-};
-
-return axisHelper;
+}

@@ -1,11 +1,7 @@
-/**
- * @file Timeline model
- */
-
-var ComponentModel = require('../../model/Component');
-var List = require('../../data/List');
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
+import {util as zrUtil} from 'zrender';
+import ComponentModel from '../../model/Component';
+import List from '../../data/List';
+import * as modelUtil from '../../util/model';
 
 var TimelineModel = ComponentModel.extend({
 
@@ -190,4 +186,4 @@ var TimelineModel = ComponentModel.extend({
 
 });
 
-return TimelineModel;
+export default TimelineModel;

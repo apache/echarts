@@ -1,5 +1,5 @@
 
-return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
+export default function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
 
     // Encoding visual for all series include which is filtered for legend drawing
     ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
@@ -39,4 +39,4 @@ return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
             });
         }
     });
-};
+}

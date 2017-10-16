@@ -1,9 +1,5 @@
-/**
- * @file Legend action
- */
-
-var echarts = require('../../echarts');
-var zrUtil = require('zrender/core/util');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
 
 function legendSelectActionHandler(methodName, payload, ecModel) {
     var selectedMap = {};

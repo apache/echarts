@@ -1,4 +1,4 @@
-import echarts from '../echarts';
+import * as echarts from '../echarts';
 import {util as zrUtil} from 'zrender';
 
 export default function (seriesType, actionInfos) {

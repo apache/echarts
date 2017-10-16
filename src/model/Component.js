@@ -4,12 +4,14 @@
  * @module echarts/model/Component
  */
 
-var Model = require('./Model');
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+import Model from './Model';
+import * as componentUtil from '../util/component';
+import * as clazzUtil from '../util/clazz';
+import * as layout from '../util/layout';
+import boxLayoutMixin from './mixin/boxLayout';
+
 var arrayPush = Array.prototype.push;
-var componentUtil = require('../util/component');
-var clazzUtil = require('../util/clazz');
-var layout = require('../util/layout');
 
 /**
  * @alias module:echarts/model/Component
@@ -187,6 +189,6 @@ function getDependencies(componentType) {
     });
 }
 
-zrUtil.mixin(ComponentModel, require('./mixin/boxLayout'));
+zrUtil.mixin(ComponentModel, boxLayoutMixin);
 
-return ComponentModel;
+export default ComponentModel;

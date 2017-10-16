@@ -1,19 +1,17 @@
 
-var helper = {};
-
 /**
  * For geo and graph.
  *
  * @param {Object} controllerHost
  * @param {module:zrender/Element} controllerHost.target
  */
-helper.updateViewOnPan = function (controllerHost, dx, dy) {
+export function updateViewOnPan(controllerHost, dx, dy) {
     var target = controllerHost.target;
     var pos = target.position;
     pos[0] += dx;
     pos[1] += dy;
     target.dirty();
-};
+}
 
 /**
  * For geo and graph.
@@ -23,7 +21,7 @@ helper.updateViewOnPan = function (controllerHost, dx, dy) {
  * @param {number} controllerHost.zoom
  * @param {number} controllerHost.zoomLimit like: {min: 1, max: 2}
  */
-helper.updateViewOnZoom = function (controllerHost, zoomDelta, zoomX, zoomY) {
+export function updateViewOnZoom(controllerHost, zoomDelta, zoomX, zoomY) {
     var target = controllerHost.target;
     var zoomLimit = controllerHost.zoomLimit;
     var pos = target.position;
@@ -48,6 +46,4 @@ helper.updateViewOnZoom = function (controllerHost, zoomDelta, zoomX, zoomY) {
     scale[1] *= zoomScale;
 
     target.dirty();
-};
-
-return helper;
+}

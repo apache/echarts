@@ -1,6 +1,6 @@
+import {util as zrUtil} from 'zrender';
+import * as numberUtil from '../../util/number';
 
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../../util/number');
 var indexOf = zrUtil.indexOf;
 
 function hasXOrY(item) {
@@ -81,7 +81,7 @@ var markerTypeCalculator = {
  * @param  {Object} item
  * @return {Object}
  */
-var dataTransform = function (seriesModel, item) {
+export function dataTransform(seriesModel, item) {
     var data = seriesModel.getData();
     var coordSys = seriesModel.coordinateSystem;
 
@@ -129,9 +129,9 @@ var dataTransform = function (seriesModel, item) {
         }
     }
     return item;
-};
+}
 
-var getAxisInfo = function (item, data, coordSys, seriesModel) {
+export function getAxisInfo(item, data, coordSys, seriesModel) {
     var ret = {};
 
     if (item.valueIndex != null || item.valueDim != null) {
@@ -149,7 +149,7 @@ var getAxisInfo = function (item, data, coordSys, seriesModel) {
     }
 
     return ret;
-};
+}
 
 /**
  * Filter data which is out of coordinateSystem range
@@ -158,21 +158,21 @@ var getAxisInfo = function (item, data, coordSys, seriesModel) {
  * @param  {Object} item
  * @return {boolean}
  */
-var dataFilter = function (coordSys, item) {
+export function dataFilter(coordSys, item) {
     // Alwalys return true if there is no coordSys
     return (coordSys && coordSys.containData && item.coord && !hasXOrY(item))
         ? coordSys.containData(item.coord) : true;
-};
+}
 
-var dimValueGetter = function (item, dimName, dataIndex, dimIndex) {
+export function dimValueGetter(item, dimName, dataIndex, dimIndex) {
     // x, y, radius, angle
     if (dimIndex < 2) {
         return item.coord && item.coord[dimIndex];
     }
     return item.value;
-};
+}
 
-var numCalculate = function (data, valueDataDim, type) {
+export function numCalculate(data, valueDataDim, type) {
     if (type === 'average') {
         var sum = 0;
         var count = 0;
@@ -187,12 +187,4 @@ var numCalculate = function (data, valueDataDim, type) {
     else {
         return data.getDataExtent(valueDataDim, true)[type === 'max' ? 1 : 0];
     }
-};
-
-return {
-    dataTransform: dataTransform,
-    dataFilter: dataFilter,
-    dimValueGetter: dimValueGetter,
-    getAxisInfo: getAxisInfo,
-    numCalculate: numCalculate
-};
+}

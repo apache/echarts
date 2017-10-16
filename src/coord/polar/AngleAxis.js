@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../Axis');
+import {util as zrUtil} from 'zrender';
+import Axis from '../Axis';
 
 function AngleAxis(scale, angleExtent) {
 
@@ -37,4 +36,4 @@ AngleAxis.prototype = {
 
 zrUtil.inherits(AngleAxis, Axis);
 
-return AngleAxis;
+export default AngleAxis;

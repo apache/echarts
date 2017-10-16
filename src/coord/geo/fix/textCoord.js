@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var coordsOffsetMap = {
     '南海诸岛' : [32, 80],
@@ -11,7 +10,7 @@ var coordsOffsetMap = {
     '天津': [5, 5]
 };
 
-return function (geo) {
+export default function (geo) {
     zrUtil.each(geo.regions, function (region) {
         var coordFix = coordsOffsetMap[region.name];
         if (coordFix) {

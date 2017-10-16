@@ -1,10 +1,6 @@
-/**
- * @file Data zoom action
- */
-
-var zrUtil = require('zrender/core/util');
-var helper = require('./helper');
-var echarts = require('../../echarts');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import * as helper from './helper';
 
 
 echarts.registerAction('dataZoom', function (payload, ecModel) {

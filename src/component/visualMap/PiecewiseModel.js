@@ -1,9 +1,8 @@
-
-var VisualMapModel = require('./VisualMapModel');
-var zrUtil = require('zrender/core/util');
-var VisualMapping = require('../../visual/VisualMapping');
-var visualDefault = require('../../visual/visualDefault');
-var reformIntervals = require('../../util/number').reformIntervals;
+import {util as zrUtil} from 'zrender';
+import VisualMapModel from './VisualMapModel';
+import VisualMapping from '../../visual/VisualMapping';
+import visualDefault from '../../visual/visualDefault';
+import {reformIntervals} from '../../util/number';
 
 var PiecewiseModel = VisualMapModel.extend({
 
@@ -522,4 +521,4 @@ function normalizeReverse(thisOption, pieceList) {
     }
 }
 
-return PiecewiseModel;
+export default PiecewiseModel;

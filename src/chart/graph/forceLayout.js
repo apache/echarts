@@ -1,7 +1,7 @@
-import forceHelper from './forceHelper';
+import {forceLayout} from './forceHelper';
+import {simpleLayout} from './simpleLayoutHelper';
+import {circularLayout} from './circularLayoutHelper';
 import {linearMap} from '../../util/number';
-import simpleLayoutHelper from './simpleLayoutHelper';
-import circularLayoutHelper from './circularLayoutHelper';
 import {vector as vec2} from 'zrender';
 import {util as zrUtil} from 'zrender';
 
@@ -25,10 +25,10 @@ export default function (ecModel) {
                 });
             }
             else if (!initLayout || initLayout === 'none') {
-                simpleLayoutHelper(graphSeries);
+                simpleLayout(graphSeries);
             }
             else if (initLayout === 'circular') {
-                circularLayoutHelper(graphSeries);
+                circularLayout(graphSeries);
             }
 
             var nodeDataExtent = nodeData.getDataExtent('value');
@@ -74,7 +74,7 @@ export default function (ecModel) {
 
             var coordSys = graphSeries.coordinateSystem;
             var rect = coordSys.getBoundingRect();
-            var forceInstance = forceHelper(nodes, edges, {
+            var forceInstance = forceLayout(nodes, edges, {
                 rect: rect,
                 gravity: forceModel.get('gravity')
             });

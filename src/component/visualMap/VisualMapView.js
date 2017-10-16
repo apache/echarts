@@ -1,12 +1,11 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as formatUtil from '../../util/format';
+import * as layout from '../../util/layout';
+import VisualMapping from '../../visual/VisualMapping';
 
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var formatUtil = require('../../util/format');
-var layout = require('../../util/layout');
-var echarts = require('../../echarts');
-var VisualMapping = require('../../visual/VisualMapping');
-
-return echarts.extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'visualMap',
 

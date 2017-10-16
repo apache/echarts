@@ -2,10 +2,10 @@
  * Separate legend and scrollable legend to reduce package size.
  */
 
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var layoutUtil = require('../../util/layout');
-var LegendView = require('./LegendView');
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as layoutUtil from '../../util/layout';
+import LegendView from './LegendView';
 
 var Group = graphic.Group;
 
@@ -377,4 +377,4 @@ var ScrollableLegendView = LegendView.extend({
 
 });
 
-return ScrollableLegendView;
+export default ScrollableLegendView;

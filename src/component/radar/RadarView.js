@@ -1,13 +1,13 @@
-
-var AxisBuilder = require('../axis/AxisBuilder');
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import AxisBuilder from '../axis/AxisBuilder';
+import * as graphic from '../../util/graphic';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ];
 
-return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'radar',
 

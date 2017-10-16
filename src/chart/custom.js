@@ -1,7 +1,7 @@
-import echarts from '../echarts';
+import * as echarts from '../echarts';
 import {util as zrUtil} from 'zrender';
-import graphicUtil from '../util/graphic';
-import labelHelper from './helper/labelHelper';
+import * as graphicUtil from '../util/graphic';
+import {findLabelValueDim} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
 import barGrid from '../layout/barGrid';
 import DataDiffer from '../data/DataDiffer';
@@ -308,7 +308,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             currItemModel = data.getItemModel(dataIndexInside);
             currLabelNormalModel = currItemModel.getModel(LABEL_NORMAL);
             currLabelEmphasisModel = currItemModel.getModel(LABEL_EMPHASIS);
-            currLabelValueDim = labelHelper.findLabelValueDim(data);
+            currLabelValueDim = findLabelValueDim(data);
             currVisualColor = data.getItemVisual(dataIndexInside, 'color');
 
             currDirty = false;

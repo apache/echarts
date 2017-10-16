@@ -1,11 +1,8 @@
-/**
- * @file VisualMap preprocessor
- */
+import {util as zrUtil} from 'zrender';
 
-var zrUtil = require('zrender/core/util');
 var each = zrUtil.each;
 
-return function (option) {
+export default function (option) {
     var visualMap = option && option.visualMap;
 
     if (!zrUtil.isArray(visualMap)) {
@@ -37,7 +34,7 @@ return function (option) {
             });
         }
     });
-};
+}
 
 function has(obj, name) {
     return obj && obj.hasOwnProperty && obj.hasOwnProperty(name);

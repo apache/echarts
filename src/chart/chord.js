@@ -1,9 +1,8 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
 
 import './chord/ChordSeries';
 import './chord/ChordView';
-
-import echarts from '../echarts';
-import {util as zrUtil} from 'zrender';
 
 import chordCircularLayout from './chord/chordCircularLayout';
 import dataColor from '../visual/dataColor';

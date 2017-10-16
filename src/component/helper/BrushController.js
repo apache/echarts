@@ -1,15 +1,7 @@
-/**
- * Box selection tool.
- *
- * @module echarts/component/helper/BrushController
- */
-
-
-var Eventful = require('zrender/mixin/Eventful');
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var interactionMutex = require('./interactionMutex');
-var DataDiffer = require('../../data/DataDiffer');
+import {util as zrUtil, Eventful} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as interactionMutex from './interactionMutex';
+import DataDiffer from '../../data/DataDiffer';
 
 var curry = zrUtil.curry;
 var each = zrUtil.each;
@@ -989,4 +981,4 @@ function getLineRenderer(xyIndex) {
     };
 }
 
-return BrushController;
+export default BrushController;

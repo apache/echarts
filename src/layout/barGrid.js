@@ -1,7 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../util/number');
-var parsePercent = numberUtil.parsePercent;
+import {util as zrUtil} from 'zrender';
+import {parsePercent} from '../util/number';
 
 var STACK_PREFIX = '__ec_stack_';
 
@@ -321,4 +319,4 @@ function barLayoutGrid(seriesType, ecModel, api) {
 
 barLayoutGrid.getLayoutOnAxis = getLayoutOnAxis;
 
-return barLayoutGrid;
+export default barLayoutGrid;

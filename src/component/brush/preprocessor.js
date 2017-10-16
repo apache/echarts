@@ -1,12 +1,8 @@
-/**
- * @file brush preprocessor
- */
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var DEFAULT_TOOLBOX_BTNS = ['rect', 'polygon', 'keep', 'clear'];
 
-return function (option, isNew) {
+export default function (option, isNew) {
     var brushComponents = option && option.brush;
     if (!zrUtil.isArray(brushComponents)) {
         brushComponents = brushComponents ? [brushComponents] : [];
@@ -48,7 +44,7 @@ return function (option, isNew) {
     if (isNew && !brushTypes.length) {
         brushTypes.push.apply(brushTypes, DEFAULT_TOOLBOX_BTNS);
     }
-};
+}
 
 function removeDuplicate(arr) {
     var map = {};

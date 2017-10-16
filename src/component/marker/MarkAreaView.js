@@ -1,12 +1,12 @@
 // TODO Better on polar
 
-var zrUtil = require('zrender/core/util');
-var List = require('../../data/List');
-var numberUtil = require('../../util/number');
-var graphic = require('../../util/graphic');
-var colorUtil = require('zrender/tool/color');
+import {util as zrUtil, color as colorUtil} from 'zrender';
+import List from '../../data/List';
+import * as numberUtil from '../../util/number';
+import * as graphic from '../../util/graphic';
+import * as markerHelper from './markerHelper';
+import MarkerView from './MarkerView';
 
-var markerHelper = require('./markerHelper');
 
 var markAreaTransform = function (seriesModel, coordSys, maModel, item) {
     var lt = markerHelper.dataTransform(seriesModel, item[0]);
@@ -126,7 +126,7 @@ function getSingleMarkerEndPoint(data, idx, dims, seriesModel, api) {
 
 var dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']];
 
-require('./MarkerView').extend({
+MarkerView.extend({
 
     type: 'markArea',
 

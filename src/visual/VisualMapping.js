@@ -1,10 +1,9 @@
-/**
- * @file Visual mapping.
- */
+import {
+    util as zrUtil,
+    color as zrColor
+} from 'zrender';
+import {linearMap} from '../util/number';
 
-var zrUtil = require('zrender/core/util');
-var zrColor = require('zrender/tool/color');
-var linearMap = require('../util/number').linearMap;
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
 
@@ -613,4 +612,4 @@ function littleThan(close, a, b) {
     return close ? a <= b : a < b;
 }
 
-return VisualMapping;
+export default VisualMapping;

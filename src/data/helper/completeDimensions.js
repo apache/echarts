@@ -2,12 +2,12 @@
  * Complete dimensions by data (guess dimension).
  */
 
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
+import {util as zrUtil} from 'zrender';
+import {normalizeToArray} from '../../util/model';
+
 var each = zrUtil.each;
 var isString = zrUtil.isString;
 var defaults = zrUtil.defaults;
-var normalizeToArray = modelUtil.normalizeToArray;
 
 var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
 
@@ -218,4 +218,4 @@ function retrieveValue(o) {
     return zrUtil.isArray(o) ? o : zrUtil.isObject(o) ? o.value: o;
 }
 
-return completeDimensions;
+export default completeDimensions;

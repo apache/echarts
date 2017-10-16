@@ -1,13 +1,12 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil, contain} from 'zrender';
+import * as featureManager from './featureManager';
+import * as graphic from '../../util/graphic';
+import Model from '../../model/Model';
+import DataDiffer from '../../data/DataDiffer';
+import * as listComponentHelper from '../helper/listComponent';
 
-var featureManager = require('./featureManager');
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var Model = require('../../model/Model');
-var DataDiffer = require('../../data/DataDiffer');
-var listComponentHelper = require('../helper/listComponent');
-var textContain = require('zrender/contain/text');
-
-return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'toolbox',
 
@@ -179,8 +178,8 @@ return require('../../echarts').extendComponentView({
             var hoverStyle = icon.hoverStyle;
             // May be background element
             if (hoverStyle && titleText) {
-                var rect = textContain.getBoundingRect(
-                    titleText, textContain.makeFont(hoverStyle)
+                var rect = contain.text.getBoundingRect(
+                    titleText, contain.text.makeFont(hoverStyle)
                 );
                 var offsetX = icon.position[0] + group.position[0];
                 var offsetY = icon.position[1] + group.position[1] + itemSize;

@@ -1,5 +1,6 @@
+import MarkerModel from './MarkerModel';
 
-return require('./MarkerModel').extend({
+export default MarkerModel.extend({
 
     type: 'markPoint',
 

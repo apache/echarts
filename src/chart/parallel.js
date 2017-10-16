@@ -1,4 +1,4 @@
-import echarts from '../echarts';
+import * as echarts from '../echarts';
 import '../component/parallel';
 import './parallel/ParallelSeries';
 import './parallel/ParallelView';

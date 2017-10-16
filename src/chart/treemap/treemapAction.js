@@ -2,8 +2,8 @@
  * @file Treemap action
  */
 
-import echarts from '../../echarts';
-import helper from './helper';
+import * as echarts from '../../echarts';
+import * as helper from './helper';
 
 var noop = function () {};
 

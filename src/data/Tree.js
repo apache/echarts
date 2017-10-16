@@ -4,11 +4,11 @@
  * @module echarts/data/Tree
  */
 
-var zrUtil = require('zrender/core/util');
-var Model = require('../model/Model');
-var List = require('./List');
-var linkList = require('./helper/linkList');
-var completeDimensions = require('./helper/completeDimensions');
+import {util as zrUtil} from 'zrender';
+import Model from '../model/Model';
+import List from './List';
+import linkList from './helper/linkList';
+import completeDimensions from './helper/completeDimensions';
 
 /**
  * @constructor module:echarts/data/Tree~TreeNode
@@ -485,4 +485,4 @@ function addChild(child, node) {
     child.parentNode = node;
 }
 
-return Tree;
+export default Tree;

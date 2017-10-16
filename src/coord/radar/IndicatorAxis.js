@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../Axis');
+import {util as zrUtil} from 'zrender';
+import Axis from '../Axis';
 
 function IndicatorAxis(dim, scale, radiusExtent) {
     Axis.call(this, dim, scale, radiusExtent);
@@ -30,4 +29,4 @@ function IndicatorAxis(dim, scale, radiusExtent) {
 
 zrUtil.inherits(IndicatorAxis, Axis);
 
-return IndicatorAxis;
+export default IndicatorAxis;

@@ -1,11 +1,10 @@
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../../util/model';
 
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
-
-return function (option) {
+export default function (option) {
     createParallelIfNeeded(option);
     mergeAxisOptionFromParallel(option);
-};
+}
 
 /**
  * Create a parallel coordinate if not exists.

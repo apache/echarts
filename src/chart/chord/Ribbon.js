@@ -1,4 +1,4 @@
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 
 var sin = Math.sin;
 var cos = Math.cos;

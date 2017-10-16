@@ -1,10 +1,14 @@
 // TODO clockwise
 
-var zrUtil = require('zrender/core/util');
-var IndicatorAxis = require('./IndicatorAxis');
-var IntervalScale = require('../../scale/Interval');
-var numberUtil = require('../../util/number');
-var axisHelper = require('../axisHelper');
+import {util as zrUtil} from 'zrender';
+import IndicatorAxis from './IndicatorAxis';
+import IntervalScale from '../../scale/Interval';
+import * as numberUtil from '../../util/number';
+import {
+    getScaleExtent,
+    niceScaleExtent
+} from '../axisHelper';
+import CoordinateSystem from '../../CoordinateSystem';
 
 function Radar(radarModel, ecModel, api) {
 
@@ -150,8 +154,8 @@ Radar.prototype.update = function (ecModel, api) {
     }
     // Force all the axis fixing the maxSplitNumber.
     zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-        var rawExtent = axisHelper.getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
-        axisHelper.niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+        var rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+        niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
         var axisModel = indicatorAxis.model;
         var scale = indicatorAxis.scale;
@@ -228,5 +232,6 @@ Radar.create = function (ecModel, api) {
     return radarList;
 };
 
-require('../../CoordinateSystem').register('radar', Radar);
-return Radar;
+CoordinateSystem.register('radar', Radar);
+
+export default Radar;

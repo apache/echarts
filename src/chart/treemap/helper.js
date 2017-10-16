@@ -53,10 +53,3 @@ export function wrapTreePathInfo(node, seriesModel) {
 
     return treePathInfo;
 }
-
-export default {
-    retrieveTargetInfo,
-    getPathToRoot,
-    aboveViewRoot,
-    wrapTreePathInfo,
-};

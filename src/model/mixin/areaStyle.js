@@ -1,4 +1,6 @@
-var getAreaStyle = require('./makeStyleMapper')(
+import makeStyleMapper from './makeStyleMapper';
+
+var getAreaStyle = makeStyleMapper(
     [
         ['fill', 'color'],
         ['shadowBlur'],
@@ -8,7 +10,8 @@ var getAreaStyle = require('./makeStyleMapper')(
         ['shadowColor']
     ]
 );
-return {
+
+export default {
     getAreaStyle: function (excludes, includes) {
         return getAreaStyle(this, excludes, includes);
     }

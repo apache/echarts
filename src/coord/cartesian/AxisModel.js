@@ -1,7 +1,7 @@
-
-var ComponentModel = require('../../model/Component');
-var zrUtil = require('zrender/core/util');
-var axisModelCreator = require('../axisModelCreator');
+import {util as zrUtil} from 'zrender';
+import ComponentModel from '../../model/Component';
+import axisModelCreator from '../axisModelCreator';
+import axisModelCommonMixin from '../axisModelCommonMixin';
 
 var AxisModel = ComponentModel.extend({
 
@@ -55,7 +55,7 @@ function getAxisType(axisDim, option) {
     return option.type || (option.data ? 'category' : 'value');
 }
 
-zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
+zrUtil.merge(AxisModel.prototype, axisModelCommonMixin);
 
 var extraOption = {
     // gridIndex: 0,
@@ -68,4 +68,4 @@ var extraOption = {
 axisModelCreator('x', AxisModel, getAxisType, extraOption);
 axisModelCreator('y', AxisModel, getAxisType, extraOption);
 
-return AxisModel;
+export default AxisModel;

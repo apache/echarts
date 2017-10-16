@@ -1,13 +1,13 @@
-
-var zrUtil = require('zrender/core/util');
-
-var pathTool = require('zrender/tool/path');
-var Path = require('zrender/graphic/Path');
-var colorTool = require('zrender/tool/color');
-var matrix = require('zrender/core/matrix');
-var vector = require('zrender/core/vector');
-var Transformable = require('zrender/mixin/Transformable');
-var BoundingRect = require('zrender/core/BoundingRect');
+import {
+    util as zrUtil,
+    path as pathTool,
+    color as colorTool,
+    matrix,
+    vector,
+    Path,
+    Transformable,
+    Image
+} from 'zrender';
 
 var round = Math.round;
 var mathMax = Math.max;
@@ -15,53 +15,19 @@ var mathMin = Math.min;
 
 var EMPTY_OBJ = {};
 
-var graphic = {};
-
-graphic.Group = require('zrender/container/Group');
-
-graphic.Image = require('zrender/graphic/Image');
-
-graphic.Text = require('zrender/graphic/Text');
-
-graphic.Circle = require('zrender/graphic/shape/Circle');
-
-graphic.Sector = require('zrender/graphic/shape/Sector');
-
-graphic.Ring = require('zrender/graphic/shape/Ring');
-
-graphic.Polygon = require('zrender/graphic/shape/Polygon');
-
-graphic.Polyline = require('zrender/graphic/shape/Polyline');
-
-graphic.Rect = require('zrender/graphic/shape/Rect');
-
-graphic.Line = require('zrender/graphic/shape/Line');
-
-graphic.BezierCurve = require('zrender/graphic/shape/BezierCurve');
-
-graphic.Arc = require('zrender/graphic/shape/Arc');
-
-graphic.CompoundPath = require('zrender/graphic/CompoundPath');
-
-graphic.LinearGradient = require('zrender/graphic/LinearGradient');
-
-graphic.RadialGradient = require('zrender/graphic/RadialGradient');
-
-graphic.BoundingRect = BoundingRect;
-
 /**
  * Extend shape with parameters
  */
-graphic.extendShape = function (opts) {
+export function extendShape(opts) {
     return Path.extend(opts);
-};
+}
 
 /**
  * Extend path
  */
-graphic.extendPath = function (pathData, opts) {
+export function extendPath(pathData, opts) {
     return pathTool.extendFromString(pathData, opts);
-};
+}
 
 /**
  * Create a path element from path data string
@@ -70,20 +36,18 @@ graphic.extendPath = function (pathData, opts) {
  * @param {module:zrender/core/BoundingRect} rect
  * @param {string} [layout=cover] 'center' or 'cover'
  */
-graphic.makePath = function (pathData, opts, rect, layout) {
+export function makePath(pathData, opts, rect, layout) {
     var path = pathTool.createFromString(pathData, opts);
     var boundingRect = path.getBoundingRect();
     if (rect) {
-        var aspect = boundingRect.width / boundingRect.height;
-
         if (layout === 'center') {
             rect = centerGraphic(rect, boundingRect);
         }
 
-        graphic.resizePath(path, rect);
+        resizePath(path, rect);
     }
     return path;
-};
+}
 
 /**
  * Create a image element from image url
@@ -92,8 +56,8 @@ graphic.makePath = function (pathData, opts, rect, layout) {
  * @param {module:zrender/core/BoundingRect} rect constrain rect
  * @param {string} [layout=cover] 'center' or 'cover'
  */
-graphic.makeImage = function (imageUrl, rect, layout) {
-    var path = new graphic.Image({
+export function makeImage(imageUrl, rect, layout) {
+    var path = new Image({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -112,7 +76,7 @@ graphic.makeImage = function (imageUrl, rect, layout) {
         }
     });
     return path;
-};
+}
 
 /**
  * Get position of centered element in bounding box.
@@ -144,14 +108,14 @@ function centerGraphic(rect, boundingRect) {
     };
 }
 
-graphic.mergePath = pathTool.mergePath,
+export var mergePath = pathTool.mergePath;
 
 /**
  * Resize a path to fit the rect
  * @param {module:zrender/graphic/Path} path
  * @param {Object} rect
  */
-graphic.resizePath = function (path, rect) {
+export function resizePath(path, rect) {
     if (!path.applyTransform) {
         return;
     }
@@ -161,7 +125,7 @@ graphic.resizePath = function (path, rect) {
     var m = pathRect.calculateTransform(rect);
 
     path.applyTransform(m);
-};
+}
 
 /**
  * Sub pixel optimize line for canvas
@@ -176,7 +140,7 @@ graphic.resizePath = function (path, rect) {
  * @param {number} [param.style.lineWidth]
  * @return {Object} Modified param
  */
-graphic.subPixelOptimizeLine = function (param) {
+export function subPixelOptimizeLine(param) {
     var shape = param.shape;
     var lineWidth = param.style.lineWidth;
 
@@ -187,7 +151,7 @@ graphic.subPixelOptimizeLine = function (param) {
         shape.y1 = shape.y2 = subPixelOptimize(shape.y1, lineWidth, true);
     }
     return param;
-};
+}
 
 /**
  * Sub pixel optimize rect for canvas
@@ -202,7 +166,7 @@ graphic.subPixelOptimizeLine = function (param) {
  * @param {number} [param.style.lineWidth]
  * @return {Object} Modified param
  */
-graphic.subPixelOptimizeRect = function (param) {
+export function subPixelOptimizeRect(param) {
     var shape = param.shape;
     var lineWidth = param.style.lineWidth;
     var originX = shape.x;
@@ -220,7 +184,7 @@ graphic.subPixelOptimizeRect = function (param) {
         originHeight === 0 ? 0 : 1
     );
     return param;
-};
+}
 
 /**
  * Sub pixel optimize for canvas
@@ -230,14 +194,14 @@ graphic.subPixelOptimizeRect = function (param) {
  * @param {boolean=} positiveOrNegative Default false (negative).
  * @return {number} Optimized position.
  */
-var subPixelOptimize = graphic.subPixelOptimize = function (position, lineWidth, positiveOrNegative) {
+export function subPixelOptimize(position, lineWidth, positiveOrNegative) {
     // Assure that (position + lineWidth / 2) is near integer edge,
     // otherwise line will be fuzzy in canvas.
     var doubledPosition = round(position * 2);
     return (doubledPosition + round(lineWidth)) % 2 === 0
         ? doubledPosition / 2
         : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
-};
+}
 
 function hasFillOrStroke(fillOrStroke) {
     return fillOrStroke != null && fillOrStroke != 'none';
@@ -452,7 +416,7 @@ function leaveEmphasis() {
  *        In this case, hoverSilentOnTouch should be used to disable hover-highlight
  *        on touch device.
  */
-graphic.setHoverStyle = function (el, hoverStyle, opt) {
+export function setHoverStyle(el, hoverStyle, opt) {
     el.__hoverSilentOnTouch = opt && opt.hoverSilentOnTouch;
 
     el.type === 'group'
@@ -470,7 +434,7 @@ graphic.setHoverStyle = function (el, hoverStyle, opt) {
     // Emphasis, normal can be triggered manually
     el.on('emphasis', enterEmphasis)
         .on('normal', leaveEmphasis);
-};
+}
 
 /**
  * @param {Object|module:zrender/graphic/Style} normalStyle
@@ -488,7 +452,7 @@ graphic.setHoverStyle = function (el, hoverStyle, opt) {
  * @param {Object} [normalSpecified]
  * @param {Object} [emphasisSpecified]
  */
-graphic.setLabelStyle = function (
+export function setLabelStyle(
     normalStyle, emphasisStyle,
     normalModel, emphasisModel,
     opt,
@@ -540,7 +504,7 @@ graphic.setLabelStyle = function (
 
     normalStyle.text = normalStyleText;
     emphasisStyle.text = emphasisStyleText;
-};
+}
 
 /**
  * Set basic textStyle properties.
@@ -550,7 +514,7 @@ graphic.setLabelStyle = function (
  * @param {Object} [opt] See `opt` of `setTextStyleCommon`.
  * @param {boolean} [isEmphasis]
  */
-var setTextStyle = graphic.setTextStyle = function (
+export function setTextStyle(
     textStyle, textStyleModel, specifiedTextStyle, opt, isEmphasis
 ) {
     setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis);
@@ -558,7 +522,7 @@ var setTextStyle = graphic.setTextStyle = function (
     textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
     return textStyle;
-};
+}
 
 /**
  * Set text option in the style.
@@ -568,7 +532,7 @@ var setTextStyle = graphic.setTextStyle = function (
  * @param {string|boolean} defaultColor Default text color.
  *        If set as false, it will be processed as a emphasis style.
  */
-graphic.setText = function (textStyle, labelModel, defaultColor) {
+export function setText(textStyle, labelModel, defaultColor) {
     var opt = {isRectText: true};
     var isEmphasis;
 
@@ -581,7 +545,7 @@ graphic.setText = function (textStyle, labelModel, defaultColor) {
     }
     setTextStyleCommon(textStyle, labelModel, opt, isEmphasis);
     textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
-};
+}
 
 /**
  * {
@@ -810,7 +774,7 @@ function rollbackInsideStyle(style) {
     }
 }
 
-graphic.getFont = function (opt, ecModel) {
+export function getFont(opt, ecModel) {
     // ecModel or default text style model.
     var gTextStyleModel = ecModel || ecModel.getModel('textStyle');
     return [
@@ -820,7 +784,7 @@ graphic.getFont = function (opt, ecModel) {
         (opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || 12) + 'px',
         opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'
     ].join(' ');
-};
+}
 
 function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) {
     if (typeof dataIndex === 'function') {
@@ -882,9 +846,9 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
-graphic.updateProps = function (el, props, animatableModel, dataIndex, cb) {
+export function updateProps(el, props, animatableModel, dataIndex, cb) {
     animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
-};
+}
 
 /**
  * Init graphic element properties with or without animation according to the
@@ -900,9 +864,9 @@ graphic.updateProps = function (el, props, animatableModel, dataIndex, cb) {
  * @param {number} [dataIndex]
  * @param {Function} cb
  */
-graphic.initProps = function (el, props, animatableModel, dataIndex, cb) {
+export function initProps(el, props, animatableModel, dataIndex, cb) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
-};
+}
 
 /**
  * Get transform matrix of target (param target),
@@ -911,7 +875,7 @@ graphic.initProps = function (el, props, animatableModel, dataIndex, cb) {
  * @param {module:zrender/mixin/Transformable} target
  * @param {module:zrender/mixin/Transformable} [ancestor]
  */
-graphic.getTransform = function (target, ancestor) {
+export function getTransform(target, ancestor) {
     var mat = matrix.identity([]);
 
     while (target && target !== ancestor) {
@@ -920,7 +884,7 @@ graphic.getTransform = function (target, ancestor) {
     }
 
     return mat;
-};
+}
 
 /**
  * Apply transform to an vertex.
@@ -931,7 +895,7 @@ graphic.getTransform = function (target, ancestor) {
  * @param {boolean=} invert Whether use invert matrix.
  * @return {Array.<number>} [x, y]
  */
-graphic.applyTransform = function (target, transform, invert) {
+export function applyTransform(target, transform, invert) {
     if (transform && !zrUtil.isArrayLike(transform)) {
         transform = Transformable.getLocalTransform(transform);
     }
@@ -940,7 +904,7 @@ graphic.applyTransform = function (target, transform, invert) {
         transform = matrix.invert([], transform);
     }
     return vector.applyTransform([], target, transform);
-};
+}
 
 /**
  * @param {string} direction 'left' 'right' 'top' 'bottom'
@@ -948,7 +912,7 @@ graphic.applyTransform = function (target, transform, invert) {
  * @param {boolean=} invert Whether use invert matrix.
  * @return {string} Transformed direction. 'left' 'right' 'top' 'bottom'
  */
-graphic.transformDirection = function (direction, transform, invert) {
+export function transformDirection(direction, transform, invert) {
 
     // Pick a base, ensure that transform result will not be (0, 0).
     var hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
@@ -961,18 +925,18 @@ graphic.transformDirection = function (direction, transform, invert) {
         direction === 'top' ? -vBase : direction === 'bottom' ? vBase : 0
     ];
 
-    vertex = graphic.applyTransform(vertex, transform, invert);
+    vertex = applyTransform(vertex, transform, invert);
 
     return Math.abs(vertex[0]) > Math.abs(vertex[1])
         ? (vertex[0] > 0 ? 'right' : 'left')
         : (vertex[1] > 0 ? 'bottom' : 'top');
-};
+}
 
 /**
  * Apply group transition animation from g1 to g2.
  * If no animatableModel, no animation.
  */
-graphic.groupTransition = function (g1, g2, animatableModel, cb) {
+export function groupTransition(g1, g2, animatableModel, cb) {
     if (!g1 || !g2) {
         return;
     }
@@ -1004,7 +968,7 @@ graphic.groupTransition = function (g1, g2, animatableModel, cb) {
             if (oldEl) {
                 var newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
-                graphic.updateProps(el, newProp, animatableModel, el.dataIndex);
+                updateProps(el, newProp, animatableModel, el.dataIndex);
             }
             // else {
             //     if (el.previousProps) {
@@ -1013,14 +977,14 @@ graphic.groupTransition = function (g1, g2, animatableModel, cb) {
             // }
         }
     });
-};
+}
 
 /**
  * @param {Array.<Array.<number>>} points Like: [[23, 44], [53, 66], ...]
  * @param {Object} rect {x, y, width, height}
  * @return {Array.<Array.<number>>} A new clipped points.
  */
-graphic.clipPointsByRect = function (points, rect) {
+export function clipPointsByRect(points, rect) {
     return zrUtil.map(points, function (point) {
         var x = point[0];
         x = mathMax(x, rect.x);
@@ -1030,14 +994,14 @@ graphic.clipPointsByRect = function (points, rect) {
         y = mathMin(y, rect.y + rect.height);
         return [x, y];
     });
-};
+}
 
 /**
  * @param {Object} targetRect {x, y, width, height}
  * @param {Object} rect {x, y, width, height}
  * @return {Object} A new clipped rect. If rect size are negative, return undefined.
  */
-graphic.clipRectByRect = function (targetRect, rect) {
+export function clipRectByRect(targetRect, rect) {
     var x = mathMax(targetRect.x, rect.x);
     var x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
     var y = mathMax(targetRect.y, rect.y);
@@ -1051,7 +1015,7 @@ graphic.clipRectByRect = function (targetRect, rect) {
             height: y2 - y
         };
     }
-};
+}
 
 /**
  * @param {string} iconStr Support 'image://' or 'path://' or direct svg path.
@@ -1059,7 +1023,7 @@ graphic.clipRectByRect = function (targetRect, rect) {
  * @param {Object} [rect] {x, y, width, height}
  * @return {module:zrender/Element} Icon path or image element.
  */
-graphic.createIcon = function (iconStr, opt, rect) {
+export function createIcon(iconStr, opt, rect) {
     opt = zrUtil.extend({rectHover: true}, opt);
     var style = opt.style = {strokeNoScale: true};
     rect = rect || {x: -1, y: -1, width: 2, height: 2};
@@ -1069,10 +1033,10 @@ graphic.createIcon = function (iconStr, opt, rect) {
             ? (
                 style.image = iconStr.slice(8),
                 zrUtil.defaults(style, rect),
-                new graphic.Image(opt)
+                new Image(opt)
             )
             : (
-                graphic.makePath(
+                makePath(
                     iconStr.replace('path://', ''),
                     opt,
                     rect,
@@ -1080,7 +1044,23 @@ graphic.createIcon = function (iconStr, opt, rect) {
                 )
             );
     }
+}
 
-};
-
-return graphic;
+export {
+    Group,
+    Image,
+    Text,
+    Circle,
+    Sector,
+    Ring,
+    Polygon,
+    Polyline,
+    Rect,
+    Line,
+    BezierCurve,
+    Arc,
+    CompoundPath,
+    LinearGradient,
+    RadialGradient,
+    BoundingRect
+} from 'zrender';

@@ -1,5 +1,4 @@
-
-var echarts = require('../../echarts');
+import * as echarts from '../../echarts';
 
 /**
  * @payload
@@ -11,6 +10,7 @@ var actionInfo = {
     event: 'axisAreaSelected',
     update: 'updateVisual'
 };
+
 echarts.registerAction(actionInfo, function (payload, ecModel) {
     ecModel.eachComponent(
         {mainType: 'parallelAxis', query: payload},

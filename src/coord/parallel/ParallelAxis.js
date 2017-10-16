@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../Axis');
+import {util as zrUtil} from 'zrender';
+import Axis from '../Axis';
 
 /**
  * @constructor module:echarts/coord/parallel/ParallelAxis
@@ -45,4 +44,4 @@ ParallelAxis.prototype = {
 
 zrUtil.inherits(ParallelAxis, Axis);
 
-return ParallelAxis;
+export default ParallelAxis;

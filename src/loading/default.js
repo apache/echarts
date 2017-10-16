@@ -1,7 +1,8 @@
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../util/graphic';
 
-var graphic = require('../util/graphic');
-var zrUtil = require('zrender/core/util');
 var PI = Math.PI;
+
 /**
  * @param {module:echarts/ExtensionAPI} api
  * @param {Object} [opts]
@@ -10,7 +11,7 @@ var PI = Math.PI;
  * @param {string} [opts.textColor]
  * @return {module:zrender/Element}
  */
-return function (api, opts) {
+export default function (api, opts) {
     opts = opts || {};
     zrUtil.defaults(opts, {
         text: 'loading',
@@ -93,4 +94,4 @@ return function (api, opts) {
     };
     group.resize();
     return group;
-};
+}

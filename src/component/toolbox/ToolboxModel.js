@@ -1,8 +1,8 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import * as featureManager from './featureManager';
 
-var featureManager = require('./featureManager');
-var zrUtil = require('zrender/core/util');
-
-var ToolboxModel = require('../../echarts').extendComponentModel({
+var ToolboxModel = echarts.extendComponentModel({
 
     type: 'toolbox',
 
@@ -68,4 +68,4 @@ var ToolboxModel = require('../../echarts').extendComponentModel({
     }
 });
 
-return ToolboxModel;
+export default ToolboxModel;

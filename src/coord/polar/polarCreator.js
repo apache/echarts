@@ -1,15 +1,16 @@
 // TODO Axis scale
 
-var Polar = require('./Polar');
-var numberUtil = require('../../util/number');
-var zrUtil = require('zrender/core/util');
-var axisHelper = require('../../coord/axisHelper');
-
-var parsePercent = numberUtil.parsePercent;
-var niceScaleExtent = axisHelper.niceScaleExtent;
+import {util as zrUtil} from 'zrender';
+import Polar from './Polar';
+import {parsePercent} from '../../util/number';
+import {
+    createScaleByModel,
+    niceScaleExtent
+} from '../../coord/axisHelper';
+import CoordinateSystem from '../../CoordinateSystem';
 
 // 依赖 PolarModel 做预处理
-require('./PolarModel');
+import './PolarModel';
 
 /**
  * Resize method bound to the polar
@@ -71,7 +72,7 @@ function updatePolarScale(ecModel, api) {
  */
 function setAxis(axis, axisModel) {
     axis.type = axisModel.get('type');
-    axis.scale = axisHelper.createScaleByModel(axisModel);
+    axis.scale = createScaleByModel(axisModel);
     axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
     axis.inverse = axisModel.get('inverse');
 
@@ -142,4 +143,4 @@ var polarCreator = {
     }
 };
 
-require('../../CoordinateSystem').register('polar', polarCreator);
+CoordinateSystem.register('polar', polarCreator);

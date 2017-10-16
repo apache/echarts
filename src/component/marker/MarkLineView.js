@@ -1,11 +1,9 @@
-
-var zrUtil = require('zrender/core/util');
-var List = require('../../data/List');
-var numberUtil = require('../../util/number');
-
-var markerHelper = require('./markerHelper');
-
-var LineDraw = require('../../chart/helper/LineDraw');
+import {util as zrUtil} from 'zrender';
+import List from '../../data/List';
+import * as numberUtil from '../../util/number';
+import * as markerHelper from './markerHelper';
+import LineDraw from '../../chart/helper/LineDraw';
+import MarkerView from './MarkerView';
 
 var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
     var data = seriesModel.getData();
@@ -175,7 +173,7 @@ function updateSingleMarkerEndLayout(
     data.setItemLayout(idx, point);
 }
 
-require('./MarkerView').extend({
+export default MarkerView.extend({
 
     type: 'markLine',
 
@@ -343,6 +341,7 @@ function createList(coordSys, seriesModel, mlModel) {
         zrUtil.map(optData, function (item) { return item[2]; })
     );
     lineData.hasItemOption = true;
+
     return {
         from: fromData,
         to: toData,

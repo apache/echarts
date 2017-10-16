@@ -1,6 +1,8 @@
 import VisualMapping from '../../visual/VisualMapping';
-import {color as zrColor} from 'zrender';
-import {util as zrUtil} from 'zrender';
+import {
+    color as zrColor,
+    util as zrUtil
+} from 'zrender';
 
 var isArray = zrUtil.isArray;
 
@@ -32,7 +34,7 @@ export default function (ecModel, api, payload) {
             seriesModel
         );
     });
-};
+}
 
 function travelTree(
     node, designatedVisual, levelItemStyles, seriesItemStyleModel,

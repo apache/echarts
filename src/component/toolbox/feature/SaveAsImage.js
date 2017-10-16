@@ -1,22 +1,24 @@
+import {env} from 'zrender';
+import lang from '../../../lang';
+import * as featureManager from '../featureManager';
 
-var env = require('zrender/core/env');
-var lang = require('../../../lang').toolbox.saveAsImage;
+var saveAsImageLang = lang.toolbox.saveAsImage;
 
-function SaveAsImage (model) {
+function SaveAsImage(model) {
     this.model = model;
 }
 
 SaveAsImage.defaultOption = {
     show: true,
     icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
-    title: lang.title,
+    title: saveAsImageLang.title,
     type: 'png',
     // Default use option.backgroundColor
     // backgroundColor: '#fff',
     name: '',
     excludeComponents: ['toolbox'],
     pixelRatio: 1,
-    lang: lang.lang.slice()
+    lang: saveAsImageLang.lang.slice()
 };
 
 SaveAsImage.prototype.unusable = !env.canvasSupported;
@@ -71,8 +73,8 @@ proto.onclick = function (ecModel, api) {
     }
 };
 
-require('../featureManager').register(
+featureManager.register(
     'saveAsImage', SaveAsImage
 );
 
-return SaveAsImage;
+export default SaveAsImage;

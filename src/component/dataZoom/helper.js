@@ -1,7 +1,6 @@
-var formatUtil = require('../../util/format');
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+import * as formatUtil from '../../util/format';
 
-var helper = {};
 
 var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle', 'single'];
 // Supported coords.
@@ -11,9 +10,9 @@ var COORDS = ['cartesian2d', 'polar', 'singleAxis'];
  * @param {string} coordType
  * @return {boolean}
  */
-helper.isCoordSupported = function (coordType) {
+export function isCoordSupported(coordType) {
     return zrUtil.indexOf(COORDS, coordType) >= 0;
-};
+}
 
 /**
  * Create "each" method to iterate names.
@@ -23,7 +22,7 @@ helper.isCoordSupported = function (coordType) {
  * @param  {Array.<string>=} attrs
  * @return {Function}
  */
-helper.createNameEach = function (names, attrs) {
+export function createNameEach(names, attrs) {
     names = names.slice();
     var capitalNames = zrUtil.map(names, formatUtil.capitalFirst);
     attrs = (attrs || []).slice();
@@ -40,7 +39,7 @@ helper.createNameEach = function (names, attrs) {
             callback.call(context, nameObj);
         });
     };
-};
+}
 
 /**
  * Iterate each dimension name.
@@ -56,7 +55,7 @@ helper.createNameEach = function (names, attrs) {
  *                            }
  * @param {Object} context
  */
-helper.eachAxisDim = helper.createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index', 'id']);
+export var eachAxisDim = createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index', 'id']);
 
 /**
  * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
@@ -69,7 +68,7 @@ helper.eachAxisDim = helper.createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'ind
  * @param {Function} edgeIdGetter Giving node and edgeType, return an array of edge id.
  * @return {Function} Input: sourceNode, Output: Like {nodes: [], dims: {}}
  */
-helper.createLinkedNodesFinder = function (forEachNode, forEachEdgeType, edgeIdGetter) {
+export function createLinkedNodesFinder(forEachNode, forEachEdgeType, edgeIdGetter) {
 
     return function (sourceNode) {
         var result = {
@@ -126,6 +125,4 @@ helper.createLinkedNodesFinder = function (forEachNode, forEachEdgeType, edgeIdG
             });
         });
     }
-};
-
-return helper;
+}

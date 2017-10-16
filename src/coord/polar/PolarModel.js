@@ -1,7 +1,7 @@
+import * as echarts from '../../echarts';
+import './AxisModel';
 
-require('./AxisModel');
-
-require('../../echarts').extendComponentModel({
+export default echarts.extendComponentModel({
 
     type: 'polar',
 

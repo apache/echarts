@@ -1,13 +1,13 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import {util as zrUtil} from 'zrender';
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import DataDiffer from '../../data/DataDiffer';
-import helper from './helper';
+import * as helper from './helper';
 import Breadcrumb from './Breadcrumb';
 import RoamController from '../../component/helper/RoamController';
 import {BoundingRect} from 'zrender';
 import {matrix} from 'zrender';
-import animationUtil from '../../util/animation';
+import * as animationUtil from '../../util/animation';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 
 var bind = zrUtil.bind;
@@ -43,7 +43,7 @@ var getItemStyleNormal = function (model) {
     return itemStyle;
 };
 
-return echarts.extendChartView({
+export default echarts.extendChartView({
 
     type: 'treemap',
 

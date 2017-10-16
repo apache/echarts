@@ -1,4 +1,4 @@
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import {util as zrUtil} from 'zrender';
 import ChartView from '../../view/Chart';
 

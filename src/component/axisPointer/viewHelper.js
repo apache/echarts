@@ -1,18 +1,15 @@
-
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var textContain = require('zrender/contain/text');
-var formatUtil = require('../../util/format');
-var matrix = require('zrender/core/matrix');
-var axisHelper = require('../../coord/axisHelper');
-var AxisBuilder = require('../axis/AxisBuilder');
-
-var helper = {};
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import {contain} from 'zrender';
+import * as formatUtil from '../../util/format';
+import {matrix} from 'zrender';
+import * as axisHelper from '../../coord/axisHelper';
+import AxisBuilder from '../axis/AxisBuilder';
 
 /**
  * @param {module:echarts/model/Model} axisPointerModel
  */
-helper.buildElStyle = function (axisPointerModel) {
+export function buildElStyle(axisPointerModel) {
     var axisPointerType = axisPointerModel.get('type');
     var styleModel = axisPointerModel.getModel(axisPointerType + 'Style');
     var style;
@@ -25,16 +22,16 @@ helper.buildElStyle = function (axisPointerModel) {
         style.stroke = null;
     }
     return style;
-};
+}
 
 /**
  * @param {Function} labelPos {align, verticalAlign, position}
  */
-helper.buildLabelElOption = function (
+export function buildLabelElOption(
     elOption, axisModel, axisPointerModel, api, labelPos
 ) {
     var value = axisPointerModel.get('value');
-    var text = helper.getValueLabel(
+    var text = getValueLabel(
         value, axisModel.axis, axisModel.ecModel,
         axisPointerModel.get('seriesDataIndices'),
         {
@@ -46,7 +43,7 @@ helper.buildLabelElOption = function (
     var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
     var font = labelModel.getFont();
-    var textRect = textContain.getBoundingRect(text, font);
+    var textRect = contain.text.getBoundingRect(text, font);
 
     var position = labelPos.position;
     var width = textRect.width + paddings[1] + paddings[3];
@@ -88,7 +85,7 @@ helper.buildLabelElOption = function (
         // Lable should be over axisPointer.
         z2: 10
     };
-};
+}
 
 // Do not overflow ec container
 function confineInContainer(position, width, height, api) {
@@ -109,7 +106,7 @@ function confineInContainer(position, width, height, api) {
  * @param {number|string} opt.precision 'auto' or a number
  * @param {string|Function} opt.formatter label formatter
  */
-helper.getValueLabel = function (value, axis, ecModel, seriesDataIndices, opt) {
+export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
     var text = axis.scale.getLabel(
         // If `precision` is set, width can be fixed (like '12.00500'), which
         // helps to debounce when when moving label.
@@ -138,7 +135,7 @@ helper.getValueLabel = function (value, axis, ecModel, seriesDataIndices, opt) {
     }
 
     return text;
-};
+}
 
 /**
  * @param {module:echarts/coord/Axis} axis
@@ -147,7 +144,7 @@ helper.getValueLabel = function (value, axis, ecModel, seriesDataIndices, opt) {
  *  rotation, position, labelOffset, labelDirection, labelMargin
  * }
  */
-helper.getTransformedPosition = function (axis, value, layoutInfo) {
+export function getTransformedPosition (axis, value, layoutInfo) {
     var transform = matrix.create();
     matrix.rotate(transform, transform, layoutInfo.rotation);
     matrix.translate(transform, transform, layoutInfo.position);
@@ -157,28 +154,28 @@ helper.getTransformedPosition = function (axis, value, layoutInfo) {
         (layoutInfo.labelOffset || 0)
             + (layoutInfo.labelDirection || 1) * (layoutInfo.labelMargin || 0)
     ], transform);
-};
+}
 
-helper.buildCartesianSingleLabelElOption = function (
+export function buildCartesianSingleLabelElOption(
     value, elOption, layoutInfo, axisModel, axisPointerModel, api
 ) {
     var textLayout = AxisBuilder.innerTextLayout(
         layoutInfo.rotation, 0, layoutInfo.labelDirection
     );
     layoutInfo.labelMargin = axisPointerModel.get('label.margin');
-    helper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, {
-        position: helper.getTransformedPosition(axisModel.axis, value, layoutInfo),
+    buildLabelElOption(elOption, axisModel, axisPointerModel, api, {
+        position: getTransformedPosition(axisModel.axis, value, layoutInfo),
         align: textLayout.textAlign,
         verticalAlign: textLayout.textVerticalAlign
     });
-};
+}
 
 /**
  * @param {Array.<number>} p1
  * @param {Array.<number>} p2
  * @param {number} [xDimIndex=0] or 1
  */
-helper.makeLineShape = function (p1, p2, xDimIndex) {
+export function makeLineShape(p1, p2, xDimIndex) {
     xDimIndex = xDimIndex || 0;
     return {
         x1: p1[xDimIndex],
@@ -186,14 +183,14 @@ helper.makeLineShape = function (p1, p2, xDimIndex) {
         x2: p2[xDimIndex],
         y2: p2[1 - xDimIndex]
     };
-};
+}
 
 /**
  * @param {Array.<number>} xy
  * @param {Array.<number>} wh
  * @param {number} [xDimIndex=0] or 1
  */
-helper.makeRectShape = function (xy, wh, xDimIndex) {
+export function makeRectShape(xy, wh, xDimIndex) {
     xDimIndex = xDimIndex || 0;
     return {
         x: xy[xDimIndex],
@@ -201,9 +198,9 @@ helper.makeRectShape = function (xy, wh, xDimIndex) {
         width: wh[xDimIndex],
         height: wh[1 - xDimIndex]
     };
-};
+}
 
-helper.makeSectorShape = function (cx, cy, r0, r, startAngle, endAngle) {
+export function makeSectorShape(cx, cy, r0, r, startAngle, endAngle) {
     return {
         cx: cx,
         cy: cy,
@@ -213,6 +210,4 @@ helper.makeSectorShape = function (cx, cy, r0, r, startAngle, endAngle) {
         endAngle: endAngle,
         clockwise: true
     };
-};
-
-return helper;
+}

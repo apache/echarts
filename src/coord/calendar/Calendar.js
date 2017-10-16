@@ -1,7 +1,7 @@
-
-var layout = require('../../util/layout');
-var numberUtil = require('../../util/number');
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+import * as layout from '../../util/layout';
+import * as numberUtil from '../../util/number';
+import CoordinateSystem from '../../CoordinateSystem';
 
 // (24*60*60*1000)
 var PROXIMATE_ONE_DAY = 86400000;
@@ -454,6 +454,6 @@ function doConvert(methodName, ecModel, finder, value) {
     return coordSys === this ? coordSys[methodName](value) : null;
 }
 
-require('../../CoordinateSystem').register('calendar', Calendar);
+CoordinateSystem.register('calendar', Calendar);
 
-return Calendar;
+export default Calendar;

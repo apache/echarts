@@ -1,9 +1,6 @@
+import {set, get} from '../../util/clazz';
 
-var classUtil = require('../../util/clazz');
-var set = classUtil.set;
-var get = classUtil.get;
-
-return {
+export default {
     clearColorPalette: function () {
         set(this, 'colorIdx', 0);
         set(this, 'colorNameMap', {});

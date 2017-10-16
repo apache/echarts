@@ -1,8 +1,10 @@
 
-var AxisBuilder = require('./AxisBuilder');
-var zrUtil =  require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var singleAxisHelper = require('./singleAxisHelper');
+import {util as zrUtil} from 'zrender';
+import AxisBuilder from './AxisBuilder';
+import * as graphic from '../../util/graphic';
+import * as singleAxisHelper from './singleAxisHelper';
+import AxisView from './AxisView';
+
 var getInterval = AxisBuilder.getInterval;
 var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 
@@ -12,7 +14,7 @@ var axisBuilderAttrs = [
 
 var selfBuilderAttr = 'splitLine';
 
-var SingleAxisView = require('./AxisView').extend({
+var SingleAxisView = AxisView.extend({
 
     type: 'singleAxis',
 
@@ -118,4 +120,4 @@ var SingleAxisView = require('./AxisView').extend({
     }
 });
 
-return SingleAxisView;
+export default SingleAxisView;

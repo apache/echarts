@@ -1,11 +1,9 @@
-var modelUtil = require('../../util/model');
-var ComponentModel = require('../../model/Component');
-var Model = require('../../model/Model');
-var zrUtil = require('zrender/core/util');
-
-var selectableMixin = require('../../component/helper/selectableMixin');
-
-var geoCreator = require('./geoCreator');
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../../util/model';
+import ComponentModel from '../../model/Component';
+import Model from '../../model/Model';
+import selectableMixin from '../../component/helper/selectableMixin';
+import geoCreator from './geoCreator';
 
 var GeoModel = ComponentModel.extend({
 
@@ -155,4 +153,4 @@ var GeoModel = ComponentModel.extend({
 
 zrUtil.mixin(GeoModel, selectableMixin);
 
-return GeoModel;
+export default GeoModel;

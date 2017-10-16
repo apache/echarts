@@ -1,5 +1,6 @@
+import Component from '../../model/Component';
 
-require('../../model/Component').registerSubTypeDefaulter('visualMap', function (option) {
+Component.registerSubTypeDefaulter('visualMap', function (option) {
     // Compatible with ec2, when splitNumber === 0, continuous visualMap will be used.
     return (
             !option.categories

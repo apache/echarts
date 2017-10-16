@@ -1,4 +1,6 @@
-var getItemStyle = require('./makeStyleMapper')(
+import makeStyleMapper from './makeStyleMapper';
+
+var getItemStyle = makeStyleMapper(
     [
         ['fill', 'color'],
         ['stroke', 'borderColor'],
@@ -12,7 +14,8 @@ var getItemStyle = require('./makeStyleMapper')(
         ['textAlign']
     ]
 );
-return {
+
+export default {
     getItemStyle: function (excludes, includes) {
         var style = getItemStyle(this, excludes, includes);
         var lineDash = this.getBorderLineDash();

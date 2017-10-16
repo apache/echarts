@@ -1,26 +1,19 @@
-/**
- * @file Silder timeline view
- */
-
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var layout = require('../../util/layout');
-var TimelineView = require('./TimelineView');
-var TimelineAxis = require('./TimelineAxis');
-var symbolUtil = require('../../util/symbol');
-var axisHelper = require('../../coord/axisHelper');
-var BoundingRect = require('zrender/core/BoundingRect');
-var matrix = require('zrender/core/matrix');
-var numberUtil = require('../../util/number');
-var formatUtil = require('../../util/format');
-var encodeHTML = formatUtil.encodeHTML;
+import {util as zrUtil, BoundingRect, matrix} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as layout from '../../util/layout';
+import TimelineView from './TimelineView';
+import TimelineAxis from './TimelineAxis';
+import {createSymbol} from '../../util/symbol';
+import * as axisHelper from '../../coord/axisHelper';
+import * as numberUtil from '../../util/number';
+import {encodeHTML} from '../../util/format';
 
 var bind = zrUtil.bind;
 var each = zrUtil.each;
 
 var PI = Math.PI;
 
-return TimelineView.extend({
+export default TimelineView.extend({
 
     type: 'timeline.slider',
 
@@ -634,7 +627,7 @@ function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
 
     if (!symbol) {
         var symbolType = hostModel.get('symbol');
-        symbol = symbolUtil.createSymbol(symbolType, -1, -1, 2, 2, color);
+        symbol = createSymbol(symbolType, -1, -1, 2, 2, color);
         symbol.setStyle('strokeNoScale', true);
         group.add(symbol);
         callback && callback.onCreate(symbol);

@@ -1,9 +1,9 @@
-
-var Geo = require('./Geo');
-
-var layout = require('../../util/layout');
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../../util/number');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import Geo from './Geo';
+import * as layout from '../../util/layout';
+import * as numberUtil from '../../util/number';
+import parseGeoJson from './parseGeoJson';
 
 var mapDataStores = {};
 
@@ -283,17 +283,10 @@ var geoCreator = {
 };
 
 // Inject methods into echarts
-var echarts = require('../../echarts');
-
-echarts.registerMap = geoCreator.registerMap;
-
-echarts.getMap = geoCreator.getMap;
-
-echarts.parseGeoJSON = require('./parseGeoJson');
-
-// TODO
-echarts.loadMap = function () {};
+echarts.__inject.registerMap(geoCreator.registerMap);
+echarts.__inject.getMap(geoCreator.getMap);
+echarts.__inject.parseGeoJSON(parseGeoJson);
 
 echarts.registerCoordinateSystem('geo', geoCreator);
 
-return geoCreator;
+export default geoCreator;

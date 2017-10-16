@@ -1,6 +1,5 @@
+import DataZoomView from './DataZoomView';
 
-return require('./DataZoomView').extend({
-
+export default DataZoomView.extend({
     type: 'dataZoom.select'
-
 });

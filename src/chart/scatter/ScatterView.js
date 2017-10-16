@@ -1,4 +1,4 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import LargeSymbolDraw from '../helper/LargeSymbolDraw';
 

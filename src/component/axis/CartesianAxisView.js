@@ -1,9 +1,9 @@
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import AxisBuilder from './AxisBuilder';
+import AxisView from './AxisView';
+import * as cartesianAxisHelper from './cartesianAxisHelper';
 
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var AxisBuilder = require('./AxisBuilder');
-var AxisView = require('./AxisView');
-var cartesianAxisHelper = require('./cartesianAxisHelper');
 var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
 var getInterval = AxisBuilder.getInterval;
 

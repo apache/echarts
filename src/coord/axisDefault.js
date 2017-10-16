@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var defaultOption = {
     show: true,
@@ -94,7 +93,9 @@ var defaultOption = {
     }
 };
 
-var categoryAxis = zrUtil.merge({
+var axisDefault = {};
+
+axisDefault.categoryAxis = zrUtil.merge({
     // 类目起始和结束两端空白策略
     boundaryGap: true,
     // splitArea: {
@@ -115,7 +116,7 @@ var categoryAxis = zrUtil.merge({
     }
 }, defaultOption);
 
-var valueAxis = zrUtil.merge({
+axisDefault.valueAxis = zrUtil.merge({
     // 数值起始和结束两端空白策略
     boundaryGap: [0, 0],
     // 最小值, 设置成 'dataMin' 则从数据中计算最小值
@@ -136,20 +137,15 @@ var valueAxis = zrUtil.merge({
 }, defaultOption);
 
 // FIXME
-var timeAxis = zrUtil.defaults({
+axisDefault.timeAxis = zrUtil.defaults({
     scale: true,
     min: 'dataMin',
     max: 'dataMax'
-}, valueAxis);
+}, axisDefault.valueAxis);
 
-var logAxis = zrUtil.defaults({
+axisDefault.logAxis = zrUtil.defaults({
     scale: true,
     logBase: 10
-}, valueAxis);
+}, axisDefault.valueAxis);
 
-return {
-    categoryAxis: categoryAxis,
-    valueAxis: valueAxis,
-    timeAxis: timeAxis,
-    logAxis: logAxis
-};
+export default axisDefault;

@@ -1,8 +1,8 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import Model from '../../model/Model';
 
-var zrUtil = require('zrender/core/util');
-var Model = require('../../model/Model');
-
-var LegendModel = require('../../echarts').extendComponentModel({
+var LegendModel = echarts.extendComponentModel({
 
     type: 'legend.plain',
 
@@ -194,4 +194,4 @@ var LegendModel = require('../../echarts').extendComponentModel({
     }
 });
 
-return LegendModel;
+export default LegendModel;

@@ -1,10 +1,9 @@
-
-var textContain = require('zrender/contain/text');
-var graphicUtil = require('../../util/graphic');
+import {contain} from 'zrender';
+import * as graphicUtil from '../../util/graphic';
 
 var PATH_COLOR = ['textStyle', 'color'];
 
-return {
+export default {
     /**
      * Get color property or get color from option.textStyle.color
      * @param {boolean} [isEmphasis]
@@ -32,7 +31,7 @@ return {
     },
 
     getTextRect: function (text) {
-        return textContain.getBoundingRect(
+        return contain.text.getBoundingRect(
             text,
             this.getFont(),
             this.getShallow('align'),

@@ -1,5 +1,5 @@
 
-return function (seriesType, ecModel) {
+export default function (seriesType, ecModel) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
         var data = seriesModel.getData();
         var coordSys = seriesModel.coordinateSystem;
@@ -29,5 +29,4 @@ return function (seriesType, ecModel) {
             }, true);
         }
     });
-};
-});
+}

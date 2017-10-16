@@ -1,8 +1,4 @@
-/**
- * @file Data zoom processor
- */
-
-var echarts = require('../../echarts');
+import * as echarts from '../../echarts';
 
 echarts.registerProcessor(function (ecModel, api) {
 

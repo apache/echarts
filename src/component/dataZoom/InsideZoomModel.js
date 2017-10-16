@@ -1,8 +1,6 @@
-/**
- * @file Data zoom model
- */
+import DataZoomModel from './DataZoomModel';
 
-return require('./DataZoomModel').extend({
+export default DataZoomModel.extend({
 
     type: 'dataZoom.inside',
 

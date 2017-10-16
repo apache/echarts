@@ -3,7 +3,7 @@
  * @module echarts/chart/helper/EffectLine
  */
 
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import Line from './Line';
 import {util as zrUtil} from 'zrender';
 import {createSymbol} from '../../util/symbol';

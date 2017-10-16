@@ -1,8 +1,8 @@
+import {util as zrUtil} from 'zrender';
+import DataZoomView from './DataZoomView';
+import sliderMove from '../helper/sliderMove';
+import * as roams from './roams';
 
-var DataZoomView = require('./DataZoomView');
-var zrUtil = require('zrender/core/util');
-var sliderMove = require('../helper/sliderMove');
-var roams = require('./roams');
 var bind = zrUtil.bind;
 
 var InsideZoomView = DataZoomView.extend({
@@ -218,4 +218,4 @@ var getDirectionInfo = {
     }
 };
 
-return InsideZoomView;
+export default InsideZoomView;

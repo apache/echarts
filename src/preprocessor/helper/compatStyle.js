@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../../util/model';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -134,7 +133,7 @@ function toObj(o) {
     return (zrUtil.isArray(o) ? o[0] : o) || {};
 }
 
-return function (option, isTheme) {
+export default function (option, isTheme) {
     each(toArr(option.series), function (seriesOpt) {
         isObject(seriesOpt) && processSeries(seriesOpt);
     });
@@ -183,4 +182,4 @@ return function (option, isTheme) {
     compatLabelTextStyle(toObj(option.timeline).label);
     compatTextStyle(toObj(option.axisPointer), 'label');
     compatTextStyle(toObj(option.tooltip).axisPointer, 'label');
-};
+}

@@ -1,11 +1,11 @@
+import * as formatUtil from '../../util/format';
+import BaseAxisPointer from './BaseAxisPointer';
+import * as graphic from '../../util/graphic';
+import * as viewHelper from './viewHelper';
+import {matrix} from 'zrender';
+import AxisBuilder from '../axis/AxisBuilder';
+import AxisView from '../axis/AxisView';
 
-var formatUtil = require('../../util/format');
-var BaseAxisPointer = require('./BaseAxisPointer');
-var graphic = require('../../util/graphic');
-var viewHelper = require('./viewHelper');
-var matrix = require('zrender/core/matrix');
-var AxisBuilder = require('../axis/AxisBuilder');
-var AxisView = require('../axis/AxisView');
 
 var PolarAxisPointer = BaseAxisPointer.extend({
 
@@ -138,4 +138,4 @@ var pointerShapeBuilder = {
 
 AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
-return PolarAxisPointer;
+export default PolarAxisPointer;

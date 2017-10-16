@@ -2,60 +2,76 @@
 // In build process 'typeof __DEV__' will be replace with 'boolean'
 // So this code will be removed or disabled anyway after built.
 if (typeof __DEV__ === 'undefined') {
-// In browser
-if (typeof window !== 'undefined') {
-    window.__DEV__ = true;
-}
-// In node
-else if (typeof global !== 'undefined') {
-    global.__DEV__ = true;
-}
+    // In browser
+    if (typeof window !== 'undefined') {
+        window.__DEV__ = true;
+    }
+    // In node
+    else if (typeof global !== 'undefined') {
+        global.__DEV__ = true;
+    }
 }
 
 /*!
-* ECharts, a javascript interactive chart library.
-*
-* Copyright (c) 2015, Baidu Inc.
-* All rights reserved.
-*
-* LICENSE
-* https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
-*/
-
-/**
- * @module echarts
+ * ECharts, a javascript interactive chart library.
+ *
+ * Copyright (c) 2015, Baidu Inc.
+ * All rights reserved.
+ *
+ * LICENSE
+ * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
  */
 
-var env = require('zrender/core/env');
+import zrender from 'zrender';
+import GlobalModel from './model/Global';
+import ExtensionAPI from './ExtensionAPI';
+import CoordinateSystemManager from './CoordinateSystem';
+import OptionManager from './model/OptionManager';
+import backwardCompat from './preprocessor/backwardCompat';
+import ComponentModel from './model/Component';
+import SeriesModel from './model/Series';
+import ComponentView from './view/Component';
+import ChartView from './view/Chart';
+import * as graphic from './util/graphic';
+import * as modelUtil from './util/model';
+import * as numberUtil from './util/number';
+import * as formatUtil from './util/format';
+import {throttle} from './util/throttle';
+import seriesColor from './visual/seriesColor';
+import loadingDefault from './loading/default';
+import * as ecHelper from './helper';
 
-var GlobalModel = require('./model/Global');
-var ExtensionAPI = require('./ExtensionAPI');
-var CoordinateSystemManager = require('./CoordinateSystem');
-var OptionManager = require('./model/OptionManager');
-var backwardCompat = require('./preprocessor/backwardCompat');
+var zrUtil = zrender.util;
+var colorTool = zrender.color;
+var Eventful = zrender.Eventful;
+var timsort = zrender.timsort;
 
-var ComponentModel = require('./model/Component');
-var SeriesModel = require('./model/Series');
-
-var ComponentView = require('./view/Component');
-var ChartView = require('./view/Chart');
-var graphic = require('./util/graphic');
-var modelUtil = require('./util/model');
-var throttle = require('./util/throttle');
-
-var zrender = require('zrender/zrender');
-var zrUtil = require('zrender/core/util');
-var colorTool = require('zrender/tool/color');
-var Eventful = require('zrender/mixin/Eventful');
-var timsort = require('zrender/core/timsort');
-
-
+var env = zrender.env;
 var each = zrUtil.each;
 var parseClassType = ComponentModel.parseClassType;
 
+export var version = '3.7.2';
+
+export var dependencies = {
+    zrender: '3.6.2'
+};
+
+export var PRIORITY = {
+    PROCESSOR: {
+        FILTER: PRIORITY_PROCESSOR_FILTER,
+        STATISTIC: PRIORITY_PROCESSOR_STATISTIC
+    },
+    VISUAL: {
+        LAYOUT: PRIORITY_VISUAL_LAYOUT,
+        GLOBAL: PRIORITY_VISUAL_GLOBAL,
+        CHART: PRIORITY_VISUAL_CHART,
+        COMPONENT: PRIORITY_VISUAL_COMPONENT,
+        BRUSH: PRIORITY_VISUAL_BRUSH
+    }
+};
+
 var PRIORITY_PROCESSOR_FILTER = 1000;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
-
 
 var PRIORITY_VISUAL_LAYOUT = 1000;
 var PRIORITY_VISUAL_GLOBAL = 2000;
@@ -136,7 +152,7 @@ function ECharts(dom, theme, opts) {
      * @type {Function}
      * @private
      */
-    this._throttledZrFlush = throttle.throttle(zrUtil.bind(zr.flush, zr), 17);
+    this._throttledZrFlush = throttle(zrUtil.bind(zr.flush, zr), 17);
 
     var theme = zrUtil.clone(theme);
     theme && backwardCompat(theme, true);
@@ -1518,19 +1534,6 @@ var idBase = new Date() - 0;
 var groupIdBase = new Date() - 0;
 var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 
-/**
- * @alias module:echarts
- */
-var echarts = {
-    /**
-     * @type {number}
-     */
-    version: '3.7.2',
-    dependencies: {
-        zrender: '3.6.2'
-    }
-};
-
 function enableConnect(chart) {
     var STATUS_PENDING = 0;
     var STATUS_UPDATING = 1;
@@ -1583,15 +1586,15 @@ function enableConnect(chart) {
  * @param {number} [opts.height] Use clientHeight of the input `dom` by default.
  *                               Can be 'auto' (the same as null/undefined)
  */
-echarts.init = function (dom, theme, opts) {
+export function init(dom, theme, opts) {
     if (__DEV__) {
         // Check version
-        if ((zrender.version.replace('.', '') - 0) < (echarts.dependencies.zrender.replace('.', '') - 0)) {
+        if ((zrender.version.replace('.', '') - 0) < (dependencies.zrender.replace('.', '') - 0)) {
             throw new Error(
                 'ZRender ' + zrender.version
-                + ' is too old for ECharts ' + echarts.version
+                + ' is too old for ECharts ' + version
                 + '. Current version need ZRender '
-                + echarts.dependencies.zrender + '+'
+                + dependencies.zrender + '+'
             );
         }
 
@@ -1600,7 +1603,7 @@ echarts.init = function (dom, theme, opts) {
         }
     }
 
-    var existInstance = echarts.getInstanceByDom(dom);
+    var existInstance = getInstanceByDom(dom);
     if (existInstance) {
         if (__DEV__) {
             console.warn('There is a chart instance already initialized on the dom.');
@@ -1634,12 +1637,12 @@ echarts.init = function (dom, theme, opts) {
     enableConnect(chart);
 
     return chart;
-};
+}
 
 /**
  * @return {string|Array.<module:echarts~ECharts>} groupId
  */
-echarts.connect = function (groupId) {
+export function connect(groupId) {
     // Is array of charts
     if (zrUtil.isArray(groupId)) {
         var charts = groupId;
@@ -1657,43 +1660,43 @@ echarts.connect = function (groupId) {
     }
     connectedGroups[groupId] = true;
     return groupId;
-};
+}
 
 /**
  * @DEPRECATED
  * @return {string} groupId
  */
-echarts.disConnect = function (groupId) {
+export function disConnect(groupId) {
     connectedGroups[groupId] = false;
-};
+}
 
 /**
  * @return {string} groupId
  */
-echarts.disconnect = echarts.disConnect;
+export var disconnect = disConnect;
 
 /**
  * Dispose a chart instance
  * @param  {module:echarts~ECharts|HTMLDomElement|string} chart
  */
-echarts.dispose = function (chart) {
+export function dispose(chart) {
     if (typeof chart === 'string') {
         chart = instances[chart];
     }
     else if (!(chart instanceof ECharts)){
         // Try to treat as dom
-        chart = echarts.getInstanceByDom(chart);
+        chart = getInstanceByDom(chart);
     }
     if ((chart instanceof ECharts) && !chart.isDisposed()) {
         chart.dispose();
     }
-};
+}
 
 /**
  * @param  {HTMLElement} dom
  * @return {echarts~ECharts}
  */
-echarts.getInstanceByDom = function (dom) {
+export function getInstanceByDom(dom) {
     var key;
     if (dom.getAttribute) {
         key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
@@ -1702,36 +1705,36 @@ echarts.getInstanceByDom = function (dom) {
         key = dom[DOM_ATTRIBUTE_KEY];
     }
     return instances[key];
-};
+}
 
 /**
  * @param {string} key
  * @return {echarts~ECharts}
  */
-echarts.getInstanceById = function (key) {
+export function getInstanceById(key) {
     return instances[key];
-};
+}
 
 /**
  * Register theme
  */
-echarts.registerTheme = function (name, theme) {
+export function registerTheme(name, theme) {
     themeStorage[name] = theme;
-};
+}
 
 /**
  * Register option preprocessor
  * @param {Function} preprocessorFunc
  */
-echarts.registerPreprocessor = function (preprocessorFunc) {
+export function registerPreprocessor(preprocessorFunc) {
     optionPreprocessorFuncs.push(preprocessorFunc);
-};
+}
 
 /**
  * @param {number} [priority=1000]
  * @param {Function} processorFunc
  */
-echarts.registerProcessor = function (priority, processorFunc) {
+export function registerProcessor(priority, processorFunc) {
     if (typeof priority === 'function') {
         processorFunc = priority;
         priority = PRIORITY_PROCESSOR_FILTER;
@@ -1745,15 +1748,15 @@ echarts.registerProcessor = function (priority, processorFunc) {
         prio: priority,
         func: processorFunc
     });
-};
+}
 
 /**
  * Register postUpdater
  * @param {Function} postUpdateFunc
  */
-echarts.registerPostUpdate = function (postUpdateFunc) {
+export function registerPostUpdate(postUpdateFunc) {
     postUpdateFuncs.push(postUpdateFunc);
-};
+}
 
 /**
  * Usage:
@@ -1771,7 +1774,7 @@ echarts.registerPostUpdate = function (postUpdateFunc) {
  * @param {string} [eventName]
  * @param {Function} action
  */
-echarts.registerAction = function (actionInfo, eventName, action) {
+export function registerAction(actionInfo, eventName, action) {
     if (typeof eventName === 'function') {
         action = eventName;
         eventName = '';
@@ -1793,29 +1796,29 @@ echarts.registerAction = function (actionInfo, eventName, action) {
         actions[actionType] = {action: action, actionInfo: actionInfo};
     }
     eventActionMap[eventName] = actionType;
-};
+}
 
 /**
  * @param {string} type
  * @param {*} CoordinateSystem
  */
-echarts.registerCoordinateSystem = function (type, CoordinateSystem) {
+export function registerCoordinateSystem(type, CoordinateSystem) {
     CoordinateSystemManager.register(type, CoordinateSystem);
-};
+}
 
 /**
  * Get dimensions of specified coordinate system.
  * @param {string} type
  * @return {Array.<string|Object>}
  */
-echarts.getCoordinateSystemDimensions = function (type) {
+export function getCoordinateSystemDimensions(type) {
     var coordSysCreator = CoordinateSystemManager.get(type);
     if (coordSysCreator) {
         return coordSysCreator.getDimensionsInfo
                 ? coordSysCreator.getDimensionsInfo()
                 : coordSysCreator.dimensions.slice();
     }
-};
+}
 
 /**
  * Layout is a special stage of visual encoding
@@ -1825,7 +1828,7 @@ echarts.getCoordinateSystemDimensions = function (type) {
  * @param {number} [priority=1000]
  * @param {Function} layoutFunc
  */
-echarts.registerLayout = function (priority, layoutFunc) {
+export function registerLayout(priority, layoutFunc) {
     if (typeof priority === 'function') {
         layoutFunc = priority;
         priority = PRIORITY_VISUAL_LAYOUT;
@@ -1840,13 +1843,13 @@ echarts.registerLayout = function (priority, layoutFunc) {
         func: layoutFunc,
         isLayout: true
     });
-};
+}
 
 /**
  * @param {number} [priority=3000]
  * @param {Function} visualFunc
  */
-echarts.registerVisual = function (priority, visualFunc) {
+export function registerVisual(priority, visualFunc) {
     if (typeof priority === 'function') {
         visualFunc = priority;
         priority = PRIORITY_VISUAL_CHART;
@@ -1860,46 +1863,46 @@ echarts.registerVisual = function (priority, visualFunc) {
         prio: priority,
         func: visualFunc
     });
-};
+}
 
 /**
  * @param {string} name
  */
-echarts.registerLoading = function (name, loadingFx) {
+export function registerLoading(name, loadingFx) {
     loadingEffects[name] = loadingFx;
-};
+}
 
 /**
  * @param {Object} opts
  * @param {string} [superClass]
  */
-echarts.extendComponentModel = function (opts/*, superClass*/) {
+export function extendComponentModel(opts/*, superClass*/) {
     // var Clazz = ComponentModel;
     // if (superClass) {
     //     var classType = parseClassType(superClass);
     //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
     // }
     return ComponentModel.extend(opts);
-};
+}
 
 /**
  * @param {Object} opts
  * @param {string} [superClass]
  */
-echarts.extendComponentView = function (opts/*, superClass*/) {
+export function extendComponentView(opts/*, superClass*/) {
     // var Clazz = ComponentView;
     // if (superClass) {
     //     var classType = parseClassType(superClass);
     //     Clazz = ComponentView.getClass(classType.main, classType.sub, true);
     // }
     return ComponentView.extend(opts);
-};
+}
 
 /**
  * @param {Object} opts
  * @param {string} [superClass]
  */
-echarts.extendSeriesModel = function (opts/*, superClass*/) {
+export function extendSeriesModel(opts/*, superClass*/) {
     // var Clazz = SeriesModel;
     // if (superClass) {
     //     superClass = 'series.' + superClass.replace('series.', '');
@@ -1907,13 +1910,13 @@ echarts.extendSeriesModel = function (opts/*, superClass*/) {
     //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
     // }
     return SeriesModel.extend(opts);
-};
+}
 
 /**
  * @param {Object} opts
  * @param {string} [superClass]
  */
-echarts.extendChartView = function (opts/*, superClass*/) {
+export function extendChartView(opts/*, superClass*/) {
     // var Clazz = ChartView;
     // if (superClass) {
     //     superClass = superClass.replace('series.', '');
@@ -1921,7 +1924,7 @@ echarts.extendChartView = function (opts/*, superClass*/) {
     //     Clazz = ChartView.getClass(classType.main, true);
     // }
     return ChartView.extend(opts);
-};
+}
 
 /**
  * ZRender need a canvas context to do measureText.
@@ -1939,71 +1942,69 @@ echarts.extendChartView = function (opts/*, superClass*/) {
  *         return new Canvas(32, 32);
  *     });
  */
-echarts.setCanvasCreator = function (creator) {
+export function setCanvasCreator(creator) {
     zrUtil.createCanvas = creator;
-};
+}
 
-echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
-echarts.registerPreprocessor(backwardCompat);
-echarts.registerLoading('default', require('./loading/default'));
+registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
+registerPreprocessor(backwardCompat);
+registerLoading('default', loadingDefault);
 
 // Default action
-echarts.registerAction({
+registerAction({
     type: 'highlight',
     event: 'highlight',
     update: 'highlight'
 }, zrUtil.noop);
-echarts.registerAction({
+registerAction({
     type: 'downplay',
     event: 'downplay',
     update: 'downplay'
 }, zrUtil.noop);
 
+
 // --------
 // Exports
 // --------
-echarts.zrender = zrender;
 
-echarts.List = require('./data/List');
-echarts.Model = require('./model/Model');
+export {zrender};
+export {default as List} from './data/List';
+export {default as Model} from './model/Model';
+export {default as Axis} from './coord/Axis';
+export {graphic};
+export {numberUtil as number};
+export {formatUtil as format};
+export {throttle};
+export {ecHelper as helper};
+export {matrix} from 'zrender';
+export {vector} from 'zrender';
+export {color} from 'zrender';
 
-echarts.Axis = require('./coord/Axis');
-
-echarts.graphic = require('./util/graphic');
-echarts.number = require('./util/number');
-echarts.format = require('./util/format');
-echarts.throttle = throttle.throttle;
-echarts.matrix = require('zrender/core/matrix');
-echarts.vector = require('zrender/core/vector');
-echarts.color = require('zrender/tool/color');
-
-echarts.util = {};
+var ecUtil = {};
 each([
         'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
         'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction',
         'extend', 'defaults', 'clone', 'merge'
     ],
     function (name) {
-        echarts.util[name] = zrUtil[name];
+        ecUtil[name] = zrUtil[name];
     }
 );
+export {ecUtil as util};
 
-echarts.helper = require('./helper');
+export var registerMap;
+export var getMap;
+export var parseGeoJSON;
 
-
-// PRIORITY
-echarts.PRIORITY = {
-    PROCESSOR: {
-        FILTER: PRIORITY_PROCESSOR_FILTER,
-        STATISTIC: PRIORITY_PROCESSOR_STATISTIC
+export var __inject = {
+    registerMap: function (f) {
+        registerMap = f;
     },
-    VISUAL: {
-        LAYOUT: PRIORITY_VISUAL_LAYOUT,
-        GLOBAL: PRIORITY_VISUAL_GLOBAL,
-        CHART: PRIORITY_VISUAL_CHART,
-        COMPONENT: PRIORITY_VISUAL_COMPONENT,
-        BRUSH: PRIORITY_VISUAL_BRUSH
+    getMap: function (f) {
+        getMap = f;
+    },
+    parseGeoJSON: function (f) {
+        parseGeoJSON = f;
     }
 };
 
-return echarts;

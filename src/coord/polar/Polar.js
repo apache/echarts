@@ -2,8 +2,8 @@
  * @module echarts/coord/polar/Polar
  */
 
-var RadiusAxis = require('./RadiusAxis');
-var AngleAxis = require('./AngleAxis');
+import RadiusAxis from './RadiusAxis';
+import AngleAxis from './AngleAxis';
 
 /**
  * @alias {module:echarts/coord/polar/Polar}
@@ -239,4 +239,4 @@ Polar.prototype = {
 
 };
 
-return Polar;
+export default Polar;

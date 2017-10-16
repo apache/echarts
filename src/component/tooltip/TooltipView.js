@@ -1,27 +1,25 @@
-
-var TooltipContent = require('./TooltipContent');
-var zrUtil = require('zrender/core/util');
-var formatUtil = require('../../util/format');
-var numberUtil = require('../../util/number');
-var graphic = require('../../util/graphic');
-var findPointFromSeries = require('../axisPointer/findPointFromSeries');
-var layoutUtil = require('../../util/layout');
-var env = require('zrender/core/env');
-var Model = require('../../model/Model');
-var globalListener = require('../axisPointer/globalListener');
-var axisHelper = require('../../coord/axisHelper');
-var axisPointerViewHelper = require('../axisPointer/viewHelper');
+import * as echarts from '../../echarts';
+import {util as zrUtil, env} from 'zrender';
+import TooltipContent from './TooltipContent';
+import * as formatUtil from '../../util/format';
+import * as numberUtil from '../../util/number';
+import * as graphic from '../../util/graphic';
+import findPointFromSeries from '../axisPointer/findPointFromSeries';
+import * as layoutUtil from '../../util/layout';
+import Model from '../../model/Model';
+import * as globalListener from '../axisPointer/globalListener';
+import * as axisHelper from '../../coord/axisHelper';
+import * as axisPointerViewHelper from '../axisPointer/viewHelper';
 
 var bind = zrUtil.bind;
 var each = zrUtil.each;
 var parsePercent = numberUtil.parsePercent;
 
-
 var proxyRect = new graphic.Rect({
     shape: {x: -1, y: -1, width: 2, height: 2}
 });
 
-require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'tooltip',
 

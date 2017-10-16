@@ -1,20 +1,20 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil, env} from 'zrender';
+import * as modelUtil from '../../util/model';
+import * as formatUtil from '../../util/format';
 
-var modelUtil = require('../../util/model');
-var zrUtil = require('zrender/core/util');
-var env = require('zrender/core/env');
-
-var formatUtil = require('../../util/format');
 var addCommas = formatUtil.addCommas;
 var encodeHTML = formatUtil.encodeHTML;
 
 function fillLabel(opt) {
     modelUtil.defaultEmphasis(opt.label, ['show']);
 }
-var MarkerModel = require('../../echarts').extendComponentModel({
+var MarkerModel = echarts.extendComponentModel({
 
     type: 'marker',
 
     dependencies: ['series', 'grid', 'polar', 'geo'],
+
     /**
      * @overrite
      */
@@ -125,4 +125,4 @@ var MarkerModel = require('../../echarts').extendComponentModel({
 
 zrUtil.mixin(MarkerModel, modelUtil.dataFormatMixin);
 
-return MarkerModel;
+export default MarkerModel;

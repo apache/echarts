@@ -1,10 +1,6 @@
-/**
- * @file Timeline preprocessor
- */
+import {util as zrUtil} from 'zrender';
 
-var zrUtil = require('zrender/core/util');
-
-return function (option) {
+export default function (option) {
     var timelineOpt = option && option.timeline;
 
     if (!zrUtil.isArray(timelineOpt)) {
@@ -18,7 +14,7 @@ return function (option) {
 
         compatibleEC2(opt);
     });
-};
+}
 
 function compatibleEC2(opt) {
     var type = opt.type;

@@ -247,5 +247,3 @@ export var Polygon = Path.extend({
         }
     }
 });
-
-export default {Polyline, Polygon};

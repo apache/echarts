@@ -2,7 +2,7 @@
  * @file Visual mapping.
  */
 
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var visualDefault = {
 
@@ -64,4 +64,4 @@ var defaultOption = {
     }
 };
 
-return visualDefault;
+export default visualDefault;

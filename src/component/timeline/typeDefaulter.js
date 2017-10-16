@@ -1,5 +1,6 @@
+import Component from '../../model/Component';
 
-require('../../model/Component').registerSubTypeDefaulter('timeline', function () {
+Component.registerSubTypeDefaulter('timeline', function () {
     // Only slider now.
     return 'slider';
 });

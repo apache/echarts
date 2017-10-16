@@ -1,7 +1,6 @@
-
-var Group = require('zrender/container/Group');
-var componentUtil = require('../util/component');
-var clazzUtil = require('../util/clazz');
+import Group from 'zrender/container/Group';
+import * as componentUtil from '../util/component';
+import * as clazzUtil from '../util/clazz';
 
 var Component = function () {
     /**
@@ -42,4 +41,4 @@ clazzUtil.enableClassExtend(Component);
 // Enable capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
 clazzUtil.enableClassManagement(Component, {registerWhenExtend: true});
 
-return Component;
+export default Component;

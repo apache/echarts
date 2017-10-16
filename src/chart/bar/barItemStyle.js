@@ -16,12 +16,14 @@ var getBarItemStyle = makeStyleMapper(
     ]
 );
 
-export function getBarItemStyle(excludes) {
-    var style = getBarItemStyle(this, excludes);
-    if (this.getBorderLineDash) {
-        var lineDash = this.getBorderLineDash();
-        lineDash && (style.lineDash = lineDash);
+export default {
+    getBarItemStyle: function (excludes) {
+        var style = getBarItemStyle(this, excludes);
+        if (this.getBorderLineDash) {
+            var lineDash = this.getBorderLineDash();
+            lineDash && (style.lineDash = lineDash);
+        }
+        return style;
     }
-    return style;
-}
+};
 

@@ -3,8 +3,8 @@
  * @author  Deqing Li(annong035@gmail.com)
  */
 
-import graphic from '../../util/graphic';
-import echarts from '../../echarts';
+import * as graphic from '../../util/graphic';
+import * as echarts from '../../echarts';
 
 var SankeyShape = graphic.extendShape({
     shape: {

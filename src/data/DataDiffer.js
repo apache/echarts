@@ -126,4 +126,4 @@ function initIndexMap(arr, map, keyArr, keyGetterName, dataDiffer) {
     }
 }
 
-return DataDiffer;
+export default DataDiffer;

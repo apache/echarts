@@ -1,6 +1,4 @@
 
-var lib = {};
-
 var ORIGIN_METHOD = '\0__throttleOriginMethod';
 var RATE = '\0__throttleRate';
 var THROTTLE_TYPE = '\0__throttleType';
@@ -14,7 +12,7 @@ var THROTTLE_TYPE = '\0__throttleType';
  *        false: If call interval less than `delay, call works on fixed rate.
  * @return {(Function)} throttled fn.
  */
-lib.throttle = function (fn, delay, debounce) {
+export function throttle(fn, delay, debounce) {
 
     var currCall;
     var lastCall = 0;
@@ -78,7 +76,7 @@ lib.throttle = function (fn, delay, debounce) {
     };
 
     return cb;
-};
+}
 
 /**
  * Create throttle method or update throttle rate.
@@ -107,7 +105,7 @@ lib.throttle = function (fn, delay, debounce) {
  * @param {string} [throttleType='fixRate'] 'fixRate' or 'debounce'
  * @return {Function} throttled function.
  */
-lib.createOrUpdate = function (obj, fnAttr, rate, throttleType) {
+export function createOrUpdate(obj, fnAttr, rate, throttleType) {
     var fn = obj[fnAttr];
 
     if (!fn) {
@@ -123,7 +121,7 @@ lib.createOrUpdate = function (obj, fnAttr, rate, throttleType) {
             return (obj[fnAttr] = originFn);
         }
 
-        fn = obj[fnAttr] = lib.throttle(
+        fn = obj[fnAttr] = throttle(
             originFn, rate, throttleType === 'debounce'
         );
         fn[ORIGIN_METHOD] = originFn;
@@ -132,7 +130,7 @@ lib.createOrUpdate = function (obj, fnAttr, rate, throttleType) {
     }
 
     return fn;
-};
+}
 
 /**
  * Clear throttle. Example see throttle.createOrUpdate.
@@ -141,11 +139,9 @@ lib.createOrUpdate = function (obj, fnAttr, rate, throttleType) {
  * @param {Object} obj
  * @param {string} fnAttr
  */
-lib.clear = function (obj, fnAttr) {
+export function clear(obj, fnAttr) {
     var fn = obj[fnAttr];
     if (fn && fn[ORIGIN_METHOD]) {
         obj[fnAttr] = fn[ORIGIN_METHOD];
     }
-};
-
-return lib;
+}

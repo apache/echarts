@@ -1,19 +1,18 @@
+import {util as zrUtil, BoundingRect} from 'zrender';
+import parseGeoJson from './parseGeoJson';
+import View from '../View';
 
-var parseGeoJson = require('./parseGeoJson');
-
-var zrUtil = require('zrender/core/util');
-
-var BoundingRect = require('zrender/core/BoundingRect');
-
-var View = require('../View');
-
+import fixNanhai from './fix/nanhai';
+import fixTextCoord from './fix/textCoord';
+import fixGeoCoord from './fix/geoCoord';
+import fixDiaoyuIsland from './fix/diaoyuIsland';
 
 // Geo fix functions
 var geoFixFuncs = [
-    require('./fix/nanhai'),
-    require('./fix/textCoord'),
-    require('./fix/geoCoord'),
-    require('./fix/diaoyuIsland')
+    fixNanhai,
+    fixTextCoord,
+    fixGeoCoord,
+    fixDiaoyuIsland
 ];
 
 /**
@@ -235,4 +234,4 @@ function doConvert(methodName, ecModel, finder, value) {
     return coordSys === this ? coordSys[methodName](value) : null;
 }
 
-return Geo;
+export default Geo;

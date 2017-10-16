@@ -1,12 +1,4 @@
-/**
- * 数值处理模块
- * @module echarts/util/number
- */
-
-
-var zrUtil = require('zrender/core/util');
-
-var number = {};
+import {util as zrUtil} from 'zrender';
 
 var RADIAN_EPSILON = 1e-4;
 
@@ -23,7 +15,7 @@ function _trim(str) {
  * @param  {boolean} clamp
  * @return {(number|Array.<number>}
  */
-number.linearMap = function (val, domain, range, clamp) {
+export function linearMap(val, domain, range, clamp) {
     var subDomain = domain[1] - domain[0];
     var subRange = range[1] - range[0];
 
@@ -66,7 +58,7 @@ number.linearMap = function (val, domain, range, clamp) {
     }
 
     return (val - domain[0]) / subDomain * subRange + range[0];
-};
+}
 
 /**
  * Convert a percent string to absolute number.
@@ -76,7 +68,7 @@ number.linearMap = function (val, domain, range, clamp) {
  * @param {number} all
  * @return {number}
  */
-number.parsePercent = function(percent, all) {
+export function parsePercent(percent, all) {
     switch (percent) {
         case 'center':
         case 'middle':
@@ -100,7 +92,7 @@ number.parsePercent = function(percent, all) {
     }
 
     return percent == null ? NaN : +percent;
-};
+}
 
 /**
  * (1) Fix rounding error of float numbers.
@@ -111,7 +103,7 @@ number.parsePercent = function(percent, all) {
  * @param {boolean} [returnStr]
  * @return {number|string}
  */
-number.round = function (x, precision, returnStr) {
+export function round(x, precision, returnStr) {
     if (precision == null) {
         precision = 10;
     }
@@ -119,20 +111,20 @@ number.round = function (x, precision, returnStr) {
     precision = Math.min(Math.max(0, precision), 20);
     x = (+x).toFixed(precision);
     return returnStr ? x : +x;
-};
+}
 
-number.asc = function (arr) {
+export function asc(arr) {
     arr.sort(function (a, b) {
         return a - b;
     });
     return arr;
-};
+}
 
 /**
  * Get precision
  * @param {number} val
  */
-number.getPrecision = function (val) {
+export function getPrecision(val) {
     val = +val;
     if (isNaN(val)) {
         return 0;
@@ -148,13 +140,13 @@ number.getPrecision = function (val) {
         count++;
     }
     return count;
-};
+}
 
 /**
  * @param {string|number} val
  * @return {number}
  */
-number.getPrecisionSafe = function (val) {
+export function getPrecisionSafe(val) {
     var str = val.toString();
 
     // Consider scientific notation: '3.4e-12' '3.4e+12'
@@ -167,7 +159,7 @@ number.getPrecisionSafe = function (val) {
         var dotIndex = str.indexOf('.');
         return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
     }
-};
+}
 
 /**
  * Minimal dicernible data precisioin according to a single pixel.
@@ -176,7 +168,7 @@ number.getPrecisionSafe = function (val) {
  * @param {Array.<number>} pixelExtent
  * @return {number} precision
  */
-number.getPixelPrecision = function (dataExtent, pixelExtent) {
+export function getPixelPrecision(dataExtent, pixelExtent) {
     var log = Math.log;
     var LN10 = Math.LN10;
     var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
@@ -184,7 +176,7 @@ number.getPixelPrecision = function (dataExtent, pixelExtent) {
     // toFixed() digits argument must be between 0 and 20.
     var precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
     return !isFinite(precision) ? 20 : precision;
-};
+}
 
 /**
  * Get a data of given precision, assuring the sum of percentages
@@ -197,7 +189,7 @@ number.getPixelPrecision = function (dataExtent, pixelExtent) {
  * @param {number} precision integer number showing digits of precision
  * @return {number} percent ranging from 0 to 100
  */
-number.getPercentWithPrecision = function (valueList, idx, precision) {
+export function getPercentWithPrecision(valueList, idx, precision) {
     if (!valueList[idx]) {
         return 0;
     }
@@ -246,40 +238,30 @@ number.getPercentWithPrecision = function (valueList, idx, precision) {
     }
 
     return seats[idx] / digits;
-};
+}
 
 // Number.MAX_SAFE_INTEGER, ie do not support.
-number.MAX_SAFE_INTEGER = 9007199254740991;
+export var MAX_SAFE_INTEGER = 9007199254740991;
 
 /**
  * To 0 - 2 * PI, considering negative radian.
  * @param {number} radian
  * @return {number}
  */
-number.remRadian = function (radian) {
+export function remRadian(radian) {
     var pi2 = Math.PI * 2;
     return (radian % pi2 + pi2) % pi2;
-};
+}
 
 /**
  * @param {type} radian
  * @return {boolean}
  */
-number.isRadianAroundZero = function (val) {
+export function isRadianAroundZero(val) {
     return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
-};
+}
 
 var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
-
-/**
- * Consider DST, it is incorrect to provide a method `getTimezoneOffset`
- * without time specified. So this method is removed.
- *
- * @return {number} in minutes
- */
-// number.getTimezoneOffset = function () {
-//     return (new Date()).getTimezoneOffset();
-// };
 
 /**
  * @param {string|Date|number} value These values can be accepted:
@@ -296,7 +278,7 @@ var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?:
  *   + a timestamp, which represent a time in UTC.
  * @return {Date} date
  */
-number.parseDate = function (value) {
+export function parseDate(value) {
     if (value instanceof Date) {
         return value;
     }
@@ -355,7 +337,7 @@ number.parseDate = function (value) {
     }
 
     return new Date(Math.round(value));
-};
+}
 
 /**
  * Quantity of a number. e.g. 0.1, 1, 10, 100
@@ -363,9 +345,9 @@ number.parseDate = function (value) {
  * @param  {number} val
  * @return {number}
  */
-number.quantity = function (val) {
+export function quantity(val) {
     return Math.pow(10, quantityExponent(val));
-};
+}
 
 function quantityExponent(val) {
     return Math.floor(Math.log(val) / Math.LN10);
@@ -382,7 +364,7 @@ function quantityExponent(val) {
  * @param  {boolean} round
  * @return {number}
  */
-number.nice = function (val, round) {
+export function nice(val, round) {
     var exponent = quantityExponent(val);
     var exp10 = Math.pow(10, exponent);
     var f = val / exp10; // 1 <= f < 10
@@ -406,7 +388,7 @@ number.nice = function (val, round) {
     // Fix 3 * 0.1 === 0.30000000000000004 issue (see IEEE 754).
     // 20 is the uppper bound of toFixed.
     return exponent >= -20 ? +val.toFixed(exponent < 0 ? -exponent : 0) : val;
-};
+}
 
 /**
  * Order intervals asc, and split them when overlap.
@@ -430,7 +412,7 @@ number.nice = function (val, round) {
  *        of the interval, and Infinity can be used.
  * @return {Array.<Object>} The origin list, which has been reformed.
  */
-number.reformIntervals = function (list) {
+export function reformIntervals(list) {
     list.sort(function (a, b) {
         return littleThan(a, b, 0) ? -1 : 1;
     });
@@ -470,7 +452,7 @@ number.reformIntervals = function (list) {
                 )
             );
     }
-};
+}
 
 /**
  * parseFloat NaNs numeric-cast false positives (null|true|false|"")
@@ -480,8 +462,6 @@ number.reformIntervals = function (list) {
  * @param {*} v
  * @return {boolean}
  */
-number.isNumeric = function (v) {
+export function isNumeric(v) {
     return v - parseFloat(v) >= 0;
-};
-
-return number;
+}

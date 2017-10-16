@@ -1,18 +1,15 @@
+import {util as zrUtil, event as eventTool} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as throttle from '../../util/throttle';
+import DataZoomView from './DataZoomView';
+import * as numberUtil from '../../util/number';
+import * as layout from '../../util/layout';
+import sliderMove from '../helper/sliderMove';
 
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var throttle = require('../../util/throttle');
-var DataZoomView = require('./DataZoomView');
 var Rect = graphic.Rect;
-var numberUtil = require('../../util/number');
 var linearMap = numberUtil.linearMap;
-var layout = require('../../util/layout');
-var sliderMove = require('../helper/sliderMove');
-var eventTool = require('zrender/core/event');
-
 var asc = numberUtil.asc;
 var bind = zrUtil.bind;
-// var mathMax = Math.max;
 var each = zrUtil.each;
 
 // Constants
@@ -785,4 +782,4 @@ function getCursor(orient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
 
-return SliderZoomView;
+export default SliderZoomView;

@@ -1,7 +1,7 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
 
-var zrUtil = require('zrender/core/util');
-
-return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'marker',
 

@@ -1,17 +1,18 @@
-
-var zrUtil = require('zrender/core/util');
-var formatUtil = require('../util/format');
-var classUtil = require('../util/clazz');
-var modelUtil = require('../util/model');
-var ComponentModel = require('./Component');
-var colorPaletteMixin = require('./mixin/colorPalette');
-var env = require('zrender/core/env');
-var layout = require('../util/layout');
-
-var set = classUtil.set;
-var get = classUtil.get;
-var encodeHTML = formatUtil.encodeHTML;
-var addCommas = formatUtil.addCommas;
+import {util as zrUtil, env} from 'zrender';
+import {
+    formatTime,
+    encodeHTML,
+    addCommas,
+    getTooltipMarker
+} from '../util/format';
+import {set, get} from '../util/clazz';
+import * as modelUtil from '../util/model';
+import ComponentModel from './Component';
+import colorPaletteMixin from './mixin/colorPalette';
+import {
+    getLayoutParams,
+    mergeLayoutParam
+} from '../util/layout';
 
 var SeriesModel = ComponentModel.extend({
 
@@ -87,7 +88,7 @@ var SeriesModel = ComponentModel.extend({
     mergeDefaultAndTheme: function (option, ecModel) {
         var layoutMode = this.layoutMode;
         var inputPositionParams = layoutMode
-            ? layout.getLayoutParams(option) : {};
+            ? getLayoutParams(option) : {};
 
         // Backward compat: using subType on theme.
         // But if name duplicate between series subType
@@ -109,7 +110,7 @@ var SeriesModel = ComponentModel.extend({
         this.fillDataTextStyle(option.data);
 
         if (layoutMode) {
-            layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
+            mergeLayoutParam(option, inputPositionParams, layoutMode);
         }
     },
 
@@ -119,7 +120,7 @@ var SeriesModel = ComponentModel.extend({
 
         var layoutMode = this.layoutMode;
         if (layoutMode) {
-            layout.mergeLayoutParam(this.option, newSeriesOption, layoutMode);
+            mergeLayoutParam(this.option, newSeriesOption, layoutMode);
         }
 
         var data = this.getInitialData(newSeriesOption, ecModel);
@@ -247,7 +248,7 @@ var SeriesModel = ComponentModel.extend({
                     + (dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
-                        ? (multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val))
+                        ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
                         : addCommas(val)
                     );
                 valStr && result.push(encodeHTML(valStr));
@@ -269,7 +270,7 @@ var SeriesModel = ComponentModel.extend({
         }
         color = color || 'transparent';
 
-        var colorEl = formatUtil.getTooltipMarker(color);
+        var colorEl = getTooltipMarker(color);
 
         var seriesName = this.name;
         // FIXME
@@ -342,4 +343,4 @@ var SeriesModel = ComponentModel.extend({
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
-return SeriesModel;
+export default SeriesModel;

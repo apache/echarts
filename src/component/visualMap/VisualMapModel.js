@@ -1,17 +1,13 @@
-/**
- * @file Controller visual map model
- */
+import * as echarts from '../../echarts';
+import {util as zrUtil, env} from 'zrender';
+import visualDefault from '../../visual/visualDefault';
+import VisualMapping from '../../visual/VisualMapping';
+import * as visualSolution from '../../visual/visualSolution';
+import * as modelUtil from '../../util/model';
+import * as numberUtil from '../../util/number';
 
-var echarts = require('../../echarts');
-var zrUtil = require('zrender/core/util');
-var env = require('zrender/core/env');
-var visualDefault = require('../../visual/visualDefault');
-var VisualMapping = require('../../visual/VisualMapping');
-var visualSolution = require('../../visual/visualSolution');
 var mapVisual = VisualMapping.mapVisual;
-var modelUtil = require('../../util/model');
 var eachVisual = VisualMapping.eachVisual;
-var numberUtil = require('../../util/number');
 var isArray = zrUtil.isArray;
 var each = zrUtil.each;
 var asc = numberUtil.asc;
@@ -522,4 +518,4 @@ var VisualMapModel = echarts.extendComponentModel({
 
 });
 
-return VisualMapModel;
+export default VisualMapModel;

@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var axisHelper = require('./axisHelper');
+import {util as zrUtil} from 'zrender';
+import * as axisHelper from './axisHelper';
 
 function getName(obj) {
     if (zrUtil.isObject(obj) && obj.value != null) {
@@ -11,7 +10,7 @@ function getName(obj) {
     }
 }
 
-return {
+export default {
 
     /**
      * Format labels

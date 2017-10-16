@@ -1,12 +1,7 @@
-
-var zrUtil = require('zrender/core/util');
-var clazz = require('./clazz');
-
-var parseClassType = clazz.parseClassType;
+import {util as zrUtil} from 'zrender';
+import {parseClassType} from './clazz';
 
 var base = 0;
-
-var componentUtil = {};
 
 var DELIMITER = '_';
 
@@ -15,16 +10,16 @@ var DELIMITER = '_';
  * @param {string} type
  * @return {string}
  */
-componentUtil.getUID = function (type) {
+export function getUID(type) {
     // Considering the case of crossing js context,
     // use Math.random to make id as unique as possible.
     return [(type || ''), base++, Math.random()].join(DELIMITER);
-};
+}
 
 /**
  * @inner
  */
-componentUtil.enableSubTypeDefaulter = function (entity) {
+export function enableSubTypeDefaulter(entity) {
 
     var subTypeDefaulters = {};
 
@@ -45,7 +40,7 @@ componentUtil.enableSubTypeDefaulter = function (entity) {
     };
 
     return entity;
-};
+}
 
 /**
  * Topological travel on Activity Network (Activity On Vertices).
@@ -56,7 +51,7 @@ componentUtil.enableSubTypeDefaulter = function (entity) {
  * If there is circle dependencey, Error will be thrown.
  *
  */
-componentUtil.enableTopologicalTravel = function (entity, dependencyGetter) {
+export function enableTopologicalTravel(entity, dependencyGetter) {
 
     /**
      * @public
@@ -169,6 +164,4 @@ componentUtil.enableTopologicalTravel = function (entity, dependencyGetter) {
         });
         return availableDeps;
     }
-};
-
-return componentUtil;
+}

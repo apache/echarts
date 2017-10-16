@@ -3,8 +3,8 @@
  */
 
 import {util as zrUtil} from 'zrender';
-import symbolUtil from '../../util/symbol';
-import graphic from '../../util/graphic';
+import {createSymbol} from '../../util/symbol';
+import * as graphic from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import {findLabelValueDim} from './labelHelper';
 
@@ -27,13 +27,13 @@ function getScale(symbolSize) {
  * @param {number} idx
  * @extends {module:zrender/graphic/Group}
  */
-function Symbol(data, idx, seriesScope) {
+function SymbolClz(data, idx, seriesScope) {
     graphic.Group.call(this);
 
     this.updateData(data, idx, seriesScope);
 }
 
-var symbolProto = Symbol.prototype;
+var symbolProto = SymbolClz.prototype;
 
 function driftSymbol(dx, dy) {
     this.parent.drift(dx, dy);
@@ -45,13 +45,13 @@ symbolProto._createSymbol = function (symbolType, data, idx, symbolSize) {
 
     var color = data.getItemVisual(idx, 'color');
 
-    // var symbolPath = symbolUtil.createSymbol(
+    // var symbolPath = createSymbol(
     //     symbolType, -0.5, -0.5, 1, 1, color
     // );
     // If width/height are set too small (e.g., set to 1) on ios10
     // and macOS Sierra, a circle stroke become a rect, no matter what
     // the scale is set. So we set width/height as 2. See #4150.
-    var symbolPath = symbolUtil.createSymbol(
+    var symbolPath = createSymbol(
         symbolType, -1, -1, 2, 2, color
     );
 
@@ -327,6 +327,6 @@ symbolProto.fadeOut = function (cb, opt) {
     );
 };
 
-zrUtil.inherits(Symbol, graphic.Group);
+zrUtil.inherits(SymbolClz, graphic.Group);
 
-export default Symbol;
+export default SymbolClz;

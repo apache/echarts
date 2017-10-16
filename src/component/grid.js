@@ -1,6 +1,3 @@
-
-require('./gridSimple');
-
-require('./axisPointer/CartesianAxisPointer');
-
-require('./axisPointer');
+import './gridSimple';
+import './axisPointer/CartesianAxisPointer';
+import './axisPointer';

@@ -1,8 +1,4 @@
-/**
- * @file Brush action
- */
-
-var echarts = require('../../echarts');
+import * as echarts from '../../echarts';
 
 /**
  * payload: {

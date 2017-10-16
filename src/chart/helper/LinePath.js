@@ -2,7 +2,7 @@
  * Line path for bezier and straight line draw
  */
 
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import {vector as vec2} from 'zrender';
 
 var straightLineProto = graphic.Line.prototype;

@@ -1,4 +1,3 @@
-
 import commonLayout from './commonLayout';
 
 export default function (ecModel, api) {

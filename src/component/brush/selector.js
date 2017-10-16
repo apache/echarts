@@ -1,6 +1,6 @@
+import {contain, BoundingRect} from 'zrender';
 
-var polygonContain = require('zrender/contain/polygon').contain;
-var BoundingRect = require('zrender/core/BoundingRect');
+var polygonContain = contain.polygon;
 
 // Key of the first level is brushType: `line`, `rect`, `polygon`.
 // Key of the second level is chart element type: `point`, `rect`.
@@ -121,4 +121,4 @@ function determinant(v1, v2, v3, v4) {
     return v1 * v4 - v2 * v3;
 }
 
-return selector;
+export default selector;

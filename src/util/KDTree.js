@@ -5,7 +5,7 @@
  * @author Yi Shen(https://github.com/pissang)
  */
 
-var quickSelect = require('./quickSelect');
+import quickSelect from './quickSelect';
 
 function Node(axis, data) {
     this.left = null;
@@ -242,4 +242,4 @@ KDTree.prototype.nearestN = function (target, N, squaredDistance, output) {
     return output;
 };
 
-return KDTree;
+export default KDTree;

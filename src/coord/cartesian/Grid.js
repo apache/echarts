@@ -4,20 +4,19 @@
  * TODO Default cartesian
  */
 
-var layout = require('../../util/layout');
-var axisHelper = require('../../coord/axisHelper');
+import {util as zrUtil} from 'zrender';
+import {getLayoutRect} from '../../util/layout';
+import * as axisHelper from '../../coord/axisHelper';
+import Cartesian2D from './Cartesian2D';
+import Axis2D from './Axis2D';
+import CoordinateSystem from '../../CoordinateSystem';
 
-var zrUtil = require('zrender/core/util');
-var Cartesian2D = require('./Cartesian2D');
-var Axis2D = require('./Axis2D');
+// Depends on GridModel, AxisModel, which performs preprocess.
+import './GridModel';
 
 var each = zrUtil.each;
-
 var ifAxisCrossZero = axisHelper.ifAxisCrossZero;
 var niceScaleExtent = axisHelper.niceScaleExtent;
-
-// 依赖 GridModel, AxisModel 做预处理
-require('./GridModel');
 
 /**
  * Check if the axis is used in the specified grid
@@ -160,7 +159,7 @@ function canNotOnZeroToAxis(axis) {
  */
 gridProto.resize = function (gridModel, api, ignoreContainLabel) {
 
-    var gridRect = layout.getLayoutRect(
+    var gridRect = getLayoutRect(
         gridModel.getBoxLayoutParams(), {
             width: api.getWidth(),
             height: api.getHeight()
@@ -624,6 +623,6 @@ Grid.create = function (ecModel, api) {
 // For deciding which dimensions to use when creating list data
 Grid.dimensions = Grid.prototype.dimensions = Cartesian2D.prototype.dimensions;
 
-require('../../CoordinateSystem').register('cartesian2d', Grid);
+CoordinateSystem.register('cartesian2d', Grid);
 
-return Grid;
+export default Grid;

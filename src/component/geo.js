@@ -1,14 +1,10 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
 
-require('../coord/geo/GeoModel');
-
-require('../coord/geo/geoCreator');
-
-require('./geo/GeoView');
-
-require('../action/geoRoam');
-
-var echarts = require('../echarts');
-var zrUtil = require('zrender/core/util');
+import '../coord/geo/GeoModel';
+import '../coord/geo/geoCreator';
+import './geo/GeoView';
+import '../action/geoRoam';
 
 function makeAction(method, actionInfo) {
     actionInfo.update = 'updateView';

@@ -1,22 +1,22 @@
-
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var formatUtil = require('../../util/format');
-var numberUtil = require('../../util/number');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as formatUtil from '../../util/format';
+import * as numberUtil from '../../util/number';
 
 var MONTH_TEXT = {
     EN: [
-            'Jan', 'Feb', 'Mar',
-            'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep',
-            'Oct', 'Nov', 'Dec'
-        ],
+        'Jan', 'Feb', 'Mar',
+        'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep',
+        'Oct', 'Nov', 'Dec'
+    ],
     CN: [
-            '一月', '二月', '三月',
-            '四月', '五月', '六月',
-            '七月', '八月', '九月',
-            '十月', '十一月', '十二月'
-        ]
+        '一月', '二月', '三月',
+        '四月', '五月', '六月',
+        '七月', '八月', '九月',
+        '十月', '十一月', '十二月'
+    ]
 };
 
 var WEEK_TEXT = {
@@ -24,7 +24,7 @@ var WEEK_TEXT = {
     CN: ['日', '一', '二', '三', '四', '五', '六']
 };
 
-return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'calendar',
 

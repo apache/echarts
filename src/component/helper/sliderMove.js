@@ -1,4 +1,3 @@
-
 /**
  * Calculate slider move result.
  * Usage:
@@ -20,7 +19,7 @@
  * @param {number} [maxSpan] The range of dataZoom can not be larger than that.
  * @return {Array.<number>} The input handleEnds.
  */
-return function (delta, handleEnds, extent, handleIndex, minSpan, maxSpan) {
+export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpan) {
     // Normalize firstly.
     handleEnds[0] = restrict(handleEnds[0], extent);
     handleEnds[1] = restrict(handleEnds[1], extent);
@@ -67,7 +66,7 @@ return function (delta, handleEnds, extent, handleIndex, minSpan, maxSpan) {
     }
 
     return handleEnds;
-};
+}
 
 function getSpanSign(handleEnds, handleIndex) {
     var dist = handleEnds[handleIndex] - handleEnds[1 - handleIndex];

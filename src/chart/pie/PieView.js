@@ -1,5 +1,5 @@
-import graphic from '../../util/graphic';
 import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 
 /**
@@ -274,7 +274,7 @@ zrUtil.inherits(PiePiece, graphic.Group);
 
 
 // Pie view
-var Pie = ChartView.extend({
+var PieView = ChartView.extend({
 
     type: 'pie',
 
@@ -393,4 +393,4 @@ var Pie = ChartView.extend({
 
 });
 
-export default Pie;
+export default PieView;

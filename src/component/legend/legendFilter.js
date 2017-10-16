@@ -1,4 +1,5 @@
-return function (ecModel) {
+export default function (ecModel) {
+
     var legendModels = ecModel.findComponents({
         mainType: 'legend'
     });
@@ -14,4 +15,5 @@ return function (ecModel) {
             return true;
         });
     }
-};
+
+}

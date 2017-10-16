@@ -1,7 +1,10 @@
-
-var ComponentModel = require('../../model/Component');
-var zrUtil = require('zrender/core/util');
-var layout = require('../../util/layout');
+import {util as zrUtil} from 'zrender';
+import ComponentModel from '../../model/Component';
+import {
+    getLayoutParams,
+    sizeCalculable,
+    mergeLayoutParam
+} from '../../util/layout';
 
 var CalendarModel = ComponentModel.extend({
 
@@ -92,7 +95,7 @@ var CalendarModel = ComponentModel.extend({
      * @override
      */
     init: function (option, parentModel, ecModel, extraOpt) {
-        var inputPositionParams = layout.getLayoutParams(option);
+        var inputPositionParams = getLayoutParams(option);
 
         CalendarModel.superApply(this, 'init', arguments);
 
@@ -124,15 +127,15 @@ function mergeAndNormalizeLayoutParams(target, raw) {
         // If user have set `width` or both `left` and `right`, cellSize
         // will be automatically set to 'auto', otherwise the default
         // setting of cellSize will make `width` setting not work.
-        if (layout.sizeCalculable(raw, hvIdx)) {
+        if (sizeCalculable(raw, hvIdx)) {
             cellSize[hvIdx] = 'auto';
         }
         return cellSize[hvIdx] != null && cellSize[hvIdx] !== 'auto';
     });
 
-    layout.mergeLayoutParam(target, raw, {
+    mergeLayoutParam(target, raw, {
         type: 'box', ignoreSize: ignoreSize
     });
 }
 
-return CalendarModel;
+export default CalendarModel;

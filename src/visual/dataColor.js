@@ -2,7 +2,7 @@
 // Applicable for charts that require applying color palette
 // in data level (like pie, funnel, chord).
 
-return function (seriesType, ecModel) {
+export default function (seriesType, ecModel) {
     // Pie and funnel may use diferrent scope
     var paletteScope = {};
     ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
@@ -41,4 +41,4 @@ return function (seriesType, ecModel) {
             });
         }
     });
-};
+}

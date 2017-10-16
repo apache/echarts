@@ -1,8 +1,9 @@
+import * as echarts from '../echarts';
 
-require('./marker/MarkLineModel');
-require('./marker/MarkLineView');
+import './marker/MarkLineModel';
+import './marker/MarkLineView';
 
-require('../echarts').registerPreprocessor(function (opt) {
+echarts.registerPreprocessor(function (opt) {
     // Make sure markLine component is enabled
     opt.markLine = opt.markLine || {};
 });

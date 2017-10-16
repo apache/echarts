@@ -1,9 +1,8 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import BrushController from '../helper/BrushController';
 
-var zrUtil = require('zrender/core/util');
-var BrushController = require('../helper/BrushController');
-var echarts = require('../../echarts');
-
-return echarts.extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'brush',
 

@@ -1,8 +1,7 @@
-import {util as zrUtil} from 'zrender';
+import {util as zrUtil, BoundingRect} from 'zrender';
 import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
-import layout from '../../util/layout';
-import helper from './helper';
-import {BoundingRect} from 'zrender';
+import * as layout from '../../util/layout';
+import * as helper from './helper';
 
 var mathMax = Math.max;
 var mathMin = Math.min;
@@ -17,7 +16,7 @@ var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'normal', 'height'];
 /**
  * @public
  */
-function update(ecModel, api, payload) {
+export default function (ecModel, api, payload) {
     // Layout result in each node:
     // {x, y, width, height, area, borderWidth}
     var condition = {mainType: 'series', subType: 'treemap', query: payload};
@@ -562,5 +561,3 @@ function prunning(node, clipRect, viewAbovePath, viewRoot, depth) {
 function getUpperLabelHeight(model) {
     return model.get(PATH_UPPER_LABEL_SHOW) ? model.get(PATH_UPPER_LABEL_HEIGHT) : 0;
 }
-
-export default update;

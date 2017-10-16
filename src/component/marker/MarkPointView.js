@@ -1,11 +1,9 @@
-
-var SymbolDraw = require('../../chart/helper/SymbolDraw');
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../../util/number');
-
-var List = require('../../data/List');
-
-var markerHelper = require('./markerHelper');
+import {util as zrUtil} from 'zrender';
+import SymbolDraw from '../../chart/helper/SymbolDraw';
+import * as numberUtil from '../../util/number';
+import List from '../../data/List';
+import * as markerHelper from './markerHelper';
+import MarkerView from './MarkerView';
 
 function updateMarkerLayout(mpData, seriesModel, api) {
     var coordSys = seriesModel.coordinateSystem;
@@ -43,7 +41,7 @@ function updateMarkerLayout(mpData, seriesModel, api) {
     });
 }
 
-require('./MarkerView').extend({
+export default MarkerView.extend({
 
     type: 'markPoint',
 
@@ -147,5 +145,6 @@ function createList(coordSys, seriesModel, mpModel) {
             return item.value;
         }
     );
+
     return mpData;
 }

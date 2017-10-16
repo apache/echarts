@@ -1,9 +1,9 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
 
-var echarts = require('../echarts');
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../util/model');
-var graphicUtil = require('../util/graphic');
-var layoutUtil = require('../util/layout');
+import * as modelUtil from '../util/model';
+import * as graphicUtil from '../util/graphic';
+import * as layoutUtil from '../util/layout';
 
 // -------------
 // Preprocessor

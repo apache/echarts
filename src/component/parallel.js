@@ -1,11 +1,11 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
+import * as throttleUtil from '../util/throttle';
+import parallelPreprocessor from '../coord/parallel/parallelPreprocessor';
 
-require('../coord/parallel/parallelCreator');
-require('../coord/parallel/ParallelModel');
-require('./parallelAxis');
-
-var echarts = require('../echarts');
-var zrUtil = require('zrender/core/util');
-var throttle = require('../util/throttle');
+import '../coord/parallel/parallelCreator';
+import '../coord/parallel/ParallelModel';
+import './parallelAxis';
 
 var CLICK_THRESHOLD = 5; // > 4
 
@@ -24,7 +24,7 @@ echarts.extendComponentView({
             }, this);
         }
 
-        throttle.createOrUpdate(
+        throttleUtil.createOrUpdate(
             this,
             '_throttledDispatchExpand',
             parallelModel.get('axisExpandRate'),
@@ -115,6 +115,4 @@ function checkTrigger(view, triggerOn) {
     return model.get('axisExpandable') && model.get('axisExpandTriggerOn') === triggerOn;
 }
 
-echarts.registerPreprocessor(
-    require('../coord/parallel/parallelPreprocessor')
-);
+echarts.registerPreprocessor(parallelPreprocessor);

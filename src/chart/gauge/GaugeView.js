@@ -1,5 +1,5 @@
 import PointerPath from './PointerPath';
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
 

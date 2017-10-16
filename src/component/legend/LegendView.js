@@ -1,15 +1,15 @@
-
-var zrUtil = require('zrender/core/util');
-var symbolCreator = require('../../util/symbol');
-var graphic = require('../../util/graphic');
-var listComponentHelper = require('../helper/listComponent');
-var layoutUtil = require('../../util/layout');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import {createSymbol} from '../../util/symbol';
+import * as graphic from '../../util/graphic';
+import {makeBackground} from '../helper/listComponent';
+import * as layoutUtil from '../../util/layout';
 
 var curry = zrUtil.curry;
 var each = zrUtil.each;
 var Group = graphic.Group;
 
-return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
     type: 'legend.plain',
 
@@ -79,7 +79,7 @@ return require('../../echarts').extendComponentView({
 
         // Render background after group is layout.
         this.group.add(
-            this._backgroundEl = listComponentHelper.makeBackground(mainRect, legendModel)
+            this._backgroundEl = makeBackground(mainRect, legendModel)
         );
     },
 
@@ -209,7 +209,7 @@ return require('../../echarts').extendComponentView({
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-        itemGroup.add(symbolCreator.createSymbol(
+        itemGroup.add(createSymbol(
             legendSymbolType,
             0,
             0,
@@ -230,7 +230,7 @@ return require('../../echarts').extendComponentView({
                 symbolType = 'circle';
             }
             // Put symbol in the center
-            itemGroup.add(symbolCreator.createSymbol(
+            itemGroup.add(createSymbol(
                 symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size,
                 isSelected ? color : inactiveColor
             ));

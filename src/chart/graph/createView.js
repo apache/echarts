@@ -70,5 +70,6 @@ export default function (ecModel, api) {
             viewList.push(viewCoordSys);
         }
     });
+
     return viewList;
 }

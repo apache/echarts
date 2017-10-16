@@ -5,7 +5,7 @@
  * @author Yi Shen(https://www.github.com/pissang)
  */
 
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 // id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey (id) {
@@ -515,4 +515,4 @@ zrUtil.mixin(Edge, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 Graph.Node = Node;
 Graph.Edge = Edge;
 
-return Graph;
+export default Graph;

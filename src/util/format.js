@@ -1,30 +1,26 @@
-
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('./number');
-var textContain = require('zrender/contain/text');
-
-var formatUtil = {};
+import {util as zrUtil, contain} from 'zrender';
+import * as numberUtil from './number';
 
 /**
  * 每三位默认加,格式化
  * @param {string|number} x
  * @return {string}
  */
-formatUtil.addCommas = function (x) {
+export function addCommas(x) {
     if (isNaN(x)) {
         return '-';
     }
     x = (x + '').split('.');
     return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
             + (x.length > 1 ? ('.' + x[1]) : '');
-};
+}
 
 /**
  * @param {string} str
  * @param {boolean} [upperCaseFirst=false]
  * @return {string} str
  */
-formatUtil.toCamelCase = function (str, upperCaseFirst) {
+export function toCamelCase(str, upperCaseFirst) {
     str = (str || '').toLowerCase().replace(/-(.)/g, function(match, group1) {
         return group1.toUpperCase();
     });
@@ -34,18 +30,18 @@ formatUtil.toCamelCase = function (str, upperCaseFirst) {
     }
 
     return str;
-};
+}
 
-formatUtil.normalizeCssArray = zrUtil.normalizeCssArray;
+export var normalizeCssArray = zrUtil.normalizeCssArray;
 
-var encodeHTML = formatUtil.encodeHTML = function (source) {
+export function encodeHTML(source) {
     return String(source)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-};
+}
 
 var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
@@ -60,7 +56,7 @@ var wrapVar = function (varName, seriesIdx) {
  * @param {boolean} [encode=false]
  * @return {string}
  */
-formatUtil.formatTpl = function (tpl, paramsList, encode) {
+export function formatTpl(tpl, paramsList, encode) {
     if (!zrUtil.isArray(paramsList)) {
         paramsList = [paramsList];
     }
@@ -86,7 +82,7 @@ formatUtil.formatTpl = function (tpl, paramsList, encode) {
     }
 
     return tpl;
-};
+}
 
 /**
  * simple Template formatter
@@ -96,7 +92,7 @@ formatUtil.formatTpl = function (tpl, paramsList, encode) {
  * @param {boolean} [encode=false]
  * @return {string}
  */
-formatUtil.formatTplSimple = function (tpl, param, encode) {
+export function formatTplSimple(tpl, param, encode) {
     zrUtil.each(param, function (value, key) {
         tpl = tpl.replace(
             '{' + key + '}',
@@ -104,20 +100,20 @@ formatUtil.formatTplSimple = function (tpl, param, encode) {
         );
     });
     return tpl;
-};
+}
 
 /**
  * @param {string} color
  * @param {string} [extraCssText]
  * @return {string}
  */
-formatUtil.getTooltipMarker = function (color, extraCssText) {
+export function getTooltipMarker(color, extraCssText) {
     return color
         ? '<span style="display:inline-block;margin-right:5px;'
             + 'border-radius:10px;width:9px;height:9px;background-color:'
-            + formatUtil.encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
+            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
         : '';
-};
+}
 
 /**
  * @param {string} str
@@ -137,7 +133,7 @@ var s2d = function (str) {
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-formatUtil.formatTime = function (tpl, value, isUTC) {
+export function formatTime(tpl, value, isUTC) {
     if (tpl === 'week'
         || tpl === 'month'
         || tpl === 'quarter'
@@ -170,19 +166,17 @@ formatUtil.formatTime = function (tpl, value, isUTC) {
         .replace('s', s);
 
     return tpl;
-};
+}
 
 /**
  * Capital first
  * @param {string} str
  * @return {string}
  */
-formatUtil.capitalFirst = function (str) {
+export function capitalFirst(str) {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
-};
+}
 
-formatUtil.truncateText = textContain.truncateText;
+export var truncateText = contain.text.truncateText;
 
-formatUtil.getTextRect = textContain.getBoundingRect;
-
-return formatUtil;
+export var getTextRect = contain.text.getBoundingRect;

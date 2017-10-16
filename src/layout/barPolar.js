@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var parsePercent = require('../util/number').parsePercent;
+import {util as zrUtil} from 'zrender';
+import {parsePercent} from '../util/number';
 
 function getSeriesStackId(seriesModel) {
     return seriesModel.get('stack')
@@ -287,4 +286,4 @@ function calRadialBar(barSeries, api) {
     return result;
 }
 
-return barLayoutPolar;
+export default barLayoutPolar;

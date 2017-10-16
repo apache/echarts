@@ -1,9 +1,8 @@
-
-var Group = require('zrender/container/Group');
-var componentUtil = require('../util/component');
-var clazzUtil = require('../util/clazz');
-var modelUtil = require('../util/model');
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+import Group from 'zrender/container/Group';
+import * as componentUtil from '../util/component';
+import * as clazzUtil from '../util/clazz';
+import * as modelUtil from '../util/model';
 
 function Chart() {
 
@@ -138,4 +137,4 @@ clazzUtil.enableClassExtend(Chart, ['dispose']);
 // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
 clazzUtil.enableClassManagement(Chart, {registerWhenExtend: true});
 
-return Chart;
+export default Chart;

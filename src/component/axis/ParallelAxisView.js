@@ -1,13 +1,13 @@
-
-var zrUtil = require('zrender/core/util');
-var AxisBuilder = require('./AxisBuilder');
-var BrushController = require('../helper/BrushController');
-var brushHelper = require('../helper/brushHelper');
-var graphic = require('../../util/graphic');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import AxisBuilder from './AxisBuilder';
+import BrushController from '../helper/BrushController';
+import * as brushHelper from '../helper/brushHelper';
+import * as graphic from '../../util/graphic';
 
 var elementList = ['axisLine', 'axisTickLabel', 'axisName'];
 
-var AxisView = require('../../echarts').extendComponentView({
+var AxisView = echarts.extendComponentView({
 
     type: 'parallelAxis',
 
@@ -179,4 +179,4 @@ function getCoordSysModel(axisModel, ecModel) {
     );
 }
 
-return AxisView;
+export default AxisView;

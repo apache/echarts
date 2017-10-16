@@ -1,7 +1,7 @@
-
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var AxisBuilder = require('./AxisBuilder');
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import AxisBuilder from './AxisBuilder';
+import AxisView from './AxisView';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -10,7 +10,7 @@ var selfBuilderAttrs = [
     'splitLine', 'splitArea'
 ];
 
-require('./AxisView').extend({
+export default AxisView.extend({
 
     type: 'radiusAxis',
 

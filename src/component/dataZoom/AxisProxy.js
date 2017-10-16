@@ -1,10 +1,7 @@
-/**
- * @file Axis operator
- */
+import {util as zrUtil} from 'zrender';
+import * as numberUtil from '../../util/number';
+import * as helper from './helper';
 
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../../util/number');
-var helper = require('./helper');
 var each = zrUtil.each;
 var asc = numberUtil.asc;
 
@@ -463,4 +460,4 @@ function setMinMaxSpan(axisProxy) {
     });
 }
 
-return AxisProxy;
+export default AxisProxy;

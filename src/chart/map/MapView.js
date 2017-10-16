@@ -1,9 +1,9 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import {util as zrUtil} from 'zrender';
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
 
-echarts.extendChartView({
+export default echarts.extendChartView({
 
     type: 'map',
 

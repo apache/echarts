@@ -1,4 +1,4 @@
-import layout from '../../util/layout';
+import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
 
 function getViewRect(seriesModel, api) {

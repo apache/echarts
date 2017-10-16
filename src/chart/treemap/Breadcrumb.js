@@ -1,7 +1,7 @@
-import graphic from '../../util/graphic';
-import layout from '../../util/layout';
+import * as graphic from '../../util/graphic';
+import * as layout from '../../util/layout';
 import {util as zrUtil} from 'zrender';
-import helper from './helper';
+import {wrapTreePathInfo} from './helper';
 
 var TEXT_PADDING = 8;
 var ITEM_GAP = 8;
@@ -161,7 +161,7 @@ function packEventData(el, seriesModel, itemNode) {
             dataIndex: itemNode && itemNode.dataIndex,
             name: itemNode && itemNode.name
         },
-        treePathInfo: itemNode && helper.wrapTreePathInfo(itemNode, seriesModel)
+        treePathInfo: itemNode && wrapTreePathInfo(itemNode, seriesModel)
     };
 }
 

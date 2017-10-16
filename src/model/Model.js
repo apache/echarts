@@ -2,9 +2,15 @@
  * @module echarts/model/Model
  */
 
-var zrUtil = require('zrender/core/util');
-var clazzUtil = require('../util/clazz');
-var env = require('zrender/core/env');
+import {util as zrUtil, env} from 'zrender';
+import * as clazzUtil from '../util/clazz';
+
+import lineStyleMixin from './mixin/lineStyle';
+import areaStyleMixin from './mixin/areaStyle';
+import textStyleMixin from './mixin/textStyle';
+import itemStyleMixin from './mixin/itemStyle';
+
+var mixin = zrUtil.mixin;
 
 /**
  * @alias module:echarts/model/Model
@@ -187,10 +193,9 @@ function getParent(model, path) {
 // Enable Model.extend.
 clazzUtil.enableClassExtend(Model);
 
-var mixin = zrUtil.mixin;
-mixin(Model, require('./mixin/lineStyle'));
-mixin(Model, require('./mixin/areaStyle'));
-mixin(Model, require('./mixin/textStyle'));
-mixin(Model, require('./mixin/itemStyle'));
+mixin(Model, lineStyleMixin);
+mixin(Model, areaStyleMixin);
+mixin(Model, textStyleMixin);
+mixin(Model, itemStyleMixin);
 
-return Model;
+export default Model;

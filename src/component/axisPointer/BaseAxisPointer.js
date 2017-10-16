@@ -1,12 +1,12 @@
+import {util as zrUtil} from 'zrender';
+import * as clazzUtil from '../../util/clazz';
+import * as graphic from '../../util/graphic';
+import * as axisPointerModelHelper from './modelHelper';
+import {event as eventTool} from 'zrender';
+import * as throttleUtil from '../../util/throttle';
+import * as modelUtil from '../../util/model';
 
-var zrUtil = require('zrender/core/util');
-var clazzUtil = require('../../util/clazz');
-var graphic = require('../../util/graphic');
-var get = require('../../util/model').makeGetter();
-var axisPointerModelHelper = require('./modelHelper');
-var eventTool = require('zrender/core/event');
-var throttle = require('../../util/throttle');
-
+var get = modelUtil.makeGetter();
 var clone = zrUtil.clone;
 var bind = zrUtil.bind;
 
@@ -299,7 +299,7 @@ BaseAxisPointer.prototype = {
         }
         handle.attr('scale', [handleSize[0] / 2, handleSize[1] / 2]);
 
-        throttle.createOrUpdate(
+        throttleUtil.createOrUpdate(
             this,
             '_doDispatchAxisPointer',
             handleModel.get('throttle') || 0,
@@ -514,4 +514,4 @@ function updateMandatoryProps(group, axisPointerModel, silent) {
 
 clazzUtil.enableClassExtend(BaseAxisPointer);
 
-return BaseAxisPointer;
+export default BaseAxisPointer;

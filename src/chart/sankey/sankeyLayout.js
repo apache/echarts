@@ -3,7 +3,7 @@
  * @author  Deqing Li(annong035@gmail.com)
  */
 
-import layout from '../../util/layout';
+import * as layout from '../../util/layout';
 import nest from '../../util/array/nest';
 import {util as zrUtil} from 'zrender';
 

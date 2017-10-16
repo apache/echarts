@@ -1,5 +1,5 @@
 
-return function (ecModel) {
+export default function (ecModel) {
     ecModel.eachSeriesByType('map', function (seriesModel) {
         var colorList = seriesModel.get('color');
         var itemStyleModel = seriesModel.getModel('itemStyle.normal');
@@ -13,4 +13,4 @@ return function (ecModel) {
             'color': color
         });
     });
-};
+}

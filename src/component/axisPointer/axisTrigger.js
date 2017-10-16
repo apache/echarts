@@ -1,8 +1,7 @@
-
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
-var modelHelper = require('./modelHelper');
-var findPointFromSeries = require('./findPointFromSeries');
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../../util/model';
+import * as modelHelper from './modelHelper';
+import findPointFromSeries from './findPointFromSeries';
 
 var each = zrUtil.each;
 var curry = zrUtil.curry;
@@ -35,7 +34,7 @@ var get = modelUtil.makeGetter();
  * @param {module:echarts/ExtensionAPI} api
  * @return {Object} content of event obj for echarts.connect.
  */
-function axisTrigger(payload, ecModel, api) {
+export default function (payload, ecModel, api) {
     var currTrigger = payload.currTrigger;
     var point = [payload.x, payload.y];
     var finder = payload;
@@ -393,5 +392,3 @@ function makeMapperParam(axisInfo) {
 function illegalPoint(point) {
     return !point || point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
 }
-
-return axisTrigger;

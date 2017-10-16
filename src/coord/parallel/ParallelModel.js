@@ -1,10 +1,9 @@
+import {util as zrUtil} from 'zrender';
+import Component from '../../model/Component';
 
-var zrUtil = require('zrender/core/util');
-var Component = require('../../model/Component');
+import './AxisModel';
 
-require('./AxisModel');
-
-Component.extend({
+export default Component.extend({
 
     type: 'parallel',
 

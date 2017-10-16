@@ -1,5 +1,6 @@
-var Gradient = require('zrender/graphic/Gradient');
-return function (ecModel) {
+import Gradient from 'zrender/graphic/Gradient';
+
+export default function (ecModel) {
     function encodeColor(seriesModel) {
         var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.normal.color').split('.');
         var data = seriesModel.getData();
@@ -30,4 +31,4 @@ return function (ecModel) {
         }
     }
     ecModel.eachRawSeries(encodeColor);
-};
+}

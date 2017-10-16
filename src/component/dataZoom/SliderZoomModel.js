@@ -1,8 +1,4 @@
-/**
- * @file Data zoom model
- */
-
-var DataZoomModel = require('./DataZoomModel');
+import DataZoomModel from './DataZoomModel';
 
 var SliderZoomModel = DataZoomModel.extend({
 
@@ -68,4 +64,4 @@ var SliderZoomModel = DataZoomModel.extend({
 
 });
 
-return SliderZoomModel;
+export default SliderZoomModel;

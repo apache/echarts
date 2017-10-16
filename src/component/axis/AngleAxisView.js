@@ -1,6 +1,7 @@
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var Model = require('../../model/Model');
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import Model from '../../model/Model';
+import AxisView from './AxisView';
 
 var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
@@ -22,7 +23,7 @@ function getRadiusIdx(polar) {
     return radiusAxis.inverse ? 0 : 1;
 }
 
-require('./AxisView').extend({
+export default AxisView.extend({
 
     type: 'angleAxis',
 

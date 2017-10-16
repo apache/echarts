@@ -2,9 +2,9 @@
  * Single coordinates system.
  */
 
-var SingleAxis = require('./SingleAxis');
-var axisHelper = require('../axisHelper');
-var layout = require('../../util/layout');
+import SingleAxis from './SingleAxis';
+import * as axisHelper from '../axisHelper';
+import {getLayoutRect} from '../../util/layout';
 
 /**
  * Create a single coordinates system.
@@ -113,7 +113,7 @@ Single.prototype = {
      * @param  {module:echarts/ExtensionAPI} api
      */
     resize: function (axisModel, api) {
-        this._rect = layout.getLayoutRect(
+        this._rect = getLayoutRect(
             {
                 left: axisModel.get('left'),
                 top: axisModel.get('top'),
@@ -269,4 +269,4 @@ Single.prototype = {
 
 };
 
-return Single;
+export default Single;

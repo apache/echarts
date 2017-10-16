@@ -1,6 +1,4 @@
-var zrUtil = require('zrender/core/util');
-
-var helper = {};
+import {util as zrUtil} from 'zrender';
 
 /**
  * @param {Object} opt {labelInside}
@@ -9,7 +7,7 @@ var helper = {};
  *  tickDirection, labelRotate, labelInterval, z2
  * }
  */
-helper.layout = function (gridModel, axisModel, opt) {
+export function layout(gridModel, axisModel, opt) {
     opt = opt || {};
     var grid = gridModel.coordinateSystem;
     var axis = axisModel.axis;
@@ -67,6 +65,4 @@ helper.layout = function (gridModel, axisModel, opt) {
     layout.z2 = 1;
 
     return layout;
-};
-
-return helper;
+}

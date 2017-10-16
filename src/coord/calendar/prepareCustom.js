@@ -1,7 +1,6 @@
+import {util as zrUtil} from 'zrender';
 
-var zrUtil = require('zrender/core/util');
-
-function prepareCustom(coordSys) {
+export default function (coordSys) {
     var rect = coordSys.getRect();
     var rangeInfo = coordSys.getRangeInfo();
 
@@ -26,5 +25,3 @@ function prepareCustom(coordSys) {
         }
     };
 }
-
-return prepareCustom;

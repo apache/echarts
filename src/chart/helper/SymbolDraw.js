@@ -2,8 +2,8 @@
  * @module echarts/chart/helper/SymbolDraw
  */
 
-import graphic from '../../util/graphic';
-import Symbol from './Symbol';
+import * as graphic from '../../util/graphic';
+import SymbolClz from './Symbol';
 
 /**
  * @constructor
@@ -13,7 +13,7 @@ import Symbol from './Symbol';
 function SymbolDraw(symbolCtor) {
     this.group = new graphic.Group();
 
-    this._symbolCtor = symbolCtor || Symbol;
+    this._symbolCtor = symbolCtor || SymbolClz;
 }
 
 var symbolDrawProto = SymbolDraw.prototype;

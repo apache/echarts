@@ -1,12 +1,11 @@
-var zrUtil = require('zrender/core/util');
-var formatUtil = require('../../util/format');
-var graphic = require('../../util/graphic');
-var Model = require('../../model/Model');
-var numberUtil = require('../../util/number');
-var remRadian = numberUtil.remRadian;
-var isRadianAroundZero = numberUtil.isRadianAroundZero;
-var vec2 = require('zrender/core/vector');
-var matrix = require('zrender/core/matrix');
+import {util as zrUtil} from 'zrender';
+import * as formatUtil from '../../util/format';
+import * as graphic from '../../util/graphic';
+import Model from '../../model/Model';
+import {isRadianAroundZero, remRadian} from '../../util/number';
+import {matrix as matrixUtil} from 'zrender';
+import {vector as vec2} from 'zrender';
+
 var v2ApplyTransform = vec2.applyTransform;
 var retrieve = zrUtil.retrieve;
 
@@ -467,11 +466,11 @@ function isTwoLabelOverlapped(current, next, labelLayout) {
 
     // When checking intersect of two rotated labels, we use mRotationBack
     // to avoid that boundingRect is enlarge when using `boundingRect.applyTransform`.
-    var mRotationBack = matrix.identity([]);
-    matrix.rotate(mRotationBack, mRotationBack, -current.rotation);
+    var mRotationBack = matrixUtil.identity([]);
+    matrixUtil.rotate(mRotationBack, mRotationBack, -current.rotation);
 
-    firstRect.applyTransform(matrix.mul([], mRotationBack, current.getLocalTransform()));
-    nextRect.applyTransform(matrix.mul([], mRotationBack, next.getLocalTransform()));
+    firstRect.applyTransform(matrixUtil.mul([], mRotationBack, current.getLocalTransform()));
+    nextRect.applyTransform(matrixUtil.mul([], mRotationBack, next.getLocalTransform()));
 
     return firstRect.intersect(nextRect);
 }
@@ -703,4 +702,4 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
 }
 
 
-return AxisBuilder;
+export default AxisBuilder;

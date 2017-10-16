@@ -1,14 +1,9 @@
-/**
- * @file Brush visual coding.
- */
-
-var echarts = require('../../echarts');
-var visualSolution = require('../../visual/visualSolution');
-var zrUtil = require('zrender/core/util');
-var BoundingRect = require('zrender/core/BoundingRect');
-var selector = require('./selector');
-var throttle = require('../../util/throttle');
-var BrushTargetManager = require('../helper/BrushTargetManager');
+import * as echarts from '../../echarts';
+import {util as zrUtil, BoundingRect} from 'zrender';
+import * as visualSolution from '../../visual/visualSolution';
+import selector from './selector';
+import * as throttleUtil from '../../util/throttle';
+import BrushTargetManager from '../helper/BrushTargetManager';
 
 var STATE_LIST = ['inBrush', 'outOfBrush'];
 var DISPATCH_METHOD = '__ecBrushSelect';
@@ -214,7 +209,7 @@ function dispatchAction(api, throttleType, throttleDelay, brushSelected, payload
         zr[DISPATCH_METHOD] = doDispatch;
     }
 
-    var fn = throttle.createOrUpdate(zr, DISPATCH_METHOD, throttleDelay, throttleType);
+    var fn = throttleUtil.createOrUpdate(zr, DISPATCH_METHOD, throttleDelay, throttleType);
 
     fn(api, brushSelected);
 }

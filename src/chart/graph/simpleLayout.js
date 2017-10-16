@@ -1,5 +1,4 @@
-import simpleLayoutHelper from './simpleLayoutHelper';
-import simpleLayoutEdge from './simpleLayoutEdge';
+import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
 
 export default function (ecModel, api) {
     ecModel.eachSeriesByType('graph', function (seriesModel) {
@@ -33,7 +32,7 @@ export default function (ecModel, api) {
             simpleLayoutEdge(data.graph);
         }
         else if (!layout || layout === 'none') {
-            simpleLayoutHelper(seriesModel);
+            simpleLayout(seriesModel);
         }
     });
 }

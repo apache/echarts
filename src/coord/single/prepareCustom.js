@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 function dataToCoordSize(dataSize, dataItem) {
     // dataItem is necessary in log axis.
@@ -11,7 +10,7 @@ function dataToCoordSize(dataSize, dataItem) {
         : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 }
 
-function prepareCustom(coordSys) {
+export default function (coordSys) {
     var rect = coordSys.getRect();
 
     return {
@@ -28,5 +27,3 @@ function prepareCustom(coordSys) {
         }
     };
 }
-
-return prepareCustom;

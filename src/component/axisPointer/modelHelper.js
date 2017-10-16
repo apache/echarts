@@ -1,14 +1,12 @@
+import {util as zrUtil} from 'zrender';
+import Model from '../../model/Model';
 
-var zrUtil = require('zrender/core/util');
-var Model = require('../../model/Model');
 var each = zrUtil.each;
 var curry = zrUtil.curry;
 
-var helper = {};
-
 // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
 // allAxesInfo should be updated when setOption performed.
-helper.collect = function (ecModel, api) {
+export function collect(ecModel, api) {
     var result = {
         /**
          * key: makeKey(axis.model)
@@ -39,7 +37,7 @@ helper.collect = function (ecModel, api) {
     result.seriesInvolved && collectSeriesInfo(result, ecModel);
 
     return result;
-};
+}
 
 function collectAxesInfo(result, ecModel, api) {
     var globalTooltipModel = ecModel.getComponent('tooltip');
@@ -255,8 +253,8 @@ function checkPropInLink(linkPropValue, axisPropValue) {
         || linkPropValue === axisPropValue;
 }
 
-helper.fixValue = function (axisModel) {
-    var axisInfo = helper.getAxisInfo(axisModel);
+export function fixValue(axisModel) {
+    var axisInfo = getAxisInfo(axisModel);
     if (!axisInfo) {
         return;
     }
@@ -300,17 +298,17 @@ helper.fixValue = function (axisModel) {
     if (useHandle) {
         option.status = axisInfo.axis.scale.isBlank() ? 'hide' : 'show';
     }
-};
+}
 
-helper.getAxisInfo = function (axisModel) {
+export function getAxisInfo(axisModel) {
     var coordSysAxesInfo = (axisModel.ecModel.getComponent('axisPointer') || {}).coordSysAxesInfo;
     return coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
-};
+}
 
-helper.getAxisPointerModel = function (axisModel) {
-    var axisInfo = helper.getAxisInfo(axisModel);
+export function getAxisPointerModel(axisModel) {
+    var axisInfo = getAxisInfo(axisModel);
     return axisInfo && axisInfo.axisPointerModel;
-};
+}
 
 function isHandleTrigger(axisPointerModel) {
     return !!axisPointerModel.get('handle.show');
@@ -320,8 +318,6 @@ function isHandleTrigger(axisPointerModel) {
  * @param {module:echarts/model/Model} model
  * @return {string} unique key
  */
-var makeKey = helper.makeKey = function (model) {
+export function makeKey(model) {
     return model.type + '||' + model.id;
-};
-
-return helper;
+}

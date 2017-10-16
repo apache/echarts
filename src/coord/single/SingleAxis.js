@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../Axis');
+import {util as zrUtil} from 'zrender';
+import Axis from '../Axis';
 
 /**
  * @constructor  module:echarts/coord/single/SingleAxis
@@ -96,4 +95,4 @@ SingleAxis.prototype = {
 
 zrUtil.inherits(SingleAxis, Axis);
 
-return SingleAxis;
+export default SingleAxis;

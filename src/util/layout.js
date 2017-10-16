@@ -1,25 +1,25 @@
 // Layout helpers for each component positioning
 
-var zrUtil = require('zrender/core/util');
-var BoundingRect = require('zrender/core/BoundingRect');
-var numberUtil = require('./number');
-var formatUtil = require('./format');
-var parsePercent = numberUtil.parsePercent;
-var each = zrUtil.each;
+import {
+    util as zrUtil,
+    BoundingRect
+} from 'zrender';
+import {parsePercent} from './number';
+import * as formatUtil from './format';
 
-var layout = {};
+var each = zrUtil.each;
 
 /**
  * @public
  */
-var LOCATION_PARAMS = layout.LOCATION_PARAMS = [
+export var LOCATION_PARAMS = [
     'left', 'right', 'top', 'bottom', 'width', 'height'
 ];
 
 /**
  * @public
  */
-var HV_NAMES = layout.HV_NAMES = [
+export var HV_NAMES = [
     ['width', 'left', 'right'],
     ['height', 'top', 'bottom']
 ];
@@ -96,7 +96,7 @@ function boxLayout(orient, group, gap, maxWidth, maxHeight) {
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
  */
-layout.box = boxLayout;
+export var box = boxLayout;
 
 /**
  * VBox layouting
@@ -105,7 +105,7 @@ layout.box = boxLayout;
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
  */
-layout.vbox = zrUtil.curry(boxLayout, 'vertical');
+export var vbox = zrUtil.curry(boxLayout, 'vertical');
 
 /**
  * HBox layouting
@@ -114,7 +114,7 @@ layout.vbox = zrUtil.curry(boxLayout, 'vertical');
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
  */
-layout.hbox = zrUtil.curry(boxLayout, 'horizontal');
+export var hbox = zrUtil.curry(boxLayout, 'horizontal');
 
 /**
  * If x or x2 is not specified or 'center' 'left' 'right',
@@ -131,7 +131,7 @@ layout.hbox = zrUtil.curry(boxLayout, 'horizontal');
  * @param {string|number} margin
  * @return {Object} {width, height}
  */
-layout.getAvailableSize = function (positionInfo, containerRect, margin) {
+export function getAvailableSize(positionInfo, containerRect, margin) {
     var containerWidth = containerRect.width;
     var containerHeight = containerRect.height;
 
@@ -151,7 +151,7 @@ layout.getAvailableSize = function (positionInfo, containerRect, margin) {
         width: Math.max(x2 - x - margin[1] - margin[3], 0),
         height: Math.max(y2 - y - margin[0] - margin[2], 0)
     };
-};
+}
 
 /**
  * Parse position info.
@@ -169,7 +169,7 @@ layout.getAvailableSize = function (positionInfo, containerRect, margin) {
  *
  * @return {module:zrender/core/BoundingRect}
  */
-layout.getLayoutRect = function (
+export function getLayoutRect(
     positionInfo, containerRect, margin
 ) {
     margin = formatUtil.normalizeCssArray(margin || 0);
@@ -263,7 +263,7 @@ layout.getLayoutRect = function (
     var rect = new BoundingRect(left + margin[3], top + margin[0], width, height);
     rect.margin = margin;
     return rect;
-};
+}
 
 
 /**
@@ -304,7 +304,7 @@ layout.getLayoutRect = function (
  *               container. (Consider a rotated circle needs to be located in a corner.)
  *               In this mode positionInfo.width/height can only be number.
  */
-layout.positionElement = function (el, positionInfo, containerRect, margin, opt) {
+export function positionElement(el, positionInfo, containerRect, margin, opt) {
     var h = !opt || !opt.hv || opt.hv[0];
     var v = !opt || !opt.hv || opt.hv[1];
     var boundingMode = opt && opt.boundingMode || 'all';
@@ -331,7 +331,7 @@ layout.positionElement = function (el, positionInfo, containerRect, margin, opt)
     }
 
     // The real width and height can not be specified but calculated by the given el.
-    positionInfo = layout.getLayoutRect(
+    positionInfo = getLayoutRect(
         zrUtil.defaults(
             {width: rect.width, height: rect.height},
             positionInfo
@@ -348,16 +348,16 @@ layout.positionElement = function (el, positionInfo, containerRect, margin, opt)
     var dy = v ? positionInfo.y - rect.y : 0;
 
     el.attr('position', boundingMode === 'raw' ? [dx, dy] : [elPos[0] + dx, elPos[1] + dy]);
-};
+}
 
 /**
  * @param {Object} option Contains some of the properties in HV_NAMES.
  * @param {number} hvIdx 0: horizontal; 1: vertical.
  */
-layout.sizeCalculable = function (option, hvIdx) {
+export function sizeCalculable(option, hvIdx) {
     return option[HV_NAMES[hvIdx][0]] != null
         || (option[HV_NAMES[hvIdx][1]] != null && option[HV_NAMES[hvIdx][2]] != null);
-};
+}
 
 /**
  * Consider Case:
@@ -384,7 +384,7 @@ layout.sizeCalculable = function (option, hvIdx) {
  * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Used for the components
  *  that width (or height) should not be calculated by left and right (or top and bottom).
  */
-layout.mergeLayoutParam = function (targetOption, newOption, opt) {
+export function mergeLayoutParam(targetOption, newOption, opt) {
     !zrUtil.isObject(opt) && (opt = {});
 
     var ignoreSize = opt.ignoreSize;
@@ -464,27 +464,25 @@ layout.mergeLayoutParam = function (targetOption, newOption, opt) {
             target[name] = source[name];
         });
     }
-};
+}
 
 /**
  * Retrieve 'left', 'right', 'top', 'bottom', 'width', 'height' from object.
  * @param {Object} source
  * @return {Object} Result contains those props.
  */
-layout.getLayoutParams = function (source) {
-    return layout.copyLayoutParams({}, source);
-};
+export function getLayoutParams(source) {
+    return copyLayoutParams({}, source);
+}
 
 /**
  * Retrieve 'left', 'right', 'top', 'bottom', 'width', 'height' from object.
  * @param {Object} source
  * @return {Object} Result contains those props.
  */
-layout.copyLayoutParams = function (target, source) {
+export function copyLayoutParams(target, source) {
     source && target && each(LOCATION_PARAMS, function (name) {
         source.hasOwnProperty(name) && (target[name] = source[name]);
     });
     return target;
-};
-
-return layout;
+}

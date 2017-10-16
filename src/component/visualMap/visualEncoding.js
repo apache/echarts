@@ -1,11 +1,7 @@
-/**
- * @file Data range visual coding.
- */
-
-var echarts = require('../../echarts');
-var visualSolution = require('../../visual/visualSolution');
-var VisualMapping = require('../../visual/VisualMapping');
-var zrUtil = require('zrender/core/util');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import * as visualSolution from '../../visual/visualSolution';
+import VisualMapping from '../../visual/VisualMapping';
 
 echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT, function (ecModel) {
     ecModel.eachComponent('visualMap', function (visualMapModel) {

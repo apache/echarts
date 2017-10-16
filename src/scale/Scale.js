@@ -3,7 +3,7 @@
  * @module echarts/scale/Scale
  */
 
-var clazzUtil = require('../util/clazz');
+import * as clazzUtil from '../util/clazz';
 
 /**
  * @param {Object} [setting]
@@ -153,4 +153,4 @@ clazzUtil.enableClassManagement(Scale, {
     registerWhenExtend: true
 });
 
-return Scale;
+export default Scale;

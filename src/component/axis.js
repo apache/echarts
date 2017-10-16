@@ -1,4 +1,2 @@
-
-require('../coord/cartesian/AxisModel');
-
-require('./axis/CartesianAxisView');
+import '../coord/cartesian/AxisModel';
+import './axis/CartesianAxisView';

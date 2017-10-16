@@ -1,7 +1,6 @@
+import ComponentView from '../../view/Component';
 
-var ComponentView = require('../../view/Component');
-
-return ComponentView.extend({
+export default ComponentView.extend({
 
     type: 'dataZoom',
 

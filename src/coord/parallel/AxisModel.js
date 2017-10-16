@@ -1,9 +1,9 @@
-
-var ComponentModel = require('../../model/Component');
-var zrUtil = require('zrender/core/util');
-var makeStyleMapper = require('../../model/mixin/makeStyleMapper');
-var axisModelCreator = require('../axisModelCreator');
-var numberUtil = require('../../util/number');
+import {util as zrUtil} from 'zrender';
+import ComponentModel from '../../model/Component';
+import makeStyleMapper from '../../model/mixin/makeStyleMapper';
+import axisModelCreator from '../axisModelCreator';
+import * as numberUtil from '../../util/number';
+import axisModelCommonMixin from '../axisModelCommonMixin';
 
 var AxisModel = ComponentModel.extend({
 
@@ -109,7 +109,7 @@ var defaultOption = {
     z: 10
 };
 
-zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
+zrUtil.merge(AxisModel.prototype, axisModelCommonMixin);
 
 function getAxisType(axisName, option) {
     return option.type || (option.data ? 'category' : 'value');
@@ -117,4 +117,4 @@ function getAxisType(axisName, option) {
 
 axisModelCreator('parallel', AxisModel, getAxisType, defaultOption);
 
-return AxisModel;
+export default AxisModel;

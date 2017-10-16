@@ -1,11 +1,9 @@
-/**
- * @module echarts/component/toolbox/feature/DataView
- */
+import * as echarts from '../../../echarts';
+import {util as zrUtil, event as eventTool} from 'zrender';
+import lang from '../../../lang';
+import * as featureManager from '../featureManager';
 
-
-var zrUtil = require('zrender/core/util');
-var eventTool = require('zrender/core/event');
-var lang = require('../../../lang').toolbox.dataView;
+var dataViewLang = lang.toolbox.dataView;
 
 var BLOCK_SPLITER = new Array(60).join('-');
 var ITEM_SPLITER = '\t';
@@ -276,8 +274,8 @@ DataView.defaultOption = {
     contentToOption: null,
 
     icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
-    title: zrUtil.clone(lang.title),
-    lang: zrUtil.clone(lang.lang),
+    title: zrUtil.clone(dataViewLang.title),
+    lang: zrUtil.clone(dataViewLang.lang),
     backgroundColor: '#fff',
     textColor: '#000',
     textareaColor: '#fff',
@@ -441,9 +439,9 @@ function tryMergeDataOption(newData, originalData) {
     });
 }
 
-require('../featureManager').register('dataView', DataView);
+featureManager.register('dataView', DataView);
 
-require('../../../echarts').registerAction({
+echarts.registerAction({
     type: 'changeDataView',
     event: 'dataViewChanged',
     update: 'prepareAndUpdate'
@@ -473,4 +471,4 @@ require('../../../echarts').registerAction({
     }, payload.newOption));
 });
 
-return DataView;
+export default DataView;

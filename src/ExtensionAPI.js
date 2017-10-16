@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var echartsAPIList = [
     'getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed',
@@ -14,4 +13,4 @@ function ExtensionAPI(chartInstance) {
     }, this);
 }
 
-return ExtensionAPI;
+export default ExtensionAPI;

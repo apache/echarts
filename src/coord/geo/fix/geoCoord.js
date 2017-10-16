@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var geoCoordMap = {
     'Russia': [100, 60],
@@ -7,7 +6,7 @@ var geoCoordMap = {
     'United States of America': [-99, 38]
 };
 
-return function (geo) {
+export default function (geo) {
     zrUtil.each(geo.regions, function (region) {
         var geoCoord = geoCoordMap[region.name];
         if (geoCoord) {

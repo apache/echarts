@@ -3,9 +3,8 @@
  * @module echarts/coord/geo/parseGeoJson
  */
 
-var zrUtil = require('zrender/core/util');
-
-var Region = require('./Region');
+import {util as zrUtil} from 'zrender';
+import Region from './Region';
 
 function decode(json) {
     if (!json.UTF8Encoding) {
@@ -80,7 +79,7 @@ function decodePolygon(coordinate, encodeOffsets, encodeScale) {
  * @param {Object} geoJson
  * @return {module:zrender/container/Group}
  */
-return function (geoJson) {
+export default function (geoJson) {
 
     decode(geoJson);
 

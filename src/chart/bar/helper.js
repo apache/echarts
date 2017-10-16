@@ -1,4 +1,4 @@
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 
 export function setLabel(
     normalStyle, hoverStyle, itemModel, color, seriesModel, dataIndex, labelPositionOutside

@@ -1,11 +1,11 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import {util as zrUtil} from 'zrender';
 import SymbolDraw from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController from '../../component/helper/RoamController';
-import roamHelper from '../../component/helper/roamHelper';
-import cursorHelper from '../../component/helper/cursorHelper';
-import graphic from '../../util/graphic';
+import * as roamHelper from '../../component/helper/roamHelper';
+import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
 
 
@@ -45,7 +45,7 @@ function fadeInItem(item, opacityPath) {
     });
 }
 
-echarts.extendChartView({
+export default echarts.extendChartView({
 
     type: 'graph',
 
@@ -288,7 +288,7 @@ echarts.extendChartView({
             var rect = group.getBoundingRect();
             rect.applyTransform(group.transform);
             return rect.contain(x, y)
-                && !cursorHelper.onIrrelevantElement(e, api, seriesModel);
+                && !onIrrelevantElement(e, api, seriesModel);
         });
 
         if (seriesModel.coordinateSystem.type !== 'view') {

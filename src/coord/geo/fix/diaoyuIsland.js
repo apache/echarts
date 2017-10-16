@@ -14,7 +14,8 @@ var points = [
         [123.45165252685547, 25.73527164402261]
     ]
 ];
-return function (geo) {
+
+export default function (geo) {
     if (geo.map === 'china') {
         for (var i = 0, len = geo.regions.length; i < len; ++i) {
             if (geo.regions[i].name === '台湾') {
@@ -25,4 +26,4 @@ return function (geo) {
             }
         }
     }
-};
+}

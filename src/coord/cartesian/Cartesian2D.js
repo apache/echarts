@@ -1,6 +1,6 @@
 
-var zrUtil = require('zrender/core/util');
-var Cartesian = require('./Cartesian');
+import {util as zrUtil} from 'zrender';
+import Cartesian from './Cartesian';
 
 function Cartesian2D(name) {
 
@@ -92,4 +92,4 @@ Cartesian2D.prototype = {
 
 zrUtil.inherits(Cartesian2D, Cartesian);
 
-return Cartesian2D;
+export default Cartesian2D;

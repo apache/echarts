@@ -1,9 +1,9 @@
+import {util as zrUtil} from 'zrender';
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
-import {util as zrUtil} from 'zrender';
 import Model from '../../model/Model';
 import {encodeHTML, addCommas} from '../../util/format';
-import helper from './helper';
+import {wrapTreePathInfo} from './helper';
 
 export default SeriesModel.extend({
 
@@ -213,7 +213,7 @@ export default SeriesModel.extend({
         var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
 
         var node = this.getData().tree.getNodeByDataIndex(dataIndex);
-        params.treePathInfo = helper.wrapTreePathInfo(node, this);
+        params.treePathInfo = wrapTreePathInfo(node, this);
 
         return params;
     },

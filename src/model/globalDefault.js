@@ -1,9 +1,11 @@
+
 var platform = '';
 // Navigator not exists in node
 if (typeof navigator !== 'undefined') {
     platform = navigator.platform || '';
 }
-return {
+
+export default {
     // 全图默认背景
     // backgroundColor: 'rgba(0,0,0,0)',
 

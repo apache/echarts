@@ -1,8 +1,9 @@
 
-var numberUtil = require('../util/number');
+import {util as zrUtil} from 'zrender';
+import * as numberUtil from '../util/number';
+import * as axisHelper from './axisHelper';
+
 var linearMap = numberUtil.linearMap;
-var zrUtil = require('zrender/core/util');
-var axisHelper = require('./axisHelper');
 
 function fixExtentWithBands(extent, nTick) {
     var size = extent[1] - extent[0];
@@ -259,4 +260,4 @@ Axis.prototype = {
 
 };
 
-return Axis;
+export default Axis;

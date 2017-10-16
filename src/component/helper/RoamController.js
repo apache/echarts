@@ -1,11 +1,5 @@
-/**
- * @module echarts/component/helper/RoamController
- */
-
-var Eventful = require('zrender/mixin/Eventful');
-var zrUtil = require('zrender/core/util');
-var eventTool = require('zrender/core/event');
-var interactionMutex = require('./interactionMutex');
+import {util as zrUtil, Eventful, event as eventTool} from 'zrender';
+import * as interactionMutex from './interactionMutex';
 
 /**
  * @alias module:echarts/component/helper/RoamController
@@ -201,4 +195,4 @@ function checkKeyBinding(roamController, prop, e) {
         && (!zrUtil.isString(setting) || e.event[setting + 'Key']);
 }
 
-return RoamController;
+export default RoamController;

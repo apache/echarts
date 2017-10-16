@@ -1,6 +1,4 @@
-/**
- * @file Legend action
- */
+import * as echarts from '../../echarts';
 
 /**
  * @event legendScroll
@@ -8,7 +6,7 @@
  * @property {string} type 'legendScroll'
  * @property {string} scrollDataIndex
  */
-require('../../echarts').registerAction(
+echarts.registerAction(
     'legendScroll', 'legendscroll',
     function (payload, ecModel) {
         var scrollDataIndex = payload.scrollDataIndex;

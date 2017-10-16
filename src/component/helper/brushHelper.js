@@ -1,18 +1,15 @@
+import {BoundingRect} from 'zrender';
+import {onIrrelevantElement} from './cursorHelper';
+import * as graphicUtil from '../../util/graphic';
 
-var cursorHelper = require('./cursorHelper');
-var BoundingRect = require('zrender/core/BoundingRect');
-var graphicUtil = require('../../util/graphic');
-
-var helper = {};
-
-helper.makeRectPanelClipPath = function (rect) {
+export function makeRectPanelClipPath(rect) {
     rect = normalizeRect(rect);
     return function (localPoints, transform) {
         return graphicUtil.clipPointsByRect(localPoints, rect);
     };
-};
+}
 
-helper.makeLinearBrushOtherExtent = function (rect, specifiedXYIndex) {
+export function makeLinearBrushOtherExtent(rect, specifiedXYIndex) {
     rect = normalizeRect(rect);
     return function (xyIndex) {
         var idx = specifiedXYIndex != null ? specifiedXYIndex : xyIndex;
@@ -20,19 +17,19 @@ helper.makeLinearBrushOtherExtent = function (rect, specifiedXYIndex) {
         var base = idx ? rect.x : rect.y;
         return [base, base + (brushWidth || 0)];
     };
-};
+}
 
-helper.makeRectIsTargetByCursor = function (rect, api, targetModel) {
+export function makeRectIsTargetByCursor(rect, api, targetModel) {
     rect = normalizeRect(rect);
     return function (e, localCursorPoint, transform) {
         return rect.contain(localCursorPoint[0], localCursorPoint[1])
-            && !cursorHelper.onIrrelevantElement(e, api, targetModel);
+            && !onIrrelevantElement(e, api, targetModel);
     };
-};
+}
 
 // Consider width/height is negative.
 function normalizeRect(rect) {
     return BoundingRect.create(rect);
 }
 
-return helper;
+

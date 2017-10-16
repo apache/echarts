@@ -1,7 +1,8 @@
+import {util as zrUtil} from 'zrender';
+import * as featureManager from '../featureManager';
+import lang from '../../../lang';
 
-var featureManager = require('../featureManager');
-var zrUtil = require('zrender/core/util');
-var lang = require('../../../lang').toolbox.brush;
+var brushLang = lang.toolbox.brush;
 
 function Brush(model, ecModel, api) {
     this.model = model;
@@ -33,7 +34,7 @@ Brush.defaultOption = {
         clear: 'M22,14.7l30.9,31 M52.9,14.7L22,45.7 M4.7,16.8V4.2h13.1 M26,4.2h7.8 M41.6,4.2h7.8 M70.3,16.8V4.2H57.2 M4.7,25.9v8.6 M70.3,25.9v8.6 M4.7,43.2v12.6h13.1 M26,55.8h7.8 M41.6,55.8h7.8 M70.3,43.2v12.6H57.2' // jshint ignore:line
     },
     // `rect`, `polygon`, `lineX`, `lineY`, `keep`, `clear`
-    title: zrUtil.clone(lang.title)
+    title: zrUtil.clone(brushLang.title)
 };
 
 var proto = Brush.prototype;
@@ -80,7 +81,6 @@ proto.getIcons = function () {
 };
 
 proto.onclick = function (ecModel, api, type) {
-    var api = this.api;
     var brushType = this._brushType;
     var brushMode = this._brushMode;
 
@@ -116,4 +116,4 @@ proto.onclick = function (ecModel, api, type) {
 
 featureManager.register('brush', Brush);
 
-return Brush;
+export default Brush;

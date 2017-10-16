@@ -117,5 +117,3 @@ export var viewMixin = {
         this._whiskerBoxDraw.remove();
     }
 };
-
-export default {seriesModelMixin, viewMixin};

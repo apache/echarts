@@ -2,7 +2,8 @@
  * Parallel coordinate system creater.
  */
 
-var Parallel = require('./Parallel');
+import Parallel from './Parallel';
+import CoordinateSystem from '../../CoordinateSystem';
 
 function create(ecModel, api) {
     var coordSysList = [];
@@ -34,4 +35,4 @@ function create(ecModel, api) {
     return coordSysList;
 }
 
-require('../../CoordinateSystem').register('parallel', {create: create});
+CoordinateSystem.register('parallel', {create: create});

@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 function dataToCoordSize(dataSize, dataItem) {
     dataItem = dataItem || [0, 0];
@@ -15,7 +14,7 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-function prepareCustom(coordSys) {
+export default function (coordSys) {
     var rect = coordSys.getBoundingRect();
     return {
         coordSys: {
@@ -31,5 +30,3 @@ function prepareCustom(coordSys) {
         }
     };
 }
-
-return prepareCustom;

@@ -3,13 +3,13 @@
  * Mapping given x, y to transformd view x, y
  */
 
-var vector = require('zrender/core/vector');
-var matrix = require('zrender/core/matrix');
-
-var Transformable = require('zrender/mixin/Transformable');
-var zrUtil = require('zrender/core/util');
-
-var BoundingRect = require('zrender/core/BoundingRect');
+import {
+    util as zrUtil,
+    vector,
+    matrix,
+    BoundingRect,
+    Transformable
+} from 'zrender';
 
 var v2ApplyTransform = vector.applyTransform;
 
@@ -291,4 +291,4 @@ function doConvert(methodName, ecModel, finder, value) {
     return coordSys === this ? coordSys[methodName](value) : null;
 }
 
-return View;
+export default View;

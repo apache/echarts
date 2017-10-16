@@ -1,7 +1,7 @@
 // TODO Batch by color
 
-import graphic from '../../util/graphic';
-import symbolUtil from '../../util/symbol';
+import * as graphic from '../../util/graphic';
+import {createSymbol} from '../../util/symbol';
 
 var LargeSymbolPath = graphic.extendShape({
 
@@ -103,7 +103,7 @@ largeSymbolProto.updateData = function (data) {
     });
 
     // Create symbolProxy to build path for each data
-    symbolEl.symbolProxy = symbolUtil.createSymbol(
+    symbolEl.symbolProxy = createSymbol(
         data.getVisual('symbol'), 0, 0, 0, 0
     );
     // Use symbolProxy setColor method

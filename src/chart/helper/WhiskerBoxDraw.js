@@ -3,7 +3,7 @@
  */
 
 import {util as zrUtil} from 'zrender';
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import Path from 'zrender/graphic/Path';
 
 var WhiskerPath = Path.extend({

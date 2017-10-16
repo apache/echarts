@@ -63,7 +63,7 @@ function select(arr, left, right, nth, compareFunc) {
  *
  * @return {number}
  */
-function quickSelect(arr, left, right, nth, compareFunc) {
+export default function (arr, left, right, nth, compareFunc) {
     if (arguments.length <= 3) {
         nth = left;
         if (arguments.length == 2) {
@@ -77,5 +77,3 @@ function quickSelect(arr, left, right, nth, compareFunc) {
     }
     return select(arr, left, right, nth, compareFunc);
 }
-
-return quickSelect;

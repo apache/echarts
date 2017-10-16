@@ -2,7 +2,8 @@
  * Link lists and struct (graph or tree)
  */
 
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+
 var each = zrUtil.each;
 
 var DATAS = '\0__link_datas';
@@ -128,4 +129,4 @@ function linkSingle(data, dataType, mainData, opt) {
     data.getLinkedData = getLinkedData;
 }
 
-return linkList;
+export default linkList;

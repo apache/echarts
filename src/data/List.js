@@ -3,28 +3,26 @@
  * @module echarts/data/List
  */
 
+import {util as zrUtil} from 'zrender';
+import Model from '../model/Model';
+import DataDiffer from './DataDiffer';
+import * as modelUtil from '../util/model';
+
+var isObject = zrUtil.isObject;
+
 var UNDEFINED = 'undefined';
-var globalObj = typeof window === 'undefined' ? global : window;
-var Float64Array = typeof globalObj.Float64Array === UNDEFINED
-    ? Array : globalObj.Float64Array;
-var Int32Array = typeof globalObj.Int32Array === UNDEFINED
-    ? Array : globalObj.Int32Array;
+var globalObj = typeof window === UNDEFINED ? global : window;
 
 var dataCtors = {
-    'float': Float64Array,
-    'int': Int32Array,
+    'float': typeof globalObj.Float64Array === UNDEFINED
+        ? Array : globalObj.Float64Array,
+    'int': typeof globalObj.Int32Array === UNDEFINED
+        ? Array : globalObj.Int32Array,
     // Ordinal data type can be string or int
     'ordinal': Array,
     'number': Array,
     'time': Array
 };
-
-var Model = require('../model/Model');
-var DataDiffer = require('./DataDiffer');
-
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../util/model');
-var isObject = zrUtil.isObject;
 
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData'
@@ -1180,4 +1178,4 @@ listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 // Methods that change indices of this list should be listed here.
 listProto.CHANGABLE_METHODS = ['filterSelf'];
 
-return List;
+export default List;

@@ -1,6 +1,6 @@
 
+import * as echarts from '../echarts';
 import {util as zrUtil} from 'zrender';
-import echarts from '../echarts';
 
 // Must use radar component
 import '../component/radar';

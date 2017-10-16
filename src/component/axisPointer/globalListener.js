@@ -1,11 +1,9 @@
+import {util as zrUtil} from 'zrender';
+import {env} from 'zrender';
+import * as modelUtil from '../../util/model';
 
-var env = require('zrender/core/env');
-var zrUtil = require('zrender/core/util');
-var get = require('../../util/model').makeGetter();
-
+var get = modelUtil.makeGetter();
 var each = zrUtil.each;
-
-var globalListener = {};
 
 /**
  * @param {string} key
@@ -14,7 +12,7 @@ var globalListener = {};
  *      param: {string} currTrigger
  *      param: {Array.<number>} point
  */
-globalListener.register = function (key, api, handler) {
+export function register(key, api, handler) {
     if (env.node) {
         return;
     }
@@ -26,7 +24,7 @@ globalListener.register = function (key, api, handler) {
 
     var record = get(zr).records[key] || (get(zr).records[key] = {});
     record.handler = handler;
-};
+}
 
 function initGlobalListeners(zr, api) {
     if (get(zr).initialized) {
@@ -109,7 +107,7 @@ function makeDispatchAction(api) {
  * @param {string} key
  * @param {module:echarts/ExtensionAPI} api
  */
-globalListener.unregister = function (key, api) {
+export function unregister(key, api) {
     if (env.node) {
         return;
     }
@@ -118,6 +116,4 @@ globalListener.unregister = function (key, api) {
     if (record) {
         get(zr).records[key] = null;
     }
-};
-
-return globalListener;
+}

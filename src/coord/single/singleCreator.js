@@ -2,7 +2,8 @@
  * Single coordinate system creator.
  */
 
-var Single = require('./Single');
+import Single from './Single';
+import CoordinateSystem from '../../CoordinateSystem';
 
 /**
  * Create single coordinate system and inject it into seriesModel.
@@ -38,7 +39,7 @@ function create(ecModel, api) {
     return singles;
 }
 
-require('../../CoordinateSystem').register('single', {
+CoordinateSystem.register('single', {
     create: create,
     dimensions: Single.prototype.dimensions
 });

@@ -1,5 +1,4 @@
-
-var echarts = require('../../echarts');
+import * as echarts from '../../echarts';
 
 var AxisPointerModel = echarts.extendComponentModel({
 
@@ -92,4 +91,4 @@ var AxisPointerModel = echarts.extendComponentModel({
 
 });
 
-return AxisPointerModel;
+export default AxisPointerModel;

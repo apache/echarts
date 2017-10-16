@@ -4,9 +4,9 @@ import {util as zrUtil} from 'zrender';
 import SymbolDraw from '../helper/SymbolDraw';
 import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
-import graphic from '../../util/graphic';
-import modelUtil from '../../util/model';
-import polyHelper from './poly';
+import * as graphic from '../../util/graphic';
+import * as modelUtil from '../../util/model';
+import {Polyline, Polygon} from './poly';
 import ChartView from '../../view/Chart';
 
 function isPointsSame(points1, points2) {
@@ -42,6 +42,7 @@ function getAxisExtentWithGap(axis) {
 function sign(val) {
     return val >= 0 ? 1 : -1;
 }
+
 /**
  * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
  * @param {module:echarts/data/List} data
@@ -560,7 +561,7 @@ export default ChartView.extend({
             this._lineGroup.remove(polyline);
         }
 
-        polyline = new polyHelper.Polyline({
+        polyline = new Polyline({
             shape: {
                 points: points
             },
@@ -588,7 +589,7 @@ export default ChartView.extend({
             this._lineGroup.remove(polygon);
         }
 
-        polygon = new polyHelper.Polygon({
+        polygon = new Polygon({
             shape: {
                 points: points,
                 stackedOnPoints: stackedOnPoints

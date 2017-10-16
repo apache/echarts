@@ -7,8 +7,8 @@
 
 // FIXME only one data
 
-var zrUtil = require('zrender/core/util');
-var Scale = require('./Scale');
+import {util as zrUtil} from 'zrender';
+import Scale from './Scale';
 
 var scaleProto = Scale.prototype;
 
@@ -97,4 +97,4 @@ OrdinalScale.create = function () {
     return new OrdinalScale();
 };
 
-return OrdinalScale;
+export default OrdinalScale;

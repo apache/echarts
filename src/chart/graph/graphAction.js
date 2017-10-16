@@ -1,5 +1,5 @@
-import echarts from '../../echarts';
-import roamHelper from '../../action/roamHelper';
+import * as echarts from '../../echarts';
+import {updateCenterAndZoom} from '../../action/roamHelper';
 
 var actionInfo = {
     type: 'graphRoam',
@@ -20,7 +20,7 @@ echarts.registerAction(actionInfo, function (payload, ecModel) {
     ecModel.eachComponent({mainType: 'series', query: payload}, function (seriesModel) {
         var coordSys = seriesModel.coordinateSystem;
 
-        var res = roamHelper.updateCenterAndZoom(coordSys, payload);
+        var res = updateCenterAndZoom(coordSys, payload);
 
         seriesModel.setCenter
             && seriesModel.setCenter(res.center);

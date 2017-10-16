@@ -1,7 +1,7 @@
+import * as echarts from '../../echarts';
+import * as globalListener from './globalListener';
 
-var globalListener = require('./globalListener');
-
-var AxisPonterView = require('../../echarts').extendComponentView({
+var AxisPointerView = echarts.extendComponentView({
 
     type: 'axisPointer',
 
@@ -36,7 +36,7 @@ var AxisPonterView = require('../../echarts').extendComponentView({
      */
     remove: function (ecModel, api) {
         globalListener.disopse(api.getZr(), 'axisPointer');
-        AxisPonterView.superApply(this._model, 'remove', arguments);
+        AxisPointerView.superApply(this._model, 'remove', arguments);
     },
 
     /**
@@ -44,7 +44,9 @@ var AxisPonterView = require('../../echarts').extendComponentView({
      */
     dispose: function (ecModel, api) {
         globalListener.unregister('axisPointer', api);
-        AxisPonterView.superApply(this._model, 'dispose', arguments);
+        AxisPointerView.superApply(this._model, 'dispose', arguments);
     }
 
 });
+
+export default AxisPointerView;

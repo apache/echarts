@@ -1,10 +1,9 @@
-
-var VisualMapView = require('./VisualMapView');
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var symbolCreators = require('../../util/symbol');
-var layout = require('../../util/layout');
-var helper = require('./helper');
+import {util as zrUtil} from 'zrender';
+import VisualMapView from './VisualMapView';
+import * as graphic from '../../util/graphic';
+import {createSymbol} from '../../util/symbol';
+import * as layout from '../../util/layout';
+import * as helper from './helper';
 
 var PiecewiseVisualMapView = VisualMapView.extend({
 
@@ -182,7 +181,7 @@ var PiecewiseVisualMapView = VisualMapView.extend({
      * @private
      */
     _createItemSymbol: function (group, representValue, shapeParam) {
-        group.add(symbolCreators.createSymbol(
+        group.add(createSymbol(
             this.getControllerVisual(representValue, 'symbol'),
             shapeParam[0], shapeParam[1], shapeParam[2], shapeParam[3],
             this.getControllerVisual(representValue, 'color')
@@ -217,4 +216,4 @@ var PiecewiseVisualMapView = VisualMapView.extend({
     }
 });
 
-return PiecewiseVisualMapView;
+export default PiecewiseVisualMapView;

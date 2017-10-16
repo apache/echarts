@@ -1,7 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
-
-var clazz = {};
+import {util as zrUtil} from 'zrender';
 
 var TYPE_DELIMITER = '.';
 var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';
@@ -12,33 +9,33 @@ var MEMBER_PRIFIX = '\0ec_\0';
  * The same behavior as `host[name] = value;` (can be right-value)
  * @public
  */
-clazz.set = function (host, name, value) {
+export function set(host, name, value) {
     return (host[MEMBER_PRIFIX + name] = value);
-};
+}
 
 /**
  * Hide private class member.
  * The same behavior as `host[name];`
  * @public
  */
-clazz.get = function (host, name) {
+export function get(host, name) {
     return host[MEMBER_PRIFIX + name];
-};
+}
 
 /**
  * For hidden private class member.
  * The same behavior as `host.hasOwnProperty(name);`
  * @public
  */
-clazz.hasOwn = function (host, name) {
+export function hasOwn(host, name) {
     return host.hasOwnProperty(MEMBER_PRIFIX + name);
-};
+}
 
 /**
  * Notice, parseClassType('') should returns {main: '', sub: ''}
  * @public
  */
-var parseClassType = clazz.parseClassType = function (componentType) {
+export function parseClassType(componentType) {
     var ret = {main: '', sub: ''};
     if (componentType) {
         componentType = componentType.split(TYPE_DELIMITER);
@@ -46,7 +43,7 @@ var parseClassType = clazz.parseClassType = function (componentType) {
         ret.sub = componentType[1] || '';
     }
     return ret;
-};
+}
 
 /**
  * @public
@@ -61,7 +58,7 @@ function checkClassType(componentType) {
 /**
  * @public
  */
-clazz.enableClassExtend = function (RootClass, mandatoryMethods) {
+export function enableClassExtend(RootClass, mandatoryMethods) {
 
     RootClass.$constructor = RootClass;
     RootClass.extend = function (proto) {
@@ -97,7 +94,7 @@ clazz.enableClassExtend = function (RootClass, mandatoryMethods) {
 
         return ExtendedClass;
     };
-};
+}
 
 // superCall should have class info, which can not be fetch from 'this'.
 // Consider this case:
@@ -120,7 +117,7 @@ function superApply(context, methodName, args) {
  * @param {boolean} [options.registerWhenExtend]
  * @public
  */
-clazz.enableClassManagement = function (entity, options) {
+export function enableClassManagement(entity, options) {
     options = options || {};
 
     /**
@@ -240,12 +237,12 @@ clazz.enableClassManagement = function (entity, options) {
     }
 
     return entity;
-};
+}
 
 /**
  * @param {string|Array.<string>} properties
  */
-clazz.setReadOnly = function (obj, properties) {
+export function setReadOnly(obj, properties) {
     // FIXME It seems broken in IE8 simulation of IE11
     // if (!zrUtil.isArray(properties)) {
     //     properties = properties != null ? [properties] : [];
@@ -261,6 +258,4 @@ clazz.setReadOnly = function (obj, properties) {
     //         && Object.freeze
     //         && Object.freeze(obj[prop]);
     // });
-};
-
-return clazz;
+}

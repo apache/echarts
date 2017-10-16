@@ -4,7 +4,7 @@
  * @see https://github.com/d3/d3-hierarchy
  */
 
-import layout from '../../util/layout';
+import * as layout from '../../util/layout';
 
 /**
  * Initialize all computational message for following algorithm
@@ -253,12 +253,3 @@ function moveSubtree(wl, wr,shift) {
 function defaultSeparation(node1, node2) {
     return node1.parentNode === node2.parentNode ? 1 : 2;
 }
-
-export default {
-    init,
-    firstWalk,
-    secondWalk,
-    separation,
-    radialCoordinate,
-    getViewRect
-};

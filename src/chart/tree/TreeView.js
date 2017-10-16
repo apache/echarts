@@ -2,11 +2,11 @@
  * @file  This file used to draw tree view
  */
 
-import graphic from '../../util/graphic';
-import zrUtil from 'zrender/core/util';
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
 import SymbolClz from '../helper/Symbol';
 import {radialCoordinate} from './layoutHelper';
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 
 export default echarts.extendChartView({
 

@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 var coordinateSystemCreators = {};
 
@@ -42,4 +41,4 @@ CoordinateSystemManager.get = function (type) {
     return coordinateSystemCreators[type];
 };
 
-return CoordinateSystemManager;
+export default CoordinateSystemManager;

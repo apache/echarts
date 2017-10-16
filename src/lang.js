@@ -1,5 +1,5 @@
 
-return {
+export default {
     toolbox: {
         brush: {
             title: {

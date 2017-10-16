@@ -1,4 +1,2 @@
-
-require('../coord/polar/polarCreator');
-
-require('./axis/RadiusAxisView');
+import '../coord/polar/polarCreator';
+import './axis/RadiusAxisView';

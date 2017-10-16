@@ -1,8 +1,7 @@
-
-var zrUtil = require('zrender/core/util');
-var graphic = require('../../util/graphic');
-var modelUtil = require('../../util/model');
-var brushHelper = require('./brushHelper');
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
+import * as modelUtil from '../../util/model';
+import * as brushHelper from './brushHelper';
 
 var each = zrUtil.each;
 var indexOf = zrUtil.indexOf;
@@ -438,4 +437,4 @@ function getSize(xyMinMax) {
         : [NaN, NaN];
 }
 
-return BrushTargetManager;
+export default BrushTargetManager;

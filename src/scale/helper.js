@@ -2,11 +2,9 @@
  * For testable.
  */
 
-var numberUtil = require('../util/number');
+import * as numberUtil from '../util/number';
 
 var roundNumber = numberUtil.round;
-
-var helper = {};
 
 /**
  * @param {Array.<number>} extent Both extent[0] and extent[1] should be valid number.
@@ -16,7 +14,7 @@ var helper = {};
  * @param {number} [maxInterval]
  * @return {Object} {interval, intervalPrecision, niceTickExtent}
  */
-helper.intervalScaleNiceTicks = function (extent, splitNumber, minInterval, maxInterval) {
+export function intervalScaleNiceTicks(extent, splitNumber, minInterval, maxInterval) {
     var result = {};
     var span = extent[1] - extent[0];
 
@@ -28,33 +26,33 @@ helper.intervalScaleNiceTicks = function (extent, splitNumber, minInterval, maxI
         interval = result.interval = maxInterval;
     }
     // Tow more digital for tick.
-    var precision = result.intervalPrecision = helper.getIntervalPrecision(interval);
+    var precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
     var niceTickExtent = result.niceTickExtent = [
         roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
         roundNumber(Math.floor(extent[1] / interval) * interval, precision)
     ];
 
-    helper.fixExtent(niceTickExtent, extent);
+    fixExtent(niceTickExtent, extent);
 
     return result;
-};
+}
 
 /**
  * @param {number} interval
  * @return {number} interval precision
  */
-helper.getIntervalPrecision = function (interval) {
+export function getIntervalPrecision(interval) {
     // Tow more digital for tick.
     return numberUtil.getPrecisionSafe(interval) + 2;
-};
+}
 
 function clamp(niceTickExtent, idx, extent) {
     niceTickExtent[idx] = Math.max(Math.min(niceTickExtent[idx], extent[1]), extent[0]);
 }
 
 // In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
-helper.fixExtent = function (niceTickExtent, extent) {
+export function fixExtent(niceTickExtent, extent) {
     !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
     !isFinite(niceTickExtent[1]) && (niceTickExtent[1] = extent[1]);
     clamp(niceTickExtent, 0, extent);
@@ -62,9 +60,9 @@ helper.fixExtent = function (niceTickExtent, extent) {
     if (niceTickExtent[0] > niceTickExtent[1]) {
         niceTickExtent[0] = niceTickExtent[1];
     }
-};
+}
 
-helper.intervalScaleGetTicks = function (interval, extent, niceTickExtent, intervalPrecision) {
+export function intervalScaleGetTicks(interval, extent, niceTickExtent, intervalPrecision) {
     var ticks = [];
 
     // If interval is 0, return [];
@@ -100,6 +98,4 @@ helper.intervalScaleGetTicks = function (interval, extent, niceTickExtent, inter
     }
 
     return ticks;
-};
-
-return helper;
+}

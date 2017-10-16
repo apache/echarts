@@ -1,9 +1,8 @@
-
-var graphic = require('../../util/graphic');
-var BaseAxisPointer = require('./BaseAxisPointer');
-var viewHelper = require('./viewHelper');
-var cartesianAxisHelper = require('../axis/cartesianAxisHelper');
-var AxisView = require('../axis/AxisView');
+import * as graphic from '../../util/graphic';
+import BaseAxisPointer from './BaseAxisPointer';
+import * as viewHelper from './viewHelper';
+import * as cartesianAxisHelper from '../axis/cartesianAxisHelper';
+import AxisView from '../axis/AxisView';
 
 var CartesianAxisPointer = BaseAxisPointer.extend({
 
@@ -123,4 +122,4 @@ function getAxisDimIndex(axis) {
 
 AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 
-return CartesianAxisPointer;
+export default CartesianAxisPointer;

@@ -4,10 +4,10 @@
  */
 
 
-var numberUtil = require('../util/number');
-var formatUtil = require('../util/format');
-var Scale = require('./Scale');
-var helper = require('./helper');
+import * as numberUtil from '../util/number';
+import * as formatUtil from '../util/format';
+import Scale from './Scale';
+import * as helper from './helper';
 
 var roundNumber = numberUtil.round;
 
@@ -202,4 +202,4 @@ IntervalScale.create = function () {
     return new IntervalScale();
 };
 
-return IntervalScale;
+export default IntervalScale;

@@ -2,14 +2,14 @@
  * @module echarts/chart/helper/Line
  */
 
-import symbolUtil from '../../util/symbol';
-import vector from 'zrender/core/vector';
+import {util as zrUtil, vector} from 'zrender';
+import * as symbolUtil from '../../util/symbol';
 import LinePath from './LinePath';
-import graphic from '../../util/graphic';
-import {util as zrUtil} from 'zrender';
+import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
 
 var SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'];
+
 function makeSymbolTypeKey(symbolCategory) {
     return '_' + symbolCategory + 'Type';
 }

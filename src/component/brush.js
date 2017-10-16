@@ -2,13 +2,13 @@
  * Brush component entry
  */
 
-require('../echarts').registerPreprocessor(
-    require('./brush/preprocessor')
-);
+import * as echarts from '../echarts';
+import preprocessor from './brush/preprocessor';
 
-require('./brush/visualEncoding');
-require('./brush/BrushModel');
-require('./brush/BrushView');
-require('./brush/brushAction');
+import './brush/visualEncoding';
+import './brush/BrushModel';
+import './brush/BrushView';
+import './brush/brushAction';
+import './toolbox/feature/Brush';
 
-require('./toolbox/feature/Brush');
+echarts.registerPreprocessor(preprocessor);

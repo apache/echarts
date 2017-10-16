@@ -5,9 +5,10 @@
  */
 
 
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../util/model');
-var ComponentModel = require('./Component');
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../util/model';
+import ComponentModel from './Component';
+
 var each = zrUtil.each;
 var clone = zrUtil.clone;
 var map = zrUtil.map;
@@ -430,4 +431,4 @@ function mergeOption(oldOption, newOption) {
     });
 }
 
-return OptionManager;
+export default OptionManager;

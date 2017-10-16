@@ -1,6 +1,6 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import RibbonPath from './Ribbon';
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 
 export default echarts.extendChartView({
 

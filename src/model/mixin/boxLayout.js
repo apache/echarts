@@ -1,5 +1,5 @@
 
-return {
+export default {
     getBoxLayoutParams: function () {
         return {
             left: this.get('left'),

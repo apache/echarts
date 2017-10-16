@@ -1,6 +1,6 @@
 import {vector as vec2} from 'zrender/core/vector';
 
-export default function (seriesModel) {
+export function circularLayout(seriesModel) {
     var coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
         return;

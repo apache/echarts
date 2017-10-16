@@ -24,5 +24,3 @@ export function findLabelValueDim(data) {
 
     return valueDim;
 }
-
-export default {findLabelValueDim};

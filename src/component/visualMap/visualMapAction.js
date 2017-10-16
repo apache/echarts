@@ -1,8 +1,4 @@
-/**
- * @file Data range action
- */
-
-var echarts = require('../../echarts');
+import * as echarts from '../../echarts';
 
 var actionInfo = {
     type: 'selectDataRange',

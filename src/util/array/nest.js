@@ -1,11 +1,10 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 /**
  * nest helper used to group by the array.
  * can specified the keys and sort the keys.
  */
-function nest() {
+export default function nest() {
 
     var keysFunction = [];
     var sortKeysFunction = [];
@@ -101,4 +100,3 @@ function nest() {
         }
     };
 }
-return nest;

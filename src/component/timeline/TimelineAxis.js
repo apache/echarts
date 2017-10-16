@@ -1,7 +1,6 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../../coord/Axis');
-var axisHelper = require('../../coord/axisHelper');
+import {util as zrUtil} from 'zrender';
+import Axis from '../../coord/Axis';
+import * as axisHelper from '../../coord/axisHelper';
 
 /**
  * Extend axis 2d
@@ -91,4 +90,4 @@ TimelineAxis.prototype = {
 
 zrUtil.inherits(TimelineAxis, Axis);
 
-return TimelineAxis;
+export default TimelineAxis;

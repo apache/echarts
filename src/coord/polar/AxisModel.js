@@ -1,7 +1,7 @@
-
-var zrUtil = require('zrender/core/util');
-var ComponentModel = require('../../model/Component');
-var axisModelCreator = require('../axisModelCreator');
+import {util as zrUtil} from 'zrender';
+import ComponentModel from '../../model/Component';
+import axisModelCreator from '../axisModelCreator';
+import axisModelCommonMixin from '../axisModelCommonMixin';
 
 var PolarAxisModel = ComponentModel.extend({
 
@@ -25,7 +25,7 @@ var PolarAxisModel = ComponentModel.extend({
 
 });
 
-zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));
+zrUtil.merge(PolarAxisModel.prototype, axisModelCommonMixin);
 
 var polarAxisDefaultExtendedOption = {
     angle: {

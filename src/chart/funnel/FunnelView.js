@@ -1,4 +1,4 @@
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import {util as zrUtil} from 'zrender';
 import ChartView from '../../view/Chart';
 
@@ -161,7 +161,7 @@ funnelPieceProto._updateLabel = function (data, idx) {
 zrUtil.inherits(FunnelPiece, graphic.Group);
 
 
-var Funnel = ChartView.extend({
+var FunnelView = ChartView.extend({
 
     type: 'funnel',
 
@@ -204,4 +204,4 @@ var Funnel = ChartView.extend({
     dispose: function () {}
 });
 
-export default Funnel;
+export default FunnelView;

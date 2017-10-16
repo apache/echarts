@@ -1,4 +1,6 @@
-var getLineStyle = require('./makeStyleMapper')(
+import makeStyleMapper from './makeStyleMapper';
+
+var getLineStyle = makeStyleMapper(
     [
         ['lineWidth', 'width'],
         ['stroke', 'color'],
@@ -9,7 +11,8 @@ var getLineStyle = require('./makeStyleMapper')(
         ['shadowColor']
     ]
 );
-return {
+
+export default {
     getLineStyle: function (excludes) {
         var style = getLineStyle(this, excludes);
         var lineDash = this.getLineDash(style.lineWidth);

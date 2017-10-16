@@ -1,3 +1,4 @@
+
 var samplers = {
     average: function (frame) {
         var sum = 0;
@@ -43,7 +44,8 @@ var samplers = {
 var indexSampler = function (frame, value) {
     return Math.round(frame.length / 2);
 };
-return function (seriesType, ecModel, api) {
+
+export default function (seriesType, ecModel, api) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
         var data = seriesModel.getData();
         var sampling = seriesModel.get('sampling');
@@ -73,4 +75,4 @@ return function (seriesType, ecModel, api) {
             }
         }
     }, this);
-};
+}

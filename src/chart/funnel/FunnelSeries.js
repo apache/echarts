@@ -1,4 +1,4 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import List from '../../data/List';
 import {defaultEmphasis} from '../../util/model';
 import completeDimensions from '../../data/helper/completeDimensions';

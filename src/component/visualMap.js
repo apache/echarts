@@ -2,5 +2,5 @@
  * visualMap component entry
  */
 
-require('./visualMapContinuous');
-require('./visualMapPiecewise');
+import './visualMapContinuous';
+import './visualMapPiecewise';

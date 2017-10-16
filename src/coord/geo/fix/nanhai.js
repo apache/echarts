@@ -1,7 +1,7 @@
 // Fix for 南海诸岛
 
-var Region = require('../Region');
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+import Region from '../Region';
 
 var geoCoord = [126, 25];
 
@@ -21,6 +21,7 @@ var points = [
     [[0,3.5],[0,93.1],[64,93.1],[64,0],[63,0],[63,92.4],
         [1,92.4],[1,3.5],[0,3.5]]
 ];
+
 for (var i = 0; i < points.length; i++) {
     for (var k = 0; k < points[i].length; k++) {
         points[i][k][0] /= 10.5;
@@ -30,7 +31,8 @@ for (var i = 0; i < points.length; i++) {
         points[i][k][1] += geoCoord[1];
     }
 }
-return function (geo) {
+
+export default function (geo) {
     if (geo.map === 'china') {
         geo.regions.push(new Region(
             '南海诸岛',
@@ -42,4 +44,4 @@ return function (geo) {
             }), geoCoord
         ));
     }
-};
+}

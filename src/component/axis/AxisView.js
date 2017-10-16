@@ -1,9 +1,10 @@
-var axisPointerModelHelper = require('../axisPointer/modelHelper');
+import * as echarts from '../../echarts';
+import * as axisPointerModelHelper from '../axisPointer/modelHelper';
 
 /**
  * Base class of AxisView.
  */
-var AxisView = require('../../echarts').extendComponentView({
+var AxisView = echarts.extendComponentView({
 
     type: 'axis',
 
@@ -98,4 +99,4 @@ AxisView.getAxisPointerClass = function (type) {
     return type && axisPointerClazz[type];
 };
 
-return AxisView;
+export default AxisView;

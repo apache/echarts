@@ -4,7 +4,7 @@
  *
  */
 
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 function dimAxisMapper(dim) {
     return this._axes[dim];
@@ -107,4 +107,4 @@ Cartesian.prototype = {
     }
 };
 
-return Cartesian;
+export default Cartesian;

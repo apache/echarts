@@ -2,7 +2,7 @@
  * @module echarts/chart/helper/Line
  */
 
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import {util as zrUtil} from 'zrender';
 
 /**

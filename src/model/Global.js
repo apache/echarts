@@ -18,19 +18,19 @@
  * `mergeOption` in module:echarts/model/OptionManager.
  */
 
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../util/model');
-var Model = require('./Model');
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../util/model';
+import Model from './Model';
+import ComponentModel from './Component';
+import globalDefault from './globalDefault';
+import colorPaletteMinin from './mixin/colorPalette';
+
 var each = zrUtil.each;
 var filter = zrUtil.filter;
 var map = zrUtil.map;
 var isArray = zrUtil.isArray;
 var indexOf = zrUtil.indexOf;
 var isObject = zrUtil.isObject;
-
-var ComponentModel = require('./Component');
-
-var globalDefault = require('./globalDefault');
 
 var OPTION_INNER_KEY = '\0_ec_inner';
 
@@ -709,6 +709,6 @@ function assertSeriesInitialized(ecModel) {
     }
 }
 
-zrUtil.mixin(GlobalModel, require('./mixin/colorPalette'));
+zrUtil.mixin(GlobalModel, colorPaletteMinin);
 
-return GlobalModel;
+export default GlobalModel;

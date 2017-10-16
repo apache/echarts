@@ -1,6 +1,6 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import {util as zrUtil} from 'zrender';
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import {setLabel} from './helper';
 import Model from '../../model/Model';
 import barItemStyle from './barItemStyle';

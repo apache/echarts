@@ -1,13 +1,12 @@
-
-var zrUtil = require('zrender/core/util');
-var modelUtil = require('../../util/model');
+import {util as zrUtil} from 'zrender';
+import * as modelUtil from '../../util/model';
 
 /**
  * @param {Object} finder contains {seriesIndex, dataIndex, dataIndexInside}
  * @param {module:echarts/model/Global} ecModel
  * @return {Object} {point: [x, y], el: ...} point Will not be null.
  */
-return function (finder, ecModel) {
+export default function (finder, ecModel) {
     var point = [];
     var seriesIndex = finder.seriesIndex;
     var seriesModel;
@@ -49,4 +48,4 @@ return function (finder, ecModel) {
     }
 
     return {point: point, el: el};
-};
+}

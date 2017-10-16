@@ -1,6 +1,5 @@
-
-var zrUtil = require('zrender/core/util');
-var Axis = require('../Axis');
+import {util as zrUtil} from 'zrender';
+import Axis from '../Axis';
 
 /**
  * Extend axis 2d
@@ -118,6 +117,7 @@ Axis2D.prototype = {
     toGlobalCoord: null
 
 };
+
 zrUtil.inherits(Axis2D, Axis);
 
-return Axis2D;
+export default Axis2D;

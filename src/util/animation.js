@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 /**
  * @param {number} [time=500] Time in ms
@@ -16,7 +15,7 @@ var zrUtil = require('zrender/core/util');
  *      .done(function () { // done })
  *      .start('cubicOut');
  */
-function createWrap() {
+export function createWrap() {
 
     var storage = [];
     var elExistsMap = {};
@@ -95,5 +94,3 @@ function createWrap() {
         }
     };
 }
-
-return {createWrap: createWrap};

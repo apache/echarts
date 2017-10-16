@@ -1,6 +1,6 @@
 // TODO Batch by color
 
-import graphic from '../../util/graphic';
+import * as graphic from '../../util/graphic';
 import {contain} from 'zrender';
 
 var LargeLineShape = graphic.extendShape({

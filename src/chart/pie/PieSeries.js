@@ -1,8 +1,8 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import List from '../../data/List';
 import {util as zrUtil} from 'zrender';
-import modelUtil from '../../util/model';
-import numberUtil from '../../util/number';
+import * as modelUtil from '../../util/model';
+import {getPercentWithPrecision} from '../../util/number';
 import completeDimensions from '../../data/helper/completeDimensions';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 
@@ -49,7 +49,7 @@ var PieSeries = echarts.extendSeriesModel({
             valueList.push(value);
         });
 
-        params.percent = numberUtil.getPercentWithPrecision(
+        params.percent = getPercentWithPrecision(
             valueList,
             dataIndex,
             data.hostModel.get('percentPrecision')

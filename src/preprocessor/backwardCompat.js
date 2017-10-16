@@ -1,7 +1,7 @@
 // Compatitable with 2.0
 
-var zrUtil = require('zrender/core/util');
-var compatStyle = require('./helper/compatStyle');
+import {util as zrUtil} from 'zrender';
+import compatStyle from './helper/compatStyle';
 
 function get(opt, path) {
     path = path.split(',');
@@ -55,7 +55,7 @@ var COMPATITABLE_SERIES = [
 
 var each = zrUtil.each;
 
-return function (option, isTheme) {
+export default function (option, isTheme) {
     compatStyle(option, isTheme);
 
     var series = option.series;
@@ -101,4 +101,4 @@ return function (option, isTheme) {
             });
         }
     });
-};
+}

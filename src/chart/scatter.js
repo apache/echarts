@@ -1,5 +1,5 @@
+import * as echarts from '../echarts';
 import {util as zrUtil} from 'zrender';
-import echarts from '../echarts';
 
 import './scatter/ScatterSeries';
 import './scatter/ScatterView';

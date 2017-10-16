@@ -1,10 +1,6 @@
-/**
- * @file Data zoom model
- */
-
-var VisualMapModel = require('./VisualMapModel');
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../../util/number');
+import {util as zrUtil} from 'zrender';
+import VisualMapModel from './VisualMapModel';
+import * as numberUtil from '../../util/number';
 
 // Constant
 var DEFAULT_BAR_BOUND = [20, 140];
@@ -243,4 +239,4 @@ function getColorStopValues(visualMapModel, valueState, dataExtent) {
     return stopValues;
 }
 
-return ContinuousModel;
+export default ContinuousModel;

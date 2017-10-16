@@ -1,5 +1,6 @@
+import * as echarts from '../../echarts';
 
-require('../../echarts').extendComponentModel({
+export default echarts.extendComponentModel({
 
     type: 'tooltip',
 

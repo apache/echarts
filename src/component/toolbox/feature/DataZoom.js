@@ -1,15 +1,17 @@
-
-var zrUtil = require('zrender/core/util');
-var BrushController = require('../../helper/BrushController');
-var BrushTargetManager = require('../../helper/BrushTargetManager');
-var history = require('../../dataZoom/history');
-var sliderMove = require('../../helper/sliderMove');
-var lang = require('../../../lang').toolbox.dataZoom;
-
-var each = zrUtil.each;
+import * as echarts from '../../../echarts';
+import {util as zrUtil} from 'zrender';
+import BrushController from '../../helper/BrushController';
+import BrushTargetManager from '../../helper/BrushTargetManager';
+import * as history from '../../dataZoom/history';
+import sliderMove from '../../helper/sliderMove';
+import lang from '../../../lang';
+import * as featureManager from '../featureManager';
 
 // Use dataZoomSelect
-require('../../dataZoomSelect');
+import '../../dataZoomSelect';
+
+var dataZoomLang = lang.toolbox.dataZoom;
+var each = zrUtil.each;
 
 // Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
 var DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
@@ -39,7 +41,7 @@ DataZoom.defaultOption = {
         back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
     },
     // `zoom`, `back`
-    title: zrUtil.clone(lang.title)
+    title: zrUtil.clone(dataZoomLang.title)
 };
 
 var proto = DataZoom.prototype;
@@ -225,11 +227,11 @@ function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
 }
 
 
-require('../featureManager').register('dataZoom', DataZoom);
+featureManager.register('dataZoom', DataZoom);
 
 
 // Create special dataZoom option for select
-require('../../../echarts').registerPreprocessor(function (option) {
+echarts.registerPreprocessor(function (option) {
     if (!option) {
         return;
     }
@@ -297,4 +299,4 @@ require('../../../echarts').registerPreprocessor(function (option) {
     }
 });
 
-return DataZoom;
+export default DataZoom;

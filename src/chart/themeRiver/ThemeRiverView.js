@@ -3,9 +3,9 @@
  * @author  Deqing Li(annong035@gmail.com)
  */
 
-import echarts from '../../echarts';
-import poly from '../line/poly';
-import graphic from '../../util/graphic';
+import * as echarts from '../../echarts';
+import {Polygon} from '../line/poly';
+import * as graphic from '../../util/graphic';
 import {util as zrUtil} from 'zrender';
 import DataDiffer from '../../data/DataDiffer';
 
@@ -80,7 +80,7 @@ export default echarts.extendChartView({
             var margin = labelModel.get('margin');
             if (status === 'add') {
                 var layerGroup = newLayersGroups[idx] = new graphic.Group();
-                polygon = new poly.Polygon({
+                polygon = new Polygon({
                     shape: {
                         points: points0,
                         stackedOnPoints: points1,

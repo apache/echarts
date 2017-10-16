@@ -4,7 +4,7 @@
  */
 
 import {util as zrUtil} from 'zrender';
-import symbolUtil from '../../util/symbol';
+import {createSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
@@ -62,13 +62,13 @@ effectSymbolProto.startEffectAnimation = function (effectCfg) {
     var rippleGroup = this.childAt(1);
 
     for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
-        // var ripplePath = symbolUtil.createSymbol(
+        // var ripplePath = createSymbol(
         //     symbolType, -0.5, -0.5, 1, 1, color
         // );
         // If width/height are set too small (e.g., set to 1) on ios10
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4136.
-        var ripplePath = symbolUtil.createSymbol(
+        var ripplePath = createSymbol(
             symbolType, -1, -1, 2, 2, color
         );
         ripplePath.attr({

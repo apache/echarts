@@ -1,25 +1,23 @@
+import {util as zrUtil} from 'zrender';
+import * as formatUtil from './format';
+import nubmerUtil from './number';
+import Model from '../model/Model';
 
-var formatUtil = require('./format');
-var nubmerUtil = require('./number');
-var Model = require('../model/Model');
-var zrUtil = require('zrender/core/util');
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
-
-var modelUtil = {};
 
 /**
  * If value is not array, then translate it to array.
  * @param  {*} value
  * @return {Array} [value] or value
  */
-modelUtil.normalizeToArray = function (value) {
+export function normalizeToArray(value) {
     return value instanceof Array
         ? value
         : value == null
         ? []
         : [value];
-};
+}
 
 /**
  * Sync default option between normal and emphasis like `position` and `show`
@@ -37,7 +35,7 @@ modelUtil.normalizeToArray = function (value) {
  * @param {Object} opt
  * @param {Array.<string>} subOpts
  */
-    modelUtil.defaultEmphasis = function (opt, subOpts) {
+export function defaultEmphasis(opt, subOpts) {
     if (opt) {
         var emphasisOpt = opt.emphasis = opt.emphasis || {};
         var normalOpt = opt.normal = opt.normal || {};
@@ -52,9 +50,9 @@ modelUtil.normalizeToArray = function (value) {
             }
         }
     }
-};
+}
 
-modelUtil.TEXT_STYLE_OPTIONS = [
+export var TEXT_STYLE_OPTIONS = [
     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
     'rich', 'tag', 'color', 'textBorderColor', 'textBorderWidth',
     'width', 'height', 'lineHeight', 'align', 'verticalAlign', 'baseline',
@@ -76,29 +74,29 @@ modelUtil.TEXT_STYLE_OPTIONS = [
  * @param {string|number|Date|Array|Object} dataItem
  * @return {number|string|Date|Array.<number|string|Date>}
  */
-modelUtil.getDataItemValue = function (dataItem) {
+export function getDataItemValue(dataItem) {
     // Performance sensitive.
     return dataItem && (dataItem.value == null ? dataItem : dataItem.value);
-};
+}
 
 /**
  * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
  * This helper method determine if dataItem has extra option besides value
  * @param {string|number|Date|Array|Object} dataItem
  */
-modelUtil.isDataItemOption = function (dataItem) {
+export function isDataItemOption(dataItem) {
     return isObject(dataItem)
         && !(dataItem instanceof Array);
         // // markLine data can be array
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
-};
+}
 
 /**
  * This helper method convert value in data.
  * @param {string|number|Date} value
  * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
  */
-modelUtil.converDataValue = function (value, dimInfo) {
+export function converDataValue(value, dimInfo) {
     // Performance sensitive.
     var dimType = dimInfo && dimInfo.type;
     if (dimType === 'ordinal') {
@@ -119,7 +117,7 @@ modelUtil.converDataValue = function (value, dimInfo) {
     // parse to NaN.
     return (value == null || value === '')
         ? NaN : +value; // If string (like '-'), using '+' parse to NaN
-};
+}
 
 /**
  * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
@@ -130,9 +128,9 @@ modelUtil.converDataValue = function (value, dimInfo) {
  * @param {Object} [opt.mainType]
  * @param {Object} [opt.subType]
  */
-modelUtil.createDataFormatModel = function (data, opt) {
+export function createDataFormatModel(data, opt) {
     var model = new Model();
-    zrUtil.mixin(model, modelUtil.dataFormatMixin);
+    zrUtil.mixin(model, dataFormatMixin);
     model.seriesIndex = opt.seriesIndex;
     model.name = opt.name || '';
     model.mainType = opt.mainType;
@@ -142,10 +140,10 @@ modelUtil.createDataFormatModel = function (data, opt) {
         return data;
     };
     return model;
-};
+}
 
 // PENDING A little ugly
-modelUtil.dataFormatMixin = {
+export var dataFormatMixin = {
     /**
      * Get params for formatter
      * @param {number} dataIndex
@@ -244,7 +242,7 @@ modelUtil.dataFormatMixin = {
  * @return {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
  *                          index of which is the same as exists.
  */
-modelUtil.mappingToExists = function (exists, newCptOptions) {
+export function mappingToExists(exists, newCptOptions) {
     // Mapping by the order by original option (but not order of
     // new option) in merge mode. Because we should ensure
     // some specified index (like xAxisIndex) is consistent with
@@ -281,8 +279,8 @@ modelUtil.mappingToExists = function (exists, newCptOptions) {
                 // Can not match when both ids exist but different.
                 && (exist.id == null || cptOption.id == null)
                 && cptOption.name != null
-                && !modelUtil.isIdInner(cptOption)
-                && !modelUtil.isIdInner(exist)
+                && !isIdInner(cptOption)
+                && !isIdInner(exist)
                 && exist.name === cptOption.name + ''
             ) {
                 result[i].option = cptOption;
@@ -306,7 +304,7 @@ modelUtil.mappingToExists = function (exists, newCptOptions) {
                 // mapped to (because after mapping performed model may
                 // be assigned with a id, whish should not affect next
                 // mapping), except those has inner id.
-                && !modelUtil.isIdInner(exist)
+                && !isIdInner(exist)
                 // Caution:
                 // Do not overwrite id. But name can be overwritten,
                 // because axis use name as 'show label text'.
@@ -325,7 +323,7 @@ modelUtil.mappingToExists = function (exists, newCptOptions) {
     });
 
     return result;
-};
+}
 
 /**
  * Make id and name for mapping result (result of mappingToExists)
@@ -336,7 +334,7 @@ modelUtil.mappingToExists = function (exists, newCptOptions) {
  *                          which order is the same as exists.
  * @return {Array.<Object>} The input.
  */
-modelUtil.makeIdAndName = function (mapResult) {
+export function makeIdAndName(mapResult) {
     // We use this id to hash component models and view instances
     // in echarts. id can be specified by user, or auto generated.
 
@@ -409,18 +407,18 @@ modelUtil.makeIdAndName = function (mapResult) {
 
         idMap.set(keyInfo.id, item);
     });
-};
+}
 
 /**
  * @public
  * @param {Object} cptOption
  * @return {boolean}
  */
-modelUtil.isIdInner = function (cptOption) {
+export function isIdInner(cptOption) {
     return isObject(cptOption)
         && cptOption.id
         && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
-};
+}
 
 /**
  * A helper for removing duplicate items between batchA and batchB,
@@ -430,7 +428,7 @@ modelUtil.isIdInner = function (cptOption) {
  * @param {Array.<Object>} batchB Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
  * @return {Array.<Array.<Object>, Array.<Object>>} result: [resultBatchA, resultBatchB]
  */
-modelUtil.compressBatches = function (batchA, batchB) {
+export function compressBatches(batchA, batchB) {
     var mapA = {};
     var mapB = {};
 
@@ -442,7 +440,7 @@ modelUtil.compressBatches = function (batchA, batchB) {
     function makeMap(sourceBatch, map, otherMap) {
         for (var i = 0, len = sourceBatch.length; i < len; i++) {
             var seriesId = sourceBatch[i].seriesId;
-            var dataIndices = modelUtil.normalizeToArray(sourceBatch[i].dataIndex);
+            var dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
             var otherDataIndices = otherMap && otherMap[seriesId];
 
             for (var j = 0, lenj = dataIndices.length; j < lenj; j++) {
@@ -473,7 +471,7 @@ modelUtil.compressBatches = function (batchA, batchB) {
         }
         return result;
     }
-};
+}
 
 /**
  * @param {module:echarts/data/List} data
@@ -481,7 +479,7 @@ modelUtil.compressBatches = function (batchA, batchB) {
  *                         each of which can be Array or primary type.
  * @return {number|Array.<number>} dataIndex If not found, return undefined/null.
  */
-modelUtil.queryDataIndex = function (data, payload) {
+export function queryDataIndex(data, payload) {
     if (payload.dataIndexInside != null) {
         return payload.dataIndexInside;
     }
@@ -499,7 +497,7 @@ modelUtil.queryDataIndex = function (data, payload) {
             })
             : data.indexOfName(payload.name);
     }
-};
+}
 
 /**
  * Enable property storage to any host object.
@@ -515,7 +513,7 @@ modelUtil.queryDataIndex = function (data, payload) {
  *
  * @return {Function}
  */
-modelUtil.makeGetter = (function () {
+export var makeGetter = (function () {
     var index = 0;
     return function () {
         var key = '\0__ec_prop_getter_' + index++;
@@ -560,7 +558,7 @@ modelUtil.makeGetter = (function () {
  *            ...
  *        }
  */
-modelUtil.parseFinder = function (ecModel, finder, opt) {
+export function parseFinder(ecModel, finder, opt) {
     if (zrUtil.isString(finder)) {
         var obj = {};
         obj[finder + 'Index'] = 0;
@@ -611,7 +609,7 @@ modelUtil.parseFinder = function (ecModel, finder, opt) {
     });
 
     return result;
-};
+}
 
 /**
  * @see {module:echarts/data/helper/completeDimensions}
@@ -619,7 +617,7 @@ modelUtil.parseFinder = function (ecModel, finder, opt) {
  * @param {string|number} dataDim
  * @return {string}
  */
-modelUtil.dataDimToCoordDim = function (data, dataDim) {
+export function dataDimToCoordDim(data, dataDim) {
     var dimensions = data.dimensions;
     dataDim = data.getDimension(dataDim);
     for (var i = 0; i < dimensions.length; i++) {
@@ -628,7 +626,7 @@ modelUtil.dataDimToCoordDim = function (data, dataDim) {
             return dimItem.coordDim;
         }
     }
-};
+}
 
 /**
  * @see {module:echarts/data/helper/completeDimensions}
@@ -636,7 +634,7 @@ modelUtil.dataDimToCoordDim = function (data, dataDim) {
  * @param {string} coordDim
  * @return {Array.<string>} data dimensions on the coordDim.
  */
-modelUtil.coordDimToDataDim = function (data, coordDim) {
+export function coordDimToDataDim(data, coordDim) {
     var dataDim = [];
     each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
@@ -645,7 +643,7 @@ modelUtil.coordDimToDataDim = function (data, coordDim) {
         }
     });
     return dataDim;
-};
+}
 
 /**
  * @see {module:echarts/data/helper/completeDimensions}
@@ -654,7 +652,7 @@ modelUtil.coordDimToDataDim = function (data, coordDim) {
  *                        like 'label' or 'tooltip'.
  * @return {Array.<string>} data dimensions on the otherDim.
  */
-modelUtil.otherDimToDataDim = function (data, otherDim) {
+export function otherDimToDataDim(data, otherDim) {
     var dataDim = [];
     each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
@@ -665,10 +663,8 @@ modelUtil.otherDimToDataDim = function (data, otherDim) {
         }
     });
     return dataDim;
-};
+}
 
 function has(obj, prop) {
     return obj && obj.hasOwnProperty(prop);
 }
-
-return modelUtil;

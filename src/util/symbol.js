@@ -1,7 +1,8 @@
 // Symbol factory
 
-var graphic = require('./graphic');
-var BoundingRect = require('zrender/core/BoundingRect');
+import {util as zrUtil} from 'zrender';
+import * as graphic from './graphic';
+import {BoundingRect} from 'zrender';
 
 /**
  * Triangle shape
@@ -26,6 +27,7 @@ var Triangle = graphic.extendShape({
         path.closePath();
     }
 });
+
 /**
  * Diamond shape
  * @inner
@@ -142,6 +144,7 @@ var Arrow = graphic.extendShape({
  * @type {Object.<string, module:zrender/graphic/Path>}
  */
 var symbolCtors = {
+
     line: graphic.Line,
 
     rect: graphic.Rect,
@@ -231,13 +234,11 @@ var symbolShapeMakers = {
 };
 
 var symbolBuildProxies = {};
-for (var name in symbolCtors) {
-    if (symbolCtors.hasOwnProperty(name)) {
-        symbolBuildProxies[name] = new symbolCtors[name]();
-    }
-}
+zrUtil.each(symbolCtors, function (Ctor, name) {
+    symbolBuildProxies[name] = new Ctor();
+});
 
-var Symbol = graphic.extendShape({
+var SymbolClz = graphic.extendShape({
 
     type: 'symbol',
 
@@ -278,7 +279,7 @@ var Symbol = graphic.extendShape({
 });
 
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
-var symbolPathSetColor = function (color, innerColor) {
+function symbolPathSetColor(color, innerColor) {
     if (this.type !== 'image') {
         var symbolStyle = this.style;
         var symbolShape = this.shape;
@@ -296,64 +297,60 @@ var symbolPathSetColor = function (color, innerColor) {
         }
         this.dirty(false);
     }
-};
+}
 
-var symbolUtil = {
-    /**
-     * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
-     * @param {string} symbolType
-     * @param {number} x
-     * @param {number} y
-     * @param {number} w
-     * @param {number} h
-     * @param {string} color
-     * @param {boolean} [keepAspect=false] whether to keep the ratio of w/h,
-     *                            for path and image only.
-     */
-    createSymbol: function (symbolType, x, y, w, h, color, keepAspect) {
-        // TODO Support image object, DynamicImage.
+/**
+ * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+ * @param {string} symbolType
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {string} color
+ * @param {boolean} [keepAspect=false] whether to keep the ratio of w/h,
+ *                            for path and image only.
+ */
+export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
+    // TODO Support image object, DynamicImage.
 
-        var isEmpty = symbolType.indexOf('empty') === 0;
-        if (isEmpty) {
-            symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
-        }
-        var symbolPath;
-
-        if (symbolType.indexOf('image://') === 0) {
-            symbolPath = graphic.makeImage(
-                symbolType.slice(8),
-                new BoundingRect(x, y, w, h),
-                keepAspect ? 'center' : 'cover'
-            );
-        }
-        else if (symbolType.indexOf('path://') === 0) {
-            symbolPath = graphic.makePath(
-                symbolType.slice(7),
-                {},
-                new BoundingRect(x, y, w, h),
-                keepAspect ? 'center' : 'cover'
-            );
-        }
-        else {
-            symbolPath = new Symbol({
-                shape: {
-                    symbolType: symbolType,
-                    x: x,
-                    y: y,
-                    width: w,
-                    height: h
-                }
-            });
-        }
-
-        symbolPath.__isEmptyBrush = isEmpty;
-
-        symbolPath.setColor = symbolPathSetColor;
-
-        symbolPath.setColor(color);
-
-        return symbolPath;
+    var isEmpty = symbolType.indexOf('empty') === 0;
+    if (isEmpty) {
+        symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
     }
-};
+    var symbolPath;
 
-return symbolUtil;
+    if (symbolType.indexOf('image://') === 0) {
+        symbolPath = graphic.makeImage(
+            symbolType.slice(8),
+            new BoundingRect(x, y, w, h),
+            keepAspect ? 'center' : 'cover'
+        );
+    }
+    else if (symbolType.indexOf('path://') === 0) {
+        symbolPath = graphic.makePath(
+            symbolType.slice(7),
+            {},
+            new BoundingRect(x, y, w, h),
+            keepAspect ? 'center' : 'cover'
+        );
+    }
+    else {
+        symbolPath = new SymbolClz({
+            shape: {
+                symbolType: symbolType,
+                x: x,
+                y: y,
+                width: w,
+                height: h
+            }
+        });
+    }
+
+    symbolPath.__isEmptyBrush = isEmpty;
+
+    symbolPath.setColor = symbolPathSetColor;
+
+    symbolPath.setColor(color);
+
+    return symbolPath;
+}

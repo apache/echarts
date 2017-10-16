@@ -4,7 +4,7 @@
  */
 
 import {util as zrUtil} from 'zrender';
-import numberUtil from '../../util/number';
+import * as numberUtil from '../../util/number';
 
 export default function (ecModel, api) {
 

@@ -1,11 +1,7 @@
-/**
- * @file Brush model
- */
-
-var echarts = require('../../echarts');
-var zrUtil = require('zrender/core/util');
-var visualSolution = require('../../visual/visualSolution');
-var Model = require('../../model/Model');
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import * as visualSolution from '../../visual/visualSolution';
+import Model from '../../model/Model';
 
 var DEFAULT_OUT_OF_BRUSH_COLOR = ['#ddd'];
 
@@ -141,4 +137,4 @@ function generateBrushOption(option, brushOption) {
     );
 }
 
-return BrushModel;
+export default BrushModel;

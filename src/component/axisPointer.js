@@ -1,16 +1,15 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
+import * as axisPointerModelHelper from './axisPointer/modelHelper';
+import axisTrigger from './axisPointer/axisTrigger';
 
-var echarts = require('../echarts');
-var axisPointerModelHelper = require('./axisPointer/modelHelper');
-var axisTrigger = require('./axisPointer/axisTrigger');
-var zrUtil = require('zrender/core/util');
-
-require('./axisPointer/AxisPointerModel');
-require('./axisPointer/AxisPointerView');
+import './axisPointer/AxisPointerModel';
+import './axisPointer/AxisPointerView';
 
 // CartesianAxisPointer is not supposed to be required here. But consider
 // echarts.simple.js and online build tooltip, which only require gridSimple,
 // CartesianAxisPointer should be able to required somewhere.
-require('./axisPointer/CartesianAxisPointer');
+import './axisPointer/CartesianAxisPointer';
 
 echarts.registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.

@@ -1,7 +1,6 @@
-
-var echarts = require('../echarts');
-var graphic = require('../util/graphic');
-var layout = require('../util/layout');
+import * as echarts from '../echarts';
+import * as graphic from '../util/graphic';
+import {getLayoutRect} from '../util/layout';
 
 // Model
 echarts.extendComponentModel({
@@ -137,7 +136,7 @@ echarts.extendComponentView({
         var layoutOption = titleModel.getBoxLayoutParams();
         layoutOption.width = groupRect.width;
         layoutOption.height = groupRect.height;
-        var layoutRect = layout.getLayoutRect(
+        var layoutRect = getLayoutRect(
             layoutOption, {
                 width: api.getWidth(),
                 height: api.getHeight()

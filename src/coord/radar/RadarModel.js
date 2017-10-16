@@ -1,11 +1,10 @@
+import * as echarts from '../../echarts';
+import {util as zrUtil} from 'zrender';
+import axisDefault from '../axisDefault';
+import Model from '../../model/Model';
+import axisModelCommonMixin from '../axisModelCommonMixin';
 
-
-var axisDefault = require('../axisDefault');
 var valueAxisDefault = axisDefault.valueAxis;
-var Model = require('../../model/Model');
-var zrUtil = require('zrender/core/util');
-
-var axisModelCommonMixin = require('../axisModelCommonMixin');
 
 function defaultsShow(opt, show) {
     return zrUtil.defaults({
@@ -13,7 +12,7 @@ function defaultsShow(opt, show) {
     }, opt);
 }
 
-var RadarModel = require('../../echarts').extendComponentModel({
+var RadarModel = echarts.extendComponentModel({
 
     type: 'radar',
 
@@ -134,4 +133,4 @@ var RadarModel = require('../../echarts').extendComponentModel({
     }
 });
 
-return RadarModel;
+export default RadarModel;

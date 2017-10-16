@@ -1,5 +1,4 @@
-
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
 function dataToCoordSize(dataSize, dataItem) {
     // dataItem is necessary in log axis.
@@ -22,7 +21,7 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-function prepareCustom(coordSys) {
+export default function (coordSys) {
     var radiusAxis = coordSys.getRadiusAxis();
     var angleAxis = coordSys.getAngleAxis();
     var radius = radiusAxis.getExtent();
@@ -48,5 +47,3 @@ function prepareCustom(coordSys) {
         }
     };
 }
-
-return prepareCustom;

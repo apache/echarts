@@ -3,12 +3,12 @@
  * @module echarts/scale/Log
  */
 
-var zrUtil = require('zrender/core/util');
-var Scale = require('./Scale');
-var numberUtil = require('../util/number');
+import {util as zrUtil} from 'zrender';
+import Scale from './Scale';
+import * as numberUtil from '../util/number';
 
 // Use some method of IntervalScale
-var IntervalScale = require('./Interval');
+import IntervalScale from './Interval';
 
 var scaleProto = Scale.prototype;
 var intervalScaleProto = IntervalScale.prototype;
@@ -184,4 +184,4 @@ function fixRoundingError(val, originalVal) {
     return roundingErrorFix(val, getPrecisionSafe(originalVal));
 }
 
-return LogScale;
+export default LogScale;

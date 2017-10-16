@@ -2,13 +2,11 @@
  * Data selectable mixin for chart series.
  * To eanble data select, option of series must have `selectedMode`.
  * And each data item will use `selected` to toggle itself selected status
- *
- * @module echarts/chart/helper/DataSelectable
  */
 
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
 
-return {
+export default {
 
     updateSelectedMap: function (targetList) {
         this._targetList = targetList.slice();

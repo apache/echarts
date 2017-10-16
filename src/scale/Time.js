@@ -1,9 +1,3 @@
-/**
- * Interval scale
- * @module echarts/coord/scale/Time
- */
-
-
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
 // (except time zone is specified in time string). And `format.formateTime` returns
@@ -14,12 +8,11 @@
 // (2) By default, the input data string (e.g., '2011-01-02') should be displayed
 // as its original time, without any time difference.
 
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../util/number');
-var formatUtil = require('../util/format');
-var scaleHelper = require('./helper');
-
-var IntervalScale = require('./Interval');
+import {util as zrUtil} from 'zrender';
+import * as numberUtil from '../util/number';
+import * as formatUtil from '../util/format';
+import scaleHelper from './helper';
+import IntervalScale from './Interval';
 
 var intervalScaleProto = IntervalScale.prototype;
 
@@ -201,4 +194,4 @@ TimeScale.create = function (model) {
     return new TimeScale({useUTC: model.ecModel.get('useUTC')});
 };
 
-return TimeScale;
+export default TimeScale;

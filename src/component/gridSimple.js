@@ -1,11 +1,9 @@
+import * as echarts from '../echarts';
+import {util as zrUtil} from 'zrender';
+import * as graphic from '../util/graphic';
 
-var graphic = require('../util/graphic');
-var zrUtil = require('zrender/core/util');
-var echarts = require('../echarts');
-
-require('../coord/cartesian/Grid');
-
-require('./axis');
+import '../coord/cartesian/Grid';
+import './axis';
 
 // Grid view
 echarts.extendComponentView({

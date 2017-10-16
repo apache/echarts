@@ -6,7 +6,7 @@ var scaleAndAdd = vec2.scaleAndAdd;
 //     return e.n1 === n ? e.n2 : e.n1;
 // }
 
-export default function (nodes, edges, opts) {
+export function forceLayout(nodes, edges, opts) {
     var rect = opts.rect;
     var width = rect.width;
     var height = rect.height;

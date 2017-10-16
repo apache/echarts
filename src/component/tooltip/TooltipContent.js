@@ -1,14 +1,13 @@
-/**
- * @module echarts/component/tooltip/TooltipContent
- */
+import {
+    util as zrUtil,
+    color as zrColor,
+    event as eventUtil,
+    env
+} from 'zrender';
+import * as formatUtil from '../../util/format';
 
-var zrUtil = require('zrender/core/util');
-var zrColor = require('zrender/tool/color');
-var eventUtil = require('zrender/core/event');
-var formatUtil = require('../../util/format');
 var each = zrUtil.each;
 var toCamelCase = formatUtil.toCamelCase;
-var env = require('zrender/core/env');
 
 var vendors = ['', '-webkit-', '-moz-', '-o-'];
 
@@ -256,4 +255,4 @@ TooltipContent.prototype = {
     }
 };
 
-return TooltipContent;
+export default TooltipContent;

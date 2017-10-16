@@ -1,8 +1,8 @@
-import echarts from '../../echarts';
+import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import EffectSymbol from '../helper/EffectSymbol';
 
-echarts.extendChartView({
+export default echarts.extendChartView({
 
     type: 'effectScatter',
 

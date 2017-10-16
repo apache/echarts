@@ -1,9 +1,8 @@
-
-var graphic = require('../../util/graphic');
-var BaseAxisPointer = require('./BaseAxisPointer');
-var viewHelper = require('./viewHelper');
-var singleAxisHelper = require('../axis/singleAxisHelper');
-var AxisView = require('../axis/AxisView');
+import * as graphic from '../../util/graphic';
+import BaseAxisPointer from './BaseAxisPointer';
+import * as viewHelper from './viewHelper';
+import * as singleAxisHelper from '../axis/singleAxisHelper';
+import AxisView from '../axis/AxisView';
 
 var XY = ['x', 'y'];
 var WH = ['width', 'height'];
@@ -120,4 +119,4 @@ function getGlobalExtent(coordSys, dimIndex) {
 
 AxisView.registerAxisPointerClass('SingleAxisPointer', SingleAxisPointer);
 
-return SingleAxisPointer;
+export default SingleAxisPointer;

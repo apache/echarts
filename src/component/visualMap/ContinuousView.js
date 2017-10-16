@@ -1,13 +1,14 @@
-
-var VisualMapView = require('./VisualMapView');
-var graphic = require('../../util/graphic');
-var zrUtil = require('zrender/core/util');
-var numberUtil = require('../../util/number');
-var sliderMove = require('../helper/sliderMove');
-var LinearGradient = require('zrender/graphic/LinearGradient');
-var helper = require('./helper');
-var modelUtil = require('../../util/model');
-var eventTool = require('zrender/core/event');
+import {
+    util as zrUtil,
+    LinearGradient,
+    event as eventTool
+} from 'zrender';
+import VisualMapView from './VisualMapView';
+import * as graphic from '../../util/graphic';
+import * as numberUtil from '../../util/number';
+import sliderMove from '../helper/sliderMove';
+import * as helper from './helper';
+import * as modelUtil from '../../util/model';
 
 var linearMap = numberUtil.linearMap;
 var each = zrUtil.each;
@@ -843,4 +844,4 @@ function getCursor(orient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
 
-return ContinuousView;
+export default ContinuousView;

@@ -1,12 +1,8 @@
-/**
- * @module echarts/component/helper/MapDraw
- */
-
-var RoamController = require('./RoamController');
-var roamHelper = require('../../component/helper/roamHelper');
-var cursorHelper = require('../../component/helper/cursorHelper');
-var graphic = require('../../util/graphic');
-var zrUtil = require('zrender/core/util');
+import {util as zrUtil} from 'zrender';
+import RoamController from './RoamController';
+import * as roamHelper from '../../component/helper/roamHelper';
+import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import * as graphic from '../../util/graphic';
 
 function getFixedItemStyle(model, scale) {
     var itemStyle = model.getItemStyle();
@@ -363,9 +359,9 @@ MapDraw.prototype = {
 
         controller.setPointerChecker(function (e, x, y) {
             return geo.getViewRectAfterRoam().contain(x, y)
-                && !cursorHelper.onIrrelevantElement(e, api, mapOrGeoModel);
+                && !onIrrelevantElement(e, api, mapOrGeoModel);
         });
     }
 };
 
-return MapDraw;
+export default MapDraw;

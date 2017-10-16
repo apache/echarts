@@ -3,14 +3,13 @@
  * <https://en.wikipedia.org/wiki/Parallel_coordinates>
  */
 
-var layoutUtil = require('../../util/layout');
-var axisHelper = require('../../coord/axisHelper');
-var zrUtil = require('zrender/core/util');
-var ParallelAxis = require('./ParallelAxis');
-var graphic = require('../../util/graphic');
-var matrix = require('zrender/core/matrix');
-var numberUtil = require('../../util/number');
-var sliderMove = require('../../component/helper/sliderMove');
+import {util as zrUtil, matrix} from 'zrender';
+import * as layoutUtil from '../../util/layout';
+import * as axisHelper from '../../coord/axisHelper';
+import ParallelAxis from './ParallelAxis';
+import * as graphic from '../../util/graphic';
+import * as numberUtil from '../../util/number';
+import sliderMove from '../../component/helper/sliderMove';
 
 var each = zrUtil.each;
 var mathMin = Math.min;
@@ -511,4 +510,4 @@ function layoutAxisWithExpand(axisIndex, layoutInfo) {
     };
 }
 
-return Parallel;
+export default Parallel;

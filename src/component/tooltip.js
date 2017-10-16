@@ -1,13 +1,12 @@
 // FIXME Better way to pack data in graphic element
 
-require('./axisPointer');
+import * as echarts from '../echarts';
 
-require('./tooltip/TooltipModel');
+import './axisPointer';
+import './tooltip/TooltipModel';
+import './tooltip/TooltipView';
 
-require('./tooltip/TooltipView');
 
-
-// Show tip action
 /**
  * @action
  * @property {string} type
@@ -16,7 +15,7 @@ require('./tooltip/TooltipView');
  * @property {number} [x]
  * @property {number} [y]
  */
-require('../echarts').registerAction(
+echarts.registerAction(
     {
         type: 'showTip',
         event: 'showTip',
@@ -25,8 +24,8 @@ require('../echarts').registerAction(
     // noop
     function () {}
 );
-// Hide tip action
-require('../echarts').registerAction(
+
+echarts.registerAction(
     {
         type: 'hideTip',
         event: 'hideTip',

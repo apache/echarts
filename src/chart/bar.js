@@ -1,11 +1,10 @@
+import * as echarts from '../echarts';
 import {util as zrUtil} from 'zrender';
+import barLayoutGrid from '../layout/barGrid';
+
 import '../coord/cartesian/Grid';
 import './bar/BarSeries';
 import './bar/BarView';
-
-import barLayoutGrid from '../layout/barGrid';
-import echarts from '../echarts';
-
 // In case developer forget to include grid component
 import '../component/gridSimple';
 
