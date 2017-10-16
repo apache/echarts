@@ -1,5 +1,5 @@
-import {util as zrUtil} from 'zrender';
-import {env} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import env from 'zrender/core/env';
 import * as modelUtil from '../../util/model';
 
 var get = modelUtil.makeGetter();

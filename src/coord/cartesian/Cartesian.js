@@ -4,7 +4,7 @@
  *
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 function dimAxisMapper(dim) {
     return this._axes[dim];

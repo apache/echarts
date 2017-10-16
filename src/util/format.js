@@ -1,4 +1,5 @@
-import {util as zrUtil, contain} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import textContain from 'zrender/contain/text';
 import * as numberUtil from './number';
 
 /**
@@ -177,6 +178,6 @@ export function capitalFirst(str) {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
 }
 
-export var truncateText = contain.text.truncateText;
+export var truncateText = textContain.truncateText;
 
-export var getTextRect = contain.text.getBoundingRect;
+export var getTextRect = textContain.getBoundingRect;

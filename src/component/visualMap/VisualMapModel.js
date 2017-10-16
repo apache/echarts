@@ -1,5 +1,6 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil, env} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import env from 'zrender/core/env';
 import visualDefault from '../../visual/visualDefault';
 import VisualMapping from '../../visual/VisualMapping';
 import * as visualSolution from '../../visual/visualSolution';

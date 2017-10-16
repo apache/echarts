@@ -1,4 +1,6 @@
-import {util as zrUtil, Eventful, event as eventTool} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import Eventful from 'zrender/mixin/Eventful';
+import * as eventTool from 'zrender/core/event';
 import * as interactionMutex from './interactionMutex';
 
 /**

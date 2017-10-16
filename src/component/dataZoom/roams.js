@@ -4,7 +4,7 @@
 // pan or zoom, only dispatch one action for those data zoom
 // components.
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import RoamController from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
 

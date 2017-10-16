@@ -3,7 +3,7 @@
  */
 
 import * as graphic from '../../util/graphic';
-import {vector as vec2} from 'zrender';
+import * as vec2 from 'zrender/core/vector';
 
 var straightLineProto = graphic.Line.prototype;
 var bezierCurveProto = graphic.BezierCurve.prototype;

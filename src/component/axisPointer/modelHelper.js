@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Model from '../../model/Model';
 
 var each = zrUtil.each;

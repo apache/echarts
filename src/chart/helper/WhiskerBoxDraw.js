@@ -2,7 +2,7 @@
  * @module echarts/chart/helper/Symbol
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphic from '../../util/graphic';
 import Path from 'zrender/graphic/Path';
 

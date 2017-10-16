@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import SeriesModel from '../../model/Series';
 import {seriesModelMixin} from '../helper/whiskerBoxCommon';
 

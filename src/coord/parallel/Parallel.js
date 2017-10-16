@@ -3,7 +3,8 @@
  * <https://en.wikipedia.org/wiki/Parallel_coordinates>
  */
 
-import {util as zrUtil, matrix} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import * as matrix from 'zrender/core/matrix';
 import * as layoutUtil from '../../util/layout';
 import * as axisHelper from '../../coord/axisHelper';
 import ParallelAxis from './ParallelAxis';

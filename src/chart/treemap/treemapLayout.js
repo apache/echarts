@@ -1,4 +1,5 @@
-import {util as zrUtil, BoundingRect} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import BoundingRect from 'zrender/core/BoundingRect';
 import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
 import * as layout from '../../util/layout';
 import * as helper from './helper';

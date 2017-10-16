@@ -1,5 +1,6 @@
 import * as echarts from '../../../echarts';
-import {util as zrUtil, event as eventTool} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import * as eventTool from 'zrender/core/event';
 import lang from '../../../lang';
 import * as featureManager from '../featureManager';
 

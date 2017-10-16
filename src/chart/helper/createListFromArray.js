@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import List from '../../data/List';
 import completeDimensions from '../../data/helper/completeDimensions';
 import {getDataItemValue, converDataValue, isDataItemOption} from '../../util/model';

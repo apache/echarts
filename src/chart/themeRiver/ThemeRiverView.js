@@ -6,7 +6,7 @@
 import * as echarts from '../../echarts';
 import {Polygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import DataDiffer from '../../data/DataDiffer';
 
 export default echarts.extendChartView({

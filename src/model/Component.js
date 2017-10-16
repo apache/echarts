@@ -4,7 +4,7 @@
  * @module echarts/model/Component
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Model from './Model';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';

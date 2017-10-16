@@ -1,5 +1,5 @@
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Cartesian from './Cartesian';
 
 function Cartesian2D(name) {

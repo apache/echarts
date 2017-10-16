@@ -1,5 +1,5 @@
 import * as graphic from '../../util/graphic';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import ChartView from '../../view/Chart';
 
 var SMOOTH = 0.3;

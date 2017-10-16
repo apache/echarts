@@ -1,6 +1,7 @@
 // TODO Better on polar
 
-import {util as zrUtil, color as colorUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import * as colorUtil from 'zrender/tool/color';
 import List from '../../data/List';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';

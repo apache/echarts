@@ -3,7 +3,7 @@
  * @module echarts/coord/geo/parseGeoJson
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Region from './Region';
 
 function decode(json) {

@@ -1,6 +1,6 @@
 import List from '../../data/List';
 import SeriesModel from '../../model/Series';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 var GaugeSeries = SeriesModel.extend({
 

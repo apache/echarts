@@ -1,4 +1,4 @@
-import {BoundingRect} from 'zrender';
+import BoundingRect from 'zrender/core/BoundingRect';
 import {onIrrelevantElement} from './cursorHelper';
 import * as graphicUtil from '../../util/graphic';
 

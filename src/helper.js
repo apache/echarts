@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
 import * as axisHelper from './coord/axisHelper';
 import axisModelCommonMixin from './coord/axisModelCommonMixin';

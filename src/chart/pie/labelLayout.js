@@ -1,6 +1,6 @@
 // FIXME emphasis label position is not same with normal label position
 
-import {contain} from 'zrender';
+import * as textContain from 'zrender/contain/text';
 
 function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
     list.sort(function (a, b) {
@@ -194,7 +194,7 @@ export default function (seriesModel, r, viewWidth, viewHeight) {
             ? (dx < 0 ? -midAngle + Math.PI : -midAngle) : 0;
         var text = seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx);
-        var textRect = contain.text.getBoundingRect(
+        var textRect = textContain.getBoundingRect(
             text, font, textAlign, 'top'
         );
         hasLabelRotate = !!labelRotate;

@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import VisualMapModel from './VisualMapModel';
 import * as numberUtil from '../../util/number';
 

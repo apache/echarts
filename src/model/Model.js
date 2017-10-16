@@ -2,7 +2,8 @@
  * @module echarts/model/Model
  */
 
-import {util as zrUtil, env} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import env from 'zrender/core/env';
 import * as clazzUtil from '../util/clazz';
 
 import lineStyleMixin from './mixin/lineStyle';

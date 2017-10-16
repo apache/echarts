@@ -1,4 +1,4 @@
-import {env} from 'zrender';
+import env from 'zrender/core/env';
 import lang from '../../../lang';
 import * as featureManager from '../featureManager';
 

@@ -22,7 +22,12 @@ if (typeof __DEV__ === 'undefined') {
  * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
  */
 
-import zrender from 'zrender';
+import * as zrender from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import * as colorTool from 'zrender/tool/color';
+import env from 'zrender/core/env';
+import timsort from 'zrender/core/timsort';
+import Eventful from 'zrender/mixin/Eventful';
 import GlobalModel from './model/Global';
 import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
@@ -41,12 +46,6 @@ import seriesColor from './visual/seriesColor';
 import loadingDefault from './loading/default';
 import * as ecHelper from './helper';
 
-var zrUtil = zrender.util;
-var colorTool = zrender.color;
-var Eventful = zrender.Eventful;
-var timsort = zrender.timsort;
-
-var env = zrender.env;
 var each = zrUtil.each;
 var parseClassType = ComponentModel.parseClassType;
 

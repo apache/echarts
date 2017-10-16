@@ -1,6 +1,6 @@
 // Fix for 南海诸岛
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Region from '../Region';
 
 var geoCoord = [126, 25];

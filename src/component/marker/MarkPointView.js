@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import SymbolDraw from '../../chart/helper/SymbolDraw';
 import * as numberUtil from '../../util/number';
 import List from '../../data/List';

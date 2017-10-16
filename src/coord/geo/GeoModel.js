@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as modelUtil from '../../util/model';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';

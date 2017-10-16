@@ -1,5 +1,5 @@
 import * as echarts from '../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphicUtil from '../util/graphic';
 import {findLabelValueDim} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';

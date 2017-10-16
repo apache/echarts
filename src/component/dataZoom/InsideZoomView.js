@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import DataZoomView from './DataZoomView';
 import sliderMove from '../helper/sliderMove';
 import * as roams from './roams';

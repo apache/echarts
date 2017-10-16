@@ -2,12 +2,10 @@
  * @module echarts/coord/geo/Region
  */
 
-import {
-    contain,
-    BoundingRect,
-    bbox,
-    vector as vec2
-} from 'zrender';
+import BoundingRect from 'zrender/core/BoundingRect';
+import * as bbox from 'zrender/core/bbox';
+import * as vec2 from 'zrender/core/vector';
+import polygonContain from 'zrender/contain/polygon';
 
 /**
  * @param {string} name
@@ -103,10 +101,10 @@ Region.prototype = {
             }
             var exterior = geometries[i].exterior;
             var interiors = geometries[i].interiors;
-            if (contain.polygon.contain(exterior, coord[0], coord[1])) {
+            if (polygonContain.contain(exterior, coord[0], coord[1])) {
                 // Not in the region if point is in the hole.
                 for (var k = 0; k < (interiors ? interiors.length : 0); k++) {
-                    if (contain.polygon.contain(interiors[k])) {
+                    if (polygonContain.contain(interiors[k])) {
                         continue loopGeo;
                     }
                 }

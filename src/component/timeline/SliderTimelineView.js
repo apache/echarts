@@ -1,4 +1,6 @@
-import {util as zrUtil, BoundingRect, matrix} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import BoundingRect from 'zrender/core/BoundingRect';
+import * as matrix from 'zrender/core/matrix';
 import * as graphic from '../../util/graphic';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';

@@ -1,8 +1,8 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphic from '../../util/graphic';
-import {contain} from 'zrender';
+import * as textContain from 'zrender/contain/text';
 import * as formatUtil from '../../util/format';
-import {matrix} from 'zrender';
+import * as matrix from 'zrender/core/matrix';
 import * as axisHelper from '../../coord/axisHelper';
 import AxisBuilder from '../axis/AxisBuilder';
 
@@ -43,7 +43,7 @@ export function buildLabelElOption(
     var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
     var font = labelModel.getFont();
-    var textRect = contain.text.getBoundingRect(text, font);
+    var textRect = textContain.getBoundingRect(text, font);
 
     var position = labelPos.position;
     var width = textRect.width + paddings[1] + paddings[3];

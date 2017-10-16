@@ -1,9 +1,7 @@
 // Layout helpers for each component positioning
 
-import {
-    util as zrUtil,
-    BoundingRect
-} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import BoundingRect from 'zrender/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
 

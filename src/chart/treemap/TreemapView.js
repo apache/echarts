@@ -1,12 +1,12 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphic from '../../util/graphic';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from './helper';
 import Breadcrumb from './Breadcrumb';
 import RoamController from '../../component/helper/RoamController';
-import {BoundingRect} from 'zrender';
-import {matrix} from 'zrender';
+import BoundingRect from 'zrender/core/BoundingRect';
+import * as matrix from 'zrender/core/matrix';
 import * as animationUtil from '../../util/animation';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 

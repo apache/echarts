@@ -5,10 +5,10 @@
 
 import * as graphic from '../../util/graphic';
 import Line from './Line';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import {createSymbol} from '../../util/symbol';
-import {vector as vec2} from 'zrender';
-import {curve as curveUtil} from 'zrender';
+import * as vec2 from 'zrender/core/vector';
+import * as curveUtil from 'zrender/core/curve';
 
 /**
  * @constructor

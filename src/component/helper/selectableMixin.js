@@ -4,7 +4,7 @@
  * And each data item will use `selected` to toggle itself selected status
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 export default {
 

@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import List from '../../data/List';
 import Graph from '../../data/Graph';
 import linkList from '../../data/helper/linkList';

@@ -4,9 +4,9 @@
  */
 
 import Polyline from './Polyline';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import EffectLine from './EffectLine';
-import {vector as vec2} from 'zrender';
+import * as vec2 from 'zrender/core/vector';
 
 /**
  * @constructor

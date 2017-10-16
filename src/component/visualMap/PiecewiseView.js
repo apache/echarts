@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import VisualMapView from './VisualMapView';
 import * as graphic from '../../util/graphic';
 import {createSymbol} from '../../util/symbol';

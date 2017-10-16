@@ -1,6 +1,6 @@
 // TODO Axis scale
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Polar from './Polar';
 import {parsePercent} from '../../util/number';
 import {

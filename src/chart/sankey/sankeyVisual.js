@@ -4,7 +4,7 @@
  */
 
 import VisualMapping from '../../visual/VisualMapping';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 export default function (ecModel, payload) {
     ecModel.eachSeriesByType('sankey', function (seriesModel) {

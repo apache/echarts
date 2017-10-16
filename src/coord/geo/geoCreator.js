@@ -1,5 +1,5 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Geo from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';

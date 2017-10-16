@@ -1,5 +1,5 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 function legendSelectActionHandler(methodName, payload, ecModel) {
     var selectedMap = {};

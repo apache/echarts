@@ -1,4 +1,5 @@
-import {util as zrUtil, contain} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import textContain from 'zrender/contain/text';
 import OrdinalScale from '../scale/Ordinal';
 import IntervalScale from '../scale/Interval';
 import Scale from '../scale/Scale';
@@ -201,7 +202,7 @@ export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal)
 
     for (var i = 0; i < tickCoords.length; i += step) {
         var tickCoord = tickCoords[i];
-        var rect = contain.text.getBoundingRect(
+        var rect = textContain.getBoundingRect(
             labels[i], font, 'center', 'top'
         );
         rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;

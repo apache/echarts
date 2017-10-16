@@ -1,7 +1,7 @@
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
 import completeDimensions from '../../data/helper/completeDimensions';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import {encodeHTML} from '../../util/format';
 
 var RadarSeries = SeriesModel.extend({

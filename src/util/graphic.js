@@ -1,13 +1,11 @@
-import {
-    util as zrUtil,
-    path as pathTool,
-    color as colorTool,
-    matrix,
-    vector,
-    Path,
-    Transformable,
-    Image
-} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import * as pathTool from 'zrender/tool/path';
+import * as colorTool from 'zrender/tool/color';
+import * as matrix from 'zrender/core/matrix';
+import * as vector from 'zrender/core/vector';
+import Path from 'zrender/graphic/Path';
+import Transformable from 'zrender/mixin/Transformable';
+import Image from 'zrender/graphic/Image';
 
 var round = Math.round;
 var mathMax = Math.max;

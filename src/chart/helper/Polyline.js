@@ -3,7 +3,7 @@
  */
 
 import * as graphic from '../../util/graphic';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 /**
  * @constructor

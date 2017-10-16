@@ -1,4 +1,4 @@
-import {contain} from 'zrender';
+import * as textContain from 'zrender/contain/text';
 import * as graphicUtil from '../../util/graphic';
 
 var PATH_COLOR = ['textStyle', 'color'];
@@ -31,7 +31,7 @@ export default {
     },
 
     getTextRect: function (text) {
-        return contain.text.getBoundingRect(
+        return textContain.getBoundingRect(
             text,
             this.getFont(),
             this.getShallow('align'),

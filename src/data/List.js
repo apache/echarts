@@ -3,7 +3,7 @@
  * @module echarts/data/List
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import * as modelUtil from '../util/model';

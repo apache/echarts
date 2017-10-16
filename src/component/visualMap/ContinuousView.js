@@ -1,8 +1,6 @@
-import {
-    util as zrUtil,
-    LinearGradient,
-    event as eventTool
-} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import LinearGradient from 'zrender/graphic/LinearGradient';
+import * as eventTool from 'zrender/core/event';
 import VisualMapView from './VisualMapView';
 import * as graphic from '../../util/graphic';
 import * as numberUtil from '../../util/number';

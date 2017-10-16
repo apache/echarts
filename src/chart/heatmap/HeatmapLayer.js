@@ -6,7 +6,7 @@
  * @module
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 var GRADIENT_LEVELS = 256;
 

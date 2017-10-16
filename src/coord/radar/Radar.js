@@ -1,6 +1,6 @@
 // TODO clockwise
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import IndicatorAxis from './IndicatorAxis';
 import IntervalScale from '../../scale/Interval';
 import * as numberUtil from '../../util/number';

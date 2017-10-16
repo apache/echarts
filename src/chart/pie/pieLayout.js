@@ -1,7 +1,7 @@
 
 import {parsePercent, linearMap} from '../../util/number';
 import labelLayout from './labelLayout';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;

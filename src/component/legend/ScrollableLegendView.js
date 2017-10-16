@@ -2,7 +2,7 @@
  * Separate legend and scrollable legend to reduce package size.
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphic from '../../util/graphic';
 import * as layoutUtil from '../../util/layout';
 import LegendView from './LegendView';

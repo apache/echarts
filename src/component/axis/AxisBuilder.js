@@ -1,10 +1,10 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
-import {matrix as matrixUtil} from 'zrender';
-import {vector as vec2} from 'zrender';
+import * as matrixUtil from 'zrender/core/matrix';
+import * as vec2 from 'zrender/core/vector';
 
 var v2ApplyTransform = vec2.applyTransform;
 var retrieve = zrUtil.retrieve;

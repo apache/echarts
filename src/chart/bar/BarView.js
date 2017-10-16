@@ -1,5 +1,5 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphic from '../../util/graphic';
 import {setLabel} from './helper';
 import Model from '../../model/Model';

@@ -1,7 +1,8 @@
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';
-import {contain} from 'zrender';
+import * as lineContain from 'zrender/contain/line';
+import * as quadraticContain from 'zrender/contain/quadratic';
 
 var LargeLineShape = graphic.extendShape({
     shape: {
@@ -45,7 +46,7 @@ var LargeLineShape = graphic.extendShape({
             var seg = segs[i];
             if (isPolyline) {
                 for (var j = 1; j < seg.length; j++) {
-                    if (contain.line.containStroke(
+                    if (lineContain.containStroke(
                         seg[j - 1][0], seg[j - 1][1], seg[j][0], seg[j][1], lineWidth, x, y
                     )) {
                         return i;
@@ -54,14 +55,14 @@ var LargeLineShape = graphic.extendShape({
             }
             else {
                 if (seg.length > 2) {
-                    if (contain.quadratic.containStroke(
+                    if (quadraticContain.containStroke(
                         seg[0][0], seg[0][1], seg[2][0], seg[2][1], seg[1][0], seg[1][1], lineWidth, x, y
                     )) {
                         return i;
                     }
                 }
                 else {
-                    if (contain.line.containStroke(
+                    if (lineContain.containStroke(
                         seg[0][0], seg[0][1], seg[1][0], seg[1][1], lineWidth, x, y
                     )) {
                         return i;

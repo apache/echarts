@@ -5,7 +5,7 @@
 
 import * as layout from '../../util/layout';
 import nest from '../../util/array/nest';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 export default function (ecModel, api, payload) {
 

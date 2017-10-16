@@ -2,7 +2,7 @@
  * @file Visual mapping.
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 var visualDefault = {
 

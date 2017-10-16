@@ -1,5 +1,5 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import AxisBuilder from './AxisBuilder';
 import BrushController from '../helper/BrushController';
 import * as brushHelper from '../helper/brushHelper';

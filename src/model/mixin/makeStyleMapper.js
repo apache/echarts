@@ -1,6 +1,6 @@
 // TODO Parse shadow style
 // TODO Only shallow path support
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 export default function (properties) {
     // Normalize

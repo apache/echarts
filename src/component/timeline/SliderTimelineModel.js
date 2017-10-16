@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import TimelineModel from './TimelineModel';
 import * as modelUtil from '../../util/model';
 

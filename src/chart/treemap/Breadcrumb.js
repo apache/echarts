@@ -1,6 +1,6 @@
 import * as graphic from '../../util/graphic';
 import * as layout from '../../util/layout';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import {wrapTreePathInfo} from './helper';
 
 var TEXT_PADDING = 8;

@@ -1,5 +1,5 @@
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as numberUtil from '../util/number';
 import * as axisHelper from './axisHelper';
 

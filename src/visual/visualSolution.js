@@ -2,7 +2,7 @@
  * @file Visual solution, for consistent option specification.
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import VisualMapping from './VisualMapping';
 
 var each = zrUtil.each;

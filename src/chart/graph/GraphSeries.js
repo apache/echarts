@@ -1,6 +1,6 @@
 import * as echarts from '../../echarts';
 import List from '../../data/List';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import {defaultEmphasis} from '../../util/model';
 import Model from '../../model/Model';
 import {encodeHTML} from '../../util/format';

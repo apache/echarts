@@ -5,7 +5,7 @@
  * @author Yi Shen(https://www.github.com/pissang)
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 
 // id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey (id) {

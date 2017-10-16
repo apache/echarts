@@ -1,7 +1,8 @@
 // Poly path support NaN point
 
 import Path from 'zrender/graphic/Path';
-import {vector as vec2, zrHelper} from 'zrender';
+import * as vec2 from 'zrender/core/vector';
+import fixClipWithShadow from 'zrender/graphic/helper/fixClipWithShadow';
 
 var vec2Min = vec2.min;
 var vec2Max = vec2.max;
@@ -151,7 +152,7 @@ export var Polyline = Path.extend({
         stroke: '#000'
     },
 
-    brush: zrHelper.fixClipWithShadow(Path.prototype.brush),
+    brush: fixClipWithShadow(Path.prototype.brush),
 
     buildPath: function (ctx, shape) {
         var points = shape.points;
@@ -205,7 +206,7 @@ export var Polygon = Path.extend({
         connectNulls: false
     },
 
-    brush: zrHelper.fixClipWithShadow(Path.prototype.brush),
+    brush: fixClipWithShadow(Path.prototype.brush),
 
     buildPath: function (ctx, shape) {
         var points = shape.points;

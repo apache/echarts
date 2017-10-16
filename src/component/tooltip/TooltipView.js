@@ -1,5 +1,6 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil, env} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import env from 'zrender/core/env';
 import TooltipContent from './TooltipContent';
 import * as formatUtil from '../../util/format';
 import * as numberUtil from '../../util/number';

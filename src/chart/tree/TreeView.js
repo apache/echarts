@@ -2,7 +2,7 @@
  * @file  This file used to draw tree view
  */
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as graphic from '../../util/graphic';
 import SymbolClz from '../helper/Symbol';
 import {radialCoordinate} from './layoutHelper';

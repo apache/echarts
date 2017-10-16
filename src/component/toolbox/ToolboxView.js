@@ -1,5 +1,6 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil, contain} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
+import textContain from 'zrender/contain/text';
 import * as featureManager from './featureManager';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
@@ -178,8 +179,8 @@ export default echarts.extendComponentView({
             var hoverStyle = icon.hoverStyle;
             // May be background element
             if (hoverStyle && titleText) {
-                var rect = contain.text.getBoundingRect(
-                    titleText, contain.text.makeFont(hoverStyle)
+                var rect = textContain.getBoundingRect(
+                    titleText, textContain.makeFont(hoverStyle)
                 );
                 var offsetX = icon.position[0] + group.position[0];
                 var offsetY = icon.position[1] + group.position[1] + itemSize;

@@ -1,5 +1,5 @@
 import * as echarts from '../../echarts';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import Model from '../../model/Model';
 
 var LegendModel = echarts.extendComponentModel({

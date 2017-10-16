@@ -8,7 +8,7 @@
 // (2) By default, the input data string (e.g., '2011-01-02') should be displayed
 // as its original time, without any time difference.
 
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import scaleHelper from './helper';

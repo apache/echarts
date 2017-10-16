@@ -1,4 +1,4 @@
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import List from '../../data/List';
 import * as numberUtil from '../../util/number';
 import * as markerHelper from './markerHelper';

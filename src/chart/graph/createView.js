@@ -1,7 +1,7 @@
 // FIXME Where to create the simple view coordinate system
 import View from '../../coord/View';
 import {getLayoutRect} from '../../util/layout';
-import {bbox} from 'zrender';
+import * as bbox from 'zrender/core/bbox';
 
 function getViewRect(seriesModel, api, aspect) {
     var option = seriesModel.getBoxLayoutParams();

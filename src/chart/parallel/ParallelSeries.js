@@ -1,5 +1,5 @@
 import List from '../../data/List';
-import {util as zrUtil} from 'zrender';
+import * as zrUtil from 'zrender/core/util';
 import SeriesModel from '../../model/Series';
 import completeDimensions from '../../data/helper/completeDimensions';
 
