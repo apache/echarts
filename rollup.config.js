@@ -2,14 +2,34 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import uglify from 'rollup-plugin-uglify';
 
-function plugins(production) {
+function getPlugins(production) {
     let plugins = [
         resolve({
             extensions: ['.js'],
             jsnext: true,
-            main: true
+            main: true,
+            customResolveOptions: {
+                /**
+                 * BTW, `index.js` of a package will not be filtered.
+                 * @see <https://github.com/browserify/resolve>
+                 * @param {Object} pkg - package data
+                 * @param {Object} path - the path being resolved
+                 * @param {Object} relativePath - the path relative from the package.json location
+                 * @return {string} - a relative path that will be joined from the package.json location
+                 */
+                pathFilter: function (pkg, path, relativePath) {
+                    if (pkg.name !== 'zrender') {
+                        return path;
+                    }
+                    // Redirect zrender `import` to `node_module/zrender/src`.
+                    var idx = path.lastIndexOf(relativePath);
+                    return path.slice(0, idx) + 'src/' + relativePath;
+                }
+            }
         }),
-        commonjs()
+        commonjs({
+            include: ['index*.js']
+        })
     ];
     if (production) {
         plugins.push(uglify({
@@ -40,9 +60,9 @@ function createBuild(type, production) {
         postfix = '.min';
     }
     return {
-        input: `./index${type}.js`,
         name: 'echarts',
-        plugins: plugins(production),
+        plugins: getPlugins(production),
+        input: `./echarts${type}.js`,
         legacy: true, // Support IE8-
         output: {
             format: 'umd',

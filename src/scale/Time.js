@@ -11,7 +11,7 @@
 import * as zrUtil from 'zrender/core/util';
 import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
-import scaleHelper from './helper';
+import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 
 var intervalScaleProto = IntervalScale.prototype;

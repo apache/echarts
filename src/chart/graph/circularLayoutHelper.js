@@ -1,4 +1,4 @@
-import {vector as vec2} from 'zrender/core/vector';
+import * as vec2 from 'zrender/core/vector';
 
 export function circularLayout(seriesModel) {
     var coordSys = seriesModel.coordinateSystem;

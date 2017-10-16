@@ -22,9 +22,11 @@ if (typeof __DEV__ === 'undefined') {
  * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
  */
 
-import * as zrender from 'zrender';
+import * as zrender from 'zrender/zrender';
 import * as zrUtil from 'zrender/core/util';
 import * as colorTool from 'zrender/tool/color';
+import * as matrix from 'zrender/core/matrix';
+import * as vector from 'zrender/core/vector';
 import env from 'zrender/core/env';
 import timsort from 'zrender/core/timsort';
 import Eventful from 'zrender/mixin/Eventful';
@@ -1942,19 +1944,21 @@ export function extendChartView(opts/*, superClass*/) {
  *     });
  */
 export function setCanvasCreator(creator) {
-    zrUtil.createCanvas = creator;
+    zrUtil.$inject.createCanvas(creator);
 }
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);
 registerLoading('default', loadingDefault);
 
-// Default action
+// Default actions
+
 registerAction({
     type: 'highlight',
     event: 'highlight',
     update: 'highlight'
 }, zrUtil.noop);
+
 registerAction({
     type: 'downplay',
     event: 'downplay',
@@ -1975,9 +1979,9 @@ export {numberUtil as number};
 export {formatUtil as format};
 export {throttle};
 export {ecHelper as helper};
-export {matrix} from 'zrender';
-export {vector} from 'zrender';
-export {color} from 'zrender';
+export {matrix};
+export {vector};
+export {colorTool as color};
 
 var ecUtil = {};
 each([
@@ -1995,7 +1999,7 @@ export var registerMap;
 export var getMap;
 export var parseGeoJSON;
 
-export var __inject = {
+export var $inject = {
     registerMap: function (f) {
         registerMap = f;
     },

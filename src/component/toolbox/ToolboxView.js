@@ -1,6 +1,6 @@
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/core/util';
-import textContain from 'zrender/contain/text';
+import * as textContain from 'zrender/contain/text';
 import * as featureManager from './featureManager';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';

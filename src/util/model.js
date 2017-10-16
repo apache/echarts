@@ -1,6 +1,6 @@
 import * as zrUtil from 'zrender/core/util';
 import * as formatUtil from './format';
-import nubmerUtil from './number';
+import * as nubmerUtil from './number';
 import Model from '../model/Model';
 
 var each = zrUtil.each;

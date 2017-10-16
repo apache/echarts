@@ -1,4 +1,4 @@
-import polygonContain from 'zrender/contain/polygon';
+import * as polygonContain from 'zrender/contain/polygon';
 import BoundingRect from 'zrender/core/BoundingRect';
 
 // Key of the first level is brushType: `line`, `rect`, `polygon`.
@@ -24,7 +24,7 @@ var selector = {
     polygon: {
         point: function (itemLayout, selectors, area) {
             return area.boundingRect.contain(itemLayout[0], itemLayout[1])
-                && polygonContain(area.range, itemLayout[0], itemLayout[1]);
+                && polygonContain.contain(area.range, itemLayout[0], itemLayout[1]);
         },
         rect: function (itemLayout, selectors, area) {
             var points = area.range;
@@ -39,10 +39,10 @@ var selector = {
             var height = itemLayout.height;
             var p = points[0];
 
-            if (polygonContain(points, x, y)
-                || polygonContain(points, x + width, y)
-                || polygonContain(points, x, y + height)
-                || polygonContain(points, x + width, y + height)
+            if (polygonContain.contain(points, x, y)
+                || polygonContain.contain(points, x + width, y)
+                || polygonContain.contain(points, x, y + height)
+                || polygonContain.contain(points, x + width, y + height)
                 || BoundingRect.create(itemLayout).contain(p[0], p[1])
                 || lineIntersectPolygon(x, y, x + width, y, points)
                 || lineIntersectPolygon(x, y, x, y + height, points)

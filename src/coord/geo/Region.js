@@ -5,7 +5,7 @@
 import BoundingRect from 'zrender/core/BoundingRect';
 import * as bbox from 'zrender/core/bbox';
 import * as vec2 from 'zrender/core/vector';
-import polygonContain from 'zrender/contain/polygon';
+import * as polygonContain from 'zrender/contain/polygon';
 
 /**
  * @param {string} name

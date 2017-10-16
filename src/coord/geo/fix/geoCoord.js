@@ -15,4 +15,4 @@ export default function (geo) {
             cp[1] = geoCoord[1];
         }
     });
-};
+}

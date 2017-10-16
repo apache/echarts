@@ -19,4 +19,4 @@ export default function (geo) {
             cp[1] += -coordFix[1] / (10.5 / 0.75);
         }
     });
-};
+}

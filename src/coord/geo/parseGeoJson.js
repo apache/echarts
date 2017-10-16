@@ -124,4 +124,4 @@ export default function (geoJson) {
         region.properties = properties;
         return region;
     });
-};
+}

@@ -6,6 +6,22 @@ import * as vector from 'zrender/core/vector';
 import Path from 'zrender/graphic/Path';
 import Transformable from 'zrender/mixin/Transformable';
 import Image from 'zrender/graphic/Image';
+import Group from 'zrender/container/Group';
+import Text from 'zrender/graphic/Text';
+import Circle from 'zrender/graphic/shape/Circle';
+import Sector from 'zrender/graphic/shape/Sector';
+import Ring from 'zrender/graphic/shape/Ring';
+import Polygon from 'zrender/graphic/shape/Polygon';
+import Polyline from 'zrender/graphic/shape/Polyline';
+import Rect from 'zrender/graphic/shape/Rect';
+import Line from 'zrender/graphic/shape/Line';
+import BezierCurve from 'zrender/graphic/shape/BezierCurve';
+import Arc from 'zrender/graphic/shape/Arc';
+import CompoundPath from 'zrender/graphic/CompoundPath';
+import LinearGradient from 'zrender/graphic/LinearGradient';
+import RadialGradient from 'zrender/graphic/RadialGradient';
+import BoundingRect from 'zrender/core/BoundingRect';
+
 
 var round = Math.round;
 var mathMax = Math.max;
@@ -1061,4 +1077,4 @@ export {
     LinearGradient,
     RadialGradient,
     BoundingRect
-} from 'zrender';
+};

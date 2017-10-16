@@ -283,9 +283,9 @@ var geoCreator = {
 };
 
 // Inject methods into echarts
-echarts.__inject.registerMap(geoCreator.registerMap);
-echarts.__inject.getMap(geoCreator.getMap);
-echarts.__inject.parseGeoJSON(parseGeoJson);
+echarts.$inject.registerMap(geoCreator.registerMap);
+echarts.$inject.getMap(geoCreator.getMap);
+echarts.$inject.parseGeoJSON(parseGeoJson);
 
 echarts.registerCoordinateSystem('geo', geoCreator);
 

@@ -1,5 +1,5 @@
 import * as zrUtil from 'zrender/core/util';
-import textContain from 'zrender/contain/text';
+import * as textContain from 'zrender/contain/text';
 import * as numberUtil from './number';
 
 /**

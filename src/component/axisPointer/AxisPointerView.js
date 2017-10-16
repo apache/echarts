@@ -35,7 +35,7 @@ var AxisPointerView = echarts.extendComponentView({
      * @override
      */
     remove: function (ecModel, api) {
-        globalListener.disopse(api.getZr(), 'axisPointer');
+        globalListener.unregister(api.getZr(), 'axisPointer');
         AxisPointerView.superApply(this._model, 'remove', arguments);
     },
 
