@@ -111,8 +111,8 @@ export default Component.extend({
         var axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel) {
             // Can not use this.contains here, because
             // initialization has not been completed yet.
-            return axisModel.get('parallelIndex') === this.componentIndex;
-        });
+            return (axisModel.get('parallelIndex') || 0) === this.componentIndex;
+        }, this);
 
         zrUtil.each(axisModels, function (axisModel) {
             dimensions.push('dim' + axisModel.get('dim'));

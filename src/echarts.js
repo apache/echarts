@@ -1,16 +1,3 @@
-// Enable DEV mode when using source code without build. which has no __DEV__ variable
-// In build process 'typeof __DEV__' will be replace with 'boolean'
-// So this code will be removed or disabled anyway after built.
-if (typeof __DEV__ === 'undefined') {
-    // In browser
-    if (typeof window !== 'undefined') {
-        window.__DEV__ = true;
-    }
-    // In node
-    else if (typeof global !== 'undefined') {
-        global.__DEV__ = true;
-    }
-}
 
 /*!
  * ECharts, a javascript interactive chart library.
@@ -57,6 +44,17 @@ export var dependencies = {
     zrender: '3.6.2'
 };
 
+var PRIORITY_PROCESSOR_FILTER = 1000;
+var PRIORITY_PROCESSOR_STATISTIC = 5000;
+
+var PRIORITY_VISUAL_LAYOUT = 1000;
+var PRIORITY_VISUAL_GLOBAL = 2000;
+var PRIORITY_VISUAL_CHART = 3000;
+var PRIORITY_VISUAL_COMPONENT = 4000;
+// FIXME
+// necessary?
+var PRIORITY_VISUAL_BRUSH = 5000;
+
 export var PRIORITY = {
     PROCESSOR: {
         FILTER: PRIORITY_PROCESSOR_FILTER,
@@ -70,17 +68,6 @@ export var PRIORITY = {
         BRUSH: PRIORITY_VISUAL_BRUSH
     }
 };
-
-var PRIORITY_PROCESSOR_FILTER = 1000;
-var PRIORITY_PROCESSOR_STATISTIC = 5000;
-
-var PRIORITY_VISUAL_LAYOUT = 1000;
-var PRIORITY_VISUAL_GLOBAL = 2000;
-var PRIORITY_VISUAL_CHART = 3000;
-var PRIORITY_VISUAL_COMPONENT = 4000;
-// FIXME
-// necessary?
-var PRIORITY_VISUAL_BRUSH = 5000;
 
 // Main process have three entries: `setOption`, `dispatchAction` and `resize`,
 // where they must not be invoked nestedly, except the only case: invoke

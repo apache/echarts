@@ -9,14 +9,19 @@ require.config({
     packages: [
         {
             main: 'echarts',
-            location: '../src',
+            location: '../dist',
             name: 'echarts'
-        },
-        {
-            main: 'zrender',
-            location: '../../zrender/src',
-            name: 'zrender'
         }
+        // {
+        //     main: 'echarts',
+        //     location: '../src',
+        //     name: 'echarts'
+        // },
+        // {
+        //     main: 'zrender',
+        //     location: '../../zrender/src',
+        //     name: 'zrender'
+        // }
     ]
     // urlArgs: '_v_=' + +new Date()
 });

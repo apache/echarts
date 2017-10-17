@@ -2,6 +2,8 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import uglify from 'rollup-plugin-uglify';
 
+var watching = process.argv.indexOf('--watch') >= 0 || process.argv.indexOf('-w') >= 0;
+
 function getPlugins(production) {
     let plugins = [
         resolve({
@@ -44,7 +46,6 @@ function getPlugins(production) {
     return plugins;
 }
 
-
 // ??????????
 // en lang
 
@@ -70,19 +71,23 @@ function createBuild(type, production) {
             file: `dist/echarts${type}${postfix}.js`
         },
         watch: {
-            include: ['./src/**', './index*.js']
+            include: ['./src/**', './echarts*.js']
         }
     };
 }
 
-export default [
-    createBuild('blank', false),
-    createBuild('simple', false),
-    createBuild('common', false),
-    createBuild('', false),
+var configs = watching
+    ? createBuild('', false)
+    : [
+        createBuild('blank', false),
+        createBuild('simple', false),
+        createBuild('common', false),
+        createBuild('', false),
 
-    createBuild('blank', true),
-    createBuild('simple', true),
-    createBuild('common', true),
-    createBuild('', true)
-];
+        createBuild('blank', true),
+        createBuild('simple', true),
+        createBuild('common', true),
+        createBuild('', true)
+    ];
+
+export default configs;
