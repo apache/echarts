@@ -1,9 +1,8 @@
-define(function (require) {
-    var echarts = require('echarts');
-    echarts.dataTool = {
-        version: '1.0.0',
-        gexf: require('./gexf'),
-        prepareBoxplotData: require('./prepareBoxplotData')
-    };
-    return echarts.dataTool;
-});
+import * as gexf from './gexf';
+import prepareBoxplotData from './prepareBoxplotData';
+
+export var version = '1.0.0';
+
+export {gexf};
+
+export {prepareBoxplotData};
