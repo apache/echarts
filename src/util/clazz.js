@@ -67,7 +67,7 @@ define(function (require) {
         RootClass.$constructor = RootClass;
         RootClass.extend = function (proto) {
 
-            if (__DEV__) {
+            if (typeof __DEV__ !== 'undefined' && __DEV__) {
                 zrUtil.each(mandatoryMethods, function (method) {
                     if (!proto[method]) {
                         console.warn(
@@ -140,7 +140,7 @@ define(function (require) {
                 componentType = parseClassType(componentType);
 
                 if (!componentType.sub) {
-                    if (__DEV__) {
+                    if (typeof __DEV__ !== 'undefined' && __DEV__) {
                         if (storage[componentType.main]) {
                             console.warn(componentType.main + ' exists.');
                         }
