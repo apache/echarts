@@ -306,7 +306,7 @@ define(function (require) {
 
         var viewMain = document.createElement('div');
         var textarea = document.createElement('textarea');
-        viewMain.style.cssText = 'display:block;width:100%;overflow:auto;';
+        viewMain.style.cssText = 'display:block;width:100%;';
 
         var optionToContent = model.get('optionToContent');
         var contentToOption = model.get('contentToOption');
