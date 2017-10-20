@@ -364,6 +364,25 @@ define(function (require) {
         });
         return zr.painter.getRenderedCanvas(opts);
     };
+
+    /**
+     * Get svg data url
+     */
+    echartsProto.getSvgDataUrl = function () {
+        if (!env.svgSupported) {
+            return;
+        }
+
+        var zr = this._zr;
+        var list = zr.storage.getDisplayList();
+        // Stop animations
+        zrUtil.each(list, function (el) {
+            el.stopAnimation(true);
+        });
+
+        return zr.painter.pathToSvg();
+    };
+
     /**
      * @return {string}
      * @param {Object} opts
@@ -391,9 +410,15 @@ define(function (require) {
             });
         });
 
-        var url = this.getRenderedCanvas(opts).toDataURL(
-            'image/' + (opts && opts.type || 'png')
-        );
+        var url;
+        if (this._zr.painter.getType() === 'svg') {
+            url = this.getSvgDataUrl();
+        }
+        else {
+            url = this.getRenderedCanvas(opts).toDataURL(
+                'image/' + (opts && opts.type || 'png')
+            );
+        }
 
         each(excludesComponentViews, function (view) {
             view.group.ignore = false;
