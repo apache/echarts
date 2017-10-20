@@ -1,5 +1,5 @@
-import * as zrUtil from 'zrender/core/util';
-import * as textContain from 'zrender/contain/text';
+import * as zrUtil from 'zrender/src/core/util';
+import * as textContain from 'zrender/src/contain/text';
 import OrdinalScale from '../scale/Ordinal';
 import IntervalScale from '../scale/Interval';
 import Scale from '../scale/Scale';

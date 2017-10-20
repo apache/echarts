@@ -1,5 +1,5 @@
 import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 import './effectScatter/EffectScatterSeries';
 import './effectScatter/EffectScatterView';

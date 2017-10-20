@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 var TYPE_DELIMITER = '.';
 var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';

@@ -2,9 +2,9 @@
  * @module echarts/chart/helper/Symbol
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import Path from 'zrender/graphic/Path';
+import Path from 'zrender/src/graphic/Path';
 
 var WhiskerPath = Path.extend({
 

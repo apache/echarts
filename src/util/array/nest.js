@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 /**
  * nest helper used to group by the array.

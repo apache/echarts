@@ -1,5 +1,5 @@
-import * as zrUtil from 'zrender/core/util';
-import Eventful from 'zrender/mixin/Eventful';
+import * as zrUtil from 'zrender/src/core/util';
+import Eventful from 'zrender/src/mixin/Eventful';
 import * as graphic from '../../util/graphic';
 import * as interactionMutex from './interactionMutex';
 import DataDiffer from '../../data/DataDiffer';

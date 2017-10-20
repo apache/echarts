@@ -1,8 +1,8 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as clazzUtil from '../../util/clazz';
 import * as graphic from '../../util/graphic';
 import * as axisPointerModelHelper from './modelHelper';
-import * as eventTool from 'zrender/core/event';
+import * as eventTool from 'zrender/src/core/event';
 import * as throttleUtil from '../../util/throttle';
 import * as modelUtil from '../../util/model';
 

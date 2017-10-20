@@ -18,7 +18,7 @@
  * `mergeOption` in module:echarts/model/OptionManager.
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import Model from './Model';
 import ComponentModel from './Component';

@@ -2,7 +2,7 @@ import * as formatUtil from '../../util/format';
 import BaseAxisPointer from './BaseAxisPointer';
 import * as graphic from '../../util/graphic';
 import * as viewHelper from './viewHelper';
-import * as matrix from 'zrender/core/matrix';
+import * as matrix from 'zrender/src/core/matrix';
 import AxisBuilder from '../axis/AxisBuilder';
 import AxisView from '../axis/AxisView';
 

@@ -9,14 +9,14 @@
  * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
  */
 
-import * as zrender from 'zrender/zrender';
-import * as zrUtil from 'zrender/core/util';
-import * as colorTool from 'zrender/tool/color';
-import * as matrix from 'zrender/core/matrix';
-import * as vector from 'zrender/core/vector';
-import env from 'zrender/core/env';
-import timsort from 'zrender/core/timsort';
-import Eventful from 'zrender/mixin/Eventful';
+import * as zrender from 'zrender/src/zrender';
+import * as zrUtil from 'zrender/src/core/util';
+import * as colorTool from 'zrender/src/tool/color';
+import * as matrix from 'zrender/src/core/matrix';
+import * as vector from 'zrender/src/core/vector';
+import env from 'zrender/src/core/env';
+import timsort from 'zrender/src/core/timsort';
+import Eventful from 'zrender/src/mixin/Eventful';
 import GlobalModel from './model/Global';
 import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
@@ -1579,7 +1579,7 @@ export function init(dom, theme, opts) {
         // Check version
         if ((zrender.version.replace('.', '') - 0) < (dependencies.zrender.replace('.', '') - 0)) {
             throw new Error(
-                'ZRender ' + zrender.version
+                'zrender/src ' + zrender.version
                 + ' is too old for ECharts ' + version
                 + '. Current version need ZRender '
                 + dependencies.zrender + '+'

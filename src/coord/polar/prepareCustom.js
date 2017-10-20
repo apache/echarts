@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 function dataToCoordSize(dataSize, dataItem) {
     // dataItem is necessary in log axis.

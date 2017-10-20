@@ -1,5 +1,5 @@
 import * as echarts from '../../../echarts';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import BrushController from '../../helper/BrushController';
 import BrushTargetManager from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';

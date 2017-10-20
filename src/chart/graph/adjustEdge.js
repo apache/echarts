@@ -1,5 +1,5 @@
-import * as curveTool from 'zrender/core/curve';
-import * as vec2 from 'zrender/core/vector';
+import * as curveTool from 'zrender/src/core/curve';
+import * as vec2 from 'zrender/src/core/vector';
 
 var v1 = [];
 var v2 = [];

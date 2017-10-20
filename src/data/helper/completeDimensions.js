@@ -2,7 +2,7 @@
  * Complete dimensions by data (guess dimension).
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 
 var each = zrUtil.each;

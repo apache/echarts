@@ -1,5 +1,5 @@
 // Backward compat for radar chart in 2
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 export default function (option) {
     var polarOptArr = option.polar;

@@ -1,4 +1,4 @@
-import Gradient from 'zrender/graphic/Gradient';
+import Gradient from 'zrender/src/graphic/Gradient';
 
 export default function (ecModel) {
     function encodeColor(seriesModel) {

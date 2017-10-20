@@ -1,4 +1,4 @@
-import Path from 'zrender/graphic/Path';
+import Path from 'zrender/src/graphic/Path';
 
 export default Path.extend({
 

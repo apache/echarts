@@ -1,6 +1,6 @@
 import * as echarts from '../../echarts';
-import * as zrUtil from 'zrender/core/util';
-import env from 'zrender/core/env';
+import * as zrUtil from 'zrender/src/core/util';
+import env from 'zrender/src/core/env';
 import * as modelUtil from '../../util/model';
 import * as formatUtil from '../../util/format';
 

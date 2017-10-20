@@ -1,5 +1,5 @@
-import * as zrUtil from 'zrender/core/util';
-import env from 'zrender/core/env';
+import * as zrUtil from 'zrender/src/core/util';
+import env from 'zrender/src/core/env';
 import {
     formatTime,
     encodeHTML,

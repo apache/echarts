@@ -3,11 +3,11 @@
  * Mapping given x, y to transformd view x, y
  */
 
-import * as zrUtil from 'zrender/core/util';
-import * as vector from 'zrender/core/vector';
-import * as matrix from 'zrender/core/matrix';
-import BoundingRect from 'zrender/core/BoundingRect';
-import Transformable from 'zrender/mixin/Transformable';
+import * as zrUtil from 'zrender/src/core/util';
+import * as vector from 'zrender/src/core/vector';
+import * as matrix from 'zrender/src/core/matrix';
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import Transformable from 'zrender/src/mixin/Transformable';
 
 var v2ApplyTransform = vector.applyTransform;
 

@@ -2,7 +2,7 @@
 import List from '../../data/List';
 import completeDimensions from '../../data/helper/completeDimensions';
 import WhiskerBoxDraw from '../helper/WhiskerBoxDraw';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 export var seriesModelMixin = {
 

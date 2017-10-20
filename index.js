@@ -1,53 +1,52 @@
-/**
- * Export echarts as CommonJS module
- */
-module.exports = require('./src/echarts');
+import './src/config';
+
+export * from './src/echarts';
 
 // Import all charts and components
-require('./src/chart/line');
-require('./src/chart/bar');
-require('./src/chart/pie');
-require('./src/chart/scatter');
-require('./src/chart/radar');
+import './src/chart/line';
+import './src/chart/bar';
+import './src/chart/pie';
+import './src/chart/scatter';
+import './src/chart/radar';
 
-require('./src/chart/map');
-require('./src/chart/treemap');
-require('./src/chart/graph');
-require('./src/chart/gauge');
-require('./src/chart/funnel');
-require('./src/chart/parallel');
-require('./src/chart/sankey');
-require('./src/chart/boxplot');
-require('./src/chart/candlestick');
-require('./src/chart/effectScatter');
-require('./src/chart/lines');
-require('./src/chart/heatmap');
-require('./src/chart/pictorialBar');
-require('./src/chart/themeRiver');
-require('./src/chart/custom');
+import './src/chart/map';
+import './src/chart/treemap';
+import './src/chart/graph';
+import './src/chart/gauge';
+import './src/chart/funnel';
+import './src/chart/parallel';
+import './src/chart/sankey';
+import './src/chart/boxplot';
+import './src/chart/candlestick';
+import './src/chart/effectScatter';
+import './src/chart/lines';
+import './src/chart/heatmap';
+import './src/chart/pictorialBar';
+import './src/chart/themeRiver';
+import './src/chart/custom';
 
-require('./src/component/graphic');
-require('./src/component/grid');
-require('./src/component/legendScroll');
-require('./src/component/tooltip');
-require('./src/component/axisPointer');
-require('./src/component/polar');
-require('./src/component/geo');
-require('./src/component/parallel');
-require('./src/component/singleAxis');
-require('./src/component/brush');
-require('./src/component/calendar');
+import './src/component/graphic';
+import './src/component/grid';
+import './src/component/legendScroll';
+import './src/component/tooltip';
+import './src/component/axisPointer';
+import './src/component/polar';
+import './src/component/geo';
+import './src/component/parallel';
+import './src/component/singleAxis';
+import './src/component/brush';
+import './src/component/calendar';
 
-require('./src/component/title');
+import './src/component/title';
 
-require('./src/component/dataZoom');
-require('./src/component/visualMap');
+import './src/component/dataZoom';
+import './src/component/visualMap';
 
-require('./src/component/markPoint');
-require('./src/component/markLine');
-require('./src/component/markArea');
+import './src/component/markPoint';
+import './src/component/markLine';
+import './src/component/markArea';
 
-require('./src/component/timeline');
-require('./src/component/toolbox');
+import './src/component/timeline';
+import './src/component/toolbox';
 
-require('zrender/lib/vml/vml');
+import 'zrender/src/vml/vml';

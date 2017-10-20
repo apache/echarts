@@ -1,6 +1,6 @@
 import * as echarts from '../../echarts';
 import List from '../../data/List';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
 import completeDimensions from '../../data/helper/completeDimensions';

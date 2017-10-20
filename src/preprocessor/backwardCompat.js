@@ -1,6 +1,6 @@
 // Compatitable with 2.0
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import compatStyle from './helper/compatStyle';
 
 function get(opt, path) {

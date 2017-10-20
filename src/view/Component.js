@@ -1,4 +1,4 @@
-import Group from 'zrender/container/Group';
+import Group from 'zrender/src/container/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 

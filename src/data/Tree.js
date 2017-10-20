@@ -4,7 +4,7 @@
  * @module echarts/data/Tree
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import List from './List';
 import linkList from './helper/linkList';

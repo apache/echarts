@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../util/number';
 
 var STACK_PREFIX = '__ec_stack_';

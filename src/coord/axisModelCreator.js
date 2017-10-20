@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from './axisDefault';
 import ComponentModel from '../model/Component';
 import {

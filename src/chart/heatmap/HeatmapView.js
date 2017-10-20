@@ -1,7 +1,7 @@
 import * as echarts from '../../echarts';
 import * as graphic from '../../util/graphic';
 import HeatmapLayer from './HeatmapLayer';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 function getIsInPiecewiseRange(dataExtent, pieceList, selected) {
     var dataSpan = dataExtent[1] - dataExtent[0];

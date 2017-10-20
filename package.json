@@ -32,7 +32,7 @@
     "url": "https://github.com/ecomfe/echarts.git"
   },
   "scripts": {
-    "prepublish": "rm -r lib; node build/amd2common.js"
+    "prepublish": "rm -r lib; cp -r src lib"
   },
   "dependencies": {
     "zrender": "^3.6.2"
@@ -45,7 +45,6 @@
     "fs-extra": "^0.26.5",
     "glob": "^7.0.0",
     "rollup": "^0.50.0",
-    "rollup-plugin-commonjs": "^8.2.1",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-uglify": "^2.0.1",
     "zrender": "^3.6.2"

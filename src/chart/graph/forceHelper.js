@@ -1,4 +1,4 @@
-import * as vec2 from 'zrender/core/vector';
+import * as vec2 from 'zrender/src/core/vector';
 
 var scaleAndAdd = vec2.scaleAndAdd;
 

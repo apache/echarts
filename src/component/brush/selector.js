@@ -1,5 +1,5 @@
-import * as polygonContain from 'zrender/contain/polygon';
-import BoundingRect from 'zrender/core/BoundingRect';
+import * as polygonContain from 'zrender/src/contain/polygon';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 // Key of the first level is brushType: `line`, `rect`, `polygon`.
 // Key of the second level is chart element type: `point`, `rect`.

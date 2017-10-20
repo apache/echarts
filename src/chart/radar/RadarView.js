@@ -1,6 +1,6 @@
 import * as echarts from '../../echarts';
 import * as graphic from '../../util/graphic';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as symbolUtil from '../../util/symbol';
 
 function normalizeSymbolSize(symbolSize) {

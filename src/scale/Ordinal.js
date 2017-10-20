@@ -7,7 +7,7 @@
 
 // FIXME only one data
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
 
 var scaleProto = Scale.prototype;

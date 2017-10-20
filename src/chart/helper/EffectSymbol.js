@@ -3,7 +3,7 @@
  * @module echarts/chart/helper/EffectSymbol
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
 import {parsePercent} from '../../util/number';

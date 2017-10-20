@@ -3,7 +3,7 @@
  * @author Deqing Li(annong035@gmail.com)
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 
 export default function (ecModel, api) {

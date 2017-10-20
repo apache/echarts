@@ -1,5 +1,5 @@
 import * as graphic from '../../util/graphic';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 
 /**

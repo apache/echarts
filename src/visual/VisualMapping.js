@@ -1,5 +1,5 @@
-import * as zrUtil from 'zrender/core/util';
-import * as zrColor from 'zrender/tool/color';
+import * as zrUtil from 'zrender/src/core/util';
+import * as zrColor from 'zrender/src/tool/color';
 import {linearMap} from '../util/number';
 
 var each = zrUtil.each;

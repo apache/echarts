@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as formatUtil from './format';
 import * as nubmerUtil from './number';
 import Model from '../model/Model';

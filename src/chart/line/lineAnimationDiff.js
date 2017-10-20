@@ -1,6 +1,6 @@
 
-// var arrayDiff = require('zrender/core/arrayDiff');
-// 'zrender/core/arrayDiff' has been used before, but it did
+// var arrayDiff = require('zrender/src/core/arrayDiff');
+// 'zrender/src/core/arrayDiff' has been used before, but it did
 // not do well in performance when roam with fixed dataZoom window.
 
 function sign(val) {

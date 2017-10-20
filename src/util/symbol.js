@@ -1,8 +1,8 @@
 // Symbol factory
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from './graphic';
-import BoundingRect from 'zrender/core/BoundingRect';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 /**
  * Triangle shape

@@ -3,7 +3,7 @@
  * @module echarts/scale/Log
  */
 
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
 import * as numberUtil from '../util/number';
 

@@ -1,5 +1,5 @@
-import * as zrUtil from 'zrender/core/util';
-import BoundingRect from 'zrender/core/BoundingRect';
+import * as zrUtil from 'zrender/src/core/util';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import parseGeoJson from './parseGeoJson';
 import View from '../View';
 

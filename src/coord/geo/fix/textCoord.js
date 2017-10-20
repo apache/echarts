@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 
 var coordsOffsetMap = {
     '南海诸岛' : [32, 80],

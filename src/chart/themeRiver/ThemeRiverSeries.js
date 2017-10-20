@@ -6,7 +6,7 @@
 import completeDimensions from '../../data/helper/completeDimensions';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import nest from '../../util/array/nest';
 

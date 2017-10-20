@@ -1,7 +1,7 @@
-import * as zrUtil from 'zrender/core/util';
-import * as zrColor from 'zrender/tool/color';
-import * as eventUtil from 'zrender/core/event';
-import env from 'zrender/core/env';
+import * as zrUtil from 'zrender/src/core/util';
+import * as zrColor from 'zrender/src/tool/color';
+import * as eventUtil from 'zrender/src/core/event';
+import env from 'zrender/src/core/env';
 import * as formatUtil from '../../util/format';
 
 var each = zrUtil.each;

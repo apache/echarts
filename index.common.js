@@ -1,24 +1,23 @@
-/**
- * Export echarts as CommonJS module
- */
-module.exports = require('./src/echarts');
+import './src/config';
 
-require('./src/chart/line');
-require('./src/chart/bar');
-require('./src/chart/pie');
-require('./src/chart/scatter');
-require('./src/component/graphic');
-require('./src/component/tooltip');
-require('./src/component/axisPointer');
-require('./src/component/legendScroll');
+export * from './src/echarts';
 
-require('./src/component/grid');
-require('./src/component/title');
+import './src/chart/line';
+import './src/chart/bar';
+import './src/chart/pie';
+import './src/chart/scatter';
+import './src/component/graphic';
+import './src/component/tooltip';
+import './src/component/axisPointer';
+import './src/component/legendScroll';
 
-require('./src/component/markPoint');
-require('./src/component/markLine');
-require('./src/component/markArea');
-require('./src/component/dataZoom');
-require('./src/component/toolbox');
+import './src/component/grid';
+import './src/component/title';
 
-require('zrender/lib/vml/vml');
+import './src/component/markPoint';
+import './src/component/markLine';
+import './src/component/markArea';
+import './src/component/dataZoom';
+import './src/component/toolbox';
+
+import 'zrender/src/vml/vml';

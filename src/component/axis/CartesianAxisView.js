@@ -1,4 +1,4 @@
-import * as zrUtil from 'zrender/core/util';
+import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import AxisBuilder from './AxisBuilder';
 import AxisView from './AxisView';

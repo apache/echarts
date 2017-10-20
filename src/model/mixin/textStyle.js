@@ -1,4 +1,4 @@
-import * as textContain from 'zrender/contain/text';
+import * as textContain from 'zrender/src/contain/text';
 import * as graphicUtil from '../../util/graphic';
 
 var PATH_COLOR = ['textStyle', 'color'];

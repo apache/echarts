@@ -1,8 +1,8 @@
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';
-import * as lineContain from 'zrender/contain/line';
-import * as quadraticContain from 'zrender/contain/quadratic';
+import * as lineContain from 'zrender/src/contain/line';
+import * as quadraticContain from 'zrender/src/contain/quadratic';
 
 var LargeLineShape = graphic.extendShape({
     shape: {
