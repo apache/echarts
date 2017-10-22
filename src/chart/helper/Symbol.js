@@ -187,6 +187,12 @@ var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
 var normalLabelAccessPath = ['label', 'normal'];
 var emphasisLabelAccessPath = ['label', 'emphasis'];
 
+/**
+ * @param {module:echarts/data/List} data
+ * @param {number} idx
+ * @param {Array.<number>} symbolSize
+ * @param {Object} [seriesScope]
+ */
 symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     var symbolPath = this.childAt(0);
     var seriesModel = data.hostModel;
@@ -243,7 +249,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
     // PENDING setColor before setStyle!!!
-    seriesScope && symbolPath.setColor(color, seriesScope.symbolInnerColor);
+    symbolPath.setColor(color, seriesScope && seriesScope.symbolInnerColor);
 
     symbolPath.setStyle(itemStyle);
 

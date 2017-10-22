@@ -31,15 +31,15 @@
         <script>
 
             require([
-                'echarts',
-                'zrender/core/util',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/timeline'
-            ], function (echarts, zrUtil) {
-
+                'echarts'
+                // 'zrender/core/util',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/timeline'
+            ], function (echarts) {
+                var zrUtil = echarts.util;
                 makeChart({
                     timeline: {
                         label: {

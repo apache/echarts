@@ -20,19 +20,19 @@
             require([
                 'echarts',
 
-                'extension/dataTool/gexf',
+                'extension/dataTool',
 
-                'echarts/chart/graph',
+                // 'echarts/chart/graph',
 
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/geo',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
 
                 'theme/vintage'
-            ], function (echarts, gexf) {
-
+            ], function (echarts, dataTool) {
+                var gexf = dataTool.gexf;
                 var chart = echarts.init(document.getElementById('main'), 'vintage', {
                     renderer: 'canvas'
                 });

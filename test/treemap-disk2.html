@@ -51,13 +51,13 @@
             var formatUtil;
 
             require([
-                'echarts',
-                'echarts/util/format',
-                'echarts/component/tooltip',
-                'echarts/component/legend',
-                'echarts/chart/treemap'
-            ], function (echarts, format) {
-                formatUtil = format;
+                'echarts'
+                // 'echarts/util/format',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/legend',
+                // 'echarts/chart/treemap'
+            ], function (echarts) {
+                formatUtil = echarts.format;
                 initEcharts(echarts);
             });
 

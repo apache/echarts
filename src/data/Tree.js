@@ -420,12 +420,13 @@ Tree.prototype = {
  * @param {Object} dataRoot Root node.
  * @param {module:echarts/model/Model} hostModel
  * @param {Object} treeOptions
- * @param {Array.<Object>} treeOptions.levelOptions
+ * @param {Array.<Object>} treeOptions.levels
+ * @param {Array.<Object>} treeOptions.leaves
  * @return module:echarts/data/Tree
  */
 Tree.createTree = function (dataRoot, hostModel, treeOptions) {
 
-    var tree = new Tree(hostModel, treeOptions.levelOptions, treeOptions.leaves);
+    var tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
     var listData = [];
     var dimMax = 1;
 

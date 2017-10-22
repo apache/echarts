@@ -130,19 +130,19 @@
 
             require([
                 'echarts',
-                'data/stock-DJI.json',
-                'echarts/chart/candlestick',
-                'echarts/chart/line',
-                'echarts/chart/bar',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'echarts/component/toolbox',
-                'echarts/component/brush',
-                'echarts/component/markPoint',
-                'echarts/component/markLine'
+                'data/stock-DJI.json'
+                // 'echarts/chart/candlestick',
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/brush',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/markLine'
             ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main1'), null, {
@@ -433,15 +433,16 @@
 
             require([
                 'echarts',
-                'extension/dataTool/gexf',
-                'echarts/chart/graph',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/geo',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
+                'extension/dataTool',
+                // 'echarts/chart/graph',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
                 'theme/vintage'
-            ], function (echarts, gexf) {
+            ], function (echarts, dataTool) {
+                var gexf = dataTool.gexf;
 
                 var chart = echarts.init(document.getElementById('main2'), 'vintage');
 

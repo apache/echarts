@@ -4,24 +4,19 @@ require.config({
         'theme': '../theme',
         'data': './data',
         'map': '../map',
-        'extension': '../extension'
+        'extension': '../dist/extension'
     },
     packages: [
         {
             main: 'echarts',
             location: '../dist',
             name: 'echarts'
+        },
+        {
+            main: 'zrender',
+            location: '../../zrender/dist',
+            name: 'zrender'
         }
-        // {
-        //     main: 'echarts',
-        //     location: '../src',
-        //     name: 'echarts'
-        // },
-        // {
-        //     main: 'zrender',
-        //     location: '../../zrender/src',
-        //     name: 'zrender'
-        // }
     ]
     // urlArgs: '_v_=' + +new Date()
 });

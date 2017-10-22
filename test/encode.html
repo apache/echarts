@@ -38,13 +38,13 @@
 
             require([
                 'echarts',
-                'data/security-sh-2013.json',
-                'echarts/chart/line',
-                'echarts/chart/candlestick',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'data/security-sh-2013.json'
+                // 'echarts/chart/line',
+                // 'echarts/chart/candlestick',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts, rawData) {
 
                 var dom = document.getElementById('dim');
@@ -156,15 +156,17 @@
 
             require([
                 'echarts',
-                'extension/dataTool/prepareBoxplotData',
-                'echarts/chart/boxplot',
-                'echarts/chart/scatter',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom'
-            ], function (echarts, prepareBoxplotData) {
+                'extension/dataTool'
+                // 'echarts/chart/boxplot',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom'
+            ], function (echarts, dataTool) {
+
+                var prepareBoxplotData = dataTool.prepareBoxplotData;
 
                 data = [];
                 for (var seriesIndex = 0; seriesIndex < 5; seriesIndex++) {
@@ -273,12 +275,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
                 data = [
                     ['Blouse "Blue Viola"', 101.88, 99.75, 23, 17, 32, 18],

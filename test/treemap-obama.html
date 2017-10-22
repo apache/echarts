@@ -90,11 +90,11 @@
             var SERIES_NAME = 'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent';
 
             require([
-                'echarts',
-                'echarts/util/format',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/chart/treemap'
+                'echarts'
+                // 'echarts/util/format',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/chart/treemap'
             ], init);
 
             function areaMeasureChange(mode) {
@@ -272,9 +272,9 @@
                 }
             }
 
-            function init(echarts, format) {
+            function init(echarts) {
 
-                formatUtil = format;
+                formatUtil = echarts.format;
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'

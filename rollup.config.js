@@ -36,12 +36,6 @@ function getPlugins(min, en) {
     return plugins;
 }
 
-// ??????????
-// en lang
-
-// ??????????
-// prepublish
-
 function createEChartsBuild(type, opt) {
     type && (type = '.' + type);
     let postfixMin = opt.min ? '.min' : '';
@@ -58,7 +52,7 @@ function createEChartsBuild(type, opt) {
             file: `dist/echarts${postfixEN}${type}${postfixMin}.js`
         },
         watch: {
-            include: ['./src/**', './index*.js']
+            include: ['./src/**', './index*.js', '../zrender/src/**']
         }
     };
 }

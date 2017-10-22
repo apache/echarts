@@ -28,18 +28,18 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/parallel',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap'
-            ], function (ec, ct) {
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/parallel',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap'
+            ], function (ec) {
 
                 $.getJSON('./data/nutrients.json', function (data) {
                     echarts = ec;
-                    colorTool = ct;
+                    colorTool = echarts.color;
 
                     normalizeData(data);
 
