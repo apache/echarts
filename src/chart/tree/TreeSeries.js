@@ -96,7 +96,7 @@ export default SeriesModel.extend({
 
         expandAndCollapse: true,
 
-        initialTreeDepth: 1,
+        initialTreeDepth: 2,
 
         lineStyle: {
             normal: {

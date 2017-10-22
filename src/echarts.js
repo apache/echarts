@@ -350,6 +350,7 @@ echartsProto.getDevicePixelRatio = function () {
  * Get canvas which has all thing rendered
  * @param {Object} opts
  * @param {string} [opts.backgroundColor]
+ * @return {string}
  */
 echartsProto.getRenderedCanvas = function (opts) {
     if (!env.canvasSupported) {
@@ -367,6 +368,26 @@ echartsProto.getRenderedCanvas = function (opts) {
     });
     return zr.painter.getRenderedCanvas(opts);
 };
+
+/**
+ * Get svg data url
+ * @return {string}
+ */
+echartsProto.getSvgDataUrl = function () {
+    if (!env.svgSupported) {
+        return;
+    }
+
+    var zr = this._zr;
+    var list = zr.storage.getDisplayList();
+    // Stop animations
+    zrUtil.each(list, function (el) {
+        el.stopAnimation(true);
+    });
+
+    return zr.painter.pathToSvg();
+};
+
 /**
  * @return {string}
  * @param {Object} opts
@@ -394,13 +415,16 @@ echartsProto.getDataURL = function (opts) {
         });
     });
 
-    var url = this.getRenderedCanvas(opts).toDataURL(
-        'image/' + (opts && opts.type || 'png')
-    );
+    var url = this._zr.painter.getType() === 'svg'
+        ? this.getSvgDataUrl()
+        : this.getRenderedCanvas(opts).toDataURL(
+            'image/' + (opts && opts.type || 'png')
+        );
 
     each(excludesComponentViews, function (view) {
         view.group.ignore = false;
     });
+
     return url;
 };
 
