@@ -133,6 +133,7 @@ var InsideZoomView = DataZoomView.extend({
 
         // Restrict range.
         var minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
         return (this._range = range);

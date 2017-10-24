@@ -447,13 +447,15 @@ function setMinMaxSpan(axisProxy) {
 
         // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
         var valueSpan = dataZoomModel.get(minMax + 'ValueSpan');
+
         if (valueSpan != null) {
             minMaxSpan[minMax + 'ValueSpan'] = valueSpan;
-
             valueSpan = axisProxy.getAxisModel().axis.scale.parse(valueSpan);
+
             if (valueSpan != null) {
+                var dataExtent = axisProxy._dataExtent;
                 minMaxSpan[minMax + 'Span'] = numberUtil.linearMap(
-                    valueSpan, axisProxy._dataExtent, [0, 100], true
+                    dataExtent[0] + valueSpan, dataExtent, [0, 100], true
                 );
             }
         }
