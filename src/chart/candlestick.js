@@ -2,7 +2,6 @@ import * as echarts from '../echarts';
 
 import './candlestick/CandlestickSeries';
 import './candlestick/CandlestickView';
-import './candlestick/CandlestickView';
 import preprocessor from './candlestick/preprocessor';
 
 import candlestickVisual from './candlestick/candlestickVisual';
