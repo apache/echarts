@@ -47,7 +47,8 @@ if (typeof navigator === 'undefined') {
         os: {},
         node: true,
         // Assume canvas is supported
-        canvasSupported: true
+        canvasSupported: true,
+        svgSupported: true
     };
 }
 else {
@@ -144,7 +145,8 @@ function detect(ua) {
         node: false,
         // 原生canvas支持，改极端点了
         // canvasSupported : !(browser.ie && parseFloat(browser.version) < 9)
-        canvasSupported : document.createElement('canvas').getContext ? true : false,
+        canvasSupported: !!document.createElement('canvas').getContext,
+        svgSupported: typeof SVGRect !== 'undefined',
         // @see <http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript>
         // works on most browsers
         // IE10/11 does not support touch event, and MS Edge supports them but not by
@@ -1092,7 +1094,7 @@ function sub(out, v1, v2) {
  * @return {number}
  */
 function len(v) {
-    return Math.sqrt(this.lenSquare(v));
+    return Math.sqrt(lenSquare(v));
 }
 var length = len; // jshint ignore:line
 
@@ -13401,7 +13403,7 @@ var CompoundPath = Path.extend({
     },
 
     afterBrush: function () {
-        var paths = this.shape.paths;
+        var paths = this.shape.paths || [];
         for (var i = 0; i < paths.length; i++) {
             paths[i].__dirtyPath = false;
         }
@@ -25390,6 +25392,7 @@ echartsProto.getDevicePixelRatio = function () {
  * Get canvas which has all thing rendered
  * @param {Object} opts
  * @param {string} [opts.backgroundColor]
+ * @return {string}
  */
 echartsProto.getRenderedCanvas = function (opts) {
     if (!env$1.canvasSupported) {
@@ -25407,6 +25410,26 @@ echartsProto.getRenderedCanvas = function (opts) {
     });
     return zr.painter.getRenderedCanvas(opts);
 };
+
+/**
+ * Get svg data url
+ * @return {string}
+ */
+echartsProto.getSvgDataUrl = function () {
+    if (!env$1.svgSupported) {
+        return;
+    }
+
+    var zr = this._zr;
+    var list = zr.storage.getDisplayList();
+    // Stop animations
+    each$1(list, function (el) {
+        el.stopAnimation(true);
+    });
+
+    return zr.painter.pathToSvg();
+};
+
 /**
  * @return {string}
  * @param {Object} opts
@@ -25434,13 +25457,16 @@ echartsProto.getDataURL = function (opts) {
         });
     });
 
-    var url = this.getRenderedCanvas(opts).toDataURL(
-        'image/' + (opts && opts.type || 'png')
-    );
+    var url = this._zr.painter.getType() === 'svg'
+        ? this.getSvgDataUrl()
+        : this.getRenderedCanvas(opts).toDataURL(
+            'image/' + (opts && opts.type || 'png')
+        );
 
     each(excludesComponentViews, function (view) {
         view.group.ignore = false;
     });
+
     return url;
 };
 
@@ -27307,6 +27333,12 @@ var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
 var normalLabelAccessPath = ['label', 'normal'];
 var emphasisLabelAccessPath = ['label', 'emphasis'];
 
+/**
+ * @param {module:echarts/data/List} data
+ * @param {number} idx
+ * @param {Array.<number>} symbolSize
+ * @param {Object} [seriesScope]
+ */
 symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     var symbolPath = this.childAt(0);
     var seriesModel = data.hostModel;
@@ -27363,7 +27395,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
     // PENDING setColor before setStyle!!!
-    seriesScope && symbolPath.setColor(color, seriesScope.symbolInnerColor);
+    symbolPath.setColor(color, seriesScope && seriesScope.symbolInnerColor);
 
     symbolPath.setStyle(itemStyle);
 
@@ -37622,12 +37654,13 @@ Tree.prototype = {
  * @param {Object} dataRoot Root node.
  * @param {module:echarts/model/Model} hostModel
  * @param {Object} treeOptions
- * @param {Array.<Object>} treeOptions.levelOptions
+ * @param {Array.<Object>} treeOptions.levels
+ * @param {Array.<Object>} treeOptions.leaves
  * @return module:echarts/data/Tree
  */
 Tree.createTree = function (dataRoot, hostModel, treeOptions) {
 
-    var tree = new Tree(hostModel, treeOptions.levelOptions, treeOptions.leaves);
+    var tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
     var listData = [];
     var dimMax = 1;
 
@@ -62537,13 +62570,15 @@ function setMinMaxSpan(axisProxy) {
 
         // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
         var valueSpan = dataZoomModel.get(minMax + 'ValueSpan');
+
         if (valueSpan != null) {
             minMaxSpan[minMax + 'ValueSpan'] = valueSpan;
-
             valueSpan = axisProxy.getAxisModel().axis.scale.parse(valueSpan);
+
             if (valueSpan != null) {
+                var dataExtent = axisProxy._dataExtent;
                 minMaxSpan[minMax + 'Span'] = linearMap(
-                    valueSpan, axisProxy._dataExtent, [0, 100], true
+                    dataExtent[0] + valueSpan, dataExtent, [0, 100], true
                 );
             }
         }
@@ -64352,6 +64387,7 @@ var InsideZoomView = DataZoomView.extend({
 
         // Restrict range.
         var minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
         return (this._range = range);
@@ -72445,4 +72481,7 @@ exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 })));
+//# sourceMappingURL=echarts-en.js.map

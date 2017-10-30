@@ -324,5 +324,7 @@ exports.version = version;
 exports.gexf = gexf;
 exports.prepareBoxplotData = prepareBoxplotData;
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 })));
 //# sourceMappingURL=dataTool.js.map

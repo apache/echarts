@@ -121,6 +121,13 @@ ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visu
 
 + [Node-Echarts](https://github.com/suxiaoxin/node-echarts) by suxiaoxin
 
+## Build
+
++ Release: `node <echarts_dir>/build/build.js`.
++ Watch: `node <echarts_dir>/build/build.js -w`.
++ Build with specified language: `node <echarts_dir>/build/build.js --lang xx`, where `xx` is the shortcut of the language, and a corresponding file `langXX.js` is required in `<echarts_dir>`.
++ Other usages: `node <echarts_dir>/build/build.js -h`.
+
 ## License
 
 ECharts is available under the BSD license.
