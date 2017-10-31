@@ -284,8 +284,8 @@
         context.require = null;
 
         // Import esl.
-        helper.loadScript('../esl.js', 'esl', function () {
-            helper.loadScript('config.js', 'config', function () {
+        helper.loadScript('../lib/esl.js', 'esl', function () {
+            helper.loadScript('lib/config.js', 'config', function () {
                 then();
             });
         });
