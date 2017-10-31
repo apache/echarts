@@ -26,7 +26,6 @@
     "debug": false,
     "eqnull": true,
     "esversion": 6,
-    "module": true,
     "evil": true,
     "expr": true,
     "funcscope": false,
@@ -64,8 +63,14 @@
     "passfail": false,
     "white": false,
 
+    "varstmt": true,
+
     "predef": [
         "__DEV__",
-        "global"
+        "global",
+        "require",
+        "exports",
+        "Buffer",
+        "__dirname"
     ]
 }
