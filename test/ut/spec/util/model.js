@@ -2,7 +2,7 @@ describe('util/model', function() {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/util/model', 'echarts/model/Model']);
+    var testCase = utHelper.prepare(['echarts/src/util/model', 'echarts/src/model/Model']);
 
 
     describe('compressBatches', function () {

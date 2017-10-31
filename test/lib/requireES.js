@@ -2,10 +2,7 @@
  * Load es modules in browser.
  * rollup.browser.js is required.
  *
- * Caution: Modules are not shared between different
- * calling of `simpleModuleLoader.load()`.
- *
- * Usage:
+ * [Usage]:
  *
  * // AMD config like.
  * requireES.config({
@@ -15,7 +12,8 @@
  *     },
  *     packages: [
  *         {...}, ...
- *     ]
+ *     ],
+ *     urlArgs: +new Date()
  * });
  *
  * requireES([
@@ -25,10 +23,15 @@
  *     ...
  * });
  *
- * requireES.remove([
- *     'xxx/moduleA',
- *     'yyy/moduleB'
- * ]);
+ * [Caution]:
+ *
+ * 1) Modules are not shared between different
+ * calling of `simpleModuleLoader.load()`.
+ *
+ * 2) Whether import `*` or `default` is determined
+ * by module itself. That is, if the module only
+ * export `default` (like `xxx/SomeClz`), we import
+ * `default`, otherwise import `*` (like `xxx/util`).
  */
 
 /* global define, ActiveXObject */
@@ -44,7 +47,8 @@
     var amdCfg = {
         baseUrl: cwd(),
         paths: {},
-        packages: []
+        packages: [],
+        urlArgs: null
     };
 
     /**
@@ -55,7 +59,7 @@
      * @param {Object} [cfg.paths]
      */
     function amdConfig(cfg) {
-        if (cfg.baseUrl) {
+        if (cfg.baseUrl != null) {
             amdCfg.baseUrl = resolve(cwd(), cfg.baseUrl);
         }
         if (cfg.paths) {
@@ -66,6 +70,9 @@
             for (var i = 0; i < cfg.packages.length; i++) {
                 amdCfg.packages[i] = extend({}, cfg.packages[i]);
             }
+        }
+        if (cfg.urlArgs != null) {
+            amdCfg.urlArgs = cfg.urlArgs;
         }
     }
 
@@ -96,7 +103,10 @@
                         return importee;
                     }
                     // console.log('resolveid', importee, importor);
-                    return resolvePath(importee, importor);
+                    return getAbsolutePath(
+                        importee,
+                        importor !== TOP_MODULE_NAME ? importor : null
+                    );
                 },
                 load: function (path) {
                     if (path === TOP_MODULE_NAME) {
@@ -124,13 +134,30 @@
 
             var exportsList = [];
             for (var i = 0; i < moduleIds.length; i++) {
-                exportsList.push(modules['m' + i]);
+                var mod = modules['m' + i];
+                // Guess whether `*` or `default` is required: if only `default`
+                // exported, like 'xxx/SomeClz', `default` is required.
+                if (onlyDefaultExported(mod)) {
+                    mod = mod['default'];
+                }
+                exportsList.push(mod);
             }
             onload && onload.apply(null, exportsList);
         });
     }
 
     requireES.config = amdConfig;
+
+    function onlyDefaultExported(mod) {
+        for (var name in mod) {
+            if (mod.hasOwnProperty(name)) {
+                if (name !== 'default') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     function generateTopModuleCode(moduleIds) {
         var code = [];
@@ -147,8 +174,8 @@
         return code.join('\n');
     }
 
-    // Get absolute path. `refPath` can be omitted if moduleId is absolute.
-    function resolvePath(moduleId, basePath) {
+    // Get absolute path. `basePath` can be omitted if moduleId is absolute.
+    function getAbsolutePath(moduleId, basePath) {
         moduleId = addExt(moduleId);
 
         for (var path in amdCfg.paths) {
@@ -177,6 +204,10 @@
             moduleId = resolve(dir(basePath), moduleId);
         }
 
+        if (moduleId.charAt(0) !== '/') {
+            throw new Error('"' + moduleId + '" can not be found.');
+        }
+
         return moduleId;
     }
 
@@ -188,6 +219,10 @@
     }
 
     function ajax(toUrl) {
+        if (amdCfg.urlArgs != null) {
+            toUrl += '?' + amdCfg.urlArgs;
+        }
+
         return new Promise(function (promiseResolve, promiseReject) {
             var xhr = window.XMLHttpRequest
                 ? new XMLHttpRequest()

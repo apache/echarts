@@ -3,11 +3,11 @@ describe('scale_interval', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/scale/helper',
-        'echarts/util/number',
-        'echarts/component/grid',
-        'echarts/chart/line',
-        'echarts/chart/bar'
+        'echarts/src/scale/helper',
+        'echarts/src/util/number',
+        'echarts/src/component/grid',
+        'echarts/src/chart/line',
+        'echarts/src/chart/bar'
     ]);
 
     describe('extreme', function () {

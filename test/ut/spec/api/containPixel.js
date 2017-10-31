@@ -5,13 +5,13 @@ describe('api/containPixel', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/chart/pie',
-        'echarts/chart/map',
-        'echarts/chart/scatter',
-        'echarts/chart/graph',
-        'echarts/component/geo',
-        'echarts/component/grid',
-        'echarts/component/polar'
+        'echarts/src/chart/pie',
+        'echarts/src/chart/map',
+        'echarts/src/chart/scatter',
+        'echarts/src/chart/graph',
+        'echarts/src/component/geo',
+        'echarts/src/component/grid',
+        'echarts/src/component/polar'
     ]);
 
     var testGeoJson1 = {

@@ -4,11 +4,9 @@ describe('dataZoom/helper', function() {
     var helper;
 
     beforeAll(function (done) { // jshint ignore:line
-        utHelper.resetPackageLoader(function () {
-            window.require(['echarts/component/dataZoom/helper'], function (h) {
-                helper = h;
-                done();
-            });
+        window.requireES(['echarts/src/component/dataZoom/helper'], function (h) {
+            helper = h;
+            done();
         });
     });
 
