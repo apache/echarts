@@ -45,7 +45,9 @@ define(function (require) {
                 color: '#333',
                 width: 1,
                 type: 'solid'
-            }
+            },
+            symbol: ['none', 'none'],
+            symbolSize: [10, 15]
         },
         // 坐标轴小标记
         axisTick: {
