@@ -20,16 +20,18 @@
             require([
                 'echarts',
 
-                'extension/dataTool/gexf',
+                'extension/dataTool'
 
-                'echarts/chart/graph',
+                // 'echarts/chart/graph',
 
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/geo',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap'
-            ], function (echarts, gexf) {
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap'
+            ], function (echarts, dataTool) {
+
+                var gexf = dataTool.gexf;
 
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'

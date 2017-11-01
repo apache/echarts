@@ -1,9 +1,6 @@
 /**
  * visualMap component entry
  */
-define(function (require) {
 
-    require('./visualMapContinuous');
-    require('./visualMapPiecewise');
-
-});
+import './visualMapContinuous';
+import './visualMapPiecewise';

@@ -18,15 +18,15 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/chord',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/chord',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
-                chart.setOption({                    
+                chart.setOption({
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {

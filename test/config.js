@@ -4,17 +4,17 @@ require.config({
         'theme': '../theme',
         'data': './data',
         'map': '../map',
-        'extension': '../extension'
+        'extension': '../dist/extension'
     },
     packages: [
         {
             main: 'echarts',
-            location: '../src',
+            location: '../dist',
             name: 'echarts'
         },
         {
             main: 'zrender',
-            location: '../../zrender/src',
+            location: '../../zrender/dist',
             name: 'zrender'
         }
     ]

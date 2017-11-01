@@ -27,27 +27,27 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/line',
-                'echarts/chart/bar',
-                'echarts/chart/pie',
-                'echarts/chart/scatter',
-                'echarts/chart/map',
-                'echarts/chart/parallel',
-                'echarts/chart/radar',
-                'echarts/component/grid',
-                'echarts/component/polar',
-                'echarts/component/geo',
-                'echarts/component/singleAxis',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom'
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/pie',
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/map',
+                // 'echarts/chart/parallel',
+                // 'echarts/chart/radar',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/geo',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
             ], function (ec, ct) {
                 echarts = ec;
-                colorTool = ct;
+                colorTool = echarts.color;
                 chart = myChart = echarts.init(document.getElementById('main'));
 
                 option = {

@@ -20,11 +20,11 @@
 
             require([
                 'echarts',
-                'echarts/chart/lines',
-                'echarts/component/legend',
-                'echarts/component/geo',
-                'echarts/chart/effectScatter',
-                'extension/bmap/bmap'
+                // 'echarts/chart/lines',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/chart/effectScatter',
+                'extension/bmap'
             ], function (echarts) {
                 $.get('../map/json/china.json', function (json) {
                     echarts.registerMap('china', json);

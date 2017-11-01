@@ -1,11 +1,10 @@
 // HINT Markpoint can't be used too much
-define(function (require) {
+import * as echarts from '../echarts';
 
-    require('./marker/MarkPointModel');
-    require('./marker/MarkPointView');
+import './marker/MarkPointModel';
+import './marker/MarkPointView';
 
-    require('../echarts').registerPreprocessor(function (opt) {
-        // Make sure markPoint component is enabled
-        opt.markPoint = opt.markPoint || {};
-    });
+echarts.registerPreprocessor(function (opt) {
+    // Make sure markPoint component is enabled
+    opt.markPoint = opt.markPoint || {};
 });

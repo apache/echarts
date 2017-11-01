@@ -1,21 +1,17 @@
-/**
- * @file Data zoom model
- */
-define(function(require) {
+import DataZoomModel from './DataZoomModel';
 
-    return require('./DataZoomModel').extend({
+export default DataZoomModel.extend({
 
-        type: 'dataZoom.inside',
+    type: 'dataZoom.inside',
 
-        /**
-         * @protected
-         */
-        defaultOption: {
-            disabled: false,   // Whether disable this inside zoom.
-            zoomLock: false,   // Whether disable zoom but only pan.
-            zoomOnMouseWheel: true, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
-            moveOnMouseMove: true,   // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
-            preventDefaultMouseMove: true
-        }
-    });
+    /**
+     * @protected
+     */
+    defaultOption: {
+        disabled: false,   // Whether disable this inside zoom.
+        zoomLock: false,   // Whether disable zoom but only pan.
+        zoomOnMouseWheel: true, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
+        moveOnMouseMove: true,   // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
+        preventDefaultMouseMove: true
+    }
 });

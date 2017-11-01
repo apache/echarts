@@ -32,19 +32,22 @@
     "url": "https://github.com/ecomfe/echarts.git"
   },
   "scripts": {
-    "prepublish": "rm -r lib; node build/amd2common.js"
+    "prepublish": "rm -r lib; cp -r src lib"
   },
   "dependencies": {
     "zrender": "^3.6.2"
   },
   "devDependencies": {
+    "commander": "^2.11.0",
     "coordtransform": "^2.0.2",
     "escodegen": "^1.8.0",
     "esprima": "^2.7.2",
     "estraverse": "^4.1.1",
-    "fs-extra": "^0.26.5",
+    "fs-extra": "^0.26.7",
     "glob": "^7.0.0",
-    "webpack": "^1.12.13",
+    "rollup": "^0.50.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-uglify": "^2.0.1",
     "zrender": "^3.6.2"
   }
 }

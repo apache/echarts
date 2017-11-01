@@ -22,18 +22,18 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/scatter',
-                'echarts/chart/graph',
-                'echarts/component/singleAxis',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/dataZoom',
-                'echarts/component/visualMap'
-            ], function (ec, ct) {
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/graph',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/visualMap'
+            ], function (ec) {
                 echarts = ec;
-                colorTool = ct;
+                colorTool = echarts.color;
 
 
 

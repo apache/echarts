@@ -1,17 +1,14 @@
-define(function (require) {
+import * as echarts from '../echarts';
+import * as zrUtil from 'zrender/src/core/util';
 
-    var echarts = require('../echarts');
-    var zrUtil = require('zrender/core/util');
+import './tree/TreeSeries';
+import './tree/TreeView';
+import './tree/treeAction';
 
-    require('./tree/TreeSeries');
-    require('./tree/TreeView');
-    require('./tree/treeAction');
+import visualSymbol from '../visual/symbol';
+import orthogonalLayout from './tree/orthogonalLayout';
+import radialLayout from './tree/radialLayout';
 
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'tree', 'circle', null
-    ));
-
-    echarts.registerLayout(require('./tree/orthogonalLayout'));
-    echarts.registerLayout(require('./tree/radialLayout'));
-
-});
+echarts.registerVisual(zrUtil.curry(visualSymbol, 'tree', 'circle', null));
+echarts.registerLayout(orthogonalLayout);
+echarts.registerLayout(radialLayout);

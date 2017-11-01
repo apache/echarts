@@ -16,13 +16,14 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/util/graphic',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip'
-            ], function (echarts, graphic) {
+                'echarts'
+                // 'echarts/util/graphic',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
+            ], function (echarts) {
+                var graphic = echarts.graphic;
 
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'

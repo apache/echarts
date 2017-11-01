@@ -1,35 +1,31 @@
-define(function (require) {
+import * as echarts from '../echarts';
 
-    var echarts = require('../echarts');
-    var PRIORITY = echarts.PRIORITY;
+import './map/MapSeries';
+import './map/MapView';
+import '../action/geoRoam';
+import '../coord/geo/geoCreator';
 
-    require('./map/MapSeries');
+import mapSymbolLayout from './map/mapSymbolLayout';
+import mapVisual from './map/mapVisual';
+import mapDataStatistic from './map/mapDataStatistic';
+import backwardCompat from './map/backwardCompat';
+import createDataSelectAction from '../action/createDataSelectAction';
 
-    require('./map/MapView');
+echarts.registerLayout(mapSymbolLayout);
+echarts.registerVisual(mapVisual);
+echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, mapDataStatistic);
+echarts.registerPreprocessor(backwardCompat);
 
-    require('../action/geoRoam');
-
-    require('../coord/geo/geoCreator');
-
-    echarts.registerLayout(require('./map/mapSymbolLayout'));
-
-    echarts.registerVisual(require('./map/mapVisual'));
-
-    echarts.registerProcessor(PRIORITY.PROCESSOR.STATISTIC, require('./map/mapDataStatistic'));
-
-    echarts.registerPreprocessor(require('./map/backwardCompat'));
-
-    require('../action/createDataSelectAction')('map', [{
-        type: 'mapToggleSelect',
-        event: 'mapselectchanged',
-        method: 'toggleSelected'
-    }, {
-        type: 'mapSelect',
-        event: 'mapselected',
-        method: 'select'
-    }, {
-        type: 'mapUnSelect',
-        event: 'mapunselected',
-        method: 'unSelect'
-    }]);
-});
+createDataSelectAction('map', [{
+    type: 'mapToggleSelect',
+    event: 'mapselectchanged',
+    method: 'toggleSelected'
+}, {
+    type: 'mapSelect',
+    event: 'mapselected',
+    method: 'select'
+}, {
+    type: 'mapUnSelect',
+    event: 'mapunselected',
+    method: 'unSelect'
+}]);

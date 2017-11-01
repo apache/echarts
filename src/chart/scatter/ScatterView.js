@@ -1,44 +1,42 @@
-define(function (require) {
+import * as echarts from '../../echarts';
+import SymbolDraw from '../helper/SymbolDraw';
+import LargeSymbolDraw from '../helper/LargeSymbolDraw';
 
-    var SymbolDraw = require('../helper/SymbolDraw');
-    var LargeSymbolDraw = require('../helper/LargeSymbolDraw');
+echarts.extendChartView({
 
-    require('../../echarts').extendChartView({
+    type: 'scatter',
 
-        type: 'scatter',
+    init: function () {
+        this._normalSymbolDraw = new SymbolDraw();
+        this._largeSymbolDraw = new LargeSymbolDraw();
+    },
 
-        init: function () {
-            this._normalSymbolDraw = new SymbolDraw();
-            this._largeSymbolDraw = new LargeSymbolDraw();
-        },
+    render: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        var largeSymbolDraw = this._largeSymbolDraw;
+        var normalSymbolDraw = this._normalSymbolDraw;
+        var group = this.group;
 
-        render: function (seriesModel, ecModel, api) {
-            var data = seriesModel.getData();
-            var largeSymbolDraw = this._largeSymbolDraw;
-            var normalSymbolDraw = this._normalSymbolDraw;
-            var group = this.group;
+        var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
+            ? largeSymbolDraw : normalSymbolDraw;
 
-            var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
-                ? largeSymbolDraw : normalSymbolDraw;
+        this._symbolDraw = symbolDraw;
+        symbolDraw.updateData(data);
+        group.add(symbolDraw.group);
 
-            this._symbolDraw = symbolDraw;
-            symbolDraw.updateData(data);
-            group.add(symbolDraw.group);
+        group.remove(
+            symbolDraw === largeSymbolDraw
+            ? normalSymbolDraw.group : largeSymbolDraw.group
+        );
+    },
 
-            group.remove(
-                symbolDraw === largeSymbolDraw
-                ? normalSymbolDraw.group : largeSymbolDraw.group
-            );
-        },
+    updateLayout: function (seriesModel) {
+        this._symbolDraw.updateLayout(seriesModel);
+    },
 
-        updateLayout: function (seriesModel) {
-            this._symbolDraw.updateLayout(seriesModel);
-        },
+    remove: function (ecModel, api) {
+        this._symbolDraw && this._symbolDraw.remove(api, true);
+    },
 
-        remove: function (ecModel, api) {
-            this._symbolDraw && this._symbolDraw.remove(api, true);
-        },
-
-        dispose: function () {}
-    });
+    dispose: function () {}
 });

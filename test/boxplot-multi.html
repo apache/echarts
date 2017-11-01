@@ -23,16 +23,16 @@
 
             require([
                 'echarts',
-                'extension/dataTool/prepareBoxplotData',
-                'echarts/chart/boxplot',
-                'echarts/chart/scatter',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom'
-            ], function (echarts, prepareBoxplotData) {
-
+                'extension/dataTool',
+                // 'echarts/chart/boxplot',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom'
+            ], function (echarts, dataTool) {
+                var prepareBoxplotData = dataTool.prepareBoxplotData;
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
