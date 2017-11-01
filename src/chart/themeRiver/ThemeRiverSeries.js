@@ -30,7 +30,7 @@ var ThemeRiverSeries = SeriesModel.extend({
     init: function (option) {
         ThemeRiverSeries.superApply(this, 'init', arguments);
 
-        // Put this function here is for the sake of consistency of code
+        // Put this function here is for the sake of consistency of code style.
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
         this.legendDataProvider = function () {

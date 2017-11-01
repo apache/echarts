@@ -19,7 +19,6 @@ export default echarts.extendChartView({
 
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-        var rawData = seriesModel.getRawData();
 
         if (!data.count()) {
             return;
@@ -69,7 +68,7 @@ export default echarts.extendChartView({
                 points0.push([x, y0]);
                 points1.push([x, y0 + y]);
 
-                color = rawData.getItemVisual(indices[j], 'color');
+                color = data.getItemVisual(indices[j], 'color');
             }
 
             var polygon;
