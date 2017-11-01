@@ -433,12 +433,8 @@ var DataZoomModel = echarts.extendComponentModel({
      * @param {boolean} [ignoreUpdateRangeUsg=false]
      */
     setRawRange: function (opt, ignoreUpdateRangeUsg) {
-        each(['start', 'end', 'startValue', 'endValue'], function (name) {
-            // If any of those prop is null/undefined, we should alos set
-            // them, because only one pair between start/end and
-            // startValue/endValue can work.
-            this.option[name] = opt[name];
-        }, this);
+        setOneSide(opt, this.option, 'start');
+        setOneSide(opt, this.option, 'end');
 
         !ignoreUpdateRangeUsg && updateRangeUse(this, opt);
     },
@@ -513,6 +509,24 @@ var DataZoomModel = echarts.extendComponentModel({
     }
 
 });
+
+// percentName: 'start' or 'end', valueName: 'startValue' or 'endValue'
+function setOneSide(inputParams, option, percentName) {
+    var names = [percentName, percentName + 'Value'];
+    var hasValueIdx;
+    each(names, function (name, index) {
+        if (inputParams[name] != null) {
+            option[name] = inputParams[name];
+            hasValueIdx = index;
+        }
+    });
+    // If only 'start' or 'startValue' is set in inputParams and then assigned
+    // to option, the other one should be cleared in option. because only one
+    // pair between start/end and startValue/endValue can work.
+    if (hasValueIdx != null) {
+        option[names[1 - hasValueIdx]] = null;
+    }
+}
 
 function retrieveRaw(option) {
     var ret = {};

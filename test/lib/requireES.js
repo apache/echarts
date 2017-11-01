@@ -26,13 +26,11 @@
  *
  * [Caution]:
  *
- * 1) Modules are not shared between different
- * calling of `simpleModuleLoader.load()`.
+ * 1) Modules are not shared between different calling of `requireES(...)`.
  *
- * 2) Whether import `*` or `default` is determined
- * by module itself. That is, if the module only
- * export `default` (like `xxx/SomeClz`), we import
- * `default`, otherwise import `*` (like `xxx/util`).
+ * 2) Whether import `*` or `default` is determined by the module itself.
+ * That is, if the module (like `xxx/SomeClz`) only export `default` , it
+ * imports `default`, otherwise (like `xxx/util`) it imports `*`.
  */
 
 /* global define, ActiveXObject */
