@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-let fsExtra = require('fs-extra');
-let {resolve} = require('path');
-let config = require('./config.js');
-let commander = require('commander');
-let {build, watch} = require('./helper');
+const fsExtra = require('fs-extra');
+const {resolve} = require('path');
+const config = require('./config.js');
+const commander = require('commander');
+const {build, watch} = require('./helper');
 
 function run() {
 
@@ -60,11 +60,11 @@ function run() {
     let configs = [];
 
     if (isWatch) {
-        watch(config.createEChartsBuild(opt));
+        watch(config.createECharts(opt));
     }
     else {
         if (!buildAll) {
-            configs = [config.createEChartsBuild(opt)];
+            configs = [config.createECharts(opt)];
         }
         else {
             configs = [];
@@ -76,15 +76,15 @@ function run() {
                 {min: true, lang: 'en'}
             ].forEach(function (opt) {
                 ['', 'simple', 'common'].forEach(function (type) {
-                    configs.push(config.createEChartsBuild(Object.assign({type}, opt)));
+                    configs.push(config.createECharts(Object.assign({type}, opt)));
                 });
             });
 
             configs.push(
-                config.createBMapBuild(false),
-                config.createBMapBuild(true),
-                config.createDataToolBuild(false),
-                config.createDataToolBuild(true)
+                config.createBMap(false),
+                config.createBMap(true),
+                config.createDataTool(false),
+                config.createDataTool(true)
             );
         }
 
@@ -96,7 +96,10 @@ function run() {
     }
 }
 
-// Based on echarts dir/
+/**
+ * @param {string} relativePath Based on echarts directory.
+ * @return {string} Absolute path.
+ */
 function getPath(relativePath) {
     return resolve(__dirname, '../', relativePath);
 }

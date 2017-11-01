@@ -3,9 +3,9 @@ describe('vsiaulMap_setOption', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/component/grid',
-        'echarts/chart/scatter',
-        'echarts/component/visualMap'
+        'echarts/src/component/grid',
+        'echarts/src/chart/scatter',
+        'echarts/src/component/visualMap'
     ]);
 
     testCase.createChart()('defaultTargetController', function () {

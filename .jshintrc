@@ -26,6 +26,7 @@
     "debug": false,
     "eqnull": true,
     "esversion": 6,
+    "module": true,
     "evil": true,
     "expr": true,
     "funcscope": false,

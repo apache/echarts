@@ -1,8 +1,6 @@
-/* global require, __dirname, exports */
-
-let nodeResolvePlugin = require('rollup-plugin-node-resolve');
-let uglifyPlugin = require('rollup-plugin-uglify');
-let {dirname, resolve} = require('path');
+const nodeResolvePlugin = require('rollup-plugin-node-resolve');
+const uglifyPlugin = require('rollup-plugin-uglify');
+const {dirname, resolve} = require('path');
 
 // Based on echarts/
 function getPath(relativePath) {
@@ -49,7 +47,7 @@ function getPlugins(min, lang) {
  * @param {boolean} [opt.min=false]
  * @param {string} [opt.lang=undefined] null/undefined/'' or 'en' or 'fi' or ...
  */
-exports.createEChartsBuild = function (opt) {
+exports.createECharts = function (opt) {
     opt = opt || {};
     let postfixType = opt.type ? '.' + opt.type : '';
     let postfixMin = opt.min ? '.min' : '';
@@ -74,7 +72,7 @@ exports.createEChartsBuild = function (opt) {
 /**
  * @param {boolean} [min=false]
  */
-exports.createBMapBuild = function (min) {
+exports.createBMap = function (min) {
     let postfix = min ? '.min' : '';
 
     return {
@@ -101,7 +99,7 @@ exports.createBMapBuild = function (min) {
 /**
  * @param {boolean} [min=false]
  */
-exports.createDataToolBuild = function (min) {
+exports.createDataTool = function (min) {
     let postfix = min ? '.min' : '';
     return {
         plugins: getPlugins(min),
@@ -120,6 +118,21 @@ exports.createDataToolBuild = function (min) {
         },
         watch: {
             include: [getPath('./extension/dataTool/**')]
+        }
+    };
+};
+
+/**
+ * @param {string} [absolutePath]
+ */
+exports.createSingleModule = function (absolutePath) {
+    return {
+        plugins: getPlugins(),
+        input: absolutePath,
+        legacy: true, // Support IE8-
+        output: {
+            name: 'echarts',
+            format: 'amd'
         }
     };
 };

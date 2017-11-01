@@ -69,14 +69,11 @@
                 if (!(requireId instanceof Array)) {
                     requireId = requireId != null ? [] : [requireId];
                 }
-                requireId = ['echarts'].concat(requireId);
+                requireId = ['echarts/src/echarts'].concat(requireId);
 
                 window.it(name, function (done) {
-                    helper.resetPackageLoader(onLoaderReset);
 
-                    function onLoaderReset() {
-                        window.require(requireId, onModuleLoaded);
-                    }
+                    window.requireES(requireId, onModuleLoaded);
 
                     function onModuleLoaded(echarts) {
                         var createResult = createChart(context, echarts);
@@ -273,7 +270,7 @@
      *
      * @public
      */
-    helper.resetPackageLoader = function (then) {
+    helper.resetAMDLoader = function (then) {
         // Clean esl
         var eslEl = helper.g('esl');
         if (eslEl) {
@@ -287,8 +284,8 @@
         context.require = null;
 
         // Import esl.
-        helper.loadScript('../esl.js', 'esl', function () {
-            helper.loadScript('config.js', 'config', function () {
+        helper.loadScript('../lib/esl.js', 'esl', function () {
+            helper.loadScript('lib/config.js', 'config', function () {
                 then();
             });
         });
@@ -307,7 +304,7 @@
      * @param {Array.<Function>} testFnList
      * @param {Function} done All done callback.
      */
-    helper.resetPackageLoaderEachTest = function (deps, testFnList, done) {
+    helper.resetAMDLoaderEachTest = function (deps, testFnList, done) {
         var i = -1;
         next();
 
@@ -318,7 +315,7 @@
                 return;
             }
 
-            helper.resetPackageLoader(function () {
+            helper.resetAMDLoader(function () {
                 window.require(deps, function () {
                     testFnList[i].apply(null, arguments);
                     next();

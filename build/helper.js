@@ -1,6 +1,4 @@
-/* global require, exports */
-
-let rollup = require('rollup');
+const rollup = require('rollup');
 
 /**
  * @param {Array.<Object>} configs A list of rollup configs:
@@ -14,45 +12,50 @@ let rollup = require('rollup');
  *      },
  *      ...
  *  ]
+ * @return {Promise}
  */
 exports.build = function (configs) {
-    let index = 0;
+    return new Promise(function (promiseResolve, promiseReject) {
+        let index = 0;
 
-    buildSingle();
+        buildSingle();
 
-    function buildSingle() {
-        let singleConfig = configs[index++];
+        function buildSingle() {
+            let singleConfig = configs[index++];
 
-        if (!singleConfig) {
-            return;
+            if (!singleConfig) {
+                promiseResolve();
+                return;
+            }
+
+            console.log(
+                color('fgCyan', 'dim')('\nBundles '),
+                color('fgCyan')(singleConfig.input),
+                color('fgCyan', 'dim')('=>'),
+                color('fgCyan')(singleConfig.output.file),
+                color('fgCyan', 'dim')(' ...')
+            );
+
+            rollup
+                .rollup(singleConfig)
+                .then(function (bundle) {
+                    return bundle.write(singleConfig.output);
+                })
+                .then(function () {
+                    console.log(
+                        color('fgGreen', 'dim')('Created '),
+                        color('fgGreen')(singleConfig.output.file),
+                        color('fgGreen', 'dim')(' successfully.')
+                    );
+                    buildSingle();
+                })
+                .catch(function (err) {
+                    console.log(color('fgRed')(err));
+                    promiseReject();
+                });
         }
-
-        console.log(
-            color('fgCyan', 'dim')('\nBundles '),
-            color('fgCyan')(singleConfig.input),
-            color('fgCyan', 'dim')('=>'),
-            color('fgCyan')(singleConfig.output.file),
-            color('fgCyan', 'dim')(' ...')
-        );
-
-        rollup
-            .rollup(singleConfig)
-            .then(function (bundle) {
-                return bundle.write(singleConfig.output);
-            })
-            .then(function () {
-                console.log(
-                    color('fgGreen', 'dim')('Created '),
-                    color('fgGreen')(singleConfig.output.file),
-                    color('fgGreen', 'dim')(' successfully.')
-                );
-                buildSingle();
-            })
-            .catch(function (err) {
-                console.log(color('fgRed')(err));
-            });
-    }
-}
+    });
+};
 
 /**
  * @param {Object} singleConfig A single rollup config:
@@ -65,7 +68,7 @@ exports.build = function (configs) {
  *  }
  */
 exports.watch = function (singleConfig) {
-    var watcher = rollup.watch(singleConfig);
+    let watcher = rollup.watch(singleConfig);
 
     watcher.on('event', function (event) {
         // event.code can be one of:
@@ -89,7 +92,7 @@ exports.watch = function (singleConfig) {
             printWatchResult(event);
         }
     });
-}
+};
 
 function printWatchResult(event) {
     console.log(
@@ -155,12 +158,12 @@ const COLOR_MAP = {
  * Print colored text with `console.log`.
  *
  * Usage:
- * var color = require('colorConsole');
+ * let color = require('colorConsole');
  * color('fgCyan')('some text'); // cyan text.
  * color('fgCyan', 'bright')('some text'); // bright cyan text.
  * color('fgCyan', 'bgRed')('some text') // cyan text and red background.
  */
-function color() {
+let color = exports.color = function () {
     let prefix = [];
     for (let i = 0; i < arguments.length; i++) {
         let color = COLOR_MAP[arguments[i]];
@@ -171,4 +174,4 @@ function color() {
     return function (text) {
         return prefix + text + COLOR_RESET;
     };
-}
+};
