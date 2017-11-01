@@ -6,7 +6,7 @@
 import * as echarts from '../../echarts';
 import {Polygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
-import * as zrUtil from 'zrender/src/core/util';
+import {bind, extend} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
 
 export default echarts.extendChartView({
@@ -19,10 +19,6 @@ export default echarts.extendChartView({
 
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-
-        if (!data.count()) {
-            return;
-        }
 
         var group = this.group;
 
@@ -44,9 +40,10 @@ export default echarts.extendChartView({
 
         var newLayersGroups = {};
 
-        dataDiffer.add(zrUtil.bind(zrUtil.curry(process, 'add'), this))
-            .update(zrUtil.bind(zrUtil.curry(process, 'update'), this))
-            .remove(zrUtil.bind(zrUtil.curry(process, 'remove'), this))
+        dataDiffer
+            .add(bind(process, this, 'add'))
+            .update(bind(process, this, 'update'))
+            .remove(bind(process, this, 'remove'))
             .execute();
 
         function process(status, idx, oldIdx) {
@@ -137,7 +134,7 @@ export default echarts.extendChartView({
                 textVerticalAlign: 'middle'
             });
 
-            polygon.setStyle(zrUtil.extend({
+            polygon.setStyle(extend({
                 fill: color
             }, itemStyleModel.getItemStyle(['color'])));
 
