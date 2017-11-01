@@ -72481,7 +72481,5 @@ exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 })));
 //# sourceMappingURL=echarts.js.map
