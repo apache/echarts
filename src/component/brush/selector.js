@@ -15,21 +15,22 @@ var selector = {
     lineY: getLineSelectors(1),
     rect: {
         point: function (itemLayout, selectors, area) {
-            return area.boundingRect.contain(itemLayout[0], itemLayout[1]);
+            return itemLayout && area.boundingRect.contain(itemLayout[0], itemLayout[1]);
         },
         rect: function (itemLayout, selectors, area) {
-            return area.boundingRect.intersect(itemLayout);
+            return itemLayout && area.boundingRect.intersect(itemLayout);
         }
     },
     polygon: {
         point: function (itemLayout, selectors, area) {
-            return area.boundingRect.contain(itemLayout[0], itemLayout[1])
+            return itemLayout
+                && area.boundingRect.contain(itemLayout[0], itemLayout[1])
                 && polygonContain.contain(area.range, itemLayout[0], itemLayout[1]);
         },
         rect: function (itemLayout, selectors, area) {
             var points = area.range;
 
-            if (points.length <= 1) {
+            if (!itemLayout || points.length <= 1) {
                 return false;
             }
 
@@ -61,21 +62,25 @@ function getLineSelectors(xyIndex) {
 
     return {
         point: function (itemLayout, selectors, area) {
-            var range = area.range;
-            var p = itemLayout[xyIndex];
-            return inLineRange(p, range);
+            if (itemLayout) {
+                var range = area.range;
+                var p = itemLayout[xyIndex];
+                return inLineRange(p, range);
+            }
         },
         rect: function (itemLayout, selectors, area) {
-            var range = area.range;
-            var layoutRange = [
-                itemLayout[xy[xyIndex]],
-                itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
-            ];
-            layoutRange[1] < layoutRange[0] && layoutRange.reverse();
-            return inLineRange(layoutRange[0], range)
-                || inLineRange(layoutRange[1], range)
-                || inLineRange(range[0], layoutRange)
-                || inLineRange(range[1], layoutRange);
+            if (itemLayout) {
+                var range = area.range;
+                var layoutRange = [
+                    itemLayout[xy[xyIndex]],
+                    itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
+                ];
+                layoutRange[1] < layoutRange[0] && layoutRange.reverse();
+                return inLineRange(layoutRange[0], range)
+                    || inLineRange(layoutRange[1], range)
+                    || inLineRange(range[0], layoutRange)
+                    || inLineRange(range[1], layoutRange);
+            }
         }
     };
 }
