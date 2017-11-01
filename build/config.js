@@ -61,6 +61,7 @@ exports.createECharts = function (opt) {
             name: 'echarts',
             format: 'umd',
             sourcemap: !opt.min && !postfixType,
+            legacy: true, // Must be declared both in inputOptions and outputOptions.
             file: getPath(`dist/echarts${postfixLang}${postfixType}${postfixMin}.js`)
         },
         watch: {
@@ -84,6 +85,7 @@ exports.createBMap = function (min) {
             name: 'bmap',
             format: 'umd',
             sourcemap: !min,
+            legacy: true, // Must be declared both in inputOptions and outputOptions.
             globals: {
                 // For UMD `global.echarts`
                 echarts: 'echarts'
@@ -110,6 +112,7 @@ exports.createDataTool = function (min) {
             name: 'dataTool',
             format: 'umd',
             sourcemap: !min,
+            legacy: true, // Must be declared both in inputOptions and outputOptions.
             globals: {
                 // For UMD `global.echarts`
                 echarts: 'echarts'
@@ -122,17 +125,3 @@ exports.createDataTool = function (min) {
     };
 };
 
-/**
- * @param {string} [absolutePath]
- */
-exports.createSingleModule = function (absolutePath) {
-    return {
-        plugins: getPlugins(),
-        input: absolutePath,
-        legacy: true, // Support IE8-
-        output: {
-            name: 'echarts',
-            format: 'amd'
-        }
-    };
-};

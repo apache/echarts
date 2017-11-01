@@ -97,6 +97,7 @@
 
         rollup.rollup({
             input: TOP_MODULE_NAME,
+            legacy: true,
             plugins: [{
                 resolveId: function (importee, importor) {
                     if (importee === TOP_MODULE_NAME) {
@@ -117,12 +118,9 @@
                 }
             }]
         }).then(function (bundle) {
-            var external = [];
-            for (var i = 0; i < bundle.imports.length; i++) {
-                external.push();
-            }
             return bundle.generate({
                 format: 'iife',
+                legacy: true,
                 name: TOP_MODULE_NAME
             });
         }).then(function (result) {
