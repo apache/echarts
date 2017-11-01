@@ -13,7 +13,8 @@
  *     packages: [
  *         {...}, ...
  *     ],
- *     urlArgs: +new Date()
+ *     urlArgs: +new Date(),
+ *     sourceMap: true // Enable sourceMap for debugging. `false` by default.
  * });
  *
  * requireES([
@@ -56,7 +57,10 @@
      *
      * @param {Object} cfg {
      * @param {string} [cfg.baseUrl='.']
-     * @param {Object} [cfg.paths]
+     * @param {Object} [cfg.paths={}]
+     * @param {Array.<Object>} [cfg.packages=[]]
+     * @param {string} [cfg.urlArgs='']
+     * @param {boolean} [cfg.sourceMap=false]
      */
     function amdConfig(cfg) {
         if (cfg.baseUrl != null) {
@@ -73,6 +77,9 @@
         }
         if (cfg.urlArgs != null) {
             amdCfg.urlArgs = cfg.urlArgs;
+        }
+        if (cfg.sourceMap != null) {
+            amdCfg.sourceMap = cfg.sourceMap;
         }
     }
 
@@ -121,12 +128,21 @@
             return bundle.generate({
                 format: 'iife',
                 legacy: true,
+                // But only bundle.write support generating inline source map.
+                sourcemap: 'inline',
                 name: TOP_MODULE_NAME
             });
         }).then(function (result) {
+
+            var code = result.code;
+
+            if (amdCfg.sourceMap) {
+                code = addSourceMap(code, result.map);
+            }
+
             var modules = (new Function(
                 'var __DEV__ = true; '
-                + result.code
+                + code
                 + '\n return ' + TOP_MODULE_NAME
             ))();
 
@@ -294,6 +310,20 @@
         }
 
         return res;
+    }
+
+    function addSourceMap(code, map) {
+        // Use unescape(encodeURIComponent) to avoid the error on Chrome:
+        // Uncaught (in promise) DOMException: Failed to execute 'btoa' on 'Window':
+        // The string to be encoded contains characters outside of the Latin1 range
+        var dataURI = btoa(unescape(encodeURIComponent(map.toString()))); // jshint ignore:line
+        dataURI = 'data:application/json;charset=utf-8;base64,' + dataURI;
+
+        // Split the string to prevent sourcemap tooling from mistaking
+        // this for an actual sourceMappingURL.
+        code += '//# ' + 'sourceMa' + 'ppingURL' + '=' + dataURI + '\n';
+
+        return code;
     }
 
     function cwd() {
