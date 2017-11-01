@@ -7,7 +7,7 @@
             baseUrl: baseUrl,
             paths: {
                 'echarts': 'dist/echarts',
-                'zrender': '../zrender/dist/zrender',
+                'zrender': 'node_modules/zrender/dist/zrender',
                 'geoJson': '../geoData/geoJson',
                 'theme': 'theme',
                 'data': 'test/data',
@@ -23,7 +23,7 @@
             baseUrl: baseUrl,
             paths: {
                 'echarts': './',
-                'zrender': '../zrender',
+                'zrender': 'node_modules/zrender',
                 'geoJson': 'geoData/geoJson',
                 'theme': 'theme',
                 'data': 'test/data',
