@@ -20,7 +20,19 @@ function run() {
 
     commander
         .usage('[options]')
-        .description('Build echarts and generate result files in directory `echarts/dist`.')
+        .description([
+            'Build echarts and generate result files in directory `echarts/dist`.',
+            '',
+            '  For example:',
+            '',
+            '    node build/build.js --release # Build all to `dist` folder.',
+            '    node build/build.js --type ""  # Only generate `dist/echarts.js`.',
+            '    node build/build.js --type common --min  # Only generate `dist/echarts.common.min.js`.',
+            '    node build/build.js --type simple --min --lang en  # Only generate `dist/echarts-en.simple.min.js`.',
+            '    node build/build.js --min --lang en -i "/my/index.js" -o "/my/ec.js"  '
+                + '# Take `/my/index.js` as input and generate a bundle `/my/ec.js`, '
+                + 'which is in EN language and has been minified.',
+        ].join('\n'))
         .option(
             '-w, --watch',
             'Watch modifications of files and auto-compile to dist file (e.g., `echarts/dist/echarts.js`).'
@@ -32,6 +44,10 @@ function run() {
                 + 'e.g., `--lang en`, where a file `langEN.js` is required.'
         )
         .option(
+            '--release',
+            'Build all for release'
+        )
+        .option(
             '--min',
             'Whether to compress the output file.'
         )
@@ -40,20 +56,45 @@ function run() {
             'Can be "simple" or "common" or "" (default). '
                 + 'e.g., `--type ""` or `--type "common"`.'
         )
+        .option(
+            '--sourcemap',
+            'Whether output sourcemap.'
+        )
+        .option(
+            '--format <format>',
+            'The format of output bundle. Can be "umd", "amd", "iife", "cjs", "es".'
+        )
+        .option(
+            '-i, --input <input file path>',
+            'If input file path is specified, output file path must be specified too.'
+        )
+        .option(
+            '-o, --output <output file path>',
+            'If output file path is specified, input file path must be specified too.'
+        )
         .parse(process.argv);
 
-    let opt = {};
     let isWatch = !!commander.watch;
-    opt.lang = commander.lang || null;
-    opt.min = !!commander.min;
-    opt.type = commander.type || '';
-    let buildAll = commander.watch == null
-        && commander.lang == null
-        && commander.min == null
-        && commander.type == null;
+    let isRelease = !!commander.release;
+
+    let opt = {
+        lang: commander.lang || null,
+        min: !!commander.min,
+        type: commander.type || '',
+        input: commander.input,
+        output: commander.output,
+        sourcemap: !!commander.sourcemap,
+        format: commander.format || 'umd'
+    };
+
+    if ((opt.input != null && opt.output == null)
+        || (opt.input == null && opt.output != null)
+    ) {
+        throw new Error('`input` and `output` must be both set.');
+    }
 
     // Clear `echarts/dist`
-    if (buildAll) {
+    if (isRelease) {
         fsExtra.removeSync(getPath('./dist'));
     }
 
@@ -63,10 +104,7 @@ function run() {
         watch(config.createECharts(opt));
     }
     else {
-        if (!buildAll) {
-            configs = [config.createECharts(opt)];
-        }
-        else {
+        if (isRelease) {
             configs = [];
 
             [
@@ -86,6 +124,9 @@ function run() {
                 config.createDataTool(false),
                 config.createDataTool(true)
             );
+        }
+        else {
+            configs = [config.createECharts(opt)];
         }
 
         build(configs);
