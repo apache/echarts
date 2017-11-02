@@ -338,7 +338,5 @@ var version = '1.0.0';
 
 exports.version = version;
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 })));
 //# sourceMappingURL=bmap.js.map

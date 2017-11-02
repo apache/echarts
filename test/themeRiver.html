@@ -2,6 +2,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- <script src="lib/esl.js"></script> -->
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
@@ -19,10 +20,11 @@
 
             require([
                 'echarts'
-                // 'echarts/chart/themeRiver',
-                // 'echarts/component/legend',
-                // 'echarts/component/singleAxis',
-                // 'echarts/component/tooltip',
+                // 'echarts/src/echarts',
+                // 'echarts/src/chart/themeRiver',
+                // 'echarts/src/component/legend',
+                // 'echarts/src/component/singleAxis',
+                // 'echarts/src/component/tooltip',
                 ], function (echarts) {
 
                     var chart = echarts.init(document.getElementById('main'));

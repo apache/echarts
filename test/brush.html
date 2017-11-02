@@ -903,7 +903,14 @@
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('Class' + i);
-                    data1.push((Math.random() * 2).toFixed(2));
+
+                    if (i === 1) {
+                        data1.push(null);
+                    }
+                    else {
+                        data1.push((Math.random() * 2).toFixed(2));
+                    }
+
                     data2.push(-Math.random().toFixed(2));
                     data3.push((Math.random() * 5).toFixed(2));
                     data4.push((Math.random() + 0.3).toFixed(2));

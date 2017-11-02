@@ -1,6 +1,7 @@
 import './src/config';
 
 export * from './src/echarts';
+export * from './src/export';
 
 // Import all charts and components
 import './src/chart/line';
@@ -50,3 +51,4 @@ import './src/component/timeline';
 import './src/component/toolbox';
 
 import 'zrender/src/vml/vml';
+import 'zrender/src/svg/svg';

@@ -90,6 +90,7 @@ function run() {
 
         build(configs);
 
+        // Compatible with prevoius folder structure: `echarts/lib` exists in `node_modules`
         // npm run prepublish: `rm -r lib; cp -r src lib`
         fsExtra.removeSync(getPath('./lib'));
         fsExtra.copySync(getPath('./src'), getPath('./lib'));
