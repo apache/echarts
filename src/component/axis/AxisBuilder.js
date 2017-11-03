@@ -3,6 +3,7 @@ import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
+import {createSymbol} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import * as vec2 from 'zrender/src/core/vector';
 
@@ -144,8 +145,14 @@ var builders = {
             v2ApplyTransform(pt2, pt2, matrix);
         }
 
-        this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+        var lineStyle = zrUtil.extend(
+            {
+                lineCap: 'round'
+            },
+            axisModel.getModel('axisLine.lineStyle').getLineStyle()
+        );
 
+        this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
             // Id for animation
             anid: 'line',
 
@@ -155,14 +162,62 @@ var builders = {
                 x2: pt2[0],
                 y2: pt2[1]
             },
-            style: zrUtil.extend(
-                {lineCap: 'round'},
-                axisModel.getModel('axisLine.lineStyle').getLineStyle()
-            ),
+            style: lineStyle,
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
         })));
+
+        var arrows = axisModel.get('axisLine.symbol');
+        var arrowSize = axisModel.get('axisLine.symbolSize');
+
+        if (arrows != null) {
+            if (typeof arrows === 'string') {
+                // Use the same arrow for start and end point
+                arrows = [arrows, arrows];
+            }
+            if (typeof arrowSize === 'string'
+                || typeof arrowSize === 'number'
+            ) {
+                // Use the same size for width and height
+                arrowSize = [arrowSize, arrowSize];
+            }
+
+            var symbolWidth = arrowSize[0];
+            var symbolHeight = arrowSize[1];
+
+            // Start arrow
+            if (arrows[0] !== 'none' && arrows[0] != null) {
+                var symbol = createSymbol(
+                    arrows[0],
+                    -symbolWidth / 2,
+                    -symbolHeight / 2,
+                    symbolWidth,
+                    symbolHeight,
+                    lineStyle.stroke,
+                    true
+                );
+                symbol.attr('rotation', opt.rotation + Math.PI / 2);
+                symbol.attr('position', pt1);
+                this.group.add(symbol);
+            }
+
+            // End arrow
+            if (arrows[1] !== 'none' && arrows[1] != null) {
+                var symbol = createSymbol(
+                    arrows[1],
+                    -symbolWidth / 2,
+                    -symbolHeight / 2,
+                    symbolWidth,
+                    symbolHeight,
+                    lineStyle.stroke,
+                    true
+                );
+                symbol.attr('rotation', opt.rotation - Math.PI / 2);
+                symbol.attr('position', pt2);
+                this.group.add(symbol);
+            }
+        }
     },
 
     /**
