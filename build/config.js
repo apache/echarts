@@ -11,7 +11,7 @@ function getPathBasedOnECharts(path) {
 
 /**
  * @param {boolean} [min=false]
- * @param {string} [lang=null] null/undefined/'' or 'en' or 'fi' or ...
+ * @param {string} [lang=null] null/undefined/'' or 'en' or 'fi' or a file path
  */
 function getPlugins(min, lang) {
     let plugins = [
@@ -46,7 +46,7 @@ function getPlugins(min, lang) {
  * @param {Object} [opt]
  * @param {string} [opt.type=''] '' or 'simple' or 'common'
  * @param {boolean} [opt.min=false]
- * @param {string} [opt.lang=undefined] null/undefined/'' or 'en' or 'fi' or ...
+ * @param {string} [opt.lang=undefined] null/undefined/'' or 'en' or 'fi' or a file path.
  * @param {string} [opt.input=undefined] If set, `opt.output` is required too, and `opt.type` is ignored.
  * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.sourcemap] If set, `opt.input` is required too, and `opt.type` is ignored.
@@ -64,9 +64,6 @@ exports.createECharts = function (opt) {
     let format = opt.format || 'umd';
 
     if (input != null || output != null) {
-        if (input == null || output == null) {
-            throw new Error('`input` and `output` must be both set.');
-        }
         isCustom = true;
         // Based on process.cwd();
         input = resolve(input);
@@ -155,4 +152,3 @@ exports.createDataTool = function (min) {
         }
     };
 };
-

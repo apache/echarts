@@ -123,10 +123,8 @@ ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visu
 
 ## Build
 
-+ Release: `node <echarts_dir>/build/build.js`.
-+ Watch: `node <echarts_dir>/build/build.js -w`.
-+ Build with certain language: `node <echarts_dir>/build/build.js --lang xx`, where `xx` is the shortcut of the language, and a corresponding file `langXX.js` is required in `<echarts_dir>`.
-+ Other usages: `node <echarts_dir>/build/build.js -h`.
+Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/echarts-doc/public/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts)
+ please.
 
 ## License
 

@@ -6,6 +6,7 @@ const {resolve} = require('path');
 const config = require('./config.js');
 const commander = require('commander');
 const {build, watch, color} = require('./helper');
+const ecLangPlugin = require('./rollup-plugin-ec-lang');
 
 function run() {
 
@@ -19,6 +20,9 @@ function run() {
      * (2) `node ./build/build.js --help` will print helper info and exit.
      */
 
+    let descIndent = '                                 ';
+    let egIndent = '    ';
+
     commander
         .usage('[options]')
         .description([
@@ -26,24 +30,30 @@ function run() {
             '',
             '  For example:',
             '',
-            '    node build/build.js --release # Build all to `dist` folder.',
-            '    node build/build.js --type ""  # Only generate `dist/echarts.js`.',
-            '    node build/build.js --type common --min  # Only generate `dist/echarts.common.min.js`.',
-            '    node build/build.js --type simple --min --lang en  # Only generate `dist/echarts-en.simple.min.js`.',
-            '    node build/build.js --min --lang en -i "/my/index.js" -o "/my/ec.js"  '
-                + '# Take `/my/index.js` as input and generate a bundle `/my/ec.js`, '
-                + 'which is in EN language and has been minified.',
+            egIndent + 'node build/build.js --release'
+                + '\n' + descIndent + '# Build all to `dist` folder.',
+            egIndent + 'node build/build.js --type ""'
+                + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
+            egIndent + 'node build/build.js --type common --min'
+                + '\n' + descIndent + '# Only generate `dist/echarts.common.min.js`.',
+            egIndent + 'node build/build.js --type simple --min --lang en'
+                + '\n' + descIndent + '# Only generate `dist/echarts-en.simple.min.js`.',
+            egIndent + 'node build/build.js --lang "my/lang.js" -i "my/index.js" -o "my/bundle.js"'
+                + '\n' + descIndent + '# Take `<cwd>/my/index.js` as input and generate `<cwd>/my/bundle.js`,'
+                + '\n' + descIndent + 'where `<cwd>/my/lang.js` is used as language file.',
         ].join('\n'))
         .option(
-            '-w, --watch',
-            'Watch modifications of files and auto-compile to dist file (e.g., `echarts/dist/echarts.js`).'
-        )
+            '-w, --watch', [
+            'Watch modifications of files and auto-compile to dist file. For example,',
+            descIndent + '`echarts/dist/echarts.js`.'
+        ].join('\n'))
         .option(
-            '--lang <language shortcut>',
-            'Only generate a dist file with specified language in directory `echarts/dist`. '
-                + 'A langXX.js file is required in directory `echarts`. '
-                + 'e.g., `--lang en`, where a file `langEN.js` is required.'
-        )
+            '--lang <language file path or shortcut>', [
+            'Use the specified file instead of `echarts/src/lang.js`. For example:',
+            descIndent + '`--lang en` will use `echarts/src/langEN.js`.',
+            descIndent + '`--lang my/langDE.js` will use `<cwd>/my/langDE.js`. -o must be specified in this case.',
+            descIndent + '`--lang /my/indexSW.js` will use `/my/indexSW.js`. -o must be specified in this case.'
+        ].join('\n'))
         .option(
             '--release',
             'Build all for release'
@@ -53,10 +63,10 @@ function run() {
             'Whether to compress the output file, and remove error-log-print code.'
         )
         .option(
-            '--type <type name>',
-            'Can be "simple" or "common" or "" (default). '
-                + 'e.g., `--type ""` or `--type "common"`.'
-        )
+            '--type <type name>', [
+            'Can be "simple" or "common" or "" (default). For example,',
+            descIndent + '`--type ""` or `--type "common"`.'
+        ].join('\n'))
         .option(
             '--sourcemap',
             'Whether output sourcemap.'
@@ -88,11 +98,8 @@ function run() {
         format: commander.format || 'umd'
     };
 
-    if ((opt.input != null && opt.output == null)
-        || (opt.input == null && opt.output != null)
-    ) {
-        throw new Error('`input` and `output` must be both set.');
-    }
+    validateIO(opt.input, opt.output);
+    validateLang(opt.lang, opt.output);
 
     // Clear `echarts/dist`
     if (isRelease) {
@@ -148,12 +155,35 @@ function checkCode(singleConfig) {
     // Make sure __DEV__ is eliminated.
     let code = fs.readFileSync(singleConfig.output.file, {encoding: 'utf-8'});
     if (!code) {
-        throw new Error(singleConfig.output.file + ' is empty');
+        throw new Error(`${singleConfig.output.file} is empty`);
     }
     if (code.indexOf('__DEV__') >= 0) {
         throw new Error('__DEV__ is not removed.');
     }
     console.log(color('fgGreen', 'dim')('Check code: correct.'));
+}
+
+function validateIO(input, output) {
+    if ((input != null && output == null)
+        || (input == null && output != null)
+    ) {
+        throw new Error('`input` and `output` must be both set.');
+    }
+}
+
+function validateLang(lang, output) {
+    if (!lang) {
+        return;
+    }
+
+    let langInfo = ecLangPlugin.getLangFileInfo(lang);
+
+    if (langInfo.isOuter && !output) {
+        throw new Error('`-o` or `--output` must be specified if using a file path in `--lang`.');
+    }
+    if (!langInfo.absolutePath || !fs.statSync(langInfo.absolutePath).isFile()) {
+        throw new Error(`File ${langInfo.absolutePath} does not exist yet. Contribution is welcome!`);
+    }
 }
 
 /**
