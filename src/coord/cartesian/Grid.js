@@ -5,7 +5,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import * as BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import {getLayoutRect} from '../../util/layout';
 import * as axisHelper from '../../coord/axisHelper';
 import Cartesian2D from './Cartesian2D';

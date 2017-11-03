@@ -26,7 +26,7 @@ export default function (option) {
         option.polar = polarNotRadar;
     }
     zrUtil.each(option.series, function (seriesOpt) {
-        if (seriesOpt.type === 'radar' && seriesOpt.polarIndex) {
+        if (seriesOpt && seriesOpt.type === 'radar' && seriesOpt.polarIndex) {
             seriesOpt.radarIndex = seriesOpt.polarIndex;
         }
     });
