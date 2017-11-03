@@ -4,16 +4,11 @@
 	(factory((global.echarts = {})));
 }(this, (function (exports) { 'use strict';
 
-// Enable DEV mode when using source code without build. which has no __DEV__ variable
-// In build process 'typeof __DEV__' will be replace with 'boolean'
-// So this code will be removed or disabled anyway after built.
-if (typeof __DEV__ === 'undefined') {
-    // In browser
-    if (typeof window !== 'undefined') {
+if (typeof __DEV__ === "undefined") {
+    if (typeof window !== "undefined") {
         window.__DEV__ = true;
     }
-    // In node
-    else if (typeof global !== 'undefined') {
+    else if (typeof global !== "undefined") {
         global.__DEV__ = true;
     }
 }
@@ -28792,7 +28787,10 @@ var defaultOption = {
             color: '#333',
             width: 1,
             type: 'solid'
-        }
+        },
+        // 坐标轴两端的箭头
+        symbol: ['none', 'none'],
+        symbolSize: [10, 15]
     },
     // 坐标轴小标记
     axisTick: {
@@ -29064,6 +29062,18 @@ function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
     return axisModel.getCoordSysModel() === gridModel;
 }
 
+function rotateTextRect(textRect, rotate) {
+  var rotateRadians = rotate * Math.PI / 180;
+  var boundingBox = textRect.plain();
+  var beforeWidth = boundingBox.width;
+  var beforeHeight = boundingBox.height;
+  var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
+  var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+  var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
+
+  return rotatedRect;
+}
+
 function getLabelUnionRect(axis) {
     var axisModel = axis.model;
     var labels = axisModel.getFormattedLabels();
@@ -29077,8 +29087,9 @@ function getLabelUnionRect(axis) {
     }
     for (var i = 0; i < labelCount; i += step) {
         if (!axis.isLabelIgnored(i)) {
-            var singleRect = axisLabelModel.getTextRect(labels[i]);
-            // FIXME consider label rotate
+            var unrotatedSingleRect = axisLabelModel.getTextRect(labels[i]);
+            var singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
+
             rect ? rect.union(singleRect) : (rect = singleRect);
         }
     }
@@ -29663,9 +29674,6 @@ Grid.dimensions = Grid.prototype.dimensions = Cartesian2D.prototype.dimensions;
 
 CoordinateSystemManager.register('cartesian2d', Grid);
 
-var v2ApplyTransform$1 = applyTransform;
-var retrieve$1 = retrieve;
-
 var PI$2 = Math.PI;
 
 function makeAxisEventDataBase(axisModel) {
@@ -29797,12 +29805,18 @@ var builders = {
         var pt1 = [extent[0], 0];
         var pt2 = [extent[1], 0];
         if (matrix) {
-            v2ApplyTransform$1(pt1, pt1, matrix);
-            v2ApplyTransform$1(pt2, pt2, matrix);
+            applyTransform(pt1, pt1, matrix);
+            applyTransform(pt2, pt2, matrix);
         }
 
-        this.group.add(new Line(subPixelOptimizeLine({
+        var lineStyle = extend(
+            {
+                lineCap: 'round'
+            },
+            axisModel.getModel('axisLine.lineStyle').getLineStyle()
+        );
 
+        this.group.add(new Line(subPixelOptimizeLine({
             // Id for animation
             anid: 'line',
 
@@ -29812,14 +29826,53 @@ var builders = {
                 x2: pt2[0],
                 y2: pt2[1]
             },
-            style: extend(
-                {lineCap: 'round'},
-                axisModel.getModel('axisLine.lineStyle').getLineStyle()
-            ),
+            style: lineStyle,
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
         })));
+
+        var arrows = axisModel.get('axisLine.symbol');
+        var arrowSize = axisModel.get('axisLine.symbolSize');
+
+        if (arrows != null) {
+            if (typeof arrows === 'string') {
+                // Use the same arrow for start and end point
+                arrows = [arrows, arrows];
+            }
+            if (typeof arrowSize === 'string'
+                || typeof arrowSize === 'number'
+            ) {
+                // Use the same size for width and height
+                arrowSize = [arrowSize, arrowSize];
+            }
+
+            var symbolWidth = arrowSize[0];
+            var symbolHeight = arrowSize[1];
+
+            each$1([
+                [opt.rotation + Math.PI / 2, pt1],
+                [opt.rotation - Math.PI / 2, pt2]
+            ], function (item, index) {
+                if (arrows[index] !== 'none' && arrows[index] != null) {
+                    var symbol = createSymbol(
+                        arrows[index],
+                        -symbolWidth / 2,
+                        -symbolHeight / 2,
+                        symbolWidth,
+                        symbolHeight,
+                        lineStyle.stroke,
+                        true
+                    );
+                    symbol.attr({
+                        rotation: item[0],
+                        position: item[1],
+                        silent: true
+                    });
+                    this.group.add(symbol);
+                }
+            }, this);
+        }
     },
 
     /**
@@ -29841,7 +29894,7 @@ var builders = {
     axisName: function () {
         var opt = this.opt;
         var axisModel = this.axisModel;
-        var name = retrieve$1(opt.axisName, axisModel.get('name'));
+        var name = retrieve(opt.axisName, axisModel.get('name'));
 
         if (!name) {
             return;
@@ -29898,7 +29951,7 @@ var builders = {
 
         var truncateOpt = axisModel.get('nameTruncate', true) || {};
         var ellipsis = truncateOpt.ellipsis;
-        var maxWidth = retrieve$1(
+        var maxWidth = retrieve(
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
         // FIXME
@@ -30223,8 +30276,8 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
         pt2[1] = opt.tickDirection * tickLen;
 
         if (matrix) {
-            v2ApplyTransform$1(pt1, pt1, matrix);
-            v2ApplyTransform$1(pt2, pt2, matrix);
+            applyTransform(pt1, pt1, matrix);
+            applyTransform(pt2, pt2, matrix);
         }
         // Tick line, Not use group transform to have better line draw
         var tickEl = new Line(subPixelOptimizeLine({
@@ -30255,7 +30308,7 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
 
 function buildAxisLabel(axisBuilder, axisModel, opt) {
     var axis = axisModel.axis;
-    var show = retrieve$1(opt.axisLabelShow, axisModel.get('axisLabel.show'));
+    var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
 
     if (!show || axis.scale.isBlank()) {
         return;
@@ -30268,7 +30321,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
 
     // Special label rotate.
     var labelRotation = (
-        retrieve$1(opt.labelRotate, labelModel.get('rotate')) || 0
+        retrieve(opt.labelRotate, labelModel.get('rotate')) || 0
     ) * PI$2 / 180;
 
     var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
@@ -34059,7 +34112,7 @@ var backwardCompat$1 = function (option) {
         option.polar = polarNotRadar;
     }
     each$1(option.series, function (seriesOpt) {
-        if (seriesOpt.type === 'radar' && seriesOpt.polarIndex) {
+        if (seriesOpt && seriesOpt.type === 'radar' && seriesOpt.polarIndex) {
             seriesOpt.radarIndex = seriesOpt.polarIndex;
         }
     });
@@ -34374,7 +34427,7 @@ var parseGeoJson = function (geoJson) {
  * Mapping given x, y to transformd view x, y
  */
 
-var v2ApplyTransform$2 = applyTransform;
+var v2ApplyTransform$1 = applyTransform;
 
 // Dummy transform node
 function TransformDummy() {
@@ -34599,7 +34652,7 @@ View.prototype = {
     dataToPoint: function (data) {
         var transform = this.transform;
         return transform
-            ? v2ApplyTransform$2([], data, transform)
+            ? v2ApplyTransform$1([], data, transform)
             : [data[0], data[1]];
     },
 
@@ -34611,7 +34664,7 @@ View.prototype = {
     pointToData: function (point) {
         var invTransform = this.invTransform;
         return invTransform
-            ? v2ApplyTransform$2([], point, invTransform)
+            ? v2ApplyTransform$1([], point, invTransform)
             : [point[0], point[1]];
     },
 
@@ -36547,15 +36600,12 @@ var backwardCompat$2 = function (option) {
     // Save geoCoord
     var mapSeries = [];
     each$1(option.series, function (seriesOpt) {
-        if (seriesOpt.type === 'map') {
+        if (seriesOpt && seriesOpt.type === 'map') {
             mapSeries.push(seriesOpt);
+            seriesOpt.map = seriesOpt.map || seriesOpt.mapType;
+            // Put x, y, width, height, x2, y2 in the top level
+            defaults(seriesOpt, seriesOpt.mapLocation);
         }
-    });
-
-    each$1(mapSeries, function (seriesOpt) {
-        seriesOpt.map = seriesOpt.map || seriesOpt.mapType;
-        // Put x, y, width, height, x2, y2 in the top level
-        defaults(seriesOpt, seriesOpt.mapLocation);
     });
 };
 
@@ -53200,10 +53250,6 @@ extendChartView({
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
 
-        if (!data.count()) {
-            return;
-        }
-
         var group = this.group;
 
         var layerSeries = seriesModel.getLayerSeries();
@@ -53224,9 +53270,10 @@ extendChartView({
 
         var newLayersGroups = {};
 
-        dataDiffer.add(bind(curry(process, 'add'), this))
-            .update(bind(curry(process, 'update'), this))
-            .remove(bind(curry(process, 'remove'), this))
+        dataDiffer
+            .add(bind(process, this, 'add'))
+            .update(bind(process, this, 'update'))
+            .remove(bind(process, this, 'remove'))
             .execute();
 
         function process(status, idx, oldIdx) {
@@ -58772,21 +58819,22 @@ var selector = {
     lineY: getLineSelectors(1),
     rect: {
         point: function (itemLayout, selectors, area) {
-            return area.boundingRect.contain(itemLayout[0], itemLayout[1]);
+            return itemLayout && area.boundingRect.contain(itemLayout[0], itemLayout[1]);
         },
         rect: function (itemLayout, selectors, area) {
-            return area.boundingRect.intersect(itemLayout);
+            return itemLayout && area.boundingRect.intersect(itemLayout);
         }
     },
     polygon: {
         point: function (itemLayout, selectors, area) {
-            return area.boundingRect.contain(itemLayout[0], itemLayout[1])
+            return itemLayout
+                && area.boundingRect.contain(itemLayout[0], itemLayout[1])
                 && contain$1(area.range, itemLayout[0], itemLayout[1]);
         },
         rect: function (itemLayout, selectors, area) {
             var points = area.range;
 
-            if (points.length <= 1) {
+            if (!itemLayout || points.length <= 1) {
                 return false;
             }
 
@@ -58818,21 +58866,25 @@ function getLineSelectors(xyIndex) {
 
     return {
         point: function (itemLayout, selectors, area) {
-            var range = area.range;
-            var p = itemLayout[xyIndex];
-            return inLineRange(p, range);
+            if (itemLayout) {
+                var range = area.range;
+                var p = itemLayout[xyIndex];
+                return inLineRange(p, range);
+            }
         },
         rect: function (itemLayout, selectors, area) {
-            var range = area.range;
-            var layoutRange = [
-                itemLayout[xy[xyIndex]],
-                itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
-            ];
-            layoutRange[1] < layoutRange[0] && layoutRange.reverse();
-            return inLineRange(layoutRange[0], range)
-                || inLineRange(layoutRange[1], range)
-                || inLineRange(range[0], layoutRange)
-                || inLineRange(range[1], layoutRange);
+            if (itemLayout) {
+                var range = area.range;
+                var layoutRange = [
+                    itemLayout[xy[xyIndex]],
+                    itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
+                ];
+                layoutRange[1] < layoutRange[0] && layoutRange.reverse();
+                return inLineRange(layoutRange[0], range)
+                    || inLineRange(layoutRange[1], range)
+                    || inLineRange(range[0], layoutRange)
+                    || inLineRange(range[1], layoutRange);
+            }
         }
     };
 }
@@ -62334,12 +62386,8 @@ var DataZoomModel = extendComponentModel({
      * @param {boolean} [ignoreUpdateRangeUsg=false]
      */
     setRawRange: function (opt, ignoreUpdateRangeUsg) {
-        each$25(['start', 'end', 'startValue', 'endValue'], function (name) {
-            // If any of those prop is null/undefined, we should alos set
-            // them, because only one pair between start/end and
-            // startValue/endValue can work.
-            this.option[name] = opt[name];
-        }, this);
+        setOneSide(opt, this.option, 'start');
+        setOneSide(opt, this.option, 'end');
 
         !ignoreUpdateRangeUsg && updateRangeUse(this, opt);
     },
@@ -62414,6 +62462,24 @@ var DataZoomModel = extendComponentModel({
     }
 
 });
+
+// percentName: 'start' or 'end', valueName: 'startValue' or 'endValue'
+function setOneSide(inputParams, option, percentName) {
+    var names = [percentName, percentName + 'Value'];
+    var hasValueIdx;
+    each$25(names, function (name, index) {
+        if (inputParams[name] != null) {
+            option[name] = inputParams[name];
+            hasValueIdx = index;
+        }
+    });
+    // If only 'start' or 'startValue' is set in inputParams and then assigned
+    // to option, the other one should be cleared in option. because only one
+    // pair between start/end and startValue/endValue can work.
+    if (hasValueIdx != null) {
+        option[names[1 - hasValueIdx]] = null;
+    }
+}
 
 function retrieveRaw(option) {
     var ret = {};

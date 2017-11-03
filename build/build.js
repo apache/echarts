@@ -90,11 +90,11 @@ function run() {
 
     let opt = {
         lang: commander.lang || null,
-        min: !!commander.min,
+        min: commander.min,
         type: commander.type || '',
         input: commander.input,
         output: commander.output,
-        sourcemap: !!commander.sourcemap,
+        sourcemap: commander.sourcemap,
         format: commander.format || 'umd'
     };
 
