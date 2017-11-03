@@ -5,6 +5,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
+import * as BoundingRect from 'zrender/core/BoundingRect';
 import {getLayoutRect} from '../../util/layout';
 import * as axisHelper from '../../coord/axisHelper';
 import Cartesian2D from './Cartesian2D';
@@ -26,6 +27,18 @@ function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
     return axisModel.getCoordSysModel() === gridModel;
 }
 
+function rotateTextRect(textRect, rotate) {
+  var rotateRadians = rotate * Math.PI / 180;
+  var boundingBox = textRect.plain();
+  var beforeWidth = boundingBox.width;
+  var beforeHeight = boundingBox.height;
+  var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
+  var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+  var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
+
+  return rotatedRect;
+}
+
 function getLabelUnionRect(axis) {
     var axisModel = axis.model;
     var labels = axisModel.getFormattedLabels();
@@ -39,8 +52,9 @@ function getLabelUnionRect(axis) {
     }
     for (var i = 0; i < labelCount; i += step) {
         if (!axis.isLabelIgnored(i)) {
-            var singleRect = axisLabelModel.getTextRect(labels[i]);
-            // FIXME consider label rotate
+            var unrotatedSingleRect = axisLabelModel.getTextRect(labels[i]);
+            var singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
+
             rect ? rect.union(singleRect) : (rect = singleRect);
         }
     }
