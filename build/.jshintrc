@@ -71,6 +71,7 @@
         "require",
         "exports",
         "Buffer",
+        "module",
         "__dirname"
     ]
 }

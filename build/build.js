@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 const fsExtra = require('fs-extra');
+const fs = require('fs');
 const {resolve} = require('path');
 const config = require('./config.js');
 const commander = require('commander');
-const {build, watch} = require('./helper');
+const {build, watch, color} = require('./helper');
 
 function run() {
 
@@ -49,7 +50,7 @@ function run() {
         )
         .option(
             '--min',
-            'Whether to compress the output file.'
+            'Whether to compress the output file, and remove error-log-print code.'
         )
         .option(
             '--type <type name>',
@@ -98,44 +99,61 @@ function run() {
         fsExtra.removeSync(getPath('./dist'));
     }
 
-    let configs = [];
-
     if (isWatch) {
         watch(config.createECharts(opt));
     }
-    else {
-        if (isRelease) {
-            configs = [];
+    else if (isRelease) {
+        let configs = [];
+        let configForCheck;
 
-            [
-                {min: false},
-                {min: true},
-                {min: false, lang: 'en'},
-                {min: true, lang: 'en'}
-            ].forEach(function (opt) {
-                ['', 'simple', 'common'].forEach(function (type) {
-                    configs.push(config.createECharts(Object.assign({type}, opt)));
-                });
+        [
+            {min: false},
+            {min: true},
+            {min: false, lang: 'en'},
+            {min: true, lang: 'en'}
+        ].forEach(function (opt) {
+            ['', 'simple', 'common'].forEach(function (type) {
+                let singleOpt = Object.assign({type}, opt);
+                let singleConfig = config.createECharts(singleOpt);
+                configs.push(singleConfig);
+
+                if (singleOpt.min && singleOpt.type === '') {
+                    configForCheck = singleConfig;
+                }
             });
+        });
 
-            configs.push(
-                config.createBMap(false),
-                config.createBMap(true),
-                config.createDataTool(false),
-                config.createDataTool(true)
-            );
-        }
-        else {
-            configs = [config.createECharts(opt)];
-        }
+        configs.push(
+            config.createBMap(false),
+            config.createBMap(true),
+            config.createDataTool(false),
+            config.createDataTool(true)
+        );
 
-        build(configs);
+        build(configs).then(function () {
+            checkCode(configForCheck);
 
-        // Compatible with prevoius folder structure: `echarts/lib` exists in `node_modules`
-        // npm run prepublish: `rm -r lib; cp -r src lib`
-        fsExtra.removeSync(getPath('./lib'));
-        fsExtra.copySync(getPath('./src'), getPath('./lib'));
+            // Compatible with prevoius folder structure: `echarts/lib` exists in `node_modules`
+            // npm run prepublish: `rm -r lib; cp -r src lib`
+            fsExtra.removeSync(getPath('./lib'));
+            fsExtra.copySync(getPath('./src'), getPath('./lib'));
+        });
     }
+    else {
+        build([config.createECharts(opt)]);
+    }
+}
+
+function checkCode(singleConfig) {
+    // Make sure __DEV__ is eliminated.
+    let code = fs.readFileSync(singleConfig.output.file, {encoding: 'utf-8'});
+    if (!code) {
+        throw new Error(singleConfig.output.file + ' is empty');
+    }
+    if (code.indexOf('__DEV__') >= 0) {
+        throw new Error('__DEV__ is not removed.');
+    }
+    console.log(color('fgGreen', 'dim')('Check code: correct.'));
 }
 
 /**

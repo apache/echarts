@@ -1,5 +1,3 @@
-import './src/config';
-
 export * from './src/echarts';
 
 import './src/chart/line';

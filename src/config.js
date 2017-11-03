@@ -1,4 +1,4 @@
-
+// See `echarts/build/rollup-plugin-ec-dev`.
 // Enable DEV mode when using source code without build. which has no __DEV__ variable
 // In build process 'typeof __DEV__' will be replace with 'boolean'
 // So this code will be removed or disabled anyway after built.

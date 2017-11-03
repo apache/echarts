@@ -1,7 +1,9 @@
 /* global process */
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
 const uglifyPlugin = require('rollup-plugin-uglify');
-const {dirname, resolve} = require('path');
+const ecDevPlugin = require('./rollup-plugin-ec-dev');
+const ecLangPlugin = require('./rollup-plugin-ec-lang');
+const {resolve} = require('path');
 
 function getPathBasedOnECharts(path) {
     return resolve(__dirname, '../', path);
@@ -12,18 +14,13 @@ function getPathBasedOnECharts(path) {
  * @param {string} [lang=null] null/undefined/'' or 'en' or 'fi' or ...
  */
 function getPlugins(min, lang) {
-    let plugins = [];
+    let plugins = [
+        ecDevPlugin()
+    ];
 
-    lang && plugins.push({
-        resolveId: function (importee, importor) {
-            if (/\/lang([.]js)?$/.test(importee)) {
-                return resolve(
-                    dirname(importor),
-                    importee.replace(/\/lang([.]js)?$/, '/lang' + lang.toUpperCase() + '.js')
-                );
-            }
-        }
-    });
+    lang && plugins.push(
+        ecLangPlugin({lang})
+    );
 
     plugins.push(
         nodeResolvePlugin()
@@ -32,9 +29,13 @@ function getPlugins(min, lang) {
     min && plugins.push(uglifyPlugin({
         compress: {
             // Eliminate __DEV__ code.
+            // Currently, in uglify:
+            // `var vx; if(vx) {...}` can not be removed.
+            // `if (__DEV__) {...}` can be removed if `__DEV__` is defined as `false` in `global_defs`.
             'global_defs': {
-                __DEV__: true
-            }
+                __DEV__: false
+            },
+            'dead_code': true
         }
     }));
 
