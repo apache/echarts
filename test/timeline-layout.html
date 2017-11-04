@@ -122,7 +122,7 @@
                         + encodeHTML(JSON.stringify(opt)) + '</label>';
                     containerEl.appendChild(el);
 
-                    var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                    var chart = echarts.init(el.firstChild, null, { });
                     chart.setOption(getOption(opt));
                 }
 

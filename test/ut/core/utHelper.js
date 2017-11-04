@@ -147,7 +147,7 @@
                     'right:0'
                 ].join(';');
                 els.push(el);
-                charts.push(echarts.init(el, null, {renderer: 'canvas'}));
+                charts.push(echarts.init(el, null, { }));
             }
             return {charts: charts, els: els};
         }

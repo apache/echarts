@@ -179,7 +179,7 @@ chart.setOption({
                 el.innerHTML = '<div class="ec"></div><div class="info"></div>';
                 containerEl.appendChild(el);
 
-                var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                var chart = echarts.init(el.firstChild, null, { });
                 chart.setOption(opt);
 
                 charts.push(chart);

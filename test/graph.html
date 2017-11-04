@@ -34,7 +34,7 @@
             ], function (echarts, dataTool) {
                 var gexf = dataTool.gexf;
                 var chart = echarts.init(document.getElementById('main'), 'vintage', {
-                    renderer: 'canvas'
+
                 });
 
                 $.get('./data/les-miserables.gexf', function (xml) {

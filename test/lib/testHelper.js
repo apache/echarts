@@ -64,9 +64,69 @@
                 }
             }
             return false;
+        },
+
+        // Nodejs `path.resolve`.
+        resolve: function () {
+            var resolvedPath = '';
+            var resolvedAbsolute;
+
+            for (var i = arguments.length - 1; i >= 0 && !resolvedAbsolute; i--) {
+                var path = arguments[i];
+                if (path) {
+                    resolvedPath = path + '/' + resolvedPath;
+                    resolvedAbsolute = path[0] === '/';
+                }
+            }
+
+            if (!resolvedAbsolute) {
+                throw new Error('At least one absolute path should be input.');
+            }
+
+            // Normalize the path
+            resolvedPath = normalizePathArray(resolvedPath.split('/'), false).join('/');
+
+            return '/' + resolvedPath;
+        },
+
+        encodeHTML: function (source) {
+            return String(source)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
     };
+
+    // resolves . and .. elements in a path array with directory names there
+    // must be no slashes or device names (c:\) in the array
+    // (so also no leading and trailing slashes - it does not distinguish
+    // relative and absolute paths)
+    function normalizePathArray(parts, allowAboveRoot) {
+        var res = [];
+        for (var i = 0; i < parts.length; i++) {
+            var p = parts[i];
+
+            // ignore empty parts
+            if (!p || p === '.') {
+                continue;
+            }
+
+            if (p === '..') {
+                if (res.length && res[res.length - 1] !== '..') {
+                    res.pop();
+                } else if (allowAboveRoot) {
+                    res.push('..');
+                }
+            } else {
+                res.push(p);
+            }
+        }
+
+        return res;
+    }
 
     function getParamListFromURL() {
         var params = location.search.replace('?', '');

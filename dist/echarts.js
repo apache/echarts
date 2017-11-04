@@ -20920,22 +20920,32 @@ function ECharts(dom, theme, opts) {
      * @type {string}
      */
     this.id;
+
     /**
      * Group id
      * @type {string}
      */
     this.group;
+
     /**
      * @type {HTMLElement}
      * @private
      */
     this._dom = dom;
+
+    var defaultRenderer = 'canvas';
+    if (__DEV__) {
+        defaultRenderer = (
+            typeof window === void 0 ? global : window
+        ).__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+    }
+
     /**
      * @type {module:zrender/ZRender}
      * @private
      */
     var zr = this._zr = init$1(dom, {
-        renderer: opts.renderer || 'canvas',
+        renderer: opts.renderer || defaultRenderer,
         devicePixelRatio: opts.devicePixelRatio,
         width: opts.width,
         height: opts.height

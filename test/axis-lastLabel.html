@@ -5,7 +5,7 @@
         <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
@@ -56,7 +56,7 @@
             ], function (rainfallData, echarts) {
 
                 var chart = echarts.init(document.getElementById('chart-1'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({
@@ -126,7 +126,7 @@
             ], function (rainfallData, echarts) {
 
                 var chart = echarts.init(document.getElementById('chart0'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({
@@ -198,7 +198,7 @@
             ], function (rainfallData, echarts) {
 
                 var chart = echarts.init(document.getElementById('chart1'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({

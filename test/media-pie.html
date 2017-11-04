@@ -5,7 +5,7 @@
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/draggable.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="lib/reset.css">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -40,7 +40,7 @@
             ], function (echarts) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 draggable.init(

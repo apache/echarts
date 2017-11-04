@@ -3,7 +3,7 @@
         <meta charset="utf-8">
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="lib/reset.css">
         <style>
             #main {
                 position: relative;
@@ -422,7 +422,7 @@
                     el.innerHTML = '<div class="ec"></div><label><pre>' + encodeHTML(label) + '</pre></label>';
                     containerEl.appendChild(el);
 
-                    var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                    var chart = echarts.init(el.firstChild, null, { });
                     chart.setOption(zrUtil.merge(opt, getOption()));
                 }
 

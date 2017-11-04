@@ -4,7 +4,7 @@
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
@@ -146,7 +146,7 @@
             ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main1'), null, {
-                    renderer: 'canvas'
+
                 });
                 panel = document.getElementById('panel1');
                 data = splitData(rawData);
