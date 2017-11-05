@@ -186,7 +186,7 @@ export function ifAxisCrossZero(axis) {
  * @param {boolean} isAxisHorizontal
  * @return {number}
  */
-export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal) {
+export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal, rotate) {
     // FIXME
     // 不同角的axis和label，不只是horizontal和vertical.
 
@@ -200,12 +200,24 @@ export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal)
         step = Math.floor(labels.length / 40);
     }
 
+    // 计算旋转后的label所占的宽度或高度
+    function rotateLableWidth(w, h, r) {
+        r = Math.abs(r / 360 * 2 * Math.PI) || 0;
+        var s = Math.sin(r);
+        var c = Math.cos(r);
+        return h * c < w * s ? h / s : w * c;
+    }
+
     for (var i = 0; i < tickCoords.length; i += step) {
         var tickCoord = tickCoords[i];
         var rect = textContain.getBoundingRect(
             labels[i], font, 'center', 'top'
         );
         rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
+
+        rect['width'] = rotateLableWidth(rect['width'], rect['height'], rotate);
+        rect['height'] = rotateLableWidth(rect['width'], rect['height'], 90 - Math.abs(rotate));
+
         // FIXME Magic number 1.5
         rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
         if (!textSpaceTakenRect) {

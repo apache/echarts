@@ -250,7 +250,8 @@ Axis.prototype = {
                     zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
                     axisModel.getFormattedLabels(),
                     labelModel.getFont(),
-                    this.isHorizontal()
+                    this.isHorizontal(),
+                    labelModel.get('rotate')
                 );
             }
             this._labelInterval = labelInterval;
