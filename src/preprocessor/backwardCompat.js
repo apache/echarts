@@ -1,7 +1,8 @@
 // Compatitable with 2.0
 
-import * as zrUtil from 'zrender/src/core/util';
+import {each, isArray, isObject} from 'zrender/src/core/util';
 import compatStyle from './helper/compatStyle';
+import {normalizeToArray} from '../util/model';
 
 function get(opt, path) {
     path = path.split(',');
@@ -53,14 +54,14 @@ var COMPATITABLE_SERIES = [
     'pie', 'radar', 'sankey', 'scatter', 'treemap'
 ];
 
-var each = zrUtil.each;
-
 export default function (option, isTheme) {
     compatStyle(option, isTheme);
 
-    var series = option.series;
-    each(zrUtil.isArray(series) ? series : [series], function (seriesOpt) {
-        if (!zrUtil.isObject(seriesOpt)) {
+    // Make sure series array for model initialization.
+    option.series = normalizeToArray(option.series);
+
+    each(option.series, function (seriesOpt) {
+        if (!isObject(seriesOpt)) {
             return;
         }
 
@@ -93,7 +94,7 @@ export default function (option, isTheme) {
     each(COMPATITABLE_COMPONENTS, function (componentName) {
         var options = option[componentName];
         if (options) {
-            if (!zrUtil.isArray(options)) {
+            if (!isArray(options)) {
                 options = [options];
             }
             each(options, function (option) {
