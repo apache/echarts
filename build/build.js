@@ -95,7 +95,8 @@ function run() {
         input: commander.input,
         output: commander.output,
         sourcemap: commander.sourcemap,
-        format: commander.format || 'umd'
+        format: commander.format || 'umd',
+        addBundleVersion: isWatch
     };
 
     validateIO(opt.input, opt.output);

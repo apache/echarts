@@ -45,4 +45,68 @@
         window.__ECHARTS__DEFAULT__RENDERER__ = matchResult[1];
     }
 
+    // Mount bundle version print.
+    if (typeof require !== 'undefined') {
+        var originalRequire = require;
+        window.require = function (deps, cb) {
+            var newCb = function () {
+                if (deps && deps instanceof Array) {
+                    printBundleVersion(deps, [].slice.call(arguments));
+                }
+                cb && cb.apply(this, arguments);
+            };
+            return originalRequire.call(this, deps, newCb);
+        };
+    }
+
+    function printBundleVersion(bundleIds, bundles) {
+        var content = [];
+        for (var i = 0; i < bundleIds.length; i++) {
+            var bundle = bundles[i];
+            var bundleVersion = bundle && bundle.bundleVersion;
+            if (bundleVersion) {
+                var date = new Date(+bundleVersion);
+                // Check whether timestamp.
+                if (!isNaN(+date)) {
+                    bundleVersion = date.getHours() + ':' + date.getMinutes() + ': '
+                        + '<span style="color:yellow">'
+                        + date.getSeconds() + '.' + date.getMilliseconds()
+                        + '</span>';
+                }
+                else {
+                    bundleVersion = encodeHTML(bundleVersion);
+                }
+                content.push(encodeHTML(bundleIds[i]) + '.js: ' + bundleVersion);
+            }
+        }
+
+        var domId = 'ec-test-bundle-version';
+        var dom = document.getElementById(domId);
+        if (!dom) {
+            dom = document.createElement('div');
+            dom.setAttribute('id', domId);
+            dom.style.cssText = [
+                'background: rgb(52,56,64)',
+                'color: rgb(215,215,215)',
+                'position: fixed',
+                'right: 0',
+                'top: 0',
+                'font-size: 10px',
+                'padding: 1px 2px 1px 2px',
+                'border-bottom-left-radius: 3px'
+            ].join(';');
+            document.body.appendChild(dom);
+        }
+        dom.innerHTML = content.join('');
+    }
+
+    function encodeHTML(source) {
+        return String(source)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
 })();

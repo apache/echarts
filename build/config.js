@@ -12,8 +12,9 @@ function getPathBasedOnECharts(path) {
 /**
  * @param {boolean} [min=false]
  * @param {string} [lang=null] null/undefined/'' or 'en' or 'fi' or a file path
+ * @param {boolean} [addBundleVersion=false]
  */
-function getPlugins(min, lang) {
+function getPlugins(min, lang, addBundleVersion) {
     let plugins = [
         ecDevPlugin()
     ];
@@ -25,6 +26,12 @@ function getPlugins(min, lang) {
     plugins.push(
         nodeResolvePlugin()
     );
+
+    addBundleVersion && plugins.push({
+        outro: function () {
+            return 'exports.bundleVersion = "' + (+new Date()) + '";';
+        }
+    });
 
     min && plugins.push(uglifyPlugin({
         compress: {
@@ -51,6 +58,7 @@ function getPlugins(min, lang) {
  * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.sourcemap] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {string} [opt.format='umd'] If set, `opt.input` is required too, and `opt.type` is ignored.
+ * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
  */
 exports.createECharts = function (opt) {
     opt = opt || {};
@@ -78,7 +86,7 @@ exports.createECharts = function (opt) {
     }
 
     return {
-        plugins: getPlugins(opt.min, opt.lang),
+        plugins: getPlugins(opt.min, opt.lang, opt.addBundleVersion),
         input: input,
         legacy: true, // Support IE8-
         output: {
