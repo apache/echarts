@@ -81,7 +81,7 @@
     }
 
     function makePageURL(pagePath, renderer) {
-        return pagePath + '?__ECHARTS__DEFAULT__RENDERER__=' + renderer;
+        return pagePath + '?__RENDERER__=' + renderer;
     }
 
     function enterPage(pageURL, dontUpdateHash) {
@@ -125,13 +125,13 @@
 
     function getRendererFromPageURL(pageURL) {
         if (pageURL) {
-            var matchResult = pageURL.match(/[?&]__ECHARTS__DEFAULT__RENDERER__=(canvas|svg)(&|$)/);
+            var matchResult = pageURL.match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
             return matchResult && matchResult[1];
         }
     }
 
     function replaceRendererOnPageURL(pageURL, renderer) {
-        return pageURL.replace(/([?&]__ECHARTS__DEFAULT__RENDERER__=)([^&]*)(&|$)/, '$1' + renderer + '$3');
+        return pageURL.replace(/([?&]__RENDERER__=)([^&]*)(&|$)/, '$1' + renderer + '$3');
     }
 
 })();

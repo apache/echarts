@@ -40,7 +40,7 @@
     }
 
     // Set default renderer in dev mode from hash.
-    var matchResult = location.href.match(/[?&]__ECHARTS__DEFAULT__RENDERER__=(canvas|svg)(&|$)/);
+    var matchResult = location.href.match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
     if (matchResult) {
         window.__ECHARTS__DEFAULT__RENDERER__ = matchResult[1];
     }
