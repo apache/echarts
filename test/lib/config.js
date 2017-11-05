@@ -68,9 +68,10 @@
                 var date = new Date(+bundleVersion);
                 // Check whether timestamp.
                 if (!isNaN(+date)) {
-                    bundleVersion = date.getHours() + ':' + date.getMinutes() + ': '
-                        + '<span style="color:yellow">'
-                        + date.getSeconds() + '.' + date.getMilliseconds()
+                    bundleVersion = '<span style="color:yellow">'
+                        + pad(date.getHours(), 2) + ':'
+                        + pad(date.getMinutes(), 2) + ':'
+                        + pad(date.getSeconds(), 2) + '.' + pad(date.getMilliseconds(), 3)
                         + '</span>';
                 }
                 else {
@@ -98,6 +99,10 @@
             document.body.appendChild(dom);
         }
         dom.innerHTML = content.join('');
+    }
+
+    function pad(num, len) {
+        return ('000000' + num).substr(-len, len);
     }
 
     function encodeHTML(source) {

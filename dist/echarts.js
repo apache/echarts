@@ -19770,7 +19770,7 @@ function mergeOption(oldOption, newOption) {
     });
 }
 
-var each$7 = each$1;
+var each$6 = each$1;
 var isObject$3 = isObject;
 
 var POSSIBLE_STYLES = [
@@ -19903,17 +19903,17 @@ function toObj(o) {
 }
 
 var compatStyle = function (option, isTheme) {
-    each$7(toArr(option.series), function (seriesOpt) {
+    each$6(toArr(option.series), function (seriesOpt) {
         isObject$3(seriesOpt) && processSeries(seriesOpt);
     });
 
     var axes = ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'];
     isTheme && axes.push('valueAxis', 'categoryAxis', 'logAxis', 'timeAxis');
 
-    each$7(
+    each$6(
         axes,
         function (axisName) {
-            each$7(toArr(option[axisName]), function (axisOpt) {
+            each$6(toArr(option[axisName]), function (axisOpt) {
                 if (axisOpt) {
                     compatTextStyle(axisOpt, 'axisLabel');
                     compatTextStyle(axisOpt.axisPointer, 'label');
@@ -19922,27 +19922,27 @@ var compatStyle = function (option, isTheme) {
         }
     );
 
-    each$7(toArr(option.parallel), function (parallelOpt) {
+    each$6(toArr(option.parallel), function (parallelOpt) {
         var parallelAxisDefault = parallelOpt && parallelOpt.parallelAxisDefault;
         compatTextStyle(parallelAxisDefault, 'axisLabel');
         compatTextStyle(parallelAxisDefault && parallelAxisDefault.axisPointer, 'label');
     });
 
-    each$7(toArr(option.calendar), function (calendarOpt) {
+    each$6(toArr(option.calendar), function (calendarOpt) {
         compatTextStyle(calendarOpt, 'dayLabel');
         compatTextStyle(calendarOpt, 'monthLabel');
         compatTextStyle(calendarOpt, 'yearLabel');
     });
 
     // radar.name.textStyle
-    each$7(toArr(option.radar), function (radarOpt) {
+    each$6(toArr(option.radar), function (radarOpt) {
         compatTextStyle(radarOpt, 'name');
     });
 
-    each$7(toArr(option.geo), function (geoOpt) {
+    each$6(toArr(option.geo), function (geoOpt) {
         if (isObject$3(geoOpt)) {
             compatLabelTextStyle(geoOpt.label);
-            each$7(toArr(geoOpt.regions), function (regionObj) {
+            each$6(toArr(geoOpt.regions), function (regionObj) {
                 compatLabelTextStyle(regionObj.label);
             });
         }
@@ -19984,7 +19984,7 @@ function set$2(opt, path, val, overwrite) {
 }
 
 function compatLayoutProperties(option) {
-    each$6(LAYOUT_PROPERTIES, function (prop) {
+    each$1(LAYOUT_PROPERTIES, function (prop) {
         if (prop[0] in option && !(prop[1] in option)) {
             option[prop[1]] = option[prop[0]];
         }
@@ -20005,13 +20005,13 @@ var COMPATITABLE_SERIES = [
     'pie', 'radar', 'sankey', 'scatter', 'treemap'
 ];
 
-var each$6 = each$1;
-
 var backwardCompat = function (option, isTheme) {
     compatStyle(option, isTheme);
 
-    var series = option.series;
-    each$6(isArray(series) ? series : [series], function (seriesOpt) {
+    // Make sure series array for model initialization.
+    option.series = normalizeToArray(option.series);
+
+    each$1(option.series, function (seriesOpt) {
         if (!isObject(seriesOpt)) {
             return;
         }
@@ -20042,13 +20042,13 @@ var backwardCompat = function (option, isTheme) {
         option.visualMap = option.dataRange;
     }
 
-    each$6(COMPATITABLE_COMPONENTS, function (componentName) {
+    each$1(COMPATITABLE_COMPONENTS, function (componentName) {
         var options = option[componentName];
         if (options) {
             if (!isArray(options)) {
                 options = [options];
             }
-            each$6(options, function (option) {
+            each$1(options, function (option) {
                 compatLayoutProperties(option);
             });
         }
@@ -24119,7 +24119,7 @@ listProto.CHANGABLE_METHODS = ['filterSelf'];
  * Complete dimensions by data (guess dimension).
  */
 
-var each$8 = each$1;
+var each$7 = each$1;
 var isString$1 = isString;
 var defaults$1 = defaults;
 
@@ -24179,7 +24179,7 @@ function completeDimensions(sysDims, data, opt) {
             sysDims.length,
             dimsDef.length
         );
-        each$8(sysDims, function (sysDimItem) {
+        each$7(sysDims, function (sysDimItem) {
             var sysDimItemDimsDef = sysDimItem.dimsDef;
             sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
         });
@@ -24204,7 +24204,7 @@ function completeDimensions(sysDims, data, opt) {
     // Set `coordDim` and `coordDimIndex` by `encodeDef` and normalize `encodeDef`.
     encodeDef.each(function (dataDims, coordDim) {
         dataDims = encodeDef.set(coordDim, normalizeToArray(dataDims).slice());
-        each$8(dataDims, function (resultDimIdx, coordDimIndex) {
+        each$7(dataDims, function (resultDimIdx, coordDimIndex) {
             // The input resultDimIdx can be dim name or index.
             isString$1(resultDimIdx) && (resultDimIdx = dataDimNameMap.get(resultDimIdx));
             if (resultDimIdx != null && resultDimIdx < dimCount) {
@@ -24216,7 +24216,7 @@ function completeDimensions(sysDims, data, opt) {
 
     // Apply templetes and default order from `sysDims`.
     var availDimIdx = 0;
-    each$8(sysDims, function (sysDimItem, sysDimIndex) {
+    each$7(sysDims, function (sysDimItem, sysDimIndex) {
         var coordDim;
         var sysDimItem;
         var sysDimItemDimsDef;
@@ -24246,7 +24246,7 @@ function completeDimensions(sysDims, data, opt) {
             }
         }
         // Apply templates.
-        each$8(dataDims, function (resultDimIdx, coordDimIndex) {
+        each$7(dataDims, function (resultDimIdx, coordDimIndex) {
             var resultItem = result[resultDimIdx];
             applyDim(defaults$1(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
@@ -29060,7 +29060,7 @@ ComponentModel.extend({
  * TODO Default cartesian
  */
 
-var each$9 = each$1;
+var each$8 = each$1;
 var ifAxisCrossZero$1 = ifAxisCrossZero;
 var niceScaleExtent$1 = niceScaleExtent;
 
@@ -29152,16 +29152,16 @@ gridProto.update = function (ecModel, api) {
 
     this._updateScale(ecModel, this.model);
 
-    each$9(axesMap.x, function (xAxis) {
+    each$8(axesMap.x, function (xAxis) {
         niceScaleExtent$1(xAxis.scale, xAxis.model);
     });
-    each$9(axesMap.y, function (yAxis) {
+    each$8(axesMap.y, function (yAxis) {
         niceScaleExtent$1(yAxis.scale, yAxis.model);
     });
-    each$9(axesMap.x, function (xAxis) {
+    each$8(axesMap.x, function (xAxis) {
         fixAxisOnZero(axesMap, 'y', xAxis);
     });
-    each$9(axesMap.y, function (yAxis) {
+    each$8(axesMap.y, function (yAxis) {
         fixAxisOnZero(axesMap, 'x', yAxis);
     });
 
@@ -29232,7 +29232,7 @@ gridProto.resize = function (gridModel, api, ignoreContainLabel) {
 
     // Minus label size
     if (!ignoreContainLabel && gridModel.get('containLabel')) {
-        each$9(axesList, function (axis) {
+        each$8(axesList, function (axis) {
             if (!axis.model.get('axisLabel.inside')) {
                 var labelUnionRect = getLabelUnionRect(axis);
                 if (labelUnionRect) {
@@ -29253,7 +29253,7 @@ gridProto.resize = function (gridModel, api, ignoreContainLabel) {
     }
 
     function adjustAxes() {
-        each$9(axesList, function (axis) {
+        each$8(axesList, function (axis) {
             var isHorizontal = axis.isHorizontal();
             var extent = isHorizontal ? [0, gridRect.width] : [0, gridRect.height];
             var idx = axis.inverse ? 1 : 0;
@@ -29435,8 +29435,8 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
     this._axesMap = axesMap;
 
     /// Create cartesian2d
-    each$9(axesMap.x, function (xAxis, xAxisIndex) {
-        each$9(axesMap.y, function (yAxis, yAxisIndex) {
+    each$8(axesMap.x, function (xAxis, xAxisIndex) {
+        each$8(axesMap.y, function (yAxis, yAxisIndex) {
             var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
             var cartesian = new Cartesian2D(key);
 
@@ -29551,7 +29551,7 @@ gridProto._updateScale = function (ecModel, gridModel) {
     }, this);
 
     function unionExtent(data, axis, seriesModel) {
-        each$9(seriesModel.coordDimToDataDim(axis.dim), function (dim) {
+        each$8(seriesModel.coordDimToDataDim(axis.dim), function (dim) {
             axis.scale.unionExtentFromData(data, dim);
         });
     }
@@ -29565,7 +29565,7 @@ gridProto.getTooltipAxes = function (dim) {
     var baseAxes = [];
     var otherAxes = [];
 
-    each$9(this.getCartesians(), function (cartesian) {
+    each$8(this.getCartesians(), function (cartesian) {
         var baseAxis = (dim != null && dim !== 'auto')
             ? cartesian.getAxis(dim) : cartesian.getBaseAxis();
         var otherAxis = cartesian.getOtherAxis(baseAxis);
@@ -30421,7 +30421,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     return labelEls;
 }
 
-var each$10 = each$1;
+var each$9 = each$1;
 var curry$1 = curry;
 
 // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
@@ -30467,7 +30467,7 @@ function collectAxesInfo(result, ecModel, api) {
     var linkGroups = [];
 
     // Collect axes info.
-    each$10(api.getCoordinateSystems(), function (coordSys) {
+    each$9(api.getCoordinateSystems(), function (coordSys) {
         // Some coordinate system do not support axes, like geo.
         if (!coordSys.axisPointerEnabled) {
             return;
@@ -30482,7 +30482,7 @@ function collectAxesInfo(result, ecModel, api) {
         var coordSysModel = coordSys.model;
         var baseTooltipModel = coordSysModel.getModel('tooltip', globalTooltipModel);
 
-        each$10(coordSys.getAxes(), curry$1(saveTooltipAxisInfo, false, null));
+        each$9(coordSys.getAxes(), curry$1(saveTooltipAxisInfo, false, null));
 
         // If axis tooltip used, choose tooltip axis for each coordSys.
         // Notice this case: coordSys is `grid` but not `cartesian2D` here.
@@ -30498,12 +30498,12 @@ function collectAxesInfo(result, ecModel, api) {
             var cross = baseTooltipModel.get('axisPointer.type') === 'cross';
             var tooltipAxes = coordSys.getTooltipAxes(baseTooltipModel.get('axisPointer.axis'));
             if (triggerAxis || cross) {
-                each$10(tooltipAxes.baseAxes, curry$1(
+                each$9(tooltipAxes.baseAxes, curry$1(
                     saveTooltipAxisInfo, cross ? 'cross' : true, triggerAxis
                 ));
             }
             if (cross) {
-                each$10(tooltipAxes.otherAxes, curry$1(saveTooltipAxisInfo, 'cross', false));
+                each$9(tooltipAxes.otherAxes, curry$1(saveTooltipAxisInfo, 'cross', false));
             }
         }
 
@@ -30568,7 +30568,7 @@ function makeAxisPointerModel(
     var tooltipAxisPointerModel = baseTooltipModel.getModel('axisPointer');
     var volatileOption = {};
 
-    each$10(
+    each$9(
         [
             'type', 'snap', 'lineStyle', 'shadowStyle', 'label',
             'animation', 'animationDurationUpdate', 'animationEasingUpdate', 'z'
@@ -30627,7 +30627,7 @@ function collectSeriesInfo(result, ecModel) {
             return;
         }
 
-        each$10(result.coordSysAxesInfo[makeKey(coordSys.model)], function (axisInfo) {
+        each$9(result.coordSysAxesInfo[makeKey(coordSys.model)], function (axisInfo) {
             var axis = axisInfo.axis;
             if (coordSys.getAxis(axis.dim) === axis) {
                 axisInfo.seriesModels.push(seriesModel);
@@ -36642,7 +36642,7 @@ createDataSelectAction('map', [{
  * Link lists and struct (graph or tree)
  */
 
-var each$11 = each$1;
+var each$10 = each$1;
 
 var DATAS = '\0__link_datas';
 var MAIN_DATA = '\0__link_mainData';
@@ -36678,8 +36678,8 @@ function linkList(opt) {
     linkAll(mainData, datas, opt);
 
     // Porxy data original methods.
-    each$11(datas, function (data) {
-        each$11(mainData.TRANSFERABLE_METHODS, function (methodName) {
+    each$10(datas, function (data) {
+        each$10(mainData.TRANSFERABLE_METHODS, function (methodName) {
             data.wrapMethod(methodName, curry(transferInjection, opt));
         });
 
@@ -36690,7 +36690,7 @@ function linkList(opt) {
 
     // Only mainData trigger change, because struct.update may trigger
     // another changable methods, which may bring about dead lock.
-    each$11(mainData.CHANGABLE_METHODS, function (methodName) {
+    each$10(mainData.CHANGABLE_METHODS, function (methodName) {
         mainData.wrapMethod(methodName, curry(changeInjection, opt));
     });
 
@@ -36722,7 +36722,7 @@ function cloneShallowInjection(opt, res) {
     // to be exposed as an API. So for implementation simplicity we can make
     // the restriction that cloneShallow of not-mainData should not be invoked
     // outside, but only be invoked here.
-    each$11(res[DATAS], function (data, dataType) {
+    each$10(res[DATAS], function (data, dataType) {
         data !== res && linkSingle(data.cloneShallow(), dataType, res, opt);
     });
     return res;
@@ -36748,7 +36748,7 @@ function isMainData(data) {
 
 function linkAll(mainData, datas, opt) {
     mainData[DATAS] = {};
-    each$11(datas, function (data, dataType) {
+    each$10(datas, function (data, dataType) {
         linkSingle(data, dataType, mainData, opt);
     });
 }
@@ -37900,7 +37900,7 @@ function createWrap() {
 var bind$1 = bind;
 var Group$2 = Group;
 var Rect$1 = Rect;
-var each$12 = each$1;
+var each$11 = each$1;
 
 var DRAG_THRESHOLD = 3;
 var PATH_LABEL_NOAMAL = ['label', 'normal'];
@@ -38090,7 +38090,7 @@ extendChartView({
             // we use rawIndex in that case.
             if (sameTree) {
                 oldViewChildren = thisViewChildren;
-                each$12(thisViewChildren, function (child, index) {
+                each$11(thisViewChildren, function (child, index) {
                     !child.isRemoved() && processNode(index, index);
                 });
             }
@@ -38127,9 +38127,9 @@ extendChartView({
 
         function clearStorage(storage) {
             var willDeleteEls = createStorage();
-            storage && each$12(storage, function (store, storageName) {
+            storage && each$11(storage, function (store, storageName) {
                 var delEls = willDeleteEls[storageName];
-                each$12(store, function (el) {
+                each$11(store, function (el) {
                     el && (delEls.push(el), el.__tmWillDelete = 1);
                 });
             });
@@ -38137,12 +38137,12 @@ extendChartView({
         }
 
         function renderFinally() {
-            each$12(willDeleteEls, function (els) {
-                each$12(els, function (el) {
+            each$11(willDeleteEls, function (els) {
+                each$11(els, function (el) {
                     el.parent && el.parent.remove(el);
                 });
             });
-            each$12(willInvisibleEls, function (el) {
+            each$11(willInvisibleEls, function (el) {
                 el.invisible = true;
                 // Setting invisible is for optimizing, so no need to set dirty,
                 // just mark as invisible.
@@ -38164,8 +38164,8 @@ extendChartView({
         var animationWrap = createWrap();
 
         // Make delete animations.
-        each$12(renderResult.willDeleteEls, function (store, storageName) {
-            each$12(store, function (el, rawIndex) {
+        each$11(renderResult.willDeleteEls, function (store, storageName) {
+            each$11(store, function (el, rawIndex) {
                 if (el.invisible) {
                     return;
                 }
@@ -38217,8 +38217,8 @@ extendChartView({
         });
 
         // Make other animations
-        each$12(this._storage, function (store, storageName) {
-            each$12(store, function (el, rawIndex) {
+        each$11(this._storage, function (store, storageName) {
+            each$11(store, function (el, rawIndex) {
                 var last = renderResult.lastsForAnimation[storageName][rawIndex];
                 var target = {};
 
@@ -38838,7 +38838,7 @@ registerAction(
     }
 );
 
-var each$13 = each$1;
+var each$12 = each$1;
 var isObject$5 = isObject;
 
 var CATEGORY_DEFAULT_VISUAL_INDEX = -1;
@@ -39079,7 +39079,7 @@ function preprocessForSpecifiedCategory(thisOption) {
     var visual = thisOption.visual;
 
     var categoryMap = thisOption.categoryMap = {};
-    each$13(categories, function (cate, index) {
+    each$12(categories, function (cate, index) {
         categoryMap[cate] = index;
     });
 
@@ -39088,7 +39088,7 @@ function preprocessForSpecifiedCategory(thisOption) {
         var visualArr = [];
 
         if (isObject(visual)) {
-            each$13(visual, function (v, cate) {
+            each$12(visual, function (v, cate) {
                 var index = categoryMap[cate];
                 visualArr[index != null ? index : CATEGORY_DEFAULT_VISUAL_INDEX] = v;
             });
@@ -39115,7 +39115,7 @@ function normalizeVisualRange(thisOption, isCategory) {
     var visualArr = [];
 
     if (isObject(visual)) {
-        each$13(visual, function (v) {
+        each$12(visual, function (v) {
             visualArr.push(v);
         });
     }
@@ -39310,7 +39310,7 @@ VisualMapping.retrieveVisuals = function (obj) {
     var ret = {};
     var hasVisual;
 
-    obj && each$13(visualHandlers, function (h, visualType) {
+    obj && each$12(visualHandlers, function (h, visualType) {
         if (obj.hasOwnProperty(visualType)) {
             ret[visualType] = obj[visualType];
             hasVisual = true;
@@ -39331,7 +39331,7 @@ VisualMapping.retrieveVisuals = function (obj) {
 VisualMapping.prepareVisualTypes = function (visualTypes) {
     if (isObject$5(visualTypes)) {
         var types = [];
-        each$13(visualTypes, function (item, type) {
+        each$12(visualTypes, function (item, type) {
             types.push(type);
         });
         visualTypes = types;
@@ -39670,7 +39670,7 @@ function mapVisual$1(nodeModel, visuals, child, index, mapping, seriesModel) {
 var mathMax$4 = Math.max;
 var mathMin$4 = Math.min;
 var retrieveValue$1 = retrieve;
-var each$14 = each$1;
+var each$13 = each$1;
 
 var PATH_BORDER_WIDTH = ['itemStyle', 'normal', 'borderWidth'];
 var PATH_GAP_WIDTH = ['itemStyle', 'normal', 'gapWidth'];
@@ -39753,7 +39753,7 @@ var treemapLayout = function (ecModel, api, payload) {
             squarify(viewRoot, options, false, 0);
             // Supplement layout.
             var viewRootLayout = viewRoot.getLayout();
-            each$14(viewAbovePath, function (node, index) {
+            each$13(viewAbovePath, function (node, index) {
                 var childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
                 node.setLayout(extend(
                     {dataExtent: [childValue, childValue], borderWidth: 0, upperHeight: 0},
@@ -40016,7 +40016,7 @@ function statistic(nodeModel, children, orderBy) {
     // Other dimension.
     else {
         var dataExtent = [Infinity, -Infinity];
-        each$14(children, function (child) {
+        each$13(children, function (child) {
             var value = child.getValue(dimension);
             value < dataExtent[0] && (dataExtent[0] = value);
             value > dataExtent[1] && (dataExtent[1] = value);
@@ -40217,7 +40217,7 @@ function prunning(node, clipRect, viewAbovePath, viewRoot, depth) {
         clipRect.height
     );
 
-    each$14(node.viewChildren || [], function (child) {
+    each$13(node.viewChildren || [], function (child) {
         prunning(child, childClipRect, viewAbovePath, viewRoot, depth + 1);
     });
 }
@@ -43947,7 +43947,7 @@ function restrict$1(value, extend) {
  * <https://en.wikipedia.org/wiki/Parallel_coordinates>
  */
 
-var each$15 = each$1;
+var each$14 = each$1;
 var mathMin$5 = Math.min;
 var mathMax$5 = Math.max;
 var mathFloor$2 = Math.floor;
@@ -44008,7 +44008,7 @@ Parallel.prototype = {
         var dimensions = parallelModel.dimensions;
         var parallelAxisIndex = parallelModel.parallelAxisIndex;
 
-        each$15(dimensions, function (dim, idx) {
+        each$14(dimensions, function (dim, idx) {
 
             var axisIndex = parallelAxisIndex[idx];
             var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
@@ -44072,7 +44072,7 @@ Parallel.prototype = {
 
             var data = seriesModel.getData();
 
-            each$15(this.dimensions, function (dim) {
+            each$14(this.dimensions, function (dim) {
                 var axis = this._axesMap.get(dim);
                 axis.scale.unionExtentFromData(data, dim);
                 niceScaleExtent(axis.scale, axis.model);
@@ -44189,7 +44189,7 @@ Parallel.prototype = {
             axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
         });
 
-        each$15(dimensions, function (dim, idx) {
+        each$14(dimensions, function (dim, idx) {
             var posInfo = (layoutInfo.axisExpandable
                 ? layoutAxisWithExpand : layoutAxisWithoutExpand
             )(idx, layoutInfo);
@@ -44742,7 +44742,7 @@ registerAction('parallelAxisExpand', function (payload, ecModel) {
 });
 
 var curry$2 = curry;
-var each$16 = each$1;
+var each$15 = each$1;
 var map$3 = map;
 var mathMin$6 = Math.min;
 var mathMax$6 = Math.max;
@@ -44897,7 +44897,7 @@ function BrushController(zr) {
      * @type {Object}
      */
     this._handlers = {};
-    each$16(mouseHandlers, function (handler, eventName) {
+    each$15(mouseHandlers, function (handler, eventName) {
         this._handlers[eventName] = bind(handler, this);
     }, this);
 }
@@ -44984,7 +44984,7 @@ BrushController.prototype = {
     },
 
     eachCover: function (cb, context) {
-        each$16(this._covers, cb, context);
+        each$15(this._covers, cb, context);
     },
 
     /**
@@ -45093,7 +45093,7 @@ function doEnableBrush(controller, brushOption) {
         take(zr, MUTEX_RESOURCE_KEY, controller._uid);
     }
 
-    each$16(controller._handlers, function (handler, eventName) {
+    each$15(controller._handlers, function (handler, eventName) {
         zr.on(eventName, handler);
     });
 
@@ -45106,7 +45106,7 @@ function doDisableBrush(controller) {
 
     release(zr, MUTEX_RESOURCE_KEY, controller._uid);
 
-    each$16(controller._handlers, function (handler, eventName) {
+    each$15(controller._handlers, function (handler, eventName) {
         zr.off(eventName, handler);
     });
 
@@ -45163,7 +45163,7 @@ function getPanelByPoint(controller, e, localCursorPoint) {
     }
     var panel;
     var transform = controller._transform;
-    each$16(panels, function (pn) {
+    each$15(panels, function (pn) {
         pn.isTargetByCursor(e, localCursorPoint, transform) && (panel = pn);
     });
     return panel;
@@ -45184,7 +45184,7 @@ function getPanelByCover(controller, cover) {
 function clearCovers(controller) {
     var covers = controller._covers;
     var originalLength = covers.length;
-    each$16(covers, function (cover) {
+    each$15(covers, function (cover) {
         controller.group.remove(cover);
     }, controller);
     covers.length = 0;
@@ -45244,7 +45244,7 @@ function createBaseRectCover(doDrift, controller, brushOption, edgeNames) {
         ondragend: curry$2(trigger, controller, {isEnd: true})
     }));
 
-    each$16(
+    each$15(
         edgeNames,
         function (name) {
             cover.add(new Rect({
@@ -45304,7 +45304,7 @@ function updateCommon(controller, cover) {
         cursor: transformable ? 'move' : 'default'
     });
 
-    each$16(
+    each$15(
         ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
         function (name) {
             var el = cover.childOfName(name);
@@ -45369,7 +45369,7 @@ function driftRect(toRectRange, fromRectRange, controller, cover, name, dx, dy, 
     var rectRange = toRectRange(brushOption.range);
     var localDelta = toLocalDelta(controller, dx, dy);
 
-    each$16(name.split(''), function (namePart) {
+    each$15(name.split(''), function (namePart) {
         var ind = DIRECTION_MAP[namePart];
         rectRange[ind[0]][ind[1]] += localDelta[ind[0]];
     });
@@ -45386,7 +45386,7 @@ function driftPolygon(controller, cover, dx, dy, e) {
     var range = cover.__brushOption.range;
     var localDelta = toLocalDelta(controller, dx, dy);
 
-    each$16(range, function (point) {
+    each$15(range, function (point) {
         point[0] += localDelta[0];
         point[1] += localDelta[1];
     });
@@ -47721,13 +47721,13 @@ var boxplotVisual = function (ecModel, api) {
 
 };
 
-var each$17 = each$1;
+var each$16 = each$1;
 
 var boxplotLayout = function (ecModel) {
 
     var groupResult = groupSeriesByAxis(ecModel);
 
-    each$17(groupResult, function (groupItem) {
+    each$16(groupResult, function (groupItem) {
         var seriesModels = groupItem.seriesModels;
 
         if (!seriesModels.length) {
@@ -47736,7 +47736,7 @@ var boxplotLayout = function (ecModel) {
 
         calculateBase(groupItem);
 
-        each$17(seriesModels, function (seriesModel, idx) {
+        each$16(seriesModels, function (seriesModel, idx) {
             layoutSingleSeries(
                 seriesModel,
                 groupItem.boxOffsetList[idx],
@@ -47788,14 +47788,14 @@ function calculateBase(groupItem) {
     }
     else {
         var maxDataCount = 0;
-        each$17(seriesModels, function (seriesModel) {
+        each$16(seriesModels, function (seriesModel) {
             maxDataCount = Math.max(maxDataCount, seriesModel.getData().count());
         });
         extent = baseAxis.getExtent(),
         Math.abs(extent[1] - extent[0]) / maxDataCount;
     }
 
-    each$17(seriesModels, function (seriesModel) {
+    each$16(seriesModels, function (seriesModel) {
         var boxWidthBound = seriesModel.get('boxWidth');
         if (!isArray(boxWidthBound)) {
             boxWidthBound = [boxWidthBound, boxWidthBound];
@@ -47811,7 +47811,7 @@ function calculateBase(groupItem) {
     var boxWidth = (availableWidth - boxGap * (seriesCount - 1)) / seriesCount;
     var base = boxWidth / 2 - availableWidth / 2;
 
-    each$17(seriesModels, function (seriesModel, idx) {
+    each$16(seriesModels, function (seriesModel, idx) {
         boxOffsetList.push(base);
         base += boxGap + boxWidth;
 
@@ -51324,7 +51324,7 @@ var findPointFromSeries = function (finder, ecModel) {
     return {point: point, el: el};
 };
 
-var each$18 = each$1;
+var each$17 = each$1;
 var curry$3 = curry;
 var get$2 = makeGetter();
 
@@ -51398,11 +51398,11 @@ var axisTrigger = function (payload, ecModel, api) {
     };
 
     // Process for triggered axes.
-    each$18(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
+    each$17(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
         // If a point given, it must be contained by the coordinate system.
         var coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
 
-        each$18(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
+        each$17(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
             var axis = axisInfo.axis;
             var inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
             // If no inputAxesInfo, no axis is restricted.
@@ -51418,12 +51418,12 @@ var axisTrigger = function (payload, ecModel, api) {
 
     // Process for linked axes.
     var linkTriggers = {};
-    each$18(axesInfo, function (tarAxisInfo, tarKey) {
+    each$17(axesInfo, function (tarAxisInfo, tarKey) {
         var linkGroup = tarAxisInfo.linkGroup;
 
         // If axis has been triggered in the previous stage, it should not be triggered by link.
         if (linkGroup && !showValueMap[tarKey]) {
-            each$18(linkGroup.axesInfo, function (srcAxisInfo, srcKey) {
+            each$17(linkGroup.axesInfo, function (srcAxisInfo, srcKey) {
                 var srcValItem = showValueMap[srcKey];
                 // If srcValItem exist, source axis is triggered, so link to target axis.
                 if (srcAxisInfo !== tarAxisInfo && srcValItem) {
@@ -51436,7 +51436,7 @@ var axisTrigger = function (payload, ecModel, api) {
             });
         }
     });
-    each$18(linkTriggers, function (val, tarKey) {
+    each$17(linkTriggers, function (val, tarKey) {
         processOnAxis(axesInfo[tarKey], val, updaters, true, outputFinder);
     });
 
@@ -51492,7 +51492,7 @@ function buildPayloadsBySeries(value, axisInfo) {
     var minDist = Number.MAX_VALUE;
     var minDiff = -1;
 
-    each$18(axisInfo.seriesModels, function (series, idx) {
+    each$17(axisInfo.seriesModels, function (series, idx) {
         var dataDim = series.coordDimToDataDim(dim);
         var seriesNestestValue;
         var dataIndices;
@@ -51530,7 +51530,7 @@ function buildPayloadsBySeries(value, axisInfo) {
                 snapToValue = seriesNestestValue;
                 payloadBatch.length = 0;
             }
-            each$18(dataIndices, function (dataIndex) {
+            each$17(dataIndices, function (dataIndex) {
                 payloadBatch.push({
                     seriesIndex: series.seriesIndex,
                     dataIndexInside: dataIndex,
@@ -51597,7 +51597,7 @@ function showTooltip(dataByCoordSys, axisInfo, payloadInfo, value) {
 function updateModelActually(showValueMap, axesInfo, outputFinder) {
     var outputAxesInfo = outputFinder.axesInfo = [];
     // Basic logic: If no 'show' required, 'hide' this axisPointer.
-    each$18(axesInfo, function (axisInfo, key) {
+    each$17(axesInfo, function (axisInfo, key) {
         var option = axisInfo.axisPointerModel.option;
         var valItem = showValueMap[key];
 
@@ -51663,9 +51663,9 @@ function dispatchHighDownActually(axesInfo, dispatchAction, api) {
 
     // Update highlight/downplay status according to axisPointer model.
     // Build hash map and remove duplicate incidentally.
-    each$18(axesInfo, function (axisInfo, key) {
+    each$17(axesInfo, function (axisInfo, key) {
         var option = axisInfo.axisPointerModel.option;
-        option.status === 'show' && each$18(option.seriesDataIndices, function (batchItem) {
+        option.status === 'show' && each$17(option.seriesDataIndices, function (batchItem) {
             var key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
             newHighlights[key] = batchItem;
         });
@@ -51806,7 +51806,7 @@ var AxisPointerModel = extendComponentModel({
 });
 
 var get$3 = makeGetter();
-var each$19 = each$1;
+var each$18 = each$1;
 
 /**
  * @param {string} key
@@ -51845,7 +51845,7 @@ function initGlobalListeners(zr, api) {
         zr.on(eventType, function (e) {
             var dis = makeDispatchAction(api);
 
-            each$19(get$3(zr).records, function (record) {
+            each$18(get$3(zr).records, function (record) {
                 record && cb(record, e, dis.dispatchAction);
             });
 
@@ -55112,7 +55112,7 @@ function makeBackground(rect, componentModel) {
 }
 
 var curry$4 = curry;
-var each$20 = each$1;
+var each$19 = each$1;
 var Group$3 = Group;
 
 var LegendView = extendComponentView({
@@ -55205,7 +55205,7 @@ var LegendView = extendComponentView({
         var legendDrawnMap = createHashMap();
         var selectMode = legendModel.get('selectedMode');
 
-        each$20(legendModel.getData(), function (itemModel, dataIndex) {
+        each$19(legendModel.getData(), function (itemModel, dataIndex) {
             var name = itemModel.get('name');
 
             // Use empty string or \n as a newline string
@@ -56047,7 +56047,7 @@ extendComponentModel({
     }
 });
 
-var each$22 = each$1;
+var each$21 = each$1;
 var toCamelCase$1 = toCamelCase;
 
 var vendors = ['', '-webkit-', '-moz-', '-o-'];
@@ -56086,7 +56086,7 @@ function assembleFont(textStyleModel) {
     fontSize &&
         cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
 
-    each$22(['decoration', 'align'], function (name) {
+    each$21(['decoration', 'align'], function (name) {
         var val = textStyleModel.get(name);
         val && cssText.push('text-' + name + ':' + val);
     });
@@ -56126,7 +56126,7 @@ function assembleCssText(tooltipModel) {
     }
 
     // Border style
-    each$22(['width', 'color', 'radius'], function (name) {
+    each$21(['width', 'color', 'radius'], function (name) {
         var borderName = 'border-' + name;
         var camelCase = toCamelCase$1(borderName);
         var val = tooltipModel.get(camelCase);
@@ -56297,7 +56297,7 @@ TooltipContent.prototype = {
 };
 
 var bind$3 = bind;
-var each$21 = each$1;
+var each$20 = each$1;
 var parsePercent$2 = parsePercent$1;
 
 var proxyRect = new Rect({
@@ -56610,7 +56610,7 @@ extendComponentView({
             globalTooltipModel
         ]);
 
-        each$21(dataByCoordSys, function (itemCoordSys) {
+        each$20(dataByCoordSys, function (itemCoordSys) {
             // var coordParamList = [];
             // var coordDefaultHTML = [];
             // var coordTooltipModel = buildTooltipModel([
@@ -56622,7 +56622,7 @@ extendComponentView({
             // var displayMode = coordTooltipModel.get('displayMode');
             // var paramsList = displayMode === 'single' ? singleParamsList : [];
 
-            each$21(itemCoordSys.dataByAxis, function (item) {
+            each$20(itemCoordSys.dataByAxis, function (item) {
                 var axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex);
                 var axisValue = item.value;
                 var seriesDefaultHTML = [];
@@ -56896,13 +56896,13 @@ extendComponentView({
         var contentNotChanged = !!lastCoordSys
             && lastCoordSys.length === dataByCoordSys.length;
 
-        contentNotChanged && each$21(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
+        contentNotChanged && each$20(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
             var lastDataByAxis = lastItemCoordSys.dataByAxis || {};
             var thisItemCoordSys = dataByCoordSys[indexCoordSys] || {};
             var thisDataByAxis = thisItemCoordSys.dataByAxis || [];
             contentNotChanged &= lastDataByAxis.length === thisDataByAxis.length;
 
-            contentNotChanged && each$21(lastDataByAxis, function (lastItem, indexAxis) {
+            contentNotChanged && each$20(lastDataByAxis, function (lastItem, indexAxis) {
                 var thisItem = thisDataByAxis[indexAxis] || {};
                 var lastIndices = lastItem.seriesDataIndices || [];
                 var newIndices = thisItem.seriesDataIndices || [];
@@ -56913,7 +56913,7 @@ extendComponentView({
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
-                contentNotChanged && each$21(lastIndices, function (lastIdxItem, j) {
+                contentNotChanged && each$20(lastIndices, function (lastIdxItem, j) {
                     var newIdxItem = newIndices[j];
                     contentNotChanged &=
                         lastIdxItem.seriesIndex === newIdxItem.seriesIndex
@@ -58687,7 +58687,7 @@ function removeDuplicate(arr) {
  * @file Visual solution, for consistent option specification.
  */
 
-var each$23 = each$1;
+var each$22 = each$1;
 
 function hasKeys(obj) {
     if (obj) {
@@ -58708,10 +58708,10 @@ function hasKeys(obj) {
 function createVisualMappings(option, stateList, supplementVisualOption) {
     var visualMappings = {};
 
-    each$23(stateList, function (state) {
+    each$22(stateList, function (state) {
         var mappings = visualMappings[state] = createMappings();
 
-        each$23(option[state], function (visualData, visualType) {
+        each$22(option[state], function (visualData, visualType) {
             if (!VisualMapping.isValidType(visualType)) {
                 return;
             }
@@ -58939,7 +58939,7 @@ function determinant(v1, v2, v3, v4) {
     return v1 * v4 - v2 * v3;
 }
 
-var each$24 = each$1;
+var each$23 = each$1;
 var indexOf$2 = indexOf;
 var curry$5 = curry;
 
@@ -59019,7 +59019,7 @@ function BrushTargetManager(option, ecModel, opt) {
     var info = {};
     var foundCpts = parseFinder$1(ecModel, option);
 
-    each$24(targetInfoBuilders, function (builder, type) {
+    each$23(targetInfoBuilders, function (builder, type) {
         if (!opt || !opt.include || indexOf$2(opt.include, type) >= 0) {
             builder(foundCpts, targetInfoList, info);
         }
@@ -59049,7 +59049,7 @@ proto.setOutputRanges = function (areas, ecModel) {
 };
 
 proto.matchOutputRanges = function (areas, ecModel, cb) {
-    each$24(areas, function (area) {
+    each$23(areas, function (area) {
         var targetInfo = this.findTargetInfo(area, ecModel);
 
         if (targetInfo && targetInfo !== true) {
@@ -59065,7 +59065,7 @@ proto.matchOutputRanges = function (areas, ecModel, cb) {
 };
 
 proto.setInputRanges = function (areas, ecModel) {
-    each$24(areas, function (area) {
+    each$23(areas, function (area) {
         var targetInfo = this.findTargetInfo(area, ecModel);
 
         if (__DEV__) {
@@ -59186,17 +59186,17 @@ var targetInfoBuilders = {
             return;
         }
 
-        each$24(xAxisModels, function (axisModel) {
+        each$23(xAxisModels, function (axisModel) {
             var gridModel = axisModel.axis.grid.model;
             gridModelMap.set(gridModel.id, gridModel);
             xAxesHas[gridModel.id] = true;
         });
-        each$24(yAxisModels, function (axisModel) {
+        each$23(yAxisModels, function (axisModel) {
             var gridModel = axisModel.axis.grid.model;
             gridModelMap.set(gridModel.id, gridModel);
             yAxesHas[gridModel.id] = true;
         });
-        each$24(gridModels, function (gridModel) {
+        each$23(gridModels, function (gridModel) {
             gridModelMap.set(gridModel.id, gridModel);
             xAxesHas[gridModel.id] = true;
             yAxesHas[gridModel.id] = true;
@@ -59206,7 +59206,7 @@ var targetInfoBuilders = {
             var grid = gridModel.coordinateSystem;
             var cartesians = [];
 
-            each$24(grid.getCartesians(), function (cartesian, index) {
+            each$23(grid.getCartesians(), function (cartesian, index) {
                 if (indexOf$2(xAxisModels, cartesian.getAxis('x').model) >= 0
                     || indexOf$2(yAxisModels, cartesian.getAxis('y').model) >= 0
                 ) {
@@ -59228,7 +59228,7 @@ var targetInfoBuilders = {
     },
 
     geo: function (foundCpts, targetInfoList) {
-        each$24(foundCpts.geoModels, function (geoModel) {
+        each$23(foundCpts.geoModels, function (geoModel) {
             var coordSys = geoModel.coordinateSystem;
             targetInfoList.push({
                 panelId: 'geo--' + geoModel.id,
@@ -61508,7 +61508,7 @@ function createLinkedNodesFinder(forEachNode, forEachEdgeType, edgeIdGetter) {
     }
 }
 
-var each$26 = each$1;
+var each$25 = each$1;
 var asc$1 = asc;
 
 /**
@@ -61681,12 +61681,12 @@ AxisProxy.prototype = {
         ];
         var valueWindow = [];
 
-        each$26(['startValue', 'endValue'], function (prop) {
+        each$25(['startValue', 'endValue'], function (prop) {
             valueWindow.push(opt[prop] != null ? scale.parse(opt[prop]) : null);
         });
 
         // Normalize bound.
-        each$26([0, 1], function (idx) {
+        each$25([0, 1], function (idx) {
             var boundValue = valueWindow[idx];
             var boundPercent = percentWindow[idx];
 
@@ -61806,7 +61806,7 @@ AxisProxy.prototype = {
         }
 
         // Process series data
-        each$26(seriesModels, function (seriesModel) {
+        each$25(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
             var dataDims = seriesModel.coordDimToDataDim(axisDim);
 
@@ -61832,7 +61832,7 @@ AxisProxy.prototype = {
                 });
             }
             else {
-                seriesData && each$26(dataDims, function (dim) {
+                seriesData && each$25(dataDims, function (dim) {
                     if (filterMode === 'empty') {
                         seriesModel.setData(
                             seriesData.map(dim, function (value) {
@@ -61856,10 +61856,10 @@ AxisProxy.prototype = {
 function calculateDataExtent(axisProxy, axisDim, seriesModels) {
     var dataExtent = [Infinity, -Infinity];
 
-    each$26(seriesModels, function (seriesModel) {
+    each$25(seriesModels, function (seriesModel) {
         var seriesData = seriesModel.getData();
         if (seriesData) {
-            each$26(seriesModel.coordDimToDataDim(axisDim), function (dim) {
+            each$25(seriesModel.coordDimToDataDim(axisDim), function (dim) {
                 var seriesExtent = seriesData.getDataExtent(dim);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
@@ -61948,7 +61948,7 @@ function setMinMaxSpan(axisProxy) {
     var minMaxSpan = axisProxy._minMaxSpan = {};
     var dataZoomModel = axisProxy._dataZoomModel;
 
-    each$26(['min', 'max'], function (minMax) {
+    each$25(['min', 'max'], function (minMax) {
         minMaxSpan[minMax + 'Span'] = dataZoomModel.get(minMax + 'Span');
 
         // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
@@ -61968,7 +61968,7 @@ function setMinMaxSpan(axisProxy) {
     });
 }
 
-var each$25 = each$1;
+var each$24 = each$1;
 var eachAxisDim = eachAxisDim$1;
 
 var DataZoomModel = extendComponentModel({
@@ -62093,7 +62093,7 @@ var DataZoomModel = extendComponentModel({
 
         updateRangeUse(this, rawOption);
 
-        each$25([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
+        each$24([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
             // start/end has higher priority over startValue/endValue if they
             // both set, but we should make chart.setOption({endValue: 1000})
             // effective, rather than chart.setOption({endValue: 1000, end: null}).
@@ -62206,7 +62206,7 @@ var DataZoomModel = extendComponentModel({
                 autoAxisIndex = false;
             }
             else {
-                each$25(dependentModels.singleAxis, function (singleAxisModel) {
+                each$24(dependentModels.singleAxis, function (singleAxisModel) {
                     if (autoAxisIndex && singleAxisModel.get('orient', true) === orient) {
                         thisOption.singleAxisIndex = [singleAxisModel.componentIndex];
                         autoAxisIndex = false;
@@ -62355,7 +62355,7 @@ var DataZoomModel = extendComponentModel({
     eachTargetAxis: function (callback, context) {
         var ecModel = this.ecModel;
         eachAxisDim(function (dimNames) {
-            each$25(
+            each$24(
                 this.get(dimNames.axisIndex),
                 function (axisIndex) {
                     callback.call(context, dimNames, axisIndex, this, ecModel);
@@ -62477,7 +62477,7 @@ var DataZoomModel = extendComponentModel({
 function setOneSide(inputParams, option, percentName) {
     var names = [percentName, percentName + 'Value'];
     var hasValueIdx;
-    each$25(names, function (name, index) {
+    each$24(names, function (name, index) {
         if (inputParams[name] != null) {
             option[name] = inputParams[name];
             hasValueIdx = index;
@@ -62493,7 +62493,7 @@ function setOneSide(inputParams, option, percentName) {
 
 function retrieveRaw(option) {
     var ret = {};
-    each$25(
+    each$24(
         ['start', 'end', 'startValue', 'endValue', 'throttle'],
         function (name) {
             option.hasOwnProperty(name) && (ret[name] = option[name]);
@@ -62506,7 +62506,7 @@ function updateRangeUse(dataZoomModel, rawOption) {
     var rangePropMode = dataZoomModel._rangePropMode;
     var rangeModeInOption = dataZoomModel.get('rangeMode');
 
-    each$25([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
+    each$24([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
         var percentSpecified = rawOption[names[0]] != null;
         var valueSpecified = rawOption[names[1]] != null;
         if (percentSpecified && !valueSpecified) {
@@ -62660,7 +62660,7 @@ var Rect$2 = Rect;
 var linearMap$2 = linearMap;
 var asc$2 = asc;
 var bind$4 = bind;
-var each$27 = each$1;
+var each$26 = each$1;
 
 // Constants
 var DEFAULT_LOCATION_EDGE_GAP = 7;
@@ -63107,7 +63107,7 @@ var SliderZoomView = DataZoomView.extend({
             }
         })));
 
-        each$27([0, 1], function (handleIndex) {
+        each$26([0, 1], function (handleIndex) {
             var path = createIcon(
                 dataZoomModel.get('handleIcon'),
                 {
@@ -63208,7 +63208,7 @@ var SliderZoomView = DataZoomView.extend({
         var handleInterval = asc$2(handleEnds.slice());
         var size = this._size;
 
-        each$27([0, 1], function (handleIndex) {
+        each$26([0, 1], function (handleIndex) {
             // Handles
             var handle = displaybles.handles[handleIndex];
             var handleHeight = this._handleHeight;
@@ -63399,7 +63399,7 @@ var SliderZoomView = DataZoomView.extend({
     _findCoordRect: function () {
         // Find the grid coresponding to the first axis referred by dataZoom.
         var rect;
-        each$27(this.getTargetCoordInfo(), function (coordInfoList) {
+        each$26(this.getTargetCoordInfo(), function (coordInfoList) {
             if (!rect && coordInfoList.length) {
                 var coordSys = coordInfoList[0].model.coordinateSystem;
                 rect = coordSys.getRect && coordSys.getRect();
@@ -63955,7 +63955,7 @@ registerAction('dataZoom', function (payload, ecModel) {
  * DataZoom component entry
  */
 
-var each$28 = each$1;
+var each$27 = each$1;
 
 var preprocessor$2 = function (option) {
     var visualMap = option && option.visualMap;
@@ -63964,7 +63964,7 @@ var preprocessor$2 = function (option) {
         visualMap = visualMap ? [visualMap] : [];
     }
 
-    each$28(visualMap, function (opt) {
+    each$27(visualMap, function (opt) {
         if (!opt) {
             return;
         }
@@ -63977,7 +63977,7 @@ var preprocessor$2 = function (option) {
 
         var pieces = opt.pieces;
         if (pieces && isArray(pieces)) {
-            each$28(pieces, function (piece) {
+            each$27(pieces, function (piece) {
                 if (isObject(piece)) {
                     if (has$1(piece, 'start') && !has$1(piece, 'min')) {
                         piece.min = piece.start;
@@ -64151,7 +64151,7 @@ var defaultOption$3 = {
 var mapVisual$2 = VisualMapping.mapVisual;
 var eachVisual = VisualMapping.eachVisual;
 var isArray$3 = isArray;
-var each$29 = each$1;
+var each$28 = each$1;
 var asc$3 = asc;
 var linearMap$3 = linearMap;
 var noop$2 = noop;
@@ -64507,7 +64507,7 @@ var VisualMapModel = extendComponentModel({
             base.inRange = base.inRange || {color: DEFAULT_COLOR};
 
             // If using shortcut like: {inRange: 'symbol'}, complete default value.
-            each$29(this.stateList, function (state) {
+            each$28(this.stateList, function (state) {
                 var visualType = base[state];
 
                 if (isString(visualType)) {
@@ -64530,7 +64530,7 @@ var VisualMapModel = extendComponentModel({
 
             if (optExist && !optAbsent) {
                 optAbsent = base[stateAbsent] = {};
-                each$29(optExist, function (visualData, visualType) {
+                each$28(optExist, function (visualData, visualType) {
                     if (!VisualMapping.isValidType(visualType)) {
                         return;
                     }
@@ -64561,7 +64561,7 @@ var VisualMapModel = extendComponentModel({
                 || (controller.outOfRange || {}).symbolSize;
             var inactiveColor = this.get('inactiveColor');
 
-            each$29(this.stateList, function (state) {
+            each$28(this.stateList, function (state) {
 
                 var itemSize = this.itemSize;
                 var visuals = controller[state];
@@ -65090,7 +65090,7 @@ function convertDataIndex(batch) {
 }
 
 var linearMap$4 = linearMap;
-var each$30 = each$1;
+var each$29 = each$1;
 var mathMin$7 = Math.min;
 var mathMax$7 = Math.max;
 
@@ -65593,7 +65593,7 @@ var ContinuousView = VisualMapView.extend({
         var handleThumbs = shapes.handleThumbs;
         var handleLabels = shapes.handleLabels;
 
-        each$30([0, 1], function (handleIndex) {
+        each$29([0, 1], function (handleIndex) {
             var handleThumb = handleThumbs[handleIndex];
             handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
             handleThumb.position[1] = handleEnds[handleIndex];
@@ -68406,7 +68406,7 @@ TimelineAxis.prototype = {
 inherits(TimelineAxis, Axis);
 
 var bind$6 = bind;
-var each$31 = each$1;
+var each$30 = each$1;
 
 var PI$4 = Math.PI;
 
@@ -68477,7 +68477,7 @@ TimelineView.extend({
                 return encodeHTML(axis.scale.getLabel(dataIndex));
             };
 
-            each$31(
+            each$30(
                 ['AxisLine', 'AxisTick', 'Control', 'CurrentPointer'],
                 function (name) {
                     this['_render' + name](layoutInfo, mainGroup, axis, timelineModel);
@@ -68741,7 +68741,7 @@ TimelineView.extend({
         var data = timelineModel.getData();
         var ticks = axis.scale.getTicks();
 
-        each$31(ticks, function (value, dataIndex) {
+        each$30(ticks, function (value, dataIndex) {
 
             var tickCoord = axis.dataToCoord(value);
             var itemModel = data.getItemModel(dataIndex);
@@ -68782,7 +68782,7 @@ TimelineView.extend({
         );
         var labelInterval = axis.getLabelInterval();
 
-        each$31(ticks, function (tick, dataIndex) {
+        each$30(ticks, function (tick, dataIndex) {
             if (axis.isLabelIgnored(dataIndex, labelInterval)) {
                 return;
             }
@@ -70103,7 +70103,7 @@ registerAction({
     }, payload.newOption));
 });
 
-var each$33 = each$1;
+var each$32 = each$1;
 
 var ATTR$2 = '\0_ec_hist_store';
 
@@ -70116,7 +70116,7 @@ function push(ecModel, newSnapshot) {
 
     // If previous dataZoom can not be found,
     // complete an range with current range.
-    each$33(newSnapshot, function (batchItem, dataZoomId) {
+    each$32(newSnapshot, function (batchItem, dataZoomId) {
         var i = store.length - 1;
         for (; i >= 0; i--) {
             var snapshot = store[i];
@@ -70154,7 +70154,7 @@ function pop(ecModel) {
 
     // Find top for all dataZoom.
     var snapshot = {};
-    each$33(head, function (batchItem, dataZoomId) {
+    each$32(head, function (batchItem, dataZoomId) {
         for (var i = store.length - 1; i >= 0; i--) {
             var batchItem = store[i][dataZoomId];
             if (batchItem) {
@@ -70209,7 +70209,7 @@ DataZoomView.extend({
  */
 
 var dataZoomLang = lang.toolbox.dataZoom;
-var each$32 = each$1;
+var each$31 = each$1;
 
 // Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
 var DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
@@ -70357,7 +70357,7 @@ proto$4._dispatchZoomAction = function (snapshot) {
     var batch = [];
 
     // Convert from hash map to array.
-    each$32(snapshot, function (batchItem, dataZoomId) {
+    each$31(snapshot, function (batchItem, dataZoomId) {
         batch.push(clone(batchItem));
     });
 
@@ -70493,7 +70493,7 @@ registerPreprocessor(function (option) {
         if (!isArray(opts)) {
             opts = opts ? [opts] : [];
         }
-        each$32(opts, cb);
+        each$31(opts, cb);
     }
 });
 
@@ -70809,7 +70809,7 @@ if (!env$1.canvasSupported) {
     };
 
     var points$3 = [[], [], []];
-    var pathDataToString = function (data, m) {
+    var pathDataToString = function (path, m) {
         var M = CMD.M;
         var C = CMD.C;
         var L = CMD.L;
@@ -70823,7 +70823,9 @@ if (!env$1.canvasSupported) {
         var i;
         var xi;
         var yi;
-        for (i = 0; i < data.length;) {
+        var data = path.data;
+        var dataLength = path.len();
+        for (i = 0; i < dataLength;) {
             cmd = data[i++];
             cmdStr = '';
             nPoint = 0;
@@ -71044,7 +71046,7 @@ if (!env$1.canvasSupported) {
             this.__dirtyPath = false;
         }
 
-        vmlEl.path = pathDataToString(path.data, this.transform);
+        vmlEl.path = pathDataToString(path, this.transform);
 
         vmlEl.style.zIndex = getZIndex(this.zlevel, this.z, this.z2);
 
@@ -71941,9 +71943,11 @@ function bindStyle(svgEl, style, isText) {
 /***************************************************
  * PATH
  **************************************************/
-function pathDataToString$1(data) {
+function pathDataToString$1(path) {
     var str = [];
-    for (var i = 0; i < data.length;) {
+    var data = path.data;
+    var dataLength = path.len();
+    for (var i = 0; i < dataLength;) {
         var cmd = data[i++];
         var cmdStr = '';
         var nData = 0;
@@ -72069,7 +72073,7 @@ svgPath.brush = function (el) {
         el.buildPath(path, el.shape);
         el.__dirtyPath = false;
 
-        attr(svgEl, 'd', pathDataToString$1(path.data));
+        attr(svgEl, 'd', pathDataToString$1(path));
     }
 
     bindStyle(svgEl, style);
@@ -73466,6 +73470,8 @@ exports.util = ecUtil;
 exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
+
+exports.bundleVersion = "1509895597231";
 
 })));
 //# sourceMappingURL=echarts.js.map
