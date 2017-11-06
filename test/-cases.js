@@ -13,11 +13,14 @@
 
     function run() {
         // Init list
+        var url = dir() + '/';
         $.ajax({
-            url: dir() + '/'
+            url: url
         }).then(function (content) {
             var pagePaths = fetchPagePaths(content);
-            render(pagePaths);
+            pagePaths.length ? render(pagePaths) : renderFailInfo(url);
+        }).cache(function () {
+            renderFailInfo(url);
         });
 
         $(window).on('hashchange', function () {
@@ -29,6 +32,12 @@
         });
 
         reset();
+    }
+
+    function renderFailInfo(url) {
+        url = encodeHTML(url);
+        document.body.innerHTML = 'Error: This page requires a server that is able to list files when visiting'
+            + ' <a target="_blank" href="' + url + '">' + url + '</a>.';
     }
 
     function reset() {
