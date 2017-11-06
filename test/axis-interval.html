@@ -28,8 +28,10 @@
 
         <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
         <!-- <div class="chart" id="main0"></div> -->
-        <h1>[ Test interval when rotated ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
-        <div class="chart" id="main1"></div>
+        <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
+        <!-- <div class="chart" id="main1"></div> -->
+        <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
+        <div class="chart" id="main2"></div>
 
 
         <script>
@@ -167,10 +169,10 @@
 
                 var chart = testHelper.createChart(echarts, 'main1', option, {height: 600});
 
-                next();
+                chart && next();
 
                 function next() {
-                    var nextInterval = rotate % 90 === 0 ? 2000 : 70;
+                    var nextInterval = rotate % 90 === 0 ? 2000: 70;
                     rotate = (rotate + 1) % 360;
                     setTimeout(function () {
                         chart.setOption({
@@ -195,6 +197,68 @@
         </script>
 
 
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/rainfall.json',
+                'echarts'
+            ], function (rainfallData, echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        bottom: 150
+                    },
+                    dataZoom: {
+                        show: true,
+                        realtime: true,
+                        startValue: '2009-09-20 12:00',
+                        end: 100
+                    },
+                    xAxis: [
+                        {
+                            type: 'time',
+                            axisLabel: {
+                                formatter: function (value) {
+                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
+                                }
+                            }
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            name: '流量(m^3/s)'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '流量',
+                            type: 'line',
+                            symbol: 'none',
+                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+                            data: rainfallData.flow.map(function (val, idx) {
+                                return [+(new Date(rainfallData.category[idx])), val];
+                            })
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'main2', option);
+            })
+
+        </script>
 
 
 

@@ -37293,15 +37293,14 @@ SeriesModel.extend({
         });
 
         var expandAndCollapse = option.expandAndCollapse;
-        var expandTreeDepth = expandAndCollapse ? (option.initialTreeDepth >= 1 ? option.initialTreeDepth : 1) : treeDepth;
+        var expandTreeDepth = (expandAndCollapse && option.initialTreeDepth >= 0)
+            ? option.initialTreeDepth : treeDepth;
 
         tree.root.eachNode('preorder', function (node) {
-            if (node.depth <= expandTreeDepth) {
-                node.isExpand = true;
-            }
-            else {
-                node.isExpand = false;
-            }
+            var item = node.hostTree.data.getRawDataItem(node.dataIndex);
+            node.isExpand = (item && item.collapsed != null)
+                ? !item.collapsed
+                : node.depth <= expandTreeDepth;
         });
 
         return tree.data;
@@ -37321,7 +37320,9 @@ SeriesModel.extend({
             name = node.parentNode.name + '.' + name;
             node = node.parentNode;
         }
-        return encodeHTML(name + ' : ' + value);
+        return encodeHTML(name + (
+            (isNaN(value) || value == null) ? '' : ' : ' + value
+        ));
     },
 
     defaultOption: {
@@ -74322,8 +74323,6 @@ each$1([
 
 registerPainter('svg', SVGPainter);
 
-// Import all charts and components
-
 exports.version = version;
 exports.dependencies = dependencies;
 exports.PRIORITY = PRIORITY;
@@ -74364,7 +74363,7 @@ exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
 
-exports.bundleVersion = "1509959194800";
+exports.bundleVersion = "1509976480393";
 
 })));
 //# sourceMappingURL=echarts.js.map
