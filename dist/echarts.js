@@ -25731,16 +25731,15 @@ function ifAxisCrossZero(axis) {
  * @param {Array.<number>} tickCoords In axis self coordinate.
  * @param {Array.<string>} labels
  * @param {string} font
- * @param {boolean} isAxisHorizontal
+ * @param {number} axisRotate 0: towards right horizontally, clock-wise is negative.
+ * @param {number} [labelRotate=0] 0: towards right horizontally, clock-wise is negative.
  * @return {number}
  */
-function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal) {
-    // FIXME
-    // 不同角的axis和label，不只是horizontal和vertical.
-
+function getAxisLabelInterval(tickCoords, labels, font, axisRotate, labelRotate) {
     var textSpaceTakenRect;
     var autoLabelInterval = 0;
     var accumulatedLabelInterval = 0;
+    var rotation = (axisRotate - labelRotate) / 180 * Math.PI;
 
     var step = 1;
     if (labels.length > 40) {
@@ -25750,12 +25749,19 @@ function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal) {
 
     for (var i = 0; i < tickCoords.length; i += step) {
         var tickCoord = tickCoords[i];
+
+        // Not precise, do not consider align and vertical align
+        // and each distance from axis line yet.
         var rect = getBoundingRect(
             labels[i], font, 'center', 'top'
         );
-        rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
-        // FIXME Magic number 1.5
-        rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
+        rect.x += tickCoord * Math.cos(rotation);
+        rect.y += tickCoord * Math.sin(rotation);
+
+        // Magic number
+        rect.width *= 1.3;
+        rect.height *= 1.3;
+
         if (!textSpaceTakenRect) {
             textSpaceTakenRect = rect.clone();
         }
@@ -26550,18 +26556,20 @@ Axis.prototype = {
         if (!labelInterval) {
             var axisModel = this.model;
             var labelModel = axisModel.getModel('axisLabel');
-            var interval = labelModel.get('interval');
-            if (!(this.type === 'category' && interval === 'auto')) {
-                labelInterval = interval === 'auto' ? 0 : interval;
-            }
-            else if (this.isHorizontal){
+            labelInterval = labelModel.get('interval');
+
+            if (this.type === 'category'
+                && (labelInterval == null || labelInterval === 'auto')
+            ) {
                 labelInterval = getAxisLabelInterval(
                     map(this.scale.getTicks(), this.dataToCoord, this),
                     axisModel.getFormattedLabels(),
                     labelModel.getFont(),
-                    this.isHorizontal()
+                    this.isHorizontal() ? 0 : 90,
+                    labelModel.get('rotate')
                 );
             }
+
             this._labelInterval = labelInterval;
         }
         return labelInterval;
@@ -37244,6 +37252,888 @@ function addChild(child, node) {
     child.parentNode = node;
 }
 
+/**
+ * @file Create data struct and define tree view's series model
+ */
+
+SeriesModel.extend({
+
+    type: 'series.tree',
+
+    layoutInfo: null,
+
+    // can support the position parameters 'left', 'top','right','bottom', 'width',
+    // 'height' in the setOption() with 'merge' mode normal.
+    layoutMode: 'box',
+
+    /**
+     * Init a tree data structure from data in option series
+     * @param  {Object} option  the object used to config echarts view
+     * @return {module:echarts/data/List} storage initial data
+     */
+    getInitialData: function (option) {
+
+        //create an virtual root
+        var root = {name: option.name, children: option.data};
+
+        var leaves = option.leaves || {};
+
+        var treeOption = {};
+
+        treeOption.leaves = leaves;
+
+        var tree = Tree.createTree(root, this, treeOption);
+
+        var treeDepth = 0;
+
+        tree.eachNode('preorder', function (node) {
+            if (node.depth > treeDepth) {
+                treeDepth = node.depth;
+            }
+        });
+
+        var expandAndCollapse = option.expandAndCollapse;
+        var expandTreeDepth = expandAndCollapse ? (option.initialTreeDepth >= 1 ? option.initialTreeDepth : 1) : treeDepth;
+
+        tree.root.eachNode('preorder', function (node) {
+            if (node.depth <= expandTreeDepth) {
+                node.isExpand = true;
+            }
+            else {
+                node.isExpand = false;
+            }
+        });
+
+        return tree.data;
+    },
+
+    /**
+     * @override
+     * @param {number} dataIndex
+     */
+    formatTooltip: function (dataIndex) {
+        var tree = this.getData().tree;
+        var realRoot = tree.root.children[0];
+        var node = tree.getNodeByDataIndex(dataIndex);
+        var value = node.getValue();
+        var name = node.name;
+        while (node && (node !== realRoot)) {
+            name = node.parentNode.name + '.' + name;
+            node = node.parentNode;
+        }
+        return encodeHTML(name + ' : ' + value);
+    },
+
+    defaultOption: {
+        zlevel: 0,
+        z: 2,
+
+        // the position of the whole view
+        left: '12%',
+        top: '12%',
+        right: '12%',
+        bottom: '12%',
+
+        // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
+        layout: 'orthogonal',
+
+        // the orient of orthoginal layout, can be setted to 'horizontal' or 'vertical'
+        orient: 'horizontal',
+
+        symbol: 'emptyCircle',
+
+        symbolSize: 7,
+
+        expandAndCollapse: true,
+
+        initialTreeDepth: 2,
+
+        lineStyle: {
+            normal: {
+                color: '#ccc',
+                width: 1.5,
+                curveness: 0.5
+            }
+        },
+
+        itemStyle: {
+            normal: {
+                color: 'lightsteelblue',
+                borderColor: '#c23531',
+                borderWidth: 1.5
+            }
+        },
+
+        label: {
+            normal: {
+                show: true,
+                color: '#555'
+            }
+        },
+
+        leaves: {
+            label: {
+                normal: {
+                    show: true
+                }
+            }
+        },
+
+        animationEasing: 'linear',
+
+        animationDuration: 700,
+
+        animationDurationUpdate: 1000
+    }
+});
+
+/**
+ * @file The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
+ *       the tree.
+ * @see https://github.com/d3/d3-hierarchy
+ */
+
+function init$2(root) {
+    root.hierNode = {
+        defaultAncestor: null,
+        ancestor: root,
+        prelim: 0,
+        modifier: 0,
+        change: 0,
+        shift: 0,
+        i: 0,
+        thread: null
+    };
+
+    var nodes = [root];
+    var node;
+    var children;
+
+    while (node = nodes.pop()) { // jshint ignore:line
+        children = node.children;
+        if (node.isExpand && children.length) {
+            var n = children.length;
+            for (var i = n - 1; i >= 0; i--) {
+                var child = children[i];
+                child.hierNode = {
+                    defaultAncestor: null,
+                    ancestor: child,
+                    prelim: 0,
+                    modifier: 0,
+                    change: 0,
+                    shift: 0,
+                    i: i,
+                    thread: null
+                };
+                nodes.push(child);
+            }
+        }
+    }
+}
+
+/**
+ * Computes a preliminary x coordinate for node. Before that, this function is
+ * applied recursively to the children of node, as well as the function
+ * apportion(). After spacing out the children by calling executeShifts(), the
+ * node is placed to the midpoint of its outermost children.
+ * @param  {module:echarts/data/Tree~TreeNode} node
+ * @param {Function} separation
+ */
+function firstWalk(node, separation) {
+    var children = node.isExpand ? node.children : [];
+    var siblings = node.parentNode.children;
+    var subtreeW = node.hierNode.i ? siblings[node.hierNode.i -1] : null;
+    if (children.length) {
+        executeShifts(node);
+        var midPoint = (children[0].hierNode.prelim + children[children.length - 1].hierNode.prelim) / 2;
+        if (subtreeW) {
+            node.hierNode.prelim = subtreeW.hierNode.prelim + separation(node, subtreeW);
+            node.hierNode.modifier = node.hierNode.prelim - midPoint;
+        }
+        else {
+            node.hierNode.prelim = midPoint;
+        }
+    }
+    else if (subtreeW) {
+        node.hierNode.prelim = subtreeW.hierNode.prelim + separation(node, subtreeW);
+    }
+    node.parentNode.hierNode.defaultAncestor = apportion(node, subtreeW, node.parentNode.hierNode.defaultAncestor || siblings[0], separation);
+}
+
+
+/**
+ * Computes all real x-coordinates by summing up the modifiers recursively.
+ * @param  {module:echarts/data/Tree~TreeNode} node
+ */
+function secondWalk(node) {
+    var nodeX = node.hierNode.prelim + node.parentNode.hierNode.modifier;
+    node.setLayout({x: nodeX}, true);
+    node.hierNode.modifier += node.parentNode.hierNode.modifier;
+}
+
+
+function separation(cb) {
+    return arguments.length ? cb : defaultSeparation;
+}
+
+/**
+ * Transform the common coordinate to radial coordinate
+ * @param  {number} x
+ * @param  {number} y
+ * @return {Object}
+ */
+function radialCoordinate(x, y) {
+    var radialCoor = {};
+    x -= Math.PI / 2;
+    radialCoor.x = y * Math.cos(x);
+    radialCoor.y = y * Math.sin(x);
+    return radialCoor;
+}
+
+/**
+ * Get the layout position of the whole view
+ * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
+ * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
+ * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
+ */
+function getViewRect(seriesModel, api) {
+    return getLayoutRect(
+        seriesModel.getBoxLayoutParams(), {
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
+    );
+}
+
+/**
+ * All other shifts, applied to the smaller subtrees between w- and w+, are
+ * performed by this function.
+ * @param  {module:echarts/data/Tree~TreeNode} node
+ */
+function executeShifts(node) {
+    var children = node.children;
+    var n = children.length;
+    var shift = 0;
+    var change = 0;
+    while (--n >= 0) {
+        var child = children[n];
+        child.hierNode.prelim += shift;
+        child.hierNode.modifier += shift;
+        change += child.hierNode.change;
+        shift += child.hierNode.shift + change;
+    }
+}
+
+/**
+ * The core of the algorithm. Here, a new subtree is combined with the
+ * previous subtrees. Threads are used to traverse the inside and outside
+ * contours of the left and right subtree up to the highest common level.
+ * Whenever two nodes of the inside contours conflict, we compute the left
+ * one of the greatest uncommon ancestors using the function nextAncestor()
+ * and call moveSubtree() to shift the subtree and prepare the shifts of
+ * smaller subtrees. Finally, we add a new thread (if necessary).
+ * @param  {module:echarts/data/Tree~TreeNode} subtreeV
+ * @param  {module:echarts/data/Tree~TreeNode} subtreeW
+ * @param  {module:echarts/data/Tree~TreeNode} ancestor
+ * @param  {Function} separation
+ * @return {module:echarts/data/Tree~TreeNode}
+ */
+function apportion(subtreeV, subtreeW, ancestor, separation) {
+
+    if (subtreeW) {
+        var nodeOutRight = subtreeV;
+        var nodeInRight = subtreeV;
+        var nodeOutLeft = nodeInRight.parentNode.children[0];
+        var nodeInLeft = subtreeW;
+
+        var sumOutRight = nodeOutRight.hierNode.modifier;
+        var sumInRight = nodeInRight.hierNode.modifier;
+        var sumOutLeft = nodeOutLeft.hierNode.modifier;
+        var sumInLeft = nodeInLeft.hierNode.modifier;
+
+        while (nodeInLeft = nextRight(nodeInLeft), nodeInRight = nextLeft(nodeInRight), nodeInLeft && nodeInRight) {
+            nodeOutRight = nextRight(nodeOutRight);
+            nodeOutLeft = nextLeft(nodeOutLeft);
+            nodeOutRight.hierNode.ancestor = subtreeV;
+            var shift = nodeInLeft.hierNode.prelim + sumInLeft - nodeInRight.hierNode.prelim
+                    - sumInRight + separation(nodeInLeft, nodeInRight);
+            if (shift > 0) {
+                moveSubtree(nextAncestor(nodeInLeft, subtreeV, ancestor), subtreeV, shift);
+                sumInRight += shift;
+                sumOutRight += shift;
+            }
+            sumInLeft += nodeInLeft.hierNode.modifier;
+            sumInRight += nodeInRight.hierNode.modifier;
+            sumOutRight += nodeOutRight.hierNode.modifier;
+            sumOutLeft += nodeOutLeft.hierNode.modifier;
+        }
+        if (nodeInLeft && !nextRight(nodeOutRight)) {
+            nodeOutRight.hierNode.thread = nodeInLeft;
+            nodeOutRight.hierNode.modifier += sumInLeft - sumOutRight;
+
+        }
+        if (nodeInRight && !nextLeft(nodeOutLeft)) {
+            nodeOutLeft.hierNode.thread = nodeInRight;
+            nodeOutLeft.hierNode.modifier += sumInRight - sumOutLeft;
+            ancestor = subtreeV;
+        }
+    }
+    return ancestor;
+}
+
+/**
+ * This function is used to traverse the right contour of a subtree.
+ * It returns the rightmost child of node or the thread of node. The function
+ * returns null if and only if node is on the highest depth of its subtree.
+ * @param  {module:echarts/data/Tree~TreeNode} node
+ * @return {module:echarts/data/Tree~TreeNode}
+ */
+function nextRight(node) {
+    var children = node.children;
+    return children.length && node.isExpand ? children[children.length - 1] : node.hierNode.thread;
+}
+
+/**
+ * This function is used to traverse the left contour of a subtree (or a subforest).
+ * It returns the leftmost child of node or the thread of node. The function
+ * returns null if and only if node is on the highest depth of its subtree.
+ * @param  {module:echarts/data/Tree~TreeNode} node
+ * @return {module:echarts/data/Tree~TreeNode}
+ */
+function nextLeft(node) {
+    var children = node.children;
+    return children.length && node.isExpand ? children[0] : node.hierNode.thread;
+}
+
+/**
+ * If nodeInLeft’s ancestor is a sibling of node, returns nodeInLeft’s ancestor.
+ * Otherwise, returns the specified ancestor.
+ * @param  {module:echarts/data/Tree~TreeNode} nodeInLeft
+ * @param  {module:echarts/data/Tree~TreeNode} node
+ * @param  {module:echarts/data/Tree~TreeNode} ancestor
+ * @return {module:echarts/data/Tree~TreeNode}
+ */
+function nextAncestor(nodeInLeft, node, ancestor) {
+    return nodeInLeft.hierNode.ancestor.parentNode === node.parentNode
+        ? nodeInLeft.hierNode.ancestor : ancestor;
+}
+
+/**
+ * Shifts the current subtree rooted at wr. This is done by increasing prelim(w+) and modifier(w+) by shift.
+ * @param  {module:echarts/data/Tree~TreeNode} wl
+ * @param  {module:echarts/data/Tree~TreeNode} wr
+ * @param  {number} shift [description]
+ */
+function moveSubtree(wl, wr,shift) {
+    var change = shift / (wr.hierNode.i - wl.hierNode.i);
+    wr.hierNode.change -= change;
+    wr.hierNode.shift += shift;
+    wr.hierNode.modifier += shift;
+    wr.hierNode.prelim += shift;
+    wl.hierNode.change += change;
+}
+
+function defaultSeparation(node1, node2) {
+    return node1.parentNode === node2.parentNode ? 1 : 2;
+}
+
+/**
+ * @file  This file used to draw tree view
+ */
+
+extendChartView({
+
+    type: 'tree',
+
+    /**
+     * Init the chart
+     * @override
+     * @param  {module:echarts/model/Global} ecModel
+     * @param  {module:echarts/ExtensionAPI} api
+     */
+    init: function (ecModel, api) {
+
+        /**
+         * @private
+         * @type {module:echarts/data/Tree}
+         */
+        this._oldTree;
+
+        /**
+         * @private
+         * @type {module:zrender/container/Group}
+         */
+        this._mainGroup = new Group();
+
+        this.group.add(this._mainGroup);
+    },
+
+    render: function (seriesModel, ecModel, api, payload) {
+
+        var data = seriesModel.getData();
+
+        var layoutInfo = seriesModel.layoutInfo;
+
+        var group = this._mainGroup;
+
+        var layout = seriesModel.get('layout');
+
+        if (layout === 'radial') {
+            group.attr('position', [layoutInfo.x + layoutInfo.width / 2, layoutInfo.y + layoutInfo.height / 2]);
+        }
+        else {
+            group.attr('position', [layoutInfo.x, layoutInfo.y]);
+        }
+
+        var oldData = this._data;
+
+        var seriesScope = {
+            expandAndCollapse: seriesModel.get('expandAndCollapse'),
+            layout: layout,
+            orient: seriesModel.get('orient'),
+            curvature: seriesModel.get('lineStyle.normal.curveness'),
+            symbolRotate: seriesModel.get('symbolRotate'),
+            symbolOffset: seriesModel.get('symbolOffset'),
+            hoverAnimation: seriesModel.get('hoverAnimation'),
+            useNameLabel: true,
+            fadeIn: true
+        };
+
+        data.diff(oldData)
+            .add(function (newIdx) {
+                if (symbolNeedsDraw$1(data, newIdx)) {
+                    // create node and edge
+                    updateNode(data, newIdx, null, group, seriesModel, seriesScope);
+                }
+            })
+            .update(function (newIdx, oldIdx) {
+                var symbolEl = oldData.getItemGraphicEl(oldIdx);
+                if (!symbolNeedsDraw$1(data, newIdx)) {
+                    symbolEl && removeNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
+                    return;
+                }
+                // update  node and edge
+                updateNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
+            })
+            .remove(function (oldIdx) {
+                var symbolEl = oldData.getItemGraphicEl(oldIdx);
+                removeNode(data, oldIdx, symbolEl, group, seriesModel, seriesScope);
+            })
+            .execute();
+
+        if (seriesScope.expandAndCollapse === true) {
+            data.eachItemGraphicEl(function (el, dataIndex) {
+                el.off('click').on('click', function () {
+                    api.dispatchAction({
+                        type: 'treeExpandAndCollapse',
+                        seriesId: seriesModel.id,
+                        dataIndex: dataIndex
+                    });
+                });
+            });
+        }
+
+        this._data = data;
+    },
+
+    dispose: function () {},
+
+    remove: function () {
+        this._mainGroup.removeAll();
+        this._data = null;
+    }
+
+});
+
+function symbolNeedsDraw$1(data, dataIndex) {
+    var layout = data.getItemLayout(dataIndex);
+
+    return layout
+        && !isNaN(layout.x) && !isNaN(layout.y)
+        && data.getItemVisual(dataIndex, 'symbol') !== 'none';
+}
+
+function getTreeNodeStyle(node, itemModel, seriesScope) {
+    seriesScope.itemModel = itemModel;
+    seriesScope.itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
+    seriesScope.hoverItemStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+    seriesScope.lineStyle = itemModel.getModel('lineStyle.normal').getLineStyle();
+    seriesScope.labelModel = itemModel.getModel('label.normal');
+    seriesScope.hoverLabelModel = itemModel.getModel('label.emphasis');
+
+    if (node.isExpand === false && node.children.length !== 0) {
+        seriesScope.symbolInnerColor = seriesScope.itemStyle.fill;
+    }
+    else {
+        seriesScope.symbolInnerColor = '#fff';
+    }
+
+    return seriesScope;
+}
+
+function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
+    var isInit = !symbolEl;
+    var node = data.tree.getNodeByDataIndex(dataIndex);
+    var itemModel = node.getModel();
+    var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
+    var virtualRoot = data.tree.root;
+
+    var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
+    var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
+    var sourceLayout = source.getLayout();
+    var sourceOldLayout = sourceSymbolEl
+        ? {
+            x: sourceSymbolEl.position[0],
+            y: sourceSymbolEl.position[1],
+            rawX: sourceSymbolEl.__radialOldRawX,
+            rawY: sourceSymbolEl.__radialOldRawY
+        }
+        : sourceLayout;
+    var targetLayout = node.getLayout();
+
+    if (isInit) {
+        symbolEl = new SymbolClz$1(data, dataIndex, seriesScope);
+        symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
+    }
+    else {
+        symbolEl.updateData(data, dataIndex, seriesScope);
+    }
+
+    symbolEl.__radialOldRawX = symbolEl.__radialRawX;
+    symbolEl.__radialOldRawY = symbolEl.__radialRawY;
+    symbolEl.__radialRawX = targetLayout.rawX;
+    symbolEl.__radialRawY = targetLayout.rawY;
+
+    group.add(symbolEl);
+    data.setItemGraphicEl(dataIndex, symbolEl);
+    updateProps(symbolEl, {
+        position: [targetLayout.x, targetLayout.y]
+    }, seriesModel);
+
+    var symbolPath = symbolEl.getSymbolPath();
+
+    if (seriesScope.layout === 'radial') {
+        var realRoot = virtualRoot.children[0];
+        var rootLayout = realRoot.getLayout();
+        var length = realRoot.children.length;
+        var rad;
+        var isLeft;
+
+        if (targetLayout.x === rootLayout.x && node.isExpand === true) {
+            var center = {};
+            center.x = (realRoot.children[0].getLayout().x + realRoot.children[length - 1].getLayout().x) / 2;
+            center.y = (realRoot.children[0].getLayout().y + realRoot.children[length - 1].getLayout().y) / 2;
+            rad = Math.atan2(center.y - rootLayout.y, center.x - rootLayout.x);
+            if (rad < 0) {
+                rad = Math.PI * 2 + rad;
+            }
+            isLeft = center.x < rootLayout.x;
+            if (isLeft) {
+                rad = rad - Math.PI;
+            }
+        }
+        else {
+            rad = Math.atan2(targetLayout.y - rootLayout.y, targetLayout.x - rootLayout.x);
+            if (rad < 0) {
+                rad = Math.PI * 2 + rad;
+            }
+            if (node.children.length === 0 || (node.children.length !== 0 && node.isExpand === false)) {
+                isLeft = targetLayout.x < rootLayout.x;
+                if (isLeft) {
+                    rad = rad - Math.PI;
+                }
+            }
+            else {
+                isLeft = targetLayout.x > rootLayout.x;
+                if (!isLeft) {
+                    rad = rad - Math.PI;
+                }
+            }
+        }
+
+        var textPosition = isLeft ? 'left' : 'right';
+        symbolPath.setStyle({
+            textPosition: textPosition,
+            textRotation: -rad,
+            textOrigin: 'center',
+            verticalAlign: 'middle'
+        });
+    }
+
+    if (node.parentNode && node.parentNode !== virtualRoot) {
+        var edge = symbolEl.__edge;
+        if (!edge) {
+            edge = symbolEl.__edge = new BezierCurve({
+                shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
+                style: defaults({opacity: 0}, seriesScope.lineStyle)
+            });
+        }
+
+        updateProps(edge, {
+            shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
+            style: {opacity: 1}
+        }, seriesModel);
+
+        group.add(edge);
+    }
+}
+
+function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
+    var node = data.tree.getNodeByDataIndex(dataIndex);
+    var virtualRoot = data.tree.root;
+    var itemModel = node.getModel();
+    var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
+
+    var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
+    var sourceLayout;
+    while (sourceLayout = source.getLayout(), sourceLayout == null) {
+        source = source.parentNode === virtualRoot ? source : source.parentNode || source;
+    }
+
+    updateProps(symbolEl, {
+        position: [sourceLayout.x + 1, sourceLayout.y + 1]
+    }, seriesModel, function () {
+        group.remove(symbolEl);
+        data.setItemGraphicEl(dataIndex, null);
+    });
+
+    symbolEl.fadeOut(null, {keepLabel: true});
+
+    var edge = symbolEl.__edge;
+    if (edge) {
+        updateProps(edge, {
+            shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
+            style: {
+                opacity: 0
+            }
+        }, seriesModel, function () {
+            group.remove(edge);
+        });
+    }
+}
+
+function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
+    var cpx1;
+    var cpy1;
+    var cpx2;
+    var cpy2;
+    var orient = seriesScope.orient;
+
+    if (seriesScope.layout === 'radial') {
+        var x1 = sourceLayout.rawX;
+        var y1 = sourceLayout.rawY;
+        var x2 = targetLayout.rawX;
+        var y2 = targetLayout.rawY;
+
+        var radialCoor1 = radialCoordinate(x1, y1);
+        var radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
+        var radialCoor3 = radialCoordinate(x2, y2 + (y1 - y2) * seriesScope.curvature);
+        var radialCoor4 = radialCoordinate(x2, y2);
+
+        return {
+            x1: radialCoor1.x,
+            y1: radialCoor1.y,
+            x2: radialCoor4.x,
+            y2: radialCoor4.y,
+            cpx1: radialCoor2.x,
+            cpy1: radialCoor2.y,
+            cpx2: radialCoor3.x,
+            cpy2: radialCoor3.y
+        };
+    }
+    else {
+        var x1 = sourceLayout.x;
+        var y1 = sourceLayout.y;
+        var x2 = targetLayout.x;
+        var y2 = targetLayout.y;
+
+        if (orient === 'horizontal') {
+            cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
+            cpy1 = y1;
+            cpx2 = x2 + (x1 - x2) * seriesScope.curvature;
+            cpy2 = y2;
+        }
+        if (orient === 'vertical') {
+            cpx1 = x1;
+            cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
+            cpx2 = x2;
+            cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
+        }
+        return {
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2,
+            cpx1: cpx1,
+            cpy1: cpy1,
+            cpx2: cpx2,
+            cpy2: cpy2
+        };
+    }
+}
+
+registerAction({
+    type: 'treeExpandAndCollapse',
+    event: 'treeExpandAndCollapse',
+    update: 'update'
+}, function (payload, ecModel) {
+    ecModel.eachComponent({mainType: 'series', subType: 'tree', query: payload}, function (seriesModel) {
+        var dataIndex = payload.dataIndex;
+        var tree = seriesModel.getData().tree;
+        var node = tree.getNodeByDataIndex(dataIndex);
+        node.isExpand = !node.isExpand;
+
+    });
+});
+
+/**
+ * Traverse the tree from bottom to top and do something
+ * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
+ * @param  {Function} callback
+ */
+function eachAfter (root, callback, separation) {
+    var nodes = [root];
+    var next = [];
+    var node;
+
+    while (node = nodes.pop()) { // jshint ignore:line
+        next.push(node);
+        if (node.isExpand) {
+            var children = node.children;
+            if (children.length) {
+                for (var i = 0; i < children.length; i++) {
+                    nodes.push(children[i]);
+                }
+            }
+        }
+    }
+
+    while (node = next.pop()) { // jshint ignore:line
+        callback(node, separation);
+    }
+}
+
+/**
+ * Traverse the tree from top to bottom and do something
+ * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
+ * @param  {Function} callback
+ */
+function eachBefore (root, callback) {
+    var nodes = [root];
+    var node;
+    while (node = nodes.pop()) { // jshint ignore:line
+        callback(node);
+        if (node.isExpand) {
+            var children = node.children;
+            if (children.length) {
+                for (var i = children.length - 1; i >= 0; i--) {
+                    nodes.push(children[i]);
+                }
+            }
+        }
+    }
+}
+
+var commonLayout = function (seriesModel, api) {
+
+    var layoutInfo = getViewRect(seriesModel, api);
+    seriesModel.layoutInfo = layoutInfo;
+
+    var layout = seriesModel.get('layout');
+    var width = 0;
+    var height = 0;
+    var separation$$1 = null;
+    if (layout === 'radial') {
+        width = 2 * Math.PI;
+        height = Math.min(layoutInfo.height, layoutInfo.width) / 2;
+        separation$$1 = separation(function (node1, node2) {
+            return (node1.parentNode === node2.parentNode ? 1 : 2) / node1.depth;
+        });
+    }
+    else {
+        width = layoutInfo.width;
+        height = layoutInfo.height;
+        separation$$1 = separation();
+    }
+
+    var virtualRoot = seriesModel.getData().tree.root;
+    var realRoot = virtualRoot.children[0];
+    init$2(virtualRoot);
+    eachAfter(realRoot, firstWalk, separation$$1);
+    virtualRoot.hierNode.modifier = - realRoot.hierNode.prelim;
+    eachBefore(realRoot, secondWalk);
+
+    var left = realRoot;
+    var right = realRoot;
+    var bottom = realRoot;
+    eachBefore(realRoot, function (node) {
+        var x = node.getLayout().x;
+        if (x < left.getLayout().x) {
+            left = node;
+        }
+        if (x > right.getLayout().x) {
+            right = node;
+        }
+        if (node.depth > bottom.depth) {
+            bottom = node;
+        }
+    });
+
+    var delta = left === right ? 1 : separation$$1(left, right) / 2;
+    var tx = delta - left.getLayout().x;
+    var kx = 0;
+    var ky = 0;
+    var coorX = 0;
+    var coorY = 0;
+    if (layout === 'radial') {
+        kx = width / (right.getLayout().x + delta + tx);
+        // here we use (node.depth - 1), bucause the real root's depth is 1
+        ky = height/ ((bottom.depth - 1) || 1);
+        eachBefore(realRoot, function (node) {
+            coorX = (node.getLayout().x + tx) * kx;
+            coorY = (node.depth - 1) * ky;
+            var finalCoor = radialCoordinate(coorX, coorY);
+            node.setLayout({x: finalCoor.x, y: finalCoor.y, rawX: coorX, rawY: coorY}, true);
+        });
+    }
+    else {
+        if (seriesModel.get('orient') === 'horizontal') {
+            ky = height / (right.getLayout().x + delta + tx);
+            kx = width / ((bottom.depth - 1) || 1);
+            eachBefore(realRoot, function (node) {
+                coorY = (node.getLayout().x + tx) * ky;
+                coorX = (node.depth - 1) * kx;
+                node.setLayout({x: coorX, y: coorY}, true);
+            });
+        }
+        else {
+            kx = width / (right.getLayout().x + delta + tx);
+            ky = height / ((bottom.depth - 1) || 1);
+            eachBefore(realRoot, function (node) {
+                coorX = (node.getLayout().x + tx) * kx;
+                coorY = (node.depth - 1) * ky;
+                node.setLayout({x: coorX, y: coorY}, true);
+            });
+        }
+    }
+};
+
+var orthogonalLayout = function (ecModel, api) {
+    ecModel.eachSeriesByType('tree', function (seriesModel) {
+        commonLayout(seriesModel, api);
+    });
+};
+
+var radialLayout = function (ecModel, api) {
+    ecModel.eachSeriesByType('tree', function (seriesModel) {
+        commonLayout(seriesModel, api);
+    });
+};
+
+registerVisual(curry(visualSymbol, 'tree', 'circle', null));
+registerLayout(orthogonalLayout);
+registerLayout(radialLayout);
+
 function retrieveTargetInfo(payload, seriesModel) {
     if (payload
         && (
@@ -42665,7 +43555,7 @@ var forceLayout = function (ecModel) {
 };
 
 // FIXME Where to create the simple view coordinate system
-function getViewRect(seriesModel, api, aspect) {
+function getViewRect$1(seriesModel, api, aspect) {
     var option = seriesModel.getBoxLayoutParams();
     option.aspect = aspect;
     return getLayoutRect(option, {
@@ -42702,7 +43592,7 @@ var createView = function (ecModel, api) {
             }
             var aspect = (max[0] - min[0]) / (max[1] - min[1]);
             // FIXME If get view rect after data processed?
-            var viewRect = getViewRect(seriesModel, api, aspect);
+            var viewRect = getViewRect$1(seriesModel, api, aspect);
             // Position may be NaN, use view rect instead
             if (isNaN(aspect)) {
                 min = [viewRect.x, viewRect.y];
@@ -43605,7 +44495,7 @@ var FunnelView = Chart.extend({
     dispose: function () {}
 });
 
-function getViewRect$1(seriesModel, api) {
+function getViewRect$2(seriesModel, api) {
     return getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -43704,7 +44594,7 @@ var funnelLayout = function (ecModel, api, payload) {
     ecModel.eachSeriesByType('funnel', function (seriesModel) {
         var data = seriesModel.getData();
         var sort = seriesModel.get('sort');
-        var viewRect = getViewRect$1(seriesModel, api);
+        var viewRect = getViewRect$2(seriesModel, api);
         var indices = getSortedIndices(data, sort);
 
         var sizeExtent = [
@@ -46873,7 +47763,7 @@ var sankeyLayout = function (ecModel, api, payload) {
         var nodeWidth = seriesModel.get('nodeWidth');
         var nodeGap = seriesModel.get('nodeGap');
 
-        var layoutInfo = getViewRect$2(seriesModel, api);
+        var layoutInfo = getViewRect$3(seriesModel, api);
 
         seriesModel.layoutInfo = layoutInfo;
 
@@ -46905,7 +47795,7 @@ var sankeyLayout = function (ecModel, api, payload) {
  * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
  * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
  */
-function getViewRect$2(seriesModel, api) {
+function getViewRect$3(seriesModel, api) {
     return getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -68378,7 +69268,8 @@ TimelineAxis.prototype = {
                 map(this.scale.getTicks(), this.dataToCoord, this),
                 getFormattedLabels(this, labelModel.get('formatter')),
                 labelModel.getFont(),
-                timelineModel.get('orient') === 'horizontal'
+                timelineModel.get('orient') === 'horizontal' ? 0 : 90,
+                labelModel.get('rotate')
             );
         }
 
@@ -68510,7 +69401,7 @@ TimelineView.extend({
     _layout: function (timelineModel, api) {
         var labelPosOpt = timelineModel.get('label.normal.position');
         var orient = timelineModel.get('orient');
-        var viewRect = getViewRect$3(timelineModel, api);
+        var viewRect = getViewRect$4(timelineModel, api);
         // Auto label offset.
         if (labelPosOpt == null || labelPosOpt === 'auto') {
             labelPosOpt = orient === 'horizontal'
@@ -68993,7 +69884,7 @@ TimelineView.extend({
 
 });
 
-function getViewRect$3(model, api) {
+function getViewRect$4(model, api) {
     return getLayoutRect(
         model.getBoxLayoutParams(),
         {
@@ -73431,6 +74322,8 @@ each$1([
 
 registerPainter('svg', SVGPainter);
 
+// Import all charts and components
+
 exports.version = version;
 exports.dependencies = dependencies;
 exports.PRIORITY = PRIORITY;
@@ -73471,7 +74364,7 @@ exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
 
-exports.bundleVersion = "1509895597231";
+exports.bundleVersion = "1509959194800";
 
 })));
 //# sourceMappingURL=echarts.js.map

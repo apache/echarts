@@ -16,12 +16,15 @@
         var url = dir() + '/';
         $.ajax({
             url: url
-        }).then(function (content) {
-            var pagePaths = fetchPagePaths(content);
-            pagePaths.length ? render(pagePaths) : renderFailInfo(url);
-        }).cache(function () {
-            renderFailInfo(url);
-        });
+        }).then(
+            function (content) {
+                var pagePaths = fetchPagePaths(content);
+                pagePaths.length ? render(pagePaths) : renderFailInfo(url);
+            },
+            function () {
+                renderFailInfo(url);
+            }
+        );
 
         $(window).on('hashchange', function () {
             reset();

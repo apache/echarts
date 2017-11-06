@@ -9,6 +9,7 @@ import './src/chart/scatter';
 import './src/chart/radar';
 
 import './src/chart/map';
+import './src/chart/tree';
 import './src/chart/treemap';
 import './src/chart/graph';
 import './src/chart/gauge';
