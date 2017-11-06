@@ -4,6 +4,15 @@
 	(factory((global.bmap = {}),global.echarts));
 }(this, (function (exports,echarts) { 'use strict';
 
+if (typeof __DEV__ === "undefined") {
+    if (typeof window !== "undefined") {
+        window.__DEV__ = true;
+    }
+    else if (typeof global !== "undefined") {
+        global.__DEV__ = true;
+    }
+}
+
 /* global BMap */
 
 function BMapCoordSys(bmap, api) {

@@ -60,7 +60,7 @@
                 var data3 = [];
                 var data4 = [];
 
-                for (var i = 0; i < 10; i++) {
+                for (var i = 0; i < 5; i++) {
                     xAxisData.push('类目' + i);
                     data1.push((Math.random() * 5).toFixed(2));
                     data2.push(-Math.random().toFixed(2));
@@ -91,7 +91,7 @@
 
                 chart.setOption({
                     backgroundColor: '#eee',
-                    animationDurationUpdate: 3000,
+                    animationDurationUpdate: 1000,
                     legend: {
                         left: 0,
                         inactiveColor: '#abc',
@@ -213,18 +213,18 @@
                         itemStyle: itemStyle,
                         cursor: 'default',
                         data: data2
-                    }, {
-                        name: 'bar3',
-                        type: 'bar',
-                        stack: 'two',
-                        itemStyle: itemStyle,
-                        data: data3
-                    }, {
-                        name: 'bar4',
-                        type: 'bar',
-                        stack: 'two',
-                        itemStyle: itemStyle,
-                        data: data4
+                    // }, {
+                    //     name: 'bar3',
+                    //     type: 'bar',
+                    //     stack: 'two',
+                    //     itemStyle: itemStyle,
+                    //     data: data3
+                    // }, {
+                    //     name: 'bar4',
+                    //     type: 'bar',
+                    //     stack: 'two',
+                    //     itemStyle: itemStyle,
+                    //     data: data4
                     }]
                 });
 
