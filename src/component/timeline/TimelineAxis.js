@@ -63,7 +63,7 @@ TimelineAxis.prototype = {
                 zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
                 axisHelper.getFormattedLabels(this, labelModel.get('formatter')),
                 labelModel.getFont(),
-                timelineModel.get('orient') === 'horizontal',
+                timelineModel.get('orient') === 'horizontal' ? 0 : 90,
                 labelModel.get('rotate')
             );
         }

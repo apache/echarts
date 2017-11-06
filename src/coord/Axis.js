@@ -241,19 +241,20 @@ Axis.prototype = {
         if (!labelInterval) {
             var axisModel = this.model;
             var labelModel = axisModel.getModel('axisLabel');
-            var interval = labelModel.get('interval');
-            if (!(this.type === 'category' && interval === 'auto')) {
-                labelInterval = interval === 'auto' ? 0 : interval;
-            }
-            else if (this.isHorizontal){
+            labelInterval = labelModel.get('interval');
+
+            if (this.type === 'category'
+                && (labelInterval == null || labelInterval === 'auto')
+            ) {
                 labelInterval = axisHelper.getAxisLabelInterval(
                     zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
                     axisModel.getFormattedLabels(),
                     labelModel.getFont(),
-                    this.isHorizontal(),
+                    this.isHorizontal() ? 0 : 90,
                     labelModel.get('rotate')
                 );
             }
+
             this._labelInterval = labelInterval;
         }
         return labelInterval;

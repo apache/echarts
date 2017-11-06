@@ -183,16 +183,15 @@ export function ifAxisCrossZero(axis) {
  * @param {Array.<number>} tickCoords In axis self coordinate.
  * @param {Array.<string>} labels
  * @param {string} font
- * @param {boolean} isAxisHorizontal
+ * @param {number} axisRotate 0: towards right horizontally, clock-wise is negative.
+ * @param {number} [labelRotate=0] 0: towards right horizontally, clock-wise is negative.
  * @return {number}
  */
-export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal, rotate) {
-    // FIXME
-    // 不同角的axis和label，不只是horizontal和vertical.
-
+export function getAxisLabelInterval(tickCoords, labels, font, axisRotate, labelRotate) {
     var textSpaceTakenRect;
     var autoLabelInterval = 0;
     var accumulatedLabelInterval = 0;
+    var rotation = (axisRotate - labelRotate) / 180 * Math.PI;
 
     var step = 1;
     if (labels.length > 40) {
@@ -200,26 +199,21 @@ export function getAxisLabelInterval(tickCoords, labels, font, isAxisHorizontal,
         step = Math.floor(labels.length / 40);
     }
 
-    // 计算旋转后的label所占的宽度或高度
-    function rotateLableWidth(w, h, r) {
-        r = Math.abs(r / 360 * 2 * Math.PI) || 0;
-        var s = Math.sin(r);
-        var c = Math.cos(r);
-        return h * c < w * s ? h / s : w * c;
-    }
-
     for (var i = 0; i < tickCoords.length; i += step) {
         var tickCoord = tickCoords[i];
+
+        // Not precise, do not consider align and vertical align
+        // and each distance from axis line yet.
         var rect = textContain.getBoundingRect(
             labels[i], font, 'center', 'top'
         );
-        rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
+        rect.x += tickCoord * Math.cos(rotation);
+        rect.y += tickCoord * Math.sin(rotation);
 
-        rect['width'] = rotateLableWidth(rect['width'], rect['height'], rotate);
-        rect['height'] = rotateLableWidth(rect['width'], rect['height'], 90 - Math.abs(rotate));
+        // Magic number
+        rect.width *= 1.3;
+        rect.height *= 1.3;
 
-        // FIXME Magic number 1.5
-        rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
         if (!textSpaceTakenRect) {
             textSpaceTakenRect = rect.clone();
         }
