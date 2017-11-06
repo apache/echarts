@@ -33,6 +33,10 @@
                     $.getJSON('./data/flare.json')
                     .done(function (data) {
 
+                        echarts.util.each(data.children, function (datum, index) {
+                            index % 2 === 0 && (datum.collapsed = true);
+                        });
+
                         chart.setOption({
 
                             tooltip: {
@@ -52,7 +56,7 @@
                                     right: '20%',
 
                                     symbolSize: 7,
-
+                                    // initialTreeDepth: -1,
                                     label: {
                                         normal: {
                                             position: 'left',
