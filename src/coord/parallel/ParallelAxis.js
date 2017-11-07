@@ -38,7 +38,14 @@ ParallelAxis.prototype = {
      * Axis model
      * @param {module:echarts/coord/parallel/AxisModel}
      */
-    model: null
+    model: null,
+
+    /**
+     * @override
+     */
+    isHorizontal: function () {
+        return this.coordinateSystem.getModel().get('layout') !== 'horizontal';
+    }
 
 };
 

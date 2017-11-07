@@ -233,7 +233,21 @@ Axis.prototype = {
     },
 
     /**
+     * @abstract
+     * @return {boolean} Is horizontal
+     */
+    isHorizontal: null,
+
+    /**
+     * @abstract
+     * @return {number} Get axis rotate, by degree.
+     */
+    getRotate: null,
+
+    /**
      * Get interval of the axis label.
+     * To get precise result, at least one of `getRotate` and `isHorizontal`
+     * should be implemented.
      * @return {number}
      */
     getLabelInterval: function () {
@@ -250,7 +264,11 @@ Axis.prototype = {
                     zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
                     axisModel.getFormattedLabels(),
                     labelModel.getFont(),
-                    this.isHorizontal() ? 0 : 90,
+                    this.getRotate
+                        ? this.getRotate()
+                        : (this.isHorizontal && !this.isHorizontal())
+                        ? 90
+                        : 0,
                     labelModel.get('rotate')
                 );
             }

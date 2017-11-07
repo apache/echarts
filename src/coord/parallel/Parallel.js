@@ -124,6 +124,10 @@ Parallel.prototype = {
             && pLayout <= layoutBase + layoutInfo.layoutLength;
     },
 
+    getModel: function () {
+        return this._model;
+    },
+
     /**
      * Update properties from series
      * @private
