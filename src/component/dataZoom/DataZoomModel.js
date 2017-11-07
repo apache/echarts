@@ -433,8 +433,18 @@ var DataZoomModel = echarts.extendComponentModel({
      * @param {boolean} [ignoreUpdateRangeUsg=false]
      */
     setRawRange: function (opt, ignoreUpdateRangeUsg) {
-        setOneSide(opt, this.option, 'start');
-        setOneSide(opt, this.option, 'end');
+        var option = this.option;
+        each([['start', 'startValue'], ['end', 'endValue']], function (names) {
+            // If only one of 'start' and 'startValue' is not null/undefined, the other
+            // should be cleared, which enable clear the option.
+            // If both of them are not set, keep option with the original value, which
+            // enable use only set start but not set end when calling `dispatchAction`.
+            // The same as 'end' and 'endValue'.
+            if (opt[names[0]] != null || opt[names[1]] != null) {
+                option[names[0]] = opt[names[0]];
+                option[names[1]] = opt[names[1]];
+            }
+        }, this);
 
         !ignoreUpdateRangeUsg && updateRangeUse(this, opt);
     },
@@ -509,24 +519,6 @@ var DataZoomModel = echarts.extendComponentModel({
     }
 
 });
-
-// percentName: 'start' or 'end', valueName: 'startValue' or 'endValue'
-function setOneSide(inputParams, option, percentName) {
-    var names = [percentName, percentName + 'Value'];
-    var hasValueIdx;
-    each(names, function (name, index) {
-        if (inputParams[name] != null) {
-            option[name] = inputParams[name];
-            hasValueIdx = index;
-        }
-    });
-    // If only 'start' or 'startValue' is set in inputParams and then assigned
-    // to option, the other one should be cleared in option. because only one
-    // pair between start/end and startValue/endValue can work.
-    if (hasValueIdx != null) {
-        option[names[1 - hasValueIdx]] = null;
-    }
-}
 
 function retrieveRaw(option) {
     var ret = {};
