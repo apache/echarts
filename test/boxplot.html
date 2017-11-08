@@ -30,7 +30,7 @@
             require([
                 'echarts',
                 'data/Michelson-Morley.json',
-                'extension/dataTool/prepareBoxplotData'
+                'extension/dataTool'
                 // 'zrender/core/env'
                 // 'echarts/chart/boxplot',
                 // 'echarts/chart/scatter',
@@ -43,7 +43,7 @@
                 // 'zrender/vml/vml'
             ], function (echarts, rawData, dataTool) {
                 var prepareBoxplotData = dataTool.prepareBoxplotData;
-                var env = echarts.zrender.env;
+                var env = echarts.env;
 
                 chart = echarts.init(document.getElementById('main'), null, {
 

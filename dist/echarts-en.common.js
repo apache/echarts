@@ -26552,7 +26552,21 @@ Axis.prototype = {
     },
 
     /**
+     * @abstract
+     * @return {boolean} Is horizontal
+     */
+    isHorizontal: null,
+
+    /**
+     * @abstract
+     * @return {number} Get axis rotate, by degree.
+     */
+    getRotate: null,
+
+    /**
      * Get interval of the axis label.
+     * To get precise result, at least one of `getRotate` and `isHorizontal`
+     * should be implemented.
      * @return {number}
      */
     getLabelInterval: function () {
@@ -26569,7 +26583,11 @@ Axis.prototype = {
                     map(this.scale.getTicks(), this.dataToCoord, this),
                     axisModel.getFormattedLabels(),
                     labelModel.getFont(),
-                    this.isHorizontal() ? 0 : 90,
+                    this.getRotate
+                        ? this.getRotate()
+                        : (this.isHorizontal && !this.isHorizontal())
+                        ? 90
+                        : 0,
                     labelModel.get('rotate')
                 );
             }
@@ -40635,8 +40653,18 @@ var DataZoomModel = extendComponentModel({
      * @param {boolean} [ignoreUpdateRangeUsg=false]
      */
     setRawRange: function (opt, ignoreUpdateRangeUsg) {
-        setOneSide(opt, this.option, 'start');
-        setOneSide(opt, this.option, 'end');
+        var option = this.option;
+        each$15([['start', 'startValue'], ['end', 'endValue']], function (names) {
+            // If only one of 'start' and 'startValue' is not null/undefined, the other
+            // should be cleared, which enable clear the option.
+            // If both of them are not set, keep option with the original value, which
+            // enable use only set start but not set end when calling `dispatchAction`.
+            // The same as 'end' and 'endValue'.
+            if (opt[names[0]] != null || opt[names[1]] != null) {
+                option[names[0]] = opt[names[0]];
+                option[names[1]] = opt[names[1]];
+            }
+        }, this);
 
         !ignoreUpdateRangeUsg && updateRangeUse(this, opt);
     },
@@ -40711,24 +40739,6 @@ var DataZoomModel = extendComponentModel({
     }
 
 });
-
-// percentName: 'start' or 'end', valueName: 'startValue' or 'endValue'
-function setOneSide(inputParams, option, percentName) {
-    var names = [percentName, percentName + 'Value'];
-    var hasValueIdx;
-    each$15(names, function (name, index) {
-        if (inputParams[name] != null) {
-            option[name] = inputParams[name];
-            hasValueIdx = index;
-        }
-    });
-    // If only 'start' or 'startValue' is set in inputParams and then assigned
-    // to option, the other one should be cleared in option. because only one
-    // pair between start/end and startValue/endValue can work.
-    if (hasValueIdx != null) {
-        option[names[1 - hasValueIdx]] = null;
-    }
-}
 
 function retrieveRaw(option) {
     var ret = {};
@@ -45445,11 +45455,11 @@ var win = window;
 
 var vmlInited = false;
 
-var doc = win.document;
+var doc = win && win.document;
 
 var createNode;
 
-if (!env$1.canvasSupported) {
+if (doc && !env$1.canvasSupported) {
     try {
         !doc.namespaces.zrvml && doc.namespaces.add('zrvml', urn);
         createNode = function (tagName) {
@@ -45465,7 +45475,7 @@ if (!env$1.canvasSupported) {
 
 // From raphael
 function initVML() {
-    if (vmlInited) {
+    if (vmlInited || !doc) {
         return;
     }
     vmlInited = true;
@@ -48080,6 +48090,7 @@ var SVGPainter = function (root, storage) {
     svgRoot.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svgRoot.setAttribute('version', '1.1');
     svgRoot.setAttribute('baseProfile', 'full');
+    svgRoot.style['user-select'] = 'none';
 
     this.gradientManager = new GradientManager(svgRoot);
     this.clipPathManager = new ClippathManager(svgRoot);

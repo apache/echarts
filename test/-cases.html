@@ -21,18 +21,27 @@
             }
             .cases-list ul {
                 padding-left: 32px;
-                margin-top: 40px;
+                margin-top: 70px;
                 list-style-type: decimal;
             }
-            .renderer-selector {
-                padding-left: 20px;
+            .info-panel {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 230px;
+                background: #fff;
+            }
+            .info-panel .current {
+                height: 24px;
+                line-height: 24px;
+                margin-left: 20px;
+                white-space: nowrap;
+                text-decoration: underline;
+            }
+            .info-panel .renderer-selector {
+                padding-left: 20px;
                 height: 40px;
                 line-height: 40px;
-                background: #fff;
             }
             .page-content {
                 margin-left: 235px;
@@ -57,9 +66,12 @@
     </head>
     <body>
         <div class="cases-list">
-            <div class="renderer-selector">
-                <input type="radio" value="canvas" name="renderer" /> CANVAS &nbsp;&nbsp;
-                <input type="radio" value="svg" name="renderer" /> SVG
+            <div class="info-panel">
+                <input class="current" />
+                <div class="renderer-selector">
+                    <input type="radio" value="canvas" name="renderer" /> CANVAS &nbsp;&nbsp;
+                    <input type="radio" value="svg" name="renderer" /> SVG
+                </div>
             </div>
             <ul></ul>
         </div>

@@ -26,6 +26,7 @@ export {ecHelper as helper};
 export {matrix};
 export {vector};
 export {colorTool as color};
+export {default as env} from 'zrender/src/core/env';
 
 var ecUtil = {};
 zrUtil.each([

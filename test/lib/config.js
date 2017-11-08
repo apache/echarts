@@ -93,7 +93,7 @@
                 'right: 0',
                 'top: 0',
                 'font-size: 10px',
-                'padding: 1px 2px 1px 2px',
+                'padding: 1px 3px 1px 3px',
                 'border-bottom-left-radius: 3px'
             ].join(';');
             document.body.appendChild(dom);
