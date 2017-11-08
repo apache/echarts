@@ -28,8 +28,8 @@ var MapSeries = SeriesModel.extend({
 
     init: function (option) {
 
-        option = this._fillOption(option, this.getMapType());
-        this.option = option;
+        this._fillOption(option, this.getMapType());
+        // this.option = option;
 
         MapSeries.superApply(this, 'init', arguments);
 
@@ -47,11 +47,9 @@ var MapSeries = SeriesModel.extend({
     },
 
     mergeOption: function (newOption) {
-        if (newOption.data) {
-            newOption = this._fillOption(newOption, this.getMapType());
-        }
+        this._fillOption(newOption, this.getMapType());
 
-        MapSeries.superCall(this, 'mergeOption', newOption);
+        MapSeries.superApply(this, 'mergeOption', arguments);
 
         this.updateSelectedMap(this.option.data);
     },
@@ -73,11 +71,11 @@ var MapSeries = SeriesModel.extend({
 
     _fillOption: function (option, mapName) {
         // Shallow clone
-        option = zrUtil.extend({}, option);
+        // option = zrUtil.extend({}, option);
 
         option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
 
-        return option;
+        // return option;
     },
 
     getRawValue: function (dataIndex) {
