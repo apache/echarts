@@ -45451,7 +45451,7 @@ registerAction(
 );
 
 var urn = 'urn:schemas-microsoft-com:vml';
-var win = window;
+var win = typeof window === 'undefined' ? null : window;
 
 var vmlInited = false;
 
