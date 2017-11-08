@@ -1,6 +1,9 @@
 export * from './src/echarts';
 export * from './src/export';
 
+import * as dataTool from './extension/dataTool/index';
+export {dataTool};
+
 // Import all charts and components
 import './src/chart/line';
 import './src/chart/bar';

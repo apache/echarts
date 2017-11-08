@@ -1,7 +1,7 @@
 // GEXF File Parser
 // http://gexf.net/1.2draft/gexf-12draft-primer.pdf
 
-import {util as zrUtil} from 'echarts';
+import * as zrUtil from 'zrender/src/core/util';
 
 export function parse(xml) {
     var doc;

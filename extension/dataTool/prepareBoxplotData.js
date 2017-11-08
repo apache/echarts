@@ -1,5 +1,5 @@
 import quantile from './quantile';
-import {number as numberUtil} from 'echarts';
+import * as numberUtil from '../../src/util/number';
 
 /**
  * See:
