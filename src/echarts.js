@@ -125,7 +125,7 @@ function ECharts(dom, theme, opts) {
     var defaultRenderer = 'canvas';
     if (__DEV__) {
         defaultRenderer = (
-            typeof window === void 0 ? global : window
+            typeof window === 'undefined' ? global : window
         ).__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
     }
 
