@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "3.7.2",
+  "version": "3.8.0",
   "description": "A powerful charting and visualization library for browser",
   "keywords": [
     "visualization",
@@ -35,7 +35,7 @@
     "prepublish": "rm -r lib; cp -r src lib"
   },
   "dependencies": {
-    "zrender": "^3.6.2"
+    "zrender": "^3.7.0"
   },
   "devDependencies": {
     "commander": "^2.11.0",
@@ -48,6 +48,6 @@
     "rollup": "^0.50.0",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-uglify": "^2.0.1",
-    "zrender": "^3.6.2"
+    "zrender": "^3.7.0"
   }
 }
