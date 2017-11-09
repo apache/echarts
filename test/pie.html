@@ -17,7 +17,7 @@
         </style>
         <div id="main"></div>
         <script>
-
+var chart;
             require([
                 'echarts'
                 // 'echarts/chart/pie',
@@ -27,7 +27,7 @@
                 // 'echarts/component/toolbox'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                chart = echarts.init(document.getElementById('main'));
 
                 // Pencil sketch texture
                 var patternSrc = window.pieTexture;

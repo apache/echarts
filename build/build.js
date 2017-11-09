@@ -7,6 +7,7 @@ const config = require('./config.js');
 const commander = require('commander');
 const {build, watch, color} = require('./helper');
 const ecLangPlugin = require('./rollup-plugin-ec-lang');
+const prePublish = require('./pre-publish');
 
 function run() {
 
@@ -141,10 +142,7 @@ function run() {
         build(configs).then(function () {
             checkCode(configForCheck);
 
-            // Compatible with prevoius folder structure: `echarts/lib` exists in `node_modules`
-            // npm run prepublish: `rm -r lib; cp -r src lib`
-            fsExtra.removeSync(getPath('./lib'));
-            fsExtra.copySync(getPath('./src'), getPath('./lib'));
+            prePublish();
         });
     }
     else {

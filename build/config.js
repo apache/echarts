@@ -62,6 +62,7 @@ function getPlugins(min, lang, addBundleVersion) {
  */
 exports.createECharts = function (opt) {
     opt = opt || {};
+    let srcType = opt.type ? '.' + opt.type : '.all';
     let postfixType = opt.type ? '.' + opt.type : '';
     let postfixMin = opt.min ? '.min' : '';
     let postfixLang = opt.lang ? '-' + opt.lang.toLowerCase() : '';
@@ -78,10 +79,10 @@ exports.createECharts = function (opt) {
         output = resolve(output);
     }
     else {
-        input = getPathBasedOnECharts(`./index${postfixType}.js`);
+        input = getPathBasedOnECharts(`./echarts${srcType}.js`);
         output = getPathBasedOnECharts(`dist/echarts${postfixLang}${postfixType}${postfixMin}.js`);
         if (sourcemap == null) {
-            sourcemap = !opt.min && !postfixType;
+            sourcemap = !opt.min && !opt.type;
         }
     }
 
@@ -99,7 +100,7 @@ exports.createECharts = function (opt) {
         watch: {
             include: [
                 getPathBasedOnECharts('./src/**'),
-                getPathBasedOnECharts('./index*.js'),
+                getPathBasedOnECharts('./echarts*.js'),
                 getPathBasedOnECharts('../zrender/src/**')
             ]
         }
