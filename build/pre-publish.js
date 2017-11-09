@@ -2,7 +2,7 @@
  * Compatible with prevoius folder structure: `echarts/lib` exists in `node_modules`
  * (1) Build all files to CommonJS to `echarts/lib`.
  * (2) Remove __DEV__.
- * (3) Mount `echarts/src/export` to `echarts/lib/echarts`.
+ * (3) Mount `echarts/src/export.js` to `echarts/lib/echarts.js`.
  */
 
 const {resolve, join} = require('path');
@@ -55,11 +55,12 @@ module.exports = function () {
             // Using `echarts/echarts.blank.js` to overwrite `echarts/lib/echarts.js`
             // for including exports API.
             code +=
-`var ___export = require("./export");
+`var ___ec_export = require("./export");
 (function () {
-    for (var key in ___export) {
-        if (!_export.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
-        exports[key] = ___export[key];
+    for (var key in ___ec_export) {
+        if (___ec_export.hasOwnProperty(key)) {
+            exports[key] = ___ec_export[key];
+        }
     }
 })();`;
         }
