@@ -1,56 +1,105 @@
-export * from './src/echarts';
-export * from './src/export';
+var _echarts = require("./lib/echarts");
 
-import * as dataTool from './extension/dataTool/index';
-export {dataTool};
+(function () {
+  for (var key in _echarts) {
+    if (_echarts == null || !_echarts.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
+    exports[key] = _echarts[key];
+  }
+})();
 
-// Import all charts and components
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/chart/scatter';
-import './src/chart/radar';
+var _export = require("./lib/export");
 
-import './src/chart/map';
-import './src/chart/tree';
-import './src/chart/treemap';
-import './src/chart/graph';
-import './src/chart/gauge';
-import './src/chart/funnel';
-import './src/chart/parallel';
-import './src/chart/sankey';
-import './src/chart/boxplot';
-import './src/chart/candlestick';
-import './src/chart/effectScatter';
-import './src/chart/lines';
-import './src/chart/heatmap';
-import './src/chart/pictorialBar';
-import './src/chart/themeRiver';
-import './src/chart/custom';
+(function () {
+  for (var key in _export) {
+    if (_export == null || !_export.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
+    exports[key] = _export[key];
+  }
+})();
 
-import './src/component/graphic';
-import './src/component/grid';
-import './src/component/legendScroll';
-import './src/component/tooltip';
-import './src/component/axisPointer';
-import './src/component/polar';
-import './src/component/geo';
-import './src/component/parallel';
-import './src/component/singleAxis';
-import './src/component/brush';
-import './src/component/calendar';
+var dataTool = require("./extension/dataTool/index");
 
-import './src/component/title';
+exports.dataTool = dataTool;
 
-import './src/component/dataZoom';
-import './src/component/visualMap';
+require("./lib/chart/line");
 
-import './src/component/markPoint';
-import './src/component/markLine';
-import './src/component/markArea';
+require("./lib/chart/bar");
 
-import './src/component/timeline';
-import './src/component/toolbox';
+require("./lib/chart/pie");
 
-import 'zrender/src/vml/vml';
-import 'zrender/src/svg/svg';
+require("./lib/chart/scatter");
+
+require("./lib/chart/radar");
+
+require("./lib/chart/map");
+
+require("./lib/chart/tree");
+
+require("./lib/chart/treemap");
+
+require("./lib/chart/graph");
+
+require("./lib/chart/gauge");
+
+require("./lib/chart/funnel");
+
+require("./lib/chart/parallel");
+
+require("./lib/chart/sankey");
+
+require("./lib/chart/boxplot");
+
+require("./lib/chart/candlestick");
+
+require("./lib/chart/effectScatter");
+
+require("./lib/chart/lines");
+
+require("./lib/chart/heatmap");
+
+require("./lib/chart/pictorialBar");
+
+require("./lib/chart/themeRiver");
+
+require("./lib/chart/custom");
+
+require("./lib/component/graphic");
+
+require("./lib/component/grid");
+
+require("./lib/component/legendScroll");
+
+require("./lib/component/tooltip");
+
+require("./lib/component/axisPointer");
+
+require("./lib/component/polar");
+
+require("./lib/component/geo");
+
+require("./lib/component/parallel");
+
+require("./lib/component/singleAxis");
+
+require("./lib/component/brush");
+
+require("./lib/component/calendar");
+
+require("./lib/component/title");
+
+require("./lib/component/dataZoom");
+
+require("./lib/component/visualMap");
+
+require("./lib/component/markPoint");
+
+require("./lib/component/markLine");
+
+require("./lib/component/markArea");
+
+require("./lib/component/timeline");
+
+require("./lib/component/toolbox");
+
+require("zrender/lib/vml/vml");
+
+require("zrender/lib/svg/svg");

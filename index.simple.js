@@ -1,6 +1,16 @@
-export * from './src/echarts';
+var _echarts = require("./lib/echarts");
 
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/component/gridSimple';
+(function () {
+  for (var key in _echarts) {
+    if (_echarts == null || !_echarts.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
+    exports[key] = _echarts[key];
+  }
+})();
+
+require("./lib/chart/line");
+
+require("./lib/chart/bar");
+
+require("./lib/chart/pie");
+
+require("./lib/component/gridSimple");

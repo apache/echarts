@@ -64,6 +64,7 @@ module.exports = function () {
 })();`;
         }
 
+        fsExtra.ensureFileSync(outputPath);
         fs.writeFileSync(outputPath, code, {encoding:'utf-8'});
     }
 

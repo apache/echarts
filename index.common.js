@@ -1,23 +1,51 @@
-export * from './src/echarts';
-export * from './src/export';
+var _echarts = require("./lib/echarts");
 
-import './src/chart/line';
-import './src/chart/bar';
-import './src/chart/pie';
-import './src/chart/scatter';
-import './src/component/graphic';
-import './src/component/tooltip';
-import './src/component/axisPointer';
-import './src/component/legendScroll';
+(function () {
+  for (var key in _echarts) {
+    if (_echarts == null || !_echarts.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
+    exports[key] = _echarts[key];
+  }
+})();
 
-import './src/component/grid';
-import './src/component/title';
+var _export = require("./lib/export");
 
-import './src/component/markPoint';
-import './src/component/markLine';
-import './src/component/markArea';
-import './src/component/dataZoom';
-import './src/component/toolbox';
+(function () {
+  for (var key in _export) {
+    if (_export == null || !_export.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
+    exports[key] = _export[key];
+  }
+})();
 
-import 'zrender/src/vml/vml';
-import 'zrender/src/svg/svg';
+require("./lib/chart/line");
+
+require("./lib/chart/bar");
+
+require("./lib/chart/pie");
+
+require("./lib/chart/scatter");
+
+require("./lib/component/graphic");
+
+require("./lib/component/tooltip");
+
+require("./lib/component/axisPointer");
+
+require("./lib/component/legendScroll");
+
+require("./lib/component/grid");
+
+require("./lib/component/title");
+
+require("./lib/component/markPoint");
+
+require("./lib/component/markLine");
+
+require("./lib/component/markArea");
+
+require("./lib/component/dataZoom");
+
+require("./lib/component/toolbox");
+
+require("zrender/lib/vml/vml");
+
+require("zrender/lib/svg/svg");

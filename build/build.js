@@ -33,6 +33,8 @@ function run() {
             '',
             egIndent + 'node build/build.js --release'
                 + '\n' + descIndent + '# Build all to `dist` folder.',
+            egIndent + 'node build/build.js --prepublish'
+                + '\n' + descIndent + '# Only prepublish.',
             egIndent + 'node build/build.js --type ""'
                 + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
             egIndent + 'node build/build.js --type common --min'
@@ -57,6 +59,10 @@ function run() {
         ].join('\n'))
         .option(
             '--release',
+            'Build all for release'
+        )
+        .option(
+            '--prepublish',
             'Build all for release'
         )
         .option(
@@ -88,6 +94,7 @@ function run() {
 
     let isWatch = !!commander.watch;
     let isRelease = !!commander.release;
+    let isPrePublish = !!commander.prepublish;
 
     let opt = {
         lang: commander.lang || null,
@@ -110,6 +117,9 @@ function run() {
 
     if (isWatch) {
         watch(config.createECharts(opt));
+    }
+    else if (isPrePublish) {
+        prePublish();
     }
     else if (isRelease) {
         let configs = [];
