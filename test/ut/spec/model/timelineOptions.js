@@ -3,11 +3,11 @@ describe('timelineOptions', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/component/grid',
-        'echarts/chart/line',
-        'echarts/chart/pie',
-        'echarts/chart/bar',
-        'echarts/component/timeline'
+        'echarts/src/component/grid',
+        'echarts/src/chart/line',
+        'echarts/src/chart/pie',
+        'echarts/src/chart/bar',
+        'echarts/src/component/timeline'
     ]);
 
     function getData0(chart, seriesIndex) {

@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main, .chart {
+                width: 100%;
+            }
+
+            .chart {
+                height: 300px;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var options = [{
+                    title: {
+                        text: 'x: default; y: default'
+                    },
+                    xAxis: {
+                        data: ['a', 'b', 'c', 'd', 'e']
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'line',
+                        data: [2, 3, 5, 1, 6]
+                    }]
+                }, {
+                    title: {
+                        text: 'x: ["none", "arrow"]; y: "arrow" of size 30x20'
+                    },
+                    xAxis: {
+                        data: ['a', 'b', 'c', 'd', 'e'],
+                        axisLine: {
+                            symbol: ['none', 'arrow'],
+                            lineStyle: {
+                                color: 'green'
+                            }
+                        }
+                    },
+                    yAxis: {
+                        axisLine: {
+                            symbol: 'arrow',
+                            symbolSize: [30, 20]
+                        }
+                    },
+                    series: [{
+                        type: 'line',
+                        data: [2, 3, 5, 1, 6]
+                    }]
+                }, {
+                    title: {
+                        text: 'x: "none"; y: ["none", "arrow"], inversed'
+                    },
+                    xAxis: {
+                        data: ['a', 'b', 'c', 'd', 'e'],
+                        axisLine: {
+                            symbol: 'none'
+                        }
+                    },
+                    yAxis: {
+                        axisLine: {
+                            symbol: ['none', 'arrow']
+                        },
+                        inversed: true
+                    },
+                    series: [{
+                        type: 'line',
+                        data: [2, 3, 5, 1, 6]
+                    }]
+                }];
+
+                var main = document.getElementById('main');
+                for (var i = 0; i < options.length; ++i) {
+                    var container = document.createElement('div');
+                    container.setAttribute('class', 'chart');
+                    main.appendChild(container);
+
+                    var chart = echarts.init(container);
+                    chart.setOption(options[i]);
+                }
+
+            });
+
+        </script>
+    </body>
+</html>

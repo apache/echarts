@@ -1,9 +1,16 @@
-define(function (require) {
-    var echarts = require('echarts');
-    echarts.dataTool = {
-        version: '1.0.0',
-        gexf: require('./gexf'),
-        prepareBoxplotData: require('./prepareBoxplotData')
-    };
-    return echarts.dataTool;
+var echarts = require("echarts");
+
+var gexf = require("./gexf");
+
+exports.gexf = gexf;
+
+var prepareBoxplotData = require("./prepareBoxplotData");
+
+exports.prepareBoxplotData = prepareBoxplotData;
+var version = '1.0.0';
+echarts.$inject.dataTool({
+  version: version,
+  gexf: gexf,
+  prepareBoxplotData: prepareBoxplotData
 });
+exports.version = version;

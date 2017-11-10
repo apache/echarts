@@ -2,7 +2,7 @@ describe('component/helper/sliderMove', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/component/helper/sliderMove']);
+    var testCase = utHelper.prepare(['echarts/src/component/helper/sliderMove']);
 
     describe('sliderMove', function () {
 

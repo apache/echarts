@@ -1,0 +1,87 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>echarts cases</title>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+
+        <style>
+            .cases-list {
+                padding-top: 15px;
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 230px;
+                overflow: auto;
+                font-size: 13px;
+            }
+            .cases-list ul {
+                padding-left: 32px;
+                margin-top: 70px;
+                list-style-type: decimal;
+            }
+            .info-panel {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 230px;
+                background: #fff;
+            }
+            .info-panel .current {
+                height: 24px;
+                line-height: 24px;
+                margin-left: 20px;
+                white-space: nowrap;
+                text-decoration: underline;
+            }
+            .info-panel .renderer-selector {
+                padding-left: 20px;
+                height: 40px;
+                line-height: 40px;
+            }
+            .page-content {
+                margin-left: 235px;
+                height: 100%;
+                padding: 0;
+                position: relative;
+                border-left: 1px solid #333;
+            }
+            .page-content iframe {
+                padding: 0;
+                margin: 0;
+                border-width: 0;
+                overflow: visible;
+                visibility: visible;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="cases-list">
+            <div class="info-panel">
+                <input class="current" />
+                <div class="renderer-selector">
+                    <input type="radio" value="canvas" name="renderer" /> CANVAS &nbsp;&nbsp;
+                    <input type="radio" value="svg" name="renderer" /> SVG
+                </div>
+            </div>
+            <ul></ul>
+        </div>
+
+        <div class="page-content">
+            <iframe frameborder="no" border="0" marginwidth="0" marginheight="0"
+                hspace="0" vspace="0">
+            </iframe>
+        </div>
+
+        <script src="-cases.js"></script>
+    </body>
+</html>

@@ -1,50 +1,54 @@
-define(function (require) {
+import * as zrUtil from 'zrender/src/core/util';
+import Axis from '../Axis';
 
-    var zrUtil = require('zrender/core/util');
-    var Axis = require('../Axis');
+/**
+ * @constructor module:echarts/coord/parallel/ParallelAxis
+ * @extends {module:echarts/coord/Axis}
+ * @param {string} dim
+ * @param {*} scale
+ * @param {Array.<number>} coordExtent
+ * @param {string} axisType
+ */
+var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
+
+    Axis.call(this, dim, scale, coordExtent);
 
     /**
-     * @constructor module:echarts/coord/parallel/ParallelAxis
-     * @extends {module:echarts/coord/Axis}
-     * @param {string} dim
-     * @param {*} scale
-     * @param {Array.<number>} coordExtent
-     * @param {string} axisType
+     * Axis type
+     *  - 'category'
+     *  - 'value'
+     *  - 'time'
+     *  - 'log'
+     * @type {string}
      */
-    var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
+    this.type = axisType || 'value';
 
-        Axis.call(this, dim, scale, coordExtent);
+    /**
+     * @type {number}
+     * @readOnly
+     */
+    this.axisIndex = axisIndex;
+};
 
-        /**
-         * Axis type
-         *  - 'category'
-         *  - 'value'
-         *  - 'time'
-         *  - 'log'
-         * @type {string}
-         */
-        this.type = axisType || 'value';
+ParallelAxis.prototype = {
 
-        /**
-         * @type {number}
-         * @readOnly
-         */
-        this.axisIndex = axisIndex;
-    };
+    constructor: ParallelAxis,
 
-    ParallelAxis.prototype = {
+    /**
+     * Axis model
+     * @param {module:echarts/coord/parallel/AxisModel}
+     */
+    model: null,
 
-        constructor: ParallelAxis,
+    /**
+     * @override
+     */
+    isHorizontal: function () {
+        return this.coordinateSystem.getModel().get('layout') !== 'horizontal';
+    }
 
-        /**
-         * Axis model
-         * @param {module:echarts/coord/parallel/AxisModel}
-         */
-        model: null
+};
 
-    };
+zrUtil.inherits(ParallelAxis, Axis);
 
-    zrUtil.inherits(ParallelAxis, Axis);
-
-    return ParallelAxis;
-});
+export default ParallelAxis;

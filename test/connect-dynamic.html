@@ -1,9 +1,9 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
-        <link rel="stylesheet" href="reset.css" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
@@ -25,12 +25,12 @@
 
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/visualMap',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart1 = echarts.init(document.getElementById('chart1'));

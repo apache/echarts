@@ -1,10 +1,10 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
@@ -123,18 +123,18 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/line',
-                'echarts/component/grid',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom'
-            ], function (ec, ct) {
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/component/grid',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
                 echarts = ec;
-                colorTool = ct;
+                colorTool = echarts.color;
                 var dom = document.getElementById('chart0');
                 if (!dom) {
                     return;
@@ -165,18 +165,18 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/line',
-                'echarts/component/grid',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom'
-            ], function (ec, ct) {
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/component/grid',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
                 echarts = ec;
-                colorTool = ct;
+                colorTool = echarts.color;
                 var dom = document.getElementById('chart1');
                 if (!dom) {
                     return;
@@ -216,18 +216,18 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/line',
-                'echarts/component/grid',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom'
-            ], function (ec, ct) {
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/component/grid',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
                 echarts = ec;
-                colorTool = ct;
+                colorTool = echarts.color;
                 var dom = document.getElementById('chart2');
                 if (!dom) {
                     return;
@@ -261,18 +261,18 @@
             var groupColors = [];
 
             require([
-                'echarts',
-                'zrender/tool/color',
-                'echarts/chart/line',
-                'echarts/component/grid',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom'
-            ], function (ec, ct) {
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/component/grid',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
                 echarts = ec;
-                colorTool = ct;
+                colorTool = echarts.color;
                 var dom = document.getElementById('chart3');
                 if (!dom) {
                     return;

@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
     </head>
     <body>
         <style>
@@ -30,21 +30,21 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/axis',
-                'echarts/component/dataZoom',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/markPoint',
-                'echarts/component/markLine'
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/axis',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/markLine'
             ], function (echarts) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 var xAxisData = [];

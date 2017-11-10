@@ -2,7 +2,7 @@ describe('Component', function() {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/model/Component']);
+    var testCase = utHelper.prepare(['echarts/src/model/Component']);
 
     describe('topologicalTravel', function () {
 

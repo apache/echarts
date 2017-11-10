@@ -1,14 +1,5 @@
-/**
- * @file Data zoom model
- */
-define(function(require) {
+import DataZoomModel from './DataZoomModel';
 
-    var DataZoomModel = require('./DataZoomModel');
-
-    return DataZoomModel.extend({
-
-        type: 'dataZoom.select'
-
-    });
-
+export default DataZoomModel.extend({
+    type: 'dataZoom.select'
 });

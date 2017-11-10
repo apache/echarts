@@ -3,9 +3,9 @@ describe('graphic_setOption', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/chart/line',
-        'echarts/component/graphic',
-        'echarts/component/grid'
+        'echarts/src/chart/line',
+        'echarts/src/component/graphic',
+        'echarts/src/component/grid'
     ]);
 
     var NUMBER_PRECISION = 6;

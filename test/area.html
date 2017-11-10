@@ -2,7 +2,7 @@
     <head>
         <meta charset="utf-8">
         <script src="http://requirejs.org/docs/release/2.2.0/minified/require.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
     </head>
     <body>
@@ -16,17 +16,15 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/gridSimple',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/gridSimple',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var xAxisData = [];
                 var data1 = [];

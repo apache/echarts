@@ -1,18 +1,19 @@
-define(function (require) {
 
-    // Do not contain scrollable legend, for sake of file size.
+// Do not contain scrollable legend, for sake of file size.
 
-    require('./legend/LegendModel');
-    require('./legend/legendAction');
-    require('./legend/LegendView');
+import * as echarts from '../echarts';
 
-    var echarts = require('../echarts');
-    // Series Filter
-    echarts.registerProcessor(require('./legend/legendFilter'));
+import './legend/LegendModel';
+import './legend/legendAction';
+import './legend/LegendView';
 
-    require('../model/Component').registerSubTypeDefaulter('legend', function () {
-        // Default 'plain' when no type specified.
-        return 'plain';
-    });
+import legendFilter from './legend/legendFilter';
+import Component from '../model/Component';
 
+// Series Filter
+echarts.registerProcessor(legendFilter);
+
+Component.registerSubTypeDefaulter('legend', function () {
+    // Default 'plain' when no type specified.
+    return 'plain';
 });

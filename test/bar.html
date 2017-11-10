@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
@@ -24,11 +24,6 @@
             }
         </style>
 
-        <h1>
-            <input type="button" onclick="testHelper.setURLParam(['cn', 'en'], 'cn')" value="CN"/>
-            <input type="button" onclick="testHelper.setURLParam(['cn', 'en'], 'en')" value="EN"/>
-        </h1>
-
         <div id="main" class="chart"></div>
         <script>
 
@@ -36,23 +31,23 @@
             (testHelper.hasURLParam('en')
                 ? [
                     'echarts',
-                    'echarts/lang/en',
+                    // 'echarts/lang/en',
                 ]
                 : [
                     'echarts'
                 ]
             ).concat(
                 [
-                    'echarts/chart/bar',
-                    'echarts/chart/line',
-                    'echarts/component/legend',
-                    'echarts/component/graphic',
-                    'echarts/component/grid',
-                    'echarts/component/tooltip',
-                    'echarts/component/brush',
-                    'echarts/component/toolbox',
-                    'echarts/component/title',
-                    'zrender/vml/vml'
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
                 ]
             ),
             function (echarts) {

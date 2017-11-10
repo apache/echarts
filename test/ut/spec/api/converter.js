@@ -17,11 +17,11 @@ describe('api/converter', function() {
     }
 
     var testCase = utHelper.prepare([
-        'echarts/chart/map',
-        'echarts/chart/scatter',
-        'echarts/chart/graph',
-        'echarts/component/geo',
-        'echarts/component/grid'
+        'echarts/src/chart/map',
+        'echarts/src/chart/scatter',
+        'echarts/src/chart/graph',
+        'echarts/src/component/geo',
+        'echarts/src/component/grid'
     ]);
 
     var testGeoJson1 = {

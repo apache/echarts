@@ -1,0 +1,219 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            body {
+                background: #333;
+            }
+            .chart {
+                height: 400px;
+            }
+        </style>
+        <div class="chart" id="main1"></div>
+        <div class="chart" id="main2"></div>
+
+
+
+        <script>
+
+            require([
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/chart/parallel',
+                // 'echarts/component/title',
+                // 'echarts/component/grid',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main1'));
+
+                var DECIMALS = [1];
+                for (var i = 1; i < 15; i++) {
+                    DECIMALS.push(DECIMALS[DECIMALS.length - 1] * 10);
+                }
+
+                window.yAxisLabelFormatter = (function () {
+                    var labelMap = {};
+
+                    return function (val, index) {
+                        !index && (labelMap = {});
+
+                        if (val < 0) {
+                            return '';
+                        }
+
+                        var label = val >= DECIMALS[11]
+                            ? fix((val / DECIMALS[12]).toFixed(val >= DECIMALS[13] ? 0 : 1)) + 'T'
+                            : val >= DECIMALS[8]
+                            ? fix((val / DECIMALS[9]).toFixed(val >= DECIMALS[10] ? 0 : 1)) + 'B'
+                            : val >= DECIMALS[5]
+                            ? fix((val / DECIMALS[6]).toFixed(val >= DECIMALS[7] ? 0 : 1)) + 'M'
+                            : val >= DECIMALS[3]
+                            ? fix((val / DECIMALS[3]).toFixed(val >= DECIMALS[4] ? 0 : 1)) + 'K'
+                            : val;
+
+                        return (
+                            labelMap[label]
+                            ? ''
+                            : (labelMap[label] = true, label)
+                        ) + '\n';
+
+                        function fix(valStr) {
+                            return valStr.replace(/[.]0+$/, '');
+                        }
+                    };
+                })();
+
+                window.smallYAxisLabel = {
+                    show: true,
+                    margin: 2,
+                    formatter: window.yAxisLabelFormatter,
+                    inside: true,
+                    textStyle: {
+                        // color: '#f7e1a9',
+                        color: 'rgba(255,255,255,0.3)',
+                        fontSize: 9,
+                        fontFamily: 'STHeiti'
+                    }
+                };
+
+
+
+                option = {
+                    backgroundColor: '#eee',
+                    title: {
+                        text: '上两个 label 显示不出来怎么办'
+                    },
+                    grid: {
+                        backgroundColor: '#333',
+                        show: true,
+                        borderWidth: 0,
+                        height: 156,
+                        top: '15%',
+                        left: 100,
+                        right: 100
+                    },
+                    xAxis: {
+                        type: 'time'
+                    },
+
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+
+                    yAxis: {
+                        type: 'value',
+                        scale: true,
+                        boundaryGap: ['3%', '3%'],
+                        splitNumber: 3,
+                        axisLine: {
+                            show: false
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                type: 'solid',
+                                color: '#9f520e'
+                            }
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        axisLabel: window.smallYAxisLabel
+                    },
+                    easing: 'linear',
+                    series: [{
+                        name: '视频制作总数',
+                        type: 'line',
+                        lineStyle: {
+                            normal: {
+                                color: '#f9bb0b'
+                            }
+                        },
+                        showSymbol: false,
+                        data: [{"name":"980061360000","value":[980061360000,1519]},{"name":"980061420000","value":[980061420000,1526]},{"name":"980061480000","value":[980061480000,1530]},{"name":"980061540000","value":[980061540000,1531]},{"name":"980061600000","value":[980061600000,1531]},{"name":"980061660000","value":[980061660000,1532]},{"name":"980061720000","value":[980061720000,1532]},{"name":"980061780000","value":[980061780000,1533]},{"name":"980061840000","value":[980061840000,1533]},{"name":"980061900000","value":[980061900000,1537]},{"name":"980061960000","value":[980061960000,1537]},{"name":"980062020000","value":[980062020000,1539]},{"name":"980062080000","value":[980062080000,1552]},{"name":"980062140000","value":[980062140000,1552]},{"name":"980062200000","value":[980062200000,1559]},{"name":"980062260000","value":[980062260000,1561]},{"name":"980062320000","value":[980062320000,1562]},{"name":"980062380000","value":[980062380000,1562]},{"name":"980062440000","value":[980062440000,1562]},{"name":"980062500000","value":[980062500000,1563]},{"name":"980062560000","value":[980062560000,1563]},{"name":"980062620000","value":[980062620000,1565]},{"name":"980062680000","value":[980062680000,1569]},{"name":"980062740000","value":[980062740000,1575]},{"name":"980062800000","value":[980062800000,1579]},{"name":"980062860000","value":[980062860000,1579]},{"name":"980062920000","value":[980062920000,1581]},{"name":"980062980000","value":[980062980000,1582]},{"name":"980063040000","value":[980063040000,1585]},{"name":"980063100000","value":[980063100000,1589]},{"name":"980063160000","value":[980063160000,1590]},{"name":"980063220000","value":[980063220000,1590]},{"name":"980063280000","value":[980063280000,1591]},{"name":"980063340000","value":[980063340000,1591]},{"name":"980063400000","value":[980063400000,1592]},{"name":"980063460000","value":[980063460000,1592]},{"name":"980063520000","value":[980063520000,1593]},{"name":"980063580000","value":[980063580000,1605]},{"name":"980063640000","value":[980063640000,1609]},{"name":"980063700000","value":[980063700000,1612]},{"name":"980063760000","value":[980063760000,1614]},{"name":"980063820000","value":[980063820000,1614]},{"name":"980063880000","value":[980063880000,1617]},{"name":"980063940000","value":[980063940000,1617]},{"name":"980064000000","value":[980064000000,1619]},{"name":"980064060000","value":[980064060000,1622]},{"name":"980064120000","value":[980064120000,1622]},{"name":"980064180000","value":[980064180000,1624]},{"name":"980064240000","value":[980064240000,1627]},{"name":"980064300000","value":[980064300000,1640]},{"name":"980064360000","value":[980064360000,1642]},{"name":"980064420000","value":[980064420000,1642]},{"name":"980064480000","value":[980064480000,1643]},{"name":"980064540000","value":[980064540000,1644]},{"name":"980064600000","value":[980064600000,1644]},{"name":"980064660000","value":[980064660000,1647]},{"name":"980064720000","value":[980064720000,1647]},{"name":"980064780000","value":[980064780000,1648]},{"name":"980064840000","value":[980064840000,1648]},{"name":"980064900000","value":[980064900000,1648]}]
+                    }]
+                };
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main2'));
+                var rotate = 30;
+
+                option = {
+                    backgroundColor: '#eee',
+                    title: {
+                        text: 'grid.containLabel'
+                    },
+                    grid: {
+                        containLabel: true,
+                        left: 0
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        data: ['a', 'b', 'c', 'd', 'e']
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            rotate: rotate
+                        }
+                    },
+                    series: [{
+                        type: 'line',
+                        data: [
+                            1111111111111,
+                            2222222222222,
+                            3333333333333,
+                            4444444444444,
+                            5555555555555,
+                            6666666666666
+                        ]
+                    }]
+                };
+
+                chart.setOption(option);
+
+                setInterval(function () {
+                    rotate = (rotate + 1) % 360;
+
+                    chart.setOption({
+                        yAxis: {
+                            axisLabel: {
+                                rotate: rotate
+                            }
+                        }
+                    });
+                }, 100);
+            });
+
+        </script>
+
+
+    </body>
+</html>
