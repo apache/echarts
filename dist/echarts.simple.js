@@ -26348,14 +26348,12 @@ function Scale(setting) {
     this.init && this.init.apply(this, arguments);
 }
 
-var scaleProto$1 = Scale.prototype;
-
 /**
  * Parse input val to valid inner number.
  * @param {*} val
  * @return {number}
  */
-scaleProto$1.parse = function (val) {
+Scale.prototype.parse = function (val) {
     // Notice: This would be a trap here, If the implementation
     // of this method depends on extent, and this method is used
     // before extent set (like in dataZoom), it would be wrong.
@@ -26363,11 +26361,11 @@ scaleProto$1.parse = function (val) {
     return val;
 };
 
-scaleProto$1.getSetting = function (name) {
+Scale.prototype.getSetting = function (name) {
     return this._setting[name];
 };
 
-scaleProto$1.contain = function (val) {
+Scale.prototype.contain = function (val) {
     var extent = this._extent;
     return val >= extent[0] && val <= extent[1];
 };
@@ -26377,7 +26375,7 @@ scaleProto$1.contain = function (val) {
  * @param {number} val
  * @return {number}
  */
-scaleProto$1.normalize = function (val) {
+Scale.prototype.normalize = function (val) {
     var extent = this._extent;
     if (extent[1] === extent[0]) {
         return 0.5;
@@ -26390,7 +26388,7 @@ scaleProto$1.normalize = function (val) {
  * @param {number} val
  * @return {number}
  */
-scaleProto$1.scale = function (val) {
+Scale.prototype.scale = function (val) {
     var extent = this._extent;
     return val * (extent[1] - extent[0]) + extent[0];
 };
@@ -26399,7 +26397,7 @@ scaleProto$1.scale = function (val) {
  * Set extent from data
  * @param {Array.<number>} other
  */
-scaleProto$1.unionExtent = function (other) {
+Scale.prototype.unionExtent = function (other) {
     var extent = this._extent;
     other[0] < extent[0] && (extent[0] = other[0]);
     other[1] > extent[1] && (extent[1] = other[1]);
@@ -26412,7 +26410,7 @@ scaleProto$1.unionExtent = function (other) {
  * @param {module:echarts/data/List} data
  * @param {string} dim
  */
-scaleProto$1.unionExtentFromData = function (data, dim) {
+Scale.prototype.unionExtentFromData = function (data, dim) {
     this.unionExtent(data.getDataExtent(dim, true));
 };
 
@@ -26420,7 +26418,7 @@ scaleProto$1.unionExtentFromData = function (data, dim) {
  * Get extent
  * @return {Array.<number>}
  */
-scaleProto$1.getExtent = function () {
+Scale.prototype.getExtent = function () {
     return this._extent.slice();
 };
 
@@ -26429,7 +26427,7 @@ scaleProto$1.getExtent = function () {
  * @param {number} start
  * @param {number} end
  */
-scaleProto$1.setExtent = function (start, end) {
+Scale.prototype.setExtent = function (start, end) {
     var thisExtent = this._extent;
     if (!isNaN(start)) {
         thisExtent[0] = start;
@@ -26442,7 +26440,7 @@ scaleProto$1.setExtent = function (start, end) {
 /**
  * @return {Array.<string>}
  */
-scaleProto$1.getTicksLabels = function () {
+Scale.prototype.getTicksLabels = function () {
     var labels = [];
     var ticks = this.getTicks();
     for (var i = 0; i < ticks.length; i++) {
@@ -26455,7 +26453,7 @@ scaleProto$1.getTicksLabels = function () {
  * When axis extent depends on data and no data exists,
  * axis ticks should not be drawn, which is named 'blank'.
  */
-scaleProto$1.isBlank = function () {
+Scale.prototype.isBlank = function () {
     return this._isBlank;
 },
 
@@ -26463,7 +26461,7 @@ scaleProto$1.isBlank = function () {
  * When axis extent depends on data and no data exists,
  * axis ticks should not be drawn, which is named 'blank'.
  */
-scaleProto$1.setBlank = function (isBlank) {
+Scale.prototype.setBlank = function (isBlank) {
     this._isBlank = isBlank;
 };
 
@@ -27064,7 +27062,7 @@ TimeScale.create = function (model) {
  */
 
 // Use some method of IntervalScale
-var scaleProto$2 = Scale.prototype;
+var scaleProto$1 = Scale.prototype;
 var intervalScaleProto$1 = IntervalScale.prototype;
 
 var getPrecisionSafe$1 = getPrecisionSafe;
@@ -27121,7 +27119,7 @@ var LogScale = Scale.extend({
      * @return {number}
      */
     scale: function (val) {
-        val = scaleProto$2.scale.call(this, val);
+        val = scaleProto$1.scale.call(this, val);
         return mathPow$1(this.base, val);
     },
 
@@ -27141,7 +27139,7 @@ var LogScale = Scale.extend({
      */
     getExtent: function () {
         var base = this.base;
-        var extent = scaleProto$2.getExtent.call(this);
+        var extent = scaleProto$1.getExtent.call(this);
         extent[0] = mathPow$1(base, extent[0]);
         extent[1] = mathPow$1(base, extent[1]);
 
@@ -27163,7 +27161,7 @@ var LogScale = Scale.extend({
         var base = this.base;
         extent[0] = mathLog(extent[0]) / mathLog(base);
         extent[1] = mathLog(extent[1]) / mathLog(base);
-        scaleProto$2.unionExtent.call(this, extent);
+        scaleProto$1.unionExtent.call(this, extent);
     },
 
     /**
@@ -27226,7 +27224,7 @@ var LogScale = Scale.extend({
 each$1(['contain', 'normalize'], function (methodName) {
     LogScale.prototype[methodName] = function (val) {
         val = mathLog(val) / mathLog(this.base);
-        return scaleProto$2[methodName].call(this, val);
+        return scaleProto$1[methodName].call(this, val);
     };
 });
 
