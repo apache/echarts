@@ -1,8 +1,16 @@
-import * as gexf from './gexf';
-import prepareBoxplotData from './prepareBoxplotData';
+var echarts = require("echarts");
 
-export var version = '1.0.0';
+var gexf = require("./gexf");
 
-export {gexf};
+exports.gexf = gexf;
 
-export {prepareBoxplotData};
+var prepareBoxplotData = require("./prepareBoxplotData");
+
+exports.prepareBoxplotData = prepareBoxplotData;
+var version = '1.0.0';
+echarts.$inject({
+  version: version,
+  gexf: gexf,
+  prepareBoxplotData: prepareBoxplotData
+});
+exports.version = version;

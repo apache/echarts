@@ -1,8 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.dataTool = {})));
-}(this, (function (exports) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('echarts')) :
+	typeof define === 'function' && define.amd ? define(['exports', 'echarts'], factory) :
+	(factory((global.dataTool = {}),global.echarts));
+}(this, (function (exports,echarts) { 'use strict';
 
 if (typeof __DEV__ === "undefined") {
     if (typeof window !== "undefined") {
@@ -746,6 +746,12 @@ var prepareBoxplotData = function (rawData, opt) {
 };
 
 var version = '1.0.0';
+
+echarts.$inject({
+    version: version,
+    gexf: gexf,
+    prepareBoxplotData: prepareBoxplotData
+});
 
 exports.version = version;
 exports.gexf = gexf;

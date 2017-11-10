@@ -149,15 +149,19 @@ function run() {
             config.createDataTool(true)
         );
 
-        build(configs).then(function () {
-            checkCode(configForCheck);
-
-            prePublish();
-        });
+        build(configs)
+            .then(function () {
+                checkCode(configForCheck);
+                prePublish();
+            }).catch(handleBuildError);
     }
     else {
-        build([config.createECharts(opt)]);
+        build([config.createECharts(opt)]).catch(handleBuildError);
     }
+}
+
+function handleBuildError(err) {
+    console.log(err);
 }
 
 function checkCode(singleConfig) {

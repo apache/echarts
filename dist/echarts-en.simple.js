@@ -13075,6 +13075,7 @@ function windingLine(x0, y0, x1, y1, x, y) {
     return x_ > x ? dir : 0;
 }
 
+var CMD$1 = PathProxy.CMD;
 var PI2$1 = Math.PI * 2;
 
 var EPSILON$2 = 1e-4;
@@ -13277,7 +13278,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
     for (var i = 0; i < data.length;) {
         var cmd = data[i++];
         // Begin a new subpath
-        if (cmd === CMD.M && i > 1) {
+        if (cmd === CMD$1.M && i > 1) {
             // Close previous subpath
             if (!isStroke) {
                 w += windingLine(xi, yi, x0, y0, x, y);
@@ -13301,7 +13302,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
         }
 
         switch (cmd) {
-            case CMD.M:
+            case CMD$1.M:
                 // moveTo 命令重新创建一个新的 subpath, 并且更新新的起点
                 // 在 closePath 的时候使用
                 x0 = data[i++];
@@ -13309,7 +13310,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = x0;
                 yi = y0;
                 break;
-            case CMD.L:
+            case CMD$1.L:
                 if (isStroke) {
                     if (containStroke$1(xi, yi, data[i], data[i + 1], lineWidth, x, y)) {
                         return true;
@@ -13322,7 +13323,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = data[i++];
                 yi = data[i++];
                 break;
-            case CMD.C:
+            case CMD$1.C:
                 if (isStroke) {
                     if (containStroke$2(xi, yi,
                         data[i++], data[i++], data[i++], data[i++], data[i], data[i + 1],
@@ -13341,7 +13342,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = data[i++];
                 yi = data[i++];
                 break;
-            case CMD.Q:
+            case CMD$1.Q:
                 if (isStroke) {
                     if (containStroke$3(xi, yi,
                         data[i++], data[i++], data[i], data[i + 1],
@@ -13360,7 +13361,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = data[i++];
                 yi = data[i++];
                 break;
-            case CMD.A:
+            case CMD$1.A:
                 // TODO Arc 判断的开销比较大
                 var cx = data[i++];
                 var cy = data[i++];
@@ -13401,7 +13402,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = Math.cos(theta + dTheta) * rx + cx;
                 yi = Math.sin(theta + dTheta) * ry + cy;
                 break;
-            case CMD.R:
+            case CMD$1.R:
                 x0 = xi = data[i++];
                 y0 = yi = data[i++];
                 var width = data[i++];
@@ -13423,7 +13424,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                     w += windingLine(x0, y1, x0, y0, x, y);
                 }
                 break;
-            case CMD.Z:
+            case CMD$1.Z:
                 if (isStroke) {
                     if (containStroke$1(
                         xi, yi, x0, y0, lineWidth, x, y
@@ -13815,6 +13816,8 @@ Path.extend = function (defaults$$1) {
 
 inherits(Path, Displayable);
 
+var CMD$2 = PathProxy.CMD;
+
 var points = [[], [], []];
 var mathSqrt$3 = Math.sqrt;
 var mathAtan2 = Math.atan2;
@@ -13828,12 +13831,12 @@ var transformPath = function (path, m) {
     var k;
     var p;
 
-    var M = CMD.M;
-    var C = CMD.C;
-    var L = CMD.L;
-    var R = CMD.R;
-    var A = CMD.A;
-    var Q = CMD.Q;
+    var M = CMD$2.M;
+    var C = CMD$2.C;
+    var L = CMD$2.L;
+    var R = CMD$2.R;
+    var A = CMD$2.A;
+    var Q = CMD$2.Q;
 
     for (i = 0, j = 0; i < data.length;) {
         cmd = data[i++];
@@ -14004,7 +14007,7 @@ function createPathProxyFromString(data) {
     var cpy = 0;
 
     var path = new PathProxy();
-    var CMD$$1 = PathProxy.CMD;
+    var CMD = PathProxy.CMD;
 
     var prevCmd;
     for (n = 1; n < arr.length; n++) {
@@ -14042,51 +14045,51 @@ function createPathProxyFromString(data) {
                 case 'l':
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'L':
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'm':
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.M;
+                    cmd = CMD.M;
                     path.addData(cmd, cpx, cpy);
                     c = 'l';
                     break;
                 case 'M':
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.M;
+                    cmd = CMD.M;
                     path.addData(cmd, cpx, cpy);
                     c = 'L';
                     break;
                 case 'h':
                     cpx += p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'H':
                     cpx = p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'v':
                     cpy += p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'V':
                     cpy = p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'C':
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     path.addData(
                         cmd, p[off++], p[off++], p[off++], p[off++], p[off++], p[off++]
                     );
@@ -14094,7 +14097,7 @@ function createPathProxyFromString(data) {
                     cpy = p[off - 1];
                     break;
                 case 'c':
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     path.addData(
                         cmd,
                         p[off++] + cpx, p[off++] + cpy,
@@ -14109,11 +14112,11 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.C) {
+                    if (prevCmd === CMD.C) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     x1 = p[off++];
                     y1 = p[off++];
                     cpx = p[off++];
@@ -14125,11 +14128,11 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.C) {
+                    if (prevCmd === CMD.C) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     x1 = cpx + p[off++];
                     y1 = cpy + p[off++];
                     cpx += p[off++];
@@ -14141,7 +14144,7 @@ function createPathProxyFromString(data) {
                     y1 = p[off++];
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, x1, y1, cpx, cpy);
                     break;
                 case 'q':
@@ -14149,7 +14152,7 @@ function createPathProxyFromString(data) {
                     y1 = p[off++] + cpy;
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, x1, y1, cpx, cpy);
                     break;
                 case 'T':
@@ -14157,13 +14160,13 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.Q) {
+                    if (prevCmd === CMD.Q) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, ctlPtx, ctlPty, cpx, cpy);
                     break;
                 case 't':
@@ -14171,13 +14174,13 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.Q) {
+                    if (prevCmd === CMD.Q) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, ctlPtx, ctlPty, cpx, cpy);
                     break;
                 case 'A':
@@ -14190,7 +14193,7 @@ function createPathProxyFromString(data) {
                     x1 = cpx, y1 = cpy;
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.A;
+                    cmd = CMD.A;
                     processArc(
                         x1, y1, cpx, cpy, fa, fs, rx, ry, psi, cmd, path
                     );
@@ -14205,7 +14208,7 @@ function createPathProxyFromString(data) {
                     x1 = cpx, y1 = cpy;
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.A;
+                    cmd = CMD.A;
                     processArc(
                         x1, y1, cpx, cpy, fa, fs, rx, ry, psi, cmd, path
                     );
@@ -14214,7 +14217,7 @@ function createPathProxyFromString(data) {
         }
 
         if (c === 'z' || c === 'Z') {
-            cmd = CMD$$1.Z;
+            cmd = CMD.Z;
             path.addData(cmd);
         }
 
@@ -22245,6 +22248,7 @@ registerAction({
 
 
 
+
 var $inject = {
     registerMap: function (f) {
         exports.registerMap = f;
@@ -22254,6 +22258,9 @@ var $inject = {
     },
     parseGeoJSON: function (f) {
         exports.parseGeoJSON = f;
+    },
+    dataTool: function (f) {
+        exports.dataTool = f;
     }
 };
 

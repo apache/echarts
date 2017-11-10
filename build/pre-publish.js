@@ -15,6 +15,8 @@ const {color} = require('./helper');
 
 const ecDir = resolve(__dirname, '..');
 const srcDir = resolve(__dirname, '../src');
+const extensionSrcDir = resolve(__dirname, '../extension-src');
+const extensionDir = resolve(__dirname, '../extension');
 const libDir = resolve(__dirname, '../lib');
 
 const REG_SRC = /^[^.].*[.]js$/;
@@ -27,9 +29,12 @@ module.exports = function () {
     fsExtra.ensureDirSync(libDir);
     // fsExtra.copySync(getPath('./src'), getPath('./lib'));
 
-    travelSrcDir('.', ({fileName, basePath, absolutePath, outputPath}) => {
-        outputPath = resolve(ecDir, 'lib', basePath, fileName);
-        transform(absolutePath, outputPath);
+    travelDir(srcDir, '.', ({fileName, basePath, absolutePath}) => {
+        transform(absolutePath, resolve(libDir, basePath, fileName));
+    });
+
+    travelDir(extensionSrcDir, '.', ({fileName, basePath, absolutePath}) => {
+        transform(absolutePath, resolve(extensionDir, basePath, fileName));
     });
 
     transform(resolve(ecDir, 'echarts.all.js'), resolve(ecDir, 'index.js'));
@@ -72,21 +77,26 @@ module.exports = function () {
     console.log(color('fgGreen', 'bright')('All done.'));
 };
 
-function travelSrcDir(basePath, cb) {
-    const absolutePath = resolve(srcDir, basePath);
+function travelDir(tSrcDir, basePath, cb) {
+    travelSrcDir(basePath);
 
-    fs.readdirSync(absolutePath).forEach(fileName => {
-        const childAbsolutePath = resolve(absolutePath, fileName);
-        const stat = fs.statSync(childAbsolutePath);
-        if (stat.isDirectory()) {
-            if (REG_DIR.test(fileName)) {
-                travelSrcDir(join(basePath, fileName), cb);
+    function travelSrcDir(basePath) {
+        const absolutePath = resolve(tSrcDir, basePath);
+
+        fs.readdirSync(absolutePath).forEach(fileName => {
+            const childAbsolutePath = resolve(absolutePath, fileName);
+            const stat = fs.statSync(childAbsolutePath);
+            if (stat.isDirectory()) {
+                if (REG_DIR.test(fileName)) {
+                    travelSrcDir(join(basePath, fileName));
+                }
             }
-        }
-        else if (stat.isFile()) {
-            if (REG_SRC.test(fileName)) {
-                cb({fileName, basePath: basePath, absolutePath: childAbsolutePath});
+            else if (stat.isFile()) {
+                if (REG_SRC.test(fileName)) {
+                    cb({fileName, basePath: basePath, absolutePath: childAbsolutePath});
+                }
             }
-        }
-    });
+        });
+    }
 }
+

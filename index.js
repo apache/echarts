@@ -16,10 +16,6 @@ var _export = require("./lib/export");
   }
 })();
 
-var dataTool = require("./extension/dataTool/index");
-
-exports.dataTool = dataTool;
-
 require("./lib/chart/line");
 
 require("./lib/chart/bar");

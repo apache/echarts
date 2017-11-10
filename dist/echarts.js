@@ -13552,6 +13552,7 @@ function windingLine(x0, y0, x1, y1, x, y) {
     return x_ > x ? dir : 0;
 }
 
+var CMD$1 = PathProxy.CMD;
 var PI2$1 = Math.PI * 2;
 
 var EPSILON$2 = 1e-4;
@@ -13754,7 +13755,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
     for (var i = 0; i < data.length;) {
         var cmd = data[i++];
         // Begin a new subpath
-        if (cmd === CMD.M && i > 1) {
+        if (cmd === CMD$1.M && i > 1) {
             // Close previous subpath
             if (!isStroke) {
                 w += windingLine(xi, yi, x0, y0, x, y);
@@ -13778,7 +13779,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
         }
 
         switch (cmd) {
-            case CMD.M:
+            case CMD$1.M:
                 // moveTo 命令重新创建一个新的 subpath, 并且更新新的起点
                 // 在 closePath 的时候使用
                 x0 = data[i++];
@@ -13786,7 +13787,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = x0;
                 yi = y0;
                 break;
-            case CMD.L:
+            case CMD$1.L:
                 if (isStroke) {
                     if (containStroke$1(xi, yi, data[i], data[i + 1], lineWidth, x, y)) {
                         return true;
@@ -13799,7 +13800,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = data[i++];
                 yi = data[i++];
                 break;
-            case CMD.C:
+            case CMD$1.C:
                 if (isStroke) {
                     if (containStroke$2(xi, yi,
                         data[i++], data[i++], data[i++], data[i++], data[i], data[i + 1],
@@ -13818,7 +13819,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = data[i++];
                 yi = data[i++];
                 break;
-            case CMD.Q:
+            case CMD$1.Q:
                 if (isStroke) {
                     if (containStroke$3(xi, yi,
                         data[i++], data[i++], data[i], data[i + 1],
@@ -13837,7 +13838,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = data[i++];
                 yi = data[i++];
                 break;
-            case CMD.A:
+            case CMD$1.A:
                 // TODO Arc 判断的开销比较大
                 var cx = data[i++];
                 var cy = data[i++];
@@ -13878,7 +13879,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                 xi = Math.cos(theta + dTheta) * rx + cx;
                 yi = Math.sin(theta + dTheta) * ry + cy;
                 break;
-            case CMD.R:
+            case CMD$1.R:
                 x0 = xi = data[i++];
                 y0 = yi = data[i++];
                 var width = data[i++];
@@ -13900,7 +13901,7 @@ function containPath(data, lineWidth, isStroke, x, y) {
                     w += windingLine(x0, y1, x0, y0, x, y);
                 }
                 break;
-            case CMD.Z:
+            case CMD$1.Z:
                 if (isStroke) {
                     if (containStroke$1(
                         xi, yi, x0, y0, lineWidth, x, y
@@ -14292,6 +14293,8 @@ Path.extend = function (defaults$$1) {
 
 inherits(Path, Displayable);
 
+var CMD$2 = PathProxy.CMD;
+
 var points = [[], [], []];
 var mathSqrt$3 = Math.sqrt;
 var mathAtan2 = Math.atan2;
@@ -14305,12 +14308,12 @@ var transformPath = function (path, m) {
     var k;
     var p;
 
-    var M = CMD.M;
-    var C = CMD.C;
-    var L = CMD.L;
-    var R = CMD.R;
-    var A = CMD.A;
-    var Q = CMD.Q;
+    var M = CMD$2.M;
+    var C = CMD$2.C;
+    var L = CMD$2.L;
+    var R = CMD$2.R;
+    var A = CMD$2.A;
+    var Q = CMD$2.Q;
 
     for (i = 0, j = 0; i < data.length;) {
         cmd = data[i++];
@@ -14481,7 +14484,7 @@ function createPathProxyFromString(data) {
     var cpy = 0;
 
     var path = new PathProxy();
-    var CMD$$1 = PathProxy.CMD;
+    var CMD = PathProxy.CMD;
 
     var prevCmd;
     for (n = 1; n < arr.length; n++) {
@@ -14519,51 +14522,51 @@ function createPathProxyFromString(data) {
                 case 'l':
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'L':
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'm':
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.M;
+                    cmd = CMD.M;
                     path.addData(cmd, cpx, cpy);
                     c = 'l';
                     break;
                 case 'M':
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.M;
+                    cmd = CMD.M;
                     path.addData(cmd, cpx, cpy);
                     c = 'L';
                     break;
                 case 'h':
                     cpx += p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'H':
                     cpx = p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'v':
                     cpy += p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'V':
                     cpy = p[off++];
-                    cmd = CMD$$1.L;
+                    cmd = CMD.L;
                     path.addData(cmd, cpx, cpy);
                     break;
                 case 'C':
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     path.addData(
                         cmd, p[off++], p[off++], p[off++], p[off++], p[off++], p[off++]
                     );
@@ -14571,7 +14574,7 @@ function createPathProxyFromString(data) {
                     cpy = p[off - 1];
                     break;
                 case 'c':
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     path.addData(
                         cmd,
                         p[off++] + cpx, p[off++] + cpy,
@@ -14586,11 +14589,11 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.C) {
+                    if (prevCmd === CMD.C) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     x1 = p[off++];
                     y1 = p[off++];
                     cpx = p[off++];
@@ -14602,11 +14605,11 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.C) {
+                    if (prevCmd === CMD.C) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
-                    cmd = CMD$$1.C;
+                    cmd = CMD.C;
                     x1 = cpx + p[off++];
                     y1 = cpy + p[off++];
                     cpx += p[off++];
@@ -14618,7 +14621,7 @@ function createPathProxyFromString(data) {
                     y1 = p[off++];
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, x1, y1, cpx, cpy);
                     break;
                 case 'q':
@@ -14626,7 +14629,7 @@ function createPathProxyFromString(data) {
                     y1 = p[off++] + cpy;
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, x1, y1, cpx, cpy);
                     break;
                 case 'T':
@@ -14634,13 +14637,13 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.Q) {
+                    if (prevCmd === CMD.Q) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, ctlPtx, ctlPty, cpx, cpy);
                     break;
                 case 't':
@@ -14648,13 +14651,13 @@ function createPathProxyFromString(data) {
                     ctlPty = cpy;
                     var len = path.len();
                     var pathData = path.data;
-                    if (prevCmd === CMD$$1.Q) {
+                    if (prevCmd === CMD.Q) {
                         ctlPtx += cpx - pathData[len - 4];
                         ctlPty += cpy - pathData[len - 3];
                     }
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.Q;
+                    cmd = CMD.Q;
                     path.addData(cmd, ctlPtx, ctlPty, cpx, cpy);
                     break;
                 case 'A':
@@ -14667,7 +14670,7 @@ function createPathProxyFromString(data) {
                     x1 = cpx, y1 = cpy;
                     cpx = p[off++];
                     cpy = p[off++];
-                    cmd = CMD$$1.A;
+                    cmd = CMD.A;
                     processArc(
                         x1, y1, cpx, cpy, fa, fs, rx, ry, psi, cmd, path
                     );
@@ -14682,7 +14685,7 @@ function createPathProxyFromString(data) {
                     x1 = cpx, y1 = cpy;
                     cpx += p[off++];
                     cpy += p[off++];
-                    cmd = CMD$$1.A;
+                    cmd = CMD.A;
                     processArc(
                         x1, y1, cpx, cpy, fa, fs, rx, ry, psi, cmd, path
                     );
@@ -14691,7 +14694,7 @@ function createPathProxyFromString(data) {
         }
 
         if (c === 'z' || c === 'Z') {
-            cmd = CMD$$1.Z;
+            cmd = CMD.Z;
             path.addData(cmd);
         }
 
@@ -22875,6 +22878,7 @@ registerAction({
 
 
 
+
 var $inject = {
     registerMap: function (f) {
         exports.registerMap = f;
@@ -22884,6 +22888,9 @@ var $inject = {
     },
     parseGeoJSON: function (f) {
         exports.parseGeoJSON = f;
+    },
+    dataTool: function (f) {
+        exports.dataTool = f;
     }
 };
 
@@ -26702,331 +26709,6 @@ each$1([
         ecUtil[name] = zrUtil[name];
     }
 );
-
-// GEXF File Parser
-// http://gexf.net/1.2draft/gexf-12draft-primer.pdf
-
-function parse$1(xml) {
-    var doc;
-    if (typeof xml === 'string') {
-        var parser = new DOMParser();
-        doc = parser.parseFromString(xml, 'text/xml');
-    }
-    else {
-        doc = xml;
-    }
-    if (!doc || doc.getElementsByTagName('parsererror').length) {
-        return null;
-    }
-
-    var gexfRoot = getChildByTagName(doc, 'gexf');
-
-    if (!gexfRoot) {
-        return null;
-    }
-
-    var graphRoot = getChildByTagName(gexfRoot, 'graph');
-
-    var attributes = parseAttributes(getChildByTagName(graphRoot, 'attributes'));
-    var attributesMap = {};
-    for (var i = 0; i < attributes.length; i++) {
-        attributesMap[attributes[i].id] = attributes[i];
-    }
-
-    return {
-        nodes: parseNodes(getChildByTagName(graphRoot, 'nodes'), attributesMap),
-        links: parseEdges(getChildByTagName(graphRoot, 'edges'))
-    };
-}
-
-function parseAttributes(parent) {
-    return parent ? map(getChildrenByTagName(parent, 'attribute'), function (attribDom) {
-        return {
-            id: getAttr(attribDom, 'id'),
-            title: getAttr(attribDom, 'title'),
-            type: getAttr(attribDom, 'type')
-        };
-    }) : [];
-}
-
-function parseNodes(parent, attributesMap) {
-    return parent ? map(getChildrenByTagName(parent, 'node'), function (nodeDom) {
-
-        var id = getAttr(nodeDom, 'id');
-        var label = getAttr(nodeDom, 'label');
-
-        var node = {
-            id: id,
-            name: label,
-            itemStyle: {
-                normal: {}
-            }
-        };
-
-        var vizSizeDom = getChildByTagName(nodeDom, 'viz:size');
-        var vizPosDom = getChildByTagName(nodeDom, 'viz:position');
-        var vizColorDom = getChildByTagName(nodeDom, 'viz:color');
-        // var vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
-
-        var attvaluesDom = getChildByTagName(nodeDom, 'attvalues');
-
-        if (vizSizeDom) {
-            node.symbolSize = parseFloat(getAttr(vizSizeDom, 'value'));
-        }
-        if (vizPosDom) {
-            node.x = parseFloat(getAttr(vizPosDom, 'x'));
-            node.y = parseFloat(getAttr(vizPosDom, 'y'));
-            // z
-        }
-        if (vizColorDom) {
-            node.itemStyle.normal.color = 'rgb(' +[
-                getAttr(vizColorDom, 'r') | 0,
-                getAttr(vizColorDom, 'g') | 0,
-                getAttr(vizColorDom, 'b') | 0
-            ].join(',') + ')';
-        }
-        // if (vizShapeDom) {
-            // node.shape = getAttr(vizShapeDom, 'shape');
-        // }
-        if (attvaluesDom) {
-            var attvalueDomList = getChildrenByTagName(attvaluesDom, 'attvalue');
-
-            node.attributes = {};
-
-            for (var j = 0; j < attvalueDomList.length; j++) {
-                var attvalueDom = attvalueDomList[j];
-                var attId = getAttr(attvalueDom, 'for');
-                var attValue = getAttr(attvalueDom, 'value');
-                var attribute = attributesMap[attId];
-
-                if (attribute) {
-                    switch (attribute.type) {
-                        case 'integer':
-                        case 'long':
-                            attValue = parseInt(attValue, 10);
-                            break;
-                        case 'float':
-                        case 'double':
-                            attValue = parseFloat(attValue);
-                            break;
-                        case 'boolean':
-                            attValue = attValue.toLowerCase() == 'true';
-                            break;
-                        default:
-                    }
-                    node.attributes[attId] = attValue;
-                }
-            }
-        }
-
-        return node;
-    }) : [];
-}
-
-function parseEdges(parent) {
-    return parent ? map(getChildrenByTagName(parent, 'edge'), function (edgeDom) {
-        var id = getAttr(edgeDom, 'id');
-        var label = getAttr(edgeDom, 'label');
-
-        var sourceId = getAttr(edgeDom, 'source');
-        var targetId = getAttr(edgeDom, 'target');
-
-        var edge = {
-            id: id,
-            name: label,
-            source: sourceId,
-            target: targetId,
-            lineStyle: {
-                normal: {}
-            }
-        };
-
-        var lineStyle = edge.lineStyle.normal;
-
-        var vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
-        var vizColorDom = getChildByTagName(edgeDom, 'viz:color');
-        // var vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
-
-        if (vizThicknessDom) {
-            lineStyle.width = parseFloat(vizThicknessDom.getAttribute('value'));
-        }
-        if (vizColorDom) {
-            lineStyle.color = 'rgb(' + [
-                getAttr(vizColorDom, 'r') | 0,
-                getAttr(vizColorDom, 'g') | 0,
-                getAttr(vizColorDom, 'b') | 0
-            ].join(',') + ')';
-        }
-        // if (vizShapeDom) {
-        //     edge.shape = vizShapeDom.getAttribute('shape');
-        // }
-
-        return edge;
-    }) : [];
-}
-
-function getAttr(el, attrName) {
-    return el.getAttribute(attrName);
-}
-
-function getChildByTagName (parent, tagName) {
-    var node = parent.firstChild;
-
-    while (node) {
-        if (
-            node.nodeType != 1 ||
-            node.nodeName.toLowerCase() != tagName.toLowerCase()
-        ) {
-            node = node.nextSibling;
-        } else {
-            return node;
-        }
-    }
-
-    return null;
-}
-
-function getChildrenByTagName (parent, tagName) {
-    var node = parent.firstChild;
-    var children = [];
-    while (node) {
-        if (node.nodeName.toLowerCase() == tagName.toLowerCase()) {
-            children.push(node);
-        }
-        node = node.nextSibling;
-    }
-
-    return children;
-}
-
-
-var gexf = (Object.freeze || Object)({
-	parse: parse$1
-});
-
-/**
- * Copyright (c) 2010-2015, Michael Bostock
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * * The name Michael Bostock may not be used to endorse or promote products
- *   derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL MICHAEL BOSTOCK BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * @see <https://github.com/mbostock/d3/blob/master/src/arrays/quantile.js>
- * @see <http://en.wikipedia.org/wiki/Quantile>
- * @param {Array.<number>} ascArr
- */
-var quantile = function(ascArr, p) {
-    var H = (ascArr.length - 1) * p + 1,
-        h = Math.floor(H),
-        v = +ascArr[h - 1],
-        e = H - h;
-    return e ? v + e * (ascArr[h] - v) : v;
-};
-
-/**
- * See:
- *  <https://en.wikipedia.org/wiki/Box_plot#cite_note-frigge_hoaglin_iglewicz-2>
- *  <http://stat.ethz.ch/R-manual/R-devel/library/grDevices/html/boxplot.stats.html>
- *
- * Helper method for preparing data.
- *
- * @param {Array.<number>} rawData like
- *        [
- *            [12,232,443], (raw data set for the first box)
- *            [3843,5545,1232], (raw datat set for the second box)
- *            ...
- *        ]
- * @param {Object} [opt]
- *
- * @param {(number|string)} [opt.boundIQR=1.5] Data less than min bound is outlier.
- *      default 1.5, means Q1 - 1.5 * (Q3 - Q1).
- *      If 'none'/0 passed, min bound will not be used.
- * @param {(number|string)} [opt.layout='horizontal']
- *      Box plot layout, can be 'horizontal' or 'vertical'
- * @return {Object} {
- *      boxData: Array.<Array.<number>>
- *      outliers: Array.<Array.<number>>
- *      axisData: Array.<string>
- * }
- */
-var prepareBoxplotData = function (rawData, opt) {
-    opt = opt || [];
-    var boxData = [];
-    var outliers = [];
-    var axisData = [];
-    var boundIQR = opt.boundIQR;
-    var useExtreme = boundIQR === 'none' || boundIQR === 0;
-
-    for (var i = 0; i < rawData.length; i++) {
-        axisData.push(i + '');
-        var ascList = asc(rawData[i].slice());
-
-        var Q1 = quantile(ascList, 0.25);
-        var Q2 = quantile(ascList, 0.5);
-        var Q3 = quantile(ascList, 0.75);
-        var min = ascList[0];
-        var max = ascList[ascList.length - 1];
-
-        var bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
-
-        var low = useExtreme
-            ? min
-            : Math.max(min, Q1 - bound);
-        var high = useExtreme
-            ? max
-            : Math.min(max, Q3 + bound);
-
-        boxData.push([low, Q1, Q2, Q3, high]);
-
-        for (var j = 0; j < ascList.length; j++) {
-            var dataItem = ascList[j];
-            if (dataItem < low || dataItem > high) {
-                var outlier = [i, dataItem];
-                opt.layout === 'vertical' && outlier.reverse();
-                outliers.push(outlier);
-            }
-        }
-    }
-    return {
-        boxData: boxData,
-        outliers: outliers,
-        axisData: axisData
-    };
-};
-
-var version$2 = '1.0.0';
-
-
-
-
-var index = (Object.freeze || Object)({
-	version: version$2,
-	gexf: gexf,
-	prepareBoxplotData: prepareBoxplotData
-});
 
 SeriesModel.extend({
 
@@ -72147,6 +71829,7 @@ function initVML() {
 // http://www.w3.org/TR/NOTE-VML
 // TODO Use proxy like svg instead of overwrite brush methods
 
+var CMD$3 = PathProxy.CMD;
 var round$3 = Math.round;
 var sqrt = Math.sqrt;
 var abs$1 = Math.abs;
@@ -72385,11 +72068,11 @@ if (!env$1.canvasSupported) {
 
     var points$3 = [[], [], []];
     var pathDataToString = function (path, m) {
-        var M = CMD.M;
-        var C = CMD.C;
-        var L = CMD.L;
-        var A = CMD.A;
-        var Q = CMD.Q;
+        var M = CMD$3.M;
+        var C = CMD$3.C;
+        var L = CMD$3.L;
+        var A = CMD$3.A;
+        var Q = CMD$3.Q;
 
         var str = [];
         var nPoint;
@@ -72529,7 +72212,7 @@ if (!env$1.canvasSupported) {
                     xi = x1;
                     yi = y1;
                     break;
-                case CMD.R:
+                case CMD$3.R:
                     var p0 = points$3[0];
                     var p1 = points$3[1];
                     // x0, y0
@@ -72559,7 +72242,7 @@ if (!env$1.canvasSupported) {
                         ' l ', p0[0], comma, p1[1]
                     );
                     break;
-                case CMD.Z:
+                case CMD$3.Z:
                     // FIXME Update xi, yi
                     str.push(' x ');
             }
@@ -73405,6 +73088,7 @@ function createElement(name) {
 // 1. shadow
 // 2. Image: sx, sy, sw, sh
 
+var CMD$4 = PathProxy.CMD;
 var arrayJoin = Array.prototype.join;
 
 var NONE = 'none';
@@ -73527,23 +73211,23 @@ function pathDataToString$1(path) {
         var cmdStr = '';
         var nData = 0;
         switch (cmd) {
-            case CMD.M:
+            case CMD$4.M:
                 cmdStr = 'M';
                 nData = 2;
                 break;
-            case CMD.L:
+            case CMD$4.L:
                 cmdStr = 'L';
                 nData = 2;
                 break;
-            case CMD.Q:
+            case CMD$4.Q:
                 cmdStr = 'Q';
                 nData = 4;
                 break;
-            case CMD.C:
+            case CMD$4.C:
                 cmdStr = 'C';
                 nData = 6;
                 break;
-            case CMD.A:
+            case CMD$4.A:
                 var cx = data[i++];
                 var cy = data[i++];
                 var rx = data[i++];
@@ -73602,10 +73286,10 @@ function pathDataToString$1(path) {
                 str.push('A', round4(rx), round4(ry),
                     mathRound(psi * degree), +large, +clockwise, x, y);
                 break;
-            case CMD.Z:
+            case CMD$4.Z:
                 cmdStr = 'Z';
                 break;
-            case CMD.R:
+            case CMD$4.R:
                 var x = round4(data[i++]);
                 var y = round4(data[i++]);
                 var w = round4(data[i++]);
@@ -73648,7 +73332,12 @@ svgPath.brush = function (el) {
         el.buildPath(path, el.shape);
         el.__dirtyPath = false;
 
-        attr(svgEl, 'd', pathDataToString$1(path));
+        var pathStr = pathDataToString$1(path);
+        if (pathStr.indexOf('NaN') < 0) {
+            // Ignore illegal path, which may happen such in out-of-range
+            // data in Calendar series.
+            attr(svgEl, 'd', pathStr);
+        }
     }
 
     bindStyle(svgEl, style);
@@ -75023,7 +74712,6 @@ registerPainter('svg', SVGPainter);
 
 // Import all charts and components
 
-exports.dataTool = index;
 exports.version = version;
 exports.dependencies = dependencies;
 exports.PRIORITY = PRIORITY;

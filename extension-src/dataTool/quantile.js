@@ -32,12 +32,10 @@
  * @see <http://en.wikipedia.org/wiki/Quantile>
  * @param {Array.<number>} ascArr
  */
-function _default(ascArr, p) {
-  var H = (ascArr.length - 1) * p + 1,
-      h = Math.floor(H),
-      v = +ascArr[h - 1],
-      e = H - h;
-  return e ? v + e * (ascArr[h] - v) : v;
+export default function(ascArr, p) {
+    var H = (ascArr.length - 1) * p + 1,
+        h = Math.floor(H),
+        v = +ascArr[h - 1],
+        e = H - h;
+    return e ? v + e * (ascArr[h] - v) : v;
 }
-
-module.exports = _default;

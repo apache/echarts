@@ -1989,6 +1989,7 @@ registerAction({
 export var registerMap;
 export var getMap;
 export var parseGeoJSON;
+export var dataTool;
 
 export var $inject = {
     registerMap: function (f) {
@@ -1999,6 +2000,9 @@ export var $inject = {
     },
     parseGeoJSON: function (f) {
         parseGeoJSON = f;
+    },
+    dataTool: function (f) {
+        dataTool = f;
     }
 };
 

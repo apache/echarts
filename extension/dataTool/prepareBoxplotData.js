@@ -1,5 +1,6 @@
-import quantile from './quantile';
-import * as numberUtil from '../../src/util/number';
+var quantile = require("./quantile");
+
+var numberUtil = require("../../lib/util/number");
 
 /**
  * See:
@@ -27,47 +28,43 @@ import * as numberUtil from '../../src/util/number';
  *      axisData: Array.<string>
  * }
  */
-export default function (rawData, opt) {
-    opt = opt || [];
-    var boxData = [];
-    var outliers = [];
-    var axisData = [];
-    var boundIQR = opt.boundIQR;
-    var useExtreme = boundIQR === 'none' || boundIQR === 0;
+function _default(rawData, opt) {
+  opt = opt || [];
+  var boxData = [];
+  var outliers = [];
+  var axisData = [];
+  var boundIQR = opt.boundIQR;
+  var useExtreme = boundIQR === 'none' || boundIQR === 0;
 
-    for (var i = 0; i < rawData.length; i++) {
-        axisData.push(i + '');
-        var ascList = numberUtil.asc(rawData[i].slice());
+  for (var i = 0; i < rawData.length; i++) {
+    axisData.push(i + '');
+    var ascList = numberUtil.asc(rawData[i].slice());
+    var Q1 = quantile(ascList, 0.25);
+    var Q2 = quantile(ascList, 0.5);
+    var Q3 = quantile(ascList, 0.75);
+    var min = ascList[0];
+    var max = ascList[ascList.length - 1];
+    var bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
+    var low = useExtreme ? min : Math.max(min, Q1 - bound);
+    var high = useExtreme ? max : Math.min(max, Q3 + bound);
+    boxData.push([low, Q1, Q2, Q3, high]);
 
-        var Q1 = quantile(ascList, 0.25);
-        var Q2 = quantile(ascList, 0.5);
-        var Q3 = quantile(ascList, 0.75);
-        var min = ascList[0];
-        var max = ascList[ascList.length - 1];
+    for (var j = 0; j < ascList.length; j++) {
+      var dataItem = ascList[j];
 
-        var bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
-
-        var low = useExtreme
-            ? min
-            : Math.max(min, Q1 - bound);
-        var high = useExtreme
-            ? max
-            : Math.min(max, Q3 + bound);
-
-        boxData.push([low, Q1, Q2, Q3, high]);
-
-        for (var j = 0; j < ascList.length; j++) {
-            var dataItem = ascList[j];
-            if (dataItem < low || dataItem > high) {
-                var outlier = [i, dataItem];
-                opt.layout === 'vertical' && outlier.reverse();
-                outliers.push(outlier);
-            }
-        }
+      if (dataItem < low || dataItem > high) {
+        var outlier = [i, dataItem];
+        opt.layout === 'vertical' && outlier.reverse();
+        outliers.push(outlier);
+      }
     }
-    return {
-        boxData: boxData,
-        outliers: outliers,
-        axisData: axisData
-    };
+  }
+
+  return {
+    boxData: boxData,
+    outliers: outliers,
+    axisData: axisData
+  };
 }
+
+module.exports = _default;

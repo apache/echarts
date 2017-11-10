@@ -115,7 +115,7 @@ exports.createBMap = function (min) {
 
     return {
         plugins: getPlugins(min),
-        input: getPathBasedOnECharts(`./extension/bmap/bmap.js`),
+        input: getPathBasedOnECharts(`./extension-src/bmap/bmap.js`),
         legacy: true, // Support IE8-
         external: ['echarts'],
         output: {
@@ -130,7 +130,7 @@ exports.createBMap = function (min) {
             file: getPathBasedOnECharts(`dist/extension/bmap${postfix}.js`)
         },
         watch: {
-            include: [getPathBasedOnECharts('./extension/bmap/**')]
+            include: [getPathBasedOnECharts('./extension-src/bmap/**')]
         }
     };
 };
@@ -142,7 +142,7 @@ exports.createDataTool = function (min) {
     let postfix = min ? '.min' : '';
     return {
         plugins: getPlugins(min),
-        input: getPathBasedOnECharts(`./extension/dataTool/index.js`),
+        input: getPathBasedOnECharts(`./extension-src/dataTool/index.js`),
         legacy: true, // Support IE8-
         external: ['echarts'],
         output: {
@@ -157,7 +157,7 @@ exports.createDataTool = function (min) {
             file: getPathBasedOnECharts(`dist/extension/dataTool${postfix}.js`)
         },
         watch: {
-            include: [getPathBasedOnECharts('./extension/dataTool/**')]
+            include: [getPathBasedOnECharts('./extension-src/dataTool/**')]
         }
     };
 };
