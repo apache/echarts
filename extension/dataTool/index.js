@@ -8,7 +8,7 @@ var prepareBoxplotData = require("./prepareBoxplotData");
 
 exports.prepareBoxplotData = prepareBoxplotData;
 var version = '1.0.0';
-echarts.$inject({
+echarts.$inject.dataTool({
   version: version,
   gexf: gexf,
   prepareBoxplotData: prepareBoxplotData

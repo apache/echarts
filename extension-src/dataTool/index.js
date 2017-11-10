@@ -8,7 +8,7 @@ export {gexf};
 
 export {prepareBoxplotData};
 
-echarts.$inject({
+echarts.$inject.dataTool({
     version: version,
     gexf: gexf,
     prepareBoxplotData: prepareBoxplotData

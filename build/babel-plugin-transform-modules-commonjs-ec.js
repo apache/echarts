@@ -12,7 +12,7 @@ const isSideEffectImport = helperModuleTransforms.isSideEffectImport;
 const ensureStatementsHoisted = helperModuleTransforms.ensureStatementsHoisted;
 
 
-module.exports = function ({types, template}, options) {
+function plugin({types, template}, options) {
     return {
         visitor: {
             Program: {
@@ -53,8 +53,14 @@ module.exports = function ({types, template}, options) {
             }
         }
     };
+}
+
+// FIXME
+plugin.replaceInject = function (code) {
+    return code.replace(/\/\* ESM2CJS_REPLACE ([^*/]+)\*\//g, '$1');
 };
 
+module.exports = plugin;
 
 
 /**

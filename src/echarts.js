@@ -1991,18 +1991,19 @@ export var getMap;
 export var parseGeoJSON;
 export var dataTool;
 
+// FIXME
 export var $inject = {
     registerMap: function (f) {
-        registerMap = f;
+        registerMap = f; /* ESM2CJS_REPLACE exports.registerMap = f; */
     },
     getMap: function (f) {
-        getMap = f;
+        getMap = f; /* ESM2CJS_REPLACE exports.getMap = f; */
     },
     parseGeoJSON: function (f) {
-        parseGeoJSON = f;
+        parseGeoJSON = f; /* ESM2CJS_REPLACE exports.parseGeoJSON = f; */
     },
     dataTool: function (f) {
-        dataTool = f;
+        dataTool = f; /* ESM2CJS_REPLACE exports.dataTool = f; */
     }
 };
 
