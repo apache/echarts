@@ -33,7 +33,7 @@ import loadingDefault from './loading/default';
 var each = zrUtil.each;
 var parseClassType = ComponentModel.parseClassType;
 
-export var version = '3.8.2';
+export var version = '3.8.3';
 
 export var dependencies = {
     zrender: '3.7.2'

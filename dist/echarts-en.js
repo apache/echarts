@@ -20921,7 +20921,7 @@ var loadingDefault = function (api, opts) {
 var each = each$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '3.8.2';
+var version = '3.8.3';
 
 var dependencies = {
     zrender: '3.7.2'

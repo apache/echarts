@@ -37,9 +37,9 @@ module.exports = function () {
         transform(absolutePath, resolve(extensionDir, basePath, fileName));
     });
 
-    transform(resolve(ecDir, 'echarts.all.js'), resolve(ecDir, 'index.js'));
-    transform(resolve(ecDir, 'echarts.common.js'), resolve(ecDir, 'index.common.js'));
-    transform(resolve(ecDir, 'echarts.simple.js'), resolve(ecDir, 'index.simple.js'));
+    // transform(resolve(ecDir, 'echarts.all.js'), resolve(ecDir, 'index.js'));
+    // transform(resolve(ecDir, 'echarts.common.js'), resolve(ecDir, 'index.common.js'));
+    // transform(resolve(ecDir, 'echarts.simple.js'), resolve(ecDir, 'index.simple.js'));
 
     function transform(inputPath, outputPath) {
         console.log(
