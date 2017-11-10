@@ -10431,7 +10431,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '3.7.1';
+var version$1 = '3.7.2';
 
 /**
  * Initializing a zrender instance
@@ -20832,10 +20832,10 @@ var loadingDefault = function (api, opts) {
 var each = each$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '3.8.1';
+var version = '3.8.2';
 
 var dependencies = {
-    zrender: '3.7.1'
+    zrender: '3.7.2'
 };
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
