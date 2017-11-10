@@ -1,11 +1,5 @@
 var _echarts = require("./lib/echarts");
 
-(function () {
-  for (var key in _echarts) {
-    if (_echarts == null || !_echarts.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
-    exports[key] = _echarts[key];
-  }
-})();
 
 var _export = require("./lib/export");
 
@@ -99,3 +93,10 @@ require("./lib/component/toolbox");
 require("zrender/lib/vml/vml");
 
 require("zrender/lib/svg/svg");
+
+(function () {
+  for (var key in _echarts) {
+    if (_echarts == null || !_echarts.hasOwnProperty(key) || key === 'default' || key === '__esModule') return;
+    exports[key] = _echarts[key];
+  }
+})();
