@@ -759,7 +759,7 @@ function noop() {}
 
 var $inject$1 = {
     createCanvas: function (f) {
-        createCanvas = f;
+        createCanvas = f; /* ESM2CJS_REPLACE exports.createCanvas = f; */
     }
 };
 
@@ -22249,18 +22249,19 @@ registerAction({
 
 
 
+// FIXME
 var $inject = {
     registerMap: function (f) {
-        exports.registerMap = f;
+        exports.registerMap = f; /* ESM2CJS_REPLACE exports.registerMap = f; */
     },
     getMap: function (f) {
-        exports.getMap = f;
+        exports.getMap = f; /* ESM2CJS_REPLACE exports.getMap = f; */
     },
     parseGeoJSON: function (f) {
-        exports.parseGeoJSON = f;
+        exports.parseGeoJSON = f; /* ESM2CJS_REPLACE exports.parseGeoJSON = f; */
     },
     dataTool: function (f) {
-        exports.dataTool = f;
+        exports.dataTool = f; /* ESM2CJS_REPLACE exports.dataTool = f; */
     }
 };
 

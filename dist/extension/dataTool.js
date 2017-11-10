@@ -747,7 +747,7 @@ var prepareBoxplotData = function (rawData, opt) {
 
 var version = '1.0.0';
 
-echarts.$inject({
+echarts.$inject.dataTool({
     version: version,
     gexf: gexf,
     prepareBoxplotData: prepareBoxplotData
