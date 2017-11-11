@@ -1,3 +1,4 @@
+import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import OrdinalScale from '../scale/Ordinal';

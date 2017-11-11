@@ -1,3 +1,4 @@
+import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapModel from './VisualMapModel';
 import VisualMapping from '../../visual/VisualMapping';

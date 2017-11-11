@@ -15,9 +15,7 @@ function getPathBasedOnECharts(path) {
  * @param {boolean} [addBundleVersion=false]
  */
 function getPlugins(min, lang, addBundleVersion) {
-    let plugins = [
-        ecDevPlugin()
-    ];
+    let plugins = [];
 
     lang && plugins.push(
         ecLangPlugin({lang})

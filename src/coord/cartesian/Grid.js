@@ -4,6 +4,7 @@
  * TODO Default cartesian
  */
 
+import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {getLayoutRect} from '../../util/layout';

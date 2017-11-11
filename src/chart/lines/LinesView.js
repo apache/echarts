@@ -1,3 +1,4 @@
+import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import LineDraw from '../helper/LineDraw';
 import EffectLine from '../helper/EffectLine';

@@ -65,7 +65,6 @@
     "white": false,
 
     "predef": [
-        "__DEV__",
         "global"
     ]
 }
