@@ -96,6 +96,14 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        },
+
+        /**
+         * @public
+         * @return {string} Current url dir.
+         */
+        dir: function () {
+            return location.origin + testHelper.resolve(location.pathname, '..');
         }
 
     };

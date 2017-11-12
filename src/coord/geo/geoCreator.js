@@ -212,7 +212,7 @@ var geoCreator = {
         var regionsArr = (originRegionArr || []).slice();
         nameMap = nameMap || {};
 
-        var map = geoCreator.getMap(mapName);
+        var map = echarts.getMap(mapName);
         var geoJson = map && map.geoJson;
         if (!geoJson) {
             if (__DEV__) {

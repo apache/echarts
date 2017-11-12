@@ -4,15 +4,6 @@
 	(factory((global.dataTool = {}),global.echarts));
 }(this, (function (exports,echarts) { 'use strict';
 
-if (typeof __DEV__ === "undefined") {
-    if (typeof window !== "undefined") {
-        window.__DEV__ = true;
-    }
-    else if (typeof global !== "undefined") {
-        global.__DEV__ = true;
-    }
-}
-
 /**
  * @module zrender/core/util
  */
@@ -20,6 +11,8 @@ if (typeof __DEV__ === "undefined") {
 // 用于处理merge时无法遍历Date等对象的问题
 var arrayProto = Array.prototype;
 var nativeMap = arrayProto.map;
+
+
 /**
  * Those data types can be cloned:
  *     Plain object, Array, TypedArray, number, string, null, undefined.
@@ -747,11 +740,15 @@ var prepareBoxplotData = function (rawData, opt) {
 
 var version = '1.0.0';
 
-echarts.$inject.dataTool({
-    version: version,
-    gexf: gexf,
-    prepareBoxplotData: prepareBoxplotData
-});
+// For backward compatibility, where the namespace `dataTool` will
+// be mounted on `echarts` is the extension `dataTool` is imported.
+// But the old version of echarts do not have `dataTool` namespace,
+// so check it before mounting.
+if (echarts.dataTool) {
+    echarts.dataTool.version = version;
+    echarts.dataTool.gexf = gexf;
+    echarts.dataTool.prepareBoxplotData = prepareBoxplotData;
+}
 
 exports.version = version;
 exports.gexf = gexf;

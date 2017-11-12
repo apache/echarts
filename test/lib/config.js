@@ -5,11 +5,29 @@
     // `true` by default for debugging.
     sourceMap == null && (sourceMap = true);
 
+    // Set default renderer in dev mode from hash.
+    var matchResult = location.href.match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
+    if (matchResult) {
+        window.__ECHARTS__DEFAULT__RENDERER__ = matchResult[1];
+    }
+
+    // Set echarts source code.
+    var matchResult = location.href.match(/[?&]__ECDIST__=(webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
+    var ecDistPath = 'dist/echarts';
+    if (matchResult) {
+        ecDistPath = ({
+            'webpack-req-ec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-ec',
+            'webpack-req-eclibec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-eclibec',
+            'webpackold-req-ec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-ec',
+            'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec',
+        })[matchResult[1]];
+    }
+
     if (typeof require !== 'undefined') {
         require.config({
             baseUrl: baseUrl,
             paths: {
-                'echarts': 'dist/echarts',
+                'echarts': ecDistPath,
                 'zrender': 'node_modules/zrender/dist/zrender',
                 'geoJson': '../geoData/geoJson',
                 'theme': 'theme',
@@ -39,11 +57,6 @@
         });
     }
 
-    // Set default renderer in dev mode from hash.
-    var matchResult = location.href.match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
-    if (matchResult) {
-        window.__ECHARTS__DEFAULT__RENDERER__ = matchResult[1];
-    }
 
     // Mount bundle version print.
     if (typeof require !== 'undefined') {
