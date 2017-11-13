@@ -10456,7 +10456,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '3.7.2';
+var version$1 = '3.7.3';
 
 /**
  * Initializing a zrender instance
@@ -20880,10 +20880,10 @@ var loadingDefault = function (api, opts) {
 var each = each$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '3.8.3';
+var version = '3.8.4';
 
 var dependencies = {
-    zrender: '3.7.2'
+    zrender: '3.7.3'
 };
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
@@ -47452,9 +47452,12 @@ var svgTextDrawRectText = function (el, rect, textRect) {
 
     var text = style.text;
     // Convert to string
-    text != null && (text += '');
-    if (!text) {
+    if (text == null) {
+        // Draw no text only when text is set to null, but not ''
         return;
+    }
+    else {
+        text += '';
     }
 
     var textSvgEl = el.__textSvgEl;
@@ -48275,10 +48278,12 @@ inherits(ClippathManager, Definable);
  * Update clipPath.
  *
  * @param {Displayable} displayable displayable element
- * @param {SVGElement}  svgElement  SVG element of displayable
  */
-ClippathManager.prototype.update = function (displayable, svgElement) {
-    this.updateDom(svgElement, displayable.__clipPaths, false);
+ClippathManager.prototype.update = function (displayable) {
+    var svgEl = this.getSvgElement(displayable);
+    if (svgEl) {
+        this.updateDom(svgEl, displayable.__clipPaths, false);
+    }
 
     var textEl = this.getTextSvgElement(displayable);
     if (textEl) {
@@ -48370,7 +48375,13 @@ ClippathManager.prototype.updateDom = function (
         }
 
         var pathEl = this.getSvgElement(clipPath);
-        clipPathEl.appendChild(pathEl);
+        /**
+         * Use `cloneNode()` here to appendChild to multiple parents,
+         * which may happend when Text and other shapes are using the same
+         * clipPath. Since Text will create an extra clipPath DOM due to
+         * different transform rules.
+         */
+        clipPathEl.appendChild(pathEl.cloneNode());
 
         parentEl.setAttribute('clip-path', 'url(#' + id + ')');
 
@@ -48541,11 +48552,9 @@ SVGPainter.prototype = {
             if (!displayable.invisible) {
                 if (displayable.__dirty) {
                     svgProxy && svgProxy.brush(displayable);
-                    var el = getSvgElement(displayable)
-                        || getTextSvgElement(displayable);
 
                     // Update clipPath
-                    this.clipPathManager.update(displayable, el);
+                    this.clipPathManager.update(displayable);
 
                     // Update gradient
                     if (displayable.style) {

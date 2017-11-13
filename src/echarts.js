@@ -34,10 +34,10 @@ import loadingDefault from './loading/default';
 var each = zrUtil.each;
 var parseClassType = ComponentModel.parseClassType;
 
-export var version = '3.8.3';
+export var version = '3.8.4';
 
 export var dependencies = {
-    zrender: '3.7.2'
+    zrender: '3.7.3'
 };
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
