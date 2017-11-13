@@ -37,16 +37,25 @@ module.exports = function () {
         });
     });
 
-    // prePulishSrc(path.resolve(ecDir, 'echarts.all.js'), path.resolve(ecDir, 'index.js'));
-    // prePulishSrc(path.resolve(ecDir, 'echarts.common.js'), path.resolve(ecDir, 'index.common.js'));
-    // prePulishSrc(path.resolve(ecDir, 'echarts.simple.js'), path.resolve(ecDir, 'index.simple.js'));
+    prePulishSrc({
+        inputPath: path.resolve(ecDir, 'echarts.all.js'),
+        outputPath: path.resolve(ecDir, 'index.js')
+    });
+    prePulishSrc({
+        inputPath: path.resolve(ecDir, 'echarts.common.js'),
+        outputPath: path.resolve(ecDir, 'index.common.js')
+    });
+    prePulishSrc({
+        inputPath: path.resolve(ecDir, 'echarts.simple.js'),
+        outputPath: path.resolve(ecDir, 'index.simple.js')
+    });
 
     function transform({code, inputPath, outputPath}) {
         if (inputPath === path.resolve(ecDir, 'src/echarts.js')) {
             // Using `echarts/echarts.blank.js` to overwrite `echarts/lib/echarts.js`
             // for including exports API.
-            code +=
-`var ___ec_export = require("./export");
+            code += `
+var ___ec_export = require("./export");
 (function () {
     for (var key in ___ec_export) {
         if (___ec_export.hasOwnProperty(key)) {
