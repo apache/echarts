@@ -39,13 +39,13 @@
     function fetchPagePaths(content) {
         var pageList = [];
 
-        singleFetch(/"([^"]+\.html)\s*"/g);
-        singleFetch(/'([^']+\.html)\s*'/g);
+        singleFetch(/"([^"/]*\/)*([^"/]+\.html)\s*"/g);
+        singleFetch(/'([^'/]*\/)*([^'/]+\.html)\s*'/g);
 
         function singleFetch(pattern) {
             var result;
             while ((result = pattern.exec(content)) != null) {
-                pageList.push(result[1]);
+                pageList.push(result[result.length - 1]);
             }
         }
 
