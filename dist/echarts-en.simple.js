@@ -10160,7 +10160,7 @@ var painterCtors = {
 /**
  * @type {string}
  */
-var version$1 = '3.7.3';
+var version$1 = '3.7.4';
 
 /**
  * Initializing a zrender instance
@@ -20320,10 +20320,10 @@ var loadingDefault = function (api, opts) {
 var each = each$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '3.8.4';
+var version = '3.8.5';
 
 var dependencies = {
-    zrender: '3.7.3'
+    zrender: '3.7.4'
 };
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
