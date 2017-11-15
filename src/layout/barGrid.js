@@ -236,7 +236,7 @@ function barLayoutGrid(seriesType, ecModel, api) {
 
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
 
-        var valueAxisStart = baseAxis.onZero
+        var valueAxisStart = valueAxis.onZero
             ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
             : valueAxis.getGlobalExtent()[0];
 

@@ -10,7 +10,7 @@ function sign(val) {
 function getStackedOnPoint(coordSys, data, idx) {
     var baseAxis = coordSys.getBaseAxis();
     var valueAxis = coordSys.getOtherAxis(baseAxis);
-    var valueStart = baseAxis.onZero
+    var valueStart = valueAxis.onZero
         ? 0 : valueAxis.scale.getExtent()[0];
 
     var valueDim = valueAxis.dim;
