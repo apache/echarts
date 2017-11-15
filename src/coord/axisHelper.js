@@ -5,10 +5,10 @@ import OrdinalScale from '../scale/Ordinal';
 import IntervalScale from '../scale/Interval';
 import Scale from '../scale/Scale';
 import * as numberUtil from '../util/number';
+import {calBarWidthAndOffset} from '../layout/barGrid';
 
 import '../scale/Time';
 import '../scale/Log';
-import '../layout/barGrid';
 
 /**
  * Get axis scale extent before niced.
@@ -115,11 +115,11 @@ export function getScaleExtent(scale, model) {
     // If bars are placed on a base axis of type time or interval account for axis boundary overflow and current axis is base axis
     var ecModel = model.getModel().ecModel;
     var numberBarPlots = ecModel.getSeriesByType("bar").length;
-    var isBaseAxis = model.ecModel._componentsMap._ec_series.map(function(x){ return x.getBaseAxis() === model.axis}).indexOf(true) !== -1; 
+    var isBaseAxis = model.ecModel.getSeries().map(function(x){ return x.getBaseAxis() === model.axis}).indexOf(true) !== -1; 
     if ((scaleType === 'time' || scaleType === 'interval') && numberBarPlots > 0 && isBaseAxis){
 
         // Adjust axis min and max to account for overflow
-        var adjustedScale = axisHelper.adjustScaleForOverflow(min, max, model);
+        var adjustedScale = adjustScaleForOverflow(min, max, model);
         min = adjustedScale.min;
         max = adjustedScale.max;
     }
@@ -127,15 +127,15 @@ export function getScaleExtent(scale, model) {
     return [min, max];
 }
 
-axisHelper.adjustScaleForOverflow = function (min, max, model) {
+export function adjustScaleForOverflow(min, max, model) {
     
     var ecModel = model.getModel().ecModel;
     // Get Axis Length
-    var axisExtent = model.axis._extent;
+    var axisExtent = model.axis.getExtent();
     var axisLength = axisExtent[1] - axisExtent[0]
 
     // Calculate placement of bars on axis
-    var barWidthAndOffset = barGrid.calBarWidthAndOffset(zrUtil.filter(
+    var barWidthAndOffset = calBarWidthAndOffset(zrUtil.filter(
         ecModel.getSeriesByType('bar'),
         function (seriesModel) {
             return !ecModel.isSeriesFiltered(seriesModel)
