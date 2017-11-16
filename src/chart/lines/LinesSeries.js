@@ -1,3 +1,4 @@
+import {__DEV__} from '../../config';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';

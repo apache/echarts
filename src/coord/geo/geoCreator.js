@@ -1,18 +1,16 @@
+import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import Geo from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
-import parseGeoJson from './parseGeoJson';
-
-var mapDataStores = {};
 
 /**
  * Resize method bound to the geo
  * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
  * @param {module:echarts/ExtensionAPI} api
  */
-function resizeGeo (geoModel, api) {
+function resizeGeo(geoModel, api) {
 
     var boundingCoords = geoModel.get('boundingCoords');
     if (boundingCoords != null) {
@@ -122,7 +120,7 @@ var geoCreator = {
         // FIXME Create each time may be slow
         ecModel.eachComponent('geo', function (geoModel, idx) {
             var name = geoModel.get('map');
-            var mapData = mapDataStores[name];
+            var mapData = echarts.getMap(name);
             if (__DEV__) {
                 if (!mapData) {
                     mapNotExistsError(name);
@@ -167,7 +165,7 @@ var geoCreator = {
         });
 
         zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
-            var mapData = mapDataStores[mapType];
+            var mapData = echarts.getMap(mapType);
             if (__DEV__) {
                 if (!mapData) {
                     mapNotExistsError(mapSeries[0].get('map'));
@@ -203,44 +201,6 @@ var geoCreator = {
     },
 
     /**
-     * @param {string} mapName
-     * @param {Object|string} geoJson
-     * @param {Object} [specialAreas]
-     *
-     * @example
-     *     $.get('USA.json', function (geoJson) {
-     *         echarts.registerMap('USA', geoJson);
-     *         // Or
-     *         echarts.registerMap('USA', {
-     *             geoJson: geoJson,
-     *             specialAreas: {}
-     *         })
-     *     });
-     */
-    registerMap: function (mapName, geoJson, specialAreas) {
-        if (geoJson.geoJson && !geoJson.features) {
-            specialAreas = geoJson.specialAreas;
-            geoJson = geoJson.geoJson;
-        }
-        if (typeof geoJson === 'string') {
-            geoJson = (typeof JSON !== 'undefined' && JSON.parse)
-                ? JSON.parse(geoJson) : (new Function('return (' + geoJson + ');'))();
-        }
-        mapDataStores[mapName] = {
-            geoJson: geoJson,
-            specialAreas: specialAreas
-        };
-    },
-
-    /**
-     * @param {string} mapName
-     * @return {Object}
-     */
-    getMap: function (mapName) {
-        return mapDataStores[mapName];
-    },
-
-    /**
      * Fill given regions array
      * @param  {Array.<Object>} originRegionArr
      * @param  {string} mapName
@@ -252,7 +212,7 @@ var geoCreator = {
         var regionsArr = (originRegionArr || []).slice();
         nameMap = nameMap || {};
 
-        var map = geoCreator.getMap(mapName);
+        var map = echarts.getMap(mapName);
         var geoJson = map && map.geoJson;
         if (!geoJson) {
             if (__DEV__) {
@@ -281,11 +241,6 @@ var geoCreator = {
         return regionsArr;
     }
 };
-
-// Inject methods into echarts
-echarts.$inject.registerMap(geoCreator.registerMap);
-echarts.$inject.getMap(geoCreator.getMap);
-echarts.$inject.parseGeoJSON(parseGeoJson);
 
 echarts.registerCoordinateSystem('geo', geoCreator);
 

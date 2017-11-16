@@ -1,3 +1,4 @@
+import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Eventful from 'zrender/src/mixin/Eventful';
 import * as graphic from '../../util/graphic';

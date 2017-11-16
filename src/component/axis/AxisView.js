@@ -1,3 +1,4 @@
+import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as axisPointerModelHelper from '../axisPointer/modelHelper';
 

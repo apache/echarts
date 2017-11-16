@@ -27,6 +27,7 @@ export {matrix};
 export {vector};
 export {colorTool as color};
 export {default as env} from 'zrender/src/core/env';
+export {default as parseGeoJson} from './coord/geo/parseGeoJson';
 
 var ecUtil = {};
 zrUtil.each([

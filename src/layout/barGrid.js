@@ -50,7 +50,7 @@ function getLayoutOnAxis(opt, api) {
     return result;
 }
 
-function calBarWidthAndOffset(barSeries, api) {
+export function calBarWidthAndOffset(barSeries, api) {
     var seriesInfoList = zrUtil.map(barSeries, function (seriesModel) {
         var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;

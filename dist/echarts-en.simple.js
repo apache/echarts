@@ -4,14 +4,28 @@
 	(factory((global.echarts = {})));
 }(this, (function (exports) { 'use strict';
 
-if (typeof __DEV__ === "undefined") {
-    if (typeof window !== "undefined") {
-        window.__DEV__ = true;
-    }
-    else if (typeof global !== "undefined") {
-        global.__DEV__ = true;
-    }
+// (1) The code `if (__DEV__) ...` can be removed by build tool.
+// (2) If intend to use `__DEV__`, this module should be imported. Use a global
+// variable `__DEV__` may cause that miss the declaration (see #6535), or the
+// declaration is behind of the using position (for example in `Model.extent`,
+// And tools like rollup can not analysis the dependency if not import).
+
+var dev;
+
+// In browser
+if (typeof window !== 'undefined') {
+    dev = window.__DEV__;
 }
+// In node
+else if (typeof global !== 'undefined') {
+    dev = global.__DEV__;
+}
+
+if (typeof dev === 'undefined') {
+    dev = true;
+}
+
+var __DEV__ = dev;
 
 /**
  * zrender: 生成唯一id
@@ -195,6 +209,13 @@ var nativeSlice = arrayProto.slice;
 var nativeMap = arrayProto.map;
 var nativeReduce = arrayProto.reduce;
 
+// Avoid assign to an exported variable, for transforming to cjs.
+var methods = {};
+
+function $override(name, fn) {
+    methods[name] = fn;
+}
+
 /**
  * Those data types can be cloned:
  *     Plain object, Array, TypedArray, number, string, null, undefined.
@@ -337,6 +358,10 @@ function defaults(target, source, overlay) {
 }
 
 var createCanvas = function () {
+    return methods.createCanvas();
+};
+
+methods.createCanvas = function () {
     return document.createElement('canvas');
 };
 
@@ -756,12 +781,6 @@ function createHashMap(obj) {
 }
 
 function noop() {}
-
-var $inject$1 = {
-    createCanvas: function (f) {
-        createCanvas = f; /* ESM2CJS_REPLACE exports.createCanvas = f; */
-    }
-};
 
 var ArrayCtor = typeof Float32Array === 'undefined'
     ? Array
@@ -6517,6 +6536,11 @@ var STYLE_REG = /\{([a-zA-Z0-9_]+)\|([^}]*)\}/g;
 
 var DEFAULT_FONT = '12px sans-serif';
 
+// Avoid assign to an exported variable, for transforming to cjs.
+var methods$1 = {};
+
+
+
 /**
  * @public
  * @param {string} text
@@ -6869,7 +6893,12 @@ function getLineHeight(font) {
  * @param {string} font
  * @return {Object} width
  */
-var measureText = function (text, font) {
+function measureText(text, font) {
+    return methods$1.measureText(text, font);
+}
+
+// Avoid assign to an exported variable, for transforming to cjs.
+methods$1.measureText = function (text, font) {
     var ctx = getContext();
     ctx.font = font || DEFAULT_FONT;
     return ctx.measureText(text);
@@ -10131,7 +10160,7 @@ var painterCtors = {
 /**
  * @type {string}
  */
-var version$1 = '3.7.2';
+var version$1 = '3.7.4';
 
 /**
  * Initializing a zrender instance
@@ -20291,10 +20320,10 @@ var loadingDefault = function (api, opts) {
 var each = each$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '3.8.3';
+var version = '3.8.5';
 
 var dependencies = {
-    zrender: '3.7.2'
+    zrender: '3.7.4'
 };
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
@@ -21801,13 +21830,14 @@ var themeStorage = {};
  */
 var loadingEffects = {};
 
-
 var instances = {};
 var connectedGroups = {};
 
 var idBase = new Date() - 0;
 var groupIdBase = new Date() - 0;
 var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
+
+var mapDataStores = {};
 
 function enableConnect(chart) {
     var STATUS_PENDING = 0;
@@ -22218,7 +22248,45 @@ function extendChartView(opts/*, superClass*/) {
  *     });
  */
 function setCanvasCreator(creator) {
-    $inject$1.createCanvas(creator);
+    $override('createCanvas', creator);
+}
+
+/**
+ * @param {string} mapName
+ * @param {Object|string} geoJson
+ * @param {Object} [specialAreas]
+ *
+ * @example
+ *     $.get('USA.json', function (geoJson) {
+ *         echarts.registerMap('USA', geoJson);
+ *         // Or
+ *         echarts.registerMap('USA', {
+ *             geoJson: geoJson,
+ *             specialAreas: {}
+ *         })
+ *     });
+ */
+function registerMap(mapName, geoJson, specialAreas) {
+    if (geoJson.geoJson && !geoJson.features) {
+        specialAreas = geoJson.specialAreas;
+        geoJson = geoJson.geoJson;
+    }
+    if (typeof geoJson === 'string') {
+        geoJson = (typeof JSON !== 'undefined' && JSON.parse)
+            ? JSON.parse(geoJson) : (new Function('return (' + geoJson + ');'))();
+    }
+    mapDataStores[mapName] = {
+        geoJson: geoJson,
+        specialAreas: specialAreas
+    };
+}
+
+/**
+ * @param {string} mapName
+ * @return {Object}
+ */
+function getMap(mapName) {
+    return mapDataStores[mapName];
 }
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
@@ -22240,30 +22308,9 @@ registerAction({
 }, noop);
 
 
-// --------
-// Exports
-// --------
-
-
-
-
-
-
-// FIXME
-var $inject = {
-    registerMap: function (f) {
-        exports.registerMap = f; /* ESM2CJS_REPLACE exports.registerMap = f; */
-    },
-    getMap: function (f) {
-        exports.getMap = f; /* ESM2CJS_REPLACE exports.getMap = f; */
-    },
-    parseGeoJSON: function (f) {
-        exports.parseGeoJSON = f; /* ESM2CJS_REPLACE exports.parseGeoJSON = f; */
-    },
-    dataTool: function (f) {
-        exports.dataTool = f; /* ESM2CJS_REPLACE exports.dataTool = f; */
-    }
-};
+// For backward compatibility, where the namespace `dataTool` will
+// be mounted on `echarts` is the extension `dataTool` is imported.
+var dataTool = {};
 
 function defaultKeyGetter(item) {
     return item;
@@ -32232,6 +32279,8 @@ exports.extendComponentView = extendComponentView;
 exports.extendSeriesModel = extendSeriesModel;
 exports.extendChartView = extendChartView;
 exports.setCanvasCreator = setCanvasCreator;
-exports.$inject = $inject;
+exports.registerMap = registerMap;
+exports.getMap = getMap;
+exports.dataTool = dataTool;
 
 })));

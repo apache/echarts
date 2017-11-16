@@ -1,5 +1,6 @@
 // FIXME step not support polar
 
+import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw from '../helper/SymbolDraw';
 import SymbolClz from '../helper/Symbol';

@@ -1,14 +1,22 @@
-// See `echarts/build/rollup-plugin-ec-dev`.
-// Enable DEV mode when using source code without build. which has no __DEV__ variable
-// In build process 'typeof __DEV__' will be replace with 'boolean'
-// So this code will be removed or disabled anyway after built.
-if (typeof __DEV__ === 'undefined') {
-    // In browser
-    if (typeof window !== 'undefined') {
-        window.__DEV__ = true;
-    }
-    // In node
-    else if (typeof global !== 'undefined') {
-        global.__DEV__ = true;
-    }
+// (1) The code `if (__DEV__) ...` can be removed by build tool.
+// (2) If intend to use `__DEV__`, this module should be imported. Use a global
+// variable `__DEV__` may cause that miss the declaration (see #6535), or the
+// declaration is behind of the using position (for example in `Model.extent`,
+// And tools like rollup can not analysis the dependency if not import).
+
+var dev;
+
+// In browser
+if (typeof window !== 'undefined') {
+    dev = window.__DEV__;
 }
+// In node
+else if (typeof global !== 'undefined') {
+    dev = global.__DEV__;
+}
+
+if (typeof dev === 'undefined') {
+    dev = true;
+}
+
+export var __DEV__ = dev;

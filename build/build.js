@@ -5,9 +5,10 @@ const fs = require('fs');
 const {resolve} = require('path');
 const config = require('./config.js');
 const commander = require('commander');
-const {build, watch, color} = require('./helper');
+const {build, watch, color} = require('zrender/build/helper');
 const ecLangPlugin = require('./rollup-plugin-ec-lang');
 const prePublish = require('./pre-publish');
+const recheckDEV = require('zrender/build/babel-plugin-transform-remove-dev').recheckDEV;
 
 function run() {
 
@@ -35,6 +36,8 @@ function run() {
                 + '\n' + descIndent + '# Build all to `dist` folder.',
             egIndent + 'node build/build.js --prepublish'
                 + '\n' + descIndent + '# Only prepublish.',
+            egIndent + 'node build/build.js --removedev'
+                + '\n' + descIndent + '# Remove __DEV__ code. If --min, __DEV__ always be removed.',
             egIndent + 'node build/build.js --type ""'
                 + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
             egIndent + 'node build/build.js --type common --min'
@@ -64,6 +67,10 @@ function run() {
         .option(
             '--prepublish',
             'Build all for release'
+        )
+        .option(
+            '--removedev',
+            'Remove __DEV__ code. If --min, __DEV__ always be removed.'
         )
         .option(
             '--min',
@@ -97,18 +104,21 @@ function run() {
     let isPrePublish = !!commander.prepublish;
 
     let opt = {
-        lang: commander.lang || null,
+        lang: commander.lang,
         min: commander.min,
         type: commander.type || '',
         input: commander.input,
         output: commander.output,
+        format: commander.format,
         sourcemap: commander.sourcemap,
-        format: commander.format || 'umd',
+        removeDev: commander.removedev,
         addBundleVersion: isWatch
     };
 
     validateIO(opt.input, opt.output);
     validateLang(opt.lang, opt.output);
+
+    normalizeParams(opt);
 
     // Clear `echarts/dist`
     if (isRelease) {
@@ -131,8 +141,10 @@ function run() {
             {min: false, lang: 'en'},
             {min: true, lang: 'en'}
         ].forEach(function (opt) {
+
             ['', 'simple', 'common'].forEach(function (type) {
                 let singleOpt = Object.assign({type}, opt);
+                normalizeParams(singleOpt);
                 let singleConfig = config.createECharts(singleOpt);
                 configs.push(singleConfig);
 
@@ -156,7 +168,23 @@ function run() {
             }).catch(handleBuildError);
     }
     else {
-        build([config.createECharts(opt)]).catch(handleBuildError);
+        let cfg = config.createECharts(opt);
+        build([cfg])
+            .then(function () {
+                if (opt.removeDev) {
+                    checkCode(cfg);
+                }
+            })
+            .catch(handleBuildError);
+    }
+}
+
+function normalizeParams(opt) {
+    if (opt.sourcemap == null) {
+        opt.sourcemap = !(opt.min || opt.type);
+    }
+    if (opt.removeDev == null) {
+        opt.removeDev = !!opt.min;
     }
 }
 
@@ -170,9 +198,7 @@ function checkCode(singleConfig) {
     if (!code) {
         throw new Error(`${singleConfig.output.file} is empty`);
     }
-    if (code.indexOf('__DEV__') >= 0) {
-        throw new Error('__DEV__ is not removed.');
-    }
+    recheckDEV(code);
     console.log(color('fgGreen', 'dim')('Check code: correct.'));
 }
 

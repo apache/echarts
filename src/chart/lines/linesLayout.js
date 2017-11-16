@@ -1,3 +1,4 @@
+import {__DEV__} from '../../config';
 
 export default function (ecModel) {
     ecModel.eachSeriesByType('lines', function (seriesModel) {

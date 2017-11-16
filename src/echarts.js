@@ -9,6 +9,7 @@
  * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
  */
 
+import {__DEV__} from './config';
 import * as zrender from 'zrender/src/zrender';
 import * as zrUtil from 'zrender/src/core/util';
 import * as colorTool from 'zrender/src/tool/color';
@@ -33,10 +34,10 @@ import loadingDefault from './loading/default';
 var each = zrUtil.each;
 var parseClassType = ComponentModel.parseClassType;
 
-export var version = '3.8.3';
+export var version = '3.8.5';
 
 export var dependencies = {
-    zrender: '3.7.2'
+    zrender: '3.7.4'
 };
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
@@ -1543,13 +1544,14 @@ var themeStorage = {};
  */
 var loadingEffects = {};
 
-
 var instances = {};
 var connectedGroups = {};
 
 var idBase = new Date() - 0;
 var groupIdBase = new Date() - 0;
 var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
+
+var mapDataStores = {};
 
 function enableConnect(chart) {
     var STATUS_PENDING = 0;
@@ -1960,7 +1962,45 @@ export function extendChartView(opts/*, superClass*/) {
  *     });
  */
 export function setCanvasCreator(creator) {
-    zrUtil.$inject.createCanvas(creator);
+    zrUtil.$override('createCanvas', creator);
+}
+
+/**
+ * @param {string} mapName
+ * @param {Object|string} geoJson
+ * @param {Object} [specialAreas]
+ *
+ * @example
+ *     $.get('USA.json', function (geoJson) {
+ *         echarts.registerMap('USA', geoJson);
+ *         // Or
+ *         echarts.registerMap('USA', {
+ *             geoJson: geoJson,
+ *             specialAreas: {}
+ *         })
+ *     });
+ */
+export function registerMap(mapName, geoJson, specialAreas) {
+    if (geoJson.geoJson && !geoJson.features) {
+        specialAreas = geoJson.specialAreas;
+        geoJson = geoJson.geoJson;
+    }
+    if (typeof geoJson === 'string') {
+        geoJson = (typeof JSON !== 'undefined' && JSON.parse)
+            ? JSON.parse(geoJson) : (new Function('return (' + geoJson + ');'))();
+    }
+    mapDataStores[mapName] = {
+        geoJson: geoJson,
+        specialAreas: specialAreas
+    };
+}
+
+/**
+ * @param {string} mapName
+ * @return {Object}
+ */
+export function getMap(mapName) {
+    return mapDataStores[mapName];
 }
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
@@ -1982,28 +2022,6 @@ registerAction({
 }, zrUtil.noop);
 
 
-// --------
-// Exports
-// --------
-
-export var registerMap;
-export var getMap;
-export var parseGeoJSON;
-export var dataTool;
-
-// FIXME
-export var $inject = {
-    registerMap: function (f) {
-        registerMap = f; /* ESM2CJS_REPLACE exports.registerMap = f; */
-    },
-    getMap: function (f) {
-        getMap = f; /* ESM2CJS_REPLACE exports.getMap = f; */
-    },
-    parseGeoJSON: function (f) {
-        parseGeoJSON = f; /* ESM2CJS_REPLACE exports.parseGeoJSON = f; */
-    },
-    dataTool: function (f) {
-        dataTool = f; /* ESM2CJS_REPLACE exports.dataTool = f; */
-    }
-};
-
+// For backward compatibility, where the namespace `dataTool` will
+// be mounted on `echarts` is the extension `dataTool` is imported.
+export var dataTool = {};
