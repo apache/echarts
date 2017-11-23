@@ -21,7 +21,7 @@ function getAxisKey(axis) {
  * @param {number} [opt.barCategoryGap]
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
  */
-function getLayoutOnAxis(opt, api) {
+export function getLayoutOnAxis(opt, api) {
     var params = [];
     var baseAxis = opt.axis;
     var axisKey = 'axis0';
@@ -201,7 +201,7 @@ function doCalBarWidthAndOffset(seriesInfoList, api) {
  * @param {module:echarts/model/Global} ecModel
  * @param {module:echarts/ExtensionAPI} api
  */
-function barLayoutGrid(seriesType, ecModel, api) {
+export function barLayoutGrid(seriesType, ecModel, api) {
 
     var barWidthAndOffset = calBarWidthAndOffset(
         zrUtil.filter(
@@ -316,7 +316,3 @@ function barLayoutGrid(seriesType, ecModel, api) {
 
     }, this);
 }
-
-barLayoutGrid.getLayoutOnAxis = getLayoutOnAxis;
-
-export default barLayoutGrid;

@@ -5,7 +5,7 @@ import '../coord/cartesian/Grid';
 import './bar/PictorialBarSeries';
 import './bar/PictorialBarView';
 
-import barLayoutGrid from '../layout/barGrid';
+import {barLayoutGrid} from '../layout/barGrid';
 import visualSymbol from '../visual/symbol';
 
 // In case developer forget to include grid component

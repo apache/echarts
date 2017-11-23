@@ -1,6 +1,6 @@
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import barLayoutGrid from '../layout/barGrid';
+import {barLayoutGrid} from '../layout/barGrid';
 
 import '../coord/cartesian/Grid';
 import './bar/BarSeries';
