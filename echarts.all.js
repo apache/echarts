@@ -23,6 +23,7 @@ import './src/chart/lines';
 import './src/chart/heatmap';
 import './src/chart/pictorialBar';
 import './src/chart/themeRiver';
+import './src/chart/sunburst';
 import './src/chart/custom';
 
 import './src/component/graphic';

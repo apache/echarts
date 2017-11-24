@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                /* background-image: url(old_mathematics.png); */
+                /* background-repeat: repeat; */
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+            var chart;
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                chart = echarts.init(document.getElementById('main'));
+
+                chart.setOption({
+                    series: {
+                        type: 'sunburst',
+                        data: [1, 3, 2]
+                    }
+                });
+
+            });
+
+        </script>
+    </body>
+</html>
