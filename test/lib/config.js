@@ -111,7 +111,7 @@
             ].join(';');
             document.body.appendChild(dom);
         }
-        dom.innerHTML = content.join('');
+        dom.innerHTML += content.join('');
     }
 
     function pad(num, len) {
