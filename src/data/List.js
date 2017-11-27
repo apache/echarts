@@ -8,6 +8,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import * as modelUtil from '../util/model';
+import {createListTask} from '../stream/task';
 
 var isObject = zrUtil.isObject;
 
@@ -267,7 +268,7 @@ listProto.initData = function (data, nameList, dimValueGetter) {
     var size = data.count();
 
     var idList = [];
-    var nameRepeatCount = {};
+    var nameRepeatCount = this._nameRepeatCount = {};
     var nameDimIdx;
 
     nameList = nameList || [];
@@ -285,7 +286,7 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         self.hasItemOption = false;
     }
     // Default dim value getter
-    dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
+    this._dimValueGetter = dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
         var value = modelUtil.getDataItemValue(dataItem);
         // If any dataItem is like { value: 10 }
         if (modelUtil.isDataItemOption(dataItem)) {
@@ -332,11 +333,11 @@ listProto.initData = function (data, nameList, dimValueGetter) {
                 nameList[i] = storage[dimensions[nameDimIdx]][i];
             }
         }
-        var name = nameList[i] || '';
+        var name = nameList[i];
         // Try using the id in option
         var id = dataItem && dataItem.id;
 
-        if (!id && name) {
+        if (id == null && name) {
             // Use name as id and add counter to avoid same name
             nameRepeatCount[name] = nameRepeatCount[name] || 0;
             id = name;
@@ -345,11 +346,73 @@ listProto.initData = function (data, nameList, dimValueGetter) {
             }
             nameRepeatCount[name]++;
         }
-        id && (idList[i] = id);
+        id != null && (idList[i] = id);
     }
 
     this._nameList = nameList;
     this._idList = idList;
+};
+
+listProto.addData = function (moreData, moreNameList) {
+    moreNameList = moreNameList || [];
+    var originalCount = data.count();
+    var data = this._rawData;
+    // ?????????
+    data._data.push(moreData);
+
+    var storage = this._storage;
+    var indices = this.indices;
+    var dimensions = this.dimensions;
+    var size = data.count();
+    var nameDimIdx;
+    var nameRepeatCount = this._nameRepeatCount;
+    var nameList = this._nameList;
+    var idList = this._idList;
+
+    // extract ????????????
+    for (var i = 0; i < size; i++) {
+        var dataIndex = originalCount + i;
+        var dataItem = data.getItem(dataIndex);
+        for (var k = 0; k < dimensions.length; k++) {
+            var dim = dimensions[k];
+            var dimStorage = storage[dim];
+            // PENDING NULL is empty or zero
+            dimStorage[dataIndex] = this._dimValueGetter(dataItem, dim, dataIndex, k);
+        }
+        indices.push(dataIndex);
+    }
+
+    // extract ??????????
+    // Use the name in option and create id
+    for (var i = 0; i < size; i++) {
+        var dataIndex = originalCount + i;
+        var dataItem = data.getItem(dataIndex);
+        if (!moreNameList[i] && dataItem) {
+            if (dataItem.name != null) {
+                moreNameList[i] = dataItem.name;
+            }
+            else if (nameDimIdx != null) {
+                moreNameList[i] = storage[dimensions[nameDimIdx]][dataIndex];
+            }
+        }
+        var name = moreNameList[i];
+        // Try using the id in option
+        var id = dataItem && dataItem.id;
+
+        if (id == null && name) {
+            // Use name as id and add counter to avoid same name
+            nameRepeatCount[name] = nameRepeatCount[name] || 0;
+            id = name;
+            if (nameRepeatCount[name] > 0) {
+                id += '__ec__' + nameRepeatCount[name];
+            }
+            nameRepeatCount[name]++;
+        }
+        id != null && (idList[dataIndex] = id);
+
+        nameList[dataIndex] = moreNameList[i];
+    }
+
 };
 
 /**
@@ -674,6 +737,10 @@ function normalizeDimensions(dimensions) {
  *  list.each(function (idx) {})
  */
 listProto.each = function (dims, cb, stack, context) {
+
+    // ???
+    // merge to createTaskForEach?
+
     if (typeof dims === 'function') {
         context = stack;
         stack = cb;
@@ -683,7 +750,6 @@ listProto.each = function (dims, cb, stack, context) {
 
     dims = zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
 
-    var value = [];
     var dimSize = dims.length;
     var indices = this.indices;
 
@@ -702,7 +768,9 @@ listProto.each = function (dims, cb, stack, context) {
                 cb.call(context, this.get(dims[0], i, stack), this.get(dims[1], i, stack), i);
                 break;
             default:
-                for (var k = 0; k < dimSize; k++) {
+                var k = 0;
+                var value = [];
+                for (; k < dimSize; k++) {
                     value[k] = this.get(dims[k], i, stack);
                 }
                 // Index
@@ -710,6 +778,83 @@ listProto.each = function (dims, cb, stack, context) {
                 cb.apply(context, value);
         }
     }
+};
+
+/**
+ * Data iteration
+ *
+ *
+ * @param {string|Array.<string>}
+ * @param {Function} cb
+ * @param {boolean} [stack=false]
+ * @param {*} [context=this]
+ * @return {Object} pump
+ *
+ * @example
+ *  var pump = list.createEachPump('x', function (val) {
+ *      // val: 1212
+ *  });
+ *
+ *  var pump = list.createEachPump(['x', 'y'], function (vals) {
+ *      // vals: [1212, 3434]
+ *  });
+ *
+ *  pump.progress(100); // Work by chunk size.
+ *  pump.unfinished();
+ */
+listProto.createEachPump = function (dims, cb, stack) {
+    if (typeof dims === 'function') {
+        stack = cb;
+        cb = dims;
+        dims = [];
+    }
+
+    var list = this;
+    dims = zrUtil.map(normalizeDimensions(dims), list.getDimension, list);
+
+    return createListTask({
+
+        list: list,
+
+        progress: function (opt) {
+            var dimSize = dims.length;
+            var dueDataIndex = opt.dueDataIndex;
+
+            for (; dueDataIndex < opt.dueEnd; dueDataIndex++) {
+                // Simple optimization
+                switch (dimSize) {
+                    case 0:
+                        cb(
+                            dueDataIndex
+                        );
+                        break;
+                    case 1:
+                        cb(
+                            list.get(dims[0], dueDataIndex, stack),
+                            dueDataIndex
+                        );
+                        break;
+                    case 2:
+                        cb(
+                            list.get(dims[0], dueDataIndex, stack),
+                            list.get(dims[1], dueDataIndex, stack),
+                            dueDataIndex
+                        );
+                        break;
+                    default:
+                        var k = 0;
+                        var value = [];
+                        for (; k < dimSize; k++) {
+                            value[k] = list.get(dims[k], dueDataIndex, stack);
+                        }
+                        value[k] = dueDataIndex;
+                        cb(value);
+                }
+            }
+
+            return {dueDataIndex: dueDataIndex};
+        }
+    });
 };
 
 /**
@@ -1152,7 +1297,20 @@ listProto.cloneShallow = function () {
         list._extent = zrUtil.extend({}, this._extent);
     }
 
+    list._frameDataIndex = this._frameDataIndex;
+    list._frameSize = this._frameSize;
+
     return list;
+};
+
+// ???
+listProto.getFrameDataIndex = function () {
+    return this._frameDataIndex;
+};
+
+// ???
+listProto.getFrameSize = function () {
+    return 100;
 };
 
 /**

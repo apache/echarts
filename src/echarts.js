@@ -30,6 +30,7 @@ import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import seriesColor from './visual/seriesColor';
 import loadingDefault from './loading/default';
+import { layout } from './component/axis/cartesianAxisHelper';
 
 var each = zrUtil.each;
 var parseClassType = ComponentModel.parseClassType;
@@ -39,6 +40,8 @@ export var version = '3.8.5';
 export var dependencies = {
     zrender: '3.7.4'
 };
+
+var TEST_PROGRESS_STEP = 300;
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
@@ -74,6 +77,11 @@ var IN_MAIN_PROCESS = '__flagInMainProcess';
 var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
 var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
+
+var UNFINISHED_INDEX_DATA = 0;
+var UNFINISHED_INDEX_PROCESSOR = 1;
+var UNFINISHED_INDEX_VISUAL = 2;
+var UNFINISHED_INDEX_RENDER = 3;
 
 
 function createRegisterEventWithLowercaseName(method) {
@@ -192,6 +200,27 @@ function ECharts(dom, theme, opts) {
      */
     this._api = createExtensionAPI(this);
 
+    /**
+     * @type {Array.<Object>}
+     */
+    this._dataProcessorTasks = [];
+
+    /**
+     * [{tasks: [], isLayout}, ...]
+     * @type {Array.<Object>}
+     */
+    this._visualTasks = [];
+
+    /**
+     * @type {Array.<Object>}
+     */
+    this._renderTasks = [];
+
+    /**
+     * @type {Array.<boolean>}
+     */
+    this._unfinished = [];
+
     Eventful.call(this);
 
     /**
@@ -199,6 +228,8 @@ function ECharts(dom, theme, opts) {
      * @private
      */
     this._messageCenter = new MessageCenter();
+
+    // this._scheduler = new Scheduler();
 
     // Init mouse events
     this._initEvents();
@@ -224,6 +255,11 @@ function ECharts(dom, theme, opts) {
 var echartsProto = ECharts.prototype;
 
 echartsProto._onframe = function () {
+    // ???
+    if (this.isDisposed()) {
+        return;
+    }
+
     // Lazy update
     if (this[OPTION_UPDATED]) {
         var silent = this[OPTION_UPDATED].silent;
@@ -240,7 +276,42 @@ echartsProto._onframe = function () {
 
         triggerUpdatedEvent.call(this, silent);
     }
+
+    progressInFrame(this);
 };
+
+function progressInFrame(ecIns) {
+    // frame remain time in UI thread: 20ms? 16ms? ???
+    var remainTime = 20;
+    var unfinished = ecIns._unfinished;
+
+    do {
+        var startTime = +new Date();
+
+        if (unfinished[UNFINISHED_INDEX_PROCESSOR]) {
+            updateUnfinished(unfinished, progressProcessors(ecIns), UNFINISHED_INDEX_PROCESSOR);
+        }
+
+        // ???
+        // coordSys update
+
+        if (unfinished[UNFINISHED_INDEX_VISUAL]) {
+            updateUnfinished(unfinished, progressVisualEncoding(ecIns), UNFINISHED_INDEX_VISUAL);
+        }
+        if (unfinished[UNFINISHED_INDEX_RENDER]) {
+            updateUnfinished(unfinished, progressRender(ecIns, ecIns._model), UNFINISHED_INDEX_RENDER);
+        }
+
+        remainTime -= (+new Date() - startTime);
+    }
+    while (remainTime > 0 && (
+        unfinished[UNFINISHED_INDEX_PROCESSOR]
+        || unfinished[UNFINISHED_INDEX_VISUAL]
+        || unfinished[UNFINISHED_INDEX_RENDER]
+    ));
+}
+
+
 /**
  * @return {HTMLElement}
  */
@@ -682,7 +753,6 @@ echartsProto.getViewOfSeriesModel = function (seriesModel) {
     return this._chartsMap[seriesModel.__viewId];
 };
 
-
 var updateMethods = {
 
     /**
@@ -694,8 +764,8 @@ var updateMethods = {
 
         var ecModel = this._model;
         var api = this._api;
-        var coordSysMgr = this._coordSysMgr;
         var zr = this._zr;
+        var coordSysMgr = this._coordSysMgr;
         // update before setOption
         if (!ecModel) {
             return;
@@ -704,23 +774,29 @@ var updateMethods = {
         // Fixme First time update ?
         ecModel.restoreData();
 
+        zrUtil.each(ecModel.getSeries(), function (series) {
+            series.clearPipedTasks();
+        });
+
         // TODO
         // Save total ecModel here for undo/redo (after restoring data and before processing data).
         // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
 
         // Create new coordinate system each update
         // In LineView may save the old coordinate system and use it to get the orignal point
-        coordSysMgr.create(this._model, this._api);
+        coordSysMgr.create(ecModel, api);
+        // ??? coord data travel
 
-        processData.call(this, ecModel, api);
+        resetProcessors(this, ecModel, api);
 
         stackSeriesData.call(this, ecModel);
 
+        // ??? coord data travel
         coordSysMgr.update(ecModel, api);
 
-        doVisualEncoding.call(this, ecModel, payload);
+        resetVisualEncoding(this, ecModel, api, payload);
 
-        doRender.call(this, ecModel, payload);
+        resetRender(this, ecModel, api, payload);
 
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -786,7 +862,7 @@ var updateMethods = {
             seriesModel.getData().clearAllVisual();
         });
 
-        doVisualEncoding.call(this, ecModel, payload);
+        resetVisualEncoding(this, ecModel, this._api, payload);
 
         invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
     },
@@ -807,7 +883,7 @@ var updateMethods = {
             seriesModel.getData().clearAllVisual();
         });
 
-        doVisualEncoding.call(this, ecModel, payload, true);
+        resetVisualEncoding(this, ecModel, this._api, payload, 'excludesLayout');
 
         invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
     },
@@ -824,7 +900,7 @@ var updateMethods = {
             return;
         }
 
-        doLayout.call(this, ecModel, payload);
+        resetVisualEncoding(this, ecModel, this._api, payload, 'onlyLayout');
 
         invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
     },
@@ -1094,6 +1170,33 @@ function triggerUpdatedEvent(silent) {
     !silent && this.trigger('updated');
 }
 
+// ??????
+// echartsProto.addData = function (params) {
+//     var seriesIndex = params.seriesIndex;
+//     var moreData = params.data;
+//     var ecModel = this.getModel();
+//     var seriesModel = ecModel.getSeries(seriesIndex);
+
+//     var rawData = seriesModel.getRawData();
+
+//     rawData.addData(moreData);
+//     // ?????
+
+//     // ??? addData 应该是继续渲染而不是重启全部渲染？
+//     // 什么场景下需要重启全部渲染？
+
+//     updateMethods.update();
+
+//     // ??????
+//     if (rawData.count() > rawData.getChunkSize()) {
+//         requestAnimationFrame(step);
+//     }
+
+//     function step() {
+//         // if (rawData.
+//     }
+// };
+
 /**
  * Register event
  * @method
@@ -1117,18 +1220,25 @@ function invokeUpdateMethod(methodName, ecModel, payload) {
         updateZ(componentModel, component);
     }, this);
 
+    // ??? duplicate code with `resetRender`?
+    var renderTasks = this._renderTasks;
+    each(renderTasks, function (task, index) {
+        renderTasks[index] = null;
+        task && task.remove();
+    });
+
     // Upate all charts
     ecModel.eachSeries(function (seriesModel, idx) {
         var chart = this._chartsMap[seriesModel.__viewId];
-        chart[methodName](seriesModel, ecModel, api, payload);
+        renderTasks[idx] = chart[methodName](seriesModel, ecModel, api, payload);
 
-        updateZ(seriesModel, chart);
+        // ??? updateZ(seriesModel, chart);
 
-        updateProgressiveAndBlend(seriesModel, chart);
+        // ??? updateProgressiveAndBlend(seriesModel, chart);
     }, this);
 
     // If use hover layer
-    updateHoverLayerStatus(this._zr, ecModel);
+    // ??? updateHoverLayerStatus(this._zr, ecModel);
 
     // Post render
     each(postUpdateFuncs, function (func) {
@@ -1169,17 +1279,16 @@ function prepareView(type, ecModel) {
             var Clazz = isComponent
                 ? ComponentView.getClass(classType.main, classType.sub)
                 : ChartView.getClass(classType.sub);
-            if (Clazz) {
-                view = new Clazz();
-                view.init(ecModel, this._api);
-                viewMap[viewId] = view;
-                viewList.push(view);
-                zr.add(view.group);
+
+            if (__DEV__) {
+                zrUtil.assert(Clazz, classType.sub + ' does not exist.');
             }
-            else {
-                // Error
-                return;
-            }
+
+            view = new Clazz();
+            view.init(ecModel, this._api);
+            viewMap[viewId] = view;
+            viewList.push(view);
+            zr.add(view.group);
         }
 
         model.__viewId = view.__id = viewId;
@@ -1207,15 +1316,36 @@ function prepareView(type, ecModel) {
 }
 
 /**
- * Processor data in each series
- *
  * @param {module:echarts/model/Global} ecModel
  * @private
  */
-function processData(ecModel, api) {
-    each(dataProcessorFuncs, function (process) {
-        process.func(ecModel, api);
+function resetProcessors(ecIns, ecModel, api) {
+    var dataProcessorTasks = ecIns._dataProcessorTasks;
+    each(dataProcessorTasks, function (task) {
+        task && task.remove();
     });
+    dataProcessorTasks.length = dataProcessorFuncs.length;
+    each(dataProcessorFuncs, function (processor, index) {
+        var tasks = processor.func(ecModel, api);
+        if (tasks) {
+            dataProcessorTasks[index] = dataProcessorTasks.push.apply(dataProcessorTasks, tasks);
+        }
+    });
+    updateUnfinished(ecIns._unfinished, true, UNFINISHED_INDEX_PROCESSOR);
+}
+
+function progressProcessors(ecIns) {
+    var unfinished;
+    each(ecIns._dataProcessorTasks, function (task) {
+        if (task) {
+            task.progress({
+                // ???????
+                step: TEST_PROGRESS_STEP
+            });
+            unfinished |= task.unfinished();
+        }
+    });
+    return unfinished;
 }
 
 /**
@@ -1237,88 +1367,162 @@ function stackSeriesData(ecModel) {
     });
 }
 
-/**
- * Layout before each chart render there series, special visual encoding stage
- *
- * @param {module:echarts/model/Global} ecModel
- * @private
- */
-function doLayout(ecModel, payload) {
-    var api = this._api;
-    each(visualFuncs, function (visual) {
-        if (visual.isLayout) {
-            visual.func(ecModel, api, payload);
-        }
-    });
-}
+// function progressLayout() {
+//     var unfinished;
+//     each(visualFuncs, function (visual) {
+//         if (visual.isLayout) {
+//             unfinished |= visual.task.progress();
+//         }
+//     });
+//     return unfinished;
+// }
 
 /**
  * Encode visual infomation from data after data processing
  *
  * @param {module:echarts/model/Global} ecModel
  * @param {object} layout
- * @param {boolean} [excludesLayout]
+ * @param {string} [type] 'excludesLayout' or 'onlyLayout' or null/undefined
  * @private
  */
-function doVisualEncoding(ecModel, payload, excludesLayout) {
-    var api = this._api;
-    ecModel.clearColorPalette();
-    ecModel.eachSeries(function (seriesModel) {
-        seriesModel.clearColorPalette();
+function resetVisualEncoding(ecIns, ecModel, api, payload, type) {
+    // Assume that existing items in visualFuncs will not be changed.
+    var visualTasks = ecIns._visualTasks;
+    each(visualTasks, function (wrap, index) {
+        if (enter(type, wrap.isLayout)) {
+            visualTasks[index] = null;
+            wrap && each(wrap.tasks, function (task) {
+                task.remove();
+            });
+        }
     });
-    each(visualFuncs, function (visual) {
-        (!excludesLayout || !visual.isLayout)
-            && visual.func(ecModel, api, payload);
+
+    if (type !== 'onlyLayout') {
+        ecModel.clearColorPalette();
+        ecModel.eachSeries(function (seriesModel) {
+            seriesModel.clearColorPalette();
+        });
+    }
+
+    each(visualFuncs, function (visual, index) {
+        var isLayout = visual.isLayout;
+        if (enter(type, layout)) {
+            var tasks = visual.func(ecModel, api, payload);
+            if (tasks) {
+                // Keep order the same as declaration, especially
+                // the order between layout and visual encoding.
+                visualTasks[index] = {tasks: tasks, isLayout: isLayout};
+            }
+        }
     });
+
+    function enter(type, isLayout) {
+        return !type
+            || (type === 'excludesLayout' && !isLayout)
+            || (type === 'onlyLayout' && isLayout);
+    }
+
+    updateUnfinished(ecIns._unfinished, true, UNFINISHED_INDEX_VISUAL);
+}
+
+function progressVisualEncoding(ecIns) {
+    var unfinished;
+    each(ecIns._visualTasks, function (wrap) {
+        wrap && each(wrap.tasks, function (task) {
+            task.progress({
+                step: TEST_PROGRESS_STEP
+            });
+            unfinished |= task.unfinished();
+        });
+    });
+    return unfinished;
 }
 
 /**
  * Render each chart and component
  * @private
  */
-function doRender(ecModel, payload) {
-    var api = this._api;
+function resetRender(ecIns, ecModel, api, payload) {
     // Render all components
-    each(this._componentsViews, function (componentView) {
+    each(ecIns._componentsViews, function (componentView) {
         var componentModel = componentView.__model;
         componentView.render(componentModel, ecModel, api, payload);
 
         updateZ(componentModel, componentView);
-    }, this);
+    });
 
-    each(this._chartsViews, function (chart) {
+    each(ecIns._chartsViews, function (chart) {
         chart.__alive = false;
-    }, this);
+    });
+
+    var renderTasks = ecIns._renderTasks;
+    // ??? The key should be `__viewId` but not index. consider view change !!!
+    each(renderTasks, function (task, index) {
+        renderTasks[index] = null;
+        task && task.remove();
+    });
 
     // Render all charts
     ecModel.eachSeries(function (seriesModel, idx) {
-        var chartView = this._chartsMap[seriesModel.__viewId];
+        var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
-        chartView.render(seriesModel, ecModel, api, payload);
 
-        chartView.group.silent = !!seriesModel.get('silent');
+        renderTasks[idx] = chartView.render(seriesModel, ecModel, api, payload);
 
-        updateZ(seriesModel, chartView);
+        // ??? chartView.group.silent = !!seriesModel.get('silent');
 
-        updateProgressiveAndBlend(seriesModel, chartView);
+        // ??? updateZ(seriesModel, chartView);
 
-    }, this);
+        // ??? updateProgressiveAndBlend(seriesModel, chartView);
+
+    });
 
     // If use hover layer
-    updateHoverLayerStatus(this._zr, ecModel);
+    // ??? updateHoverLayerStatus(this._zr, ecModel);
 
     // Remove groups of unrendered charts
-    each(this._chartsViews, function (chart) {
+    each(ecIns._chartsViews, function (chart) {
         if (!chart.__alive) {
             chart.remove(ecModel, api);
         }
-    }, this);
+    });
+
+    // ??? add upateUnfinished to other partial update render!
+    updateUnfinished(ecIns._unfinished, true, UNFINISHED_INDEX_RENDER);
 }
+
+function progressRender(ecIns, ecModel) {
+    var unfinished;
+
+    each(ecIns._renderTasks, function (task, index) {
+        if (task) {
+            // ??????
+            unfinished |= task.progress({
+                step: TEST_PROGRESS_STEP
+            });
+        }
+    });
+
+    // ???
+    // ecModel.eachSeries(function (seriesModel, idx) {
+        // ??? var chartView = ecIns._chartsMap[seriesModel.__viewId];
+
+        // ??? chartView.group.silent = !!seriesModel.get('silent');
+
+        // ??? updateZ(seriesModel, chartView);
+
+        // ??? updateProgressiveAndBlend(seriesModel, chartView);
+    // });
+
+    return unfinished;
+}
+
 
 var MOUSE_EVENT_NAMES = [
     'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove',
     'mousedown', 'mouseup', 'globalout', 'contextmenu'
 ];
+
 /**
  * @private
  */
@@ -1448,6 +1652,7 @@ function updateProgressiveAndBlend(seriesModel, chartView) {
     }
 
     // Blend configration
+    // ???
     var blendMode = seriesModel.get('blendMode') || null;
     if (__DEV__) {
         if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
@@ -1460,6 +1665,15 @@ function updateProgressiveAndBlend(seriesModel, chartView) {
             el.setStyle('blend', blendMode);
         }
     });
+}
+
+function updateUnfinished(undefinedRecord, unfi, stageIndex) {
+    var count = Math.max(undefinedRecord.length, stageIndex + 1);
+    undefinedRecord[stageIndex] = unfi;
+    for (++stageIndex; stageIndex < count; stageIndex++) {
+        // update process should clear consequent visual stage using xor.
+        undefinedRecord[stageIndex] |= unfi;
+    }
 }
 
 /**
@@ -1531,9 +1745,9 @@ var postUpdateFuncs = [];
 /**
  * Visual encoding functions of each stage
  * @type {Array.<Object.<string, Function>>}
- * @inner
  */
 var visualFuncs = [];
+
 /**
  * Theme storage
  * @type {Object.<key, Object>}
@@ -1751,22 +1965,10 @@ export function registerPreprocessor(preprocessorFunc) {
 
 /**
  * @param {number} [priority=1000]
- * @param {Function} processorFunc
+ * @param {Object|Function} processor
  */
-export function registerProcessor(priority, processorFunc) {
-    if (typeof priority === 'function') {
-        processorFunc = priority;
-        priority = PRIORITY_PROCESSOR_FILTER;
-    }
-    if (__DEV__) {
-        if (isNaN(priority)) {
-            throw new Error('Unkown processor priority');
-        }
-    }
-    dataProcessorFuncs.push({
-        prio: priority,
-        func: processorFunc
-    });
+export function registerProcessor(priority, processor) {
+    normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_FILTER);
 }
 
 /**
@@ -1845,43 +2047,45 @@ export function getCoordinateSystemDimensions(type) {
  * But each chart has it's own layout algorithm
  *
  * @param {number} [priority=1000]
- * @param {Function} layoutFunc
+ * @param {Function} layoutTask
  */
-export function registerLayout(priority, layoutFunc) {
-    if (typeof priority === 'function') {
-        layoutFunc = priority;
-        priority = PRIORITY_VISUAL_LAYOUT;
-    }
-    if (__DEV__) {
-        if (isNaN(priority)) {
-            throw new Error('Unkown layout priority');
-        }
-    }
-    visualFuncs.push({
-        prio: priority,
-        func: layoutFunc,
-        isLayout: true
-    });
+export function registerLayout(priority, layoutTask) {
+    var wrap = normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT);
+    wrap.isLayout = true;
 }
 
 /**
  * @param {number} [priority=3000]
- * @param {Function} visualFunc
+ * @param {module:echarts/stream/Task} visualTask
  */
-export function registerVisual(priority, visualFunc) {
-    if (typeof priority === 'function') {
-        visualFunc = priority;
-        priority = PRIORITY_VISUAL_CHART;
+export function registerVisual(priority, visualTask) {
+    normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART);
+}
+
+function normalizeRegister(targetList, priority, fn, defaultPriority) {
+    if (zrUtil.isFunction(priority)) {
+        fn = priority;
+        priority = defaultPriority;
     }
+
     if (__DEV__) {
-        if (isNaN(priority)) {
-            throw new Error('Unkown visual priority');
+        if (isNaN(priority) || priority == null) {
+            throw new Error('Illegal priority');
         }
+        // Check duplicate
+        zrUtil.each(targetList, function (wrap) {
+            zrUtil.assert(wrap.func !== fn);
+        });
     }
-    visualFuncs.push({
+
+    var wrap = {
         prio: priority,
-        func: visualFunc
-    });
+        func: fn
+    };
+
+    targetList.push(wrap);
+
+    return wrap;
 }
 
 /**

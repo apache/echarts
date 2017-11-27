@@ -3,7 +3,7 @@ import SeriesModel from '../../model/Series';
 
 export default SeriesModel.extend({
 
-    type: 'series.scatter',
+    type: 'series.streamScatter',
 
     dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 

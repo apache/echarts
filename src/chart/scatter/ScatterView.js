@@ -11,6 +11,10 @@ echarts.extendChartView({
         this._largeSymbolDraw = new LargeSymbolDraw();
     },
 
+    resetRender: function () {
+
+    },
+
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
         var largeSymbolDraw = this._largeSymbolDraw;

@@ -95,6 +95,26 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     this._data = data;
 };
 
+symbolDrawProto.progress = function (data) {
+    var group = this.group;
+    var seriesModel = data.hostModel;
+    var oldData = this._data;
+
+    var SymbolCtor = this._symbolCtor;
+
+    var seriesScope = {
+        itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
+        hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
+        symbolRotate: seriesModel.get('symbolRotate'),
+        symbolOffset: seriesModel.get('symbolOffset'),
+        hoverAnimation: seriesModel.get('hoverAnimation'),
+
+        labelModel: seriesModel.getModel('label.normal'),
+        hoverLabelModel: seriesModel.getModel('label.emphasis'),
+        cursorStyle: seriesModel.get('cursor')
+    };
+};
+
 symbolDrawProto.updateLayout = function () {
     var data = this._data;
     if (data) {

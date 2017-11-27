@@ -54,6 +54,13 @@ var SeriesModel = ComponentModel.extend({
      */
     layoutMode: null,
 
+    /**
+     * Whether stream enabled.
+     * @type {boolean}
+     * @readOnly
+     */
+    streamEnabled: false,
+
     init: function (option, parentModel, ecModel, extraOpt) {
 
         /**
@@ -68,11 +75,18 @@ var SeriesModel = ComponentModel.extend({
         if (__DEV__) {
             zrUtil.assert(data, 'getInitialData returned invalid data.');
         }
+
         /**
          * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
          * @private
          */
         set(this, 'dataBeforeProcessed', data);
+
+        /**
+         * @type {Array}
+         * @private
+         */
+        set(this, 'tasks', []);
 
         // If we reverse the order (make data firstly, and then make
         // dataBeforeProcessed by cloneShallow), cloneShallow will
@@ -339,7 +353,39 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} dataIndex
      * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
      */
-    getTooltipPosition: null
+    getTooltipPosition: null,
+
+    clearPipedTasks: function () {
+        get(this, 'tasks').length = 0;
+    },
+
+    pipe: function (task) {
+        var tasks = get(this, 'tasks');
+        var lastTask = tasks[tasks.length - 1];
+        lastTask && lastTask.pipe(task);
+        tasks.push(task);
+        // ??? parallel task? multi-dependency?
+
+        // ??? A bad practice?
+        var originalRemove = task.remove;
+        task.remove = function () {
+            var i = 0;
+            for (; i < tasks.length; i++) {
+                if (tasks[i] === task) {
+                    break;
+                }
+            }
+            tasks.length = i;
+            originalRemove();
+        };
+    }
+
+    // /**
+    //  * @public
+    //  */
+    // useStream: function () {
+    //     return this.streamEnabled && this.option.streamSize > 0;
+    // }
 });
 
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
