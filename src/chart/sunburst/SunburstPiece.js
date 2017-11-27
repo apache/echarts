@@ -6,7 +6,7 @@ import * as graphic from '../../util/graphic';
  * @constructor
  * @extends {module:zrender/graphic/Group}
  */
-function SunburstPiece(data, idx) {
+function SunburstPiece(node) {
 
     graphic.Group.call(this);
 
@@ -19,7 +19,7 @@ function SunburstPiece(data, idx) {
     this.add(polyline);
     this.add(text);
 
-    this.updateData(data, idx, true);
+    this.updateData(node, true);
 
     // Hover to change label and labelLine
     function onEmphasis() {
@@ -38,48 +38,48 @@ function SunburstPiece(data, idx) {
 
 var SunburstPieceProto = SunburstPiece.prototype;
 
-SunburstPieceProto.updateData = function (data, idx, firstCreate) {
+SunburstPieceProto.updateData = function (node, firstCreate) {
 
     var sector = this.childAt(0);
 
-    var seriesModel = data.hostModel;
-    var itemModel = data.getItemModel(idx);
-    var layout = data.getItemLayout(idx);
+    var seriesModel = node.hostModel;
+    var itemModel = node.getModel();
+    var layout = node.getLayout();
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
     if (firstCreate) {
         sector.setShape(sectorShape);
 
-        var animationType = seriesModel.getShallow('animationType');
-        if (animationType === 'scale') {
-            sector.shape.r = layout.r0;
-            graphic.initProps(sector, {
-                shape: {
-                    r: layout.r
-                }
-            }, seriesModel, idx);
-        }
-        // Expansion
-        else {
-            sector.shape.endAngle = layout.startAngle;
-            graphic.updateProps(sector, {
-                shape: {
-                    endAngle: layout.endAngle
-                }
-            }, seriesModel, idx);
-        }
+        // var animationType = seriesModel.getShallow('animationType');
+        // if (animationType === 'scale') {
+        //     sector.shape.r = layout.r0;
+        //     graphic.initProps(sector, {
+        //         shape: {
+        //             r: layout.r
+        //         }
+        //     }, seriesModel);
+        // }
+        // // Expansion
+        // else {
+        //     sector.shape.endAngle = layout.startAngle;
+        //     graphic.updateProps(sector, {
+        //         shape: {
+        //             endAngle: layout.endAngle
+        //         }
+        //     }, seriesModel, idx);
+        // }
 
     }
     else {
-        graphic.updateProps(sector, {
-            shape: sectorShape
-        }, seriesModel, idx);
+        // graphic.updateProps(sector, {
+        //     shape: sectorShape
+        // }, seriesModel, idx);
     }
 
     // Update common style
     var itemStyleModel = itemModel.getModel('itemStyle');
-    var visualColor = data.getItemVisual(idx, 'color');
+    var visualColor = node.getVisual('color');
 
     sector.useStyle(
         zrUtil.defaults(
@@ -98,12 +98,12 @@ SunburstPieceProto.updateData = function (data, idx, firstCreate) {
     function onEmphasis() {
         // Sector may has animation of updating data. Force to move to the last frame
         // Or it may stopped on the wrong shape
-        sector.stopAnimation(true);
-        sector.animateTo({
-            shape: {
-                r: layout.r + seriesModel.get('hoverOffset')
-            }
-        }, 300, 'elasticOut');
+        // sector.stopAnimation(true);
+        // sector.animateTo({
+        //     shape: {
+        //         r: layout.r + seriesModel.get('hoverOffset')
+        //     }
+        // }, 300, 'elasticOut');
     }
     function onNormal() {
         sector.stopAnimation(true);
@@ -114,15 +114,15 @@ SunburstPieceProto.updateData = function (data, idx, firstCreate) {
         }, 300, 'elasticOut');
     }
     sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
-        sector
-            .on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
-    }
+    // if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
+    //     sector
+    //         .on('mouseover', onEmphasis)
+    //         .on('mouseout', onNormal)
+    //         .on('emphasis', onEmphasis)
+    //         .on('normal', onNormal);
+    // }
 
-    this._updateLabel(data, idx);
+    // this._updateLabel(data, idx);
 
     graphic.setHoverStyle(this);
 };

@@ -1,5 +1,5 @@
 
-import {parsePercent, linearMap} from '../../util/number';
+import {parsePercent} from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 
 var PI2 = Math.PI * 2;
@@ -31,18 +31,21 @@ export default function (seriesType, ecModel, api, payload) {
 
         var minAngle = seriesModel.get('minAngle') * RADIAN;
 
+        var treeRoot = seriesModel.getData().tree.root;
+
         var validDataCount = 0;
-        data.each('value', function (value) {
-            !isNaN(value) && validDataCount++;
+        zrUtil.each(treeRoot.children, function (child) {
+            !isNaN(child.getValue()) && validDataCount++;
         });
 
-        var sum = data.getSum('value');
+        var sum = treeRoot.getValue();
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
+        var rPerLevel = (r - r0) / (treeRoot.height || 1);
+
         var clockwise = seriesModel.get('clockwise');
 
-        var roseType = seriesModel.get('roseType');
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
@@ -53,85 +56,88 @@ export default function (seriesType, ecModel, api, payload) {
         var restAngle = PI2;
         var valueSumLargerThanMinAngle = 0;
 
-        var currentAngle = startAngle;
         var dir = clockwise ? 1 : -1;
 
-        data.each('value', function (value, idx) {
-            var angle;
-            if (isNaN(value)) {
-                data.setItemLayout(idx, {
-                    angle: NaN,
-                    startAngle: NaN,
-                    endAngle: NaN,
-                    clockwise: clockwise,
-                    cx: cx,
-                    cy: cy,
-                    r0: r0,
-                    r: roseType
-                        ? NaN
-                        : r
-                });
+        var renderNode = function (root, startAngle) {
+            if (!root) {
                 return;
             }
 
-            angle = (sum === 0 && stillShowZeroSum)
-                ? unitRadian : (value * unitRadian);
+            var endAngle = startAngle;
 
-            if (angle < minAngle) {
-                angle = minAngle;
-                restAngle -= minAngle;
-            }
-            else {
-                valueSumLargerThanMinAngle += value;
-            }
+            // Render self
+            if (root !== treeRoot) {
+                // Tree root is virtual, so it doesn't need to be drawn
+                var value = root.getValue();
 
-            var endAngle = currentAngle + dir * angle;
-            data.setItemLayout(idx, {
-                angle: angle,
-                startAngle: currentAngle,
-                endAngle: endAngle,
-                clockwise: clockwise,
-                cx: cx,
-                cy: cy,
-                r0: r0,
-                r: roseType
-                    ? linearMap(value, extent, [r0, r])
-                    : r
-            });
+                var angle = (sum === 0 && stillShowZeroSum)
+                    ? unitRadian : (value * unitRadian);
+                if (angle < minAngle) {
+                    angle = minAngle;
+                    restAngle -= minAngle;
+                }
+                else {
+                    valueSumLargerThanMinAngle += value;
+                }
 
-            currentAngle = endAngle;
-        }, true);
+                endAngle = startAngle + dir * angle;
 
-        // Some sector is constrained by minAngle
-        // Rest sectors needs recalculate angle
-        if (restAngle < PI2 && validDataCount) {
-            // Average the angle if rest angle is not enough after all angles is
-            // Constrained by minAngle
-            if (restAngle <= 1e-3) {
-                var angle = PI2 / validDataCount;
-                data.each('value', function (value, idx) {
-                    if (!isNaN(value)) {
-                        var layout = data.getItemLayout(idx);
-                        layout.angle = angle;
-                        layout.startAngle = startAngle + dir * idx * angle;
-                        layout.endAngle = startAngle + dir * (idx + 1) * angle;
-                    }
+                root.setLayout({
+                    angle: angle,
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    clockwise: clockwise,
+                    cx: cx,
+                    cy: cy,
+                    r0: r0 + rPerLevel * (root.depth - 1),
+                    r: r0 + rPerLevel * root.depth
                 });
             }
-            else {
-                unitRadian = restAngle / valueSumLargerThanMinAngle;
-                currentAngle = startAngle;
-                data.each('value', function (value, idx) {
-                    if (!isNaN(value)) {
-                        var layout = data.getItemLayout(idx);
-                        var angle = layout.angle === minAngle
-                            ? minAngle : value * unitRadian;
-                        layout.startAngle = currentAngle;
-                        layout.endAngle = currentAngle + dir * angle;
-                        currentAngle += dir * angle;
-                    }
+
+            // Render children
+            if (root.children && root.children.length) {
+                // currentAngle = startAngle;
+                var siblingAngle = 0;
+                zrUtil.each(root.children, function (node) {
+                    siblingAngle += renderNode(node, startAngle + siblingAngle);
                 });
             }
-        }
+
+            return endAngle - startAngle;
+        };
+
+        renderNode(treeRoot, startAngle);
+
+        // // Some sector is constrained by minAngle
+        // // Rest sectors needs recalculate angle
+        // if (restAngle < PI2 && validDataCount) {
+        //     // Average the angle if rest angle is not enough after all angles is
+        //     // Constrained by minAngle
+        //     if (restAngle <= 1e-3) {
+        //         var angle = PI2 / validDataCount;
+        //         data.each('value', function (value, idx) {
+        //             if (!isNaN(value)) {
+        //                 var layout = data.getItemLayout(idx);
+        //                 layout.angle = angle;
+        //                 layout.startAngle = startAngle + dir * idx * angle;
+        //                 layout.endAngle = startAngle + dir * (idx + 1) * angle;
+        //             }
+        //         });
+        //     }
+        //     else {
+        //         unitRadian = restAngle / valueSumLargerThanMinAngle;
+        //         currentAngle = startAngle;
+        //         data.each('value', function (value, idx) {
+        //             if (!isNaN(value)) {
+        //                 var layout = data.getItemLayout(idx);
+        //                 var angle = layout.angle === minAngle
+        //                     ? minAngle : value * unitRadian;
+        //                 layout.startAngle = currentAngle;
+        //                 layout.endAngle = currentAngle + dir * angle;
+        //                 currentAngle += dir * angle;
+        //             }
+        //         });
+        //     }
+        // }
     });
 }

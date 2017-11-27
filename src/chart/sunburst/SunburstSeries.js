@@ -1,59 +1,50 @@
-import * as echarts from '../../echarts';
-import List from '../../data/List';
-import {getPercentWithPrecision} from '../../util/number';
-import completeDimensions from '../../data/helper/completeDimensions';
+import * as zrUtil from 'zrender/src/core/util';
+import SeriesModel from '../../model/Series';
+import Tree from '../../data/Tree';
+import {wrapTreePathInfo} from '../treemap/helper';
 
-var SunburstSeries = echarts.extendSeriesModel({
+export default SeriesModel.extend({
 
     type: 'series.sunburst',
 
-    /*
-     * @override
+    /**
+     * @type {module:echarts/data/Tree~Node}
      */
-    init: function (option) {
-        SunburstSeries.superApply(this, 'init', arguments);
-
-        // Enable legend selection for each data item
-        // Use a function instead of direct access because data reference may changed
-        this.legendDataProvider = function () {
-            return this.getRawData();
-        };
-    },
-
-    /*
-     * @override
-     */
-    mergeOption: function (newOption) {
-        SunburstSeries.superCall(this, 'mergeOption', newOption);
-    },
+    _viewRoot: null,
 
     getInitialData: function (option, ecModel) {
-        var dimensions = completeDimensions(['value'], option.data);
-        var list = new List(dimensions, this);
-        list.initData(option.data);
-        return list;
+        // Create a virtual root.
+        var root = { name: option.name, children: option.data };
+
+        completeTreeValue(root);
+
+        var levels = option.levels || [];
+
+        // levels = option.levels = setDefault(levels, ecModel);
+
+        var treeOption = {};
+
+        treeOption.levels = levels;
+
+        // Make sure always a new tree is created when setOption,
+        // in TreemapView, we check whether oldTree === newTree
+        // to choose mappings approach among old shapes and new shapes.
+        return Tree.createTree(root, this, treeOption).data;
+    },
+
+    optionUpdated: function () {
+        this.resetViewRoot();
     },
 
     /*
      * @override
      */
     getDataParams: function (dataIndex) {
-        var data = this.getData();
-        var params = SunburstSeries.superCall(this, 'getDataParams', dataIndex);
-        // FIXME toFixed?
+        var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
 
-        var valueList = [];
-        data.each('value', function (value) {
-            valueList.push(value);
-        });
+        var node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        params.treePathInfo = wrapTreePathInfo(node, this);
 
-        params.percent = getPercentWithPrecision(
-            valueList,
-            dataIndex,
-            data.hostModel.get('percentPrecision')
-        );
-
-        params.$vars.push('percent');
         return params;
     },
 
@@ -99,7 +90,65 @@ var SunburstSeries = echarts.extendSeriesModel({
         animationEasing: 'cubicOut',
 
         data: []
+    },
+
+    getViewRoot: function () {
+        return this._viewRoot;
+    },
+
+    /**
+     * @param {module:echarts/data/Tree~Node} [viewRoot]
+     */
+    resetViewRoot: function (viewRoot) {
+        viewRoot
+            ? (this._viewRoot = viewRoot)
+            : (viewRoot = this._viewRoot);
+
+        var root = this.getData().tree.root;
+
+        if (!viewRoot
+            || (viewRoot !== root && !root.contains(viewRoot))
+        ) {
+            this._viewRoot = root;
+        }
     }
 });
 
-export default SunburstSeries;
+
+
+/**
+ * @param {Object} dataNode
+ */
+function completeTreeValue(dataNode) {
+    // Postorder travel tree.
+    // If value of none-leaf node is not set,
+    // calculate it by suming up the value of all children.
+    var sum = 0;
+
+    zrUtil.each(dataNode.children, function (child) {
+
+        completeTreeValue(child);
+
+        var childValue = child.value;
+        zrUtil.isArray(childValue) && (childValue = childValue[0]);
+
+        sum += childValue;
+    });
+
+    var thisValue = dataNode.value;
+    if (zrUtil.isArray(thisValue)) {
+        thisValue = thisValue[0];
+    }
+
+    if (thisValue == null || isNaN(thisValue)) {
+        thisValue = sum;
+    }
+    // Value should not less than 0.
+    if (thisValue < 0) {
+        thisValue = 0;
+    }
+
+    zrUtil.isArray(dataNode.value)
+        ? (dataNode.value[0] = thisValue)
+        : (dataNode.value = thisValue);
+}

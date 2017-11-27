@@ -2,6 +2,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import SunburstPiece from './SunburstPiece';
+import DataDiffer from '../../data/DataDiffer';
 
 /**
  * @param {module:echarts/model/Series} seriesModel
@@ -9,9 +10,9 @@ import SunburstPiece from './SunburstPiece';
  * @inner
  */
 function updateDataSelected(uid, seriesModel, hasAnimation, api) {
-    var data = seriesModel.getData();
+    var treeRoot = seriesModel.getData();
     var dataIndex = this.dataIndex;
-    var name = data.getName(dataIndex);
+    var name = treeRoot.getName(dataIndex);
 
     api.dispatchAction({
         type: 'SunburstToggleSelect',
@@ -35,7 +36,7 @@ var SunburstView = ChartView.extend({
             return;
         }
 
-        var data = seriesModel.getData();
+        var treeRoot = seriesModel.getData().tree.root;
         var oldData = this._data;
         var group = this.group;
 
@@ -43,53 +44,58 @@ var SunburstView = ChartView.extend({
         var isFirstRender = !oldData;
         var animationType = seriesModel.get('animationType');
 
-        var onSectorClick = zrUtil.curry(
-            updateDataSelected, this.uid, seriesModel, hasAnimation, api
-        );
+        // var onSectorClick = zrUtil.curry(
+        //     updateDataSelected, this.uid, seriesModel, hasAnimation, api
+        // );
 
-        data.diff(oldData)
-            .add(function (idx) {
-                var sunburstPiece = new SunburstPiece(data, idx);
-                // Default expansion animation
-                if (isFirstRender && animationType !== 'scale') {
-                    sunburstPiece.eachChild(function (child) {
-                        child.stopAnimation(true);
-                    });
-                }
+        treeRoot.eachNode(function (node) {
+            var piece = new SunburstPiece(node);
+            group.add(piece);
+        });
 
-                data.setItemGraphicEl(idx, sunburstPiece);
+        // treeRoot.diff(oldData)
+        //     .add(function (idx) {
+        //         var sunburstPiece = new SunburstPiece(treeRoot, idx);
+        //         // Default expansion animation
+        //         if (isFirstRender && animationType !== 'scale') {
+        //             sunburstPiece.eachChild(function (child) {
+        //                 child.stopAnimation(true);
+        //             });
+        //         }
 
-                group.add(sunburstPiece);
-            })
-            .update(function (newIdx, oldIdx) {
-                var sunburstPiece = oldData.getItemGraphicEl(oldIdx);
+        //         treeRoot.setItemGraphicEl(idx, sunburstPiece);
 
-                sunburstPiece.updateData(data, newIdx);
+        //         group.add(sunburstPiece);
+        //     })
+        //     .update(function (newIdx, oldIdx) {
+        //         var sunburstPiece = oldData.getItemGraphicEl(oldIdx);
 
-                group.add(sunburstPiece);
-                data.setItemGraphicEl(newIdx, sunburstPiece);
-            })
-            .remove(function (idx) {
-                var sunburstPiece = oldData.getItemGraphicEl(idx);
-                group.remove(sunburstPiece);
-            })
-            .execute();
+        //         sunburstPiece.updateData(treeRoot, newIdx);
 
-        if (
-            hasAnimation && isFirstRender && data.count() > 0
-            // Default expansion animation
-            && animationType !== 'scale'
-        ) {
-            var shape = data.getItemLayout(0);
-            var r = Math.max(api.getWidth(), api.getHeight()) / 2;
+        //         group.add(sunburstPiece);
+        //         treeRoot.setItemGraphicEl(newIdx, sunburstPiece);
+        //     })
+        //     .remove(function (idx) {
+        //         var sunburstPiece = oldData.getItemGraphicEl(idx);
+        //         group.remove(sunburstPiece);
+        //     })
+        //     .execute();
 
-            var removeClipPath = zrUtil.bind(group.removeClipPath, group);
-            group.setClipPath(this._createClipPath(
-                shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel
-            ));
-        }
+        // if (
+        //     hasAnimation && isFirstRender && treeRoot.count() > 0
+        //     // Default expansion animation
+        //     && animationType !== 'scale'
+        // ) {
+        //     var shape = treeRoot.getLayout();
+        //     var r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
-        this._data = data;
+        //     var removeClipPath = zrUtil.bind(group.removeClipPath, group);
+        //     group.setClipPath(this._createClipPath(
+        //         shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel
+        //     ));
+        // }
+
+        this._data = treeRoot;
     },
 
     dispose: function () {},
@@ -122,8 +128,8 @@ var SunburstView = ChartView.extend({
      * @implement
      */
     containPoint: function (point, seriesModel) {
-        var data = seriesModel.getData();
-        var itemLayout = data.getItemLayout(0);
+        var treeRoot = seriesModel.getData();
+        var itemLayout = treeRoot.getItemLayout(0);
         if (itemLayout) {
             var dx = point[0] - itemLayout.cx;
             var dy = point[1] - itemLayout.cy;
