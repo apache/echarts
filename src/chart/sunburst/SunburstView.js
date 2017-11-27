@@ -49,8 +49,10 @@ var SunburstView = ChartView.extend({
         // );
 
         treeRoot.eachNode(function (node) {
-            var piece = new SunburstPiece(node);
-            group.add(piece);
+            if (node !== treeRoot) {
+                var piece = new SunburstPiece(node, seriesModel);
+                group.add(piece);
+            }
         });
 
         // treeRoot.diff(oldData)

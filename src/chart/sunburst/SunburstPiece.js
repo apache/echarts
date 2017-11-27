@@ -6,7 +6,7 @@ import * as graphic from '../../util/graphic';
  * @constructor
  * @extends {module:zrender/graphic/Group}
  */
-function SunburstPiece(node) {
+function SunburstPiece(node, seriesModel) {
 
     graphic.Group.call(this);
 
@@ -19,7 +19,7 @@ function SunburstPiece(node) {
     this.add(polyline);
     this.add(text);
 
-    this.updateData(node, true);
+    this.updateData(node, true, seriesModel);
 
     // Hover to change label and labelLine
     function onEmphasis() {
@@ -38,11 +38,11 @@ function SunburstPiece(node) {
 
 var SunburstPieceProto = SunburstPiece.prototype;
 
-SunburstPieceProto.updateData = function (node, firstCreate) {
+SunburstPieceProto.updateData = function (node, firstCreate, seriesModel) {
 
     var sector = this.childAt(0);
 
-    var seriesModel = node.hostModel;
+    // var seriesModel = node.hostModel;
     var itemModel = node.getModel();
     var layout = node.getLayout();
     var sectorShape = zrUtil.extend({}, layout);
@@ -50,31 +50,23 @@ SunburstPieceProto.updateData = function (node, firstCreate) {
 
     if (firstCreate) {
         sector.setShape(sectorShape);
+        sector.shape.r = layout.r0;
 
-        // var animationType = seriesModel.getShallow('animationType');
-        // if (animationType === 'scale') {
-        //     sector.shape.r = layout.r0;
-        //     graphic.initProps(sector, {
-        //         shape: {
-        //             r: layout.r
-        //         }
-        //     }, seriesModel);
-        // }
-        // // Expansion
-        // else {
-        //     sector.shape.endAngle = layout.startAngle;
-        //     graphic.updateProps(sector, {
-        //         shape: {
-        //             endAngle: layout.endAngle
-        //         }
-        //     }, seriesModel, idx);
-        // }
+        var duration = seriesModel.getShallow('animationDuration')
+            / Math.max(node.depth + node.height, 1);
+        var delay = (node.depth - 1) * duration;
+        var easing = seriesModel.getShallow('animationEasing');
 
+        sector.animateTo({
+            shape: {
+                r: layout.r
+            }
+        }, duration, delay, easing);
     }
     else {
-        // graphic.updateProps(sector, {
-        //     shape: sectorShape
-        // }, seriesModel, idx);
+        graphic.updateProps(sector, {
+            shape: sectorShape
+        }, seriesModel);
     }
 
     // Update common style
@@ -106,21 +98,25 @@ SunburstPieceProto.updateData = function (node, firstCreate) {
         // }, 300, 'elasticOut');
     }
     function onNormal() {
-        sector.stopAnimation(true);
-        sector.animateTo({
-            shape: {
-                r: layout.r
-            }
-        }, 300, 'elasticOut');
+        // sector.stopAnimation(true);
+
+        // var duration = 300;
+        // var delay = node.depth * duration;
+
+        // sector.animateTo({
+        //     shape: {
+        //         r: layout.r
+        //     }
+        // }, duration, delay, 'elasticOut');
     }
     sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-    // if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
-    //     sector
-    //         .on('mouseover', onEmphasis)
-    //         .on('mouseout', onNormal)
-    //         .on('emphasis', onEmphasis)
-    //         .on('normal', onNormal);
-    // }
+    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
+        sector
+            .on('mouseover', onEmphasis)
+            .on('mouseout', onNormal)
+            .on('emphasis', onEmphasis)
+            .on('normal', onNormal);
+    }
 
     // this._updateLabel(data, idx);
 

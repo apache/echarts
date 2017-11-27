@@ -87,7 +87,7 @@ export default SeriesModel.extend({
         // Animation type canbe expansion, scale
         animationType: 'expansion',
 
-        animationEasing: 'cubicOut',
+        animationEasing: 'quadraticInOut',
 
         data: []
     },

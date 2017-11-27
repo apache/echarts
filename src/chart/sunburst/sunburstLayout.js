@@ -28,10 +28,9 @@ export default function (seriesType, ecModel, api, payload) {
         var data = seriesModel.getData();
 
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
-
         var minAngle = seriesModel.get('minAngle') * RADIAN;
 
-        var treeRoot = seriesModel.getData().tree.root;
+        var treeRoot = data.tree.root;
 
         var validDataCount = 0;
         zrUtil.each(treeRoot.children, function (child) {
@@ -47,10 +46,6 @@ export default function (seriesType, ecModel, api, payload) {
         var clockwise = seriesModel.get('clockwise');
 
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
-
-        // [0...max]
-        var extent = data.getDataExtent('value');
-        extent[0] = 0;
 
         // In the case some sector angle is smaller than minAngle
         var restAngle = PI2;
