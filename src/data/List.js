@@ -307,7 +307,7 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         // [1, 2]
         // 2
         // Bar chart, line chart which uses category axis
-        // only gives the 'y' value. 'x' value is the indices of cateogry
+        // only gives the 'y' value. 'x' value is the indices of category
         // Use a tempValue to normalize the value to be a (x, y) value
 
         // Store the data by dimensions
