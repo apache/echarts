@@ -24,15 +24,15 @@ function createTask(seriesType, seriesModel) {
         dims.push(seriesModel.coordDimToDataDim(coordSys.dimensions[i])[0]);
     }
 
-    var pump;
+    var task;
     if (dims.length === 1) {
-        pump = data.createEachPump(dims[0], function (x, idx) {
+        task = data.createEachTask(dims[0], function (x, idx) {
             // Also {Array.<number>}, not undefined to avoid if...else... statement
             data.setItemLayout(idx, isNaN(x) ? [NaN, NaN] : coordSys.dataToPoint(x));
         });
     }
     else if (dims.length === 2) {
-        pump = data.createEachPump(dims, function (x, y, idx) {
+        task = data.createEachTask(dims, function (x, y, idx) {
             // Also {Array.<number>}, not undefined to avoid if...else... statement
             data.setItemLayout(
                 idx, (isNaN(x) || isNaN(y)) ? [NaN, NaN] : coordSys.dataToPoint([x, y])
@@ -40,5 +40,5 @@ function createTask(seriesType, seriesModel) {
         });
     }
 
-    return pump;
+    return task;
 }

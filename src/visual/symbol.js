@@ -31,7 +31,7 @@ function createTask(seriesModel, defaultSymbolType, legendSymbol, ecModel) {
         return;
     }
 
-    return data.createEachPump(function (idx) {
+    return data.createEachTask(function (idx) {
         if (typeof symbolSize === 'function') {
             var rawValue = seriesModel.getRawValue(idx);
             // FIXME

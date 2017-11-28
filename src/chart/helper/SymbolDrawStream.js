@@ -49,7 +49,7 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
     };
 
     group.removeAll();
-    var dataEachPump = data.createEachPump(function (newIdx) {
+    var dataEachTask = data.createEachTask(function (newIdx) {
         var point = data.getItemLayout(newIdx);
         if (symbolNeedsDraw(data, newIdx, isIgnore)) {
             var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
@@ -65,10 +65,10 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
     group.renderTask.reset();
 
     // ??? pipe here?
-    seriesModel.pipe(dataEachPump);
+    seriesModel.pipe(dataEachTask);
     seriesModel.pipe(group.renderTask);
 
-    return dataEachPump;
+    return dataEachTask;
 };
 
 symbolDrawProto.updateLayout = function () {
@@ -84,14 +84,14 @@ symbolDrawProto.updateLayout = function () {
     var task = createTask({
         list: data,
         progress: function (params, notify) {
-            var dueDataIndex = params.dueDataIndex;
-            for (; dueDataIndex < params.dueEnd; dueDataIndex++) {
-                var point = data.getItemLayout(dueDataIndex);
-                var el = data.getItemGraphicEl(dueDataIndex);
+            var dueIndex = params.dueIndex;
+            for (; dueIndex < params.dueEnd; dueIndex++) {
+                var point = data.getItemLayout(dueIndex);
+                var el = data.getItemGraphicEl(dueIndex);
                 // Not use animation
                 el.attr('position', point);
             }
-            notify(dueDataIndex);
+            notify(dueIndex);
         }
     });
 

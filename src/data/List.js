@@ -788,21 +788,21 @@ listProto.each = function (dims, cb, stack, context) {
  * @param {Function} cb
  * @param {boolean} [stack=false]
  * @param {*} [context=this]
- * @return {Object} pump
+ * @return {Object} task
  *
  * @example
- *  var pump = list.createEachPump('x', function (val) {
+ *  var task = list.createEachTask('x', function (val) {
  *      // val: 1212
  *  });
  *
- *  var pump = list.createEachPump(['x', 'y'], function (vals) {
+ *  var task = list.createEachTask(['x', 'y'], function (vals) {
  *      // vals: [1212, 3434]
  *  });
  *
- *  pump.progress(100); // Work by chunk size.
- *  pump.unfinished();
+ *  task.progress(100); // Work by chunk size.
+ *  task.unfinished();
  */
-listProto.createEachPump = function (dims, cb, stack) {
+listProto.createEachTask = function (dims, cb, stack) {
     if (typeof dims === 'function') {
         stack = cb;
         cb = dims;
@@ -818,41 +818,41 @@ listProto.createEachPump = function (dims, cb, stack) {
 
         progress: function (params, notify) {
             var dimSize = dims.length;
-            var dueDataIndex = params.dueDataIndex;
+            var dueIndex = params.dueIndex;
 
-            for (; dueDataIndex < params.dueEnd; dueDataIndex++) {
+            for (; dueIndex < params.dueEnd; dueIndex++) {
                 // Simple optimization
                 switch (dimSize) {
                     case 0:
                         cb(
-                            dueDataIndex
+                            dueIndex
                         );
                         break;
                     case 1:
                         cb(
-                            list.get(dims[0], dueDataIndex, stack),
-                            dueDataIndex
+                            list.get(dims[0], dueIndex, stack),
+                            dueIndex
                         );
                         break;
                     case 2:
                         cb(
-                            list.get(dims[0], dueDataIndex, stack),
-                            list.get(dims[1], dueDataIndex, stack),
-                            dueDataIndex
+                            list.get(dims[0], dueIndex, stack),
+                            list.get(dims[1], dueIndex, stack),
+                            dueIndex
                         );
                         break;
                     default:
                         var k = 0;
                         var value = [];
                         for (; k < dimSize; k++) {
-                            value[k] = list.get(dims[k], dueDataIndex, stack);
+                            value[k] = list.get(dims[k], dueIndex, stack);
                         }
-                        value[k] = dueDataIndex;
+                        value[k] = dueIndex;
                         cb(value);
                 }
             }
 
-            notify(dueDataIndex);
+            notify(dueIndex);
         }
     });
 };
