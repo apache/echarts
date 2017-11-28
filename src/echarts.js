@@ -41,6 +41,8 @@ export var dependencies = {
     zrender: '3.7.4'
 };
 
+// ??? frame remain time in UI thread: 20ms? 16ms?
+var TEST_FRAME_REMAIN_TIME = 1;
 var TEST_PROGRESS_STEP = 300;
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
@@ -281,8 +283,7 @@ echartsProto._onframe = function () {
 };
 
 function progressInFrame(ecIns) {
-    // frame remain time in UI thread: 20ms? 16ms? ???
-    var remainTime = 20;
+    var remainTime = TEST_FRAME_REMAIN_TIME;
     var unfinished = ecIns._unfinished;
 
     do {
@@ -296,6 +297,7 @@ function progressInFrame(ecIns) {
         // coordSys update
 
         if (unfinished[UNFINISHED_INDEX_VISUAL]) {
+            // console.log('------------- ec frame visual -------------', remainTime);
             updateUnfinished(unfinished, progressVisualEncoding(ecIns), UNFINISHED_INDEX_VISUAL);
         }
         if (unfinished[UNFINISHED_INDEX_RENDER]) {

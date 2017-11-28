@@ -376,7 +376,7 @@ var SeriesModel = ComponentModel.extend({
                 }
             }
             tasks.length = i;
-            originalRemove();
+            originalRemove.call(this);
         };
     }
 

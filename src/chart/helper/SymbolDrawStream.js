@@ -2,7 +2,7 @@
 
 import * as graphic from '../../util/graphic';
 import SymbolClz from './Symbol';
-import {createListTask} from '../../stream/task';
+import {createTask} from 'zrender/src/core/task';
 
 /**
  * @constructor
@@ -32,9 +32,7 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
 
     var data = seriesModel.getData();
     var group = this.group;
-    group.removeAll();
 
-    group.clearFrames();
     var seriesModel = data.hostModel;
     var SymbolCtor = this._symbolCtor;
 
@@ -50,30 +48,27 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
         cursorStyle: seriesModel.get('cursor')
     };
 
+    group.removeAll();
     var dataEachPump = data.createEachPump(function (newIdx) {
         var point = data.getItemLayout(newIdx);
         if (symbolNeedsDraw(data, newIdx, isIgnore)) {
             var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
             symbolEl.attr('position', point);
             data.setItemGraphicEl(newIdx, symbolEl);
+            // ??? not a good interface? which must ensure data index
+            // corresponding implicitly.
             group.add(symbolEl);
         }
     });
-    seriesModel.pipe(dataEachPump);
 
-    return createListTask({
-        list: data,
-        progress: function () {
-            console.log(
-                'scatter view progress',
-                '_dueFrameIndex:', group._dueFrameIndex,
-                '_frameCount:', group._frameCount
-            );
-            group.newFrame();
-            // ??? check useful of the orginal param: isIgnore
-            return dataEachPump.progress();
-        }
-    });
+    group.enableStream();
+    group.renderTask.reset();
+
+    // ??? pipe here?
+    seriesModel.pipe(dataEachPump);
+    seriesModel.pipe(group.renderTask);
+
+    return dataEachPump;
 };
 
 symbolDrawProto.updateLayout = function () {
@@ -83,24 +78,32 @@ symbolDrawProto.updateLayout = function () {
     }
 
     var group = this.group;
-    group.clearFrames();
+
     var data = seriesModel.getData();
 
-    return createListTask({
+    var task = createTask({
         list: data,
-        progress: function (opt) {
-            var dueDataIndex = opt.dueDataIndex;
-            // ??? do not match the original frames?
-            group.newFrame(true);
-            for (; dueDataIndex < opt.dueEnd; dueDataIndex++) {
+        progress: function (params, notify) {
+            var dueDataIndex = params.dueDataIndex;
+            for (; dueDataIndex < params.dueEnd; dueDataIndex++) {
                 var point = data.getItemLayout(dueDataIndex);
                 var el = data.getItemGraphicEl(dueDataIndex);
                 // Not use animation
                 el.attr('position', point);
             }
-            return {dueDataIndex: dueDataIndex};
+            notify(dueDataIndex);
         }
     });
+
+    group.enableStream();
+    // group.renderTask.reset({reuseData: true});
+    group.renderTask.reset();
+
+    // ??? pipe here?
+    seriesModel.pipe(task);
+    seriesModel.pipe(group.renderTask);
+
+    return task;
 };
 
 symbolDrawProto.remove = function (enableAnimation) {

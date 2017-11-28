@@ -12,8 +12,6 @@ echarts.extendChartView({
 
     // ??? back compatibal
     render: function (seriesModel, ecModel, api) {
-        // g && g.clearFrames();
-
         this.group.removeAll();
 
         // var symbolDraw = this._symbolDraw;

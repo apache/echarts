@@ -8,7 +8,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import * as modelUtil from '../util/model';
-import {createListTask} from '../stream/task';
+import {createTask} from 'zrender/src/core/task';
 
 var isObject = zrUtil.isObject;
 
@@ -812,15 +812,15 @@ listProto.createEachPump = function (dims, cb, stack) {
     var list = this;
     dims = zrUtil.map(normalizeDimensions(dims), list.getDimension, list);
 
-    return createListTask({
+    return createTask({
 
         list: list,
 
-        progress: function (opt) {
+        progress: function (params, notify) {
             var dimSize = dims.length;
-            var dueDataIndex = opt.dueDataIndex;
+            var dueDataIndex = params.dueDataIndex;
 
-            for (; dueDataIndex < opt.dueEnd; dueDataIndex++) {
+            for (; dueDataIndex < params.dueEnd; dueDataIndex++) {
                 // Simple optimization
                 switch (dimSize) {
                     case 0:
@@ -852,7 +852,7 @@ listProto.createEachPump = function (dims, cb, stack) {
                 }
             }
 
-            return {dueDataIndex: dueDataIndex};
+            notify(dueDataIndex);
         }
     });
 };
