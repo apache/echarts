@@ -32,7 +32,7 @@ export default function (seriesType, ecModel, api, payload) {
 
         var treeRoot = data.tree.root;
 
-        initChildren(ecModel, treeRoot, true);
+        initChildren(treeRoot, true);
 
         var validDataCount = 0;
         zrUtil.each(treeRoot.children, function (child) {
@@ -146,48 +146,18 @@ export default function (seriesType, ecModel, api, payload) {
 /**
  * Init node children by order and update visual
  *
- * @param {module:echarts/model/Global} ecModel
  * @param {TreeNode} node  root node
  * @param {boolean}  isAsc if is in ascendant order
  */
-function initChildren(ecModel, node, isAsc) {
+function initChildren(node, isAsc) {
     var children = node.children || [];
 
     node.children = sort(children);
 
-    // Change color policy
-    node.getVisual = function (key, ignoreParent) {
-        if (key === 'color') {
-            if (this.depth === 0) {
-                // Virtual root node
-                return 'transparent';
-            }
-            else {
-                // Use color of the first generation
-                var ancestor = this;
-                var color = ancestor.getModel('itemStyle.normal').get('color');
-                while (ancestor.parentNode && !color) {
-                    ancestor = ancestor.parentNode;
-                    color = ancestor.getModel('itemStyle.normal').get('color');
-                }
-
-                if (!color) {
-                    color = ecModel.option.color[getRootId(this)];
-                }
-
-                return color;
-            }
-        }
-        else {
-            return Object.getPrototypeOf(node).getVisual
-                .call(node, key, ignoreParent);
-        }
-    };
-
     // Init children recursively
     if (children.length) {
         zrUtil.each(node.children, function (child) {
-            initChildren(ecModel, child, isAsc);
+            initChildren(child, isAsc);
         });
     }
 }
@@ -205,20 +175,4 @@ function sort(children, isAsc) {
             ? (a.dataIndex - b.dataIndex) * (isAsc ? 1 : -1)
             : diff;
     });
-}
-
-/**
- * Get index of root in sorted order
- *
- * @param {TreeNode} node current node
- * @return {number} index in root
- */
-function getRootId(node) {
-    var ancestor = node;
-    while (ancestor.depth > 1) {
-        ancestor = ancestor.parentNode;
-    }
-
-    var virtualRoot = node.getAncestors()[0];
-    return zrUtil.indexOf(virtualRoot.children, ancestor);
 }

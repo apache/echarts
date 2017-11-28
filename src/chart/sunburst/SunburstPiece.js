@@ -6,7 +6,7 @@ import * as graphic from '../../util/graphic';
  * @constructor
  * @extends {module:zrender/graphic/Group}
  */
-function SunburstPiece(node, seriesModel) {
+function SunburstPiece(node, seriesModel, ecModel) {
 
     graphic.Group.call(this);
 
@@ -19,7 +19,7 @@ function SunburstPiece(node, seriesModel) {
     this.add(polyline);
     this.add(text);
 
-    this.updateData(node, true, seriesModel);
+    this.updateData(node, true, seriesModel, ecModel);
 
     // Hover to change label and labelLine
     function onEmphasis() {
@@ -38,7 +38,12 @@ function SunburstPiece(node, seriesModel) {
 
 var SunburstPieceProto = SunburstPiece.prototype;
 
-SunburstPieceProto.updateData = function (node, firstCreate, seriesModel) {
+SunburstPieceProto.updateData = function (
+    node,
+    firstCreate,
+    seriesModel,
+    ecModel
+) {
 
     var sector = this.childAt(0);
 
@@ -71,7 +76,7 @@ SunburstPieceProto.updateData = function (node, firstCreate, seriesModel) {
 
     // Update common style
     var itemStyleModel = itemModel.getModel('itemStyle');
-    var visualColor = node.getVisual('color');
+    var visualColor = getNodeColor(node, ecModel);
 
     sector.useStyle(
         zrUtil.defaults(
@@ -202,3 +207,48 @@ SunburstPieceProto._updateLabel = function (data, idx) {
 zrUtil.inherits(SunburstPiece, graphic.Group);
 
 export default SunburstPiece;
+
+
+/**
+ * Get node color
+ *
+ * @param {TreeNode} node the node to get color
+ * @param {module:echarts/model/Global} ecModel echarts defaults
+ */
+function getNodeColor(node, ecModel) {
+    if (node.depth === 0) {
+        // Virtual root node
+        return 'transparent';
+    }
+    else {
+        // Use color of the first generation
+        var ancestor = node;
+        var color = ancestor.getModel('itemStyle.normal').get('color');
+        while (ancestor.parentNode && !color) {
+            ancestor = ancestor.parentNode;
+            color = ancestor.getModel('itemStyle.normal').get('color');
+        }
+
+        if (!color) {
+            color = ecModel.option.color[getRootId(node)];
+        }
+
+        return color;
+    }
+}
+
+/**
+ * Get index of root in sorted order
+ *
+ * @param {TreeNode} node current node
+ * @return {number} index in root
+ */
+function getRootId(node) {
+    var ancestor = node;
+    while (ancestor.depth > 1) {
+        ancestor = ancestor.parentNode;
+    }
+
+    var virtualRoot = node.getAncestors()[0];
+    return zrUtil.indexOf(virtualRoot.children, ancestor);
+}

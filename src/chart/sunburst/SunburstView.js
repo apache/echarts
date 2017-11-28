@@ -50,7 +50,7 @@ var SunburstView = ChartView.extend({
 
         treeRoot.eachNode(function (node) {
             if (node !== treeRoot) {
-                var piece = new SunburstPiece(node, seriesModel);
+                var piece = new SunburstPiece(node, seriesModel, ecModel);
                 group.add(piece);
             }
         });
