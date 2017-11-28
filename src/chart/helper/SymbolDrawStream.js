@@ -64,9 +64,10 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
     group.enableStream();
     group.renderTask.reset();
 
-    // ??? pipe here?
-    seriesModel.pipe(dataEachTask);
-    seriesModel.pipe(group.renderTask);
+    dataEachTask.pipe(group.renderTask);
+    // ??? better way?
+    dataEachTask.pipelineId = seriesModel.uid;
+    dataEachTask.updateLayoutBase = true;
 
     return dataEachTask;
 };
@@ -99,9 +100,9 @@ symbolDrawProto.updateLayout = function () {
     // group.renderTask.reset({reuseData: true});
     group.renderTask.reset();
 
-    // ??? pipe here?
-    seriesModel.pipe(task);
-    seriesModel.pipe(group.renderTask);
+    task.pipe(group.renderTask);
+    // ??? better way?
+    task.pipelineId = group.renderTask.pipelineId = seriesModel.uid;
 
     return task;
 };

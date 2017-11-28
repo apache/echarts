@@ -6,7 +6,8 @@ export default function (seriesType, defaultSymbolType, legendSymbol, ecModel) {
     ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
         var task = createTask(seriesModel, defaultSymbolType, legendSymbol, ecModel);
         if (task) {
-            seriesModel.pipe(task);
+            // ??? better way?
+            task.pipelineId = seriesModel.uid;
             tasks.push(task);
         }
     });

@@ -355,30 +355,30 @@ var SeriesModel = ComponentModel.extend({
      */
     getTooltipPosition: null,
 
-    clearPipedTasks: function () {
-        get(this, 'tasks').length = 0;
-    },
+    // clearPipedTasks: function () {
+    //     get(this, 'tasks').length = 0;
+    // },
 
-    pipe: function (task) {
-        var tasks = get(this, 'tasks');
-        var lastTask = tasks[tasks.length - 1];
-        lastTask && lastTask.pipe(task);
-        tasks.push(task);
-        // ??? parallel task? multi-dependency?
+    // pipe: function (task) {
+    //     var tasks = get(this, 'tasks');
+    //     var lastTask = tasks[tasks.length - 1];
+    //     lastTask && lastTask.pipe(task);
+    //     tasks.push(task);
+    //     // ??? parallel task? multi-dependency?
 
-        // ??? A bad practice?
-        var originalRemove = task.remove;
-        task.remove = function () {
-            var i = 0;
-            for (; i < tasks.length; i++) {
-                if (tasks[i] === task) {
-                    break;
-                }
-            }
-            tasks.length = i;
-            originalRemove.call(this);
-        };
-    }
+    //     // ??? A bad practice?
+    //     var originalRemove = task.leave;
+    //     task.leave = function () {
+    //         var i = 0;
+    //         for (; i < tasks.length; i++) {
+    //             if (tasks[i] === task) {
+    //                 break;
+    //             }
+    //         }
+    //         tasks.length = i;
+    //         originalRemove.call(this);
+    //     };
+    // }
 
     // /**
     //  * @public

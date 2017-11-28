@@ -4,7 +4,8 @@ export default function (seriesType, ecModel) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
         var task = createTask(seriesType, seriesModel);
         if (task) {
-            seriesModel.pipe(task);
+            // ??? better way?
+            task.pipelineId = seriesModel.uid;
             tasks.push(task);
         }
     });
