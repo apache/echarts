@@ -20,12 +20,80 @@
                 'echarts'
             ], function (echarts) {
 
-                chart = echarts.init(document.getElementById('main'));
+                chart = echarts.init(document.getElementById('main'), null, {
+                    // renderer: 'svg'
+                });
 
                 chart.setOption({
                     series: {
                         type: 'sunburst',
-                        data: [1, 3, 2]
+                        data: [{
+                            name: 'Grandpa',
+                            children: [{
+                                name: 'Uncle Leo',
+                                value: 15,
+                                children: [{
+                                    name: 'Cousin Jack',
+                                    value: 2
+                                }, {
+                                    name: 'Cousin Mary',
+                                    value: 5
+                                }, {
+                                    name: 'Cousin Ben',
+                                    value: 4
+                                }],
+                                itemStyle: {
+                                    normal: {
+                                        color: '#ff0'
+                                    }
+                                }
+                            }, {
+                                name: 'Aunt Jane',
+                                children: [{
+                                    name: 'Cousin Kate',
+                                    value: 4,
+                                    itemStyle: {
+                                        normal: {
+                                            color: 'blue'
+                                        }
+                                    }
+                                }]
+                            }, {
+                                name: 'Father',
+                                value: 10,
+                                children: [{
+                                    name: 'Me',
+                                    value: 5
+                                }, {
+                                    name: 'Brother Peter',
+                                    value: 1
+                                }]
+                            }]
+                        }, {
+                            name: 'Grandpa\'s friend Mike',
+                            children: [{
+                                name: 'Uncle Dan',
+                                children: [{
+                                    name: 'Cousin Lucy',
+                                    value: 3
+                                }, {
+                                    name: 'Cousin Luck',
+                                    value: 4
+                                }]
+                            }]
+                        }, {
+                            name: 'Grandpa\'s friend Nancy',
+                            children: [{
+                                name: 'Uncle Dan',
+                                children: [{
+                                    name: 'Cousin Lucy',
+                                    value: 1
+                                }, {
+                                    name: 'Cousin Luck',
+                                    value: 2
+                                }]
+                            }]
+                        }]
                     }
                 });
 

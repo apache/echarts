@@ -76,7 +76,6 @@ SunburstPieceProto.updateData = function (node, firstCreate, seriesModel) {
     sector.useStyle(
         zrUtil.defaults(
             {
-                lineJoin: 'bevel',
                 fill: visualColor
             },
             itemStyleModel.getModel('normal').getItemStyle()

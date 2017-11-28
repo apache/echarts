@@ -79,7 +79,8 @@ export default SeriesModel.extend({
         },
         itemStyle: {
             normal: {
-                borderWidth: 1
+                borderWidth: 1,
+                borderColor: 'white'
             },
             emphasis: {}
         },
