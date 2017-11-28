@@ -1,6 +1,6 @@
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import barLayoutGrid from '../layout/barGrid';
+import { layout } from '../layout/barGrid';
 
 import '../coord/cartesian/Grid';
 import './bar/BarSeries';
@@ -9,7 +9,7 @@ import './bar/BarView';
 import '../component/gridSimple';
 
 
-echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
+echarts.registerLayout(zrUtil.curry(layout, 'bar'));
 
 // Visual coding for legend
 echarts.registerVisual(function (ecModel) {
