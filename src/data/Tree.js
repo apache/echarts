@@ -283,6 +283,35 @@ TreeNode.prototype = {
      */
     getId: function () {
         return this.hostTree.data.getId(this.dataIndex);
+    },
+
+    /**
+     * if this is an ancestor of another node
+     *
+     * @public
+     * @param {TreeNode} node another node
+     * @return {boolean} if is ancestor
+     */
+    isAncestorOf: function (node) {
+        var parent = node.parentNode;
+        while (parent) {
+            if (parent === this) {
+                return true;
+            }
+            parent = parent.parentNode;
+        }
+        return false;
+    },
+
+    /**
+     * if this is an descendant of another node
+     *
+     * @public
+     * @param {TreeNode} node another node
+     * @return {boolean} if is descendant
+     */
+    isDescendantOf: function (node) {
+        return node !== this && node.isAncestorOf(this);
     }
 };
 

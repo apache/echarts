@@ -1,6 +1,13 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 
+var NodeHighlightPolicy = {
+    NONE: 0, // not downplay others
+    DESCENDANT: 1,
+    ANCESTOR: 2,
+    SELF: 3
+};
+
 /**
  * Sunburstce of Sunburst including Sector, Label, LabelLine
  * @constructor
@@ -18,6 +25,8 @@ function SunburstPiece(node, seriesModel, ecModel) {
     this.add(sector);
     this.add(polyline);
     this.add(text);
+
+    this.node = node;
 
     this.updateData(node, true, seriesModel, ecModel);
 
@@ -44,7 +53,6 @@ SunburstPieceProto.updateData = function (
     seriesModel,
     ecModel
 ) {
-
     var sector = this.childAt(0);
 
     // var seriesModel = node.hostModel;
@@ -92,40 +100,61 @@ SunburstPieceProto.updateData = function (
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
 
-    function onEmphasis() {
-        // Sector may has animation of updating data. Force to move to the last frame
-        // Or it may stopped on the wrong shape
-        // sector.stopAnimation(true);
-        // sector.animateTo({
-        //     shape: {
-        //         r: layout.r + seriesModel.get('hoverOffset')
-        //     }
-        // }, 300, 'elasticOut');
-    }
-    function onNormal() {
-        // sector.stopAnimation(true);
-
-        // var duration = 300;
-        // var delay = node.depth * duration;
-
-        // sector.animateTo({
-        //     shape: {
-        //         r: layout.r
-        //     }
-        // }, duration, delay, 'elasticOut');
-    }
-    sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
-        sector
-            .on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
-    }
+    this._initEvents(sector, node, seriesModel);
 
     // this._updateLabel(data, idx);
 
     graphic.setHoverStyle(this);
+};
+
+SunburstPieceProto.onEmphasis = function () {
+    var policy = NodeHighlightPolicy.DESCENDANT; // TODO: change to real policy
+
+    var that = this;
+    this.node.hostTree.root.eachNode(function (n) {
+        if (n.piece) {
+            if (isNodeHighlighted(n, that.node, policy)) {
+                n.piece.childAt(0).trigger('highlight');
+            }
+            else if (policy !== NodeHighlightPolicy.NONE) {
+                n.piece.childAt(0).trigger('downplay');
+            }
+        }
+    });
+};
+
+SunburstPieceProto.onNormal = function () {
+    this.node.hostTree.root.eachNode(function (n) {
+        if (n.piece) {
+            var itemStyleModel = n.getModel('itemStyle.normal');
+            var opacity = itemStyleModel.getItemStyle().opacity || 1;
+
+            var sector = n.piece.childAt(0);
+            sector.animateTo({
+                style: {
+                    opacity: opacity
+                }
+            });
+        }
+    });
+};
+
+SunburstPieceProto.onHighlight = function () {
+    var sector = this.childAt(0);
+    sector.animateTo({
+        style: {
+            opacity: 1
+        }
+    });
+};
+
+SunburstPieceProto.onDownplay = function () {
+    var sector = this.childAt(0);
+    sector.animateTo({
+        style: {
+            opacity: 0.5
+        }
+    });
 };
 
 SunburstPieceProto._updateLabel = function (data, idx) {
@@ -205,6 +234,36 @@ SunburstPieceProto._updateLabel = function (data, idx) {
     // });
 };
 
+SunburstPieceProto._initEvents = function (sector, node, seriesModel) {
+    var itemModel = node.getModel();
+
+    sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
+
+    var that = this;
+    var onEmphasis = function () {
+        that.onEmphasis();
+    };
+    var onNormal = function () {
+        that.onNormal();
+    };
+    var onDownplay = function () {
+        that.onDownplay();
+    };
+    var onHighlight = function () {
+        that.onHighlight();
+    };
+
+    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
+        sector
+            .on('mouseover', onEmphasis)
+            .on('mouseout', onNormal)
+            .on('emphasis', onEmphasis)
+            .on('normal', onNormal)
+            .on('downplay', onDownplay)
+            .on('highlight', onHighlight);
+    }
+};
+
 zrUtil.inherits(SunburstPiece, graphic.Group);
 
 export default SunburstPiece;
@@ -252,4 +311,19 @@ function getRootId(node) {
 
     var virtualRoot = node.getAncestors()[0];
     return zrUtil.indexOf(virtualRoot.children, ancestor);
+}
+
+function isNodeHighlighted(node, activeNode, policy) {
+    if (policy === NodeHighlightPolicy.NONE) {
+        return false;
+    }
+    else if (policy === NodeHighlightPolicy.SELF) {
+        return node === activeNode;
+    }
+    else if (policy === NodeHighlightPolicy.ANCESTOR) {
+        return  node === activeNode || node.isAncestorOf(activeNode);
+    }
+    else {
+        return node === activeNode || node.isDescendantOf(activeNode);
+    }
 }
