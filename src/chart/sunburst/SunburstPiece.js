@@ -20,10 +20,10 @@ function SunburstPiece(node, seriesModel, ecModel) {
     var sector = new graphic.Sector({
         z2: 2
     });
-    var polyline = new graphic.Polyline();
-    var text = new graphic.Text();
+    var text = new graphic.Text({
+        z2: 4
+    });
     this.add(sector);
-    this.add(polyline);
     this.add(text);
 
     this.node = node;
@@ -34,11 +34,9 @@ function SunburstPiece(node, seriesModel, ecModel) {
 
     // Hover to change label and labelLine
     function onEmphasis() {
-        polyline.ignore = polyline.hoverIgnore;
         text.ignore = text.hoverIgnore;
     }
     function onNormal() {
-        polyline.ignore = polyline.normalIgnore;
         text.ignore = text.normalIgnore;
     }
     this.on('emphasis', onEmphasis)
@@ -104,7 +102,7 @@ SunburstPieceProto.updateData = function (
 
     this._initEvents(sector, node, seriesModel, highlightPolicy);
 
-    // this._updateLabel(data, idx);
+    this._updateLabel(seriesModel, ecModel);
 
     graphic.setHoverStyle(this);
 };
@@ -163,81 +161,41 @@ SunburstPieceProto.onDownplay = function () {
     });
 };
 
-SunburstPieceProto._updateLabel = function (data, idx) {
+SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
+    var itemModel = this.node.getModel();
+    var labelModel = itemModel.getModel('label.normal');
+    var labelHoverModel = itemModel.getModel('label.emphasis');
 
-    // var labelLine = this.childAt(1);
-    // var labelText = this.childAt(2);
+    var layout = this.node.getLayout();
+    var midAngle = (layout.startAngle + layout.endAngle) / 2;
+    var dx = Math.cos(midAngle);
+    var dy = Math.sin(midAngle);
+    var textX = (layout.r + layout.r0) / 2 * dx + layout.cx;
+    var textY = (layout.r + layout.r0) / 2 * dy + layout.cy;
 
-    // var seriesModel = data.hostModel;
-    // var itemModel = data.getItemModel(idx);
-    // var layout = data.getItemLayout(idx);
-    // var labelLayout = layout.label;
-    // var visualColor = data.getItemVisual(idx, 'color');
+    var text = zrUtil.retrieve(
+        seriesModel.getFormattedLabel(
+            this.node.dataIndex, 'normal', null, null, 'label'
+        ),
+        this.node.name
+    );
 
-    // graphic.updateProps(labelLine, {
-    //     shape: {
-    //         points: labelLayout.linePoints || [
-    //             [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
-    //         ]
-    //     }
-    // }, seriesModel, idx);
+    var label = this.childAt(1);
+    label.attr('style', {
+        text: text,
+        textAlign: 'center',
+        textVerticalAlign: 'center'
+    });
+    label.attr('position', [textX, textY]);
 
-    // graphic.updateProps(labelText, {
-    //     style: {
-    //         x: labelLayout.x,
-    //         y: labelLayout.y
-    //     }
-    // }, seriesModel, idx);
-    // labelText.attr({
-    //     rotation: labelLayout.rotation,
-    //     origin: [labelLayout.x, labelLayout.y],
-    //     z2: 10
-    // });
-
-    // var labelModel = itemModel.getModel('label.normal');
-    // var labelHoverModel = itemModel.getModel('label.emphasis');
-    // var labelLineModel = itemModel.getModel('labelLine.normal');
-    // var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
-    // var visualColor = data.getItemVisual(idx, 'color');
-
-    // graphic.setLabelStyle(
-    //     labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
-    //     {
-    //         labelFetcher: data.hostModel,
-    //         labelDataIndex: idx,
-    //         defaultText: data.getName(idx),
-    //         autoColor: visualColor,
-    //         useInsideStyle: !!labelLayout.inside
-    //     },
-    //     {
-    //         textAlign: labelLayout.textAlign,
-    //         textVerticalAlign: labelLayout.verticalAlign,
-    //         opacity: data.getItemVisual(idx, 'opacity')
-    //     }
-    // );
-
-    // labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
-    // labelText.hoverIgnore = !labelHoverModel.get('show');
-
-    // labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
-    // labelLine.hoverIgnore = !labelLineHoverModel.get('show');
-
-    // // Default use item visual color
-    // labelLine.setStyle({
-    //     stroke: visualColor,
-    //     opacity: data.getItemVisual(idx, 'opacity')
-    // });
-    // labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
-    // labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
-
-    // var smooth = labelLineModel.get('smooth');
-    // if (smooth && smooth === true) {
-    //     smooth = 0.4;
-    // }
-    // labelLine.setShape({
-    //     smooth: smooth
-    // });
+    graphic.setLabelStyle(
+        label.style, label.hoverStyle = {}, labelModel, labelHoverModel,
+        {
+            defaultText: labelModel.getShallow('show') ? text : null,
+            autoColor: getNodeColor(this.node, ecModel),
+            useInsideStyle: true
+        }
+    );
 };
 
 SunburstPieceProto._initEvents = function (
