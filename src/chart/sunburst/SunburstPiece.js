@@ -21,7 +21,8 @@ function SunburstPiece(node, seriesModel, ecModel) {
         z2: 2
     });
     var text = new graphic.Text({
-        z2: 4
+        z2: 4,
+        silent: true
     });
     this.add(sector);
     this.add(text);
@@ -140,25 +141,13 @@ SunburstPieceProto.onNormal = function () {
 SunburstPieceProto.onHighlight = function () {
     var itemStyleModel = this.node.getModel('itemStyle.highlight');
     var opacity = itemStyleModel.getItemStyle().opacity || 1;
-
-    var sector = this.childAt(0);
-    sector.animateTo({
-        style: {
-            opacity: opacity
-        }
-    });
+    updatePieceHighlight(this, opacity);
 };
 
 SunburstPieceProto.onDownplay = function () {
     var itemStyleModel = this.node.getModel('itemStyle.downplay');
     var opacity = itemStyleModel.getItemStyle().opacity || 1;
-
-    var sector = this.childAt(0);
-    sector.animateTo({
-        style: {
-            opacity: opacity
-        }
-    });
+    updatePieceHighlight(this, opacity);
 };
 
 SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
@@ -181,12 +170,6 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
     );
 
     var label = this.childAt(1);
-    label.attr('style', {
-        text: text,
-        textAlign: 'center',
-        textVerticalAlign: 'center'
-    });
-    label.attr('position', [textX, textY]);
 
     graphic.setLabelStyle(
         label.style, label.hoverStyle = {}, labelModel, labelHoverModel,
@@ -196,6 +179,12 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
             useInsideStyle: true
         }
     );
+    label.attr('style', {
+        text: text,
+        textAlign: 'center',
+        textVerticalAlign: 'middle'
+    });
+    label.attr('position', [textX, textY]);
 };
 
 SunburstPieceProto._initEvents = function (
@@ -295,4 +284,20 @@ function isNodeHighlighted(node, activeNode, policy) {
     else {
         return node === activeNode || node.isDescendantOf(activeNode);
     }
+}
+
+function updatePieceHighlight(piece, opacity) {
+    var sector = piece.childAt(0);
+    sector.animateTo({
+        style: {
+            opacity: opacity
+        }
+    });
+
+    var text = piece.childAt(1);
+    text.animateTo({
+        style: {
+            opacity: opacity
+        }
+    });
 }
