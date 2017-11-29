@@ -68,6 +68,11 @@ export default SeriesModel.extend({
         // If still show when all data zero.
         stillShowZeroSum: true,
 
+        // Policy of highlighting pieces when hover on one
+        // Valid values: 'none' (for not downplay others), 'descendant',
+        // 'ancestor', 'self'
+        highlightPolicy: 'descendant',
+
         label: {
             normal: {
                 // If rotate around circle
@@ -82,7 +87,13 @@ export default SeriesModel.extend({
                 borderWidth: 1,
                 borderColor: 'white'
             },
-            emphasis: {}
+            emphasis: {},
+            highlight: {
+                opacity: 1
+            },
+            downplay: {
+                opacity: 0.6
+            }
         },
 
         // Animation type canbe expansion, scale

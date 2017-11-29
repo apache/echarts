@@ -2,10 +2,10 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 
 var NodeHighlightPolicy = {
-    NONE: 0, // not downplay others
-    DESCENDANT: 1,
-    ANCESTOR: 2,
-    SELF: 3
+    NONE: 'none', // not downplay others
+    DESCENDANT: 'descendant',
+    ANCESTOR: 'ancestor',
+    SELF: 'self'
 };
 
 /**
@@ -28,7 +28,9 @@ function SunburstPiece(node, seriesModel, ecModel) {
 
     this.node = node;
 
-    this.updateData(node, true, seriesModel, ecModel);
+    var highlightPolicy = seriesModel.getShallow('highlightPolicy');
+
+    this.updateData(true, seriesModel, ecModel, highlightPolicy);
 
     // Hover to change label and labelLine
     function onEmphasis() {
@@ -48,14 +50,14 @@ function SunburstPiece(node, seriesModel, ecModel) {
 var SunburstPieceProto = SunburstPiece.prototype;
 
 SunburstPieceProto.updateData = function (
-    node,
     firstCreate,
     seriesModel,
-    ecModel
+    ecModel,
+    highlightPolicy
 ) {
     var sector = this.childAt(0);
 
-    // var seriesModel = node.hostModel;
+    var node = this.node;
     var itemModel = node.getModel();
     var layout = node.getLayout();
     var sectorShape = zrUtil.extend({}, layout);
@@ -100,23 +102,21 @@ SunburstPieceProto.updateData = function (
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
 
-    this._initEvents(sector, node, seriesModel);
+    this._initEvents(sector, node, seriesModel, highlightPolicy);
 
     // this._updateLabel(data, idx);
 
     graphic.setHoverStyle(this);
 };
 
-SunburstPieceProto.onEmphasis = function () {
-    var policy = NodeHighlightPolicy.DESCENDANT; // TODO: change to real policy
-
+SunburstPieceProto.onEmphasis = function (highlightPolicy) {
     var that = this;
     this.node.hostTree.root.eachNode(function (n) {
         if (n.piece) {
-            if (isNodeHighlighted(n, that.node, policy)) {
+            if (isNodeHighlighted(n, that.node, highlightPolicy)) {
                 n.piece.childAt(0).trigger('highlight');
             }
-            else if (policy !== NodeHighlightPolicy.NONE) {
+            else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
                 n.piece.childAt(0).trigger('downplay');
             }
         }
@@ -140,19 +140,25 @@ SunburstPieceProto.onNormal = function () {
 };
 
 SunburstPieceProto.onHighlight = function () {
+    var itemStyleModel = this.node.getModel('itemStyle.highlight');
+    var opacity = itemStyleModel.getItemStyle().opacity || 1;
+
     var sector = this.childAt(0);
     sector.animateTo({
         style: {
-            opacity: 1
+            opacity: opacity
         }
     });
 };
 
 SunburstPieceProto.onDownplay = function () {
+    var itemStyleModel = this.node.getModel('itemStyle.downplay');
+    var opacity = itemStyleModel.getItemStyle().opacity || 1;
+
     var sector = this.childAt(0);
     sector.animateTo({
         style: {
-            opacity: 0.5
+            opacity: opacity
         }
     });
 };
@@ -234,14 +240,19 @@ SunburstPieceProto._updateLabel = function (data, idx) {
     // });
 };
 
-SunburstPieceProto._initEvents = function (sector, node, seriesModel) {
+SunburstPieceProto._initEvents = function (
+    sector,
+    node,
+    seriesModel,
+    highlightPolicy
+) {
     var itemModel = node.getModel();
 
     sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
     var that = this;
     var onEmphasis = function () {
-        that.onEmphasis();
+        that.onEmphasis(highlightPolicy);
     };
     var onNormal = function () {
         that.onNormal();

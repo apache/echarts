@@ -27,6 +27,7 @@
                 chart.setOption({
                     series: {
                         type: 'sunburst',
+                        highlightPolicy: 'ancestor',
                         data: [{
                             name: 'Grandpa',
                             children: [{
@@ -71,9 +72,19 @@
                                     value: 5
                                 }, {
                                     name: 'Brother Peter',
-                                    value: 1
+                                    value: 1,
+                                    itemStyle: {
+                                        downplay: {
+                                            opacity: 0.1
+                                        }
+                                    }
                                 }]
-                            }]
+                            }],
+                            itemStyle: {
+                                downplay: {
+                                    opacity: 0.8
+                                }
+                            }
                         }, {
                             name: 'Grandpa\'s friend Mike',
                             children: [{
