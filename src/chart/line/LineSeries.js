@@ -50,7 +50,7 @@ export default SeriesModel.extend({
                 type: 'solid'
             }
         },
-        // areaStyle: {},
+        // areaStyle: {origin: 'auto'},
         // false, 'start', 'end', 'middle'
         step: false,
 
