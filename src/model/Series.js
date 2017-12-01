@@ -82,18 +82,14 @@ var SeriesModel = ComponentModel.extend({
          */
         set(this, 'dataBeforeProcessed', data);
 
-        /**
-         * @type {Array}
-         * @private
-         */
-        set(this, 'tasks', []);
-
         // If we reverse the order (make data firstly, and then make
         // dataBeforeProcessed by cloneShallow), cloneShallow will
         // cause data.graph.data !== data when using
         // module:echarts/data/Graph or module:echarts/data/Tree.
         // See module:echarts/data/helper/linkList
-        this.restoreData();
+
+        // ??? should not restoreData here? but called by echart?
+        // this.restoreData();
     },
 
     /**
@@ -140,10 +136,11 @@ var SeriesModel = ComponentModel.extend({
         }
 
         var data = this.getInitialData(newSeriesOption, ecModel);
-        // TODO Merge data?
         if (data) {
-            set(this, 'data', data);
-            set(this, 'dataBeforeProcessed', data.cloneShallow());
+            // ??? progress data?
+            set(this, 'dataBeforeProcessed', data);
+            // ??? should not restoreData here? but called by echart?
+            // this.restoreData();
         }
     },
 
@@ -324,7 +321,14 @@ var SeriesModel = ComponentModel.extend({
     },
 
     restoreData: function () {
-        set(this, 'data', get(this, 'dataBeforeProcessed').cloneShallow());
+        var dataBeforeProcessed = get(this, 'dataBeforeProcessed');
+        var dataCloneTask = dataBeforeProcessed.createCloneShallowTask();
+        set(this, 'data', dataCloneTask.output);
+
+        var dataInitTask = dataBeforeProcessed.getInitTask();
+
+        this.pipeTask(dataInitTask, 'dataInit');
+        this.pipeTask(dataCloneTask, 'dataClone', 'updateBase');
     },
 
     getColorFromPalette: function (name, scope) {
@@ -355,30 +359,10 @@ var SeriesModel = ComponentModel.extend({
      */
     getTooltipPosition: null,
 
-    // clearPipedTasks: function () {
-    //     get(this, 'tasks').length = 0;
-    // },
-
-    // pipe: function (task) {
-    //     var tasks = get(this, 'tasks');
-    //     var lastTask = tasks[tasks.length - 1];
-    //     lastTask && lastTask.pipe(task);
-    //     tasks.push(task);
-    //     // ??? parallel task? multi-dependency?
-
-    //     // ??? A bad practice?
-    //     var originalRemove = task.leave;
-    //     task.leave = function () {
-    //         var i = 0;
-    //         for (; i < tasks.length; i++) {
-    //             if (tasks[i] === task) {
-    //                 break;
-    //             }
-    //         }
-    //         tasks.length = i;
-    //         originalRemove.call(this);
-    //     };
-    // }
+    /**
+     * @see {module:echarts/stream/Scheduler}
+     */
+    pipeTask: null
 
     // /**
     //  * @public

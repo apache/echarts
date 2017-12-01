@@ -1,18 +1,12 @@
 
 export default function (seriesType, defaultSymbolType, legendSymbol, ecModel) {
-    var tasks = [];
-
     // Encoding visual for all series include which is filtered for legend drawing
     ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
-        var task = createTask(seriesModel, defaultSymbolType, legendSymbol, ecModel);
-        if (task) {
-            // ??? better way?
-            task.pipelineId = seriesModel.uid;
-            tasks.push(task);
-        }
+        seriesModel.pipeTask(
+            createTask(seriesModel, defaultSymbolType, legendSymbol, ecModel),
+            'visual'
+        );
     });
-
-    return tasks;
 }
 
 function createTask(seriesModel, defaultSymbolType, legendSymbol, ecModel) {

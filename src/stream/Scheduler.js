@@ -3,63 +3,135 @@
  */
 
 import {__DEV__} from '../config';
-import {assert, each} from 'zrender/src/core/util';
+import {assert, each, createHashMap, makeInner} from 'zrender/src/core/util';
+import {normalizeToArray} from '../util/model';
+
+var inner = makeInner();
+
+/**
+ * @const
+ */
+var STAGE = {
+    dataInit: 0,
+    dataClone: 1,
+    processor: 2,
+    visual: 3,
+    render: 4
+};
+var TAG = {
+    updateBase: 1,
+    updateLayoutBase: 1,
+    updateVisualBase: 1,
+    updateViewBase: 1
+};
+
+var TEST_PROGRESS_STEP = 300;
 
 /**
  * @constructor
  */
 function Scheduler() {
-    this.clear();
+    this._pipelineMap = createHashMap();
+
+    var stageMap = this._stageMap = createHashMap();
+    each(STAGE, function (value, name) {
+        stageMap.set(name, []);
+    });
+
+    // this._stageUnfinished = [];
+
+    this.unfinished;
 }
 
 var proto = Scheduler.prototype;
 
-/**
- * Clear all tasks.
- */
-proto.clear = function () {
-    this._pipelines = {};
-    this._stage = {
-        processor: [],
-        visual: [],
-        render: []
-    };
-};
+proto.progressStage = function (stage) {
+    // if (!this._stageUnfinished[STAGE[stage]]) {
+    //     return;
+    // }
 
-proto.addPipeline = function (pipelineId) {
-    this._pipelines[pipelineId] = [];
-};
+    var unfinished;
+    var tasks = this.getTasksByStage(stage);
 
-/**
- * @param {Array} tasks Can be `null`/`undefined`. Should has `task.pipelineId`. // ???
- * @param {string} stage 'processor', 'visual', 'render'
- * @param {string} [partialBase] 'updateLayoutBase', 'updateVisualBase' or 'updateViewBase'
- */
-proto.pipeTasks = function (tasks, stage, partialBase) {
-    var pipelines = this._pipelines;
     each(tasks, function (task) {
-        var pipeline = pipelines[task.pipelineId];
+        task.progress({
+            step: TEST_PROGRESS_STEP
+        });
+        unfinished |= task.unfinished();
+    });
 
-        if (__DEV__) {
-            assert(pipeline);
-            each(pipeline, function (taskInPipeline) {
-                assert(taskInPipeline != task);
-            });
+    this.unfinished |= unfinished;
+};
+
+/**
+ * @param {Object} host Should has uid.
+ */
+proto.initPipeline = function (host) {
+    var pipelineId = host.uid;
+    if (__DEV__) {
+        assert(!this._pipelineMap.get(pipelineId) && !host.pipeTask);
+    }
+    var pipeline = {tasks: [], temps: []};
+    this._pipelineMap.set(pipelineId, pipeline);
+
+    // Inject method pipeTask
+    host.pipeTask = hostPipeTask;
+    inner(host).temps = pipeline.temps;
+};
+
+function hostPipeTask(task, stage, tags) {
+    task && inner(this).temps.push({task: task, stage: stage, tags: tags});
+}
+
+/**
+ * @param {Array.<Object>} allHosts Should has uid.
+ */
+proto.clearUnusedPipelines = function (allHosts) {
+    var pipelineMap = this._pipelineMap;
+    var idMap = createHashMap();
+    var stageMap = this._stageMap;
+    each(allHosts, function (host) {
+        idMap.set(host.uid, 1);
+    });
+    pipelineMap.each(function (pipeline, id) {
+        if (!idMap.get(id)) {
+            clearPipeline(stageMap, pipeline, -1);
+            pipelineMap.set(id, null);
         }
+    });
+};
 
-        var baseTask = partialBase
-            ? findAddClearPartialBase(pipeline, partialBase)
-            : pipeline[pipeline.length - 1];
+proto.clearTemps = function () {
+    this._pipelineMap.each(clearPipelineTemp);
+};
 
-        baseTask && baseTask.pipe(task);
+function clearPipelineTemp(pipeline) {
+    pipeline.temps.length = 0;
+}
 
-        pipeline.push(task);
+/**
+ * @param {string} tag
+ * @param {Array.<Object>} [hosts]
+ */
+proto.flushTemps = function (tag, hosts) {
+    var pipelineMap = this._pipelineMap;
+    var stageMap = this._stageMap;
+    var self = this;
 
-        // ??? Should keep the original register order of tasks
-        // within single stage. Especially visual and layout.
-        stage && this._stage[stage].push(task);
+    hosts
+        ? each(hosts, function (host) {
+            flushPipelineTemps(pipelineMap.get(host.uid));
+        })
+        : pipelineMap.each(flushPipelineTemps);
 
-    }, this);
+    function flushPipelineTemps(pipeline) {
+        clearPipelineDownstreams(stageMap, pipeline, tag);
+        each(pipeline.temps, function (tmp) {
+            self.unfinished = true;
+            pipeTask(stageMap, pipeline.tasks, tmp.task, tmp.stage, tmp.tags);
+        }, this);
+        clearPipelineTemp(pipeline);
+    }
 };
 
 /**
@@ -68,56 +140,82 @@ proto.pipeTasks = function (tasks, stage, partialBase) {
  * who are partial streams, depending on the render task of the full stream,
  * and should be cleared if another partial stream is started.
  */
-function findAddClearPartialBase(pipeline, partialBase) {
+function clearPipelineDownstreams(stageMap, pipeline, tag) {
+    var tasks = pipeline.tasks;
     var baseIndex;
-    for (var i = 0; i < pipeline.length; i++) {
-        if (pipeline[i][partialBase]) {
-            baseIndex = i;
-            break;
+
+    if (tag === 'start') {
+        baseIndex = -1;
+    }
+    else {
+        for (var i = 0; i < tasks.length; i++) {
+            if (inner(tasks[i])[tag]) {
+                baseIndex = i;
+                break;
+            }
         }
     }
-    if (__DEV__) {
-        // In case the developer do not mark a task by partailBase.
-        assert(baseIndex != null);
-    }
 
-    // Clear from baseTask
-    var baseTask = pipeline[baseIndex];
-    baseTask.clearDownstreams();
-    pipeline.length = baseIndex + 1;
-
-    return baseTask;
+    clearPipeline(stageMap, pipeline, baseIndex);
 }
 
-// keyInfo: {stage, tag}
+function pipeTask(stageMap, pipelineTasks, task, stage, tags) {
+    if (__DEV__) {
+        // In case typo.
+        stage && assert(STAGE[stage] != null);
+        each(pipelineTasks, function (taskInPipeline) {
+            assert(taskInPipeline != task);
+        });
+    }
+
+    each(normalizeToArray(tags), function (tag) {
+        if (__DEV__) {
+            assert(TAG[tag]);
+        }
+        inner(task)[tag] = true;
+    });
+
+    pipelineTasks.length && pipelineTasks[pipelineTasks.length - 1].pipe(task);
+    pipelineTasks.push(task);
+
+    // ??? Should keep the original register order of tasks
+    // within single stage. Especially visual and layout.
+    stage && stageMap.get(stage).push(task);
+}
+
 proto.getTasksByStage = function (stage) {
-    return this._stage[stage].slice();
+    return this._stageMap.get(stage).slice();
 };
 
-// ???
-// // keyInfo: {stage, tag}
-// proto.getTasksByTag = function (pipelineId, tag) {
-//     var tasks = [];
-//     each(this._pipelines[pipelineId], function (wrap) {
-//         wrap.tag === tag && tasks.push(wrap.task);
-//     });
-//     return tasks;
-// };
+// taskBaseIndex can be -1;
+function clearPipeline(stageMap, pipeline, taskBaseIndex) {
+    var tasks = pipeline.tasks;
+    if (!tasks.length) {
+        return;
+    }
 
-// ???
-// proto.unpipeTaskByKey = function (key) {
-//     each(this._pipelines, function (pipeline) {
-//         var index = 0;
-//         for (; index < pipeline.length; index++) {
-//             if (pipeline[index].key === key) {
-//                 break;
-//             }
-//         }
-//         if (index > 0 && index < pipeline.length) {
-//             pipeline[index - 1].unpipe(pipeline[index]);
-//         }
-//         pipeline.length = index;
-//     });
-// };
+    if (taskBaseIndex === -1) {
+        var taskBase = tasks[0];
+        taskBase.clearDownstreams();
+        taskBase.reset();
+    }
+    else {
+        tasks[taskBaseIndex].clearDownstreams();
+    }
+    for (var i = taskBaseIndex + 1; i < tasks.length; i++) {
+        inner(tasks[i]).cleared = 1;
+    }
+    tasks.length = taskBaseIndex + 1;
+
+    stageMap.each(function (stageTasks) {
+        for (var i = stageTasks.length - 1; i >= 0; i--) {
+            if (inner(stageTasks[i]).cleared) {
+                stageTasks.splice(i, 1);
+            }
+        }
+    });
+
+    i = 10;
+}
 
 export default Scheduler;

@@ -43,7 +43,6 @@ export var dependencies = {
 
 // ??? frame remain time in UI thread: 20ms? 16ms?
 var TEST_FRAME_REMAIN_TIME = 1;
-var TEST_PROGRESS_STEP = 300;
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
@@ -80,11 +79,9 @@ var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
 var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
-var UNFINISHED_INDEX_DATA = 0;
-var UNFINISHED_INDEX_PROCESSOR = 1;
-var UNFINISHED_INDEX_VISUAL = 2;
-var UNFINISHED_INDEX_RENDER = 3;
-
+// ??? defined in scheduler?
+var STAGE_DATA_INIT = 'dataInit';
+var STAGE_DATA_CLONE = 'dataClone';
 var STAGE_PROCESSOR = 'processor';
 var STAGE_VISUAL = 'visual';
 var STAGE_RENDER = 'render';
@@ -206,13 +203,6 @@ function ECharts(dom, theme, opts) {
      */
     this._api = createExtensionAPI(this);
 
-    // ??? reset when setOption(not merge)?
-    /**
-     * @type {Array.<boolean>}
-     */
-    this._unfinished = [];
-
-    // ??? reset when setOption(not merge)?
     /**
      * @type {module:echarts/stream/Scheduler}
      */
@@ -252,8 +242,7 @@ function ECharts(dom, theme, opts) {
 var echartsProto = ECharts.prototype;
 
 echartsProto._onframe = function () {
-    // ???
-    if (this.isDisposed()) {
+    if (this._disposed) {
         return;
     }
 
@@ -263,6 +252,7 @@ echartsProto._onframe = function () {
 
         this[IN_MAIN_PROCESS] = true;
 
+        // ??? conflict?
         updateMethods.prepareAndUpdate.call(this);
 
         this[IN_MAIN_PROCESS] = false;
@@ -274,46 +264,32 @@ echartsProto._onframe = function () {
         triggerUpdatedEvent.call(this, silent);
     }
 
-    progressInFrame(this);
-};
-
-function progressInFrame(ecIns) {
+    // Stream progress.
     var remainTime = TEST_FRAME_REMAIN_TIME;
-    var unfinished = ecIns._unfinished;
-var b;
-    do {
-        var startTime = +new Date();
+    var scheduler = this._scheduler;
 
-        if (unfinished[UNFINISHED_INDEX_PROCESSOR]) {
-b = 1;
-            updateUnfinished(unfinished, progressStage(ecIns, STAGE_PROCESSOR), UNFINISHED_INDEX_PROCESSOR);
-        }
+    if (scheduler.unfinished) {
+        scheduler.unfinished = false;
+        do {
+            var startTime = +new Date();
 
-        // ???
-        // coordSys update
+            scheduler.progressStage(STAGE_DATA_INIT);
+            scheduler.progressStage(STAGE_DATA_CLONE);
+            scheduler.progressStage(STAGE_PROCESSOR);
 
-        if (unfinished[UNFINISHED_INDEX_VISUAL]) {
+            // ???
+            // coordSys update
+
             // console.log('------------- ec frame visual -------------', remainTime);
-b = 1;
-            updateUnfinished(unfinished, progressStage(ecIns, STAGE_VISUAL), UNFINISHED_INDEX_VISUAL);
-        }
-        if (unfinished[UNFINISHED_INDEX_RENDER]) {
-b = 1;
-            updateUnfinished(unfinished, progressRender(ecIns, ecIns._model), UNFINISHED_INDEX_RENDER);
-        }
+            scheduler.progressStage(STAGE_VISUAL);
 
-        remainTime -= (+new Date() - startTime);
+            progressRender(this, this._model);
+
+            remainTime -= (+new Date() - startTime);
+        }
+        while (remainTime > 0 && scheduler.unfinished);
     }
-    while (remainTime > 0 && (
-        unfinished[UNFINISHED_INDEX_PROCESSOR]
-        || unfinished[UNFINISHED_INDEX_VISUAL]
-        || unfinished[UNFINISHED_INDEX_RENDER]
-    ));
-
-if (b) {
-    console.log(ecIns._scheduler._pipelines);
-}
-}
+};
 
 
 /**
@@ -362,6 +338,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         var optionManager = new OptionManager(this._api);
         var theme = this._theme;
         var ecModel = this._model = new GlobalModel(null, null, theme, optionManager);
+        ecModel.scheduler = this._scheduler;
         ecModel.init(null, null, theme, optionManager);
     }
 
@@ -770,19 +747,17 @@ var updateMethods = {
         var api = this._api;
         var zr = this._zr;
         var coordSysMgr = this._coordSysMgr;
+        var scheduler = this._scheduler;
+
         // update before setOption
         if (!ecModel) {
             return;
         }
 
+        scheduler.clearTemps();
+
         // Fixme First time update ?
         ecModel.restoreData();
-
-        // Reset pipeline.
-        this._scheduler.clear();
-        each(ecModel.getSeries(), function (series) {
-            this._scheduler.addPipeline(series.uid);
-        }, this);
 
         // TODO
         // Save total ecModel here for undo/redo (after restoring data and before processing data).
@@ -803,6 +778,8 @@ var updateMethods = {
         startVisualEncoding(this, ecModel, api, payload);
 
         startRender(this, ecModel, api, payload);
+
+        scheduler.flushTemps('updateBase');
 
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -864,14 +841,18 @@ var updateMethods = {
             return;
         }
 
+        this._scheduler.clearTemps();
+
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.getData().clearAllVisual();
         });
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        startVisualEncoding(this, ecModel, this._api, payload, null, 'updateViewBase');
+        startVisualEncoding(this, ecModel, this._api, payload, null);
 
         invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
+
+        this._scheduler.flushTemps('updateViewBase');
     },
 
     /**
@@ -886,14 +867,18 @@ var updateMethods = {
             return;
         }
 
+        this._scheduler.clearTemps();
+
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.getData().clearAllVisual();
         });
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        startVisualEncoding(this, ecModel, this._api, payload, false, 'updateVisualBase');
+        startVisualEncoding(this, ecModel, this._api, payload, false);
 
         invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
+
+        this._scheduler.flushTemps('updateVisualBase');
     },
 
     /**
@@ -908,10 +893,14 @@ var updateMethods = {
             return;
         }
 
+        this._scheduler.clearTemps();
+
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        startVisualEncoding(this, ecModel, this._api, payload, true, 'updateLayoutBase');
+        startVisualEncoding(this, ecModel, this._api, payload, true);
 
         invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
+
+        this._scheduler.flushTemps('updateLayoutBase');
     },
 
     /**
@@ -1179,32 +1168,19 @@ function triggerUpdatedEvent(silent) {
     !silent && this.trigger('updated');
 }
 
-// ??????
-// echartsProto.addData = function (params) {
-//     var seriesIndex = params.seriesIndex;
-//     var moreData = params.data;
-//     var ecModel = this.getModel();
-//     var seriesModel = ecModel.getSeries(seriesIndex);
+// ???
+echartsProto.addData = function (params) {
+    var seriesIndex = params.seriesIndex;
+    var ecModel = this.getModel();
+    var seriesModel = ecModel.getSeries(seriesIndex);
 
-//     var rawData = seriesModel.getRawData();
+    if (__DEV__) {
+        zrUtil.assert(params.data && seriesModel);
+    }
 
-//     rawData.addData(moreData);
-//     // ?????
-
-//     // ??? addData 应该是继续渲染而不是重启全部渲染？
-//     // 什么场景下需要重启全部渲染？
-
-//     updateMethods.update();
-
-//     // ??????
-//     if (rawData.count() > rawData.getChunkSize()) {
-//         requestAnimationFrame(step);
-//     }
-
-//     function step() {
-//         // if (rawData.
-//     }
-// };
+    var rawData = seriesModel.getRawData();
+    rawData.addData(params.data);
+};
 
 /**
  * Register event
@@ -1232,11 +1208,9 @@ function invokeUpdateMethod(methodName, ecModel, payload) {
     // ??? duplicate code with `startRender`?
 
     // Upate all charts
-    var scheduler = this._scheduler;
     ecModel.eachSeries(function (seriesModel, idx) {
         var chart = this._chartsMap[seriesModel.__viewId];
-        var task = chart[methodName](seriesModel, ecModel, api, payload);
-        task && scheduler.pipeTasks([task], STAGE_RENDER);
+        chart[methodName](seriesModel, ecModel, api, payload);
 
         // ??? updateZ(seriesModel, chart);
 
@@ -1346,10 +1320,8 @@ function stackSeriesData(ecModel) {
  */
 function startProcessors(ecIns, ecModel, api) {
     each(dataProcessorFuncs, function (processor, index) {
-        var tasks = processor.func(ecModel, api);
-        ecIns._scheduler.pipeTasks(tasks, STAGE_PROCESSOR);
+        processor.func(ecModel, api);
     });
-    updateUnfinished(ecIns._unfinished, true, UNFINISHED_INDEX_PROCESSOR);
 }
 
 /**
@@ -1360,10 +1332,10 @@ function startProcessors(ecIns, ecModel, api) {
  * @param {boolean} [layoutFilter] `true`: only layout,
  *                                 `false`: only not layout,
  *                                 `null`/`undefined`: all.
- * @param {string} partialBase
+ * @param {string} taskBaseTag
  * @private
  */
-function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter, partialBase) {
+function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter) {
     if (layoutFilter !== true) {
         ecModel.clearColorPalette();
         ecModel.eachSeries(function (seriesModel) {
@@ -1377,12 +1349,9 @@ function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter, partial
             || (layoutFilter === false && !isLayout)
             || (layoutFilter === true && isLayout)
         ) {
-            var tasks = visual.func(ecModel, api, payload);
-            ecIns._scheduler.pipeTasks(tasks, STAGE_VISUAL, partialBase);
+            visual.func(ecModel, api, payload);
         }
     });
-
-    updateUnfinished(ecIns._unfinished, true, UNFINISHED_INDEX_VISUAL);
 }
 
 /**
@@ -1402,16 +1371,13 @@ function startRender(ecIns, ecModel, api, payload) {
         chart.__alive = false;
     });
 
-    var scheduler = ecIns._scheduler;
-
     // ??? The key should be `__viewId` but not index. consider view change !!!
     // Render all charts
     ecModel.eachSeries(function (seriesModel) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
 
-        var task = chartView.render(seriesModel, ecModel, api, payload);
-        task && scheduler.pipeTasks([task], STAGE_RENDER);
+        chartView.render(seriesModel, ecModel, api, payload);
 
         // ??? chartView.group.silent = !!seriesModel.get('silent');
 
@@ -1430,15 +1396,11 @@ function startRender(ecIns, ecModel, api, payload) {
             chart.remove(ecModel, api);
         }
     });
-
-    // ??? add upateUnfinished to other partial update render!
-    updateUnfinished(ecIns._unfinished, true, UNFINISHED_INDEX_RENDER);
 }
 
 function progressRender(ecIns, ecModel) {
-    var unfinished;
 
-    unfinished |= progressStage(ecIns, STAGE_RENDER);
+    ecIns._scheduler.progressStage(STAGE_RENDER);
 
     // ???
     // ecModel.eachSeries(function (seriesModel, idx) {
@@ -1450,22 +1412,7 @@ function progressRender(ecIns, ecModel) {
 
         // ??? updateProgressiveAndBlend(seriesModel, chartView);
     // });
-
-    return unfinished;
 }
-
-function progressStage(ecIns, stage) {
-    var unfinished;
-    var tasks = ecIns._scheduler.getTasksByStage(stage);
-    each(tasks, function (task) {
-        task.progress({
-            step: TEST_PROGRESS_STEP
-        });
-        unfinished |= task.unfinished();
-    });
-    return unfinished;
-}
-
 
 var MOUSE_EVENT_NAMES = [
     'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove',
@@ -1614,15 +1561,6 @@ function updateProgressiveAndBlend(seriesModel, chartView) {
             el.setStyle('blend', blendMode);
         }
     });
-}
-
-function updateUnfinished(undefinedRecord, unfi, stageIndex) {
-    var count = Math.max(undefinedRecord.length, stageIndex + 1);
-    undefinedRecord[stageIndex] = unfi;
-    for (++stageIndex; stageIndex < count; stageIndex++) {
-        // update process should clear consequent visual stage using xor.
-        undefinedRecord[stageIndex] |= unfi;
-    }
 }
 
 /**

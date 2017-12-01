@@ -1,16 +1,11 @@
 
 export default function (seriesType, ecModel) {
-    var tasks = [];
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-        var task = createTask(seriesType, seriesModel);
-        if (task) {
-            // ??? better way?
-            task.pipelineId = seriesModel.uid;
-            tasks.push(task);
-        }
+        seriesModel.pipeTask(
+            createTask(seriesType, seriesModel),
+            'visual'
+        );
     });
-
-    return tasks;
 }
 
 function createTask(seriesType, seriesModel) {

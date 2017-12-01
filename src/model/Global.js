@@ -126,6 +126,7 @@ var GlobalModel = Model.extend({
         var option = this.option;
         var componentsMap = this._componentsMap;
         var newCptTypes = [];
+        var scheduler = this.scheduler;
 
         // 如果不存在对应的 component model 则直接 merge
         each(newOption, function (componentOption, mainType) {
@@ -151,6 +152,7 @@ var GlobalModel = Model.extend({
         this._seriesIndices = this._seriesIndices || [];
 
         function visitComponent(mainType, dependencies) {
+
             var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
             var mapResult = modelUtil.mappingToExists(
@@ -213,6 +215,9 @@ var GlobalModel = Model.extend({
                         componentModel = new ComponentModelClass(
                             newCptOption, this, this, extraOpt
                         );
+                        if (mainType === 'series') {
+                            this.scheduler.initPipeline(componentModel);
+                        }
                         zrUtil.extend(componentModel, extraOpt);
                         componentModel.init(newCptOption, this, this, extraOpt);
                         // Call optionUpdated after init.
@@ -229,7 +234,11 @@ var GlobalModel = Model.extend({
 
             // Backup series for filtering.
             if (mainType === 'series') {
-                this._seriesIndices = createSeriesIndices(componentsMap.get('series'));
+                var seriesModels = componentsMap.get('series');
+                this._seriesIndices = createSeriesIndices(seriesModels);
+                // Reset pipeline, should be after `restoreData`.
+                scheduler.clearUnusedPipelines(seriesModels);
+                scheduler.flushTemps('start', seriesModels);
             }
         }
     },

@@ -62,14 +62,9 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
     });
 
     group.enableStream();
-    group.renderTask.reset();
 
     dataEachTask.pipe(group.renderTask);
-    // ??? better way?
-    dataEachTask.pipelineId = seriesModel.uid;
-    dataEachTask.updateLayoutBase = true;
-
-    return dataEachTask;
+    seriesModel.pipeTask(dataEachTask, 'render', 'updateLayoutBase');
 };
 
 symbolDrawProto.updateLayout = function () {
@@ -82,8 +77,8 @@ symbolDrawProto.updateLayout = function () {
 
     var data = seriesModel.getData();
 
-    var task = createTask({
-        list: data,
+    var dataEachTask = createTask({
+        input: data,
         progress: function (params, notify) {
             var dueIndex = params.dueIndex;
             for (; dueIndex < params.dueEnd; dueIndex++) {
@@ -97,14 +92,9 @@ symbolDrawProto.updateLayout = function () {
     });
 
     group.enableStream();
-    // group.renderTask.reset({reuseData: true});
-    group.renderTask.reset();
 
-    task.pipe(group.renderTask);
-    // ??? better way?
-    task.pipelineId = group.renderTask.pipelineId = seriesModel.uid;
-
-    return task;
+    dataEachTask.pipe(group.renderTask);
+    seriesModel.pipeTask(dataEachTask, 'render');
 };
 
 symbolDrawProto.remove = function (enableAnimation) {
