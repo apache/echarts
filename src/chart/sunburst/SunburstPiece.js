@@ -8,6 +8,11 @@ var NodeHighlightPolicy = {
     SELF: 'self'
 };
 
+var DEFAULT_SECTOR_Z = 2;
+var DEFAULT_TEXT_Z = 4;
+var DEFAULT_SECTOR_HIGHLIGHT_Z = 3;
+var DEFAULT_TEXT_HIGHLIGHT_Z = 5;
+
 /**
  * Sunburstce of Sunburst including Sector, Label, LabelLine
  * @constructor
@@ -18,10 +23,10 @@ function SunburstPiece(node, seriesModel, ecModel) {
     graphic.Group.call(this);
 
     var sector = new graphic.Sector({
-        z2: 2
+        z2: DEFAULT_SECTOR_Z
     });
     var text = new graphic.Text({
-        z2: 4,
+        z2: DEFAULT_TEXT_Z,
         silent: true
     });
     this.add(sector);
@@ -126,28 +131,22 @@ SunburstPieceProto.onNormal = function () {
     this.node.hostTree.root.eachNode(function (n) {
         if (n.piece) {
             var itemStyleModel = n.getModel('itemStyle.normal');
-            var opacity = itemStyleModel.getItemStyle().opacity || 1;
-
-            var sector = n.piece.childAt(0);
-            sector.animateTo({
-                style: {
-                    opacity: opacity
-                }
-            });
+            var style = itemStyleModel.getItemStyle();
+            updatePiece(n.piece, false, style.opacity, style.z);
         }
     });
 };
 
 SunburstPieceProto.onHighlight = function () {
     var itemStyleModel = this.node.getModel('itemStyle.highlight');
-    var opacity = itemStyleModel.getItemStyle().opacity || 1;
-    updatePieceHighlight(this, opacity);
+    var style = itemStyleModel.getItemStyle();
+    updatePiece(this, true, style.opacity, style.z);
 };
 
 SunburstPieceProto.onDownplay = function () {
     var itemStyleModel = this.node.getModel('itemStyle.downplay');
-    var opacity = itemStyleModel.getItemStyle().opacity || 1;
-    updatePieceHighlight(this, opacity);
+    var style = itemStyleModel.getItemStyle();
+    updatePiece(this, false, style.opacity, style.z);
 };
 
 SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
@@ -286,18 +285,27 @@ function isNodeHighlighted(node, activeNode, policy) {
     }
 }
 
-function updatePieceHighlight(piece, opacity) {
+function updatePiece(piece, isHighlight, opacity, z) {
     var sector = piece.childAt(0);
+    var sectorZ = z != null
+        ? z
+        : (isHighlight ? DEFAULT_SECTOR_HIGHLIGHT_Z : DEFAULT_SECTOR_Z);
+    sector.attr('z', sectorZ);
     sector.animateTo({
         style: {
-            opacity: opacity
+            opacity: opacity || 1
         }
     });
 
     var text = piece.childAt(1);
+    var textZ = z != null
+        ? z
+        : (isHighlight ? DEFAULT_TEXT_HIGHLIGHT_Z : DEFAULT_TEXT_Z);
+    text.attr('z', textZ);
     text.animateTo({
         style: {
-            opacity: opacity
-        }
+            opacity: opacity || 1
+        },
+        z: textZ
     });
 }
