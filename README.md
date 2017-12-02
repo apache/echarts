@@ -45,18 +45,22 @@ ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visu
 
 ### Extensions
 
-+ [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
-
 + [水球图 liquidfill](https://github.com/ecomfe/echarts-liquidfill)
 
 + [字符云 wordcloud](https://github.com/ecomfe/echarts-wordcloud)
 
 + [Graph Modularity](https://github.com/ecomfe/echarts-graph-modularity) Graph modularity extension for community detection
 
+#### GIS
+
++ [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
+
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
 
 + [echarts-leaflet](https://github.com/gnijuohz/echarts-leaflet) by gnijuohz
+
++ [ol3Echarts](https://github.com/sakitam-fdd/ol3Echarts) by sakitam-fdd
 
 #### AngularJS Binding
 
