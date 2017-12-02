@@ -56,6 +56,8 @@ ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visu
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
 
++ [echarts-leaflet](https://github.com/gnijuohz/echarts-leaflet) by gnijuohz
+
 #### AngularJS Binding
 
 + [angular-echarts](https://github.com/wangshijun/angular-echarts) by wangshijun
