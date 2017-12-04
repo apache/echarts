@@ -67,6 +67,7 @@ ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visu
 + [angular-echarts](https://github.com/wangshijun/angular-echarts) by wangshijun
 + [echarts-ng](https://github.com/bornkiller/echarts-ng) by bornkiller
 + [ng-echarts](https://github.com/liekkas/ng-echarts) by liekkas
++ [ngx-echarts](https://github.com/xieziyu/ngx-echarts) by xieziyu
 
 #### Vue Component
 
