@@ -24,94 +24,124 @@
                     // renderer: 'svg'
                 });
 
-                chart.setOption({
-                    series: {
-                        type: 'sunburst',
-                        highlightPolicy: 'ancestor',
-                        data: [{
-                            name: 'Grandpa',
-                            children: [{
-                                name: 'Uncle Leo',
-                                value: 15,
-                                children: [{
-                                    name: 'Cousin Jack',
-                                    value: 2
-                                }, {
-                                    name: 'Cousin Mary',
-                                    value: 5,
-                                    itemStyle: {
-                                        normal: {
-                                            opacity: 0.2
-                                        }
-                                    }
-                                }, {
-                                    name: 'Cousin Ben',
-                                    value: 4
-                                }],
-                                itemStyle: {
-                                    normal: {
-                                        color: '#ff0'
-                                    }
-                                }
-                            }, {
-                                name: 'Aunt Jane',
-                                children: [{
-                                    name: 'Cousin Kate',
-                                    value: 4,
-                                    itemStyle: {
-                                        normal: {
-                                            color: 'blue'
-                                        }
-                                    }
-                                }]
-                            }, {
-                                name: 'Father',
-                                value: 10,
-                                children: [{
-                                    name: 'Me',
-                                    value: 5
-                                }, {
-                                    name: 'Brother Peter',
-                                    value: 1,
-                                    itemStyle: {
-                                        downplay: {
-                                            opacity: 0.1
-                                        }
-                                    }
-                                }]
-                            }],
+                var data = [{
+                    name: 'Grandpa',
+                    children: [{
+                        name: 'Uncle Leo',
+                        value: 15,
+                        children: [{
+                            name: 'Cousin Jack',
+                            value: 2
+                        }, {
+                            name: 'Cousin Mary',
+                            value: 5,
                             itemStyle: {
-                                downplay: {
-                                    opacity: 0.8
+                                normal: {
+                                    opacity: 0.2
                                 }
                             }
                         }, {
-                            name: 'Grandpa\'s friend Mike',
-                            children: [{
-                                name: 'Uncle Dan',
-                                children: [{
-                                    name: 'Cousin Lucy',
-                                    value: 3
-                                }, {
-                                    name: 'Cousin Luck',
-                                    value: 4
-                                }]
-                            }]
-                        }, {
-                            name: 'Grandpa\'s friend Nancy',
-                            children: [{
-                                name: 'Uncle Dan',
-                                children: [{
-                                    name: 'Cousin Lucy',
-                                    value: 1
-                                }, {
-                                    name: 'Cousin Luck',
-                                    value: 2
-                                }]
-                            }]
+                            name: 'Cousin Ben',
+                            value: 4
+                        }],
+                        itemStyle: {
+                            normal: {
+                                color: '#660'
+                            }
+                        }
+                    }, {
+                        name: 'Aunt Jane',
+                        children: [{
+                            name: 'Cousin Kate',
+                            value: 4,
+                            itemStyle: {
+                                normal: {
+                                    color: 'blue'
+                                }
+                            }
                         }]
+                    }, {
+                        name: 'Father',
+                        value: 10,
+                        children: [{
+                            name: 'Me',
+                            value: 5
+                        }, {
+                            name: 'Brother Peter',
+                            value: 1
+                        }],
+                        itemStyle: {
+                            downplay: {
+                                opacity: 0.1
+                            }
+                        }
+                    }],
+                    itemStyle: {
+                        downplay: {
+                            opacity: 0.8
+                        }
+                    }
+                }, {
+                    name: 'Grandpa\'s friend Mike',
+                    children: [{
+                        name: 'Uncle Dan',
+                        children: [{
+                            name: 'Cousin Lucy',
+                            value: 3
+                        }, {
+                            name: 'Cousin Luck',
+                            value: 4
+                        }]
+                    }]
+                }, {
+                    name: 'Grandpa\'s friend Nancy',
+                    children: [{
+                        name: 'Uncle Dan',
+                        children: [{
+                            name: 'Cousin Lucy',
+                            value: 1
+                        }, {
+                            name: 'Cousin Luck',
+                            value: 2
+                        }]
+                    }]
+                }];
+
+                chart.setOption({
+                    series: {
+                        type: 'sunburst',
+                        // highlightPolicy: 'ancestor',
+                        data: data
                     }
                 });
+
+                setTimeout(function () {
+                    data.push({
+                        name: 'Stranger',
+                        children: [{
+                            name: 'S1',
+                            value: 4
+                        }, {
+                            name: 'S2',
+                            value: 1
+                        }]
+                    });
+                    chart.setOption({
+                        series: {
+                            data: data
+                        }
+                    });
+                }, 3000);
+
+                setTimeout(function () {
+                    data.splice(1, 1);
+                    data[0].value = 32;
+                    chart.setOption({
+                        series: {
+                            data: data
+                        }
+                    });
+                }, 6000);
 
             });
 

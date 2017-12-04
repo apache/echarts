@@ -34,9 +34,7 @@ function SunburstPiece(node, seriesModel, ecModel) {
 
     this.node = node;
 
-    var highlightPolicy = seriesModel.getShallow('highlightPolicy');
-
-    this.updateData(true, seriesModel, ecModel, highlightPolicy);
+    this.updateData(true, node, seriesModel, ecModel);
 
     // Hover to change label and labelLine
     function onEmphasis() {
@@ -55,13 +53,15 @@ var SunburstPieceProto = SunburstPiece.prototype;
 
 SunburstPieceProto.updateData = function (
     firstCreate,
+    node,
     seriesModel,
-    ecModel,
-    highlightPolicy
+    ecModel
 ) {
+    this.node = node;
+    node.piece = this;
+
     var sector = this.childAt(0);
 
-    var node = this.node;
     var itemModel = node.getModel();
     var layout = node.getLayout();
     var sectorShape = zrUtil.extend({}, layout);
@@ -106,6 +106,7 @@ SunburstPieceProto.updateData = function (
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
 
+    var highlightPolicy = seriesModel.getShallow('highlightPolicy');
     this._initEvents(sector, node, seriesModel, highlightPolicy);
 
     this._updateLabel(seriesModel, ecModel);
