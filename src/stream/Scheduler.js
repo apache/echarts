@@ -12,11 +12,11 @@ var inner = makeInner();
  * @const
  */
 var STAGE = {
-    dataInit: 0,
-    dataClone: 1,
-    processor: 2,
-    visual: 3,
-    render: 4
+    dataInit: 1,
+    dataClone: 2,
+    processor: 3,
+    visual: 4,
+    render: 5
 };
 var TAG = {
     updateBase: 1,

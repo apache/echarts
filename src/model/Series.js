@@ -325,8 +325,10 @@ var SeriesModel = ComponentModel.extend({
         var dataCloneTask = dataBeforeProcessed.createCloneShallowTask();
         set(this, 'data', dataCloneTask.output);
 
+        // var provisionTask = dataBeforeProcessed.getProvider().provisionTask;
         var dataInitTask = dataBeforeProcessed.getInitTask();
 
+        // this.pipeTask(provisionTask, 'dataProvide');
         this.pipeTask(dataInitTask, 'dataInit');
         this.pipeTask(dataCloneTask, 'dataClone', 'updateBase');
     },
@@ -362,14 +364,15 @@ var SeriesModel = ComponentModel.extend({
     /**
      * @see {module:echarts/stream/Scheduler}
      */
-    pipeTask: null
+    pipeTask: null,
 
-    // /**
-    //  * @public
-    //  */
-    // useStream: function () {
-    //     return this.streamEnabled && this.option.streamSize > 0;
-    // }
+    /**
+     * @public
+     */
+    useStream: function () {
+        // ???
+        return this.streamEnabled;
+    }
 });
 
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);

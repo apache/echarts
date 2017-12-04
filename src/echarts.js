@@ -964,12 +964,16 @@ echartsProto.resize = function (opts) {
         zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
     }
 
-    this[IN_MAIN_PROCESS] = true;
-
     this._zr.resize(opts);
 
     var optionChanged = this._model && this._model.resetOption('media');
     var updateMethod = optionChanged ? 'prepareAndUpdate' : 'update';
+
+    refresh(updateMethod, opts && opts.silent);
+};
+
+function refresh(updateMethod, silent) {
+    this[IN_MAIN_PROCESS] = true;
 
     updateMethods[updateMethod].call(this);
 
@@ -978,12 +982,10 @@ echartsProto.resize = function (opts) {
 
     this[IN_MAIN_PROCESS] = false;
 
-    var silent = opts && opts.silent;
-
     flushPendingActions.call(this, silent);
 
     triggerUpdatedEvent.call(this, silent);
-};
+}
 
 /**
  * Show loading effect
@@ -1172,14 +1174,22 @@ function triggerUpdatedEvent(silent) {
 echartsProto.addData = function (params) {
     var seriesIndex = params.seriesIndex;
     var ecModel = this.getModel();
-    var seriesModel = ecModel.getSeries(seriesIndex);
+    var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
     if (__DEV__) {
         zrUtil.assert(params.data && seriesModel);
     }
 
-    var rawData = seriesModel.getRawData();
-    rawData.addData(params.data);
+    var provider = seriesModel.getRawData().getProvider();
+    // .provisionTask.changeInput(params.data);
+    provider.addData(params.data);
+
+    this._scheduler.unfinished = true;
+
+    // ??? Should handle this.
+    // if (!seriesModel.useStream()) {
+        // refresh('prepareAndUpdate');
+    // }
 };
 
 /**
