@@ -186,18 +186,16 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
     var textY = (layout.r + layout.r0) / 2 * dy + layout.cy;
     label.attr('position', [textX, textY]);
 
-    var rotate = labelModel.getShallow('rotate');
-    if (rotate === 'radial') {
+    var rotateType = labelModel.getShallow('rotate');
+    var rotate = 0;
+    if (rotateType === 'radial') {
         rotate = -midAngle;
         if (rotate < -Math.PI / 2) {
             rotate += Math.PI;
         }
     }
-    else if (rotate === 'tangential') {
+    else if (rotateType === 'tangential') {
         rotate = Math.PI / 2 - midAngle;
-    }
-    else {
-        rotate = 0;
     }
     label.attr('rotation', rotate);
 };
