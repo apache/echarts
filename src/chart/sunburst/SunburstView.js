@@ -26,26 +26,8 @@ var SunburstView = ChartView.extend({
 
         var oldTree = this._oldTree;
         var newTree = seriesModel.getData().tree;
-        // var treeRoot = seriesModel.getData().tree.root;
 
-        // var oldData = this._data;
         var group = this.group;
-
-        // var hasAnimation = ecModel.get('animation');
-        // var isFirstRender = !oldData;
-        // var animationType = seriesModel.get('animationType');
-
-        // var onSectorClick = zrUtil.curry(
-        //     updateDataSelected, this.uid, seriesModel, hasAnimation, api
-        // );
-
-        // treeRoot.eachNode(function (node) {
-        //     if (node !== treeRoot) {
-        //         var piece = new SunburstPiece(node, seriesModel, ecModel);
-        //         node.piece = piece;
-        //         group.add(piece);
-        //     }
-        // });
 
         dualTravel(
             newTree.root ? [newTree.root] : [],
@@ -110,30 +92,6 @@ var SunburstView = ChartView.extend({
     },
 
     dispose: function () {},
-
-    _createClipPath: function (
-        cx, cy, r, startAngle, clockwise, cb, seriesModel
-    ) {
-        var clipPath = new graphic.Sector({
-            shape: {
-                cx: cx,
-                cy: cy,
-                r0: 0,
-                r: r,
-                startAngle: startAngle,
-                endAngle: startAngle,
-                clockwise: clockwise
-            }
-        });
-
-        graphic.initProps(clipPath, {
-            shape: {
-                endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
-            }
-        }, seriesModel, cb);
-
-        return clipPath;
-    },
 
     /**
      * @implement

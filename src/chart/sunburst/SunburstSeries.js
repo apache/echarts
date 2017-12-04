@@ -75,8 +75,8 @@ export default SeriesModel.extend({
 
         label: {
             normal: {
-                // If rotate around circle
-                rotate: false,
+                // could be: 'radial', 'tangential', or 'none'
+                rotate: 'radial',
                 show: true,
                 position: 'inner'
             },

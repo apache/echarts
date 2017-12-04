@@ -155,13 +155,6 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
     var labelModel = itemModel.getModel('label.normal');
     var labelHoverModel = itemModel.getModel('label.emphasis');
 
-    var layout = this.node.getLayout();
-    var midAngle = (layout.startAngle + layout.endAngle) / 2;
-    var dx = Math.cos(midAngle);
-    var dy = Math.sin(midAngle);
-    var textX = (layout.r + layout.r0) / 2 * dx + layout.cx;
-    var textY = (layout.r + layout.r0) / 2 * dy + layout.cy;
-
     var text = zrUtil.retrieve(
         seriesModel.getFormattedLabel(
             this.node.dataIndex, 'normal', null, null, 'label'
@@ -184,7 +177,29 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
         textAlign: 'center',
         textVerticalAlign: 'middle'
     });
+
+    var layout = this.node.getLayout();
+    var midAngle = (layout.startAngle + layout.endAngle) / 2;
+    var dx = Math.cos(midAngle);
+    var dy = Math.sin(midAngle);
+    var textX = (layout.r + layout.r0) / 2 * dx + layout.cx;
+    var textY = (layout.r + layout.r0) / 2 * dy + layout.cy;
     label.attr('position', [textX, textY]);
+
+    var rotate = labelModel.getShallow('rotate');
+    if (rotate === 'radial') {
+        rotate = -midAngle;
+        if (rotate < -Math.PI / 2) {
+            rotate += Math.PI;
+        }
+    }
+    else if (rotate === 'tangential') {
+        rotate = Math.PI / 2 - midAngle;
+    }
+    else {
+        rotate = 0;
+    }
+    label.attr('rotation', rotate);
 };
 
 SunburstPieceProto._initEvents = function (
