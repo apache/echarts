@@ -101,7 +101,9 @@ export default SeriesModel.extend({
 
         animationEasing: 'quadraticInOut',
 
-        data: []
+        data: [],
+
+        levels: []
     },
 
     getViewRoot: function () {

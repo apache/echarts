@@ -39,7 +39,11 @@
                                 normal: {
                                     opacity: 0.2
                                 }
-                            }
+                            },
+                            children: [{
+                                name: 'Jackson',
+                                value: 2
+                            }]
                         }, {
                             name: 'Cousin Ben',
                             value: 4
@@ -82,7 +86,7 @@
                         }
                     }
                 }, {
-                    name: 'Grandpa\'s friend Mike',
+                    name: 'Mike',
                     children: [{
                         name: 'Uncle Dan',
                         children: [{
@@ -90,18 +94,22 @@
                             value: 3
                         }, {
                             name: 'Cousin Luck',
-                            value: 4
+                            value: 4,
+                            children: [{
+                                name: 'Nephew',
+                                value: 2
+                            }]
                         }]
                     }]
                 }, {
-                    name: 'Grandpa\'s friend Nancy',
+                    name: 'Nancy',
                     children: [{
-                        name: 'Uncle Dan',
+                        name: 'Uncle Nike',
                         children: [{
-                            name: 'Cousin Lucy',
+                            name: 'Cousin Betty',
                             value: 1
                         }, {
-                            name: 'Cousin Luck',
+                            name: 'Cousin Jenny',
                             value: 2
                         }]
                     }]
@@ -111,37 +119,81 @@
                     series: {
                         type: 'sunburst',
                         // highlightPolicy: 'ancestor',
-                        data: data
+                        data: data,
+                        radius: [0, '90%'],
+                        label: {
+                            normal: {
+                                rotate: 'radial'
+                            }
+                        },
+                        levels: [{
+                            itemStyle: {
+                                normal: {
+                                    opacity: 1
+                                }
+                            }
+                        }, {
+                            itemStyle: {
+                                normal: {
+                                    opacity: 0.8,
+                                    color: '#f0f'
+                                }
+                            },
+                            label: {
+                                normal: {
+                                    opacity: 0.8,
+                                    formatter: '{a}: {b}'
+                                }
+                            }
+                        }, {
+                            itemStyle: {
+                                normal: {
+                                    opacity: 0.6,
+                                    color: '#00f'
+                                }
+                            },
+                            label: {
+                                normal: {
+                                    opacity: 0.6
+                                }
+                            }
+                        }, {
+                            itemStyle: {
+                                normal: {
+                                    opacity: 0.4
+                                }
+                            }
+                        }]
                     }
                 });
 
-                setTimeout(function () {
-                    data.push({
-                        name: 'Stranger',
-                        children: [{
-                            name: 'S1',
-                            value: 4
-                        }, {
-                            name: 'S2',
-                            value: 1
-                        }]
-                    });
-                    chart.setOption({
-                        series: {
-                            data: data
-                        }
-                    });
-                }, 3000);
+                // setTimeout(function () {
+                //     data.push({
+                //         name: 'Stranger',
+                //         children: [{
+                //             name: 'S1',
+                //             value: 4
+                //         }, {
+                //             name: 'S2',
+                //             value: 1
+                //         }]
+                //     });
+                //     chart.setOption({
+                //         series: {
+                //             data: data
+                //         }
+                //     });
+                // }, 3000);
 
-                setTimeout(function () {
-                    data.splice(1, 1);
-                    data[0].value = 32;
-                    chart.setOption({
-                        series: {
-                            data: data
-                        }
-                    });
-                }, 6000);
+                // setTimeout(function () {
+                //     data.splice(1, 1);
+                //     data[0].value = 32;
+                //     chart.setOption({
+                //         series: {
+                //             data: data
+                //         }
+                //     });
+                // }, 6000);
 
             });
 

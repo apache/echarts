@@ -1,5 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import Model from '../../model/Model';
 
 var NodeHighlightPolicy = {
     NONE: 'none', // not downplay others
@@ -90,7 +91,7 @@ SunburstPieceProto.updateData = function (
 
     // Update common style
     var itemStyleModel = itemModel.getModel('itemStyle');
-    var visualColor = getNodeColor(node, ecModel);
+    var visualColor = getNodeColor(node, seriesModel, ecModel);
 
     sector.useStyle(
         zrUtil.defaults(
@@ -109,7 +110,7 @@ SunburstPieceProto.updateData = function (
     var highlightPolicy = seriesModel.getShallow('highlightPolicy');
     this._initEvents(sector, node, seriesModel, highlightPolicy);
 
-    this._updateLabel(seriesModel, ecModel);
+    this._updateLabel(seriesModel, ecModel, visualColor);
 
     graphic.setHoverStyle(this);
 };
@@ -131,26 +132,20 @@ SunburstPieceProto.onEmphasis = function (highlightPolicy) {
 SunburstPieceProto.onNormal = function () {
     this.node.hostTree.root.eachNode(function (n) {
         if (n.piece) {
-            var itemStyleModel = n.getModel('itemStyle.normal');
-            var style = itemStyleModel.getItemStyle();
-            updatePiece(n.piece, false, style.opacity, style.z);
+            updatePiece(n, 'normal');
         }
     });
 };
 
 SunburstPieceProto.onHighlight = function () {
-    var itemStyleModel = this.node.getModel('itemStyle.highlight');
-    var style = itemStyleModel.getItemStyle();
-    updatePiece(this, true, style.opacity, style.z);
+    updatePiece(this.node, 'highlight');
 };
 
 SunburstPieceProto.onDownplay = function () {
-    var itemStyleModel = this.node.getModel('itemStyle.downplay');
-    var style = itemStyleModel.getItemStyle();
-    updatePiece(this, false, style.opacity, style.z);
+    updatePiece(this.node, 'downplay');
 };
 
-SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
+SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
     var itemModel = this.node.getModel();
     var labelModel = itemModel.getModel('label.normal');
     var labelHoverModel = itemModel.getModel('label.emphasis');
@@ -168,14 +163,15 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel) {
         label.style, label.hoverStyle = {}, labelModel, labelHoverModel,
         {
             defaultText: labelModel.getShallow('show') ? text : null,
-            autoColor: getNodeColor(this.node, ecModel),
+            autoColor: visualColor,
             useInsideStyle: true
         }
     );
     label.attr('style', {
         text: text,
         textAlign: 'center',
-        textVerticalAlign: 'middle'
+        textVerticalAlign: 'middle',
+        opacity: labelModel.get('opacity')
     });
 
     var layout = this.node.getLayout();
@@ -244,23 +240,19 @@ export default SunburstPiece;
  * Get node color
  *
  * @param {TreeNode} node the node to get color
+ * @param {module:echarts/model/Series} seriesModel series
  * @param {module:echarts/model/Global} ecModel echarts defaults
  */
-function getNodeColor(node, ecModel) {
+function getNodeColor(node, seriesModel, ecModel) {
     if (node.depth === 0) {
         // Virtual root node
         return 'transparent';
     }
     else {
-        // Use color of the first generation
-        var ancestor = node;
-        var color = ancestor.getModel('itemStyle.normal').get('color');
-        while (ancestor.parentNode && !color) {
-            ancestor = ancestor.parentNode;
-            color = ancestor.getModel('itemStyle.normal').get('color');
-        }
-
+        // Self color or level color
+        var color = node.getModel('itemStyle.normal').get('color');
         if (!color) {
+            // First-generation color
             color = ecModel.option.color[getRootId(node)];
         }
 
@@ -299,27 +291,38 @@ function isNodeHighlighted(node, activeNode, policy) {
     }
 }
 
-function updatePiece(piece, isHighlight, opacity, z) {
-    var sector = piece.childAt(0);
-    var sectorZ = z != null
-        ? z
+function updatePiece(node, state) {
+    var isHighlight = state === 'highlight';
+
+    // Update sector
+    var itemModel = node.getModel('itemStyle.' + state);
+    var itemZ = itemModel.get('z');
+
+    var sector = node.piece.childAt(0);
+    var sectorZ = itemZ != null
+        ? itemZ
         : (isHighlight ? DEFAULT_SECTOR_HIGHLIGHT_Z : DEFAULT_SECTOR_Z);
     sector.attr('z', sectorZ);
+
     sector.animateTo({
         style: {
-            opacity: opacity || 1
+            opacity: itemModel.get('opacity') || 1
         }
     });
 
-    var text = piece.childAt(1);
-    var textZ = z != null
-        ? z
+    // Update text
+    var labelModel = node.getModel('label.' + state);
+    var labelZ = labelModel.get('z');
+
+    var text = node.piece.childAt(1);
+    var textZ = labelZ != null
+        ? labelZ
         : (isHighlight ? DEFAULT_TEXT_HIGHLIGHT_Z : DEFAULT_TEXT_Z);
     text.attr('z', textZ);
+
     text.animateTo({
         style: {
-            opacity: opacity || 1
-        },
-        z: textZ
+            opacity: labelModel.get('opacity') || 1
+        }
     });
 }
