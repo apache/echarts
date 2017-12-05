@@ -78,7 +78,12 @@ export default SeriesModel.extend({
                 // could be: 'radial', 'tangential', or 'none'
                 rotate: 'radial',
                 show: true,
-                position: 'inner'
+                // could be 'inner', 'outside', 'left' or 'right'
+                // 'left' is for inner side of inside, and 'right' is for outter
+                // side for inside
+                position: 'inner',
+                padding: 5,
+                silent: true
             },
             emphasis: {}
         },
@@ -98,12 +103,17 @@ export default SeriesModel.extend({
 
         // Animation type canbe expansion, scale
         animationType: 'expansion',
-
-        animationEasing: 'quadraticInOut',
+        animationDuration: 1000,
+        animationUpdateDuration: 300,
+        animationEasing: 'sinusoidalInOut',
 
         data: [],
 
-        levels: []
+        levels: [],
+
+        // null for not sorting,
+        // 'desc' and 'asc' for descend and ascendant order
+        sortOrder: 'desc'
     },
 
     getViewRoot: function () {

@@ -28,7 +28,7 @@ function SunburstPiece(node, seriesModel, ecModel) {
     });
     var text = new graphic.Text({
         z2: DEFAULT_TEXT_Z,
-        silent: true
+        silent: node.getModel('label.normal').get('silent')
     });
     this.add(sector);
     this.add(text);
@@ -156,6 +156,9 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         ),
         this.node.name
     );
+    if (!labelModel.get('show')) {
+        text = '';
+    }
 
     var label = this.childAt(1);
 
@@ -167,19 +170,50 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
             useInsideStyle: true
         }
     );
-    label.attr('style', {
-        text: text,
-        textAlign: 'center',
-        textVerticalAlign: 'middle',
-        opacity: labelModel.get('opacity')
-    });
 
     var layout = this.node.getLayout();
     var midAngle = (layout.startAngle + layout.endAngle) / 2;
     var dx = Math.cos(midAngle);
     var dy = Math.sin(midAngle);
-    var textX = (layout.r + layout.r0) / 2 * dx + layout.cx;
-    var textY = (layout.r + layout.r0) / 2 * dy + layout.cy;
+
+    var r;
+    var labelPosition = labelModel.get('position');
+    var labelPadding = labelModel.get('padding') || 0;
+    var textAlign = labelModel.get('align');
+    if (labelPosition === 'outside') {
+        r = layout.r + labelPadding;
+        if (!textAlign) {
+            textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
+        }
+    }
+    else {
+        if (!textAlign) {
+            r = (layout.r + layout.r0) / 2;
+            textAlign = 'center';
+        }
+        else if (textAlign === 'left') {
+            r = layout.r0 + labelPadding;
+            if (midAngle > Math.PI / 2) {
+                textAlign = 'right';
+            }
+        }
+        else if (textAlign === 'right') {
+            r = layout.r - labelPadding;
+            if (midAngle > Math.PI / 2) {
+                textAlign = 'left';
+            }
+        }
+    }
+
+    label.attr('style', {
+        text: text,
+        textAlign: textAlign,
+        textVerticalAlign: labelModel.get('verticalAlign') || 'middle',
+        opacity: labelModel.get('opacity')
+    });
+
+    var textX = r * dx + layout.cx;
+    var textY = r * dy + layout.cy;
     label.attr('position', [textX, textY]);
 
     var rotateType = labelModel.getShallow('rotate');
@@ -192,6 +226,12 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
     }
     else if (rotateType === 'tangential') {
         rotate = Math.PI / 2 - midAngle;
+        if (rotate > Math.PI / 2) {
+            rotate -= Math.PI;
+        }
+        else if (rotate < -Math.PI / 2) {
+            rotate += Math.PI;
+        }
     }
     label.attr('rotation', rotate);
 };

@@ -32,7 +32,10 @@ export default function (seriesType, ecModel, api, payload) {
 
         var treeRoot = data.tree.root;
 
-        initChildren(treeRoot, true);
+        var sortOrder = seriesModel.get('sortOrder');
+        if (sortOrder != null) {
+            initChildren(treeRoot, sortOrder === 'asc');
+        }
 
         var validDataCount = 0;
         zrUtil.each(treeRoot.children, function (child) {
@@ -83,6 +86,15 @@ export default function (seriesType, ecModel, api, payload) {
 
                 endAngle = startAngle + dir * angle;
 
+                var rStart = r0 + rPerLevel * (root.depth - 1);
+                var rEnd = r0 + rPerLevel * root.depth;
+
+                var itemModel = root.getModel();
+                if (itemModel.get('r0') != null) {
+                    rStart = parsePercent(itemModel.get('r0'), size / 2);
+                    rEnd = parsePercent(itemModel.get('r'), size / 2);
+                }
+
                 root.setLayout({
                     angle: angle,
                     startAngle: startAngle,
@@ -90,8 +102,8 @@ export default function (seriesType, ecModel, api, payload) {
                     clockwise: clockwise,
                     cx: cx,
                     cy: cy,
-                    r0: r0 + rPerLevel * (root.depth - 1),
-                    r: r0 + rPerLevel * root.depth
+                    r0: rStart,
+                    r: rEnd
                 });
             }
 
@@ -108,38 +120,6 @@ export default function (seriesType, ecModel, api, payload) {
         };
 
         renderNode(treeRoot, startAngle);
-
-        // // Some sector is constrained by minAngle
-        // // Rest sectors needs recalculate angle
-        // if (restAngle < PI2 && validDataCount) {
-        //     // Average the angle if rest angle is not enough after all angles is
-        //     // Constrained by minAngle
-        //     if (restAngle <= 1e-3) {
-        //         var angle = PI2 / validDataCount;
-        //         data.each('value', function (value, idx) {
-        //             if (!isNaN(value)) {
-        //                 var layout = data.getItemLayout(idx);
-        //                 layout.angle = angle;
-        //                 layout.startAngle = startAngle + dir * idx * angle;
-        //                 layout.endAngle = startAngle + dir * (idx + 1) * angle;
-        //             }
-        //         });
-        //     }
-        //     else {
-        //         unitRadian = restAngle / valueSumLargerThanMinAngle;
-        //         currentAngle = startAngle;
-        //         data.each('value', function (value, idx) {
-        //             if (!isNaN(value)) {
-        //                 var layout = data.getItemLayout(idx);
-        //                 var angle = layout.angle === minAngle
-        //                     ? minAngle : value * unitRadian;
-        //                 layout.startAngle = currentAngle;
-        //                 layout.endAngle = currentAngle + dir * angle;
-        //                 currentAngle += dir * angle;
-        //             }
-        //         });
-        //     }
-        // }
     });
 }
 
@@ -152,7 +132,7 @@ export default function (seriesType, ecModel, api, payload) {
 function initChildren(node, isAsc) {
     var children = node.children || [];
 
-    node.children = sort(children);
+    node.children = sort(children, isAsc);
 
     // Init children recursively
     if (children.length) {
@@ -170,7 +150,7 @@ function initChildren(node, isAsc) {
  */
 function sort(children, isAsc) {
     return children.sort(function (a, b) {
-        var diff = (a.getValue() - b.getValue()) * (isAsc ? 1 : -1);
+        var diff = (a.getValue() - b.getValue()) * (isAsc ? -1 : 1);
         return diff === 0
             ? (a.dataIndex - b.dataIndex) * (isAsc ? 1 : -1)
             : diff;
