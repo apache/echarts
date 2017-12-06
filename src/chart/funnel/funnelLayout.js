@@ -40,6 +40,7 @@ function labelLayout(data) {
         var labelLineModel = itemModel.getModel('labelLine.normal');
 
         var layout = data.getItemLayout(idx);
+        console.log(layout)
         var points = layout.points;
 
         var isLabelInside = labelPosition === 'inner'
@@ -156,10 +157,23 @@ export default function (ecModel, api, payload) {
         for (var i = 0; i < indices.length; i++) {
             var idx = indices[i];
             var nextIdx = indices[i + 1];
-            var start = getLinePoints(idx, y);
-            var end = getLinePoints(nextIdx, y + itemHeight);
 
-            y += itemHeight + gap;
+            var itemModel = data.getItemModel(idx);
+            var height = itemModel.get('itemStyle.normal.height');
+            if (height == null) {
+                height = itemHeight;
+            }
+            else {
+                height = parsePercent(height, viewRect.height);
+                if (sort === 'ascending') {
+                    height = -height;
+                }
+            }
+
+            var start = getLinePoints(idx, y);
+            var end = getLinePoints(nextIdx, y + height);
+
+            y += height + gap;
 
             data.setItemLayout(idx, {
                 points: start.concat(end.slice().reverse())
