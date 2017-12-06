@@ -13,7 +13,7 @@ export default SeriesModel.extend({
 
     brushSelector: 'point',
 
-    progressiveEnabled: true,
+    streamEnabled: true,
 
     defaultOption: {
         coordinateSystem: 'cartesian2d',

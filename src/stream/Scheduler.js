@@ -3,8 +3,8 @@
  */
 
 import {__DEV__} from '../config';
-import {assert, each, createHashMap, makeInner} from 'zrender/src/core/util';
-import {normalizeToArray} from '../util/model';
+import {assert, each, createHashMap} from 'zrender/src/core/util';
+import {normalizeToArray, makeInner} from '../util/model';
 
 var inner = makeInner();
 

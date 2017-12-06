@@ -8,7 +8,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import * as modelUtil from '../util/model';
-import {createTask} from 'zrender/src/core/task';
+import {createTask} from '../stream/task';
 
 var isObject = zrUtil.isObject;
 
@@ -945,6 +945,7 @@ listProto.createEachTask = function (dims, cb, stack) {
     });
 };
 
+// ??? remove
 /**
  * Data filter
  * @param {string|Array.<string>}
@@ -952,55 +953,55 @@ listProto.createEachTask = function (dims, cb, stack) {
  * @param {boolean} [stack=false]
  * @param {*} [context=this]
  */
-// listProto.filterSelf = function (dimensions, cb, stack, context) {
-//     if (typeof dimensions === 'function') {
-//         context = stack;
-//         stack = cb;
-//         cb = dimensions;
-//         dimensions = [];
-//     }
+listProto.filterSelf = function (dimensions, cb, stack, context) {
+    if (typeof dimensions === 'function') {
+        context = stack;
+        stack = cb;
+        cb = dimensions;
+        dimensions = [];
+    }
 
-//     dimensions = zrUtil.map(
-//         normalizeDimensions(dimensions), this.getDimension, this
-//     );
+    dimensions = zrUtil.map(
+        normalizeDimensions(dimensions), this.getDimension, this
+    );
 
-//     var newIndices = [];
-//     var value = [];
-//     var dimSize = dimensions.length;
-//     var indices = this.indices;
+    var newIndices = [];
+    var value = [];
+    var dimSize = dimensions.length;
+    var indices = this.indices;
 
-//     context = context || this;
+    context = context || this;
 
-//     for (var i = 0; i < indices.length; i++) {
-//         var keep;
-//         // Simple optimization
-//         if (!dimSize) {
-//             keep = cb.call(context, i);
-//         }
-//         else if (dimSize === 1) {
-//             keep = cb.call(
-//                 context, this.get(dimensions[0], i, stack), i
-//             );
-//         }
-//         else {
-//             for (var k = 0; k < dimSize; k++) {
-//                 value[k] = this.get(dimensions[k], i, stack);
-//             }
-//             value[k] = i;
-//             keep = cb.apply(context, value);
-//         }
-//         if (keep) {
-//             newIndices.push(indices[i]);
-//         }
-//     }
+    for (var i = 0; i < indices.length; i++) {
+        var keep;
+        // Simple optimization
+        if (!dimSize) {
+            keep = cb.call(context, i);
+        }
+        else if (dimSize === 1) {
+            keep = cb.call(
+                context, this.get(dimensions[0], i, stack), i
+            );
+        }
+        else {
+            for (var k = 0; k < dimSize; k++) {
+                value[k] = this.get(dimensions[k], i, stack);
+            }
+            value[k] = i;
+            keep = cb.apply(context, value);
+        }
+        if (keep) {
+            newIndices.push(indices[i]);
+        }
+    }
 
-//     this.indices = newIndices;
+    this.indices = newIndices;
 
-//     // Reset data extent
-//     this._extent = {};
+    // Reset data extent
+    this._extent = {};
 
-//     return this;
-// };
+    return this;
+};
 
 /**
  * Data mapping to a plain array

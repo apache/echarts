@@ -504,24 +504,33 @@ export function queryDataIndex(data, payload) {
  * Notice: Serialization is not supported.
  *
  * For example:
- * var get = modelUitl.makeGetter();
+ * var inner = zrUitl.makeInner();
  *
- * function some(hostObj) {
- *      get(hostObj)._someProperty = 1212;
+ * function some1(hostObj) {
+ *      inner(hostObj).someProperty = 1212;
+ *      ...
+ * }
+ * function some2() {
+ *      var fields = inner(this);
+ *      fields.someProperty1 = 1212;
+ *      fields.someProperty2 = 'xx';
  *      ...
  * }
  *
  * @return {Function}
  */
-export var makeGetter = (function () {
+export var makeInner = (function () {
     var index = 0;
     return function () {
-        var key = '\0__ec_prop_getter_' + index++;
+        var key = '__\0zr_inner_' + index++;
         return function (hostObj) {
             return hostObj[key] || (hostObj[key] = {});
         };
     };
 })();
+
+// ??? remove
+export var makeGetter = makeInner;
 
 /**
  * @param {module:echarts/model/Global} ecModel

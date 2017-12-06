@@ -371,7 +371,7 @@ var SeriesModel = ComponentModel.extend({
      */
     useStream: function () {
         // ???
-        return this.streamEnabled;
+        return this.streamEnabled && this.get('stream');
     }
 });
 

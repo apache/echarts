@@ -1,16 +1,14 @@
 // Temp.
 
-import * as graphic from '../../util/graphic';
 import SymbolClz from './Symbol';
-import {createTask} from 'zrender/src/core/task';
+import IncrementalDisplayble from 'zrender/src/graphic/IncrementalDisplayable';
+import * as graphic from '../../util/graphic';
 
 /**
  * @constructor
- * @alias module:echarts/chart/helper/SymbolDraw
- * @param {module:zrender/graphic/Group} [symbolCtor]
  */
 function SymbolDraw(symbolCtor) {
-    this.group = new graphic.Group();
+    this.root = new IncrementalDisplayble();
 
     this._symbolCtor = symbolCtor || SymbolClz;
 }
@@ -27,16 +25,22 @@ function symbolNeedsDraw(data, idx, isIgnore) {
                 && data.getItemVisual(idx, 'symbol') !== 'none';
 }
 
-symbolDrawProto.resetData = function (seriesModel, isIgnore) {
-    this._seriesModel = seriesModel;
+symbolDrawProto.updateData = function (data, isIgnore) {
+    var seriesModel = this._seriesModel = data.hostModel;
+    this._isIgnore = isIgnore;
 
+    this.root.clearDisplaybles();
+
+    doRender(this, seriesModel, isIgnore);
+};
+
+function doRender(self, seriesModel, isIgnore) {
+    var root = self.root;
     var data = seriesModel.getData();
-    var group = this.group;
-
     var seriesModel = data.hostModel;
-    var SymbolCtor = this._symbolCtor;
+    var SymbolCtor = self._symbolCtor;
 
-    var seriesScope = this._seriesScope = {
+    var seriesScope = self._seriesScope = {
         itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
         hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
         symbolRotate: seriesModel.get('symbolRotate'),
@@ -48,68 +52,57 @@ symbolDrawProto.resetData = function (seriesModel, isIgnore) {
         cursorStyle: seriesModel.get('cursor')
     };
 
-    group.removeAll();
     var dataEachTask = data.createEachTask(function (newIdx) {
         var point = data.getItemLayout(newIdx);
         if (symbolNeedsDraw(data, newIdx, isIgnore)) {
-            var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
-            symbolEl.attr('position', point);
-            data.setItemGraphicEl(newIdx, symbolEl);
+            // var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+            // symbolEl.attr('position', point);
             // ??? not a good interface? which must ensure data index
             // corresponding implicitly.
-            group.add(symbolEl);
+
+            // ??? group?
+            var symbolEl = new graphic.Circle({
+                shape: {
+                    r: 1 + Math.random() * 1
+                },
+                style: {
+                    fill: '#121',
+                    blend: 'lighter'
+                },
+                position: point
+            });
+            data.setItemGraphicEl(newIdx, symbolEl);
+
+            root.addDisplayable(symbolEl, true);
         }
     });
 
-    group.enableStream();
+    seriesModel.pipeTask(dataEachTask, 'render', ['updateViewBase']);
+}
 
-    dataEachTask.pipe(group.renderTask);
-    seriesModel.pipeTask(dataEachTask, 'render', 'updateLayoutBase');
-};
-
-symbolDrawProto.updateLayout = function () {
+// ???
+symbolDrawProto.updateView = function () {
     var seriesModel = this._seriesModel;
     if (!seriesModel) {
         return;
     }
 
-    var group = this.group;
-
-    var data = seriesModel.getData();
-
-    var dataEachTask = createTask({
-        input: data,
-        progress: function (params, notify) {
-            var dueIndex = params.dueIndex;
-            for (; dueIndex < params.dueEnd; dueIndex++) {
-                var point = data.getItemLayout(dueIndex);
-                var el = data.getItemGraphicEl(dueIndex);
-                // Not use animation
-                el.attr('position', point);
-            }
-            notify(dueIndex);
-        }
-    });
-
-    group.enableStream();
-
-    dataEachTask.pipe(group.renderTask);
-    seriesModel.pipeTask(dataEachTask, 'render');
+    doRender(this, this._seriesModel, this._isIgnore);
 };
 
 symbolDrawProto.remove = function (enableAnimation) {
-    var group = this.group;
+    var root = this.root;
     var data = this._data;
     if (data) {
         if (enableAnimation) {
             data.eachItemGraphicEl(function (el) {
                 el.fadeOut(function () {
-                    group.remove(el);
+                    root.remove(el);
                 });
             });
         }
         else {
-            group.removeAll();
+            root.clearDisplaybles();
         }
     }
 };

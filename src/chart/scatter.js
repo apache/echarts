@@ -4,8 +4,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import './scatter/ScatterSeries';
 import './scatter/ScatterView';
 
-import './scatter/StreamScatterSeries';
-import './scatter/StreamScatterView';
+// import './scatter/StreamScatterSeries';
+// import './scatter/StreamScatterView';
 
 import visualSymbol from '../visual/symbol';
 import layoutPoints from '../layout/points';
@@ -16,5 +16,5 @@ import '../component/gridSimple';
 echarts.registerVisual(zrUtil.curry(visualSymbol, 'scatter', 'circle', null));
 echarts.registerLayout(zrUtil.curry(layoutPoints, 'scatter'));
 
-echarts.registerVisual(zrUtil.curry(visualSymbol, 'streamScatter', 'circle', null));
-echarts.registerLayout(zrUtil.curry(layoutPoints, 'streamScatter'));
+// echarts.registerVisual(zrUtil.curry(visualSymbol, 'streamScatter', 'circle', null));
+// echarts.registerLayout(zrUtil.curry(layoutPoints, 'streamScatter'));
