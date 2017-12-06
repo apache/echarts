@@ -12,6 +12,7 @@ import * as numberUtil from './util/number';
 import * as formatUtil from './util/format';
 import {throttle} from './util/throttle';
 import * as ecHelper from './helper';
+import parseGeoJSON from './coord/geo/parseGeoJson';
 
 
 export {zrender};
@@ -27,7 +28,9 @@ export {matrix};
 export {vector};
 export {colorTool as color};
 export {default as env} from 'zrender/src/core/env';
-export {default as parseGeoJson} from './coord/geo/parseGeoJson';
+
+export {parseGeoJSON};
+export var parseGeoJson = parseGeoJSON;
 
 var ecUtil = {};
 zrUtil.each([

@@ -165,13 +165,13 @@ var creators = {
             }
         ];
 
-        var isXAxisCateogry = xAxisType === 'category';
+        var isXAxisCategory = xAxisType === 'category';
         var isYAxisCategory = yAxisType === 'category';
 
         dimensions = completeDimensions(dimensions, data, completeDimOpt);
 
         var categoryAxesModels = {};
-        if (isXAxisCateogry) {
+        if (isXAxisCategory) {
             categoryAxesModels.x = xAxisModel;
         }
         if (isYAxisCategory) {
@@ -179,7 +179,7 @@ var creators = {
         }
         return {
             dimensions: dimensions,
-            categoryIndex: isXAxisCateogry ? 0 : (isYAxisCategory ? 1 : -1),
+            categoryIndex: isXAxisCategory ? 0 : (isYAxisCategory ? 1 : -1),
             categoryAxesModels: categoryAxesModels
         };
     },
@@ -255,21 +255,21 @@ var creators = {
                 stackable: isStackable(angleAxisType)
             }
         ];
-        var isAngleAxisCateogry = angleAxisType === 'category';
-        var isRadiusAxisCateogry = radiusAxisType === 'category';
+        var isAngleAxisCategory = angleAxisType === 'category';
+        var isRadiusAxisCategory = radiusAxisType === 'category';
 
         dimensions = completeDimensions(dimensions, data, completeDimOpt);
 
         var categoryAxesModels = {};
-        if (isRadiusAxisCateogry) {
+        if (isRadiusAxisCategory) {
             categoryAxesModels.radius = radiusAxisModel;
         }
-        if (isAngleAxisCateogry) {
+        if (isAngleAxisCategory) {
             categoryAxesModels.angle = angleAxisModel;
         }
         return {
             dimensions: dimensions,
-            categoryIndex: isAngleAxisCateogry ? 1 : (isRadiusAxisCateogry ? 0 : -1),
+            categoryIndex: isAngleAxisCategory ? 1 : (isRadiusAxisCategory ? 0 : -1),
             categoryAxesModels: categoryAxesModels
         };
     },
