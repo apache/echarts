@@ -116,6 +116,7 @@ var LogScale = Scale.extend({
      * @override
      */
     unionExtentFromData: function (data, dim) {
+        // ??? filter is abandoned.
         this.unionExtent(data.getDataExtent(dim, true, function (val) {
             return val > 0;
         }));

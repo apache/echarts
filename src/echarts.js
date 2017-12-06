@@ -768,6 +768,9 @@ var updateMethods = {
         coordSysMgr.create(ecModel, api);
         // ??? coord data travel
 
+        // ??? if some processor do not use task, it should also process in progress,
+        // otherwise, consider data extent, both dependent.
+
         startProcessors(this, ecModel, api);
 
         stackSeriesData.call(this, ecModel);
