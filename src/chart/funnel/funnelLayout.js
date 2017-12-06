@@ -40,7 +40,6 @@ function labelLayout(data) {
         var labelLineModel = itemModel.getModel('labelLine.normal');
 
         var layout = data.getItemLayout(idx);
-        console.log(layout)
         var points = layout.points;
 
         var isLabelInside = labelPosition === 'inner'
