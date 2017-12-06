@@ -29,8 +29,6 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     var seriesModel = this._seriesModel = data.hostModel;
     this._isIgnore = isIgnore;
 
-    this.root.clearDisplaybles();
-
     doRender(this, seriesModel, isIgnore);
 };
 
@@ -52,8 +50,11 @@ function doRender(self, seriesModel, isIgnore) {
         cursorStyle: seriesModel.get('cursor')
     };
 
+    root.clearDisplaybles();
+
     var dataEachTask = data.createEachTask(function (newIdx) {
         var point = data.getItemLayout(newIdx);
+        var color = data.getItemVisual(newIdx, 'color');
         if (symbolNeedsDraw(data, newIdx, isIgnore)) {
             // var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
             // symbolEl.attr('position', point);
@@ -66,7 +67,7 @@ function doRender(self, seriesModel, isIgnore) {
                     r: 1 + Math.random() * 1
                 },
                 style: {
-                    fill: '#121',
+                    fill: color,
                     blend: 'lighter'
                 },
                 position: point

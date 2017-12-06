@@ -21,13 +21,15 @@ export default function (ecModel) {
             }
 
             // itemStyle in each data item
-            data.each(function (idx) {
+            var task = data.createEachTask(function (idx) {
                 var itemModel = data.getItemModel(idx);
                 var color = itemModel.get(colorAccessPath, true);
                 if (color != null) {
                     data.setItemVisual(idx, 'color', color);
                 }
             });
+
+            seriesModel.pipeTask(task, 'visual');
         }
     }
     ecModel.eachRawSeries(encodeColor);

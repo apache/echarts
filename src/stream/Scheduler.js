@@ -25,7 +25,7 @@ var TAG = {
     updateViewBase: 1
 };
 
-var TEST_PROGRESS_STEP = 300;
+var TEST_PROGRESS_STEP = 700;
 
 /**
  * @constructor
