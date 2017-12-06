@@ -1,65 +1,67 @@
-define(function (require) {
-    // List layout
-    var layout = require('../../util/layout');
-    var formatUtil = require('../../util/format');
-    var graphic = require('../../util/graphic');
+import {
+    getLayoutRect,
+    box as layoutBox,
+    positionElement
+}  from '../../util/layout';
+import * as formatUtil from '../../util/format';
+import * as graphic from '../../util/graphic';
 
-    function positionGroup(group, model, api) {
-        layout.positionElement(
-            group, model.getBoxLayoutParams(),
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            },
-            model.get('padding')
-        );
-    }
+/**
+ * Layout list like component.
+ * It will box layout each items in group of component and then position the whole group in the viewport
+ * @param {module:zrender/group/Group} group
+ * @param {module:echarts/model/Component} componentModel
+ * @param {module:echarts/ExtensionAPI}
+ */
+export function layout(group, componentModel, api) {
+    var boxLayoutParams = componentModel.getBoxLayoutParams();
+    var padding = componentModel.get('padding');
+    var viewportSize = {width: api.getWidth(), height: api.getHeight()};
 
-    return {
-        /**
-         * Layout list like component.
-         * It will box layout each items in group of component and then position the whole group in the viewport
-         * @param {module:zrender/group/Group} group
-         * @param {module:echarts/model/Component} componentModel
-         * @param {module:echarts/ExtensionAPI}
-         */
-        layout: function (group, componentModel, api) {
-            var rect = layout.getLayoutRect(componentModel.getBoxLayoutParams(), {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }, componentModel.get('padding'));
-            layout.box(
-                componentModel.get('orient'),
-                group,
-                componentModel.get('itemGap'),
-                rect.width,
-                rect.height
-            );
+    var rect = getLayoutRect(
+        boxLayoutParams,
+        viewportSize,
+        padding
+    );
 
-            positionGroup(group, componentModel, api);
+    layoutBox(
+        componentModel.get('orient'),
+        group,
+        componentModel.get('itemGap'),
+        rect.width,
+        rect.height
+    );
+
+    positionElement(
+        group,
+        boxLayoutParams,
+        viewportSize,
+        padding
+    );
+}
+
+export function makeBackground(rect, componentModel) {
+    var padding = formatUtil.normalizeCssArray(
+        componentModel.get('padding')
+    );
+    var style = componentModel.getItemStyle(['color', 'opacity']);
+    style.fill = componentModel.get('backgroundColor');
+    var rect = new graphic.Rect({
+        shape: {
+            x: rect.x - padding[3],
+            y: rect.y - padding[0],
+            width: rect.width + padding[1] + padding[3],
+            height: rect.height + padding[0] + padding[2],
+            r: componentModel.get('borderRadius')
         },
+        style: style,
+        silent: true,
+        z2: -1
+    });
+    // FIXME
+    // `subPixelOptimizeRect` may bring some gap between edge of viewpart
+    // and background rect when setting like `left: 0`, `top: 0`.
+    // graphic.subPixelOptimizeRect(rect);
 
-        addBackground: function (group, componentModel) {
-            var padding = formatUtil.normalizeCssArray(
-                componentModel.get('padding')
-            );
-            var boundingRect = group.getBoundingRect();
-            var style = componentModel.getItemStyle(['color', 'opacity']);
-            style.fill = componentModel.get('backgroundColor');
-            var rect = new graphic.Rect({
-                shape: {
-                    x: boundingRect.x - padding[3],
-                    y: boundingRect.y - padding[0],
-                    width: boundingRect.width + padding[1] + padding[3],
-                    height: boundingRect.height + padding[0] + padding[2]
-                },
-                style: style,
-                silent: true,
-                z2: -1
-            });
-            graphic.subPixelOptimizeRect(rect);
-
-            group.add(rect);
-        }
-    };
-});
+    return rect;
+}

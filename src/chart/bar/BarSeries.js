@@ -1,11 +1,10 @@
-define(function(require) {
+import BaseBarSeries from './BaseBarSeries';
 
-    return require('./BaseBarSeries').extend({
+export default BaseBarSeries.extend({
 
-        type: 'series.bar',
+    type: 'series.bar',
 
-        dependencies: ['grid', 'polar'],
+    dependencies: ['grid', 'polar'],
 
-        brushSelector: 'rect'
-    });
+    brushSelector: 'rect'
 });

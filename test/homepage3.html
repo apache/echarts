@@ -1,0 +1,92 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="./lib/jquery.min.js"></script>
+    </head>
+
+
+
+
+    <body>
+        <style>
+            html,
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .ch-main {
+                position: relative;
+                margin-top: 100px;
+                margin-left: 100px;
+            }
+            .ch-pc-chart {
+                width: 590px;
+                height: 373px;
+                border-radius: 12px;
+                box-shadow: 6px 6px 22px #ccc;
+            }
+            .ch-mobile-box {
+                position: absolute;
+                left: 433px;
+                top: -60px;
+                width: 259px;
+                height: 484px;
+                z-index: 300;
+                user-select: none;
+            }
+            .ch-mobile-content {
+                position: absolute;
+                overflow: hidden;
+                width: 199px;
+                height: 332px;
+                border-bottom-left-radius: 5px;
+                border-bottom-right-radius: 5px;
+                left: 463px;
+                top: 18px;
+                background: #333;
+                z-index: 300;
+                padding: 0;
+                margin: 0;
+            }
+            .ch-mobile-chart {
+                width: 200%;
+                height: 200%;
+                transform-origin:0 0;
+                transform:scale(0.5);
+                padding: 0;
+                margin: 0;
+            }
+        </style>
+        <div class="ch-main">
+            <div class="ch-pc-chart"></div>
+            <img class="ch-mobile-box" src="./data/iphone.png"/>
+            <div class="ch-mobile-content">
+                <div class="ch-mobile-chart"></div>
+            </div>
+        </div>
+
+
+        <script src="./homepage3.js"></script>
+
+
+        <script type="text/javascript">
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/brush',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
+            ], function (echarts) {
+                renderHomepage3Demo(echarts);
+            });
+        </script>
+
+    </body>
+</html>

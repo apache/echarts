@@ -1,51 +1,44 @@
-define(function (require) {
+import * as textContain from 'zrender/src/contain/text';
+import * as graphicUtil from '../../util/graphic';
 
-    var textContain = require('zrender/contain/text');
+var PATH_COLOR = ['textStyle', 'color'];
 
-    function getShallow(model, path) {
-        return model && model.getShallow(path);
+export default {
+    /**
+     * Get color property or get color from option.textStyle.color
+     * @param {boolean} [isEmphasis]
+     * @return {string}
+     */
+    getTextColor: function (isEmphasis) {
+        var ecModel = this.ecModel;
+        return this.getShallow('color')
+            || (
+                (!isEmphasis && ecModel) ? ecModel.get(PATH_COLOR) : null
+            );
+    },
+
+    /**
+     * Create font string from fontStyle, fontWeight, fontSize, fontFamily
+     * @return {string}
+     */
+    getFont: function () {
+        return graphicUtil.getFont({
+            fontStyle: this.getShallow('fontStyle'),
+            fontWeight: this.getShallow('fontWeight'),
+            fontSize: this.getShallow('fontSize'),
+            fontFamily: this.getShallow('fontFamily')
+        }, this.ecModel);
+    },
+
+    getTextRect: function (text) {
+        return textContain.getBoundingRect(
+            text,
+            this.getFont(),
+            this.getShallow('align'),
+            this.getShallow('verticalAlign') || this.getShallow('baseline'),
+            this.getShallow('padding'),
+            this.getShallow('rich'),
+            this.getShallow('truncateText')
+        );
     }
-
-    return {
-        /**
-         * Get color property or get color from option.textStyle.color
-         * @return {string}
-         */
-        getTextColor: function () {
-            var ecModel = this.ecModel;
-            return this.getShallow('color')
-                || (ecModel && ecModel.get('textStyle.color'));
-        },
-
-        /**
-         * Create font string from fontStyle, fontWeight, fontSize, fontFamily
-         * @return {string}
-         */
-        getFont: function () {
-            var ecModel = this.ecModel;
-            var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
-            return [
-                // FIXME in node-canvas fontWeight is before fontStyle
-                this.getShallow('fontStyle') || getShallow(gTextStyleModel, 'fontStyle'),
-                this.getShallow('fontWeight') || getShallow(gTextStyleModel, 'fontWeight'),
-                (this.getShallow('fontSize') || getShallow(gTextStyleModel, 'fontSize') || 12) + 'px',
-                this.getShallow('fontFamily') || getShallow(gTextStyleModel, 'fontFamily') || 'sans-serif'
-            ].join(' ');
-        },
-
-        getTextRect: function (text) {
-            return textContain.getBoundingRect(
-                text,
-                this.getFont(),
-                this.getShallow('align'),
-                this.getShallow('baseline')
-            );
-        },
-
-        truncateText: function (text, containerWidth, ellipsis, options) {
-            return textContain.truncateText(
-                text, containerWidth, this.getFont(), ellipsis, options
-            );
-        }
-    };
-});
+};

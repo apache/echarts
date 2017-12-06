@@ -2,20 +2,7 @@
 /*jshint camelcase:false*/
 
 function createChart(id, echarts, option, height) {
-    var dom = document.getElementById(id);
-    if (dom) {
-        if (height != null) {
-            dom.style.height = height + 'px';
-        }
-        var chart = echarts.init(dom);
-        chart.setOption(option);
-        resizable(chart);
-        return chart;
-    }
-}
-
-function resizable(chart) {
-    window.addEventListener('resize', chart.resize);
+    return window.testHelper.createChart(echarts, id, option, height);
 }
 
 function extend(target, source) {

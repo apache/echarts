@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
     </head>
     <body>
         <style>
@@ -16,11 +16,11 @@
 
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/visualMapContinuous'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMapContinuous'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -88,7 +88,7 @@
                             itemWidth: 30,
                             calculable: true,
                             inverse: true,
-                            dimension: 'z',
+                            dimension: 'value',
                             inRange: {
                                 symbolSize: [10, 180]
                             }

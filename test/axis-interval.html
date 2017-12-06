@@ -1,0 +1,271 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #a60;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+        <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
+        <div class="chart" id="main0"></div>
+        <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
+        <div class="chart" id="main1"></div>
+        <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
+        <div class="chart" id="main2"></div>
+
+
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/pie',
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/map',
+                // 'echarts/chart/parallel',
+                // 'echarts/chart/radar',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/geo',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value',
+                            scale: true,
+                            min: 0,
+                            minInterval: 1
+                        }
+                    ],
+                    series: [
+                        {
+                            type:'line',
+                            data: [1]
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'main0', option);
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var categoryData = [];
+                var data = [];
+                var rotate = 20;
+
+                for (var i = 0; i < 100; i++) {
+                    categoryData.push(i + 'longlonglong');
+                    data.push(Math.random() * 1000000);
+                }
+
+                option = {
+                    title: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    grid: [{
+                        height: 50
+                    }, {
+                        top: 220,
+                        height: 300
+                    }],
+                    xAxis: [{
+                        id: 'category',
+                        type: 'category',
+                        boundaryGap: false,
+                        data: categoryData,
+                        axisLabel: {
+                            rotate: rotate
+                        }
+                    }, {
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
+                    }, {
+                        id: 'category',
+                        type: 'category',
+                        boundaryGap: false,
+                        data: categoryData,
+                        gridIndex: 1,
+                        axisLabel: {
+                            rotate: rotate
+                        }
+                    }],
+                    series: [
+                        {
+                            type:'line',
+                            data: data
+                        },
+                        {
+                            type:'line',
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            data: data
+                        }
+                    ]
+                };
+
+                var chart = testHelper.createChart(echarts, 'main1', option, {height: 600});
+
+                chart && next();
+
+                function next() {
+                    var nextInterval = rotate % 90 === 0 ? 2000: 70;
+                    rotate = (rotate + 1) % 360;
+                    setTimeout(function () {
+                        chart.setOption({
+                            xAxis: {
+                                id: 'category',
+                                axisLabel: {
+                                    rotate: rotate
+                                }
+                            },
+                            yAxis: {
+                                id: 'category',
+                                axisLabel: {
+                                    rotate: rotate
+                                }
+                            }
+                        });
+                        next();
+                    }, nextInterval);
+                }
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/rainfall.json',
+                'echarts'
+            ], function (rainfallData, echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        bottom: 150
+                    },
+                    dataZoom: {
+                        show: true,
+                        realtime: true,
+                        startValue: '2009-09-20 12:00',
+                        end: 100
+                    },
+                    xAxis: [
+                        {
+                            type: 'time',
+                            axisLabel: {
+                                formatter: function (value) {
+                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
+                                }
+                            }
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            name: '流量(m^3/s)'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '流量',
+                            type: 'line',
+                            symbol: 'none',
+                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
+                            data: rainfallData.flow.map(function (val, idx) {
+                                return [+(new Date(rainfallData.category[idx])), val];
+                            })
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'main2', option);
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+    </body>
+</html>

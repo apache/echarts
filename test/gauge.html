@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/dat.gui.min.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
@@ -17,14 +17,14 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/gauge',
-                'echarts/component/legend',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/gauge',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 var option ={
@@ -64,16 +64,107 @@
                                     color: 'auto'
                                 }
                             },
-                            title : {
-                                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                                    fontWeight: 'bolder',
-                                    fontSize: 20,
-                                    fontStyle: 'italic'
+                            axisLabel: {
+                                formatter: '{a|{value}} km/h',
+                                rich: {
+                                    a: {
+                                        color: '#222',
+                                        textBorderColor: '#fff',
+                                        textBorderWidth: 2,
+                                        backgroundColor: 'auto',
+                                        padding: [2, 4],
+                                        borderRadius: 3
+                                    }
                                 }
                             },
+                            title : {
+                                textStyle: { // Test compat
+                                    fontWeight: 'bolder',
+                                    fontSize: 26,
+                                },
+                                offsetCenter: [0, 0],
+                                formatter: '{a|单位：}{value}',
+                                backgroundColor: '#aabbcc',
+                                padding: 10,
+                                borderRadius: 5,
+                                fontStyle: 'italic'
+                            },
                             detail : {
-                                textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                                    fontWeight: 'bolder'
+                                fontSize: 24,
+                                fontWeight: 'bold',
+                                textStyle: { // Test compat
+                                    backgroundColor: '#eeffee',
+                                },
+                                offsetCenter: [0, '70%'],
+                                borderRadius: 10,
+                                borderWidth: 2,
+                                borderColor: '#33aa33',
+                                shadowBlur: 2,
+                                shadowColor: '#222',
+                                shadowOffsetX: 5,
+                                shadowOffsetY: 5,
+                                width: 'auto',
+                                rotate: 15,
+                                textShadowBlur: 2,
+                                textShadowColor: '#66eeaa',
+                                textShadowOffsetX: 2,
+                                textShadowOffsetY: 3,
+                                formatter: [
+                                    '{a|码表}',
+                                    '{b|{value}}{c|km/h}',
+                                    '{j|width is this line is 400}',
+                                    '{d|left}{lineHeight|}{f|top}{g|bottom}middle{e|right}{e1|右边}'
+                                ].join('\n'),
+                                rich: {
+                                    a: {
+                                        fontSize: 34,
+                                        color: 'auto',
+                                    },
+                                    b: {
+                                        fontSize: 20,
+                                        color: '#12294f',
+                                        align: 'center',
+                                        padding: [0, 5, 0, 0]
+                                    },
+                                    c: {
+                                        fontSize: 14,
+                                        color: '#aa99bb',
+                                        rotate: 30,
+                                        backgroundColor: '#223344',
+                                        borderRadius: 3,
+                                        padding: [2, 10]
+                                    },
+                                    d: {
+                                        align: 'left'
+                                    },
+                                    e: {
+                                        align: 'right'
+                                    },
+                                    e1: {
+                                        color: '#33aa99',
+                                        fontSize: 16,
+                                        align: 'right'
+                                    },
+                                    f: {
+                                        verticalAlign: 'top'
+                                    },
+                                    g: {
+                                        verticalAlign: 'bottom'
+                                    },
+                                    h: {
+                                        align: 'center'
+                                    },
+                                    i: {
+                                        align: 'center'
+                                    },
+                                    j: {
+                                        width: 400,
+                                        backgroundColor: '#aabbcc',
+                                        color: '#123'
+                                    },
+                                    lineHeight: {
+                                        lineHeight: 46
+                                    }
                                 }
                             },
                             data:[{value: 40, name: 'km/h'}]
@@ -113,8 +204,9 @@
                             },
                             detail : {
                                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                                    fontWeight: 'bolder'
-                                }
+                                    fontWeight: 'bolder',
+                                    fontSize: 12
+                                },
                             },
                             data:[{value: 1.5, name: 'x1000 r/min'}]
                         },
@@ -202,7 +294,7 @@
                                 }
                             },
                             pointer: {
-                                width:2
+                                width: 2
                             },
                             title : {
                                 show: false

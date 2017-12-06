@@ -3,9 +3,9 @@ describe('graphic_setOption', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/chart/line',
-        'echarts/component/graphic',
-        'echarts/component/grid'
+        'echarts/src/chart/line',
+        'echarts/src/component/graphic',
+        'echarts/src/component/grid'
     ]);
 
     var NUMBER_PRECISION = 6;
@@ -695,11 +695,10 @@ describe('graphic_setOption', function() {
                     rotation: 0
                 },
                 {
-                    position: [106.66190488337573, 141.51471862576142],
+                    position: [98.17662350913716, 133.02943725152284],
                     scale: [1, 1],
                     rotation: 0.7853981633974483,
                     style: {
-                        textBaseline: 'middle',
                         font: '24px Microsoft YaHei',
                         text: '全屏右下角',
                         textVerticalAlign: null
@@ -768,22 +767,20 @@ describe('graphic_setOption', function() {
                     }
                 },
                 {
-                    position: [141.72076808246507, 103.8569220667674],
+                    position: [145.47972137162424, 97.71384413353478],
                     scale: [1, 1],
                     rotation: 0.5,
                     style: {
-                        textBaseline: 'middle',
                         font: '14px Microsoft YaHei',
                         text: 'group最右下角',
                         textVerticalAlign: null
                     }
                 },
                 {
-                    position: [46, 105],
+                    position: [46, 96],
                     scale: [1, 1],
                     rotation: 0,
                     style: {
-                        textBaseline: 'middle',
                         font: '18px sans-serif',
                         text: '全屏最下中间\n这是多行文字\n这是第三行',
                         textVerticalAlign: null
@@ -800,11 +797,10 @@ describe('graphic_setOption', function() {
                     rotation: 0
                 },
                 {
-                    position: [106.66190488337573, 141.51471862576142],
+                    position: [98.17662350913716, 133.02943725152286],
                     scale: [1, 1],
                     rotation: 0.7853981633974483,
                     style: {
-                        textBaseline: 'middle',
                         font: '24px Microsoft YaHei',
                         text: '全屏右下角',
                         textVerticalAlign: null
@@ -861,22 +857,20 @@ describe('graphic_setOption', function() {
                     }
                 },
                 {
-                    position: [141.72076808246507, 103.8569220667674],
+                    position: [145.47972137162424, 97.71384413353478],
                     scale: [1, 1],
                     rotation: 0.5,
                     style: {
-                        textBaseline: 'middle',
                         font: '14px Microsoft YaHei',
                         text: 'group最右下角',
                         textVerticalAlign: null
                     }
                 },
                 {
-                    position: [46, 105],
+                    position: [46, 96],
                     scale: [1, 1],
                     rotation: 0,
                     style: {
-                        textBaseline: 'middle',
                         font: '18px sans-serif',
                         text: '全屏最下中间\n这是多行文字\n这是第三行',
                         textVerticalAlign: null
@@ -1173,11 +1167,10 @@ describe('graphic_setOption', function() {
                     }
                 },
                 {
-                    position: [-72, -12],
+                    position: [-72, -18],
                     scale: [1, 1],
                     rotation: 0,
                     style: {
-                        textBaseline: 'middle',
                         text: '横轴表示温度，单位是°C\n纵轴表示高度，单位是km\n右上角有一个图片做的水印',
                         font: '12px Microsoft YaHei',
                         textVerticalAlign: null

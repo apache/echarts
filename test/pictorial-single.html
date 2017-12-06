@@ -2,14 +2,14 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="data/pie-texture.js"></script>
         <script src="data/symbols.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
@@ -49,16 +49,16 @@
 
             function makeChart(id, option, cb) {
                 require([
-                    'echarts',
-                    'echarts/chart/pictorialBar',
-                    'echarts/chart/bar',
-                    'echarts/chart/line',
-                    'echarts/chart/scatter',
-                    'echarts/component/grid',
-                    'echarts/component/legend',
-                    'echarts/component/markLine',
-                    'echarts/component/tooltip',
-                    'echarts/component/dataZoom'
+                    'echarts'
+                    // 'echarts/chart/pictorialBar',
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/chart/scatter',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/markLine',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/dataZoom'
                 ], function (echarts) {
 
                     if (typeof option === 'function') {

@@ -1,0 +1,254 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+        <h2>some empty</h2>
+        <div class="chart" id="main1"></div>
+
+        <h2>all empty</h2>
+        <div class="chart" id="main2"></div>
+
+        <h2>all zero</h2>
+        <div class="chart" id="main3"></div>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/pie',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox'
+            ], function (ec) {
+                echarts = ec;
+                chart = myChart = echarts.init(document.getElementById('main1'));
+
+                option = {
+                    color: ['#36bbd2', '#FEA054', '#FEE054', '#9CCC5A', '#F77157', '#9054FE', '#3988FF'],
+                    series: [{
+                        name: '访问来源',
+                        type: 'pie',
+                        radius: '60%',
+                        center: ['50%', '50%'],
+                        roseType: 'area',
+                        clockwise: false, // 逆时针
+                        minAngle: 20,
+                        stillShowZeroSum: false,
+                        hoverAnimation: false,
+                        selectedMode: false,
+                        selectedOffset: 0,
+                        legendHoverLink: false,
+                        data: [{
+                            value: 5,
+                            name: '本周到期'
+                        }, {
+                            value: '-',
+                            name: '下周到期'
+                        }, {
+                            value: 0,
+                            name: '本月到期'
+                        }, {
+                            value: '-',
+                            name: '未到期'
+                        }, {
+                            value: 66,
+                            name: '已完成'
+                        }, {
+                            value: 77,
+                            name: '暂停'
+                        }, {
+                            value: 88,
+                            name: '逾期'
+                        }],
+                        label: {
+                            normal: {
+                                textStyle: {
+                                    color: '#999'
+                                },
+                                formatter: "{b}: {c}"
+                            }
+                        },
+                        labelLine: {
+                            normal: {
+                                lineStyle: {
+                                    color: '#e5e5e5'
+                                },
+                                smooth: 0,
+                                length: 5,
+                                length2: 15
+                            }
+                        },
+                        itemStyle: {
+                            normal: {
+                                shadowBlur: 20,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            },
+                        },
+                        // animationType: 'scale',
+                        // animationEasing: 'elasticOut',
+                        // animationDelay: function(idx) {
+                        //     return Math.random() * 200;
+                        // }
+                    }]
+                };
+
+                chart.setOption(option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'echarts/chart/pie',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox'
+            ], function (ec) {
+                echarts = ec;
+                chart = myChart = echarts.init(document.getElementById('main2'));
+
+                option = {
+                    color: ['#36bbd2', '#FEA054', '#FEE054', '#9CCC5A', '#F77157', '#9054FE', '#3988FF'],
+                    series: [{
+                        name: '访问来源',
+                        type: 'pie',
+                        radius: '60%',
+                        center: ['50%', '50%'],
+                        roseType: 'area',
+                        clockwise: false, // 逆时针
+                        minAngle: 20,
+                        data: [{
+                            value: '-',
+                            name: '本周到期'
+                        }, {
+                            value: '-',
+                            name: '下周到期'
+                        }, {
+                            value: '-',
+                            name: '本月到期'
+                        }]
+                    }]
+                };
+
+                chart.setOption(option);
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'echarts/chart/pie',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox'
+            ], function (ec) {
+                echarts = ec;
+                chart = myChart = echarts.init(document.getElementById('main3'));
+
+                option = {
+                    color: ['#36bbd2', '#FEA054', '#FEE054', '#9CCC5A', '#F77157', '#9054FE', '#3988FF'],
+                    series: [{
+                        name: '访问来源',
+                        type: 'pie',
+                        radius: '60%',
+                        center: ['50%', '50%'],
+                        roseType: 'area',
+                        clockwise: false, // 逆时针
+                        minAngle: 20,
+                        data: [{
+                            value: 0,
+                            name: '本周到期'
+                        }, {
+                            value: 0,
+                            name: '下周到期'
+                        }, {
+                            value: 0,
+                            name: '本月到期'
+                        }]
+                    }]
+                };
+
+                chart.setOption(option);
+            });
+        </script>
+
+
+    </body>
+</html>

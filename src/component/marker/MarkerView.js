@@ -1,39 +1,35 @@
-define(function (require) {
+import * as echarts from '../../echarts';
+import * as zrUtil from 'zrender/src/core/util';
 
-    return require('../../echarts').extendComponentView({
+export default echarts.extendComponentView({
 
-        type: 'marker',
+    type: 'marker',
 
-        init: function () {
-            /**
-             * Markline grouped by series
-             * @private
-             * @type {Object}
-             */
-            this.markerGroupMap = {};
-        },
+    init: function () {
+        /**
+         * Markline grouped by series
+         * @private
+         * @type {module:zrender/core/util.HashMap}
+         */
+        this.markerGroupMap = zrUtil.createHashMap();
+    },
 
-        render: function (markerModel, ecModel, api) {
-            var markerGroupMap = this.markerGroupMap;
-            for (var name in markerGroupMap) {
-                if (markerGroupMap.hasOwnProperty(name)) {
-                    markerGroupMap[name].__keep = false;
-                }
-            }
+    render: function (markerModel, ecModel, api) {
+        var markerGroupMap = this.markerGroupMap;
+        markerGroupMap.each(function (item) {
+            item.__keep = false;
+        });
 
-            var markerModelKey = this.type + 'Model';
-            ecModel.eachSeries(function (seriesModel) {
-                var markerModel = seriesModel[markerModelKey];
-                markerModel && this.renderSeries(seriesModel, markerModel, ecModel, api);
-            }, this);
+        var markerModelKey = this.type + 'Model';
+        ecModel.eachSeries(function (seriesModel) {
+            var markerModel = seriesModel[markerModelKey];
+            markerModel && this.renderSeries(seriesModel, markerModel, ecModel, api);
+        }, this);
 
-            for (var name in markerGroupMap) {
-                if (markerGroupMap.hasOwnProperty(name) && !markerGroupMap[name].__keep) {
-                    this.group.remove(markerGroupMap[name].group);
-                }
-            }
-        },
+        markerGroupMap.each(function (item) {
+            !item.__keep && this.group.remove(item.group);
+        }, this);
+    },
 
-        renderSeries: function () {}
-    });
+    renderSeries: function () {}
 });

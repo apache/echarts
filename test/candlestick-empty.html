@@ -1,0 +1,146 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            /**
+             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
+             * @see <http://bl.ocks.org/mbostock/4061502>
+             */
+            var chart;
+            var data;
+
+            require([
+                'echarts'
+                // 'echarts/chart/candlestick',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/markLine'
+            ], function (echarts) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
+
+                });
+
+
+                var data0 = splitData([
+                    ['2013/1/24'],
+                    ['2013/1/25', 2300,2291.3,2288.26,2308.38],
+                    ['2013/1/28'],
+                    ['2013/1/29', 2347.22,2358.98,2337.35,2363.8],
+                    ['2013/1/30'],
+                    ['2013/1/31', 2383.43,2385.42,2371.23,2391.82],
+                    ['2013/2/1', 2377.41,2419.02,2369.57,2421.15],
+                    ['2013/2/4', 2425.92,2428.15,2417.58,2440.38],
+                    ['2013/2/5', 2411,2433.13,2403.3,2437.42],
+                    ['2013/2/6', 2432.68,2434.48,2427.7,2441.73],
+                    ['2013/2/7', 2430.69,2418.53,2394.22,2433.89],
+                    ['2013/2/8', 2416.62,2432.4,2414.4,2443.03],
+                    ['2013/2/18', 2441.91,2421.56,2415.43,2444.8],
+                    ['2013/2/19', 2420.26,2382.91,2373.53,2427.07],
+                    ['2013/2/20', 2383.49,2397.18,2370.61,2397.94],
+                    ['2013/2/21', 2378.82,2325.95,2309.17,2378.82],
+                    ['2013/2/22', 2322.94,2314.16,2308.76,2330.88]
+                ]);
+
+                option = {
+                    title: {
+                        text: '上证指数',
+                        left: 0
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    legend: {
+                        data: ['日K', '日K 空']
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        bottom: '15%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data0.categoryData,
+                        scale: true,
+                        boundaryGap : false,
+                        axisLine: {onZero: false},
+                        splitLine: {show: false},
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        scale: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside'
+                        },
+                        {
+                            show: true,
+                            type: 'slider',
+                            y: '90%'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '日K',
+                            type: 'candlestick',
+                            data: data0.values
+                        },
+                        // {
+                        //     name: '日K 空',
+                        //     type: 'candlestick',
+                        //     data: []
+                        // },
+
+                    ]
+                };
+
+                chart.setOption(option);
+            });
+
+
+            function splitData(rawData) {
+                var categoryData = [];
+                var values = []
+                for (var i = 0; i < rawData.length; i++) {
+                    categoryData.push(rawData[i].splice(0, 1)[0]);
+                    values.push(rawData[i])
+                }
+                return {
+                    categoryData: categoryData,
+                    values: values
+                };
+            }
+
+
+        </script>
+    </body>
+</html>

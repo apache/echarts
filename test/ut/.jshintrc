@@ -16,7 +16,7 @@
     "plusplus": false,
     "quotmark": "single",
     "undef": true,
-    "predef": ["define", "require", "describe", "expect", "beforeEach", "it"],
+    "predef": ["define", "require", "requireES", "describe", "expect", "beforeEach", "it"],
     "unused": "vars",
     "strict": false,
     "maxparams": 20,

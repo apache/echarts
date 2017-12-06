@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -17,11 +17,11 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var itemStyle = {
@@ -46,7 +46,7 @@
                     div.style.cssText = 'width: 400px; height:200px;';
                     main.appendChild(div);
                     var chart = echarts.init(div, null, {
-                        renderer: 'canvas'
+
                     });
 
                     var xAxisData = [];

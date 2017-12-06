@@ -1,21 +1,16 @@
-define(function(require) {
+import * as zrUtil from 'zrender/src/core/util';
 
-    'use strict';
+var echartsAPIList = [
+    'getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed',
+    'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption',
+    'getViewOfComponentModel', 'getViewOfSeriesModel'
+];
+// And `getCoordinateSystems` and `getComponentByElement` will be injected in echarts.js
 
-    var zrUtil = require('zrender/core/util');
+function ExtensionAPI(chartInstance) {
+    zrUtil.each(echartsAPIList, function (name) {
+        this[name] = zrUtil.bind(chartInstance[name], chartInstance);
+    }, this);
+}
 
-    var echartsAPIList = [
-        'getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed',
-        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption',
-        'getViewOfComponentModel', 'getViewOfSeriesModel'
-    ];
-    // And `getCoordinateSystems` and `getComponentByElement` will be injected in echarts.js
-
-    function ExtensionAPI(chartInstance) {
-        zrUtil.each(echartsAPIList, function (name) {
-            this[name] = zrUtil.bind(chartInstance[name], chartInstance);
-        }, this);
-    }
-
-    return ExtensionAPI;
-});
+export default ExtensionAPI;

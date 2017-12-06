@@ -1,0 +1,109 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, .chart {
+                width: 100%;
+                margin: 0;
+            }
+
+            .chart {
+                height: 400px;
+            }
+        </style>
+        <div id="chart-1" class="chart"></div>
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/chart/line',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/toolbox',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('chart-1'));
+
+                var xCnt = 500;
+                var data = [];
+                var xAxis = [];
+                for (var i = 0; i < xCnt; ++i) {
+                    data.push(
+                        Math.round(Math.random() * 100 * i) / 100
+                            * (Math.random() < 0.6 ? 1 : -1)
+                    );
+                    xAxis.push((i + 1) + '');
+                }
+
+                chart.setOption({
+                    dataZoom: [{
+                        type: 'inside',
+                        startValue: '20',
+                        endValue: '50'
+                    }, {
+                        type: 'slider',
+                        startValue: '20',
+                        endValue: '50'
+                    }],
+                    toolbox: {
+                        show: true,
+                        feature: {
+                            dataZoom: {
+                                show: true
+                            },
+                            restore: {
+                                show: true
+                            }
+                        }
+                    },
+                    tooltip: {
+                        show: true
+                    },
+                    xAxis: {
+                        data: xAxis
+                    },
+                    yAxis: {
+                        min: function (value) {
+                            return value.min - 20;
+                        },
+                        max: function (value) {
+                            return value.max + 20;
+                        }
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: data,
+                        markPoint: {
+                            symbol: 'pin',
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: 'green'
+                                }
+                            },
+                            data: [{
+                                name: 'max',
+                                type: 'max'
+                            }, {
+                                name: 'min',
+                                type: 'min'
+                            }]
+                        }
+                    }]
+                });
+            });
+        </script>
+    </body>
+</html>

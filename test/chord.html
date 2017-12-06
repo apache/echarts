@@ -2,8 +2,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
     <body>
@@ -18,11 +18,11 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/chord',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/chord',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -36,7 +36,7 @@
                     series: [{
                         name: 'chord',
                         type: 'chord',
-                        sort: 'ascending',
+                        sort: 'descending',
                         data : [
                             {name : 'group1'},
                             {name : 'group2'},

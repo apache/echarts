@@ -1,197 +1,189 @@
-/**
- * @file Timeline model
- */
-define(function(require) {
+import * as zrUtil from 'zrender/src/core/util';
+import ComponentModel from '../../model/Component';
+import List from '../../data/List';
+import * as modelUtil from '../../util/model';
 
-    var ComponentModel = require('../../model/Component');
-    var List = require('../../data/List');
-    var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
+var TimelineModel = ComponentModel.extend({
 
-    var TimelineModel = ComponentModel.extend({
+    type: 'timeline',
 
-        type: 'timeline',
+    layoutMode: 'box',
 
-        layoutMode: 'box',
+    /**
+     * @protected
+     */
+    defaultOption: {
 
-        /**
-         * @protected
-         */
-        defaultOption: {
+        zlevel: 0,                  // 一级层叠
+        z: 4,                       // 二级层叠
+        show: true,
 
-            zlevel: 0,                  // 一级层叠
-            z: 4,                       // 二级层叠
-            show: true,
+        axisType: 'time',  // 模式是时间类型，支持 value, category
 
-            axisType: 'time',  // 模式是时间类型，支持 value, category
+        realtime: true,
 
-            realtime: true,
+        left: '20%',
+        top: null,
+        right: '20%',
+        bottom: 0,
+        width: null,
+        height: 40,
+        padding: 5,
 
-            left: '20%',
-            top: null,
-            right: '20%',
-            bottom: 0,
-            width: null,
-            height: 40,
-            padding: 5,
+        controlPosition: 'left',           // 'left' 'right' 'top' 'bottom' 'none'
+        autoPlay: false,
+        rewind: false,                     // 反向播放
+        loop: true,
+        playInterval: 2000,                // 播放时间间隔，单位ms
 
-            controlPosition: 'left',           // 'left' 'right' 'top' 'bottom' 'none'
-            autoPlay: false,
-            rewind: false,                     // 反向播放
-            loop: true,
-            playInterval: 2000,                // 播放时间间隔，单位ms
+        currentIndex: 0,
 
-            currentIndex: 0,
-
-            itemStyle: {
-                normal: {},
-                emphasis: {}
+        itemStyle: {
+            normal: {},
+            emphasis: {}
+        },
+        label: {
+            normal: {
+                color: '#000'
             },
-            label: {
-                normal: {
-                    textStyle: {
-                        color: '#000'
-                    }
-                },
-                emphasis: {}
-            },
-
-            data: []
+            emphasis: {}
         },
 
-        /**
-         * @override
-         */
-        init: function (option, parentModel, ecModel) {
+        data: []
+    },
 
-            /**
-             * @private
-             * @type {module:echarts/data/List}
-             */
-            this._data;
-
-            /**
-             * @private
-             * @type {Array.<string>}
-             */
-            this._names;
-
-            this.mergeDefaultAndTheme(option, ecModel);
-            this._initData();
-        },
-
-        /**
-         * @override
-         */
-        mergeOption: function (option) {
-            TimelineModel.superApply(this, 'mergeOption', arguments);
-            this._initData();
-        },
-
-        /**
-         * @param {number} [currentIndex]
-         */
-        setCurrentIndex: function (currentIndex) {
-            if (currentIndex == null) {
-                currentIndex = this.option.currentIndex;
-            }
-            var count = this._data.count();
-
-            if (this.option.loop) {
-                currentIndex = (currentIndex % count + count) % count;
-            }
-            else {
-                currentIndex >= count && (currentIndex = count - 1);
-                currentIndex < 0 && (currentIndex = 0);
-            }
-
-            this.option.currentIndex = currentIndex;
-        },
-
-        /**
-         * @return {number} currentIndex
-         */
-        getCurrentIndex: function () {
-            return this.option.currentIndex;
-        },
-
-        /**
-         * @return {boolean}
-         */
-        isIndexMax: function () {
-            return this.getCurrentIndex() >= this._data.count() - 1;
-        },
-
-        /**
-         * @param {boolean} state true: play, false: stop
-         */
-        setPlayState: function (state) {
-            this.option.autoPlay = !!state;
-        },
-
-        /**
-         * @return {boolean} true: play, false: stop
-         */
-        getPlayState: function () {
-            return !!this.option.autoPlay;
-        },
+    /**
+     * @override
+     */
+    init: function (option, parentModel, ecModel) {
 
         /**
          * @private
+         * @type {module:echarts/data/List}
          */
-        _initData: function () {
-            var thisOption = this.option;
-            var dataArr = thisOption.data || [];
-            var axisType = thisOption.axisType;
-            var names = this._names = [];
-
-            if (axisType === 'category') {
-                var idxArr = [];
-                zrUtil.each(dataArr, function (item, index) {
-                    var value = modelUtil.getDataItemValue(item);
-                    var newItem;
-
-                    if (zrUtil.isObject(item)) {
-                        newItem = zrUtil.clone(item);
-                        newItem.value = index;
-                    }
-                    else {
-                        newItem = index;
-                    }
-
-                    idxArr.push(newItem);
-
-                    if (!zrUtil.isString(value) && (value == null || isNaN(value))) {
-                        value = '';
-                    }
-
-                    names.push(value + '');
-                });
-                dataArr = idxArr;
-            }
-
-            var dimType = ({category: 'ordinal', time: 'time'})[axisType] || 'number';
-
-            var data = this._data = new List([{name: 'value', type: dimType}], this);
-
-            data.initData(dataArr, names);
-        },
-
-        getData: function () {
-            return this._data;
-        },
+        this._data;
 
         /**
-         * @public
-         * @return {Array.<string>} categoreis
+         * @private
+         * @type {Array.<string>}
          */
-        getCategories: function () {
-            if (this.get('axisType') === 'category') {
-                return this._names.slice();
-            }
+        this._names;
+
+        this.mergeDefaultAndTheme(option, ecModel);
+        this._initData();
+    },
+
+    /**
+     * @override
+     */
+    mergeOption: function (option) {
+        TimelineModel.superApply(this, 'mergeOption', arguments);
+        this._initData();
+    },
+
+    /**
+     * @param {number} [currentIndex]
+     */
+    setCurrentIndex: function (currentIndex) {
+        if (currentIndex == null) {
+            currentIndex = this.option.currentIndex;
+        }
+        var count = this._data.count();
+
+        if (this.option.loop) {
+            currentIndex = (currentIndex % count + count) % count;
+        }
+        else {
+            currentIndex >= count && (currentIndex = count - 1);
+            currentIndex < 0 && (currentIndex = 0);
         }
 
-    });
+        this.option.currentIndex = currentIndex;
+    },
 
-    return TimelineModel;
+    /**
+     * @return {number} currentIndex
+     */
+    getCurrentIndex: function () {
+        return this.option.currentIndex;
+    },
+
+    /**
+     * @return {boolean}
+     */
+    isIndexMax: function () {
+        return this.getCurrentIndex() >= this._data.count() - 1;
+    },
+
+    /**
+     * @param {boolean} state true: play, false: stop
+     */
+    setPlayState: function (state) {
+        this.option.autoPlay = !!state;
+    },
+
+    /**
+     * @return {boolean} true: play, false: stop
+     */
+    getPlayState: function () {
+        return !!this.option.autoPlay;
+    },
+
+    /**
+     * @private
+     */
+    _initData: function () {
+        var thisOption = this.option;
+        var dataArr = thisOption.data || [];
+        var axisType = thisOption.axisType;
+        var names = this._names = [];
+
+        if (axisType === 'category') {
+            var idxArr = [];
+            zrUtil.each(dataArr, function (item, index) {
+                var value = modelUtil.getDataItemValue(item);
+                var newItem;
+
+                if (zrUtil.isObject(item)) {
+                    newItem = zrUtil.clone(item);
+                    newItem.value = index;
+                }
+                else {
+                    newItem = index;
+                }
+
+                idxArr.push(newItem);
+
+                if (!zrUtil.isString(value) && (value == null || isNaN(value))) {
+                    value = '';
+                }
+
+                names.push(value + '');
+            });
+            dataArr = idxArr;
+        }
+
+        var dimType = ({category: 'ordinal', time: 'time'})[axisType] || 'number';
+
+        var data = this._data = new List([{name: 'value', type: dimType}], this);
+
+        data.initData(dataArr, names);
+    },
+
+    getData: function () {
+        return this._data;
+    },
+
+    /**
+     * @public
+     * @return {Array.<string>} categoreis
+     */
+    getCategories: function () {
+        if (this.get('axisType') === 'category') {
+            return this._names.slice();
+        }
+    }
+
 });
+
+export default TimelineModel;

@@ -1,15 +1,10 @@
-define(function(require) {
-    'use strict';
 
-    var features = {};
+var features = {};
 
-    return {
-        register: function (name, ctor) {
-            features[name] = ctor;
-        },
+export function register(name, ctor) {
+    features[name] = ctor;
+}
 
-        get: function (name) {
-            return features[name];
-        }
-    };
-});
+export function get(name) {
+    return features[name];
+}

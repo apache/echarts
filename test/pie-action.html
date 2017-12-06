@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+            #main {
+                background: #fff;
+            }
+        </style>
+
+        <p>select</p>
+        <button onclick="select('A')">A</button>
+        <button onclick="select(1)">B</button>
+        <p>unselect</p>
+        <button onclick="unselect(0)">A</button>
+        <button onclick="unselect('B')">B</button>
+
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/pie',
+            ], function (echarts) {
+
+
+                chart = echarts.init(
+                    document.getElementById('main'),
+                    null,
+                    {
+
+                    }
+                );
+
+                chart.setOption({
+                    series: [{
+                        type: 'pie',
+                        selectedMode:'single',
+                        data: [{
+                            value: 100,
+                            name: 'A'
+                        }, {
+                            value: 200,
+                            name: 'B'
+                        }, {
+                            value: 300,
+                            name: 'C'
+                        }, {
+                            value: 400,
+                            name: 'D'
+                        }]
+                    }]
+                });
+            });
+
+            function select(name) {
+                if (typeof name === 'string') {
+                    chart.dispatchAction({
+                        type: 'pieSelect',
+                        name: name
+                    });
+                }
+                else {
+                    chart.dispatchAction({
+                        type: 'pieSelect',
+                        dataIndex: name
+                    });
+                }
+            }
+
+            function unselect(name) {
+                if (typeof name === 'string') {
+                    chart.dispatchAction({
+                        type: 'pieUnSelect',
+                        name: name
+                    });
+                }
+                else {
+                    chart.dispatchAction({
+                        type: 'pieUnSelect',
+                        dataIndex: name
+                    });
+                }
+            }
+        </script>
+    </body>
+</html>

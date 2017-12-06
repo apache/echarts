@@ -1,43 +1,37 @@
-define(function (require) {
+import * as echarts from '../../echarts';
 
-    var ATTR = '\0_ec_interaction_mutex';
+var ATTR = '\0_ec_interaction_mutex';
 
-    var interactionMutex = {
+export function take(zr, resourceKey, userKey) {
+    var store = getStore(zr);
+    store[resourceKey] = userKey;
+}
 
-        take: function (zr, resourceKey, userKey) {
-            var store = getStore(zr);
-            store[resourceKey] = userKey;
-        },
+export function release(zr, resourceKey, userKey) {
+    var store = getStore(zr);
+    var uKey = store[resourceKey];
 
-        release: function (zr, resourceKey, userKey) {
-            var store = getStore(zr);
-            var uKey = store[resourceKey];
-
-            if (uKey === userKey) {
-                store[resourceKey] = null;
-            }
-        },
-
-        isTaken: function (zr, resourceKey) {
-            return !!getStore(zr)[resourceKey];
-        }
-    };
-
-    function getStore(zr) {
-        return zr[ATTR] || (zr[ATTR] = {});
+    if (uKey === userKey) {
+        store[resourceKey] = null;
     }
+}
 
-    /**
-     * payload: {
-     *     type: 'takeGlobalCursor',
-     *     key: 'dataZoomSelect', or 'brush', or ...,
-     *         If no userKey, release global cursor.
-     * }
-     */
-    require('../../echarts').registerAction(
-        {type: 'takeGlobalCursor', event: 'globalCursorTaken', update: 'update'},
-        function () {}
-    );
+export function isTaken(zr, resourceKey) {
+    return !!getStore(zr)[resourceKey];
+}
 
-    return interactionMutex;
-});
+function getStore(zr) {
+    return zr[ATTR] || (zr[ATTR] = {});
+}
+
+/**
+ * payload: {
+ *     type: 'takeGlobalCursor',
+ *     key: 'dataZoomSelect', or 'brush', or ...,
+ *         If no userKey, release global cursor.
+ * }
+ */
+echarts.registerAction(
+    {type: 'takeGlobalCursor', event: 'globalCursorTaken', update: 'update'},
+    function () {}
+);

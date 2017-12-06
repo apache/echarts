@@ -1,9 +1,5 @@
-define(function (require) {
+import DataZoomView from './DataZoomView';
 
-    return require('./DataZoomView').extend({
-
-        type: 'dataZoom.select'
-
-    });
-
+export default DataZoomView.extend({
+    type: 'dataZoom.select'
 });

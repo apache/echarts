@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/dat.gui.min.js"></script>
     </head>
@@ -18,21 +18,21 @@
         <script>
 
             require([
-                'echarts',
+                'echarts'
 
-                'extension/dataTool/gexf',
+                // 'extension/dataTool/gexf',
 
-                'echarts/chart/graph',
+                // 'echarts/chart/graph',
 
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/geo',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap'
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 function createNodes(count) {

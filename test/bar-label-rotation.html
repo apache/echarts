@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+            #main {
+                width: 1000px;
+                background: #fff;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+
+                });
+
+                var labelOption = {
+                    normal: {
+                        show: true,
+                        position: 'insideBottom',
+                        rotate: 90,
+                        textStyle: {
+                            align: 'left',
+                            verticalAlign: 'middle'
+                        }
+                    }
+                };
+
+                option = {
+                    color: ['#003366', '#006699', '#4cabce', '#e5323e'],
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                    },
+                    legend: {
+                        data:['A', 'B', 'C', 'D']
+                    },
+                    toolbox: {
+                        show: true,
+                        orient: 'vertical',
+                        left: 'right',
+                        top: 'center',
+                        feature: {
+                            mark: {show: true},
+                            dataView: {show: true, readOnly: false},
+                            magicType: {show: true, type: ['line', 'bar', 'stack', 'tiled']},
+                            restore: {show: true},
+                            saveAsImage: {show: true}
+                        }
+                    },
+                    calculable: true,
+                    xAxis: [
+                        {
+                            type: 'category',
+                            axisTick: {show: false},
+                            data: ['2012', '2013', '2014', '2015', '2016']
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'A',
+                            type: 'bar',
+                            barGap: 0,
+                            label: labelOption,
+                            data: [320, 332, 301, 334, 390]
+                        },
+                        {
+                            name: 'B',
+                            type: 'bar',
+                            label: labelOption,
+                            data: [220, 182, 191, 234, 290]
+                        },
+                        {
+                            name: 'C',
+                            type: 'bar',
+                            label: labelOption,
+                            data: [150, 232, 201, 154, 190]
+                        },
+                        {
+                            name: 'D',
+                            type: 'bar',
+                            label: labelOption,
+                            data: [98, 77, 101, 99, 30]
+                        }
+                    ]
+                }
+
+                chart.setOption(option);
+            });
+
+        </script>
+    </body>
+</html>

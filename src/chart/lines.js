@@ -1,13 +1,10 @@
-define(function (require) {
+import * as echarts from '../echarts';
 
-    require('./lines/LinesSeries');
-    require('./lines/LinesView');
+import './lines/LinesSeries';
+import './lines/LinesView';
 
-    var echarts = require('../echarts');
-    echarts.registerLayout(
-        require('./lines/linesLayout')
-    );
-    echarts.registerVisual(
-        require('./lines/linesVisual')
-    );
-});
+import linesLayout from './lines/linesLayout';
+import linesVisual from './lines/linesVisual';
+
+echarts.registerLayout(linesLayout);
+echarts.registerVisual(linesVisual);

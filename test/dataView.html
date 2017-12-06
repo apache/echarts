@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src=""></script>
         <script src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
         <link rel="stylesheet" href="//cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css">
@@ -23,14 +23,14 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));

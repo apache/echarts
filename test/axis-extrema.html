@@ -2,12 +2,11 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="../dist/echarts.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
@@ -26,7 +25,6 @@
             }
         </style>
 
-        <h2>cartesian category axis | xAxis: {min: 'dataMin', max: 'dataMax'}</h2>
         <div class="chart" id="main1"></div>
 
         <h2>cartesian category axis | xAxis: {min: undefined, max: undefined}</h2>
@@ -38,11 +36,17 @@
         <h2>cartesian category axis | xAxis: {min: -10, max: '类目3'}</h2>
         <div class="chart" id="main2"></div>
 
+        <h2>cartesian category axis | xAxis: {min: function, max: function}</h2>
+        <div class="chart" id="main2.1"></div>
+
         <h2>cartesian value axis | xAxis: {min: 'dataMin', max: 'dataMax'}</h2>
         <div class="chart" id="main3"></div>
 
         <h2>cartesian value axis | xAxis: {min: -10, max: 10}</h2>
         <div class="chart" id="main4"></div>
+
+        <h2>cartesian value axis | xAxis: {min: function, max: function}</h2>
+        <div class="chart" id="main4.1"></div>
 
         <h2>cartesian time axis | xAxis: {min: 'dataMin', max: 'dataMax'}</h2>
         <div class="chart" id="main5"></div>
@@ -50,8 +54,14 @@
         <h2>cartesian time axis | xAxis: {min: '2012-08-12', max: '2012-10-01'}</h2>
         <div class="chart" id="main6"></div>
 
+        <h2>cartesian time axis | xAxis: {min: function, max: function}</h2>
+        <div class="chart" id="main6.1"></div>
+
         <h2>polar category axis | radiuAxis: {min: 'dataMin', max: 'dataMax'}</h2>
         <div class="chart" id="main90.1"></div>
+
+        <h2>polar category axis | radiuAxis: {min: function, max: function}</h2>
+        <div class="chart" id="main90.2"></div>
 
         <h2>parallel category axis | parallelAxis: {min: undefined, max: undefined}</h2>
         <div class="chart" id="main91.1"></div>
@@ -59,51 +69,41 @@
         <h2>single category axis | singleAxis: {min: 'dataMin', max: 'dataMax'}</h2>
         <div class="chart" id="main92.1"></div>
 
+        <h2>single category axis | singleAxis: {min: function, max: function}</h2>
+        <div class="chart" id="main92.2"></div>
+
 
         <script>
 
             function makeChart(id, option, noDataZoom) {
-                require([
-                    'echarts',
-                    'echarts/chart/line',
-                    'echarts/chart/scatter',
-                    'echarts/chart/parallel',
-                    'echarts/component/polar',
-                    'echarts/component/grid',
-                    'echarts/component/legend',
-                    'echarts/component/singleAxis',
-                    'echarts/component/tooltip',
-                    'echarts/component/dataZoom'
-                ], function (echarts) {
-                    var main = document.getElementById(id);
-                    if (main) {
-                        var chartMain = document.createElement('div');
-                        chartMain.style.cssText = 'height:100%';
-                        main.appendChild(chartMain);
-                        var chart = echarts.init(chartMain);
-                        chart.setOption(option);
+                var main = document.getElementById(id);
+                if (main) {
+                    var chartMain = document.createElement('div');
+                    chartMain.style.cssText = 'height:100%';
+                    main.appendChild(chartMain);
+                    var chart = echarts.init(chartMain);
+                    chart.setOption(option);
 
-                        if (!noDataZoom) {
-                            var controller = document.createElement('div');
-                            controller.style.cssText = 'position: absolute; right: 10px; top: 10px;';
-                            main.appendChild(controller);
-                            controller.innerHTML = [
-                                '<button>Add DataZoom</button>',
-                                '<button>Remove DataZoom</button>'
-                            ].join('');
+                    if (!noDataZoom) {
+                        var controller = document.createElement('div');
+                        controller.style.cssText = 'position: absolute; right: 10px; top: 10px;';
+                        main.appendChild(controller);
+                        controller.innerHTML = [
+                            '<button>Add DataZoom</button>',
+                            '<button>Remove DataZoom</button>'
+                        ].join('');
 
-                            var btns = $(controller).children();
-                            $(btns[0]).on('click', function () {
-                                option.dataZoom = [{type: 'inside'}, {type: 'slider'}];
-                                chart.setOption(option, true);
-                            });
-                            $(btns[1]).on('click', function () {
-                                delete option.dataZoom;
-                                chart.setOption(option, true);
-                            });
-                        }
+                        var btns = $(controller).children();
+                        $(btns[0]).on('click', function () {
+                            option.dataZoom = [{type: 'inside'}, {type: 'slider'}];
+                            chart.setOption(option, true);
+                        });
+                        $(btns[1]).on('click', function () {
+                            delete option.dataZoom;
+                            chart.setOption(option, true);
+                        });
                     }
-                });
+                }
             }
 
         </script>
@@ -282,6 +282,57 @@
 
 
 
+        <script>
+            makeChart('main2.1', {
+                legend: {
+                    data: ['no point', 'one point', 'two points'],
+                    selectedMode: 'single'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'line'
+                    }
+                },
+                grid: {
+                    containLabel: true
+                },
+                xAxis: {
+                    data: ['类目1', '类目2', '类目3', '类目4', '类目5'],
+                    min: function (value) {
+                        return value + 20;
+                    },
+                    max: function (value) {
+                        return value + 20;
+                    },
+                    axisTick: {
+                        interval: 0
+                    },
+                    axisLabel: {
+                        interval: 0
+                    }
+                },
+                yAxis: {},
+                series: [{
+                    name: 'no point',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'one point',
+                    type: 'line',
+                    data: [43]
+                }, {
+                    name: 'two points',
+                    type: 'line',
+                    data: [43, 99]
+                }]
+            });
+        </script>
+
+
+
+
+
 
         <script>
             makeChart('main3', {
@@ -332,6 +383,49 @@
                     }
                 },
                 xAxis: {min: -10, max: 10},
+                yAxis: {},
+                series: [{
+                    name: 'no point',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'one point',
+                    type: 'line',
+                    data: [[2, 43]]
+                }, {
+                    name: 'two points',
+                    type: 'line',
+                    data: [[2, 43], [4, 99]]
+                }]
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            makeChart('main4.1', {
+                legend: {
+                    data: ['no point', 'one point', 'two points'],
+                    selectedMode: 'single'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'line'
+                    }
+                },
+                xAxis: {
+                    min: function (value) {
+                        return value + 20;
+                    },
+                    max: function (value) {
+                        return value + 20;
+                    }
+                },
                 yAxis: {},
                 series: [{
                     name: 'no point',
@@ -438,6 +532,54 @@
 
 
 
+        <script>
+            makeChart('main6.1', {
+                legend: {
+                    data: ['no point', 'one point', 'two points'],
+                    selectedMode: 'single'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'line'
+                    }
+                },
+                xAxis: {
+                    type: 'time',
+                    min: function (value) {
+                        return value + 20;
+                    },
+                    max: function (value) {
+                        return value + 20;
+                    }
+                },
+                yAxis: {},
+                series: [{
+                    name: 'one point',
+                    type: 'line',
+                    data: [
+                        [new Date('2012-9-12'), 11]
+                    ]
+                }, {
+                    name: 'two points',
+                    type: 'line',
+                    data: [
+                        ['2012-9-12', 11],
+                        ['2012-9-18', 14]
+                    ]
+                }, {
+                    name: 'no point',
+                    type: 'line',
+                    data: []
+                }]
+            });
+        </script>
+
+
+
+
+
+
 
         <script>
             makeChart('main90.1', {
@@ -452,6 +594,51 @@
                 radiusAxis: {
                     min: 'dataMin',
                     max: 'dataMax',
+                    data: ['类目1', '类目2', '类目3', '类目4', '类目5']
+                },
+                angleAxis: {},
+                series: [{
+                    coordinateSystem: 'polar',
+                    name: 'no point',
+                    type: 'line',
+                    data: []
+                }, {
+                    coordinateSystem: 'polar',
+                    name: 'one point',
+                    type: 'line',
+                    data: [43]
+                }, {
+                    coordinateSystem: 'polar',
+                    name: 'two points',
+                    type: 'line',
+                    data: [43, 99]
+                }]
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            makeChart('main90.2', {
+                legend: {
+                    data: ['no point', 'one point', 'two points'],
+                    selectedMode: 'single'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                polar: {},
+                radiusAxis: {
+                    min: function (value) {
+                        return value + 20;
+                    },
+                    max: function (value) {
+                        return value + 20;
+                    },
                     data: ['类目1', '类目2', '类目3', '类目4', '类目5']
                 },
                 angleAxis: {},
@@ -533,6 +720,55 @@
                     type: 'category',
                     min: 'dataMin',
                     max: 'dataMax',
+                    data: ['类目1', '类目2', '类目3', '类目4', '类目5']
+                },
+                series: [{
+                    coordinateSystem: 'singleAxis',
+                    name: 'no point',
+                    type: 'scatter',
+                    symbolSize: 20,
+                    data: []
+                }, {
+                    coordinateSystem: 'singleAxis',
+                    name: 'one point',
+                    type: 'scatter',
+                    symbolSize: 20,
+                    data: [[2]]
+                }, {
+                    coordinateSystem: 'singleAxis',
+                    name: 'two points',
+                    type: 'scatter',
+                    symbolSize: 20,
+                    data: [[2], [4]]
+                }]
+            }, true);
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            makeChart('main92.2', {
+                legend: {
+                    data: ['no point', 'one point', 'two points'],
+                    selectedMode: 'single'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                singleAxis: {
+                    type: 'category',
+                    min: function (value) {
+                        return value + 20;
+                    },
+                    max: function (value) {
+                        return value + 20;
+                    },
                     data: ['类目1', '类目2', '类目3', '类目4', '类目5']
                 },
                 series: [{

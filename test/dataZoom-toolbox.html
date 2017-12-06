@@ -2,17 +2,15 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
-            body {
-            }
             .chart {
                 position: relative;
                 height: 500px;
@@ -43,21 +41,22 @@
         <script>
 
             var lastChart;
+            var globalColor = ['#c23531','#2f4554', '#61a0a8', '#d48265', '#91c7ae','#749f83',  '#ca8622', '#bda29a','#6e7074', '#546570', '#c4ccd3'];
 
             function makeChart(id, option, cb) {
                 require([
-                    'echarts',
-                    'echarts/model/globalDefault',
-                    'echarts/chart/scatter',
-                    'echarts/chart/line',
-                    'echarts/chart/bar',
-                    'echarts/chart/scatter',
-                    'echarts/component/grid',
-                    'echarts/component/markLine',
-                    'echarts/component/legend',
-                    'echarts/component/tooltip',
-                    'echarts/component/toolbox',
-                    'echarts/component/dataZoom'
+                    'echarts'
+                    // 'echarts/model/globalDefault',
+                    // 'echarts/chart/scatter',
+                    // 'echarts/chart/line',
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/scatter',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/markLine',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/dataZoom'
                 ], function (echarts, globalDefault) {
                     var main = document.getElementById(id);
                     if (main) {
@@ -252,7 +251,7 @@
                         position: 'left',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[0]
+                                color: globalColor[0]
                             }
                         }
                     }, {
@@ -260,7 +259,7 @@
                         position: 'right',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[1]
+                                color: globalColor[1]
                             }
                         }
                     }, {
@@ -269,7 +268,7 @@
                         offset: 80,
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[2]
+                                color: globalColor[2]
                             }
                         }
                     }],
@@ -347,7 +346,7 @@
                         position: 'left',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[0]
+                                color: globalColor[0]
                             }
                         }
                     }, {
@@ -355,7 +354,7 @@
                         position: 'right',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[1]
+                                color: globalColor[1]
                             }
                         }
                     }, {
@@ -364,7 +363,7 @@
                         offset: 80,
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[2]
+                                color: globalColor[2]
                             }
                         }
                     }, {
@@ -374,7 +373,7 @@
                         boundaryGap: ['20%', '20%'],
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[3]
+                                color: globalColor[3]
                             }
                         }
                     }, {
@@ -384,7 +383,7 @@
                         boundaryGap: ['20%', '20%'],
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[4]
+                                color: globalColor[4]
                             }
                         }
                     }],
@@ -476,7 +475,7 @@
                         position: 'left',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[0]
+                                color: globalColor[0]
                             }
                         }
                     }, {
@@ -484,7 +483,7 @@
                         position: 'right',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[1]
+                                color: globalColor[1]
                             }
                         }
                     }, {
@@ -493,7 +492,7 @@
                         offset: 80,
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[2]
+                                color: globalColor[2]
                             }
                         }
                     }, {
@@ -503,7 +502,7 @@
                         boundaryGap: ['20%', '20%'],
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[3]
+                                color: globalColor[3]
                             }
                         }
                     }, {
@@ -513,7 +512,7 @@
                         boundaryGap: ['20%', '20%'],
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[4]
+                                color: globalColor[4]
                             }
                         }
                     }],
@@ -590,7 +589,7 @@
                         position: 'left',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[0]
+                                color: globalColor[0]
                             }
                         }
                     }, {
@@ -598,7 +597,7 @@
                         position: 'right',
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[1]
+                                color: globalColor[1]
                             }
                         }
                     }, {
@@ -607,7 +606,7 @@
                         offset: 80,
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[2]
+                                color: globalColor[2]
                             }
                         }
                     }, {
@@ -617,7 +616,7 @@
                         boundaryGap: ['20%', '20%'],
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[3]
+                                color: globalColor[3]
                             }
                         }
                     }, {
@@ -627,7 +626,7 @@
                         boundaryGap: ['20%', '20%'],
                         axisLine: {
                             lineStyle: {
-                                color: globalDefault.color[4]
+                                color: globalColor[4]
                             }
                         }
                     }],

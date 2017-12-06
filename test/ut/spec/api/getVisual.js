@@ -12,14 +12,14 @@ describe('api/getVisual', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/chart/pie',
-        'echarts/chart/scatter',
-        'echarts/chart/graph',
-        'echarts/component/geo',
-        'echarts/component/grid',
-        'echarts/component/polar',
-        'echarts/component/visualMap',
-        'echarts/component/dataZoom'
+        'echarts/src/chart/pie',
+        'echarts/src/chart/scatter',
+        'echarts/src/chart/graph',
+        'echarts/src/component/geo',
+        'echarts/src/component/grid',
+        'echarts/src/component/polar',
+        'echarts/src/component/visualMap',
+        'echarts/src/component/dataZoom'
     ]);
 
     testCase.createChart()('scatter', function () {
