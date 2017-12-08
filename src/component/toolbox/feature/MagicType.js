@@ -107,7 +107,7 @@ proto.onclick = function (ecModel, api, type) {
         );
         if (newSeriesOpt) {
             // PENDING If merge original option?
-            zrUtil.defaults(newSeriesOpt, seriesModel.option);
+            zrUtil.extend(seriesModel.option, newSeriesOpt);
             newOption.series.push(newSeriesOpt);
         }
         // Modify boundaryGap
