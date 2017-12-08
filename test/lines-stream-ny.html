@@ -1,0 +1,162 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <script src='http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM'></script>
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main'></div>
+        <script>
+
+        var xs = [440000, 450000];
+        var ys = [4368000, 4537000];
+
+        // var testGeoJson1 = {
+        //     'type': 'FeatureCollection',
+        //     'features': [
+        //         {
+        //             'geometry': {
+        //                 'type': 'Polygon',
+        //                 'coordinates': [
+        //                     [
+        //                         [
+        //                             xs[0],
+        //                             ys[0]
+        //                         ],
+        //                         [
+        //                             xs[1],
+        //                             ys[0]
+        //                         ],
+        //                         [
+        //                             xs[1],
+        //                             ys[1]
+        //                         ],
+        //                         [
+        //                             xs[0],
+        //                             ys[1]
+        //                         ]
+        //                     ]
+        //                 ]
+        //             },
+        //             'properties': {
+        //                 'name': 'Bejing?',
+        //                 'childNum': 1
+        //             }
+        //         }
+        //     ]
+        // };
+
+
+        require([
+            'echarts',
+
+            // 'echarts/chart/lines',
+            // 'echarts/component/legend',
+            // 'extension/bmap'
+        ], function (echarts) {
+
+            $.get('../map/json/world.json', function (worldJson) {
+                echarts.registerMap('world', worldJson);
+
+                // echarts.registerMap('test', testGeoJson1);
+
+                // $.get('data/Links_Beijing_0.json', function (data) {
+                $.get('data/Links_NewYork_1.json', function (data) {
+
+                    var config = {
+                        dataLoading: 'whole',
+                        streamThreshold: 0,
+                        streamRender: true
+                    };
+
+                    var chart;
+
+                    var gui = new dat.GUI();
+                    gui.add(config, 'dataLoading', ['whole', 'chunked'])
+                        .onChange(init);
+                    gui.add(config, 'streamRender')
+                        .onChange(init);
+                    gui.add(config, 'streamThreshold', 0, 200000)
+                        .onChange(init);
+
+                    init();
+
+                    function init() {
+                        if (chart) {
+                            chart.dispose();
+                        }
+
+                        chart = echarts.init(document.getElementById('main'));
+
+                        var lines = data.geometries.map(function (entry) {
+                            return {
+                                coords: entry.coordinates
+                            };
+                        });
+
+                        chart.setOption({
+                            animation: false,
+                            geo: {
+                                center: [-74.04327099998152, 40.86737600240287],
+                                zoom: 360,
+                                map: 'world',
+                                roam: true,
+                                label: {
+                                    normal: {
+                                        show: true,
+                                        textStyle: {
+                                            color: 'rgba(0,0,0,0.4)'
+                                        }
+                                    }
+                                },
+                                itemStyle: {
+                                    normal:{
+                                        borderColor: 'rgba(0, 0, 0, 0.2)'
+                                    },
+                                    emphasis:{
+                                        color: null,
+                                        areaColor: null,
+                                        shadowOffsetX: 0,
+                                        shadowOffsetY: 0,
+                                        shadowBlur: 20,
+                                        borderWidth: 0,
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    }
+                                }
+                            },
+                            series: [{
+                                type: 'lines',
+                                coordinateSystem: 'geo',
+                                data: lines,
+                                polyline: true,
+                                lineStyle: {
+                                    normal: {
+                                        color: 'purple',
+                                        opacity: 0.4,
+                                        width: 1
+                                    }
+                                },
+                                stream: config.streamRender ? config.streamThreshold : false
+                            }]
+                        });
+                    }
+
+                });
+
+            });
+        });
+
+        </script>
+    </body>
+</html>

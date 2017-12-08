@@ -86,7 +86,17 @@ export default echarts.extendChartView({
     },
 
     updateLayout: function (seriesModel, ecModel, api) {
+        // ??? do not support updateLayout in stream
         this._lineDraw.updateLayout(seriesModel);
+        this._clearLayer(api);
+    },
+
+    updateView: function (seriesModel, ecModel, api) {
+        this._lineDraw.updateView(seriesModel);
+        this._clearLayer(api);
+    },
+
+    _clearLayer: function (api) {
         // Not use motion when dragging or zooming
         var zr = api.getZr();
         var isSvg = zr.painter.getType() === 'svg';
@@ -107,3 +117,4 @@ export default echarts.extendChartView({
 
     dispose: function () {}
 });
+

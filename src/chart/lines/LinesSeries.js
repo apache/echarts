@@ -40,6 +40,8 @@ var LinesSeries = SeriesModel.extend({
 
     visualColorAccessPath: 'lineStyle.normal.color',
 
+    streamEnabled: true,
+
     init: function (option) {
         // Not using preprocessor because mergeOption may not have series.type
         preprocessOption(option);

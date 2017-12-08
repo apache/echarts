@@ -6,7 +6,7 @@ export default function (ecModel) {
         var lineData = seriesModel.getData();
 
         // FIXME Use data dimensions ?
-        lineData.each(function (idx) {
+        var task = lineData.createEachTask(function (idx) {
             var itemModel = lineData.getItemModel(idx);
 
             var coords = (itemModel.option instanceof Array) ?
@@ -38,5 +38,7 @@ export default function (ecModel) {
             }
             lineData.setItemLayout(idx, pts);
         });
+
+        seriesModel.pipeTask(task, 'visual');
     });
 }

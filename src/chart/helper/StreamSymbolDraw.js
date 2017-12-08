@@ -8,7 +8,9 @@ import * as graphic from '../../util/graphic';
  * @constructor
  */
 function SymbolDraw(symbolCtor) {
-    this.root = new IncrementalDisplayble();
+    var group = this.group = new graphic.Group();
+
+    group.add(this._root = new IncrementalDisplayble());
 
     this._symbolCtor = symbolCtor || SymbolClz;
 }
@@ -33,7 +35,7 @@ symbolDrawProto.updateData = function (data, isIgnore) {
 };
 
 function doRender(self, seriesModel, isIgnore) {
-    var root = self.root;
+    var root = self._root;
     var data = seriesModel.getData();
     var seriesModel = data.hostModel;
     var SymbolCtor = self._symbolCtor;
@@ -78,34 +80,21 @@ function doRender(self, seriesModel, isIgnore) {
         }
     });
 
-    seriesModel.pipeTask(dataEachTask, 'render', ['updateViewBase']);
+    // ??? updateViewBase should not be here?
+    seriesModel.pipeTask(dataEachTask, 'render');
 }
 
 // ???
 symbolDrawProto.updateView = function () {
-    var seriesModel = this._seriesModel;
-    if (!seriesModel) {
-        return;
+    if (this._seriesModel) {
+        doRender(this, this._seriesModel, this._isIgnore);
     }
-
-    doRender(this, this._seriesModel, this._isIgnore);
 };
 
 symbolDrawProto.remove = function (enableAnimation) {
-    var root = this.root;
-    var data = this._data;
-    if (data) {
-        if (enableAnimation) {
-            data.eachItemGraphicEl(function (el) {
-                el.fadeOut(function () {
-                    root.remove(el);
-                });
-            });
-        }
-        else {
-            root.clearDisplaybles();
-        }
-    }
+    var root = this._root;
+    root && root.clearDisplaybles();
+    this.group.removeAll();
 };
 
 export default SymbolDraw;

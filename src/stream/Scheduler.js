@@ -18,12 +18,6 @@ var STAGE = {
     visual: 4,
     render: 5
 };
-var TAG = {
-    updateBase: 1,
-    updateLayoutBase: 1,
-    updateVisualBase: 1,
-    updateViewBase: 1
-};
 
 var TEST_PROGRESS_STEP = 700;
 
@@ -126,13 +120,37 @@ proto.flushTemps = function (tag, hosts) {
 
     function flushPipelineTemps(pipeline) {
         clearPipelineDownstreams(stageMap, pipeline, tag);
-        each(pipeline.temps, function (tmp) {
+        var temps = pipeline.temps;
+        setTags(temps);
+        each(temps, function (tmp) {
             self.unfinished = true;
             pipeTask(stageMap, pipeline.tasks, tmp.task, tmp.stage, tmp.tags);
         }, this);
         clearPipelineTemp(pipeline);
     }
 };
+
+// TODO when needed: customize tag
+function setTags(temps) {
+    var hasUpdateViewBase;
+    for (var i = temps.length - 1; i >= 0; i--) {
+        var item = temps[i];
+        var stage = item.stage;
+        var innerTask = inner(item.task);
+
+        if (stage === 'render') {
+            innerTask.updateLayoutBase = innerTask.updateVisualBase = true;
+        }
+        else if (stage === 'dataClone') {
+            innerTask.updateBase = true;
+        }
+        // Find the last dataClone or processor task.
+        if (!hasUpdateViewBase && (stage === 'dataClone' || stage === 'processor')) {
+            innerTask.updateViewBase = true;
+            hasUpdateViewBase = true;
+        }
+    }
+}
 
 /**
  * Only clear streams start from the tagged tasks.
@@ -159,7 +177,7 @@ function clearPipelineDownstreams(stageMap, pipeline, tag) {
     clearPipeline(stageMap, pipeline, baseIndex);
 }
 
-function pipeTask(stageMap, pipelineTasks, task, stage, tags) {
+function pipeTask(stageMap, pipelineTasks, task, stage) {
     if (__DEV__) {
         // In case typo.
         stage && assert(STAGE[stage] != null);
@@ -167,13 +185,6 @@ function pipeTask(stageMap, pipelineTasks, task, stage, tags) {
             assert(taskInPipeline != task);
         });
     }
-
-    each(normalizeToArray(tags), function (tag) {
-        if (__DEV__) {
-            assert(TAG[tag]);
-        }
-        inner(task)[tag] = true;
-    });
 
     pipelineTasks.length && pipelineTasks[pipelineTasks.length - 1].pipe(task);
     pipelineTasks.push(task);

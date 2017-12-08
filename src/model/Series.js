@@ -10,6 +10,7 @@ import {
 import {set, get} from '../util/clazz';
 import * as modelUtil from '../util/model';
 import ComponentModel from './Component';
+import {isNumeric} from '../util/number';
 import colorPaletteMixin from './mixin/colorPalette';
 import {
     getLayoutParams,
@@ -369,9 +370,11 @@ var SeriesModel = ComponentModel.extend({
     /**
      * @public
      */
-    useStream: function () {
-        // ???
-        return this.streamEnabled && this.get('stream');
+    getStreamSetting: function () {
+        var stream = this.get('stream');
+        return this.streamEnabled && (stream != null || stream !== false) && {
+            threshold: isNumeric(stream) ? +stream : 0
+        };
     }
 });
 

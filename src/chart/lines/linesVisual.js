@@ -20,7 +20,7 @@ export default function (ecModel) {
         data.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
         data.setVisual('opacity', seriesModel.get(opacityQuery));
 
-        data.each(function (idx) {
+        var task = data.createEachTask(function (idx) {
             var itemModel = data.getItemModel(idx);
             var symbolType = normalize(itemModel.getShallow('symbol', true));
             var symbolSize = normalize(itemModel.getShallow('symbolSize', true));
@@ -33,5 +33,7 @@ export default function (ecModel) {
 
             data.setItemVisual(idx, 'opacity', opacity);
         });
+
+        seriesModel.pipeTask(task, 'visual');
     });
 }

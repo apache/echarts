@@ -21,6 +21,7 @@ function createTask(seriesType, seriesModel) {
     }
 
     var task;
+    // ??? no task support ?
     if (dims.length === 1) {
         task = data.createEachTask(dims[0], function (x, idx) {
             // Also {Array.<number>}, not undefined to avoid if...else... statement

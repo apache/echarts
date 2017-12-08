@@ -1190,7 +1190,7 @@ echartsProto.addData = function (params) {
     this._scheduler.unfinished = true;
 
     // ??? Should handle this.
-    // if (!seriesModel.useStream()) {
+    // if (!seriesModel.getStreamSetting()) {
         // refresh('prepareAndUpdate');
     // }
 };
@@ -1225,7 +1225,7 @@ function invokeUpdateMethod(methodName, ecModel, payload) {
         var chart = this._chartsMap[seriesModel.__viewId];
         chart[methodName](seriesModel, ecModel, api, payload);
 
-        // ??? updateZ(seriesModel, chart);
+        updateZ(seriesModel, chart);
 
         // ??? updateProgressiveAndBlend(seriesModel, chart);
     }, this);
@@ -1392,9 +1392,9 @@ function startRender(ecIns, ecModel, api, payload) {
 
         chartView.render(seriesModel, ecModel, api, payload);
 
-        // ??? chartView.group.silent = !!seriesModel.get('silent');
+        chartView.group.silent = !!seriesModel.get('silent');
 
-        // ??? updateZ(seriesModel, chartView);
+        updateZ(seriesModel, chartView);
 
         // ??? updateProgressiveAndBlend(seriesModel, chartView);
 
@@ -1416,15 +1416,15 @@ function progressRender(ecIns, ecModel) {
     ecIns._scheduler.progressStage(STAGE_RENDER);
 
     // ???
-    // ecModel.eachSeries(function (seriesModel, idx) {
-        // ??? var chartView = ecIns._chartsMap[seriesModel.__viewId];
+    ecModel.eachSeries(function (seriesModel, idx) {
+        var chartView = ecIns._chartsMap[seriesModel.__viewId];
 
-        // ??? chartView.group.silent = !!seriesModel.get('silent');
+        chartView.group.silent = !!seriesModel.get('silent');
 
-        // ??? updateZ(seriesModel, chartView);
+        updateZ(seriesModel, chartView);
 
         // ??? updateProgressiveAndBlend(seriesModel, chartView);
-    // });
+    });
 }
 
 var MOUSE_EVENT_NAMES = [
@@ -1496,6 +1496,8 @@ echartsProto.dispose = function () {
         return;
     }
     this._disposed = true;
+
+    modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
 
     var api = this._api;
     var ecModel = this._model;
@@ -1760,12 +1762,7 @@ export function init(dom, theme, opts) {
     chart.id = 'ec_' + idBase++;
     instances[chart.id] = chart;
 
-    if (dom.setAttribute) {
-        dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
-    }
-    else {
-        dom[DOM_ATTRIBUTE_KEY] = chart.id;
-    }
+    modelUtil.setAttribute(dom, DOM_ATTRIBUTE_KEY, chart.id);
 
     enableConnect(chart);
 
@@ -1830,14 +1827,7 @@ export function dispose(chart) {
  * @return {echarts~ECharts}
  */
 export function getInstanceByDom(dom) {
-    var key;
-    if (dom.getAttribute) {
-        key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
-    }
-    else {
-        key = dom[DOM_ATTRIBUTE_KEY];
-    }
-    return instances[key];
+    return instances[modelUtil.getAttribute(dom, DOM_ATTRIBUTE_KEY)];
 }
 
 /**

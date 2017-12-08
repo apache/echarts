@@ -677,3 +677,16 @@ export function otherDimToDataDim(data, otherDim) {
 function has(obj, prop) {
     return obj && obj.hasOwnProperty(prop);
 }
+
+export function setAttribute(dom, key, value) {
+    dom.setAttribute
+        ? dom.setAttribute(key, value)
+        : (dom[key] = value);
+}
+
+export function getAttribute(dom, key) {
+    return dom.getAttribute
+        ? dom.getAttribute(key)
+        : dom[key];
+}
+

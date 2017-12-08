@@ -17,7 +17,7 @@ echarts.extendChartView({
         var data = seriesModel.getData();
         var group = this.group;
 
-        var symbolDraw = seriesModel.useStream()
+        var symbolDraw = seriesModel.getStreamSetting()
             ? this._streamSymbolDraw
             : seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
             ? this._largeSymbolDraw
@@ -25,7 +25,7 @@ echarts.extendChartView({
 
         this._symbolDraw = symbolDraw;
         symbolDraw.updateData(data);
-        group.add(symbolDraw.group || symbolDraw.root);
+        group.add(symbolDraw.group);
 
         this._lasySymbolDrawGroup && group.remove(this._lasySymbolDrawGroup);
 
@@ -33,6 +33,7 @@ echarts.extendChartView({
     },
 
     updateLayout: function (seriesModel) {
+        // ??? do not support updateLayout in stream
         this._symbolDraw.updateLayout(seriesModel);
     },
 
