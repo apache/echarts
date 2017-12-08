@@ -96,11 +96,13 @@ function doAdd(lineDraw, lineData, idx, seriesScope) {
     }
     var itemEl = createItemEl(lineDraw, lineData, idx, seriesScope);
 
-    lineData.setItemGraphicEl(idx, itemEl);
-
-    seriesScope.streamRendering
-        ? lineDraw._incremental.addDisplayable(itemEl, true)
-        : lineDraw.group.add(itemEl);
+    if (seriesScope.streamRendering) {
+        lineDraw._incremental.addDisplayable(itemEl, true)
+    }
+    else {
+        lineData.setItemGraphicEl(idx, itemEl);
+        lineDraw.group.add(itemEl);
+    }
 }
 
 function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScope) {
