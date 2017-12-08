@@ -5,7 +5,6 @@
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
         <script src="lib/dat.gui.min.js"></script>
-        <script src='http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM'></script>
         <meta name='viewport' content='width=device-width, initial-scale=1' />
     </head>
     <body>
@@ -21,6 +20,9 @@
 
         var xs = [440000, 450000];
         var ys = [4368000, 4537000];
+
+        var dataURL = '../../data-online/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
+        // var dataURL = 'http://echarts.baidu.com/resource/data/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
 
         // var testGeoJson1 = {
         //     'type': 'FeatureCollection',
@@ -72,8 +74,7 @@
                 // echarts.registerMap('test', testGeoJson1);
 
                 // $.get('data/Links_Beijing_0.json', function (data) {
-                $.get('data/Links_NewYork_1.json', function (data) {
-
+                $.get(dataURL, function (data) {
                     var config = {
                         dataLoading: 'whole',
                         streamThreshold: 0,
@@ -106,6 +107,7 @@
                         });
 
                         chart.setOption({
+                            streamStep: 1500,
                             animation: false,
                             geo: {
                                 center: [-74.04327099998152, 40.86737600240287],

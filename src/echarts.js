@@ -206,7 +206,7 @@ function ECharts(dom, theme, opts) {
     /**
      * @type {module:echarts/stream/Scheduler}
      */
-    this._scheduler = new Scheduler();
+    this._scheduler = new Scheduler(this);
 
     Eventful.call(this);
 

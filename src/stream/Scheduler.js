@@ -19,13 +19,13 @@ var STAGE = {
     render: 5
 };
 
-var TEST_PROGRESS_STEP = 700;
-
 /**
  * @constructor
  */
-function Scheduler() {
+function Scheduler(ecInstance) {
     this._pipelineMap = createHashMap();
+
+    this.ecInstance = ecInstance;
 
     var stageMap = this._stageMap = createHashMap();
     each(STAGE, function (value, name) {
@@ -47,9 +47,11 @@ proto.progressStage = function (stage) {
     var unfinished;
     var tasks = this.getTasksByStage(stage);
 
+    // ??? temporarily
+    var step = this.ecInstance.getModel().get('streamStep') || 700;
     each(tasks, function (task) {
         task.progress({
-            step: TEST_PROGRESS_STEP
+            step: step
         });
         unfinished |= task.unfinished();
     });
