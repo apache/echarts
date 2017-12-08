@@ -29,13 +29,16 @@ export default function (dom, ecModel) {
         }
 
         if (series.length === 1) {
-            ariaLabel += getSeriesTypeName(series[0].type) + '。该';
+            ariaLabel += getSeriesTypeName(series[0].type);
         }
         else {
-            ariaLabel += '图，它由' + series.length + '个图表系列组成。';
+            ariaLabel += '图表，它由' + series.length + '个图表系列组成。';
         }
 
-        zrUtil.each(series, function (s) {
+        zrUtil.each(series, function (s, id) {
+            if (series.length > 1) {
+                ariaLabel += '第' + (id + 1) + '个系列是一个';
+            }
             ariaLabel += s.desc;
         });
 
@@ -44,7 +47,7 @@ export default function (dom, ecModel) {
 
     function getTitle() {
         var title = ecModel.getModel('title').option;
-        if (title.length) {
+        if (title && title.length) {
             title = title[0];
         }
         return title && title.text;
@@ -66,8 +69,10 @@ export default function (dom, ecModel) {
     function getSeriesDesc(type, seriesModel) {
         var data = seriesModel.getData();
         var dataCnt = data.indices.length;
+        var seriesName = seriesModel.get('name');
 
-        var desc = getSeriesTypeName(type) + '包括' + dataCnt + '个数据项：';
+        var desc = (seriesName ? '表示' + seriesName + '的' : '')
+            + getSeriesTypeName(type) + '，包括' + dataCnt + '个数据项——';
 
         switch (type) {
             case 'pie':
@@ -84,6 +89,25 @@ export default function (dom, ecModel) {
                         desc += '。';
                     }
                 });
+                break;
+
+            case 'line':
+            case 'bar':
+                var baseAxis = seriesModel.getBaseAxis();
+                var labels = baseAxis.scale.getTicksLabels();
+
+                zrUtil.each(data.indices, function (id, i) {
+                    desc += labels[id] + '：' + seriesModel.getRawValue(id);
+
+                    if (i < data.indices.length - 1) {
+                        desc += '、';
+                    }
+                    else {
+                        desc += '。';
+                    }
+                });
+
+                break;
         }
 
         return desc;
