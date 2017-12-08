@@ -19,7 +19,9 @@ export default echarts.extendChartView({
 
         var hasEffect = seriesModel.get('effect.show');
         var isPolyline = seriesModel.get('polyline');
+        // ??? largeLineDraw merge?
         var isLarge = seriesModel.get('large') && data.count() >= seriesModel.get('largeThreshold');
+        isLarge = false;
 
         if (__DEV__) {
             if (hasEffect && isLarge) {

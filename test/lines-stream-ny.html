@@ -24,41 +24,6 @@
         var dataURL = '../../data-online/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
         // var dataURL = 'http://echarts.baidu.com/resource/data/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
 
-        // var testGeoJson1 = {
-        //     'type': 'FeatureCollection',
-        //     'features': [
-        //         {
-        //             'geometry': {
-        //                 'type': 'Polygon',
-        //                 'coordinates': [
-        //                     [
-        //                         [
-        //                             xs[0],
-        //                             ys[0]
-        //                         ],
-        //                         [
-        //                             xs[1],
-        //                             ys[0]
-        //                         ],
-        //                         [
-        //                             xs[1],
-        //                             ys[1]
-        //                         ],
-        //                         [
-        //                             xs[0],
-        //                             ys[1]
-        //                         ]
-        //                     ]
-        //                 ]
-        //             },
-        //             'properties': {
-        //                 'name': 'Bejing?',
-        //                 'childNum': 1
-        //             }
-        //         }
-        //     ]
-        // };
-
 
         require([
             'echarts',
@@ -78,13 +43,16 @@
                     var config = {
                         dataLoading: 'whole',
                         streamThreshold: 0,
-                        streamRender: true
+                        streamRender: true,
+                        largeModel: true
                     };
 
                     var chart;
 
                     var gui = new dat.GUI();
                     gui.add(config, 'dataLoading', ['whole', 'chunked'])
+                        .onChange(init);
+                    gui.add(config, 'largeModel')
                         .onChange(init);
                     gui.add(config, 'streamRender')
                         .onChange(init);
@@ -106,8 +74,16 @@
                             };
                         });
 
+                        // var lines = [];
+                        // for (var i = 0; i < 1000; i++) {
+                        //     var entry = data.geometries[i];
+                        //     lines.push({
+                        //         coords: entry.coordinates
+                        //     });
+                        // }
+
                         chart.setOption({
-                            streamStep: 1500,
+                            streamStep: 4000,
                             animation: false,
                             geo: {
                                 center: [-74.04327099998152, 40.86737600240287],
@@ -141,6 +117,7 @@
                                 type: 'lines',
                                 coordinateSystem: 'geo',
                                 data: lines,
+                                large: config.largeModel,
                                 polyline: true,
                                 lineStyle: {
                                     normal: {

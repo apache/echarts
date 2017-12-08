@@ -411,6 +411,11 @@ function initProgress(params, notify) {
 }
 
 function doInit(list, dueIndex, dueEnd, isInit) {
+    // Optimize.
+    if (dueIndex >= dueEnd) {
+        return dueIndex;
+    }
+
     var data = list._rawData;
     var storage = list._storage;
     var indices = list.indices;
@@ -1422,6 +1427,16 @@ listProto.createCloneShallowTask = function () {
             notify(dueIndex);
         }
     });
+};
+
+// ??? temporarily
+listProto.$releaseItemMemory = function (idx) {
+    if (this._itemLayouts) {
+        this._itemLayouts[idx] = null;
+    }
+    if (this._itemVisuals) {
+        this._itemVisuals[idx] = null;
+    }
 };
 
 /**

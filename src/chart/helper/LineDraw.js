@@ -6,6 +6,8 @@ import * as graphic from '../../util/graphic';
 import LineGroup from './Line';
 import Polyline from './Polyline';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
+import LargeLineShape from './LargeLine';
+import {curry} from 'zrender/src/core/util';
 
 
 /**
@@ -16,7 +18,12 @@ function LineDraw(ctor) {
     this._ctor = ctor || LineGroup;
 
     // ??? The third mode: largeLineDraw?
+    // Create when needed.
     this._incremental;
+
+    this._largeLine;
+
+    this._largeLineAdded;
 
     this.group = new graphic.Group();
 }
@@ -37,14 +44,33 @@ lineDrawProto.updateData = function (lineData) {
 
     // Check and change mode.
     var streamRendering = seriesScope.streamRendering;
-    if (this._incremental ^ streamRendering) {
-        this.remove();
-        streamRendering && group.add(lineDraw._incremental = new IncrementalDisplayable());
+    var incremental = lineDraw._incremental;
+
+    if (incremental ^ streamRendering) {
+        lineDraw.remove();
+        if (streamRendering) {
+            if (!incremental) {
+                incremental = lineDraw._incremental = new IncrementalDisplayable();
+                incremental.onDisplaybleFlushed = function () {
+                    clearLargeLine(lineDraw);
+                    lineDraw._largeLineAdded = false;
+                };
+            }
+            group.add(incremental);
+        }
     }
 
     // ??? Process that switch from stream to non-stream.
     if (streamRendering) {
-        this._incremental.clearDisplaybles();
+        clearIncremental(lineDraw);
+
+        if (seriesScope.isLargeMode) {
+            if (!lineDraw._largeLine) {
+                lineDraw._largeLine = new LargeLineShape();
+            }
+            // ??? set style should not be here, but in task?
+            setLargeLineCommon(lineDraw, lineData, seriesScope);
+        }
     }
     else {
         lineData.diff(oldLineData)
@@ -78,7 +104,7 @@ lineDrawProto.updateView = function () {
     var seriesScope = makeSeriesScope(lineData);
 
     if (seriesScope.streamRendering) {
-        this._incremental.clearDisplaybles();
+        clearIncremental(lineDraw);
     }
     else {
         lineData.each(function (item, idx) {
@@ -91,17 +117,34 @@ lineDrawProto.updateView = function () {
 };
 
 function doAdd(lineDraw, lineData, idx, seriesScope) {
-    if (!lineNeedsDraw(lineData.getItemLayout(idx))) {
+    var itemLayout = lineData.getItemLayout(idx);
+    var el;
+
+    if (!lineNeedsDraw(itemLayout)) {
         return;
     }
-    var itemEl = createItemEl(lineDraw, lineData, idx, seriesScope);
 
     if (seriesScope.streamRendering) {
-        lineDraw._incremental.addDisplayable(itemEl, true)
+        if (seriesScope.isLargeMode) {
+            // ??? remove when switch mode?
+            var largeLine = lineDraw._largeLine;
+            largeLine.shape.segs.push(itemLayout);
+            if (!lineDraw._largeLineAdded) {
+                lineDraw._incremental.addDisplayable(largeLine, true);
+                lineDraw._largeLineAdded = true;
+            }
+            lineDraw._incremental.dirty();
+        }
+        else {
+            el = createItemEl(lineDraw, lineData, idx, seriesScope);
+            lineDraw._incremental.addDisplayable(el, true);
+        }
+        lineData.$releaseItemMemory(idx); // ???
     }
     else {
-        lineData.setItemGraphicEl(idx, itemEl);
-        lineDraw.group.add(itemEl);
+        el = createItemEl(lineDraw, lineData, idx, seriesScope);
+        lineData.setItemGraphicEl(idx, el);
+        lineDraw.group.add(el);
     }
 }
 
@@ -150,15 +193,62 @@ function makeSeriesScope(lineData) {
         hoverLineStyle: hostModel.getModel('lineStyle.emphasis').getLineStyle(),
         labelModel: hostModel.getModel('label.normal'),
         hoverLabelModel: hostModel.getModel('label.emphasis'),
-        streamRendering: streamSetting && streamSetting.threshold < lineData.count()
+        streamRendering: streamSetting && streamSetting.threshold < lineData.count(),
+        isLargeMode: hostModel.get('large')
     };
 }
 
 lineDrawProto.remove = function () {
-    this._incremental && this._incremental.clearDisplaybles();
+    clearIncremental(this);
     this._incremental = null;
     this.group.removeAll();
 };
+
+function setLargeLineCommon(lineDraw, lineData, seriesScope) {
+    var seriesModel = lineData.hostModel;
+    var largeLine = lineDraw._largeLine;
+
+    largeLine.setShape({
+        segs: [],
+        polyline: seriesModel.get('polyline')
+    });
+
+    largeLine.useStyle(
+        seriesModel.getModel('lineStyle.normal').getLineStyle()
+    );
+
+    var visualColor = lineData.getVisual('color');
+    if (visualColor) {
+        largeLine.setStyle('stroke', visualColor);
+    }
+    largeLine.setStyle('fill');
+
+    // Enable tooltip
+    // PENDING May have performance issue when path is extremely large
+    // largeLine.seriesIndex = seriesScope.seriesIndex;
+    // lineEl.on('mousemove', function (e) {
+    //     lineEl.dataIndex = null;
+    //     var dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
+    //     if (dataIndex > 0) {
+    //         // Provide dataIndex for tooltip
+    //         lineEl.dataIndex = dataIndex;
+    //     }
+    // });
+}
+
+function clearLargeLine(lineDraw) {
+    // Do not set dirty.
+    lineDraw._largeLine && (lineDraw._largeLine.shape.segs.length = 0);
+}
+
+function clearIncremental(lineDraw) {
+    var incremental = lineDraw._incremental;
+    if (incremental) {
+        incremental.clearDisplaybles();
+        lineDraw._largeLineAdded = false;
+    }
+    clearLargeLine(lineDraw);
+}
 
 function isPointNaN(pt) {
     return isNaN(pt[0]) || isNaN(pt[1]);
