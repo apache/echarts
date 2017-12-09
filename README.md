@@ -16,7 +16,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 ## Get ECharts GL
 
-ECharts-GL is an extension pack of echarts, which providing 3D plots, globe visualization and WebGL acceleration.
+ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visualization and WebGL acceleration.
 
 + Get from [https://github.com/ecomfe/echarts-gl](https://github.com/ecomfe/echarts-gl)
 
