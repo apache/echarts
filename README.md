@@ -10,7 +10,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 ## Get ECharts
 
-+ Download on [echarts.baidu.com](http://echarts.baidu.com/download.html)
++ Download from [echarts.baidu.com](http://echarts.baidu.com/download.html)
 
 + `npm install echarts --save`
 
@@ -135,4 +135,4 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 
 ## License
 
-ECharts is available under the BSD license.
+ECharts is available under the BSD 3 license.
