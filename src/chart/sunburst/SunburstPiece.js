@@ -104,6 +104,8 @@ SunburstPieceProto.updateData = function (
     );
     sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
 
+    sector.dataIndex = node.dataIndex;
+
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
 
