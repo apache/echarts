@@ -217,6 +217,10 @@ function setLargeLineCommon(lineDraw, lineData, seriesScope) {
         seriesModel.getModel('lineStyle.normal').getLineStyle()
     );
 
+    // ???! do it in echarts.js ?
+    var blendMode = seriesModel.get('blendMode') || null;
+    largeLine.style.blend = blendMode;
+
     var visualColor = lineData.getVisual('color');
     if (visualColor) {
         largeLine.setStyle('stroke', visualColor);

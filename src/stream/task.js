@@ -105,6 +105,14 @@ taskProto.progress = function (params) {
     }, this._progressNotify);
 };
 
+taskProto.getProgressInfo = function () {
+    var fields = inner(this);
+    return {
+        dueIndex: fields.dueIndex,
+        dueEnd: fields.dueEnd
+    };
+};
+
 function progressNotify(dueIndex, outputDueEnd) {
     var fields = inner(this);
 

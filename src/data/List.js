@@ -108,6 +108,7 @@ DefaultDataProvider.prototype.addData = function (newData) {
 
     var thisArray = this._array;
     if (chunkSize == null) {
+        // ??? performance
         thisArray.push.apply(thisArray, newData);
     }
     else if (chunkSize === newData.length) {

@@ -972,22 +972,22 @@ echartsProto.resize = function (opts) {
     var optionChanged = this._model && this._model.resetOption('media');
     var updateMethod = optionChanged ? 'prepareAndUpdate' : 'update';
 
-    refresh(updateMethod, opts && opts.silent);
+    refresh(this, updateMethod, opts && opts.silent);
 };
 
-function refresh(updateMethod, silent) {
-    this[IN_MAIN_PROCESS] = true;
+function refresh(ecIns, updateMethod, silent) {
+    ecIns[IN_MAIN_PROCESS] = true;
 
-    updateMethods[updateMethod].call(this);
+    updateMethods[updateMethod].call(ecIns);
 
     // Resize loading effect
-    this._loadingFX && this._loadingFX.resize();
+    ecIns._loadingFX && ecIns._loadingFX.resize();
 
-    this[IN_MAIN_PROCESS] = false;
+    ecIns[IN_MAIN_PROCESS] = false;
 
-    flushPendingActions.call(this, silent);
+    flushPendingActions.call(ecIns, silent);
 
-    triggerUpdatedEvent.call(this, silent);
+    triggerUpdatedEvent.call(ecIns, silent);
 }
 
 /**
