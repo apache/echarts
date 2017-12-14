@@ -51,7 +51,7 @@ lineDrawProto.updateData = function (lineData) {
         if (streamRendering) {
             if (!incremental) {
                 incremental = lineDraw._incremental = new IncrementalDisplayable();
-                incremental.onDisplaybleFlushed = function () {
+                incremental.afterBrush = function () {
                     clearLargeLine(lineDraw);
                     lineDraw._largeLineAdded = false;
                 };
