@@ -3,6 +3,7 @@ import * as zrUtil from 'zrender/src/core/util';
 
 import './sunburst/SunburstSeries';
 import './sunburst/SunburstView';
+import './sunburst/sunburstAction';
 
 import dataColor from '../visual/dataColor';
 import sunburstLayout from './sunburst/sunburstLayout';

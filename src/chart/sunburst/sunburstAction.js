@@ -1,34 +1,24 @@
 /**
- * @file Treemap action
+ * @file Sunburst action
  */
 
 import * as echarts from '../../echarts';
 import * as helper from '../helper/treeHelper';
 
-var noop = function () {};
-
-var actionTypes = [
-    'treemapZoomToNode',
-    'treemapRender',
-    'treemapMove'
-];
-
-for (var i = 0; i < actionTypes.length; i++) {
-    echarts.registerAction({type: actionTypes[i], update: 'updateView'}, noop);
-}
+var ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
 echarts.registerAction(
-    {type: 'treemapRootToNode', update: 'updateView'},
+    {type: ROOT_TO_NODE_ACTION, update: 'updateView'},
     function (payload, ecModel) {
 
         ecModel.eachComponent(
-            {mainType: 'series', subType: 'treemap', query: payload},
+            {mainType: 'series', subType: 'sunburst', query: payload},
             handleRootToNode
         );
 
         function handleRootToNode(model, index) {
-            var types = ['treemapZoomToNode', 'treemapRootToNode'];
-            var targetInfo = helper.retrieveTargetInfo(payload, types, model);
+            var targetInfo = helper
+                .retrieveTargetInfo(payload, [ROOT_TO_NODE_ACTION], model);
 
             if (targetInfo) {
                 var originViewRoot = model.getViewRoot();

@@ -1,7 +1,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
-import {wrapTreePathInfo} from '../treemap/helper';
+import {wrapTreePathInfo} from '../helper/treeHelper';
 
 export default SeriesModel.extend({
 
@@ -72,6 +72,9 @@ export default SeriesModel.extend({
         // Valid values: 'none' (for not downplay others), 'descendant',
         // 'ancestor', 'self'
         highlightPolicy: 'descendant',
+
+        // 'zoomToNode', 'link', or false
+        nodeClick: 'zoomToNode',
 
         label: {
             normal: {

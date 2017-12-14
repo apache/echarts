@@ -3,7 +3,7 @@ import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
 import Model from '../../model/Model';
 import {encodeHTML, addCommas} from '../../util/format';
-import {wrapTreePathInfo} from './helper';
+import {wrapTreePathInfo} from '../helper/treeHelper';
 
 export default SeriesModel.extend({
 

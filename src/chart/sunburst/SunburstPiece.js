@@ -288,7 +288,7 @@ export default SunburstPiece;
 function getNodeColor(node, seriesModel, ecModel) {
     if (node.depth === 0) {
         // Virtual root node
-        return 'transparent';
+        return ecModel.option.color[0];
     }
     else {
         // Self color or level color

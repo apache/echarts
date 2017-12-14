@@ -1,41 +1,46 @@
 import * as zrUtil from 'zrender/src/core/util';
-import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
+
+var ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
 var SunburstView = ChartView.extend({
 
     type: 'sunburst',
 
     init: function () {
-        var sectorGroup = new graphic.Group();
-        this._sectorGroup = sectorGroup;
-
         /**
          * @private
-         * @type {module:echarts/data/Tree}
+         * @type {module:echarts/data/Node}
          */
-        this._oldTree;
+        this._oldRoot;
     },
 
     render: function (seriesModel, ecModel, api, payload) {
-        if (payload && (payload.from === this.uid)) {
-            return;
-        }
+        var that = this;
 
-        var oldTree = this._oldTree;
-        var newTree = seriesModel.getData().tree;
+        this.seriesModel = seriesModel;
+        this.api = api;
+        this.ecModel = ecModel;
+
+        var virtualRoot = seriesModel.getData().tree.root;
+
+        var oldRoot = this._oldRoot;
+        var newRoot = seriesModel.getViewRoot();
 
         var group = this.group;
 
         dualTravel(
-            newTree.root ? [newTree.root] : [],
-            (oldTree && oldTree.root) ? [oldTree.root] : []
+            newRoot ? [newRoot] : [],
+            oldRoot ? [oldRoot] : []
         );
 
-        this._data = newTree.root;
-        this._oldTree = newTree;
+        renderRollUp(virtualRoot, newRoot);
+
+        this._initEvents();
+
+        this._oldRoot = newRoot;
 
         function dualTravel(newChildren, oldChildren) {
             if (newChildren.length === 0 && oldChildren.length === 0) {
@@ -66,32 +71,118 @@ var SunburstView = ChartView.extend({
         }
 
         function doRenderNode(newNode, oldNode) {
-            if (newNode !== newTree.root) {
+            if (newNode !== virtualRoot) {
                 if (oldNode && oldNode.piece) {
                     if (newNode) {
                         // Update
                         oldNode.piece
                             .updateData(false, newNode, seriesModel, ecModel);
-                    }
-                    else {
-                        // Remove
-                        group.remove(oldNode.piece);
+                        return;
                     }
                 }
                 else {
+                    if (newNode) {
+                        // Add
+                        var piece = new SunburstPiece(
+                            newNode,
+                            seriesModel,
+                            ecModel
+                        );
+                        group.add(piece);
+                        return;
+                    }
+                }
+            }
+            // Remove
+            removeNode(oldNode);
+        }
+
+        function removeNode(node) {
+            if (!node) {
+                return;
+            }
+
+            if (node.piece) {
+                group.remove(node.piece);
+                node.piece = null;
+            }
+            zrUtil.each(node.children, function (child) {
+                removeNode(child);
+            });
+        }
+
+        function renderRollUp(virtualRoot, viewRoot) {
+            if (virtualRoot !== viewRoot) {
+                // Render
+                if (virtualRoot.piece) {
+                    // Update
+                    virtualRoot.piece
+                        .updateData(false, virtualRoot, seriesModel, ecModel);
+                }
+                else {
                     // Add
-                    var piece = new SunburstPiece(
-                        newNode,
+                    virtualRoot.piece = new SunburstPiece(
+                        virtualRoot,
                         seriesModel,
                         ecModel
                     );
-                    group.add(piece);
+                    group.add(virtualRoot.piece);
                 }
+
+                virtualRoot.piece.on('click', function (e) {
+                    that._rootToNode(viewRoot.parentNode);
+                });
+            }
+            else if (virtualRoot.piece) {
+                // Remove
+                group.remove(virtualRoot.piece);
+                virtualRoot.piece = null;
             }
         }
     },
 
-    dispose: function () {},
+    dispose: function () {
+    },
+
+    /**
+     * @private
+     */
+    _initEvents: function () {
+        var that = this;
+
+        this.group.on('click', function (e) {
+            var nodeClick = that.seriesModel.get('nodeClick', true);
+
+            if (!nodeClick) {
+                return;
+            }
+
+            if (nodeClick === 'zoomToNode') {
+                var targetFound = false;
+                var viewRoot = that.seriesModel.getViewRoot();
+                viewRoot.eachNode(function (node) {
+                    if (!targetFound
+                        && node.piece && node.piece.childAt(0) === e.target
+                    ) {
+                        that._rootToNode(node);
+                        targetFound = true;
+                    }
+                });
+            }
+        });
+    },
+
+    /**
+     * @private
+     */
+    _rootToNode: function (node) {
+        this.api.dispatchAction({
+            type: ROOT_TO_NODE_ACTION,
+            from: this.uid,
+            seriesId: this.seriesModel.id,
+            targetNode: node
+        });
+    },
 
     /**
      * @implement

@@ -25,12 +25,14 @@ export default function (seriesType, ecModel, api, payload) {
         var r0 = parsePercent(radius[0], size / 2);
         var r = parsePercent(radius[1], size / 2);
 
-        var data = seriesModel.getData();
+        // var data = seriesModel.getData();
 
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
         var minAngle = seriesModel.get('minAngle') * RADIAN;
 
-        var treeRoot = data.tree.root;
+        var virtualRoot = seriesModel.getData().tree.root;
+        var treeRoot = seriesModel.getViewRoot();
+        var rootDepth = treeRoot.depth;
 
         var sortOrder = seriesModel.get('sortOrder');
         if (sortOrder != null) {
@@ -46,7 +48,9 @@ export default function (seriesType, ecModel, api, payload) {
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
-        var rPerLevel = (r - r0) / (treeRoot.height || 1);
+        var renderRollupNode = treeRoot !== virtualRoot;
+        var levels = treeRoot.height + (renderRollupNode ? 1 : 0);
+        var rPerLevel = (r - r0) / (levels || 1);
 
         var clockwise = seriesModel.get('clockwise');
 
@@ -62,17 +66,17 @@ export default function (seriesType, ecModel, api, payload) {
          * Render a tree
          * @return increased angle
          */
-        var renderNode = function (root, startAngle) {
-            if (!root) {
+        var renderNode = function (node, startAngle) {
+            if (!node) {
                 return;
             }
 
             var endAngle = startAngle;
 
             // Render self
-            if (root !== treeRoot) {
-                // Tree root is virtual, so it doesn't need to be drawn
-                var value = root.getValue();
+            if (node !== virtualRoot) {
+                // Tree node is virtual, so it doesn't need to be drawn
+                var value = node.getValue();
 
                 var angle = (sum === 0 && stillShowZeroSum)
                     ? unitRadian : (value * unitRadian);
@@ -86,16 +90,19 @@ export default function (seriesType, ecModel, api, payload) {
 
                 endAngle = startAngle + dir * angle;
 
-                var rStart = r0 + rPerLevel * (root.depth - 1);
-                var rEnd = r0 + rPerLevel * root.depth;
+                var depth = node.depth - rootDepth + (renderRollupNode ? 1 : 0);
+                var rStart = r0 + rPerLevel * depth;
+                var rEnd = r0 + rPerLevel * (depth + 1);
 
-                var itemModel = root.getModel();
+                var itemModel = node.getModel();
                 if (itemModel.get('r0') != null) {
                     rStart = parsePercent(itemModel.get('r0'), size / 2);
+                }
+                if (itemModel.get('r') != null) {
                     rEnd = parsePercent(itemModel.get('r'), size / 2);
                 }
 
-                root.setLayout({
+                node.setLayout({
                     angle: angle,
                     startAngle: startAngle,
                     endAngle: endAngle,
@@ -108,16 +115,34 @@ export default function (seriesType, ecModel, api, payload) {
             }
 
             // Render children
-            if (root.children && root.children.length) {
+            if (node.children && node.children.length) {
                 // currentAngle = startAngle;
                 var siblingAngle = 0;
-                zrUtil.each(root.children, function (node) {
+                zrUtil.each(node.children, function (node) {
                     siblingAngle += renderNode(node, startAngle + siblingAngle);
                 });
             }
 
             return endAngle - startAngle;
         };
+
+        // Virtual root node for roll up
+        if (renderRollupNode) {
+            var rStart = r0;
+            var rEnd = r0 + rPerLevel;
+
+            var angle = Math.PI * 2;
+            virtualRoot.setLayout({
+                angle: angle,
+                startAngle: startAngle,
+                endAngle: startAngle + angle,
+                clockwise: clockwise,
+                cx: cx,
+                cy: cy,
+                r0: rStart,
+                r: rEnd
+            });
+        }
 
         renderNode(treeRoot, startAngle);
     });
