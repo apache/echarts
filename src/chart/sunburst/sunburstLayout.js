@@ -25,8 +25,6 @@ export default function (seriesType, ecModel, api, payload) {
         var r0 = parsePercent(radius[0], size / 2);
         var r = parsePercent(radius[1], size / 2);
 
-        // var data = seriesModel.getData();
-
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
         var minAngle = seriesModel.get('minAngle') * RADIAN;
 
@@ -34,9 +32,9 @@ export default function (seriesType, ecModel, api, payload) {
         var treeRoot = seriesModel.getViewRoot();
         var rootDepth = treeRoot.depth;
 
-        var sortOrder = seriesModel.get('sortOrder');
-        if (sortOrder != null) {
-            initChildren(treeRoot, sortOrder === 'asc');
+        var sort = seriesModel.get('sort');
+        if (sort != null) {
+            initChildren(treeRoot, sort);
         }
 
         var validDataCount = 0;
@@ -49,7 +47,7 @@ export default function (seriesType, ecModel, api, payload) {
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
         var renderRollupNode = treeRoot !== virtualRoot;
-        var levels = treeRoot.height + (renderRollupNode ? 1 : 0);
+        var levels = treeRoot.height - (renderRollupNode ? 0 : 1);
         var rPerLevel = (r - r0) / (levels || 1);
 
         var clockwise = seriesModel.get('clockwise');
@@ -90,7 +88,7 @@ export default function (seriesType, ecModel, api, payload) {
 
                 endAngle = startAngle + dir * angle;
 
-                var depth = node.depth - rootDepth + (renderRollupNode ? 1 : 0);
+                var depth = node.depth - rootDepth - (renderRollupNode ? 0 : 1);
                 var rStart = r0 + rPerLevel * depth;
                 var rEnd = r0 + rPerLevel * (depth + 1);
 
@@ -170,14 +168,21 @@ function initChildren(node, isAsc) {
 /**
  * Sort children nodes
  *
- * @param {TreeNode[]} children children of node to be sorted
- * @param {boolean}    isAsc    if is in ascendant order
+ * @param {TreeNode[]}               children children of node to be sorted
+ * @param {string | function | null} sort sort method
+ *                                   See SunburstSeries.js for details.
  */
-function sort(children, isAsc) {
-    return children.sort(function (a, b) {
-        var diff = (a.getValue() - b.getValue()) * (isAsc ? -1 : 1);
-        return diff === 0
-            ? (a.dataIndex - b.dataIndex) * (isAsc ? 1 : -1)
-            : diff;
-    });
+function sort(children, sortOrder) {
+    if (typeof sortOrder === 'function') {
+        return children.sort(sortOrder);
+    }
+    else {
+        var isAsc = sortOrder === 'asc';
+        return children.sort(function (a, b) {
+            var diff = (a.getValue() - b.getValue()) * (isAsc ? 1 : -1);
+            return diff === 0
+                ? (a.dataIndex - b.dataIndex) * (isAsc ? -1 : 1)
+                : diff;
+        });
+    }
 }

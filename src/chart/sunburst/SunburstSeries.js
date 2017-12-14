@@ -76,6 +76,8 @@ export default SeriesModel.extend({
         // 'zoomToNode', 'link', or false
         nodeClick: 'zoomToNode',
 
+        renderLabelForZeroData: false,
+
         label: {
             normal: {
                 // could be: 'radial', 'tangential', or 'none'
@@ -114,9 +116,18 @@ export default SeriesModel.extend({
 
         levels: [],
 
-        // null for not sorting,
-        // 'desc' and 'asc' for descend and ascendant order
-        sortOrder: 'desc'
+        /**
+         * Sort order.
+         *
+         * Valid values: 'desc', 'asc', null, or callback function.
+         * 'desc' and 'asc' for descend and ascendant order;
+         * null for not sorting;
+         * example of callback function:
+         * function(nodeA, nodeB) {
+         *     return nodeA.getValue() - nodeB.getValue();
+         * }
+         */
+        sort: 'desc'
     },
 
     getViewRoot: function () {

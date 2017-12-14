@@ -295,7 +295,8 @@ function getNodeColor(node, seriesModel, ecModel) {
         var color = node.getModel('itemStyle.normal').get('color');
         if (!color) {
             // First-generation color
-            color = ecModel.option.color[getRootId(node)];
+            var length = ecModel.option.color.length;
+            color = ecModel.option.color[getRootId(node) % length];
         }
 
         return color;

@@ -31,6 +31,8 @@ var SunburstView = ChartView.extend({
 
         var group = this.group;
 
+        var renderLabelForZeroData = seriesModel.get('renderLabelForZeroData');
+
         dualTravel(
             newRoot ? [newRoot] : [],
             oldRoot ? [oldRoot] : []
@@ -71,6 +73,11 @@ var SunburstView = ChartView.extend({
         }
 
         function doRenderNode(newNode, oldNode) {
+            if (!renderLabelForZeroData && newNode && !newNode.getValue()) {
+                // Not render data with value 0
+                newNode = null;
+            }
+
             if (newNode !== virtualRoot) {
                 if (oldNode && oldNode.piece) {
                     if (newNode) {
