@@ -50,14 +50,20 @@ function transferProperties(a, b) {
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
  */
-function DefaultDataProvider(dataArray) {
+function DefaultDataProvider(dataArray, dimSize) {
     var methods;
 
     // Typed array.
-    if (dataArray && !zrUtil.isArray(dataArray)) {
-        this._chunkSize = dataArray.length;
-        this._array = [dataArray];
+    if (dataArray && typeof dataArray[0] === 'number') {
+        if (__DEV__) {
+            if (dimSize == null) {
+                throw new Error('Typed array data must specify dimension size')
+            }
+        }
+        this._dimSize = dimSize;
+        this._array = dataArray;
         methods = typedArrayProviderMethods;
+        this.pure = true;
     }
     // Normal array.
     else {
@@ -80,12 +86,15 @@ var normalProviderMethods = {
 };
 var typedArrayProviderMethods = {
     count: function () {
-        return this._array.length * this._chunkSize;
+        return this._array.length / this._dimSize;
     },
     getItem: function (idx) {
-        var chunkSize = this._chunkSize;
-        var chunk = this._array[Math.floor(idx / chunkSize)];
-        return chunk ? chunk[idx % chunkSize] : null;
+        var item = [];
+        var offset = this._dimSize * idx;
+        for (var i = 0; i < this._dimSize; i++) {
+            item[i] = this._array[offset + i];
+        }
+        return item;
     }
 };
 
@@ -335,9 +344,9 @@ listProto.getDimensionInfo = function (dim) {
 listProto.initData = function (data, nameList, dimValueGetter) {
     data = data || [];
 
-    var isDataArray = zrUtil.isArray(data);
+    var isDataArray = zrUtil.isArrayLike(data);
     if (isDataArray) {
-        data = new DefaultDataProvider(data);
+        data = new DefaultDataProvider(data, this.dimensions.length);
     }
     if (__DEV__) {
         if (!isDataArray && (typeof data.getItem != 'function' || typeof data.count != 'function')) {

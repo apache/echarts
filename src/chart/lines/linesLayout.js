@@ -9,8 +9,7 @@ export default function (ecModel) {
         var task = lineData.createEachTask(function (idx) {
             var itemModel = lineData.getItemModel(idx);
 
-            var coords = (itemModel.option instanceof Array) ?
-                itemModel.option : itemModel.get('coords');
+            var coords = seriesModel.getLineCoords(idx);
 
             if (__DEV__) {
                 if (!(coords instanceof Array && coords.length > 0 && coords[0] instanceof Array)) {
