@@ -316,7 +316,6 @@
                     },
                     series: [{
                         type: 'sunburst',
-                        highlightPolicy: 'ancestor',
                         center: ['50%', '48%'],
                         data: data,
                         sort: function (a, b) {
@@ -390,49 +389,6 @@
                     }]
                 });
             });
-
-            function blendColor(colors) {
-                var rSum = 0;
-                var gSum = 0;
-                var bSum = 0;
-                var valueSum = 0;
-                for (var i = 0; i < colors.length; ++i) {
-                    if (colors[i]) {
-                        var color = colors[i].color;
-                        var r = parseInt(color.substr(1, 2), 16);
-                        var g = parseInt(color.substr(3, 2), 16);
-                        var b = parseInt(color.substr(5, 2), 16);
-
-                        var value = colors[i].value == null ? 1 : colors[i].value;
-
-                        rSum += r * value;
-                        gSum += g * value;
-                        bSum += b * value;
-                        valueSum += value;
-                    }
-                }
-
-                if (valueSum === 0) {
-                    return '#000000';
-                }
-                else {
-                    return '#'
-                        + numToHex(rSum / valueSum)
-                        + numToHex(gSum / valueSum)
-                        + numToHex(bSum / valueSum);
-                }
-
-                function numToHex(n) {
-                    var hex = Math.round(n).toString(16);
-                    if (hex.length < 2) {
-                        return '0' + hex;
-                    }
-                    else {
-                        return hex;
-                    }
-                }
-            }
-
         </script>
     </body>
 </html>
