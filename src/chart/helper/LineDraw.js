@@ -92,22 +92,20 @@ lineDrawProto.updateData = function (lineData, api) {
 //     }, this);
 // };
 
-lineDrawProto.updateView = function () {
+lineDrawProto.updateView = function (seriesModel, api) {
     var lineData = this._lineData;
     var lineDraw = this;
     var seriesScope = makeSeriesScope(lineData);
 
     if (seriesScope.streamRendering) {
         clearIncremental(lineDraw);
+        createRenderTask(lineDraw, lineData, seriesScope, api);
     }
     else {
         lineData.each(function (item, idx) {
             doUpdate(lineDraw, lineData, lineData, idx, idx, seriesScope);
         });
     }
-
-    // ??? set task start index.
-    createRenderTask(lineDraw, lineData, seriesScope);
 };
 
 function doAdd(lineDraw, lineData, idx, seriesScope) {
@@ -236,18 +234,12 @@ function setLargeLineCommon(lineDraw, lineData, seriesScope) {
     // });
 }
 
-function clearLargeLine(lineDraw) {
-    // Do not set dirty.
-    lineDraw._largeLine && (lineDraw._largeLine.shape.segs.length = 0);
-}
-
 function clearIncremental(lineDraw) {
     var incremental = lineDraw._incremental;
     if (incremental) {
         incremental.clearDisplaybles();
         lineDraw._largeLineAdded = false;
     }
-    clearLargeLine(lineDraw);
 }
 
 function isPointNaN(pt) {

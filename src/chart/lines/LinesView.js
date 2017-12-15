@@ -94,7 +94,7 @@ export default echarts.extendChartView({
     },
 
     updateView: function (seriesModel, ecModel, api) {
-        this._lineDraw.updateView(seriesModel);
+        this._lineDraw.updateView(seriesModel, api);
         this._clearLayer(api);
     },
 
