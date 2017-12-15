@@ -26,6 +26,8 @@ var dataCtors = {
     'time': Array
 };
 
+var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
+
 function cloneChunk(originalChunk) {
     var Ctor = originalChunk.constructor;
     // Only shallow clone is enough when Array.
@@ -358,9 +360,9 @@ listProto.initData = function (data, nameList, dimValueGetter) {
 
     // Clear
     this._storage = {};
-    this.indices = [];
-    this._chunkOffsets = [];
-    this._chunkIndices = [];
+    this.indices = new CtorUint32Array(data.count());
+    this._chunkOffsets = new CtorUint32Array(data.count());
+    this._chunkIndices = new CtorUint32Array(data.count());
 
     var dimensionInfoMap = this._dimensionInfos;
 
@@ -426,6 +428,22 @@ function doInit(list, dueIndex, dueEnd, isInit) {
         return dueIndex;
     }
 
+    if (dueEnd > list.indices.length) {
+        // Expand indices
+        var oldIndices = list.indices;
+        var oldChunkIndices = list._chunkIndices;
+        var oldChunkOffsets = list._chunkOffsets;
+        list.indices = new CtorUint32Array(dueEnd);
+        list._chunkIndices = new CtorUint32Array(dueEnd);
+        list._chunkOffsets = new CtorUint32Array(dueEnd);
+        // Copy value to new array
+        for (var i = 0; i < oldIndices.length; i++) {
+            list.indices[i] = oldIndices[i];
+            list._chunkIndices[i] = oldChunkIndices[i];
+            list._chunkOffsets[i] = oldChunkOffsets[i];
+        }
+    }
+
     var data = list._rawData;
     var storage = list._storage;
     var indices = list.indices;
@@ -483,9 +501,9 @@ function doInit(list, dueIndex, dueEnd, isInit) {
             dimStorage[chunkOffset] = list._dimValueGetter(dataItem, dim, dueIndex, k);
         }
 
-        indices.push(chunkIndex * chunkSize + chunkOffset);
-        chunkOffsets.push(chunkOffset);
-        chunkIndices.push(chunkIndex);
+        indices[dueIndex] = chunkIndex * chunkSize + chunkOffset;
+        chunkOffsets[dueIndex] = chunkOffset;
+        chunkIndices[chunkIndex] = chunkIndex;
 
         // Use the name in option and create id
         if (!nameList[dueIndex] && dataItem) {
@@ -1405,11 +1423,10 @@ listProto.cloneShallow = function () {
 
     transferProperties(list, this);
 
-
     // Clone will not change the data extent and indices
-    list.indices = this.indices.slice();
-    list._chunkIndices = this._chunkIndices.slice();
-    list._chunkOffsets = this._chunkOffsets.slice();
+    list.indices = new CtorUint32Array(this.indices);
+    list._chunkIndices = new CtorUint32Array(this._chunkIndices);
+    list._chunkOffsets = new CtorUint32Array(this._chunkOffsets);
 
     if (this._extent) {
         list._extent = zrUtil.extend({}, this._extent);
@@ -1418,25 +1435,6 @@ listProto.cloneShallow = function () {
     list._frameSize = this._frameSize;
 
     return list;
-};
-
-// ??? duplicate with cloneShallow?
-listProto.createCloneShallowTask = function () {
-    var input = this;
-    var output = this.cloneShallow();
-    return createTask({
-        input: input,
-        output: output,
-        progress: function (params, notify) {
-            var dueIndex = params.dueIndex;
-            for (; dueIndex < params.dueEnd; dueIndex++) {
-                output.indices[dueIndex] = input.indices[dueIndex];
-                output._chunkIndices[dueIndex] = input._chunkIndices[dueIndex];
-                output._chunkOffsets[dueIndex] = input._chunkOffsets[dueIndex];
-            }
-            notify(dueIndex);
-        }
-    });
 };
 
 // ??? temporarily

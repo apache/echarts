@@ -323,15 +323,7 @@ var SeriesModel = ComponentModel.extend({
 
     restoreData: function () {
         var dataBeforeProcessed = get(this, 'dataBeforeProcessed');
-        var dataCloneTask = dataBeforeProcessed.createCloneShallowTask();
-        set(this, 'data', dataCloneTask.output);
-
-        // var provisionTask = dataBeforeProcessed.getProvider().provisionTask;
-        var dataInitTask = dataBeforeProcessed.getInitTask();
-
-        // this.pipeTask(provisionTask, 'dataProvide');
-        this.pipeTask(dataInitTask, 'dataInit');
-        this.pipeTask(dataCloneTask, 'dataClone', 'updateBase');
+        set(this, 'data', dataBeforeProcessed.cloneShallow());
     },
 
     getColorFromPalette: function (name, scope) {
