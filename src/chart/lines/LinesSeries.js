@@ -62,23 +62,46 @@ var LinesSeries = SeriesModel.extend({
         LinesSeries.superApply(this, 'mergeOption', arguments);
     },
 
-    getLineCoords: function (idx) {
+    _getCoordsFromItemModel: function (idx) {
+        var itemModel = this.getItemModel(idx);
+        var coords = (itemModel.option instanceof Array) ?
+            itemModel.option : itemModel.getShallow('coords');
+        if (__DEV__) {
+            if (!(coords instanceof Array && coords.length > 0 && coords[0] instanceof Array)) {
+                throw new Error('Invalid coords ' + JSON.stringify(coords) + '. Lines must have 2d coords array in data item.');
+            }
+        }
+        return coords;
+    },
+
+    getLineCoordsCount: function (idx) {
         if (this._flatCoordsOffset) {
-            var coords = [];
+            return this._flatCoordsOffset[idx * 2 + 1];
+        }
+        else {
+            return this._getCoordsFromItemModel(idx).length;
+        }
+    },
+
+    getLineCoords: function (idx, out) {
+        if (this._flatCoordsOffset) {
             var offset = this._flatCoordsOffset[idx * 2];
             var len = this._flatCoordsOffset[idx * 2 + 1];
             for (var i = 0; i < len; i++) {
-                coords.push([
-                    this._flatCoords[offset + i * 2],
-                    this._flatCoords[offset + i * 2 + 1]
-                ]);
+                out[i] = out[i] || [];
+                out[i][0] = this._flatCoords[offset + i * 2];
+                out[i][1] = this._flatCoords[offset + i * 2 + 1];
             }
-            return coords;
+            return len;
         }
         else {
-            var itemModel = this.getItemModel(idx);
-            return (itemModel.option instanceof Array) ?
-                itemModel.option : itemModel.getShallow('coords');
+            var coords = this._getCoordsFromItemModel(idx);
+            for (var i = 0; i < coords.length; i++) {
+                out[i] = out[i] || [];
+                out[i][0] = coords[i][0];
+                out[i][1] = coords[i][1];
+            }
+            return coords.length;
         }
     },
 
@@ -136,6 +159,7 @@ var LinesSeries = SeriesModel.extend({
 
         var lineData = new List(['value'], this);
         lineData.hasItemOption = false;
+
         lineData.initData(option.data, [], function (dataItem, dimName, dataIndex, dimIndex) {
             // dataItem is simply coords
             if (dataItem instanceof Array) {

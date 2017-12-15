@@ -82,7 +82,7 @@ export default echarts.extendChartView({
 
         this.group.add(lineDraw.group);
 
-        lineDraw.updateData(data);
+        lineDraw.updateData(data, api);
 
         this._lastZlevel = zlevel;
     },

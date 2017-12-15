@@ -193,15 +193,16 @@ Geo.prototype = {
 
     /**
      * @param {string|Array.<number>} data
+     * @param {Array.<number>} out
      * @return {Array.<number>}
      */
-    dataToPoint: function (data) {
+    dataToPoint: function (data, out) {
         if (typeof data === 'string') {
             // Map area name to geoCoord
             data = this.getGeoCoord(data);
         }
         if (data) {
-            return View.prototype.dataToPoint.call(this, data);
+            return View.prototype.dataToPoint.call(this, data, out);
         }
     },
 

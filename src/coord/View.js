@@ -229,13 +229,15 @@ View.prototype = {
     /**
      * Convert a single (lon, lat) data item to (x, y) point.
      * @param {Array.<number>} data
+     * @param {Array.<number>} out
      * @return {Array.<number>}
      */
-    dataToPoint: function (data) {
+    dataToPoint: function (data, out) {
         var transform = this.transform;
+        out = out || [];
         return transform
-            ? v2ApplyTransform([], data, transform)
-            : [data[0], data[1]];
+            ? v2ApplyTransform(out, data, transform)
+            : vector.copy(out, data);
     },
 
     /**

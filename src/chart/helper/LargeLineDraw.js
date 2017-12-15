@@ -23,8 +23,9 @@ largeLineProto.updateData = function (data) {
     var seriesModel = data.hostModel;
 
     lineEl.setShape({
-        segs: data.mapArray(data.getItemLayout),
-        polyline: seriesModel.get('polyline')
+        segs: data.getLayout('linesPoints'),
+        polyline: seriesModel.get('polyline'),
+        curveness: seriesModel.get('lineStyle.normal.curveness')
     });
 
     lineEl.useStyle(
@@ -56,7 +57,7 @@ largeLineProto.updateData = function (data) {
 largeLineProto.updateLayout = function (seriesModel) {
     var data = seriesModel.getData();
     this._lineEl.setShape({
-        segs: data.mapArray(data.getItemLayout)
+        segs: data.getLayout('linesPoints')
     });
 };
 

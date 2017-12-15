@@ -23,8 +23,6 @@ function LineDraw(ctor) {
 
     this._largeLine;
 
-    this._largeLineAdded;
-
     this.group = new graphic.Group();
 }
 
@@ -33,7 +31,7 @@ var lineDrawProto = LineDraw.prototype;
 /**
  * @param {module:echarts/data/List} lineData
  */
-lineDrawProto.updateData = function (lineData) {
+lineDrawProto.updateData = function (lineData, api) {
     var lineDraw = this;
     var group = lineDraw.group;
 
@@ -46,15 +44,11 @@ lineDrawProto.updateData = function (lineData) {
     var streamRendering = seriesScope.streamRendering;
     var incremental = lineDraw._incremental;
 
-    if (incremental ^ streamRendering) {
+    if (streamRendering) {
         lineDraw.remove();
         if (streamRendering) {
             if (!incremental) {
                 incremental = lineDraw._incremental = new IncrementalDisplayable();
-                incremental.afterBrush = function () {
-                    clearLargeLine(lineDraw);
-                    lineDraw._largeLineAdded = false;
-                };
             }
             group.add(incremental);
         }
@@ -87,7 +81,7 @@ lineDrawProto.updateData = function (lineData) {
     }
 
     // ??? set task start index.
-    createRenderTask(lineDraw, lineData, seriesScope);
+    createRenderTask(lineDraw, lineData, seriesScope, api);
 };
 
 // ??? remove?
@@ -117,29 +111,17 @@ lineDrawProto.updateView = function () {
 };
 
 function doAdd(lineDraw, lineData, idx, seriesScope) {
-    var itemLayout = lineData.getItemLayout(idx);
     var el;
 
+    var itemLayout = lineData.getItemLayout(idx);
     if (!lineNeedsDraw(itemLayout)) {
         return;
     }
 
     if (seriesScope.streamRendering) {
-        if (seriesScope.isLargeMode) {
-            // ??? remove when switch mode?
-            var largeLine = lineDraw._largeLine;
-            largeLine.shape.segs.push(itemLayout);
-            if (!lineDraw._largeLineAdded) {
-                lineDraw._incremental.addDisplayable(largeLine, true);
-                lineDraw._largeLineAdded = true;
-            }
-            lineDraw._incremental.dirty();
-        }
-        else {
-            el = createItemEl(lineDraw, lineData, idx, seriesScope);
-            lineDraw._incremental.addDisplayable(el, true);
-        }
-        lineData.$releaseItemMemory(idx); // ???
+        el = createItemEl(lineDraw, lineData, idx, seriesScope);
+        lineDraw._incremental.addDisplayable(el, true);
+        lineData.$releaseItemMemory(idx);
     }
     else {
         el = createItemEl(lineDraw, lineData, idx, seriesScope);
@@ -167,11 +149,25 @@ function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScop
     lineDraw.group.add(itemEl);
 }
 
-function createRenderTask(lineDraw, lineData, seriesScope) {
+function createRenderTask(lineDraw, lineData, seriesScope, api) {
     var hostModel = lineData.hostModel;
-    hostModel.pipeTask && hostModel.pipeTask(lineData.createEachTask(function (idx) {
-        doAdd(lineDraw, lineData, idx, seriesScope);
-    }), 'render');
+    if (hostModel.get('large')) {
+        hostModel.pipeTask && hostModel.pipeTask(api.createTask({
+            input: lineData,
+            progress: function (params, notify) {
+                lineDraw._largeLine.setShape({
+                    segs: lineData.getLayout('linesPoints')
+                });
+                lineDraw._incremental.addDisplayable(lineDraw._largeLine);
+                notify(params.dueEnd);
+            }
+        }), 'render');
+    }
+    else {
+        hostModel.pipeTask && hostModel.pipeTask(lineData.createEachTask(function (idx) {
+            doAdd(lineDraw, lineData, idx, seriesScope);
+        }), 'render');
+    }
 }
 
 // ??? Modify Polyline, Line.js to support IncrementalDisplable?
