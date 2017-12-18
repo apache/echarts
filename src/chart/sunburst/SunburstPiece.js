@@ -286,21 +286,26 @@ export default SunburstPiece;
  * @param {module:echarts/model/Global} ecModel echarts defaults
  */
 function getNodeColor(node, seriesModel, ecModel) {
-    if (node.depth === 0) {
+    var visualColor = node.getVisual('color');
+    // Self color or level color
+    var color = node.getModel('itemStyle.normal').get('color');
+    if (color) {
+        return color;
+    }
+    else if (visualColor) {
+        // Color mapping
+        return visualColor;
+    }
+    else if (node.depth === 0) {
         // Virtual root node
         return ecModel.option.color[0];
     }
     else {
-        // Self color or level color
-        var color = node.getModel('itemStyle.normal').get('color');
-        if (!color) {
-            // First-generation color
-            var length = ecModel.option.color.length;
-            color = ecModel.option.color[getRootId(node) % length];
-        }
-
-        return color;
+        // First-generation color
+        var length = ecModel.option.color.length;
+        color = ecModel.option.color[getRootId(node) % length];
     }
+    return color;
 }
 
 /**
