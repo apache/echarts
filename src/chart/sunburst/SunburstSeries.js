@@ -109,8 +109,8 @@ export default SeriesModel.extend({
         // Animation type canbe expansion, scale
         animationType: 'expansion',
         animationDuration: 1000,
-        animationUpdateDuration: 300,
-        animationEasing: 'sinusoidalInOut',
+        animationUpdateDuration: 500,
+        animationEasing: 'cubicOut',
 
         data: [],
 

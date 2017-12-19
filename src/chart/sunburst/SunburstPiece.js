@@ -62,6 +62,7 @@ SunburstPieceProto.updateData = function (
     node.piece = this;
 
     var sector = this.childAt(0);
+    sector.dataIndex = node.dataIndex;
 
     var itemModel = node.getModel();
     var layout = node.getLayout();
@@ -71,17 +72,16 @@ SunburstPieceProto.updateData = function (
     if (firstCreate) {
         sector.setShape(sectorShape);
         sector.shape.r = layout.r0;
-
-        var duration = seriesModel.getShallow('animationDuration')
-            / Math.max(node.depth + node.height, 1);
-        var delay = (node.depth - 1) * duration;
-        var easing = seriesModel.getShallow('animationEasing');
-
-        sector.animateTo({
-            shape: {
-                r: layout.r
-            }
-        }, duration, delay, easing);
+        graphic.updateProps(
+            sector,
+            {
+                shape: {
+                    r: layout.r
+                }
+            },
+            seriesModel,
+            node.dataIndex
+        );
     }
     else {
         graphic.updateProps(sector, {
@@ -103,8 +103,6 @@ SunburstPieceProto.updateData = function (
         )
     );
     sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
-
-    sector.dataIndex = node.dataIndex;
 
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
