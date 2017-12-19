@@ -34,6 +34,6 @@ export default {
             data.setItemVisual(idx, 'opacity', opacity);
         }
 
-        return {dataEach: dataEach};
+        return {dataEach: data.hasItemOption ? dataEach : null};
     }
 };

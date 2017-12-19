@@ -30,7 +30,7 @@ export default {
                 }
             };
 
-            return {dataEach: dataEach};
+            return { dataEach: data.hasItemOption ? dataEach : null };
         }
     }
 };
