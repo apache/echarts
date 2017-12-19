@@ -47,7 +47,7 @@ export default function (seriesType, ecModel, api, payload) {
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
         var renderRollupNode = treeRoot !== virtualRoot;
-        var levels = treeRoot.height - (renderRollupNode ? 0 : 1);
+        var levels = treeRoot.height - (renderRollupNode ? -1 : 1);
         var rPerLevel = (r - r0) / (levels || 1);
 
         var clockwise = seriesModel.get('clockwise');
@@ -88,7 +88,8 @@ export default function (seriesType, ecModel, api, payload) {
 
                 endAngle = startAngle + dir * angle;
 
-                var depth = node.depth - rootDepth - (renderRollupNode ? 0 : 1);
+                var depth = node.depth - rootDepth
+                    - (renderRollupNode ? -1 : 1);
                 var rStart = r0 + rPerLevel * depth;
                 var rEnd = r0 + rPerLevel * (depth + 1);
 
