@@ -4,7 +4,7 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
     return {
         seriesType: seriesType,
         processRawSeries: true,
-        reset: function (data, seriesModel, ecModel, api) {
+        reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
             var symbolType = seriesModel.get('symbol') || defaultSymbolType;

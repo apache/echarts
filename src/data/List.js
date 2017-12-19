@@ -476,7 +476,7 @@ listProto.initFromRawData = function (start, end, checkNameRepeat) {
     for (var idx = start; idx < end; idx++) {
 
         // NOTICE: Try not to write things into dataItem
-        var dataItem = data.getItem(i);
+        var dataItem = data.getItem(idx);
         // Each data item is value
         // [1, 2]
         // 2

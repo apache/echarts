@@ -1,9 +1,9 @@
 import Gradient from 'zrender/src/graphic/Gradient';
 
 export default {
-    allSeries: true,
     processRawSeries: true,
-    reset: function (data, seriesModel, ecModel) {
+    reset: function (seriesModel, ecModel) {
+        var data = seriesModel.getData();
         var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.normal.color').split('.');
         var color = seriesModel.get(colorAccessPath) // Set in itemStyle
             || seriesModel.getColorFromPalette(seriesModel.get('name'));  // Default color

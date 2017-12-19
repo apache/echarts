@@ -17,9 +17,7 @@ echarts.extendChartView({
         var data = seriesModel.getData();
         var group = this.group;
 
-        var symbolDraw = seriesModel.getStreamSetting()
-            ? this._streamSymbolDraw
-            : seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
+        var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
             ? this._largeSymbolDraw
             : this._normalSymbolDraw;
 

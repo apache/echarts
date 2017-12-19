@@ -87,7 +87,7 @@ taskProto.plan = function (contextOnReset) {
  * @param {Object} [params]
  */
 function reset(taskIns, contextOnReset) {
-    extend(taskIns.context, contextOnReset);
+    contextOnReset && extend(taskIns.context, contextOnReset);
 
     var fields = inner(taskIns);
     fields.dueIndex = fields.outputDueEnd = 0;
@@ -111,6 +111,7 @@ function reset(taskIns, contextOnReset) {
  */
 taskProto.progress = function (opt) {
     var fields = inner(this);
+    var step = opt && opt.step;
 
     if (fields.noProgress) {
         return;
@@ -118,13 +119,13 @@ taskProto.progress = function (opt) {
 
     var start = fields.dueIndex;
     var end = Math.min(
-        opt.step != null ? start + opt.step : Infinity,
+        step != null ? start + step : Infinity,
         fields.dueEnd,
         this._count ? this._count(this.context) : Infinity
     );
 
     var outputDueEnd;
-    !opt.skip && start < end && (
+    !(opt && opt.skip) && start < end && (
         outputDueEnd = this._progress({start: start, end: end}, this.context)
     );
 

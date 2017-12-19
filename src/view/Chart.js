@@ -89,24 +89,31 @@ Chart.prototype = {
      * @protected
      */
     renderTaskReset: function (context) {
-        if (!this.incrementalPrepare) {
-            return {noProgress: true};
-        }
-
         var seriesModel = context.model;
         var ecModel = context.ecModel;
         var api = context.api;
-        var shouldStreamRender = this.shouldStreamRender(seriesModel);
         var payload = context.payload;
         var updateMethod = payload && inner(payload).updateMethod || 'render';
 
-        if (inner(this).streamRendering ^ shouldStreamRender) {
+        if (!seriesModel.streamEnabled) {
+            this[updateMethod](seriesModel, ecModel, api, payload);
+            return {noProgress: true};
+        }
+
+        var shouldStream = seriesModel.shouldStream();
+
+        if (inner(this).shouldStream ^ shouldStream) {
             this.remove(ecModel, api);
         }
 
-        (inner(this).streamRendering = shouldStreamRender)
-            ? this.incrementalPrepare(seriesModel, ecModel, api)
-            : this[updateMethod](seriesModel, ecModel, api, payload);
+        inner(this).shouldStream = shouldStream;
+        if (shouldStream) {
+            this.incrementalPrepare(seriesModel, ecModel, api);
+        }
+        else {
+            this[updateMethod](seriesModel, ecModel, api, payload);
+            return {noProgress: true};
+        }
     },
 
     /**
@@ -126,24 +133,6 @@ Chart.prototype = {
             this.incrementalProgress(params, seriesModel, ecModel, api);
         }
     },
-
-    /**
-     * @protected
-     */
-    shouldStreamRender: function (seriesModel) {
-        var data = seriesModel.getData();
-        var streamSetting = seriesModel.getStreamSetting();
-        return streamSetting
-            && this.incrementalPrepare
-            && streamSetting.threshold < data.count()
-            && !this.cannotStreamRender(seriesModel);
-    },
-
-    /**
-     * Convinient for override in extended class.
-     * @protected
-     */
-    cannotStreamRender: function () {}
 
     /**
      * The view contains the given point.

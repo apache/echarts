@@ -52,7 +52,7 @@ function prepareStageHandler(stageHandler, stageTaskMap, pipelineTails, ecModel,
     var handlerUID = stageHandler.uid;
     var stageHandlerRecord = stageTaskMap.get(handlerUID) || stageTaskMap.set(handlerUID, []);
 
-    if ((stageHandler.seriesType || stageHandler.allSeries) && stageHandler.reset) {
+    if (stageHandler.reset) {
         createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api);
     }
     // else if (stageHandler.execute && stageHandler.getTargetSeries) {
@@ -122,16 +122,17 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType,
             unfinished |= overallTask.perform({step: step}, contextOnReset);
         }
         else if (seriesTaskMap) {
-            stageHandler.allSeries
-                ? ecModel.eachRawSeries(eachSeries)
-                : ecModel.eachRawSeriesByType(stageHandler.seriesType, eachSeries);
+            stageHandler.seriesType
+                ? ecModel.eachRawSeriesByType(stageHandler.seriesType, eachSeries)
+                : ecModel.eachRawSeries(eachSeries);
         }
 
         function eachSeries(seriesModel) {
             var task = seriesTaskMap.get(seriesModel.uid);
+            var shouldStream = seriesModel.shouldStream();
             setDirty && task.dirty();
             unfinished |= task.perform({
-                step: step,
+                step: shouldStream ? step : null,
                 skip: !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel)
             }, contextOnReset);
         }
@@ -143,11 +144,14 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType,
 proto.performSeriesTasks = function (ecModel) {
     var unfinished;
     // ??? temporarily
-    var step = this.getStep();
+    // var step = this.getStep();
+    // var opt = {step: step};
 
-    ecModel.eachRawSeries(function (seriesModel) {
-        unfinished |= seriesModel.dataInitTask.perform({step: step});
-        unfinished |= seriesModel.dataRestoreTask.perform({step: step});
+    ecModel.eachSeries(function (seriesModel) {
+        // var taskOpt = seriesModel.shouldStream() ? opt : null;
+        // Perform all for dataInit and dataRestore.
+        unfinished |= seriesModel.dataInitTask.perform();
+        unfinished |= seriesModel.dataRestoreTask.perform();
     });
 
     this.unfinished |= unfinished;
@@ -157,9 +161,9 @@ function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, 
     var seriesTaskMap = stageHandlerRecord.seriesTaskMap || (stageHandlerRecord.seriesTaskMap = createHashMap());
     var pipelineIdMap = createHashMap();
 
-    stageHandler.allSeries
-        ? ecModel.eachRawSeries(create)
-        : ecModel.eachRawSeriesByType(stageHandler.seriesType, create);
+    stageHandler.seriesType
+        ? ecModel.eachRawSeriesByType(stageHandler.seriesType, create)
+        : ecModel.eachRawSeries(create);
 
     function create(seriesModel) {
         var pipelineId = seriesModel.uid;
@@ -220,12 +224,11 @@ function legacyTaskReset(context) {
 }
 
 function seriesTaskReset(context) {
-    var data = context.model.getData();
     if (context.useClearVisual) {
-        data.clearAllVisual();
+        context.model.getData().clearAllVisual();
     }
     var resetDefine = this.__handlerReset(
-        data, context.model, context.ecModel, context.api
+        context.model, context.ecModel, context.api
     );
     if (!resetDefine) {
         return {noProgress: true};

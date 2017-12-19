@@ -1,7 +1,7 @@
 
 export default {
     seriesType: 'lines',
-    reset: function (data, seriesModel, ecModel) {
+    reset: function (seriesModel, ecModel) {
         var coordSys = seriesModel.coordinateSystem;
         var isPolyline = seriesModel.get('polyline');
         var isLarge = seriesModel.get('large');

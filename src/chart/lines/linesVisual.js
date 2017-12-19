@@ -10,9 +10,10 @@ var opacityQuery = 'lineStyle.normal.opacity'.split('.');
 
 export default {
     seriesType: 'lines',
-    reset: function (data, seriesModel, ecModel, api) {
+    reset: function (seriesModel, ecModel, api) {
         var symbolType = normalize(seriesModel.get('symbol'));
         var symbolSize = normalize(seriesModel.get('symbolSize'));
+        var data = seriesModel.getData();
 
         data.setVisual('fromSymbol', symbolType && symbolType[0]);
         data.setVisual('toSymbol', symbolType && symbolType[1]);

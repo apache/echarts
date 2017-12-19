@@ -13,10 +13,6 @@ export default echarts.extendChartView({
 
     init: function () {},
 
-    cannotStreamRender: function (seriesModel) {
-        return this._showEffect(seriesModel);
-    },
-
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
 

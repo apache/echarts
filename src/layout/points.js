@@ -3,7 +3,8 @@ import {map} from 'zrender/src/core/util';
 export default function (seriesType) {
     return {
         seriesType: seriesType,
-        reset: function (data, seriesModel, ecModel, api) {
+        reset: function (seriesModel, ecModel, api) {
+            var data = seriesModel.getData();
             var coordSys = seriesModel.coordinateSystem;
             if (!coordSys) {
                 return;

@@ -194,6 +194,10 @@ var LinesSeries = SeriesModel.extend({
         return encodeHTML(html.join(' > '));
     },
 
+    cannotStreamRender: function (seriesModel) {
+        return !!this._showEffect(seriesModel);
+    },
+
     defaultOption: {
         coordinateSystem: 'geo',
         zlevel: 0,

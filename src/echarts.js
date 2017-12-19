@@ -1360,7 +1360,8 @@ function performRender(ecIns, ecModel, api, payload, isReset) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
 
-        unfinished |= chartView.renderTask.perform({step: step}, {payload: payload});
+        var opt = seriesModel.shouldStream() ? {step: step} : null;
+        unfinished |= chartView.renderTask.perform(opt, {payload: payload});
         // chartView.render(seriesModel, ecModel, api, payload);
 
         chartView.group.silent = !!seriesModel.get('silent');
@@ -1918,7 +1919,7 @@ export function registerVisual(priority, visualTask) {
 }
 
 /**
- * @param {Object|Function} fn: {seriesType, allSeries, processRawSeries, reset}
+ * @param {Object|Function} fn: {seriesType, processRawSeries, reset}
  */
 function normalizeRegister(targetList, priority, fn, defaultPriority) {
     if (isFunction(priority) || isObject(priority)) {
