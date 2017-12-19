@@ -118,8 +118,13 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType,
         var contextOnReset = {payload: payload};
 
         if (overallTask) {
-            setDirty && overallTask.dirty();
-            unfinished |= overallTask.perform({step: step}, contextOnReset);
+            if (setDirty) {
+                overallTask.dirty();
+                unfinished = true;
+            }
+            else {
+                unfinished |= overallTask.perform({step: step}, contextOnReset);
+            }
         }
         else if (seriesTaskMap) {
             stageHandler.seriesType
@@ -130,11 +135,16 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType,
         function eachSeries(seriesModel) {
             var task = seriesTaskMap.get(seriesModel.uid);
             var shouldStream = seriesModel.shouldStream();
-            setDirty && task.dirty();
-            unfinished |= task.perform({
-                step: shouldStream ? step : null,
-                skip: !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel)
-            }, contextOnReset);
+            if (setDirty) {
+                task.dirty();
+                unfinished = true;
+            }
+            else {
+                unfinished |= task.perform({
+                    step: shouldStream ? step : null,
+                    skip: !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel)
+                }, contextOnReset);
+            }
         }
     }, this);
 
@@ -143,13 +153,9 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType,
 
 proto.performSeriesTasks = function (ecModel) {
     var unfinished;
-    // ??? temporarily
-    // var step = this.getStep();
-    // var opt = {step: step};
 
     ecModel.eachSeries(function (seriesModel) {
-        // var taskOpt = seriesModel.shouldStream() ? opt : null;
-        // Perform all for dataInit and dataRestore.
+        // Progress to the end for dataInit and dataRestore.
         unfinished |= seriesModel.dataInitTask.perform();
         unfinished |= seriesModel.dataRestoreTask.perform();
     });
@@ -170,8 +176,9 @@ function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, 
         pipelineIdMap.set(pipelineId, 1);
 
         // Init tasks for each seriesModel only once.
-        if (!seriesTaskMap.get(pipelineId)) {
-            var task = createTask({
+        var task = seriesTaskMap.get(pipelineId);
+        if (!task) {
+            task = createTask({
                 reset: seriesTaskReset,
                 progress: seriesTaskProgress,
                 count: seriesTaskCount
@@ -184,8 +191,8 @@ function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, 
             task.__handlerReset = stageHandler.reset;
 
             seriesTaskMap.set(pipelineId, task);
-            pipe(pipelineTails, pipelineId, task);
         }
+        pipe(pipelineTails, pipelineId, task);
     }
 
     // Clear unused series tasks.
