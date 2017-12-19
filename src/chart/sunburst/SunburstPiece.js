@@ -284,7 +284,14 @@ export default SunburstPiece;
  * @param {module:echarts/model/Global} ecModel echarts defaults
  */
 function getNodeColor(node, seriesModel, ecModel) {
+    // Color from visualMap
     var visualColor = node.getVisual('color');
+    var visualMetaList = node.getVisual('visualMeta');
+    if (visualMetaList.length === 0) {
+        // Use first-generation color if has no visualMap
+        visualColor = null;
+    }
+
     // Self color or level color
     var color = node.getModel('itemStyle.normal').get('color');
     if (color) {
