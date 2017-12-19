@@ -90,7 +90,7 @@ function processSeries(seriesOpt) {
     compatTextStyle(seriesOpt, 'detail');
 
     var data = seriesOpt.data;
-    if (data) {
+    if (data && !zrUtil.isTypedArray(data)) {
         for (var i = 0; i < data.length; i++) {
             compatItemStyle(data[i]);
             compatLabelTextStyle(data[i] && data[i].label);
