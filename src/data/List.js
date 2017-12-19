@@ -34,7 +34,7 @@ function cloneChunk(originalChunk) {
 }
 
 var TRANSFERABLE_PROPERTIES = [
-    'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData'
+    'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData', '_chunkSize'
 ];
 
 function transferProperties(a, b) {
@@ -910,7 +910,7 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
         }
     }
 
-    this.indices = newIndices;
+    this.indices = new Uint32Array(newIndices);
 
     // Reset data extent
     this._extent = {};
@@ -1303,8 +1303,6 @@ listProto.cloneShallow = function () {
     if (this._extent) {
         list._extent = zrUtil.extend({}, this._extent);
     }
-
-    list._frameSize = this._frameSize;
 
     return list;
 };
