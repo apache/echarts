@@ -390,13 +390,13 @@ listProto.initData = function (data, nameList, dimValueGetter) {
 
     var self = this;
     if (!dimValueGetter) {
-        self.hasItemOption = false;
+        this.hasItemOption = false;
     }
     // Default dim value getter
     this._dimValueGetter = dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
         var value = modelUtil.getDataItemValue(dataItem);
         // If any dataItem is like { value: 10 }
-        if (modelUtil.isDataItemOption(dataItem)) {
+        if (!data.pure && modelUtil.isDataItemOption(dataItem)) {
             self.hasItemOption = true;
         }
         return modelUtil.converDataValue(
@@ -408,14 +408,19 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         );
     };
 
-    this.initFromRawData(0, size, true);
+    this.initFromRawData(0, size);
+
+    // If data has no item option.
+    if (data.pure) {
+        this.hasItemOption = false;
+    }
 };
 
 listProto.getProvider = function () {
     return this._rawData;
 };
 
-listProto.initFromRawData = function (start, end, checkNameRepeat) {
+listProto.initFromRawData = function (start, end) {
     // Optimize.
     if (start >= end) {
         return;
@@ -499,17 +504,15 @@ listProto.initFromRawData = function (start, end, checkNameRepeat) {
         chunkIndices[chunkIndex] = chunkIndex;
 
         // Use the name in option and create id
-        if (!nameList[idx] && dataItem) {
-            if (dataItem.name != null) {
-                nameList[idx] = dataItem.name;
+        if (!data.pure) {
+            if (!nameList[idx] && dataItem) {
+                if (dataItem.name != null) {
+                    nameList[idx] = dataItem.name;
+                }
+                else if (nameDimIdx != null) {
+                    nameList[idx] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
+                }
             }
-            else if (nameDimIdx != null) {
-                nameList[idx] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
-            }
-        }
-
-        // ??? do not fill idList and do not checked by nameRepeatCount when init.
-        if (checkNameRepeat) {
             var name = nameList[idx];
             // Try using the id in option
             var id = dataItem && dataItem.id;
