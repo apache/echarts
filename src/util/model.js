@@ -1,7 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as formatUtil from './format';
 import * as nubmerUtil from './number';
-import Model from '../model/Model';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -119,28 +118,28 @@ export function converDataValue(value, dimInfo) {
         ? NaN : +value; // If string (like '-'), using '+' parse to NaN
 }
 
-/**
- * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
- * @param {module:echarts/data/List} data
- * @param {Object} opt
- * @param {string} [opt.seriesIndex]
- * @param {Object} [opt.name]
- * @param {Object} [opt.mainType]
- * @param {Object} [opt.subType]
- */
-export function createDataFormatModel(data, opt) {
-    var model = new Model();
-    zrUtil.mixin(model, dataFormatMixin);
-    model.seriesIndex = opt.seriesIndex;
-    model.name = opt.name || '';
-    model.mainType = opt.mainType;
-    model.subType = opt.subType;
+// /**
+//  * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+//  * @param {module:echarts/data/List} data
+//  * @param {Object} opt
+//  * @param {string} [opt.seriesIndex]
+//  * @param {Object} [opt.name]
+//  * @param {Object} [opt.mainType]
+//  * @param {Object} [opt.subType]
+//  */
+// export function createDataFormatModel(data, opt) {
+//     var model = new Model();
+//     zrUtil.mixin(model, dataFormatMixin);
+//     model.seriesIndex = opt.seriesIndex;
+//     model.name = opt.name || '';
+//     model.mainType = opt.mainType;
+//     model.subType = opt.subType;
 
-    model.getData = function () {
-        return data;
-    };
-    return model;
-}
+//     model.getData = function () {
+//         return data;
+//     };
+//     return model;
+// }
 
 // PENDING A little ugly
 export var dataFormatMixin = {

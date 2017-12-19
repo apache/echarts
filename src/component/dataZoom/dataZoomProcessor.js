@@ -39,12 +39,13 @@ echarts.registerProcessor(function (ecModel, api) {
             endValue: valueRange[1]
         }, true);
     });
+
+    function resetSingleAxis(dimNames, axisIndex, dataZoomModel) {
+        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel, api);
+    }
+
+    function filterSingleAxis(dimNames, axisIndex, dataZoomModel) {
+        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel, api);
+    }
 });
 
-function resetSingleAxis(dimNames, axisIndex, dataZoomModel) {
-    dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel);
-}
-
-function filterSingleAxis(dimNames, axisIndex, dataZoomModel) {
-    dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel);
-}

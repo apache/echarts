@@ -1,17 +1,16 @@
 
-import {assert, each, bind, indexOf, isArray} from 'zrender/src/core/util';
+import {assert, extend, each} from 'zrender/src/core/util';
 import {makeInner} from '../util/model';
+import { __DEV__ } from '../config';
 
 var inner = makeInner();
 
 /**
  * @param {Object} define
- * @param {Function} define.progress
- * @param {Object|Array} define.input {count: Function} or a pure array.
  * @return See the return of `createTask`.
  */
-export function createTask(define) {
-    return new Task(define);
+export function createTask(define, context) {
+    return new Task(define, context);
 }
 
 /**
@@ -21,144 +20,134 @@ export function isTask(obj) {
     return obj instanceof Task;
 }
 
-// ----------------
-// Task
-// ----------------
-
 /**
  * @constructor
  * @param {Object} define
  * @param {Function} define.progress Custom progress
  * @param {Function} define.reset Custom reset
- * @param {Function} [define.input] {count: Function}
- * @param {Function} [define.output] {count: Function}
+ * @param {Function} [define.count] count is used to determin data task.
+ * @param {Object} [context]
  */
-function Task(define) {
+function Task(define, context) {
     var fields = inner(this);
+    define = define || {};
 
-    fields.downstreams = [];
-    fields.upstreams = [];
-    var input = fields.input = this.input = define.input;
-    // Just for programing convenience.
-    this.output = define.output || input;
+    this._progress = define.progress;
+    this._reset = define.reset;
+    this._count = define.count;
 
-    this._progressCustom = define.progress;
-    this._resetCustom = define.reset;
-    this._progressNotify = bind(progressNotify, this);
-    this._count = isArray(input) ? arrayCount : listCount;
+    fields.dirty = true;
 
-    this.reset();
+    this.context = context || {};
 }
 
 var taskProto = Task.prototype;
 
-/**
- * @param {Object} [params]
- */
-taskProto.reset = function (params) {
+taskProto.perform = function (opt, contextOnReset) {
+    this.plan(contextOnReset);
+    this.progress(opt);
+    return this.unfinished();
+};
+
+taskProto.dirty = function () {
+    inner(this).dirty = true;
+};
+
+taskProto.plan = function (contextOnReset) {
     var fields = inner(this);
 
-    fields.started = false;
-    fields.dueEnd = fields.upstreams.length ? 0 : null;
-    fields.dueIndex = fields.outputDueEnd = 0;
+    var finishedAfterReset;
+    if (fields.dirty) {
+        fields.dirty = false;
+        finishedAfterReset = reset(this, contextOnReset);
+    }
 
-    this._resetCustom && this._resetCustom(params);
+    // This should always be performed so it can be passed to downstream.
+    var upTask = fields.upstream;
+    if (upTask) {
+        var progressInfo = upTask.getProgressInfo();
+        if (__DEV__) {
+            assert(progressInfo.outputDueEnd != null);
+        }
+        fields.dueEnd = Math.max(progressInfo.outputDueEnd, fields.dueEnd);
+    }
 
-    each(fields.downstreams, function (downTask) {
-        downTask.reset(params);
+    // If noProgress, pass index from upstream to downstream each time plan called.
+    if (finishedAfterReset || fields.noProgress) {
+        fields.dueIndex = fields.outputDueEnd = fields.dueEnd;
+    }
+
+    // FIXME
+    each(this.agentStubs, function (agentStub) {
+        agentStub.plan(contextOnReset);
     });
 };
 
 /**
- * @param {Array|Object} input
+ * @param {Object} [params]
  */
-taskProto.changeInput = function (input) {
-    var fields = inner(this);
+function reset(taskIns, contextOnReset) {
+    extend(taskIns.context, contextOnReset);
 
-    // ???
-    assert(!fields.upstreams.length);
+    var fields = inner(taskIns);
+    fields.dueIndex = fields.outputDueEnd = 0;
+    fields.dueEnd = taskIns._count ? taskIns._count(taskIns.context) : 0;
 
-    fields.input = this.input = input;
-    fields.dueIndex = 0;
-    // Keep outputDueEnd, should not rollback.
-    fields.dueEnd = null;
-};
+    var result = taskIns._reset && taskIns._reset(taskIns.context) || {};
+
+    fields.noProgress = result.noProgress;
+
+    fields.downstream && fields.downstream.dirty();
+    // FIXME
+    taskIns.agent && taskIns.agent.dirty();
+
+    return result.finished;
+}
 
 /**
- * @param {Object} [params]
- * @param {number} [params.step] Specified step.
- *  If not specified, progress to current dueEnd.
+ * @param {Object} opt
+ * @param {number} [opt.step] Specified step.
+ * @param {number} [opt.skip] Skip customer perform call.
  */
-taskProto.progress = function (params) {
-    params = params || {};
+taskProto.progress = function (opt) {
     var fields = inner(this);
 
-    fields.started = true;
+    if (fields.noProgress) {
+        return;
+    }
 
-    this._progressCustom({
-        dueEnd: Math.min(
-            params.step != null ? fields.dueIndex + params.step : Infinity,
-            fields.dueEnd != null ? fields.dueEnd : Infinity,
-            this._count()
-        ),
-        dueIndex: fields.dueIndex
-    }, this._progressNotify);
+    var start = fields.dueIndex;
+    var end = Math.min(
+        opt.step != null ? start + opt.step : Infinity,
+        fields.dueEnd,
+        this._count ? this._count(this.context) : Infinity
+    );
+
+    var outputDueEnd;
+    !opt.skip && start < end && (
+        outputDueEnd = this._progress({start: start, end: end}, this.context)
+    );
+
+    fields.dueIndex = end;
+    // If no `outputDueEnd`, assume that output data and
+    // input data is the same, so use `dueIndex` as `outputDueEnd`.
+    if (outputDueEnd == null) {
+        outputDueEnd = end;
+    }
+    if (__DEV__) {
+        // ??? Can not rollback.
+        assert(outputDueEnd >= fields.outputDueEnd);
+    }
+    fields.outputDueEnd = outputDueEnd;
 };
 
 taskProto.getProgressInfo = function () {
     var fields = inner(this);
     return {
         dueIndex: fields.dueIndex,
-        dueEnd: fields.dueEnd
+        dueEnd: fields.dueEnd,
+        outputDueEnd: fields.outputDueEnd
     };
-};
-
-function progressNotify(dueIndex, outputDueEnd) {
-    var fields = inner(this);
-
-    assert(dueIndex != null);
-
-    fields.dueIndex = dueIndex;
-
-    // If no `outputDueEnd`, assume that output data and
-    // input data is the same, so use `dueIndex` as `outputDueEnd`.
-    outputDueEnd = outputDueEnd != null ? outputDueEnd : dueIndex;
-
-    // ??? Can not rollback.
-    assert(outputDueEnd >= fields.outputDueEnd);
-
-    fields.outputDueEnd = outputDueEnd;
-
-    each(fields.downstreams, function (downTask) {
-        downTask.plan();
-    });
-}
-
-/**
- * Receive notify. ??? Only on notify? check pipe.
- */
-taskProto.plan = function () {
-    var fields = inner(this);
-
-    var upDueEnd;
-    each(fields.upstreams, function (upTask) {
-        var dueEnd = upTask.getOutputDueEnd();
-        upDueEnd = upDueEnd != null
-            // Current no scenario that upstreams
-            // outputs data are not the same.
-            ? Math.min(upDueEnd, dueEnd)
-            : dueEnd;
-    });
-
-    assert(upDueEnd >= fields.dueEnd);
-    fields.dueEnd = upDueEnd;
-};
-
-/**
- * @return {number}
- */
-taskProto.getOutputDueEnd = function () {
-    return inner(this).outputDueEnd;
 };
 
 /**
@@ -166,10 +155,7 @@ taskProto.getOutputDueEnd = function () {
  */
 taskProto.unfinished = function () {
     var fields = inner(this);
-
-    return fields.dueIndex < (
-        fields.dueEnd != null ? fields.dueEnd : this._count()
-    );
+    return !fields.noProgress && fields.dueIndex < fields.dueEnd;
 };
 
 /**
@@ -177,60 +163,31 @@ taskProto.unfinished = function () {
  * @return {Object} The downstream task.
  */
 taskProto.pipe = function (downTask) {
-    // ???
-    assert(!inner(downTask).disposed);
+    if (__DEV__) {
+        assert(downTask && !inner(downTask).disposed);
+    }
 
     var fields = inner(this);
 
-    var downTaskUpstreams = inner(downTask).upstreams;
-    if (indexOf(downTaskUpstreams, this) >= 0) {
-        return;
+    // If already downstream, do not dirty downTask.
+    if (fields.downstream !== downTask) {
+        fields.downstream = downTask;
+        inner(downTask).upstream = this;
+
+        downTask.dirty();
     }
-
-    downTask.reset();
-
-    fields.downstreams.push(downTask);
-    downTaskUpstreams.push(this);
-
-    downTask.plan();
-
-    return downTask;
-};
-
-/**
- * Remove all downstreams.
- */
-taskProto.clearDownstreams = function () {
-    var downstreams = inner(this).downstreams;
-    each(downstreams, function (downTask) {
-        // ??? Current forbiden reuse task to avoid troubles
-        // (piped by multiple task but difficult to unpipe).
-        downTask.dispose();
-        // var downTaskUpstream = inner(downTask).upstreams;
-        // downTaskUpstream.splice(indexOf(downTaskUpstream, this), 1);
-        // // Stop the down task, but do not leave it from all its upstreams,
-        // // because it may keep working with its other upstreams.
-        // downTask.reset();
-    }, this);
-    downstreams.length = 0;
 };
 
 taskProto.dispose = function () {
     var fields = inner(this);
-    each(fields.upstreams, function (upTask) {
-        // var downTaskUpstream = inner(downTask).upstreams;
-        // downTaskUpstream.splice(indexOf(downTaskUpstream, this), 1);
-        var upTaskDownstream = inner(upTask).downstreams;
-        upTaskDownstream.splice(indexOf(upTaskDownstream, this), 1);
-    }, this);
-    this.reset();
+
+    if (fields.disposed) {
+        return;
+    }
+
+    fields.upstream && (inner(fields.upstream).downstream = null);
+    fields.downstream && (inner(fields.downstream).upstream = null);
+
+    fields.dirty = false;
     fields.disposed = true;
 };
-
-function listCount() {
-    return inner(this).input.count();
-}
-
-function arrayCount() {
-    return inner(this).input.length;
-}

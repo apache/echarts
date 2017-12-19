@@ -488,7 +488,7 @@ gridProto._updateScale = function (ecModel, gridModel) {
 
             if (!isAxisUsedInTheGrid(xAxisModel, gridModel, ecModel)
                 || !isAxisUsedInTheGrid(yAxisModel, gridModel, ecModel)
-                ) {
+            ) {
                 return;
             }
 

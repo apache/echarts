@@ -13,8 +13,8 @@ import layoutPoints from '../layout/points';
 // In case developer forget to include grid component
 import '../component/gridSimple';
 
-echarts.registerVisual(zrUtil.curry(visualSymbol, 'scatter', 'circle', null));
-echarts.registerLayout(zrUtil.curry(layoutPoints, 'scatter'));
+echarts.registerVisual(visualSymbol('scatter', 'circle'));
+echarts.registerLayout(layoutPoints('scatter'));
 
 // echarts.registerVisual(zrUtil.curry(visualSymbol, 'streamScatter', 'circle', null));
 // echarts.registerLayout(zrUtil.curry(layoutPoints, 'streamScatter'));

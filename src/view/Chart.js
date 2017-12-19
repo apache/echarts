@@ -1,8 +1,11 @@
-import * as zrUtil from 'zrender/src/core/util';
+import {bind, each} from 'zrender/src/core/util';
 import Group from 'zrender/src/container/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
+import {createTask} from '../stream/task';
+
+var inner = modelUtil.makeInner();
 
 function Chart() {
 
@@ -17,6 +20,11 @@ function Chart() {
      * @readOnly
      */
     this.uid = componentUtil.getUID('viewChart');
+
+    this.renderTask = createTask({
+        reset: bind(this.renderTaskReset, this),
+        progress: bind(this.renderTaskProgress, this)
+    }, {view: this});
 }
 
 Chart.prototype = {
@@ -75,7 +83,67 @@ Chart.prototype = {
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
      */
-    dispose: function () {}
+    dispose: function () {},
+
+    /**
+     * @protected
+     */
+    renderTaskReset: function (context) {
+        if (!this.incrementalPrepare) {
+            return {noProgress: true};
+        }
+
+        var seriesModel = context.model;
+        var ecModel = context.ecModel;
+        var api = context.api;
+        var shouldStreamRender = this.shouldStreamRender(seriesModel);
+        var payload = context.payload;
+        var updateMethod = payload && inner(payload).updateMethod || 'render';
+
+        if (inner(this).streamRendering ^ shouldStreamRender) {
+            this.remove(ecModel, api);
+        }
+
+        (inner(this).streamRendering = shouldStreamRender)
+            ? this.incrementalPrepare(seriesModel, ecModel, api)
+            : this[updateMethod](seriesModel, ecModel, api, payload);
+    },
+
+    /**
+     * @protected
+     */
+    renderTaskProgress: function (params, context) {
+        var seriesModel = context.model;
+        var ecModel = context.ecModel;
+        var api = context.api;
+
+        if (this.incrementalAdd) {
+            for (var i = params.start; i < params.end; i++) {
+                this.incrementalAdd(seriesModel, ecModel, api, i);
+            }
+        }
+        else {
+            this.incrementalProgress(params, seriesModel, ecModel, api);
+        }
+    },
+
+    /**
+     * @protected
+     */
+    shouldStreamRender: function (seriesModel) {
+        var data = seriesModel.getData();
+        var streamSetting = seriesModel.getStreamSetting();
+        return streamSetting
+            && this.incrementalPrepare
+            && streamSetting.threshold < data.count()
+            && !this.cannotStreamRender(seriesModel);
+    },
+
+    /**
+     * Convinient for override in extended class.
+     * @protected
+     */
+    cannotStreamRender: function () {}
 
     /**
      * The view contains the given point.
@@ -120,7 +188,7 @@ function toggleHighlight(data, payload, state) {
     var dataIndex = modelUtil.queryDataIndex(data, payload);
 
     if (dataIndex != null) {
-        zrUtil.each(modelUtil.normalizeToArray(dataIndex), function (dataIdx) {
+        each(modelUtil.normalizeToArray(dataIndex), function (dataIdx) {
             elSetState(data.getItemGraphicEl(dataIdx), state);
         });
     }
@@ -136,5 +204,9 @@ clazzUtil.enableClassExtend(Chart, ['dispose']);
 
 // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
 clazzUtil.enableClassManagement(Chart, {registerWhenExtend: true});
+
+Chart.markUpdateMethod = function (payload, methodName) {
+    inner(payload).updateMethod = methodName;
+};
 
 export default Chart;

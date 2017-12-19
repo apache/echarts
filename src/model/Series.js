@@ -7,7 +7,6 @@ import {
     addCommas,
     getTooltipMarker
 } from '../util/format';
-import {set, get} from '../util/clazz';
 import * as modelUtil from '../util/model';
 import ComponentModel from './Component';
 import {isNumeric} from '../util/number';
@@ -16,6 +15,9 @@ import {
     getLayoutParams,
     mergeLayoutParam
 } from '../util/layout';
+import {createTask} from '../stream/task';
+
+var inner = modelUtil.makeInner();
 
 var SeriesModel = ComponentModel.extend({
 
@@ -70,9 +72,22 @@ var SeriesModel = ComponentModel.extend({
          */
         this.seriesIndex = this.componentIndex;
 
+        // this.settingTask = createTask();
+
+        this.dataInitTask = createTask({
+            reset: dataInitTaskReset,
+            count: dataInitTaskCount,
+            progress: dataInitTaskProgress
+        }, {model: this});
+
+        this.dataRestoreTask = createTask({
+            reset: dataRestoreTaskReset
+        }, {model: this});
+
         this.mergeDefaultAndTheme(option, ecModel);
 
         var data = this.getInitialData(option, ecModel);
+        this.dataInitTask.dirty();
         if (__DEV__) {
             zrUtil.assert(data, 'getInitialData returned invalid data.');
         }
@@ -81,7 +96,7 @@ var SeriesModel = ComponentModel.extend({
          * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
          * @private
          */
-        set(this, 'dataBeforeProcessed', data);
+        inner(this).dataBeforeProcessed = data;
 
         // If we reverse the order (make data firstly, and then make
         // dataBeforeProcessed by cloneShallow), cloneShallow will
@@ -128,6 +143,8 @@ var SeriesModel = ComponentModel.extend({
     },
 
     mergeOption: function (newSeriesOption, ecModel) {
+        // this.settingTask.dirty();
+
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
         this.fillDataTextStyle(newSeriesOption.data);
 
@@ -137,12 +154,11 @@ var SeriesModel = ComponentModel.extend({
         }
 
         var data = this.getInitialData(newSeriesOption, ecModel);
-        if (data) {
-            // ??? progress data?
-            set(this, 'dataBeforeProcessed', data);
-            // ??? should not restoreData here? but called by echart?
-            // this.restoreData();
-        }
+        this.dataInitTask.dirty();
+        // ??? progress data?
+        inner(this).dataBeforeProcessed = data;
+        // ??? should not restoreData here? but called by echart?
+        // this.restoreData();
     },
 
     fillDataTextStyle: function (data) {
@@ -170,7 +186,7 @@ var SeriesModel = ComponentModel.extend({
      * @return {module:echarts/data/List}
      */
     getData: function (dataType) {
-        var data = get(this, 'data');
+        var data = inner(this).data;
         return dataType == null ? data : data.getLinkedData(dataType);
     },
 
@@ -178,7 +194,7 @@ var SeriesModel = ComponentModel.extend({
      * @param {module:echarts/data/List} data
      */
     setData: function (data) {
-        set(this, 'data', data);
+        inner(this).data = data;
     },
 
     /**
@@ -186,7 +202,7 @@ var SeriesModel = ComponentModel.extend({
      * @return {module:echarts/data/List}
      */
     getRawData: function () {
-        return get(this, 'dataBeforeProcessed');
+        return inner(this).dataBeforeProcessed;
     },
 
     /**
@@ -271,7 +287,7 @@ var SeriesModel = ComponentModel.extend({
             return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
         }
 
-        var data = get(this, 'data');
+        var data = inner(this).data;
 
         var value = this.getRawValue(dataIndex);
         var formattedValue = zrUtil.isArray(value)
@@ -322,16 +338,7 @@ var SeriesModel = ComponentModel.extend({
     },
 
     restoreData: function () {
-        var dataBeforeProcessed = get(this, 'dataBeforeProcessed');
-        var dataCloneTask = dataBeforeProcessed.createCloneShallowTask();
-        set(this, 'data', dataCloneTask.output);
-
-        // var provisionTask = dataBeforeProcessed.getProvider().provisionTask;
-        var dataInitTask = dataBeforeProcessed.getInitTask();
-
-        // this.pipeTask(provisionTask, 'dataProvide');
-        this.pipeTask(dataInitTask, 'dataInit');
-        this.pipeTask(dataCloneTask, 'dataClone', 'updateBase');
+        this.dataRestoreTask.dirty();
     },
 
     getColorFromPalette: function (name, scope) {
@@ -380,5 +387,23 @@ var SeriesModel = ComponentModel.extend({
 
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
+
+function dataInitTaskCount(context) {
+    return context.model.getRawData().count();
+}
+
+function dataInitTaskReset(context) {
+    return {finished: true};
+}
+
+function dataInitTaskProgress(taskParams, context) {
+    context.model.getRawData().initFromRawData(taskParams.dueIndex, taskParams.dueEnd);
+}
+
+function dataRestoreTaskReset(context) {
+    var model = context.model;
+    model.setData(model.getRawData().cloneShallow());
+    return {noProgress: true};
+}
 
 export default SeriesModel;

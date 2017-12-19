@@ -13,36 +13,14 @@ export default echarts.extendChartView({
 
     init: function () {},
 
+    cannotStreamRender: function (seriesModel) {
+        return this._showEffect(seriesModel);
+    },
+
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-        var lineDraw = this._lineDraw;
 
-        var hasEffect = seriesModel.get('effect.show');
-        var isPolyline = seriesModel.get('polyline');
-        // ??? largeLineDraw merge?
-        var isLarge = seriesModel.get('large') && data.count() >= seriesModel.get('largeThreshold');
-        isLarge = false;
-
-        if (__DEV__) {
-            if (hasEffect && isLarge) {
-                console.warn('Large lines not support effect');
-            }
-        }
-        if (hasEffect !== this._hasEffet || isPolyline !== this._isPolyline || isLarge !== this._isLarge) {
-            if (lineDraw) {
-                lineDraw.remove();
-            }
-            lineDraw = this._lineDraw = isLarge
-                ? new LargeLineDraw()
-                : new LineDraw(
-                    isPolyline
-                        ? (hasEffect ? EffectPolyline : Polyline)
-                        : (hasEffect ? EffectLine : Line)
-                );
-            this._hasEffet = hasEffect;
-            this._isPolyline = isPolyline;
-            this._isLarge = isLarge;
-        }
+        var lineDraw = this._updateLineDraw(data, seriesModel);
 
         var zlevel = seriesModel.get('zlevel');
         var trailLength = seriesModel.get('effect.trailLength');
@@ -61,7 +39,7 @@ export default echarts.extendChartView({
                 motionBlur: false
             });
         }
-        if (hasEffect && trailLength) {
+        if (this._showEffect(seriesModel) && trailLength) {
             if (__DEV__) {
                 var notInIndividual = false;
                 ecModel.eachSeries(function (otherSeriesModel) {
@@ -80,22 +58,65 @@ export default echarts.extendChartView({
             }
         }
 
-        this.group.add(lineDraw.group);
-
         lineDraw.updateData(data);
 
         this._lastZlevel = zlevel;
     },
 
     updateLayout: function (seriesModel, ecModel, api) {
-        // ??? do not support updateLayout in stream
-        this._lineDraw.updateLayout(seriesModel);
+        this._lineDraw.updateLayout();
         this._clearLayer(api);
     },
 
-    updateView: function (seriesModel, ecModel, api) {
-        this._lineDraw.updateView(seriesModel);
+    incrementalPrepare: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        var lineDraw = this._updateLineDraw(data, seriesModel);
+        lineDraw.incrementalPrepare(data);
         this._clearLayer(api);
+    },
+
+    incrementalProgress: function (taskParams, seriesModel, ecModel) {
+        this._lineDraw.incrementalProgress(taskParams, seriesModel.getData());
+    },
+
+    _updateLineDraw: function (data, seriesModel) {
+        var lineDraw = this._lineDraw;
+        var hasEffect = this._showEffect(seriesModel);
+        var isPolyline = !!seriesModel.get('polyline');
+        var isLarge = !!seriesModel.get('large')
+            && data.count() >= seriesModel.get('largeThreshold');
+
+        if (__DEV__) {
+            if (hasEffect && isLarge) {
+                console.warn('Large lines not support effect');
+            }
+        }
+        if (hasEffect !== this._hasEffet
+            || isPolyline !== this._isPolyline
+            || isLarge !== this._isLarge
+        ) {
+            if (lineDraw) {
+                lineDraw.remove();
+            }
+            lineDraw = this._lineDraw = isLarge
+                ? new LargeLineDraw()
+                : new LineDraw(
+                    isPolyline
+                        ? (hasEffect ? EffectPolyline : Polyline)
+                        : (hasEffect ? EffectLine : Line)
+                );
+            this._hasEffet = hasEffect;
+            this._isPolyline = isPolyline;
+            this._isLarge = isLarge;
+        }
+
+        this.group.add(lineDraw.group);
+
+        return lineDraw;
+    },
+
+    _showEffect: function (seriesModel) {
+        return !!seriesModel.get('effect.show');
     },
 
     _clearLayer: function (api) {
@@ -119,4 +140,3 @@ export default echarts.extendChartView({
 
     dispose: function () {}
 });
-

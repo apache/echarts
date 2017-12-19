@@ -8,7 +8,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import * as modelUtil from '../util/model';
-import {createTask} from '../stream/task';
 
 var isObject = zrUtil.isObject;
 
@@ -25,6 +24,8 @@ var dataCtors = {
     'number': Array,
     'time': Array
 };
+
+var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
 
 function cloneChunk(originalChunk) {
     var Ctor = originalChunk.constructor;
@@ -50,14 +51,20 @@ function transferProperties(a, b) {
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
  */
-function DefaultDataProvider(dataArray) {
+function DefaultDataProvider(dataArray, dimSize) {
     var methods;
 
     // Typed array.
-    if (dataArray && !zrUtil.isArray(dataArray)) {
-        this._chunkSize = dataArray.length;
-        this._array = [dataArray];
+    if (dataArray && typeof dataArray[0] === 'number') {
+        if (__DEV__) {
+            if (dimSize == null) {
+                throw new Error('Typed array data must specify dimension size');
+            }
+        }
+        this._dimSize = dimSize;
+        this._array = dataArray;
         methods = typedArrayProviderMethods;
+        this.pure = true;
     }
     // Normal array.
     else {
@@ -80,12 +87,15 @@ var normalProviderMethods = {
 };
 var typedArrayProviderMethods = {
     count: function () {
-        return this._array.length * this._chunkSize;
+        return this._array.length / this._dimSize;
     },
     getItem: function (idx) {
-        var chunkSize = this._chunkSize;
-        var chunk = this._array[Math.floor(idx / chunkSize)];
-        return chunk ? chunk[idx % chunkSize] : null;
+        var item = [];
+        var offset = this._dimSize * idx;
+        for (var i = 0; i < this._dimSize; i++) {
+            item[i] = this._array[offset + i];
+        }
+        return item;
     }
 };
 
@@ -98,7 +108,7 @@ DefaultDataProvider.prototype.addData = function (newData) {
 
     if (__DEV__) {
         // If using typed array, should always use typed array with the same size.
-        var isArrayData = zrUtil.isArray(newData);
+        var isArrayData = zrUtil.isArrayLike(newData);
         zrUtil.assert(
             (isArrayData && chunkSize == null)
             || (!isArrayData && chunkSize === newData.length),
@@ -317,6 +327,14 @@ listProto.getDimension = function (dim) {
 };
 
 /**
+ * @param {Array.<string|number>} dims
+ * @return {Array.<string>}
+ */
+listProto.parseDimensions = function (dims) {
+    return zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
+};
+
+/**
  * Get type and stackable info of particular dimension
  * @param {string|number} dim
  *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
@@ -335,9 +353,9 @@ listProto.getDimensionInfo = function (dim) {
 listProto.initData = function (data, nameList, dimValueGetter) {
     data = data || [];
 
-    var isDataArray = zrUtil.isArray(data);
+    var isDataArray = zrUtil.isArrayLike(data);
     if (isDataArray) {
-        data = new DefaultDataProvider(data);
+        data = new DefaultDataProvider(data, this.dimensions.length);
     }
     if (__DEV__) {
         if (!isDataArray && (typeof data.getItem != 'function' || typeof data.count != 'function')) {
@@ -349,9 +367,9 @@ listProto.initData = function (data, nameList, dimValueGetter) {
 
     // Clear
     this._storage = {};
-    this.indices = [];
-    this._chunkOffsets = [];
-    this._chunkIndices = [];
+    this.indices = new CtorUint32Array(data.count());
+    this._chunkOffsets = new CtorUint32Array(data.count());
+    this._chunkIndices = new CtorUint32Array(data.count());
 
     var dimensionInfoMap = this._dimensionInfos;
 
@@ -390,51 +408,53 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         );
     };
 
-    doInit(this, 0, size, true);
+    this.initFromRawData(0, size, true);
 };
 
 listProto.getProvider = function () {
     return this._rawData;
 };
 
-listProto.getInitTask = function () {
-    if (!this._initTask) {
-        this._initTask = createTask({
-            input: this._rawData,
-            progress: zrUtil.bind(initProgress, this)
-        });
-    }
-    return this._initTask;
-};
-
-function initProgress(params, notify) {
-    notify(doInit(this, params.dueIndex, params.dueEnd));
-}
-
-function doInit(list, dueIndex, dueEnd, isInit) {
+listProto.initFromRawData = function (start, end, checkNameRepeat) {
     // Optimize.
-    if (dueIndex >= dueEnd) {
-        return dueIndex;
+    if (start >= end) {
+        return;
     }
 
-    var data = list._rawData;
-    var storage = list._storage;
-    var indices = list.indices;
-    var chunkOffsets = list._chunkOffsets;
-    var chunkIndices = list._chunkIndices;
-    var dimensions = list.dimensions;
-    var dimensionInfoMap = list._dimensionInfos;
-    var nameList = list._nameList;
-    var idList = list._idList;
-    var chunkSize = list._chunkSize;
-    var nameRepeatCount = list._nameRepeatCount = {};
+    if (end > this.indices.length) {
+        // Expand indices
+        var oldIndices = this.indices;
+        var oldChunkIndices = this._chunkIndices;
+        var oldChunkOffsets = this._chunkOffsets;
+        this.indices = new CtorUint32Array(end);
+        this._chunkIndices = new CtorUint32Array(end);
+        this._chunkOffsets = new CtorUint32Array(end);
+        // Copy value to new array
+        for (var i = 0; i < oldIndices.length; i++) {
+            this.indices[i] = oldIndices[i];
+            this._chunkIndices[i] = oldChunkIndices[i];
+            this._chunkOffsets[i] = oldChunkOffsets[i];
+        }
+    }
+
+    var data = this._rawData;
+    var storage = this._storage;
+    var indices = this.indices;
+    var chunkOffsets = this._chunkOffsets;
+    var chunkIndices = this._chunkIndices;
+    var dimensions = this.dimensions;
+    var dimensionInfoMap = this._dimensionInfos;
+    var nameList = this._nameList;
+    var idList = this._idList;
+    var chunkSize = this._chunkSize;
+    var nameRepeatCount = this._nameRepeatCount = {};
     var nameDimIdx;
 
     // Reset cached extent
-    list._extent = {};
+    this._extent = {};
 
     // Create more chunk storage.
-    var newChunkCount = Math.ceil(dueEnd / chunkSize);
+    var newChunkCount = Math.ceil(end / chunkSize);
     for (var i = 0; i < dimensions.length; i++) {
         var dim = dimensions[i];
 
@@ -446,17 +466,17 @@ function doInit(list, dueIndex, dueEnd, isInit) {
             storage[dim] = [];
         }
         var DataCtor = dataCtors[dimInfo.type];
-        for (var j = list._chunkCount; j < newChunkCount; j++) {
+        for (var j = this._chunkCount; j < newChunkCount; j++) {
             storage[dim][j] = new DataCtor(chunkSize);
         }
     }
-    list._chunkCount = newChunkCount;
+    this._chunkCount = newChunkCount;
 
     var chunkIndex = newChunkCount - 1;
-    for (; dueIndex < dueEnd; dueIndex++) {
+    for (var idx = start; idx < end; idx++) {
 
         // NOTICE: Try not to write things into dataItem
-        var dataItem = data.getItem(dueIndex);
+        var dataItem = data.getItem(i);
         // Each data item is value
         // [1, 2]
         // 2
@@ -464,33 +484,33 @@ function doInit(list, dueIndex, dueEnd, isInit) {
         // only gives the 'y' value. 'x' value is the indices of cateogry
         // Use a tempValue to normalize the value to be a (x, y) value
 
-        var chunkOffset = dueIndex % chunkSize;
+        var chunkOffset = idx % chunkSize;
 
         // Store the data by dimensions
         for (var k = 0; k < dimensions.length; k++) {
             var dim = dimensions[k];
             var dimStorage = storage[dim][chunkIndex];
             // PENDING NULL is empty or zero
-            dimStorage[chunkOffset] = list._dimValueGetter(dataItem, dim, dueIndex, k);
+            dimStorage[chunkOffset] = this._dimValueGetter(dataItem, dim, idx, k);
         }
 
-        indices.push(chunkIndex * chunkSize + chunkOffset);
-        chunkOffsets.push(chunkOffset);
-        chunkIndices.push(chunkIndex);
+        indices[idx] = chunkIndex * chunkSize + chunkOffset;
+        chunkOffsets[idx] = chunkOffset;
+        chunkIndices[chunkIndex] = chunkIndex;
 
         // Use the name in option and create id
-        if (!nameList[dueIndex] && dataItem) {
+        if (!nameList[idx] && dataItem) {
             if (dataItem.name != null) {
-                nameList[dueIndex] = dataItem.name;
+                nameList[idx] = dataItem.name;
             }
             else if (nameDimIdx != null) {
-                nameList[dueIndex] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
+                nameList[idx] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
             }
         }
 
         // ??? do not fill idList and do not checked by nameRepeatCount when init.
-        if (isInit) {
-            var name = nameList[dueIndex];
+        if (checkNameRepeat) {
+            var name = nameList[idx];
             // Try using the id in option
             var id = dataItem && dataItem.id;
 
@@ -503,12 +523,10 @@ function doInit(list, dueIndex, dueEnd, isInit) {
                 }
                 nameRepeatCount[name]++;
             }
-            id != null && (idList[dueIndex] = id);
+            id != null && (idList[idx] = id);
         }
     }
-
-    return dueIndex;
-}
+};
 
 /**
  * @return {number}
@@ -831,10 +849,6 @@ function normalizeDimensions(dimensions) {
  *  list.each(function (idx) {})
  */
 listProto.each = function (dims, cb, stack, context) {
-
-    // ???
-    // merge to createTaskForEach?
-
     if (typeof dims === 'function') {
         context = stack;
         stack = cb;
@@ -874,84 +888,6 @@ listProto.each = function (dims, cb, stack, context) {
     }
 };
 
-/**
- * Data iteration
- *
- *
- * @param {string|Array.<string>}
- * @param {Function} cb
- * @param {boolean} [stack=false]
- * @param {*} [context=this]
- * @return {Object} task
- *
- * @example
- *  var task = list.createEachTask('x', function (val) {
- *      // val: 1212
- *  });
- *
- *  var task = list.createEachTask(['x', 'y'], function (vals) {
- *      // vals: [1212, 3434]
- *  });
- *
- *  task.progress(100); // Work by chunk size.
- *  task.unfinished();
- */
-listProto.createEachTask = function (dims, cb, stack) {
-    if (typeof dims === 'function') {
-        stack = cb;
-        cb = dims;
-        dims = [];
-    }
-
-    var list = this;
-    dims = zrUtil.map(normalizeDimensions(dims), list.getDimension, list);
-
-    return createTask({
-
-        input: list,
-
-        progress: function (params, notify) {
-            var dimSize = dims.length;
-            var dueIndex = params.dueIndex;
-
-            for (; dueIndex < params.dueEnd; dueIndex++) {
-                // Simple optimization
-                switch (dimSize) {
-                    case 0:
-                        cb(
-                            dueIndex
-                        );
-                        break;
-                    case 1:
-                        cb(
-                            list.get(dims[0], dueIndex, stack),
-                            dueIndex
-                        );
-                        break;
-                    case 2:
-                        cb(
-                            list.get(dims[0], dueIndex, stack),
-                            list.get(dims[1], dueIndex, stack),
-                            dueIndex
-                        );
-                        break;
-                    default:
-                        var k = 0;
-                        var value = [];
-                        for (; k < dimSize; k++) {
-                            value[k] = list.get(dims[k], dueIndex, stack);
-                        }
-                        value[k] = dueIndex;
-                        cb(value);
-                }
-            }
-
-            notify(dueIndex);
-        }
-    });
-};
-
-// ??? remove
 /**
  * Data filter
  * @param {string|Array.<string>}
@@ -1396,11 +1332,10 @@ listProto.cloneShallow = function () {
 
     transferProperties(list, this);
 
-
     // Clone will not change the data extent and indices
-    list.indices = this.indices.slice();
-    list._chunkIndices = this._chunkIndices.slice();
-    list._chunkOffsets = this._chunkOffsets.slice();
+    list.indices = new CtorUint32Array(this.indices);
+    list._chunkIndices = new CtorUint32Array(this._chunkIndices);
+    list._chunkOffsets = new CtorUint32Array(this._chunkOffsets);
 
     if (this._extent) {
         list._extent = zrUtil.extend({}, this._extent);
@@ -1409,25 +1344,6 @@ listProto.cloneShallow = function () {
     list._frameSize = this._frameSize;
 
     return list;
-};
-
-// ??? duplicate with cloneShallow?
-listProto.createCloneShallowTask = function () {
-    var input = this;
-    var output = this.cloneShallow();
-    return createTask({
-        input: input,
-        output: output,
-        progress: function (params, notify) {
-            var dueIndex = params.dueIndex;
-            for (; dueIndex < params.dueEnd; dueIndex++) {
-                output.indices[dueIndex] = input.indices[dueIndex];
-                output._chunkIndices[dueIndex] = input._chunkIndices[dueIndex];
-                output._chunkOffsets[dueIndex] = input._chunkOffsets[dueIndex];
-            }
-            notify(dueIndex);
-        }
-    });
 };
 
 // ??? temporarily

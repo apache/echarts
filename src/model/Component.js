@@ -7,11 +7,13 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Model from './Model';
 import * as componentUtil from '../util/component';
-import * as clazzUtil from '../util/clazz';
+import {enableClassManagement, parseClassType} from '../util/clazz';
+import {makeInner} from '../util/model';
 import * as layout from '../util/layout';
 import boxLayoutMixin from './mixin/boxLayout';
 
 var arrayPush = Array.prototype.push;
+var inner = makeInner();
 
 /**
  * @alias module:echarts/model/Component
@@ -125,7 +127,8 @@ var ComponentModel = Model.extend({
     optionUpdated: function (newCptOption, isInit) {},
 
     getDefaultOption: function () {
-        if (!clazzUtil.hasOwn(this, '__defaultOption')) {
+        var fields = inner(this);
+        if (!fields.defaultOption) {
             var optList = [];
             var Class = this.constructor;
             while (Class) {
@@ -138,9 +141,9 @@ var ComponentModel = Model.extend({
             for (var i = optList.length - 1; i >= 0; i--) {
                 defaultOption = zrUtil.merge(defaultOption, optList[i], true);
             }
-            clazzUtil.set(this, '__defaultOption', defaultOption);
+            fields.defaultOption = defaultOption;
         }
-        return clazzUtil.get(this, '__defaultOption');
+        return fields.defaultOption;
     },
 
     getReferringComponents: function (mainType) {
@@ -170,7 +173,7 @@ var ComponentModel = Model.extend({
 // );
 
 // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-clazzUtil.enableClassManagement(
+enableClassManagement(
     ComponentModel, {registerWhenExtend: true}
 );
 componentUtil.enableSubTypeDefaulter(ComponentModel);
@@ -185,7 +188,7 @@ function getDependencies(componentType) {
     });
     // Ensure main type
     return zrUtil.map(deps, function (type) {
-        return clazzUtil.parseClassType(type).main;
+        return parseClassType(type).main;
     });
 }
 

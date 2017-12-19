@@ -31,8 +31,13 @@ import {throttle} from './util/throttle';
 import seriesColor from './visual/seriesColor';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
+import {getUID} from './util/component';
 
+var assert = zrUtil.assert;
 var each = zrUtil.each;
+var createHashMap = zrUtil.createHashMap;
+var isFunction = zrUtil.isFunction;
+var isObject = zrUtil.isObject;
 var parseClassType = ComponentModel.parseClassType;
 
 export var version = '3.8.5';
@@ -78,13 +83,6 @@ var IN_MAIN_PROCESS = '__flagInMainProcess';
 var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
 var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
-
-// ??? defined in scheduler?
-var STAGE_DATA_INIT = 'dataInit';
-var STAGE_DATA_CLONE = 'dataClone';
-var STAGE_PROCESSOR = 'processor';
-var STAGE_VISUAL = 'visual';
-var STAGE_RENDER = 'render';
 
 
 function createRegisterEventWithLowercaseName(method) {
@@ -201,12 +199,12 @@ function ECharts(dom, theme, opts) {
      * @type {module:echarts/ExtensionAPI}
      * @private
      */
-    this._api = createExtensionAPI(this);
+    var api = this._api = createExtensionAPI(this);
 
     /**
      * @type {module:echarts/stream/Scheduler}
      */
-    this._scheduler = new Scheduler(this);
+    this._scheduler = new Scheduler(this, api);
 
     Eventful.call(this);
 
@@ -252,8 +250,8 @@ echartsProto._onframe = function () {
 
         this[IN_MAIN_PROCESS] = true;
 
-        // ??? conflict?
-        updateMethods.prepareAndUpdate.call(this);
+        prepare(this);
+        updateMethods.update.call(this);
 
         this[IN_MAIN_PROCESS] = false;
 
@@ -267,23 +265,24 @@ echartsProto._onframe = function () {
     // Stream progress.
     var remainTime = TEST_FRAME_REMAIN_TIME;
     var scheduler = this._scheduler;
+    var ecModel = this._model;
 
     if (scheduler.unfinished) {
         scheduler.unfinished = false;
         do {
             var startTime = +new Date();
 
-            scheduler.progressStage(STAGE_DATA_INIT);
-            scheduler.progressStage(STAGE_DATA_CLONE);
-            scheduler.progressStage(STAGE_PROCESSOR);
+            scheduler.performSeriesTasks(ecModel);
 
-            // ???
-            // coordSys update
+            scheduler.performStageTasks(dataProcessorFuncs, ecModel);
+
+            // ???! coordSys create
+            // this._coordSysMgr.update();
 
             // console.log('------------- ec frame visual -------------', remainTime);
-            scheduler.progressStage(STAGE_VISUAL);
+            scheduler.performStageTasks(visualFuncs, ecModel);
 
-            progressRender(this, this._model);
+            performRender(this, this._model, this._api);
 
             remainTime -= (+new Date() - startTime);
         }
@@ -322,11 +321,11 @@ echartsProto.getZr = function () {
  */
 echartsProto.setOption = function (option, notMerge, lazyUpdate) {
     if (__DEV__) {
-        zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
+        assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
     }
 
     var silent;
-    if (zrUtil.isObject(notMerge)) {
+    if (isObject(notMerge)) {
         lazyUpdate = notMerge.lazyUpdate;
         silent = notMerge.silent;
         notMerge = notMerge.notMerge;
@@ -349,7 +348,10 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         this[IN_MAIN_PROCESS] = false;
     }
     else {
-        updateMethods.prepareAndUpdate.call(this);
+        prepare(this);
+
+        updateMethods.update.call(this);
+
         // Ensure zr refresh sychronously, and then pixel in canvas can be
         // fetched after `setOption`.
         this._zr.flush();
@@ -754,10 +756,9 @@ var updateMethods = {
             return;
         }
 
-        scheduler.clearTemps();
-
         // Fixme First time update ?
         ecModel.restoreData();
+        scheduler.performSeriesTasks(ecModel);
 
         // TODO
         // Save total ecModel here for undo/redo (after restoring data and before processing data).
@@ -771,18 +772,17 @@ var updateMethods = {
         // ??? if some processor do not use task, it should also process in progress,
         // otherwise, consider data extent, both dependent.
 
-        startProcessors(this, ecModel, api);
+        scheduler.performStageTasks(dataProcessorFuncs, ecModel, payload);
 
         stackSeriesData.call(this, ecModel);
 
         // ??? coord data travel
         coordSysMgr.update(ecModel, api);
 
-        startVisualEncoding(this, ecModel, api, payload);
+        clearColorPalette(ecModel);
+        scheduler.performStageTasks(visualFuncs, ecModel, payload);
 
-        startRender(this, ecModel, api, payload);
-
-        scheduler.flushTemps('updateBase');
+        performRender(this, ecModel, api, payload, true);
 
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -825,9 +825,7 @@ var updateMethods = {
             }
         }
 
-        each(postUpdateFuncs, function (func) {
-            func(ecModel, api);
-        });
+        performPostUpdateFuncs(ecModel, api);
 
         // console.profile && console.profileEnd('update');
     },
@@ -844,18 +842,16 @@ var updateMethods = {
             return;
         }
 
-        this._scheduler.clearTemps();
+        ChartView.markUpdateMethod(payload, 'updateView');
 
-        ecModel.eachSeries(function (seriesModel) {
-            seriesModel.getData().clearAllVisual();
-        });
+        clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        startVisualEncoding(this, ecModel, this._api, payload, null);
+        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, null, true);
 
-        invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
+        performRender(this, this._model, this._api, payload, true);
 
-        this._scheduler.flushTemps('updateViewBase');
+        performPostUpdateFuncs(ecModel, this._api);
     },
 
     /**
@@ -870,18 +866,16 @@ var updateMethods = {
             return;
         }
 
-        this._scheduler.clearTemps();
+        ChartView.markUpdateMethod(payload, 'updateVisual');
 
-        ecModel.eachSeries(function (seriesModel) {
-            seriesModel.getData().clearAllVisual();
-        });
+        clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        startVisualEncoding(this, ecModel, this._api, payload, false);
+        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'visual', true);
 
-        invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
+        performRender(this, this._model, this._api, payload, true);
 
-        this._scheduler.flushTemps('updateVisualBase');
+        performPostUpdateFuncs(ecModel, this._api);
     },
 
     /**
@@ -896,30 +890,35 @@ var updateMethods = {
             return;
         }
 
-        this._scheduler.clearTemps();
+        ChartView.markUpdateMethod(payload, 'updateLayout');
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        startVisualEncoding(this, ecModel, this._api, payload, true);
+        // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
+        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, null, true);
 
-        invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
+        performRender(this, this._model, this._api, payload, true);
 
-        this._scheduler.flushTemps('updateLayoutBase');
-    },
-
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    prepareAndUpdate: function (payload) {
-        var ecModel = this._model;
-
-        prepareView.call(this, 'component', ecModel);
-
-        prepareView.call(this, 'chart', ecModel);
-
-        updateMethods.update.call(this, payload);
+        performPostUpdateFuncs(ecModel, this._api);
     }
 };
+
+function prepare(ecIns, payload, pipelineTails) {
+    var ecModel = ecIns._model;
+    var scheduler = ecIns._scheduler;
+
+    var pipelineTails = createHashMap();
+    ecModel.eachSeries(function (seriesModel) {
+        pipelineTails.set(seriesModel.uid, seriesModel.dataRestoreTask);
+    });
+
+    scheduler.prepareStageTasks(dataProcessorFuncs, pipelineTails);
+
+    scheduler.prepareStageTasks(visualFuncs, pipelineTails);
+
+    prepareView(ecIns, 'component', ecModel, pipelineTails);
+
+    prepareView(ecIns, 'chart', ecModel, pipelineTails);
+}
 
 /**
  * @private
@@ -964,21 +963,30 @@ function updateDirectly(ecIns, method, payload, mainType, subType) {
  */
 echartsProto.resize = function (opts) {
     if (__DEV__) {
-        zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
+        assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
     }
 
     this._zr.resize(opts);
 
-    var optionChanged = this._model && this._model.resetOption('media');
-    var updateMethod = optionChanged ? 'prepareAndUpdate' : 'update';
+    var ecModel = this._model;
 
-    refresh(this, updateMethod, opts && opts.silent);
+    var optionChanged = ecModel && ecModel.resetOption('media');
+
+    optionChanged && ecModel.settingTask.dirty();
+
+    ecModel.eachComponent(function (model, componentType) {
+        optionChanged && model.settingTask.dirty();
+        model.dataInitTask && model.dataInitTask.dirty();
+    });
+
+    refresh(this, optionChanged, opts && opts.silent);
 };
 
-function refresh(ecIns, updateMethod, silent) {
+function refresh(ecIns, needPrepare, silent) {
     ecIns[IN_MAIN_PROCESS] = true;
 
-    updateMethods[updateMethod].call(ecIns);
+    needPrepare && prepare(ecIns);
+    updateMethods.update.call(ecIns);
 
     // Resize loading effect
     ecIns._loadingFX && ecIns._loadingFX.resize();
@@ -996,7 +1004,7 @@ function refresh(ecIns, updateMethod, silent) {
  * @param  {Object} [cfg]
  */
 echartsProto.showLoading = function (name, cfg) {
-    if (zrUtil.isObject(name)) {
+    if (isObject(name)) {
         cfg = name;
         name = '';
     }
@@ -1047,7 +1055,7 @@ echartsProto.makeActionFromEvent = function (eventObj) {
  *                  undefined: Auto decide whether perform flush.
  */
 echartsProto.dispatchAction = function (payload, opt) {
-    if (!zrUtil.isObject(opt)) {
+    if (!isObject(opt)) {
         opt = {silent: !!opt};
     }
 
@@ -1136,7 +1144,8 @@ function doDispatchAction(payload, silent) {
         // Still dirty
         if (this[OPTION_UPDATED]) {
             // FIXME Pass payload ?
-            updateMethods.prepareAndUpdate.call(this, payload);
+            prepare(this);
+            updateMethods.update.call(this, payload);
             this[OPTION_UPDATED] = false;
         }
         else {
@@ -1180,7 +1189,7 @@ echartsProto.addData = function (params) {
     var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
     if (__DEV__) {
-        zrUtil.assert(params.data && seriesModel);
+        assert(params.data && seriesModel);
     }
 
     var provider = seriesModel.getRawData().getProvider();
@@ -1188,11 +1197,6 @@ echartsProto.addData = function (params) {
     provider.addData(params.data);
 
     this._scheduler.unfinished = true;
-
-    // ??? Should handle this.
-    // if (!seriesModel.getStreamSetting()) {
-        // refresh('prepareAndUpdate');
-    // }
 };
 
 /**
@@ -1204,66 +1208,28 @@ echartsProto.off = createRegisterEventWithLowercaseName('off');
 echartsProto.one = createRegisterEventWithLowercaseName('one');
 
 /**
- * @param {string} methodName
- * @private
- */
-function invokeUpdateMethod(methodName, ecModel, payload) {
-    var api = this._api;
-
-    // Update all components
-    each(this._componentsViews, function (component) {
-        var componentModel = component.__model;
-        component[methodName](componentModel, ecModel, api, payload);
-
-        updateZ(componentModel, component);
-    }, this);
-
-    // ??? duplicate code with `startRender`?
-
-    // Upate all charts
-    ecModel.eachSeries(function (seriesModel, idx) {
-        var chart = this._chartsMap[seriesModel.__viewId];
-        chart[methodName](seriesModel, ecModel, api, payload);
-
-        updateZ(seriesModel, chart);
-
-        // ??? updateProgressiveAndBlend(seriesModel, chart);
-    }, this);
-
-    // If use hover layer
-    // ??? updateHoverLayerStatus(this._zr, ecModel);
-
-    // Post render
-    each(postUpdateFuncs, function (func) {
-        func(ecModel, api);
-    });
-}
-
-/**
  * Prepare view instances of charts and components
  * @param  {module:echarts/model/Global} ecModel
  * @private
  */
-function prepareView(type, ecModel) {
+function prepareView(ecIns, type, ecModel, pipelineTails) {
     var isComponent = type === 'component';
-    var viewList = isComponent ? this._componentsViews : this._chartsViews;
-    var viewMap = isComponent ? this._componentsMap : this._chartsMap;
-    var zr = this._zr;
+    var viewList = isComponent ? ecIns._componentsViews : ecIns._chartsViews;
+    var viewMap = isComponent ? ecIns._componentsMap : ecIns._chartsMap;
+    var zr = ecIns._zr;
+    var api = ecIns._api;
 
     for (var i = 0; i < viewList.length; i++) {
         viewList[i].__alive = false;
     }
 
-    ecModel[isComponent ? 'eachComponent' : 'eachSeries'](function (componentType, model) {
-        if (isComponent) {
-            if (componentType === 'series') {
-                return;
-            }
-        }
-        else {
-            model = componentType;
-        }
+    isComponent
+        ? ecModel.eachComponent(function (componentType, model) {
+            componentType !== 'series' && doPrepare(model);
+        })
+        : ecModel.eachSeries(doPrepare);
 
+    function doPrepare(model) {
         // Consider: id same and type changed.
         var viewId = '_ec_' + model.id + '_' + model.type;
         var view = viewMap[viewId];
@@ -1274,11 +1240,11 @@ function prepareView(type, ecModel) {
                 : ChartView.getClass(classType.sub);
 
             if (__DEV__) {
-                zrUtil.assert(Clazz, classType.sub + ' does not exist.');
+                assert(Clazz, classType.sub + ' does not exist.');
             }
 
             view = new Clazz();
-            view.init(ecModel, this._api);
+            view.init(ecModel, api);
             viewMap[viewId] = view;
             viewList.push(view);
             zr.add(view.group);
@@ -1291,13 +1257,23 @@ function prepareView(type, ecModel) {
             mainType: model.mainType,
             index: model.componentIndex
         };
-    }, this);
+        if (!isComponent) {
+            var renderTask = view.renderTask;
+            renderTask.context.model = model;
+            renderTask.context.ecModel = ecModel;
+            renderTask.context.api = api;
+            var pipelineId = model.uid;
+            pipelineTails.get(pipelineId).pipe(renderTask);
+            pipelineTails.set(pipelineId, renderTask);
+        }
+    }
 
     for (var i = 0; i < viewList.length;) {
         var view = viewList[i];
         if (!view.__alive) {
+            view.renderTask.dispose();
             zr.remove(view.group);
-            view.dispose(ecModel, this._api);
+            view.dispose(ecModel, api);
             viewList.splice(i, 1);
             delete viewMap[view.__id];
             view.__id = view.group.__ecComponentInfo = null;
@@ -1327,43 +1303,33 @@ function stackSeriesData(ecModel) {
     });
 }
 
-/**
- * @param {module:echarts/model/Global} ecModel
- * @private
- */
-function startProcessors(ecIns, ecModel, api) {
-    each(dataProcessorFuncs, function (processor, index) {
-        processor.func(ecModel, api);
-    });
-}
+// /**
+//  * Encode visual infomation from data after data processing
+//  *
+//  * @param {module:echarts/model/Global} ecModel
+//  * @param {object} layout
+//  * @param {boolean} [layoutFilter] `true`: only layout,
+//  *                                 `false`: only not layout,
+//  *                                 `null`/`undefined`: all.
+//  * @param {string} taskBaseTag
+//  * @private
+//  */
+// function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter) {
+//     each(visualFuncs, function (visual, index) {
+//         var isLayout = visual.isLayout;
+//         if (layoutFilter == null
+//             || (layoutFilter === false && !isLayout)
+//             || (layoutFilter === true && isLayout)
+//         ) {
+//             visual.func(ecModel, api, payload);
+//         }
+//     });
+// }
 
-/**
- * Encode visual infomation from data after data processing
- *
- * @param {module:echarts/model/Global} ecModel
- * @param {object} layout
- * @param {boolean} [layoutFilter] `true`: only layout,
- *                                 `false`: only not layout,
- *                                 `null`/`undefined`: all.
- * @param {string} taskBaseTag
- * @private
- */
-function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter) {
-    if (layoutFilter !== true) {
-        ecModel.clearColorPalette();
-        ecModel.eachSeries(function (seriesModel) {
-            seriesModel.clearColorPalette();
-        });
-    }
-
-    each(visualFuncs, function (visual, index) {
-        var isLayout = visual.isLayout;
-        if (layoutFilter == null
-            || (layoutFilter === false && !isLayout)
-            || (layoutFilter === true && isLayout)
-        ) {
-            visual.func(ecModel, api, payload);
-        }
+function clearColorPalette(ecModel) {
+    ecModel.clearColorPalette();
+    ecModel.eachSeries(function (seriesModel) {
+        seriesModel.clearColorPalette();
     });
 }
 
@@ -1371,61 +1337,59 @@ function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter) {
  * Render each chart and component
  * @private
  */
-function startRender(ecIns, ecModel, api, payload) {
-    // Render all components
-    each(ecIns._componentsViews, function (componentView) {
-        var componentModel = componentView.__model;
-        componentView.render(componentModel, ecModel, api, payload);
+function performRender(ecIns, ecModel, api, payload, isReset) {
+    if (isReset) {
+        // Render all components
+        each(ecIns._componentsViews, function (componentView) {
+            var componentModel = componentView.__model;
+            componentView.render(componentModel, ecModel, api, payload);
 
-        updateZ(componentModel, componentView);
-    });
+            updateZ(componentModel, componentView);
+        });
 
-    each(ecIns._chartsViews, function (chart) {
-        chart.__alive = false;
-    });
+        each(ecIns._chartsViews, function (chart) {
+            chart.__alive = false;
+        });
+    }
 
-    // ??? The key should be `__viewId` but not index. consider view change !!!
     // Render all charts
+    var scheduler = ecIns._scheduler;
+    var step = scheduler.getStep();
+    var unfinished;
     ecModel.eachSeries(function (seriesModel) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
 
-        chartView.render(seriesModel, ecModel, api, payload);
+        unfinished |= chartView.renderTask.perform({step: step}, {payload: payload});
+        // chartView.render(seriesModel, ecModel, api, payload);
 
         chartView.group.silent = !!seriesModel.get('silent');
 
         updateZ(seriesModel, chartView);
 
         // ??? updateProgressiveAndBlend(seriesModel, chartView);
-
     });
+    scheduler.unfinished |= unfinished;
 
     // If use hover layer
     // ??? updateHoverLayerStatus(this._zr, ecModel);
 
-    // Remove groups of unrendered charts
-    each(ecIns._chartsViews, function (chart) {
-        if (!chart.__alive) {
-            chart.remove(ecModel, api);
-        }
+    if (isReset) {
+        // Remove groups of unrendered charts
+        each(ecIns._chartsViews, function (chart) {
+            if (!chart.__alive) {
+                chart.remove(ecModel, api);
+            }
+        });
+    }
+}
+
+function performPostUpdateFuncs(ecModel, api) {
+    each(postUpdateFuncs, function (func) {
+        func(ecModel, api);
     });
 }
 
-function progressRender(ecIns, ecModel) {
-
-    ecIns._scheduler.progressStage(STAGE_RENDER);
-
-    // ???
-    ecModel.eachSeries(function (seriesModel, idx) {
-        var chartView = ecIns._chartsMap[seriesModel.__viewId];
-
-        chartView.group.silent = !!seriesModel.get('silent');
-
-        updateZ(seriesModel, chartView);
-
-        // ??? updateProgressiveAndBlend(seriesModel, chartView);
-    });
-}
 
 var MOUSE_EVENT_NAMES = [
     'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove',
@@ -1682,7 +1646,7 @@ function enableConnect(chart) {
         }
     }
 
-    zrUtil.each(eventActionMap, function (actionType, eventType) {
+    each(eventActionMap, function (actionType, eventType) {
         chart._messageCenter.on(eventType, function (event) {
             if (connectedGroups[chart.group] && chart[STATUS_KEY] !== STATUS_PENDING) {
                 if (event && event.escapeConnect) {
@@ -1692,7 +1656,7 @@ function enableConnect(chart) {
                 var action = chart.makeActionFromEvent(event);
                 var otherCharts = [];
 
-                zrUtil.each(instances, function (otherChart) {
+                each(instances, function (otherChart) {
                     if (otherChart !== chart && otherChart.group === chart.group) {
                         otherCharts.push(otherChart);
                     }
@@ -1778,13 +1742,13 @@ export function connect(groupId) {
         var charts = groupId;
         groupId = null;
         // If any chart has group
-        zrUtil.each(charts, function (chart) {
+        each(charts, function (chart) {
             if (chart.group != null) {
                 groupId = chart.group;
             }
         });
         groupId = groupId || ('g_' + groupIdBase++);
-        zrUtil.each(charts, function (chart) {
+        each(charts, function (chart) {
             chart.group = groupId;
         });
     }
@@ -1890,7 +1854,7 @@ export function registerAction(actionInfo, eventName, action) {
         action = eventName;
         eventName = '';
     }
-    var actionType = zrUtil.isObject(actionInfo)
+    var actionType = isObject(actionInfo)
         ? actionInfo.type
         : ([actionInfo, actionInfo = {
             event: eventName
@@ -1901,7 +1865,7 @@ export function registerAction(actionInfo, eventName, action) {
     eventName = actionInfo.event;
 
     // Validate action type and event name.
-    zrUtil.assert(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
+    assert(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
 
     if (!actions[actionType]) {
         actions[actionType] = {action: action, actionInfo: actionInfo};
@@ -1941,7 +1905,7 @@ export function getCoordinateSystemDimensions(type) {
  */
 export function registerLayout(priority, layoutTask) {
     var wrap = normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT);
-    wrap.isLayout = true;
+    wrap.visualType = 'layout';
 }
 
 /**
@@ -1949,11 +1913,15 @@ export function registerLayout(priority, layoutTask) {
  * @param {module:echarts/stream/Task} visualTask
  */
 export function registerVisual(priority, visualTask) {
-    normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART);
+    var wrap = normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART);
+    wrap.visualType = 'visual';
 }
 
+/**
+ * @param {Object|Function} fn: {seriesType, allSeries, processRawSeries, reset}
+ */
 function normalizeRegister(targetList, priority, fn, defaultPriority) {
-    if (zrUtil.isFunction(priority)) {
+    if (isFunction(priority) || isObject(priority)) {
         fn = priority;
         priority = defaultPriority;
     }
@@ -1963,19 +1931,17 @@ function normalizeRegister(targetList, priority, fn, defaultPriority) {
             throw new Error('Illegal priority');
         }
         // Check duplicate
-        zrUtil.each(targetList, function (wrap) {
-            zrUtil.assert(wrap.func !== fn);
+        each(targetList, function (wrap) {
+            assert(wrap.raw !== fn);
         });
     }
+    var stageHandler = isFunction(fn) ? {legacyFunc: fn} : fn;
+    stageHandler.uid = getUID('stageHandler');
+    stageHandler.prio = priority;
 
-    var wrap = {
-        prio: priority,
-        func: fn
-    };
+    targetList.push(stageHandler);
 
-    targetList.push(wrap);
-
-    return wrap;
+    return stageHandler;
 }
 
 /**

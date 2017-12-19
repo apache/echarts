@@ -2,233 +2,260 @@
  * @module echarts/stream/Scheduler
  */
 
-import {__DEV__} from '../config';
-import {assert, each, createHashMap} from 'zrender/src/core/util';
-import {normalizeToArray, makeInner} from '../util/model';
-
-var inner = makeInner();
-
-/**
- * @const
- */
-var STAGE = {
-    dataInit: 1,
-    dataClone: 2,
-    processor: 3,
-    visual: 4,
-    render: 5
-};
+import {each, createHashMap} from 'zrender/src/core/util';
+import {createTask} from './task';
+import arrayEqual from '../util/array/equal';
 
 /**
  * @constructor
  */
-function Scheduler(ecInstance) {
-    this._pipelineMap = createHashMap();
+function Scheduler(ecInstance, api) {
+    // this._pipelineMap = createHashMap();
 
     this.ecInstance = ecInstance;
-
-    var stageMap = this._stageMap = createHashMap();
-    each(STAGE, function (value, name) {
-        stageMap.set(name, []);
-    });
-
-    // this._stageUnfinished = [];
-
+    this.api = api;
     this.unfinished;
+
+    /**
+     * @private
+     * @type {
+     *     [handlerUID: string]: {
+     *         seriesTaskMap?: {
+     *             [seriesUID: string]: Task
+     *         },
+     *         overallTask?: Task
+     *     }
+     * }
+     */
+    this._stageTaskMap = createHashMap();
 }
 
 var proto = Scheduler.prototype;
 
-proto.progressStage = function (stage) {
-    // if (!this._stageUnfinished[STAGE[stage]]) {
-    //     return;
+proto.getStep = function () {
+    return this.ecInstance.getModel().get('streamStep') || 700;
+};
+
+proto.prepareStageTasks = function (stageHandlers, pipelineTails, useClearVisual) {
+    each(stageHandlers, function (stageHandler) {
+        prepareStageHandler(
+            stageHandler,
+            this._stageTaskMap,
+            pipelineTails,
+            this.ecInstance.getModel(),
+            this.api
+        );
+    }, this);
+};
+
+function prepareStageHandler(stageHandler, stageTaskMap, pipelineTails, ecModel, api) {
+    var handlerUID = stageHandler.uid;
+    var stageHandlerRecord = stageTaskMap.get(handlerUID) || stageTaskMap.set(handlerUID, []);
+
+    if ((stageHandler.seriesType || stageHandler.allSeries) && stageHandler.reset) {
+        createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api);
+    }
+    // else if (stageHandler.execute && stageHandler.getTargetSeries) {
+    //     // ???!
+    //     // Just listen to axis setting.
+    //     stageHandlerRecord.upstreamShouldFinished = true;
+
+    //     var originalModelUIDs = stageHandlerRecord.modelUIDs;
+    //     var modelUIDs = stageHandlerRecord.modelUIDs = stageHandler.getTargetModelUIDs();
+
+    //     if (!arrayEqual(originalModelUIDs, modelUIDs)) {
+    //         var originalOverallTask = stageHandlerRecord.overallTask;
+    //         originalOverallTask && originalOverallTask.dispose();
+
+    //         var overallTask = stageHandlerRecord.overallTask = createTask({
+    //             progress: stageHandler.legacyFunc
+    //         });
+
+    //         var modelUIDMap = createHashMap(modelUIDs);
+    //         pipelineTails.each(function (tailTask, seriesUID) {
+    //             if (modelUIDMap.get(seriesUID)) {
+    //                 tailTask.pipe(overallTask);
+    //             }
+    //         });
+    //     }
     // }
+    else if (stageHandler.legacyFunc) {
+        createLegacyStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api);
+    }
+}
 
+// ???! Fragile way.
+// function detectSeriesType(stageHandler, ecModel, api) {
+//     var type;
+//     var origin = ecModel.eachSeriesByType;
+//     ecModel.eachSeriesByType = function (seriesType, cb) {
+//         type = seriesType;
+//     };
+//     try {
+//         stageHandler.legacyFunc(ecModel, api);
+//     }
+//     catch (e) {
+//     }
+//     ecModel.eachSeriesByType = origin;
+//     return type;
+// }
+
+// ???! make upateVisual updateView updateLayout the same?
+// visualType: 'visual' or 'layout'
+proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType, setDirty) {
     var unfinished;
-    var tasks = this.getTasksByStage(stage);
-
     // ??? temporarily
-    var step = this.ecInstance.getModel().get('streamStep') || 700;
-    each(tasks, function (task) {
-        task.progress({
-            step: step
-        });
-        unfinished |= task.unfinished();
+    var step = this.getStep();
+
+    each(stageHandlers, function (stageHandler, idx) {
+        if (visualType && visualType !== stageHandler.visualType) {
+            return;
+        }
+
+        var stageHandlerRecord = this._stageTaskMap.get(stageHandler.uid);
+        var seriesTaskMap = stageHandlerRecord.seriesTaskMap;
+        var overallTask = stageHandlerRecord.overallTask;
+        var contextOnReset = {payload: payload};
+
+        if (overallTask) {
+            setDirty && overallTask.dirty();
+            unfinished |= overallTask.perform({step: step}, contextOnReset);
+        }
+        else if (seriesTaskMap) {
+            stageHandler.allSeries
+                ? ecModel.eachRawSeries(eachSeries)
+                : ecModel.eachRawSeriesByType(stageHandler.seriesType, eachSeries);
+        }
+
+        function eachSeries(seriesModel) {
+            var task = seriesTaskMap.get(seriesModel.uid);
+            setDirty && task.dirty();
+            unfinished |= task.perform({
+                step: step,
+                skip: !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel)
+            }, contextOnReset);
+        }
+    }, this);
+
+    this.unfinished |= unfinished;
+};
+
+proto.performSeriesTasks = function (ecModel) {
+    var unfinished;
+    // ??? temporarily
+    var step = this.getStep();
+
+    ecModel.eachRawSeries(function (seriesModel) {
+        unfinished |= seriesModel.dataInitTask.perform({step: step});
+        unfinished |= seriesModel.dataRestoreTask.perform({step: step});
     });
 
     this.unfinished |= unfinished;
 };
 
-/**
- * @param {Object} host Should has uid.
- */
-proto.initPipeline = function (host) {
-    var pipelineId = host.uid;
-    if (__DEV__) {
-        assert(!this._pipelineMap.get(pipelineId) && !host.pipeTask);
+function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api) {
+    var seriesTaskMap = stageHandlerRecord.seriesTaskMap || (stageHandlerRecord.seriesTaskMap = createHashMap());
+    var pipelineIdMap = createHashMap();
+
+    stageHandler.allSeries
+        ? ecModel.eachRawSeries(create)
+        : ecModel.eachRawSeriesByType(stageHandler.seriesType, create);
+
+    function create(seriesModel) {
+        var pipelineId = seriesModel.uid;
+        pipelineIdMap.set(pipelineId, 1);
+
+        // Init tasks for each seriesModel only once.
+        if (!seriesTaskMap.get(pipelineId)) {
+            var task = createTask({
+                reset: seriesTaskReset,
+                progress: seriesTaskProgress,
+                count: seriesTaskCount
+            }, {
+                model: seriesModel,
+                ecModel: ecModel,
+                api: api,
+                useClearVisual: stageHandler.isVisual && !stageHandler.isLayout
+            });
+            task.__handlerReset = stageHandler.reset;
+
+            seriesTaskMap.set(pipelineId, task);
+            pipe(pipelineTails, pipelineId, task);
+        }
     }
-    var pipeline = {tasks: [], temps: []};
-    this._pipelineMap.set(pipelineId, pipeline);
 
-    // Inject method pipeTask
-    host.pipeTask = hostPipeTask;
-    inner(host).temps = pipeline.temps;
-};
-
-function hostPipeTask(task, stage, tags) {
-    task && inner(this).temps.push({task: task, stage: stage, tags: tags});
-}
-
-/**
- * @param {Array.<Object>} allHosts Should has uid.
- */
-proto.clearUnusedPipelines = function (allHosts) {
-    var pipelineMap = this._pipelineMap;
-    var idMap = createHashMap();
-    var stageMap = this._stageMap;
-    each(allHosts, function (host) {
-        idMap.set(host.uid, 1);
-    });
-    pipelineMap.each(function (pipeline, id) {
-        if (!idMap.get(id)) {
-            clearPipeline(stageMap, pipeline, -1);
-            pipelineMap.set(id, null);
+    // Clear unused series tasks.
+    seriesTaskMap.each(function (task, pipelineId) {
+        if (!pipelineIdMap.get(pipelineId)) {
+            task.dispose();
+            seriesTaskMap.removeKey(pipelineId);
         }
     });
-};
-
-proto.clearTemps = function () {
-    this._pipelineMap.each(clearPipelineTemp);
-};
-
-function clearPipelineTemp(pipeline) {
-    pipeline.temps.length = 0;
 }
 
-/**
- * @param {string} tag
- * @param {Array.<Object>} [hosts]
- */
-proto.flushTemps = function (tag, hosts) {
-    var pipelineMap = this._pipelineMap;
-    var stageMap = this._stageMap;
-    var self = this;
+function createLegacyStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api) {
+    var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
+        || createTask(
+            {reset: legacyTaskReset},
+            {ecModel: ecModel, api: api, legacyFunc: stageHandler.legacyFunc}
+        );
 
-    hosts
-        ? each(hosts, function (host) {
-            flushPipelineTemps(pipelineMap.get(host.uid));
-        })
-        : pipelineMap.each(flushPipelineTemps);
-
-    function flushPipelineTemps(pipeline) {
-        clearPipelineDownstreams(stageMap, pipeline, tag);
-        var temps = pipeline.temps;
-        setTags(temps);
-        each(temps, function (tmp) {
-            self.unfinished = true;
-            pipeTask(stageMap, pipeline.tasks, tmp.task, tmp.stage, tmp.tags);
-        }, this);
-        clearPipelineTemp(pipeline);
-    }
-};
-
-// TODO when needed: customize tag
-function setTags(temps) {
-    var hasUpdateViewBase;
-    for (var i = temps.length - 1; i >= 0; i--) {
-        var item = temps[i];
-        var stage = item.stage;
-        var innerTask = inner(item.task);
-
-        if (stage === 'render') {
-            innerTask.updateLayoutBase = innerTask.updateVisualBase = true;
-        }
-        else if (stage === 'dataClone') {
-            innerTask.updateBase = true;
-        }
-        // Find the last dataClone or processor task.
-        if (!hasUpdateViewBase && (stage === 'dataClone' || stage === 'processor')) {
-            innerTask.updateViewBase = true;
-            hasUpdateViewBase = true;
-        }
-    }
+    // ???!
+    var stubs = overallTask.agentStubs = [];
+    ecModel.eachRawSeries(function (seriesModel) {
+        var stub = createTask({reset: emptyTaskReset});
+        stub.agent = overallTask;
+        stubs.push(stub);
+        pipe(pipelineTails, seriesModel.uid, stub);
+    });
 }
 
-/**
- * Only clear streams start from the tagged tasks.
- * This is for cases like `updateView`, `updateVisual` and `updateLayout`,
- * who are partial streams, depending on the render task of the full stream,
- * and should be cleared if another partial stream is started.
- */
-function clearPipelineDownstreams(stageMap, pipeline, tag) {
-    var tasks = pipeline.tasks;
-    var baseIndex;
+function emptyTaskReset() {
+    return {noProgress: true};
+}
 
-    if (tag === 'start') {
-        baseIndex = -1;
+function legacyTaskReset(context) {
+    context.legacyFunc(context.ecModel, context.api, context.payload);
+    return {noProgress: true};
+}
+
+function seriesTaskReset(context) {
+    var data = context.model.getData();
+    if (context.useClearVisual) {
+        data.clearAllVisual();
     }
-    else {
-        for (var i = 0; i < tasks.length; i++) {
-            if (inner(tasks[i])[tag]) {
-                baseIndex = i;
-                break;
+    var resetDefine = this.__handlerReset(
+        data, context.model, context.ecModel, context.api
+    );
+    if (!resetDefine) {
+        return {noProgress: true};
+    }
+    this.__dataEach = resetDefine.dataEach;
+    this.__progress = resetDefine.progress;
+}
+
+function seriesTaskProgress(params, context) {
+    var data = context.model.getData();
+    if (data) {
+        if (this.__dataEach) {
+            for (var i = params.start; i < params.end; i++) {
+                this.__dataEach(data, i);
             }
         }
-    }
-
-    clearPipeline(stageMap, pipeline, baseIndex);
-}
-
-function pipeTask(stageMap, pipelineTasks, task, stage) {
-    if (__DEV__) {
-        // In case typo.
-        stage && assert(STAGE[stage] != null);
-        each(pipelineTasks, function (taskInPipeline) {
-            assert(taskInPipeline != task);
-        });
-    }
-
-    pipelineTasks.length && pipelineTasks[pipelineTasks.length - 1].pipe(task);
-    pipelineTasks.push(task);
-
-    // ??? Should keep the original register order of tasks
-    // within single stage. Especially visual and layout.
-    stage && stageMap.get(stage).push(task);
-}
-
-proto.getTasksByStage = function (stage) {
-    return this._stageMap.get(stage).slice();
-};
-
-// taskBaseIndex can be -1;
-function clearPipeline(stageMap, pipeline, taskBaseIndex) {
-    var tasks = pipeline.tasks;
-    if (!tasks.length) {
-        return;
-    }
-
-    if (taskBaseIndex === -1) {
-        var taskBase = tasks[0];
-        taskBase.clearDownstreams();
-        taskBase.reset();
-    }
-    else {
-        tasks[taskBaseIndex].clearDownstreams();
-    }
-    for (var i = taskBaseIndex + 1; i < tasks.length; i++) {
-        inner(tasks[i]).cleared = 1;
-    }
-    tasks.length = taskBaseIndex + 1;
-
-    stageMap.each(function (stageTasks) {
-        for (var i = stageTasks.length - 1; i >= 0; i--) {
-            if (inner(stageTasks[i]).cleared) {
-                stageTasks.splice(i, 1);
-            }
+        else if (this.__progress) {
+            this.__progress(params, data);
         }
-    });
+    }
+}
 
-    i = 10;
+function seriesTaskCount(context) {
+    return context.model.getData().count();
+}
+
+function pipe(pipelineTails, pipelineId, task) {
+    var tail = pipelineTails.get(pipelineId);
+    tail.pipe(task);
+    pipelineTails.set(pipelineId, task);
 }
 
 export default Scheduler;

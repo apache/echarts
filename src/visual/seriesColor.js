@@ -1,9 +1,10 @@
 import Gradient from 'zrender/src/graphic/Gradient';
 
-export default function (ecModel) {
-    function encodeColor(seriesModel) {
+export default {
+    allSeries: true,
+    processRawSeries: true,
+    reset: function (data, seriesModel, ecModel) {
         var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.normal.color').split('.');
-        var data = seriesModel.getData();
         var color = seriesModel.get(colorAccessPath) // Set in itemStyle
             || seriesModel.getColorFromPalette(seriesModel.get('name'));  // Default color
 
@@ -21,16 +22,15 @@ export default function (ecModel) {
             }
 
             // itemStyle in each data item
-            var task = data.createEachTask(function (idx) {
+            var dataEach = function (idx) {
                 var itemModel = data.getItemModel(idx);
                 var color = itemModel.get(colorAccessPath, true);
                 if (color != null) {
                     data.setItemVisual(idx, 'color', color);
                 }
-            });
+            };
 
-            seriesModel.pipeTask(task, 'visual');
+            return {dataEach: dataEach};
         }
     }
-    ecModel.eachRawSeries(encodeColor);
-}
+};
