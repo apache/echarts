@@ -194,8 +194,8 @@ var LinesSeries = SeriesModel.extend({
         return encodeHTML(html.join(' > '));
     },
 
-    cannotStreamRender: function (seriesModel) {
-        return !!this._showEffect(seriesModel);
+    cannotStreamRender: function () {
+        return !!this.get('effect.show');
     },
 
     defaultOption: {
@@ -234,6 +234,8 @@ var LinesSeries = SeriesModel.extend({
         large: false,
         // Available when large is true
         largeThreshold: 2000,
+
+        streamThreshold: 3000,
 
         // If lines are polyline
         // polyline not support curveness, label, animation
