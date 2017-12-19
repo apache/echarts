@@ -2,8 +2,11 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, createHashMap} from 'zrender/src/core/util';
+import {each, isFunction, createHashMap, noop, extend} from 'zrender/src/core/util';
 import {createTask} from './task';
+import {getUID} from '../util/component';
+import GlobalModel from '../model/Global';
+import SeriesModel from '../model/Series';
 // import arrayEqual from '../util/array/equal';
 
 /**
@@ -32,28 +35,62 @@ function Scheduler(ecInstance, api) {
 
 var proto = Scheduler.prototype;
 
-proto.getStep = function () {
-    return this.ecInstance.getModel().get('streamStep') || 700;
+// If seriesModel provided, incremental threshold is check by series data.
+proto.getPerformInfo = function (task, seriesModel) {
+    // For overall task
+    if (!task.__pipelineId) {
+        return;
+    }
+
+    var pipeline = this._pipelineMap.get(task.__pipelineId);
+    if (seriesModel && pipeline.thresholdFail == null) {
+        // ??? when to reset thresholdFail?
+        pipeline.thresholdFail = seriesModel.getData().count() < pipeline.threshold;
+    }
+    var incremental = pipeline.incremental
+        && task.__idxInPipeline > pipeline.bockIndex
+        && !pipeline.thresholdFail;
+
+    return {incremental: incremental, step: incremental ? pipeline.step : null};
 };
 
-proto.prepareStageTasks = function (stageHandlers, pipelineTails, useClearVisual) {
+proto.restorePipelines = function (ecModel) {
+    var scheduler = this;
+    var pipelines = scheduler._pipelineMap = createHashMap();
+
+    ecModel.eachSeries(function (seriesModel) {
+        var dataInitTask = seriesModel.dataInitTask;
+        var dataRestoreTask = seriesModel.dataRestoreTask;
+
+        pipelines.set(seriesModel.uid, {
+            head: dataInitTask,
+            tail: dataInitTask,
+            threshold: seriesModel.get('progressiveThreshold'),
+            incremental: seriesModel.get('progressive')
+                && !(seriesModel.banIncremental && seriesModel.banIncremental()),
+            bockIndex: -1,
+            step: seriesModel.get('progressiveStep') || 700, // ??? Temporarily number
+            count: 2
+        });
+
+        dataInitTask.__block = dataRestoreTask.__block = true;
+
+        pipe(scheduler, seriesModel, dataRestoreTask);
+    });
+};
+
+proto.prepareStageTasks = function (stageHandlers, useClearVisual) {
     each(stageHandlers, function (stageHandler) {
-        prepareStageHandler(
-            stageHandler,
-            this._stageTaskMap,
-            pipelineTails,
-            this.ecInstance.getModel(),
-            this.api
-        );
+        prepareStageHandler(this, stageHandler, this._stageTaskMap, this.ecInstance.getModel(), this.api);
     }, this);
 };
 
-function prepareStageHandler(stageHandler, stageTaskMap, pipelineTails, ecModel, api) {
+function prepareStageHandler(scheduler, stageHandler, stageTaskMap, ecModel, api) {
     var handlerUID = stageHandler.uid;
     var stageHandlerRecord = stageTaskMap.get(handlerUID) || stageTaskMap.set(handlerUID, []);
 
     if (stageHandler.reset) {
-        createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api);
+        createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api);
     }
     // else if (stageHandler.execute && stageHandler.getTargetSeries) {
     //     // ???!
@@ -80,50 +117,49 @@ function prepareStageHandler(stageHandler, stageTaskMap, pipelineTails, ecModel,
     //     }
     // }
     else if (stageHandler.legacyFunc) {
-        createLegacyStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api);
+        createLegacyStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api);
     }
 }
 
-// ???! Fragile way.
-// function detectSeriesType(stageHandler, ecModel, api) {
-//     var type;
-//     var origin = ecModel.eachSeriesByType;
-//     ecModel.eachSeriesByType = function (seriesType, cb) {
-//         type = seriesType;
-//     };
-//     try {
-//         stageHandler.legacyFunc(ecModel, api);
-//     }
-//     catch (e) {
-//     }
-//     ecModel.eachSeriesByType = origin;
-//     return type;
-// }
+proto.prepareView = function (view, model, ecModel, api) {
+    var renderTask = view.renderTask;
+    var context = renderTask.context;
 
-// ???! make upateVisual updateView updateLayout the same?
-// visualType: 'visual' or 'layout'
-proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType, setDirty) {
+    context.model = model;
+    context.ecModel = ecModel;
+    context.api = api;
+
+    renderTask.__block = !view.incrementalPrepareRender;
+
+    pipe(this, model, renderTask);
+};
+
+// opt
+// opt.visualType: 'visual' or 'layout'
+// opt.setDirty
+// opt.dontCheckThreshold
+proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
+    opt = opt || {};
     var unfinished;
-    // ??? temporarily
-    var step = this.getStep();
+    var scheduler = this;
 
     each(stageHandlers, function (stageHandler, idx) {
-        if (visualType && visualType !== stageHandler.visualType) {
+        if (opt.visualType && opt.visualType !== stageHandler.visualType) {
             return;
         }
 
-        var stageHandlerRecord = this._stageTaskMap.get(stageHandler.uid);
+        var stageHandlerRecord = scheduler._stageTaskMap.get(stageHandler.uid);
         var seriesTaskMap = stageHandlerRecord.seriesTaskMap;
         var overallTask = stageHandlerRecord.overallTask;
-        var contextOnReset = {payload: payload};
 
         if (overallTask) {
-            if (setDirty) {
+            if (opt.setDirty) {
                 overallTask.dirty();
                 unfinished = true;
             }
             else {
-                unfinished |= overallTask.perform({step: step}, contextOnReset);
+                overallTask.context.payload = payload;
+                unfinished |= overallTask.perform(scheduler.getPerformInfo(overallTask));
             }
         }
         else if (seriesTaskMap) {
@@ -134,21 +170,20 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, visualType,
 
         function eachSeries(seriesModel) {
             var task = seriesTaskMap.get(seriesModel.uid);
-            var shouldStream = seriesModel.shouldStream();
-            if (setDirty) {
+            if (opt.setDirty) {
                 task.dirty();
                 unfinished = true;
             }
             else {
-                unfinished |= task.perform({
-                    step: shouldStream ? step : null,
-                    skip: !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel)
-                }, contextOnReset);
+                var performInfo = scheduler.getPerformInfo(task, opt.dontCheckThreshold ? null : seriesModel);
+                performInfo.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
+                task.context.payload = payload;
+                unfinished |= task.perform(performInfo);
             }
         }
-    }, this);
+    });
 
-    this.unfinished |= unfinished;
+    scheduler.unfinished |= unfinished;
 };
 
 proto.performSeriesTasks = function (ecModel) {
@@ -163,7 +198,22 @@ proto.performSeriesTasks = function (ecModel) {
     this.unfinished |= unfinished;
 };
 
-function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api) {
+proto.plan = function () {
+    // Travel pipelines, check block.
+    this._pipelineMap.each(function (pipeline) {
+        var task = pipeline.tail;
+        do {
+            if (task.__block) {
+                pipeline.bockIndex = task.__idxInPipeline;
+                break;
+            }
+            task = task.getUpstream();
+        }
+        while (task);
+    });
+};
+
+function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var seriesTaskMap = stageHandlerRecord.seriesTaskMap || (stageHandlerRecord.seriesTaskMap = createHashMap());
     var pipelineIdMap = createHashMap();
 
@@ -176,6 +226,7 @@ function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, 
         pipelineIdMap.set(pipelineId, 1);
 
         // Init tasks for each seriesModel only once.
+        // Reuse original task instance.
         var task = seriesTaskMap.get(pipelineId);
         if (!task) {
             task = createTask({
@@ -192,7 +243,7 @@ function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, 
 
             seriesTaskMap.set(pipelineId, task);
         }
-        pipe(pipelineTails, pipelineId, task);
+        pipe(scheduler, seriesModel, task);
     }
 
     // Clear unused series tasks.
@@ -204,21 +255,23 @@ function createSeriesStageTask(stageHandler, stageHandlerRecord, pipelineTails, 
     });
 }
 
-function createLegacyStageTask(stageHandler, stageHandlerRecord, pipelineTails, ecModel, api) {
+function createLegacyStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
         || createTask(
             {reset: legacyTaskReset},
             {ecModel: ecModel, api: api, legacyFunc: stageHandler.legacyFunc}
         );
 
-    // ???!
-    var stubs = overallTask.agentStubs = [];
+    // Reuse orignal stubs.
+    var stubs = overallTask.agentStubs = overallTask.agentStubs || [];
+    var stubIndex = 0;
     ecModel.eachRawSeries(function (seriesModel) {
-        var stub = createTask({reset: emptyTaskReset});
+        var stub = stubs[stubIndex] = stubs[stubIndex] || createTask({reset: emptyTaskReset});
+        stubIndex++;
         stub.agent = overallTask;
-        stubs.push(stub);
-        pipe(pipelineTails, seriesModel.uid, stub);
+        pipe(scheduler, seriesModel, stub);
     });
+    stubs.length = stubIndex;
 }
 
 function emptyTaskReset() {
@@ -262,10 +315,35 @@ function seriesTaskCount(context) {
     return context.model.getData().count();
 }
 
-function pipe(pipelineTails, pipelineId, task) {
-    var tail = pipelineTails.get(pipelineId);
-    tail.pipe(task);
-    pipelineTails.set(pipelineId, task);
+function pipe(scheduler, seriesModel, task) {
+    var pipelineId = seriesModel.uid;
+    var pipeline = scheduler._pipelineMap.get(pipelineId);
+    pipeline.tail.pipe(task);
+    pipeline.tail = task;
+    task.__idxInPipeline = pipeline.count++;
+    task.__pipelineId = pipelineId;
 }
+
+Scheduler.wrapStageHandler = function (stageHandler, visualType) {
+    if (isFunction(stageHandler)) {
+        stageHandler = {
+            legacyFunc: stageHandler,
+            // seriesType: detectSeriseType(stageHandler)
+        };
+    }
+
+    stageHandler.uid = getUID('stageHandler');
+    visualType && (stageHandler.visualType = visualType);
+
+    return stageHandler;
+};
+
+// var fakeSeriesModel = extend({}, SeriesModel.prototype);
+
+function detectSeriseType(legacyFunc) {
+
+}
+
+
 
 export default Scheduler;

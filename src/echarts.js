@@ -31,11 +31,9 @@ import {throttle} from './util/throttle';
 import seriesColor from './visual/seriesColor';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
-import {getUID} from './util/component';
 
 var assert = zrUtil.assert;
 var each = zrUtil.each;
-var createHashMap = zrUtil.createHashMap;
 var isFunction = zrUtil.isFunction;
 var isObject = zrUtil.isObject;
 var parseClassType = ComponentModel.parseClassType;
@@ -226,7 +224,7 @@ function ECharts(dom, theme, opts) {
     this._pendingActions = [];
     // Sort on demand
     function prioritySortFunc(a, b) {
-        return a.prio - b.prio;
+        return a.__prio - b.__prio;
     }
     timsort(visualFuncs, prioritySortFunc);
     timsort(dataProcessorFuncs, prioritySortFunc);
@@ -274,7 +272,7 @@ echartsProto._onframe = function () {
 
             scheduler.performSeriesTasks(ecModel);
 
-            scheduler.performStageTasks(dataProcessorFuncs, ecModel);
+            scheduler.performStageTasks(dataProcessorFuncs, ecModel, null, {dontCheckThreshold: true});
 
             // ???! coordSys create
             // this._coordSysMgr.update();
@@ -847,7 +845,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, null, true);
+        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
         performRender(this, this._model, this._api, payload, true);
 
@@ -871,7 +869,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'visual', true);
+        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
 
         performRender(this, this._model, this._api, payload, true);
 
@@ -894,7 +892,7 @@ var updateMethods = {
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
-        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, null, true);
+        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
         performRender(this, this._model, this._api, payload, true);
 
@@ -902,22 +900,21 @@ var updateMethods = {
     }
 };
 
-function prepare(ecIns, payload, pipelineTails) {
+function prepare(ecIns) {
     var ecModel = ecIns._model;
     var scheduler = ecIns._scheduler;
 
-    var pipelineTails = createHashMap();
-    ecModel.eachSeries(function (seriesModel) {
-        pipelineTails.set(seriesModel.uid, seriesModel.dataRestoreTask);
-    });
+    scheduler.restorePipelines(ecModel);
 
-    scheduler.prepareStageTasks(dataProcessorFuncs, pipelineTails);
+    scheduler.prepareStageTasks(dataProcessorFuncs);
 
-    scheduler.prepareStageTasks(visualFuncs, pipelineTails);
+    scheduler.prepareStageTasks(visualFuncs);
 
-    prepareView(ecIns, 'component', ecModel, pipelineTails);
+    prepareView(ecIns, 'component', ecModel, scheduler);
 
-    prepareView(ecIns, 'chart', ecModel, pipelineTails);
+    prepareView(ecIns, 'chart', ecModel, scheduler);
+
+    scheduler.plan();
 }
 
 /**
@@ -1212,7 +1209,7 @@ echartsProto.one = createRegisterEventWithLowercaseName('one');
  * @param  {module:echarts/model/Global} ecModel
  * @private
  */
-function prepareView(ecIns, type, ecModel, pipelineTails) {
+function prepareView(ecIns, type, ecModel, scheduler) {
     var isComponent = type === 'component';
     var viewList = isComponent ? ecIns._componentsViews : ecIns._chartsViews;
     var viewMap = isComponent ? ecIns._componentsMap : ecIns._chartsMap;
@@ -1257,15 +1254,7 @@ function prepareView(ecIns, type, ecModel, pipelineTails) {
             mainType: model.mainType,
             index: model.componentIndex
         };
-        if (!isComponent) {
-            var renderTask = view.renderTask;
-            renderTask.context.model = model;
-            renderTask.context.ecModel = ecModel;
-            renderTask.context.api = api;
-            var pipelineId = model.uid;
-            pipelineTails.get(pipelineId).pipe(renderTask);
-            pipelineTails.set(pipelineId, renderTask);
-        }
+        !isComponent && scheduler.prepareView(view, model, ecModel, api);
     }
 
     for (var i = 0; i < viewList.length;) {
@@ -1354,14 +1343,16 @@ function performRender(ecIns, ecModel, api, payload, isReset) {
 
     // Render all charts
     var scheduler = ecIns._scheduler;
-    var step = scheduler.getStep();
     var unfinished;
     ecModel.eachSeries(function (seriesModel) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
 
-        var opt = seriesModel.shouldStream() ? {step: step} : null;
-        unfinished |= chartView.renderTask.perform(opt, {payload: payload});
+        var renderTask = chartView.renderTask;
+        var performInfo = scheduler.getPerformInfo(renderTask, seriesModel);
+        renderTask.context.payload = payload;
+        renderTask.context.incremental = performInfo.incremental;
+        unfinished |= renderTask.perform(performInfo);
         // chartView.render(seriesModel, ecModel, api, payload);
 
         chartView.group.silent = !!seriesModel.get('silent');
@@ -1905,8 +1896,7 @@ export function getCoordinateSystemDimensions(type) {
  * @param {Function} layoutTask
  */
 export function registerLayout(priority, layoutTask) {
-    var wrap = normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT);
-    wrap.visualType = 'layout';
+    normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT, 'layout');
 }
 
 /**
@@ -1914,14 +1904,13 @@ export function registerLayout(priority, layoutTask) {
  * @param {module:echarts/stream/Task} visualTask
  */
 export function registerVisual(priority, visualTask) {
-    var wrap = normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART);
-    wrap.visualType = 'visual';
+    normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART, 'visual');
 }
 
 /**
  * @param {Object|Function} fn: {seriesType, processRawSeries, reset}
  */
-function normalizeRegister(targetList, priority, fn, defaultPriority) {
+function normalizeRegister(targetList, priority, fn, defaultPriority, visualType) {
     if (isFunction(priority) || isObject(priority)) {
         fn = priority;
         priority = defaultPriority;
@@ -1933,13 +1922,14 @@ function normalizeRegister(targetList, priority, fn, defaultPriority) {
         }
         // Check duplicate
         each(targetList, function (wrap) {
-            assert(wrap.raw !== fn);
+            assert(wrap.__raw !== fn);
         });
     }
-    var stageHandler = isFunction(fn) ? {legacyFunc: fn} : fn;
-    stageHandler.uid = getUID('stageHandler');
-    stageHandler.prio = priority;
 
+    var stageHandler = Scheduler.wrapStageHandler(fn, visualType);
+
+    stageHandler.__prio = priority;
+    stageHandler.__raw = fn;
     targetList.push(stageHandler);
 
     return stageHandler;

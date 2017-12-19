@@ -84,7 +84,7 @@ lineDrawProto.updateLayout = function () {
     }, this);
 };
 
-lineDrawProto.incrementalPrepare = function (lineData) {
+lineDrawProto.incrementalPrepareRender = function (lineData) {
     this._seriesScope = makeSeriesScope(this);
     this._lineData = lineData;
     this._clearIncremental();
@@ -94,7 +94,7 @@ lineDrawProto.incrementalPrepare = function (lineData) {
     );
 };
 
-lineDrawProto.incrementalProgress = function (taskParams, lineData) {
+lineDrawProto.incrementalRender = function (taskParams, lineData) {
     for (var idx = taskParams.start; idx < taskParams.end; idx++) {
         var itemLayout = lineData.getItemLayout(idx);
 

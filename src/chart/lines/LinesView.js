@@ -64,15 +64,15 @@ export default echarts.extendChartView({
         this._clearLayer(api);
     },
 
-    incrementalPrepare: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
         var lineDraw = this._updateLineDraw(data, seriesModel);
-        lineDraw.incrementalPrepare(data);
+        lineDraw.incrementalPrepareRender(data);
         this._clearLayer(api);
     },
 
-    incrementalProgress: function (taskParams, seriesModel, ecModel) {
-        this._lineDraw.incrementalProgress(taskParams, seriesModel.getData());
+    incrementalRender: function (taskParams, seriesModel, ecModel) {
+        this._lineDraw.incrementalRender(taskParams, seriesModel.getData());
     },
 
     _updateLineDraw: function (data, seriesModel) {

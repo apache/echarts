@@ -38,8 +38,8 @@
 
             var config = {
                 dataLoading: 'whole',
-                streamThreshold: 0,
-                streamRender: true,
+                progressive: true,
+                progressiveThreshold: 3000,
                 largeModel: true
             };
 
@@ -77,9 +77,7 @@
                         .onChange(init);
                     gui.add(config, 'largeModel')
                         .onChange(init);
-                    gui.add(config, 'streamRender')
-                        .onChange(init);
-                    gui.add(config, 'streamThreshold', 0, 200000)
+                    gui.add(config, 'progressiveThreshold', 0, 200000)
                         .onChange(init);
 
                     init();
@@ -93,7 +91,7 @@
 
 
                         chart.setOption({
-                            streamStep: 40000,
+                            progressiveStep: 40000,
                             animation: false,
                             geo: {
                                 center: [-74.04327099998152, 40.86737600240287],
@@ -123,7 +121,8 @@
                                         width: 0.5
                                     }
                                 },
-                                stream: config.streamRender ? config.streamThreshold : false
+                                progressive: config.progressive,
+                                progressiveThreshold: config.progressiveThreshold
                             }]
                         });
                     }

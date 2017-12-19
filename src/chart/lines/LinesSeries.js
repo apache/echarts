@@ -45,8 +45,6 @@ var LinesSeries = SeriesModel.extend({
 
     visualColorAccessPath: 'lineStyle.normal.color',
 
-    streamEnabled: true,
-
     init: function (option) {
         // Not using preprocessor because mergeOption may not have series.type
         preprocessOption(option);
@@ -194,7 +192,7 @@ var LinesSeries = SeriesModel.extend({
         return encodeHTML(html.join(' > '));
     },
 
-    cannotStreamRender: function () {
+    banIncremental: function () {
         return !!this.get('effect.show');
     },
 
@@ -235,7 +233,8 @@ var LinesSeries = SeriesModel.extend({
         // Available when large is true
         largeThreshold: 2000,
 
-        streamThreshold: 3000,
+        incremental: false,
+        incrementalThreshold: 3000,
 
         // If lines are polyline
         // polyline not support curveness, label, animation

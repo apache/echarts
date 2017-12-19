@@ -9,7 +9,6 @@ import {
 } from '../util/format';
 import * as modelUtil from '../util/model';
 import ComponentModel from './Component';
-import {isNumeric} from '../util/number';
 import colorPaletteMixin from './mixin/colorPalette';
 import {
     getLayoutParams,
@@ -57,13 +56,6 @@ var SeriesModel = ComponentModel.extend({
      */
     layoutMode: null,
 
-    /**
-     * Whether stream enabled.
-     * @type {boolean}
-     * @readOnly
-     */
-    streamEnabled: false,
-
     init: function (option, parentModel, ecModel, extraOpt) {
 
         /**
@@ -88,6 +80,7 @@ var SeriesModel = ComponentModel.extend({
 
         var data = this.getInitialData(option, ecModel);
         this.dataInitTask.dirty();
+
         if (__DEV__) {
             zrUtil.assert(data, 'getInitialData returned invalid data.');
         }
@@ -155,10 +148,8 @@ var SeriesModel = ComponentModel.extend({
 
         var data = this.getInitialData(newSeriesOption, ecModel);
         this.dataInitTask.dirty();
-        // ??? progress data?
+
         inner(this).dataBeforeProcessed = data;
-        // ??? should not restoreData here? but called by echart?
-        // this.restoreData();
     },
 
     fillDataTextStyle: function (data) {
@@ -375,30 +366,10 @@ var SeriesModel = ComponentModel.extend({
     pipeTask: null,
 
     /**
-     * @public
-     */
-    getStreamSetting: function () {
-        var stream = this.option.stream;
-        return this.streamEnabled && (stream != null || stream !== false) && {
-            threshold: isNumeric(stream) ? +stream : 0
-        };
-    },
-
-    /**
-     * @protected
-     */
-    shouldStream: function () {
-        var data = this.getData();
-        return this.streamEnabled
-            && data.count() > this.option.streamThreshold
-            && (!this.cannotStreamRender || !this.cannotStreamRender());
-    },
-
-    /**
      * Convinient for override in extended class.
      * @protected
      */
-    cannotStreamRender: null
+    banIncremental: null
 
 });
 

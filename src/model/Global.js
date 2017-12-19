@@ -221,11 +221,6 @@ var GlobalModel = Model.extend({
                         extend(componentModel, extraOpt);
                         componentModel.init(newCptOption, this, this, extraOpt);
 
-                        if (mainType === 'series') {
-                            // componentModel.settingTask.pipe(componentModel.dataInitTask);
-                            componentModel.dataInitTask.pipe(componentModel.dataRestoreTask);
-                        }
-
                         // Call optionUpdated after init.
                         // newCptOption has been used as componentModel.option
                         // and may be merged with theme and default, so pass null

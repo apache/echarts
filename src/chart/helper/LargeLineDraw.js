@@ -42,7 +42,7 @@ largeLineProto.updateLayout = function (seriesModel) {
 /**
  * @override
  */
-largeLineProto.incrementalPrepare = function (data) {
+largeLineProto.incrementalPrepareRender = function (data) {
     this._setCommon(data, data.hostModel);
     this._clearIncremental();
 
@@ -54,7 +54,7 @@ largeLineProto.incrementalPrepare = function (data) {
 /**
  * @override
  */
-largeLineProto.incrementalProgress = function (taskParams, data) {
+largeLineProto.incrementalRender = function (taskParams, data) {
     this._lineEl.setShape({
         segs: data.getLayout('linesPoints')
     });

@@ -93,27 +93,25 @@ Chart.prototype = {
         var ecModel = context.ecModel;
         var api = context.api;
         var payload = context.payload;
-        var updateMethod = payload && inner(payload).updateMethod || 'render';
+        // ???! remove updateView updateVisual
+        var incremental = context.incremental;
 
-        if (!seriesModel.streamEnabled) {
-            this[updateMethod](seriesModel, ecModel, api, payload);
-            return {noProgress: true};
-        }
-
-        var shouldStream = seriesModel.shouldStream();
-
-        if (inner(this).shouldStream ^ shouldStream) {
+        if (inner(this).incremental ^ incremental) {
             this.remove(ecModel, api);
         }
+        inner(this).incremental = incremental;
 
-        inner(this).shouldStream = shouldStream;
-        if (shouldStream) {
-            this.incrementalPrepare(seriesModel, ecModel, api);
-        }
-        else {
-            this[updateMethod](seriesModel, ecModel, api, payload);
-            return {noProgress: true};
-        }
+        var updateMethod = payload && inner(payload).updateMethod;
+        var methodName = incremental
+            ? ((updateMethod && this.incrementalPrepareLayout)
+                ? 'incrementalPrepareLayout' : 'incrementalPrepareRender'
+            )
+            : ((updateMethod && this[updateMethod])
+                ? updateMethod : 'render'
+            );
+
+        return this[methodName](seriesModel, ecModel, api, payload)
+            || (!incremental && {noProgress: true});
     },
 
     /**
@@ -123,16 +121,21 @@ Chart.prototype = {
         var seriesModel = context.model;
         var ecModel = context.ecModel;
         var api = context.api;
+        var payload = context.payload;
+        var updateMethod = payload && inner(payload).updateMethod;
+        var methodName = (updateMethod && this.incrementalLayout)
+            ? 'incrementalLayout' : 'incrementalRender';
 
-        if (this.incrementalAdd) {
-            for (var i = params.start; i < params.end; i++) {
-                this.incrementalAdd(seriesModel, ecModel, api, i);
-            }
-        }
-        else {
-            this.incrementalProgress(params, seriesModel, ecModel, api);
-        }
+        this[methodName](params, seriesModel, ecModel, api, payload);
     },
+
+    incrementalPrepareRender: null,
+
+    incrementalRender: null,
+
+    incrementalPrepareLayout: null,
+
+    incrementalLayout: null,
 
     /**
      * The view contains the given point.
