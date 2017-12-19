@@ -4,7 +4,7 @@
 
 import {each, createHashMap} from 'zrender/src/core/util';
 import {createTask} from './task';
-import arrayEqual from '../util/array/equal';
+// import arrayEqual from '../util/array/equal';
 
 /**
  * @constructor
