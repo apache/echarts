@@ -159,23 +159,31 @@ var SunburstView = ChartView.extend({
 
         this.group.on('click', function (e) {
             var nodeClick = that.seriesModel.get('nodeClick', true);
-
             if (!nodeClick) {
                 return;
             }
 
-            if (nodeClick === 'zoomToNode') {
-                var targetFound = false;
-                var viewRoot = that.seriesModel.getViewRoot();
-                viewRoot.eachNode(function (node) {
-                    if (!targetFound
-                        && node.piece && node.piece.childAt(0) === e.target
-                    ) {
+            var targetFound = false;
+            var viewRoot = that.seriesModel.getViewRoot();
+            viewRoot.eachNode(function (node) {
+                if (!targetFound
+                    && node.piece && node.piece.childAt(0) === e.target
+                ) {
+                    if (nodeClick === 'zoomToNode') {
                         that._rootToNode(node);
-                        targetFound = true;
                     }
-                });
-            }
+                    else if (nodeClick === 'link') {
+                        var itemModel = node.getModel();
+                        var link = itemModel.get('link', true);
+                        if (link) {
+                            var linkTarget = itemModel.get('target', true)
+                                || '_blank';
+                            link && window.open(link, linkTarget);
+                        }
+                    }
+                    targetFound = true;
+                }
+            });
         });
     },
 
