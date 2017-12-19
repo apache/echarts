@@ -33,7 +33,7 @@ export default echarts.extendComponentView({
     },
 
     render: function (tooltipModel, ecModel, api) {
-        if (env.node) {
+        if (env.node || env.wxa) {
             return;
         }
 
