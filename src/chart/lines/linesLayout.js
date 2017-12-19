@@ -1,4 +1,3 @@
-
 export default {
     seriesType: 'lines',
     reset: function (seriesModel, ecModel) {
@@ -66,6 +65,6 @@ export default {
             }
         }
 
-        return {progress: progress};
+        return { progress: progress };
     }
 };

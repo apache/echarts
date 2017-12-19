@@ -55,7 +55,7 @@ function DefaultDataProvider(dataArray, dimSize) {
     var methods;
 
     // Typed array.
-    if (dataArray && typeof dataArray[0] === 'number') {
+    if (dataArray && zrUtil.isTypedArray(dataArray)) {
         if (__DEV__) {
             if (dimSize == null) {
                 throw new Error('Typed array data must specify dimension size');
@@ -199,20 +199,6 @@ var List = function (dimensions, hostModel) {
      * @readOnly
      */
     this.indices = [];
-
-    /**
-     * Speed up the query.
-     * @type {Array.<number>}
-     * @private
-     */
-    this._chunkOffsets = [];
-
-    /**
-     * Speed up the query.
-     * @type {Array.<number>}
-     * @private
-     */
-    this._chunkIndices = [];
 
     /**
      * @type {number}
@@ -368,8 +354,6 @@ listProto.initData = function (data, nameList, dimValueGetter) {
     // Clear
     this._storage = {};
     this.indices = new CtorUint32Array(data.count());
-    this._chunkOffsets = new CtorUint32Array(data.count());
-    this._chunkIndices = new CtorUint32Array(data.count());
 
     var dimensionInfoMap = this._dimensionInfos;
 
@@ -390,13 +374,13 @@ listProto.initData = function (data, nameList, dimValueGetter) {
 
     var self = this;
     if (!dimValueGetter) {
-        self.hasItemOption = false;
+        this.hasItemOption = false;
     }
     // Default dim value getter
     this._dimValueGetter = dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
         var value = modelUtil.getDataItemValue(dataItem);
         // If any dataItem is like { value: 10 }
-        if (modelUtil.isDataItemOption(dataItem)) {
+        if (!data.pure && modelUtil.isDataItemOption(dataItem)) {
             self.hasItemOption = true;
         }
         return modelUtil.converDataValue(
@@ -408,14 +392,19 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         );
     };
 
-    this.initFromRawData(0, size, true);
+    this.initFromRawData(0, size);
+
+    // If data has no item option.
+    if (data.pure) {
+        this.hasItemOption = false;
+    }
 };
 
 listProto.getProvider = function () {
     return this._rawData;
 };
 
-listProto.initFromRawData = function (start, end, checkNameRepeat) {
+listProto.initFromRawData = function (start, end) {
     // Optimize.
     if (start >= end) {
         return;
@@ -424,24 +413,16 @@ listProto.initFromRawData = function (start, end, checkNameRepeat) {
     if (end > this.indices.length) {
         // Expand indices
         var oldIndices = this.indices;
-        var oldChunkIndices = this._chunkIndices;
-        var oldChunkOffsets = this._chunkOffsets;
         this.indices = new CtorUint32Array(end);
-        this._chunkIndices = new CtorUint32Array(end);
-        this._chunkOffsets = new CtorUint32Array(end);
         // Copy value to new array
         for (var i = 0; i < oldIndices.length; i++) {
             this.indices[i] = oldIndices[i];
-            this._chunkIndices[i] = oldChunkIndices[i];
-            this._chunkOffsets[i] = oldChunkOffsets[i];
         }
     }
 
     var data = this._rawData;
     var storage = this._storage;
     var indices = this.indices;
-    var chunkOffsets = this._chunkOffsets;
-    var chunkIndices = this._chunkIndices;
     var dimensions = this.dimensions;
     var dimensionInfoMap = this._dimensionInfos;
     var nameList = this._nameList;
@@ -495,21 +476,17 @@ listProto.initFromRawData = function (start, end, checkNameRepeat) {
         }
 
         indices[idx] = chunkIndex * chunkSize + chunkOffset;
-        chunkOffsets[idx] = chunkOffset;
-        chunkIndices[chunkIndex] = chunkIndex;
 
         // Use the name in option and create id
-        if (!nameList[idx] && dataItem) {
-            if (dataItem.name != null) {
-                nameList[idx] = dataItem.name;
+        if (!data.pure) {
+            if (!nameList[idx] && dataItem) {
+                if (dataItem.name != null) {
+                    nameList[idx] = dataItem.name;
+                }
+                else if (nameDimIdx != null) {
+                    nameList[idx] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
+                }
             }
-            else if (nameDimIdx != null) {
-                nameList[idx] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
-            }
-        }
-
-        // ??? do not fill idList and do not checked by nameRepeatCount when init.
-        if (checkNameRepeat) {
             var name = nameList[idx];
             // Try using the id in option
             var id = dataItem && dataItem.id;
@@ -544,13 +521,8 @@ listProto.count = function () {
  */
 listProto.get = function (dim, idx, stack) {
     var storage = this._storage;
-    var chunkOffset = this._chunkOffsets[idx];
-    var chunkIndex = this._chunkIndices[idx];
-
-    // If value not exists
-    if (chunkOffset == null || !storage[dim]) {
-        return NaN;
-    }
+    var chunkIndex = Math.floor(idx / this._chunkSize);
+    var chunkOffset = idx % this._chunkSize;
 
     var chunkStore = storage[dim][chunkIndex];
     var value = chunkStore ? chunkStore[chunkOffset] : NaN;
@@ -686,11 +658,12 @@ listProto.getSum = function (dim, stack) {
 listProto.indexOf = function (dim, value) {
     var storage = this._storage;
     var dimData = storage[dim];
-    var chunkOffsets = this._chunkOffsets;
-
+    var chunkSize = this._chunkSize;
     if (dimData) {
-        for (var i = 0, len = chunkOffsets.length; i < len; i++) {
-            if (dimData[this._chunkIndices[i]][chunkOffsets[i]] === value) {
+        for (var i = 0, len = this.count(); i < len; i++) {
+            var chunkIndex = Math.floor(i / chunkSize);
+            var chunkOffset = i % chunkSize;
+            if (dimData[chunkIndex][chunkOffset] === value) {
                 return i;
             }
         }
@@ -1017,12 +990,11 @@ listProto.map = function (dimensions, cb, stack, context) {
     // Following properties are all immutable.
     // So we can reference to the same value
     list.indices = this.indices;
-    var chunkIndices = list._chunkIndices = this._chunkIndices;
-    var chunkOffsets = list._chunkOffsets = this._chunkOffsets;
 
     var storage = list._storage;
 
     var tmpRetValue = [];
+    var chunkSize = this._chunkSize;
     this.each(dimensions, function () {
         var idx = arguments[arguments.length - 1];
         var retValue = cb && cb.apply(this, arguments);
@@ -1032,11 +1004,13 @@ listProto.map = function (dimensions, cb, stack, context) {
                 tmpRetValue[0] = retValue;
                 retValue = tmpRetValue;
             }
+            var chunkIndex = Math.floor(idx / chunkSize);
+            var chunkOffset = idx % chunkSize;
             for (var i = 0; i < retValue.length; i++) {
                 var dim = dimensions[i];
                 var dimStore = storage[dim];
                 if (dimStore) {
-                    dimStore[chunkIndices[idx]][chunkOffsets[idx]] = retValue[i];
+                    dimStore[chunkIndex][chunkOffset] = retValue[i];
                 }
             }
         }
@@ -1056,19 +1030,14 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var list = cloneListForMapAndSample(this, [dimension]);
     var targetStorage = list._storage;
 
-    var originalChunkOffsets = this._chunkOffsets;
-    var originalChunkIndices = this._chunkIndices;
-    var chunkOffsets = list._chunkOffsets = [];
-    var chunkIndices = list._chunkIndices = [];
     var indices = list.indices = [];
 
     var frameValues = [];
-    var frameChunkOffsets = [];
-    var frameChunkIndices = [];
     var frameSize = Math.floor(1 / rate);
 
     var dimStore = targetStorage[dimension];
     var len = this.count();
+    var chunkSize = this._chunkSize;
 
     for (var i = 0; i < len; i += frameSize) {
         // Last frame
@@ -1078,21 +1047,17 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
         }
         for (var k = 0; k < frameSize; k++) {
             var dataIdx = i + k;
-            var originalChunkOffset = originalChunkOffsets[dataIdx];
-            var originalChunkIndex = originalChunkIndices[dataIdx];
+            var originalChunkIndex = Math.floor(dataIdx / chunkSize);
+            var originalChunkOffset = dataIdx % chunkSize;
             frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
-            frameChunkOffsets[k] = originalChunkOffset;
-            frameChunkIndices[k] = originalChunkIndex;
         }
         var value = sampleValue(frameValues);
         var sampleFrameIdx = sampleIndex(frameValues, value) || 0;
-        var sampleChunkOffset = frameChunkOffsets[sampleFrameIdx];
-        var sampleChunkIndex = frameChunkIndices[sampleFrameIdx];
+        var sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
+        var sampleChunkOffset = sampleFrameIdx % chunkSize;
         // Only write value on the filtered data
         dimStore[sampleChunkIndex][sampleChunkOffset] = value;
-        chunkIndices.push(sampleChunkIndex);
-        chunkOffsets.push(sampleChunkOffset);
-        indices.push(sampleChunkIndex * this._chunkSize + sampleChunkOffset);
+        indices.push(sampleFrameIdx);
     }
 
     return list;
@@ -1334,8 +1299,6 @@ listProto.cloneShallow = function () {
 
     // Clone will not change the data extent and indices
     list.indices = new CtorUint32Array(this.indices);
-    list._chunkIndices = new CtorUint32Array(this._chunkIndices);
-    list._chunkOffsets = new CtorUint32Array(this._chunkOffsets);
 
     if (this._extent) {
         list._extent = zrUtil.extend({}, this._extent);
