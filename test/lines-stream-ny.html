@@ -10,6 +10,7 @@
     <body>
         <style>
             html, body, #main {
+                background: #111;
                 width: 100%;
                 height: 100%;
                 margin: 0;
@@ -21,7 +22,8 @@
         var xs = [440000, 450000];
         var ys = [4368000, 4537000];
 
-        var dataURL = '../../data-online/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
+        var dataURL = '../../echarts-worker/example/data/links_ny.bin';
+        // var dataURL = '../../echarts-worker/example/data/Links_NewYork_1.json';
         // var dataURL = 'http://echarts.baidu.com/resource/data/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
 
 
@@ -33,21 +35,41 @@
             // 'extension/bmap'
         ], function (echarts) {
 
+            var config = {
+                dataLoading: 'whole',
+                streamThreshold: 0,
+                streamRender: true,
+                largeModel: true
+            };
+
             $.get('../map/json/world.json', function (worldJson) {
                 echarts.registerMap('world', worldJson);
 
                 // echarts.registerMap('test', testGeoJson1);
 
                 // $.get('data/Links_Beijing_0.json', function (data) {
-                $.get(dataURL, function (data) {
-                    var config = {
-                        dataLoading: 'whole',
-                        streamThreshold: 0,
-                        streamRender: true,
-                        largeModel: true
-                    };
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', dataURL, true);
+                xhr.responseType = 'arraybuffer';
 
+                xhr.onload = function (e) {
+                    var rawData = new Float32Array(this.response);
                     var chart;
+
+                    var data = new Float64Array(rawData.length - 2);
+                    var offsetX = rawData[0];
+                    var offsetY = rawData[1];
+                    var off = 0;
+                    for (var i = 2; i < rawData.length;) {
+                        var count = rawData[i++];
+                        data[off++] = count;
+                        for (var k = 0; k < count; k++) {
+                            var x = rawData[i++] + offsetX;
+                            var y = rawData[i++] + offsetY;
+                            data[off++] = x;
+                            data[off++] = y;
+                        }
+                    }
 
                     var gui = new dat.GUI();
                     gui.add(config, 'dataLoading', ['whole', 'chunked'])
@@ -68,61 +90,35 @@
 
                         chart = echarts.init(document.getElementById('main'));
 
-                        var lines = data.geometries.map(function (entry) {
-                            return {
-                                coords: entry.coordinates
-                            };
-                        });
-
-                        // var lines = [];
-                        // for (var i = 0; i < 1000; i++) {
-                        //     var entry = data.geometries[i];
-                        //     lines.push({
-                        //         coords: entry.coordinates
-                        //     });
-                        // }
 
                         chart.setOption({
-                            streamStep: 14000,
+                            streamStep: 15000,
                             animation: false,
                             geo: {
                                 center: [-74.04327099998152, 40.86737600240287],
                                 zoom: 360,
                                 map: 'world',
                                 roam: true,
-                                label: {
-                                    normal: {
-                                        show: true,
-                                        textStyle: {
-                                            color: 'rgba(0,0,0,0.4)'
-                                        }
-                                    }
-                                },
+                                silent: true,
                                 itemStyle: {
-                                    normal:{
-                                        borderColor: 'rgba(0, 0, 0, 0.2)'
-                                    },
-                                    emphasis:{
-                                        color: null,
-                                        areaColor: null,
-                                        shadowOffsetX: 0,
-                                        shadowOffsetY: 0,
-                                        shadowBlur: 20,
-                                        borderWidth: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    normal: {
+                                        areaColor: 'transparent',
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        borderWidth: 1
                                     }
                                 }
                             },
                             series: [{
                                 type: 'lines',
                                 coordinateSystem: 'geo',
-                                data: lines,
+                                data: data,
                                 large: config.largeModel,
                                 polyline: true,
+                                blendMode: 'lighter',
                                 lineStyle: {
                                     normal: {
-                                        color: 'purple',
-                                        opacity: 1,
+                                        color: 'orange',
+                                        opacity: 0.3,
                                         width: 0.5
                                     }
                                 },
@@ -130,9 +126,9 @@
                             }]
                         });
                     }
+                };
 
-                });
-
+                xhr.send();
             });
         });
 
