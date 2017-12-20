@@ -1190,9 +1190,7 @@ echartsProto.addData = function (params) {
         assert(params.data && seriesModel);
     }
 
-    var provider = seriesModel.getRawData().getProvider();
-    // .provisionTask.changeInput(params.data);
-    provider.addData(params.data);
+    seriesModel.appendData(params);
 
     this._scheduler.unfinished = true;
 };

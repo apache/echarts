@@ -34,7 +34,8 @@ function cloneChunk(originalChunk) {
 }
 
 var TRANSFERABLE_PROPERTIES = [
-    'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData', '_chunkSize', '_dimValueGetter'
+    'stackedOn', 'hasItemOption', '_nameList', '_idList',
+    '_rawData', '_chunkSize', '_dimValueGetter', '_count'
 ];
 
 function transferProperties(a, b) {
@@ -452,10 +453,17 @@ listProto._initDataFromProvider = function (start, end) {
             storage[dim][chunkIndex] = newStore;
         }
 
-        // Create new chunks
-        for (var k = volume; k < end; k += chunkSize) {
-            storage[dim][this._chunkCount++] = new DataCtor(Math.min(end - k, chunkSize));
+    }
+
+    // Create new chunks
+    for (var k = volume; k < end; k += chunkSize) {
+        for (var i = 0; i < dimensions.length; i++) {
+            var dim = dimensions[i];
+            var dimInfo = dimensionInfoMap[dim];
+            var DataCtor = dataCtors[dimInfo.type];
+            storage[dim][this._chunkCount] = new DataCtor(Math.min(end - k, chunkSize));
         }
+        this._chunkCount++;
     }
 
     for (var idx = start; idx < end; idx++) {
@@ -504,6 +512,9 @@ listProto._initDataFromProvider = function (start, end) {
             id != null && (idList[idx] = id);
         }
     }
+
+
+    this._count = end;
 };
 
 /**
