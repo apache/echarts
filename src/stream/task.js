@@ -107,7 +107,7 @@ function progress(taskIns, performInfo) {
     var start = taskIns._dueIndex;
     var end = Math.min(
         step != null ? start + step : Infinity,
-        taskIns._dueEnd,
+        taskIns._upstream ? taskIns._dueEnd : Infinity,
         taskIns._count ? taskIns._count(taskIns.context) : Infinity
     );
 

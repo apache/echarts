@@ -174,6 +174,13 @@ var SeriesModel = ComponentModel.extend({
     getInitialData: function () {},
 
     /**
+     * Append data to list
+     */
+    appendData: function (parmas) {
+        this.getRawData().appendData(parmas.data);
+    },
+
+    /**
      * @param {string} [dataType]
      * @return {module:echarts/data/List}
      */
@@ -378,16 +385,14 @@ zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
 function dataInitTaskCount(context) {
-    return context.model.getRawData().count();
+    return context.model.getRawData().getProvider().count();
 }
 
 function dataInitTaskReset(context) {
     return {finished: true};
 }
 
-function dataInitTaskProgress(taskParams, context) {
-    context.model.getRawData().initFromRawData(taskParams.dueIndex, taskParams.dueEnd);
-}
+function dataInitTaskProgress(taskParams, context) {}
 
 function dataRestoreTaskReset(context) {
     var model = context.model;
