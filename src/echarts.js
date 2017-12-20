@@ -272,7 +272,8 @@ echartsProto._onframe = function () {
 
             scheduler.performSeriesTasks(ecModel);
 
-            scheduler.performStageTasks(dataProcessorFuncs, ecModel, null, {dontCheckThreshold: true});
+            // Currently dataProcessorFuncs do not check threshold.
+            scheduler.performStageTasks(dataProcessorFuncs, ecModel);
 
             // ???! coordSys create
             // this._coordSysMgr.update();

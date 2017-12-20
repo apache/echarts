@@ -2,11 +2,11 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, isFunction, createHashMap, noop, extend} from 'zrender/src/core/util';
+import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
-import SeriesModel from '../model/Series';
+import ExtensionAPI from '../ExtensionAPI';
 // import arrayEqual from '../util/array/equal';
 
 /**
@@ -44,7 +44,7 @@ proto.getPerformInfo = function (task, seriesModel) {
 
     var pipeline = this._pipelineMap.get(task.__pipelineId);
     if (seriesModel && pipeline.thresholdFail == null) {
-        // ??? when to reset thresholdFail?
+        // It is OK not to erase the `thresholdFile` if data not changed.
         pipeline.thresholdFail = seriesModel.getData().count() < pipeline.threshold;
     }
     var incremental = pipeline.incremental
@@ -80,46 +80,17 @@ proto.restorePipelines = function (ecModel) {
 };
 
 proto.prepareStageTasks = function (stageHandlers, useClearVisual) {
-    each(stageHandlers, function (stageHandler) {
-        prepareStageHandler(this, stageHandler, this._stageTaskMap, this.ecInstance.getModel(), this.api);
+    var stageTaskMap = this._stageTaskMap;
+    var ecModel = this.ecInstance.getModel();
+    var api = this.api;
+
+    each(stageHandlers, function (handler) {
+        var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, []);
+
+        handler.reset && createSeriesStageTask(this, handler, record, ecModel, api);
+        handler.overallReset && createOverallStageTask(this, handler, record, ecModel, api);
     }, this);
 };
-
-function prepareStageHandler(scheduler, stageHandler, stageTaskMap, ecModel, api) {
-    var handlerUID = stageHandler.uid;
-    var stageHandlerRecord = stageTaskMap.get(handlerUID) || stageTaskMap.set(handlerUID, []);
-
-    if (stageHandler.reset) {
-        createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api);
-    }
-    // else if (stageHandler.execute && stageHandler.getTargetSeries) {
-    //     // ???!
-    //     // Just listen to axis setting.
-    //     stageHandlerRecord.upstreamShouldFinished = true;
-
-    //     var originalModelUIDs = stageHandlerRecord.modelUIDs;
-    //     var modelUIDs = stageHandlerRecord.modelUIDs = stageHandler.getTargetModelUIDs();
-
-    //     if (!arrayEqual(originalModelUIDs, modelUIDs)) {
-    //         var originalOverallTask = stageHandlerRecord.overallTask;
-    //         originalOverallTask && originalOverallTask.dispose();
-
-    //         var overallTask = stageHandlerRecord.overallTask = createTask({
-    //             progress: stageHandler.legacyFunc
-    //         });
-
-    //         var modelUIDMap = createHashMap(modelUIDs);
-    //         pipelineTails.each(function (tailTask, seriesUID) {
-    //             if (modelUIDMap.get(seriesUID)) {
-    //                 tailTask.pipe(overallTask);
-    //             }
-    //         });
-    //     }
-    // }
-    else if (stageHandler.legacyFunc) {
-        createLegacyStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api);
-    }
-}
 
 proto.prepareView = function (view, model, ecModel, api) {
     var renderTask = view.renderTask;
@@ -137,7 +108,6 @@ proto.prepareView = function (view, model, ecModel, api) {
 // opt
 // opt.visualType: 'visual' or 'layout'
 // opt.setDirty
-// opt.dontCheckThreshold
 proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
     opt = opt || {};
     var unfinished;
@@ -237,10 +207,9 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
                 model: seriesModel,
                 ecModel: ecModel,
                 api: api,
-                useClearVisual: stageHandler.isVisual && !stageHandler.isLayout
+                useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
+                reset: stageHandler.reset
             });
-            task.__handlerReset = stageHandler.reset;
-
             seriesTaskMap.set(pipelineId, task);
         }
         pipe(scheduler, seriesModel, task);
@@ -255,20 +224,29 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
     });
 }
 
-function createLegacyStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
+function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
         || createTask(
-            {reset: legacyTaskReset},
-            {ecModel: ecModel, api: api, legacyFunc: stageHandler.legacyFunc}
+            {reset: overallTaskReset},
+            {ecModel: ecModel, api: api, overallReset: stageHandler.overallReset}
         );
 
+    // The overall stage task process more then one seires. We simply create stubs
+    // for each pipeline to represent the overall task.
     // Reuse orignal stubs.
     var stubs = overallTask.agentStubs = overallTask.agentStubs || [];
     var stubIndex = 0;
-    ecModel.eachRawSeries(function (seriesModel) {
+    // If no series type detected, we do not set overallTask block. Otherwise the
+    // progressive rendering of all pipelines will be disabled unexpectedly.
+    // Moreover, it is not necessary to add stub to pipeline in the case.
+    var seriesType = stageHandler.seriesType;
+    seriesType && ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
         var stub = stubs[stubIndex] = stubs[stubIndex] || createTask({reset: emptyTaskReset});
         stubIndex++;
         stub.agent = overallTask;
+        stub.__block = true;
+
+        // ???! sequence of call should be caution (when to set dirty), so move it to task.js?
         pipe(scheduler, seriesModel, stub);
     });
     stubs.length = stubIndex;
@@ -278,8 +256,8 @@ function emptyTaskReset() {
     return {noProgress: true};
 }
 
-function legacyTaskReset(context) {
-    context.legacyFunc(context.ecModel, context.api, context.payload);
+function overallTaskReset(context) {
+    context.overallReset(context.ecModel, context.api, context.payload);
     return {noProgress: true};
 }
 
@@ -287,26 +265,26 @@ function seriesTaskReset(context) {
     if (context.useClearVisual) {
         context.model.getData().clearAllVisual();
     }
-    var resetDefine = this.__handlerReset(
-        context.model, context.ecModel, context.api
+    var resetDefine = context.reset(
+        context.model, context.ecModel, context.api, context.payload
     );
     if (!resetDefine) {
         return {noProgress: true};
     }
-    this.__dataEach = resetDefine.dataEach;
-    this.__progress = resetDefine.progress;
+    context.dataEach = resetDefine.dataEach;
+    context.progress = resetDefine.progress;
 }
 
 function seriesTaskProgress(params, context) {
     var data = context.model.getData();
     if (data) {
-        if (this.__dataEach) {
+        if (context.dataEach) {
             for (var i = params.start; i < params.end; i++) {
-                this.__dataEach(data, i);
+                context.dataEach(data, i);
             }
         }
-        else if (this.__progress) {
-            this.__progress(params, data);
+        else if (context.progress) {
+            context.progress(params, data);
         }
     }
 }
@@ -327,8 +305,8 @@ function pipe(scheduler, seriesModel, task) {
 Scheduler.wrapStageHandler = function (stageHandler, visualType) {
     if (isFunction(stageHandler)) {
         stageHandler = {
-            legacyFunc: stageHandler,
-            // seriesType: detectSeriseType(stageHandler)
+            overallReset: stageHandler,
+            seriesType: detectSeriseType(stageHandler)
         };
     }
 
@@ -338,12 +316,39 @@ Scheduler.wrapStageHandler = function (stageHandler, visualType) {
     return stageHandler;
 };
 
-// var fakeSeriesModel = extend({}, SeriesModel.prototype);
-
+/**
+ * Only some legacy stage handlers (usually in echarts extensions) are pure function.
+ * To ensure that they can work normally, they should work in block mode, that is,
+ * they should not be started util the previous tasks finished. So they cause the
+ * progressive rendering disabled. We try to detect the series type, to narrow down
+ * the block range to only the series type they concern, but not all series.
+ */
 function detectSeriseType(legacyFunc) {
-
+    seriesType = null;
+    try {
+        // Assume there is no async when calling `eachSeriesByType`.
+        legacyFunc(ecModelMock, apiMock);
+    }
+    catch (e) {
+    }
+    return seriesType;
 }
 
+var ecModelMock = {};
+var apiMock = {};
+var seriesType;
 
+mockMethods(ecModelMock, GlobalModel);
+mockMethods(apiMock, ExtensionAPI);
+ecModelMock.eachSeriesByType = ecModelMock.eachRawSeriesByType = function seriesByTypeGetter(type) {
+    seriesType = type;
+};
+
+function mockMethods(target, Clz) {
+    for (var name in Clz.prototype) {
+        // Do not use hasOwnProperty
+        target[name] = noop;
+    }
+}
 
 export default Scheduler;

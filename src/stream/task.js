@@ -40,6 +40,10 @@ taskProto.perform = function (performInfo, contextOnReset) {
 
 taskProto.dirty = function () {
     this._dirty = true;
+    this.agentStubs && each(this.agentStubs, function (stub) {
+        stub._dirty = true;
+    });
+    this.agent && (this.agent._dirty = true);
 };
 
 taskProto.plan = function () {
@@ -150,7 +154,7 @@ taskProto.pipe = function (downTask) {
     }
 
     // If already downstream, do not dirty downTask.
-    if (this._downstream !== downTask) {
+    if (this._downstream !== downTask || this._dirty) {
         this._downstream = downTask;
         downTask._upstream = this;
 

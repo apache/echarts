@@ -147,6 +147,7 @@ var SeriesModel = ComponentModel.extend({
         }
 
         var data = this.getInitialData(newSeriesOption, ecModel);
+        // ??? set dirty on ecModel, becusue it will call mergeOption({})?
         this.dataInitTask.dirty();
 
         inner(this).dataBeforeProcessed = data;

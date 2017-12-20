@@ -1,4 +1,4 @@
-import {bind, each} from 'zrender/src/core/util';
+import {each} from 'zrender/src/core/util';
 import Group from 'zrender/src/container/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
@@ -22,8 +22,8 @@ function Chart() {
     this.uid = componentUtil.getUID('viewChart');
 
     this.renderTask = createTask({
-        reset: bind(this.renderTaskReset, this),
-        progress: bind(this.renderTaskProgress, this)
+        reset: renderTaskReset,
+        progress: renderTaskProgress
     }, {view: this});
 }
 
@@ -84,50 +84,6 @@ Chart.prototype = {
      * @param  {module:echarts/ExtensionAPI} api
      */
     dispose: function () {},
-
-    /**
-     * @protected
-     */
-    renderTaskReset: function (context) {
-        var seriesModel = context.model;
-        var ecModel = context.ecModel;
-        var api = context.api;
-        var payload = context.payload;
-        // ???! remove updateView updateVisual
-        var incremental = context.incremental;
-
-        if (inner(this).incremental ^ incremental) {
-            this.remove(ecModel, api);
-        }
-        inner(this).incremental = incremental;
-
-        var updateMethod = payload && inner(payload).updateMethod;
-        var methodName = incremental
-            ? ((updateMethod && this.incrementalPrepareLayout)
-                ? 'incrementalPrepareLayout' : 'incrementalPrepareRender'
-            )
-            : ((updateMethod && this[updateMethod])
-                ? updateMethod : 'render'
-            );
-
-        return this[methodName](seriesModel, ecModel, api, payload)
-            || (!incremental && {noProgress: true});
-    },
-
-    /**
-     * @protected
-     */
-    renderTaskProgress: function (params, context) {
-        var seriesModel = context.model;
-        var ecModel = context.ecModel;
-        var api = context.api;
-        var payload = context.payload;
-        var updateMethod = payload && inner(payload).updateMethod;
-        var methodName = (updateMethod && this.incrementalLayout)
-            ? 'incrementalLayout' : 'incrementalRender';
-
-        this[methodName](params, seriesModel, ecModel, api, payload);
-    },
 
     incrementalPrepareRender: null,
 
@@ -200,5 +156,46 @@ clazzUtil.enableClassManagement(Chart, {registerWhenExtend: true});
 Chart.markUpdateMethod = function (payload, methodName) {
     inner(payload).updateMethod = methodName;
 };
+
+function renderTaskReset(context) {
+    var seriesModel = context.model;
+    var ecModel = context.ecModel;
+    var api = context.api;
+    var payload = context.payload;
+    // ???! remove updateView updateVisual
+    var incremental = context.incremental;
+    var view = context.view;
+
+    if (inner(view).incremental ^ incremental) {
+        view.remove(ecModel, api);
+    }
+    inner(view).incremental = incremental;
+
+    var updateMethod = payload && inner(payload).updateMethod;
+    var methodName = incremental
+        ? ((updateMethod && view.incrementalPrepareLayout)
+            ? 'incrementalPrepareLayout' : 'incrementalPrepareRender'
+        )
+        : ((updateMethod && view[updateMethod])
+            ? updateMethod : 'render'
+        );
+
+    return view[methodName](seriesModel, ecModel, api, payload)
+        || (!incremental && {noProgress: true});
+}
+
+function renderTaskProgress(params, context) {
+    var view = context.view;
+    var seriesModel = context.model;
+    var ecModel = context.ecModel;
+    var api = context.api;
+    var payload = context.payload;
+    var updateMethod = payload && inner(payload).updateMethod;
+    var methodName = (updateMethod && view.incrementalLayout)
+        ? 'incrementalLayout' : 'incrementalRender';
+
+    view[methodName](params, seriesModel, ecModel, api, payload);
+}
+
 
 export default Chart;
