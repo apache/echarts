@@ -13,7 +13,7 @@ export default SeriesModel.extend({
         var coordSys = this.coordinateSystem;
         if (coordSys) {
             // PENDING if clamp ?
-            var pt = coordSys.dataToPoint(value, true);
+            var pt = coordSys.dataToPoint(coordSys.clampData(value));
             var data = this.getData();
             var offset = data.getLayout('offset');
             var size = data.getLayout('size');
