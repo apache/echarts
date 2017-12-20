@@ -32,8 +32,8 @@ function Task(define, context) {
 
 var taskProto = Task.prototype;
 
-taskProto.perform = function (performInfo, contextOnReset) {
-    this.plan(contextOnReset);
+taskProto.perform = function (performInfo) {
+    this.plan();
     progress(this, performInfo);
     return this.unfinished();
 };

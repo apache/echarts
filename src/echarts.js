@@ -281,7 +281,7 @@ echartsProto._onframe = function () {
             // console.log('------------- ec frame visual -------------', remainTime);
             scheduler.performStageTasks(visualFuncs, ecModel);
 
-            performRender(this, this._model, this._api);
+            performRender(this, this._model, this._api, 'none');
 
             remainTime -= (+new Date() - startTime);
         }
@@ -1351,7 +1351,7 @@ function performRender(ecIns, ecModel, api, payload, isReset) {
 
         var renderTask = chartView.renderTask;
         var performInfo = scheduler.getPerformInfo(renderTask, seriesModel);
-        renderTask.context.payload = payload;
+        payload !== 'none' && (renderTask.context.payload = payload);
         renderTask.context.incremental = performInfo.incremental;
         unfinished |= renderTask.perform(performInfo);
         // chartView.render(seriesModel, ecModel, api, payload);
