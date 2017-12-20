@@ -42,7 +42,7 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 }
             }
 
-            return {dataEach: dataEach};
+            return { dataEach: data.hasItemOption ? dataEach : null };
         }
     };
 }
