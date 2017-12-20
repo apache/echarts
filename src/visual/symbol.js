@@ -21,6 +21,8 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 return;
             }
 
+            var hasCallback = typeof symbolSize === 'function';
+
             function dataEach(data, idx) {
                 if (typeof symbolSize === 'function') {
                     var rawValue = seriesModel.getRawValue(idx);
@@ -29,20 +31,22 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                     data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
                 }
 
-                var itemModel = data.getItemModel(idx);
-                var itemSymbolType = itemModel.getShallow('symbol', true);
-                var itemSymbolSize = itemModel.getShallow('symbolSize', true);
-                // If has item symbol
-                if (itemSymbolType != null) {
-                    data.setItemVisual(idx, 'symbol', itemSymbolType);
-                }
-                if (itemSymbolSize != null) {
-                    // PENDING Transform symbolSize ?
-                    data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+                if (data.hasItemOption) {
+                    var itemModel = data.getItemModel(idx);
+                    var itemSymbolType = itemModel.getShallow('symbol', true);
+                    var itemSymbolSize = itemModel.getShallow('symbolSize', true);
+                    // If has item symbol
+                    if (itemSymbolType != null) {
+                        data.setItemVisual(idx, 'symbol', itemSymbolType);
+                    }
+                    if (itemSymbolSize != null) {
+                        // PENDING Transform symbolSize ?
+                        data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+                    }
                 }
             }
 
-            return { dataEach: data.hasItemOption ? dataEach : null };
+            return { dataEach: (data.hasItemOption || hasCallback) ? dataEach : null };
         }
     };
 }
