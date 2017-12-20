@@ -1307,16 +1307,6 @@ listProto.cloneShallow = function () {
     return list;
 };
 
-// ??? temporarily
-listProto.$releaseItemMemory = function (idx) {
-    if (this._itemLayouts) {
-        this._itemLayouts[idx] = null;
-    }
-    if (this._itemVisuals) {
-        this._itemVisuals[idx] = null;
-    }
-};
-
 /**
  * Wrap some method to add more feature
  * @param {string} methodName

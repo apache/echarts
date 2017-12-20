@@ -101,7 +101,6 @@ lineDrawProto.incrementalRender = function (taskParams, lineData) {
         if (lineNeedsDraw(itemLayout)) {
             var el = new this._ctor(lineData, idx, this._seriesScope);
             this._incremental.addDisplayable(el, true);
-            this.$releaseItemMemory(idx);
         }
     }
 };
