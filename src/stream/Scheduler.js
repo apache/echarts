@@ -69,7 +69,7 @@ proto.restorePipelines = function (ecModel) {
             incremental: seriesModel.get('progressive')
                 && !(seriesModel.banIncremental && seriesModel.banIncremental()),
             bockIndex: -1,
-            step: seriesModel.get('progressiveStep') || 700, // ??? Temporarily number
+            step: seriesModel.get('progressive') || 700, // ??? Temporarily number
             count: 2
         });
 
