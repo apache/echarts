@@ -43,8 +43,7 @@ proto.getPerformInfo = function (task, seriesModel) {
     }
 
     var pipeline = this._pipelineMap.get(task.__pipelineId);
-    if (seriesModel && pipeline.thresholdFail == null) {
-        // It is OK not to erase the `thresholdFile` if data not changed.
+    if (seriesModel) {
         pipeline.thresholdFail = seriesModel.getData().count() < pipeline.threshold;
     }
     var incremental = pipeline.incremental
