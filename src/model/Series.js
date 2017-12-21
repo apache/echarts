@@ -66,20 +66,14 @@ var SeriesModel = ComponentModel.extend({
 
         // this.settingTask = createTask();
 
-        this.dataInitTask = createTask({
-            reset: dataInitTaskReset,
-            count: dataInitTaskCount,
-            progress: dataInitTaskProgress
-        }, {model: this});
-
-        this.dataRestoreTask = createTask({
-            reset: dataRestoreTaskReset
+        this.initTask = createTask({
+            reset: initTaskReset,
+            count: initTaskCount
         }, {model: this});
 
         this.mergeDefaultAndTheme(option, ecModel);
 
         var data = this.getInitialData(option, ecModel);
-        this.dataInitTask.dirty();
 
         if (__DEV__) {
             zrUtil.assert(data, 'getInitialData returned invalid data.');
@@ -148,7 +142,7 @@ var SeriesModel = ComponentModel.extend({
 
         var data = this.getInitialData(newSeriesOption, ecModel);
         // ??? set dirty on ecModel, becusue it will call mergeOption({})?
-        this.dataInitTask.dirty();
+        this.initTask.dirty();
 
         inner(this).dataBeforeProcessed = data;
     },
@@ -177,7 +171,8 @@ var SeriesModel = ComponentModel.extend({
      * Append data to list
      */
     appendData: function (parmas) {
-        this.getRawData().appendData(parmas.data);
+        var data = this.getRawData();
+        data.appendData(parmas.data);
     },
 
     /**
@@ -336,8 +331,9 @@ var SeriesModel = ComponentModel.extend({
         return animationEnabled;
     },
 
-    restoreData: function () {
-        this.dataRestoreTask.dirty();
+    restoreData: function (notDirty) {
+        this.setData(this.getRawData().cloneShallow());
+        !notDirty && this.initTask.dirty();
     },
 
     getColorFromPalette: function (name, scope) {
@@ -384,19 +380,11 @@ var SeriesModel = ComponentModel.extend({
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
-function dataInitTaskCount(context) {
+function initTaskCount(context) {
     return context.model.getRawData().getProvider().count();
 }
 
-function dataInitTaskReset(context) {
-    return {finished: true};
-}
-
-function dataInitTaskProgress(taskParams, context) {}
-
-function dataRestoreTaskReset(context) {
-    var model = context.model;
-    model.setData(model.getRawData().cloneShallow());
+function initTaskReset(context) {
     return {noProgress: true};
 }
 

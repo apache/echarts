@@ -1191,6 +1191,7 @@ echartsProto.addData = function (params) {
     }
 
     seriesModel.appendData(params);
+    seriesModel.restoreData(true);
 
     this._scheduler.unfinished = true;
 };

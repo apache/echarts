@@ -38,7 +38,7 @@
 
             var config = {
                 dataLoading: 'whole',
-                progressive: true,
+                progressive: 40000,
                 progressiveThreshold: 3000,
                 largeModel: true
             };
@@ -91,7 +91,6 @@
 
 
                         chart.setOption({
-                            progressiveStep: 40000,
                             animation: false,
                             geo: {
                                 center: [-74.04327099998152, 40.86737600240287],

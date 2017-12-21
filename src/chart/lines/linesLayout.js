@@ -29,7 +29,7 @@ export default {
                         points[offset++] = len;
                     }
                     for (var k = 0; k < len; k++) {
-                        coordSys.dataToPoint(lineCoords[k], pt);
+                        pt = coordSys.dataToPoint(lineCoords[k], pt);
                         points[offset++] = pt[0];
                         points[offset++] = pt[1];
                     }

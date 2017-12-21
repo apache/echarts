@@ -32,26 +32,18 @@ function Task(define, context) {
 
 var taskProto = Task.prototype;
 
-taskProto.perform = function (performInfo) {
-    this.plan();
-    progress(this, performInfo);
-    return this.unfinished();
-};
-
-taskProto.dirty = function () {
-    this._dirty = true;
-    this.agentStubs && each(this.agentStubs, function (stub) {
-        stub._dirty = true;
-    });
-    this.agent && (this.agent._dirty = true);
-};
-
-taskProto.plan = function () {
-    var finishedAfterReset;
+/**
+ * @param {Object} performArgs
+ * @param {number} [performArgs.step] Specified step.
+ * @param {number} [performArgs.skip] Skip customer perform call.
+ */
+taskProto.perform = function (performArgs) {
     if (this._dirty) {
         this._dirty = false;
-        finishedAfterReset = reset(this);
+        reset(this);
     }
+
+    var step = performArgs && performArgs.step;
 
     // This should always be performed so it can be passed to downstream.
     var upTask = this._upstream;
@@ -64,14 +56,53 @@ taskProto.plan = function () {
     }
 
     // If noProgress, pass index from upstream to downstream each time plan called.
-    if (finishedAfterReset || this._noProgress) {
-        this._dueIndex = this._outputDueEnd = this._dueEnd;
+    if (this._noProgress) {
+        this._dueIndex = this._outputDueEnd = this._dueEnd = count(this);
+    }
+    else {
+        if (__DEV__) {
+            assert(upTask || this._count);
+        }
+
+        var start = this._dueIndex;
+        var end = Math.min(
+            step != null ? this._dueIndex + step : Infinity,
+            upTask ? this._dueEnd : Infinity,
+            this._count ? this._count(this.context) : Infinity
+        );
+
+        var outputDueEnd;
+        !(performArgs && performArgs.skip) && start < end && (
+            outputDueEnd = this._progress({start: start, end: end}, this.context)
+        );
+
+        this._dueIndex = end;
+        // If no `outputDueEnd`, assume that output data and
+        // input data is the same, so use `dueIndex` as `outputDueEnd`.
+        if (outputDueEnd == null) {
+            outputDueEnd = end;
+        }
+        if (__DEV__) {
+            // ??? Can not rollback.
+            assert(outputDueEnd >= this._outputDueEnd);
+        }
+        this._outputDueEnd = outputDueEnd;
     }
 
     // Initialized in scheduler.
     each(this.agentStubs, function (agentStub) {
-        agentStub.plan();
+        agentStub.perform(performArgs);
     });
+
+    return this.unfinished();
+};
+
+taskProto.dirty = function () {
+    this._dirty = true;
+    this.agentStubs && each(this.agentStubs, function (stub) {
+        stub._dirty = true;
+    });
+    this.agent && (this.agent._dirty = true);
 };
 
 /**
@@ -79,7 +110,7 @@ taskProto.plan = function () {
  */
 function reset(taskIns) {
     taskIns._dueIndex = taskIns._outputDueEnd = 0;
-    taskIns._dueEnd = taskIns._count ? taskIns._count(taskIns.context) : 0;
+    taskIns._dueEnd = count(taskIns);
 
     var result = taskIns._reset && taskIns._reset(taskIns.context) || {};
 
@@ -88,45 +119,10 @@ function reset(taskIns) {
     taskIns._downstream && taskIns._downstream.dirty();
     // FIXME
     taskIns.agent && taskIns.agent.dirty();
-
-    return result.finished;
 }
 
-/**
- * @param {Object} performInfo
- * @param {number} [performInfo.step] Specified step.
- * @param {number} [performInfo.skip] Skip customer perform call.
- */
-function progress(taskIns, performInfo) {
-    var step = performInfo && performInfo.step;
-
-    if (taskIns._noProgress) {
-        return;
-    }
-
-    var start = taskIns._dueIndex;
-    var end = Math.min(
-        step != null ? start + step : Infinity,
-        taskIns._upstream ? taskIns._dueEnd : Infinity,
-        taskIns._count ? taskIns._count(taskIns.context) : Infinity
-    );
-
-    var outputDueEnd;
-    !(performInfo && performInfo.skip) && start < end && (
-        outputDueEnd = taskIns._progress({start: start, end: end}, taskIns.context)
-    );
-
-    taskIns._dueIndex = end;
-    // If no `outputDueEnd`, assume that output data and
-    // input data is the same, so use `dueIndex` as `outputDueEnd`.
-    if (outputDueEnd == null) {
-        outputDueEnd = end;
-    }
-    if (__DEV__) {
-        // ??? Can not rollback.
-        assert(outputDueEnd >= taskIns._outputDueEnd);
-    }
-    taskIns._outputDueEnd = outputDueEnd;
+function count(taskIns) {
+    return taskIns._count ? taskIns._count(taskIns.context) : 0;
 }
 
 taskProto.getProgressInfo = function () {
