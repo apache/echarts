@@ -781,7 +781,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
         scheduler.performStageTasks(visualFuncs, ecModel, payload);
 
-        render(this, ecModel, api, payload, true);
+        render(this, ecModel, api, payload);
 
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -864,7 +864,7 @@ var updateMethods = {
             visualFuncs, ecModel, payload, {setDirty: true, seriesModels: seriesModels}
         );
 
-        render(this, ecModel, this._api, payload, true, seriesModels);
+        renderSeries(this, ecModel, this._api, payload, seriesModels);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -888,7 +888,7 @@ var updateMethods = {
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
-        render(this, this._model, this._api, payload, true);
+        render(this, this._model, this._api, payload);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -912,7 +912,7 @@ var updateMethods = {
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
 
-        render(this, this._model, this._api, payload, true);
+        render(this, this._model, this._api, payload);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -935,7 +935,7 @@ var updateMethods = {
         // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
         this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
-        render(this, this._model, this._api, payload, true);
+        render(this, this._model, this._api, payload);
 
         performPostUpdateFuncs(ecModel, this._api);
     }
@@ -1362,25 +1362,34 @@ function clearColorPalette(ecModel) {
     });
 }
 
+function render(ecIns, ecModel, api, payload) {
+    // Render all components
+    each(ecIns._componentsViews, function (componentView) {
+        var componentModel = componentView.__model;
+        componentView.render(componentModel, ecModel, api, payload);
+
+        updateZ(componentModel, componentView);
+    });
+
+    each(ecIns._chartsViews, function (chart) {
+        chart.__alive = false;
+    });
+
+    renderSeries(ecIns, ecModel, api, payload);
+
+    // Remove groups of unrendered charts
+    each(ecIns._chartsViews, function (chart) {
+        if (!chart.__alive) {
+            chart.remove(ecModel, api);
+        }
+    });
+}
+
 /**
  * Render each chart and component
  * @private
  */
-function render(ecIns, ecModel, api, payload, isReset, seriesModels) {
-    if (isReset) {
-        // Render all components
-        each(ecIns._componentsViews, function (componentView) {
-            var componentModel = componentView.__model;
-            componentView.render(componentModel, ecModel, api, payload);
-
-            updateZ(componentModel, componentView);
-        });
-
-        each(ecIns._chartsViews, function (chart) {
-            chart.__alive = false;
-        });
-    }
-
+function renderSeries(ecIns, ecModel, api, payload, seriesModels) {
     // Render all charts
     var scheduler = ecIns._scheduler;
     var unfinished;
@@ -1406,15 +1415,6 @@ function render(ecIns, ecModel, api, payload, isReset, seriesModels) {
 
     // If use hover layer
     // ??? updateHoverLayerStatus(this._zr, ecModel);
-
-    if (isReset) {
-        // Remove groups of unrendered charts
-        each(ecIns._chartsViews, function (chart) {
-            if (!chart.__alive) {
-                chart.remove(ecModel, api);
-            }
-        });
-    }
 }
 
 function performPostUpdateFuncs(ecModel, api) {

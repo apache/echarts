@@ -1,5 +1,4 @@
-
-import {assert, extend, each} from 'zrender/src/core/util';
+import {assert, each} from 'zrender/src/core/util';
 import { __DEV__ } from '../config';
 
 /**
@@ -13,7 +12,6 @@ export function createTask(define, context) {
 /**
  * @constructor
  * @param {Object} define
- * @param {Function} define.progress Custom progress
  * @param {Function} define.reset Custom reset
  * @param {Function} [define.count] count is used to determin data task.
  * @param {Object} [context]
@@ -21,7 +19,6 @@ export function createTask(define, context) {
 function Task(define, context) {
     define = define || {};
 
-    this._progress = define.progress;
     this._reset = define.reset;
     this._count = define.count;
 
@@ -45,30 +42,26 @@ taskProto.perform = function (performArgs) {
 
     var step = performArgs && performArgs.step;
 
-    // This should always be performed so it can be passed to downstream.
     var upTask = this._upstream;
     if (upTask) {
-        var progressInfo = upTask.getProgressInfo();
         if (__DEV__) {
-            assert(progressInfo.outputDueEnd != null);
+            assert(upTask._outputDueEnd != null);
         }
-        this._dueEnd = Math.max(progressInfo.outputDueEnd, this._dueEnd);
-    }
-
-    // If noProgress, pass index from upstream to downstream each time plan called.
-    if (this._noProgress) {
-        this._dueIndex = this._outputDueEnd = this._dueEnd = count(this);
+        this._dueEnd = Math.max(upTask._outputDueEnd, this._dueEnd);
     }
     else {
         if (__DEV__) {
-            assert(upTask || this._count);
+            assert(!this._progress || this._count);
         }
+        this._dueEnd = this._count ? this._count(this.context) : Infinity;
+    }
 
+    // If no progress, pass index from upstream to downstream each time plan called.
+    if (this._progress) {
         var start = this._dueIndex;
         var end = Math.min(
             step != null ? this._dueIndex + step : Infinity,
-            upTask ? this._dueEnd : Infinity,
-            this._count ? this._count(this.context) : Infinity
+            this._dueEnd
         );
 
         var outputDueEnd;
@@ -87,6 +80,10 @@ taskProto.perform = function (performArgs) {
             assert(outputDueEnd >= this._outputDueEnd);
         }
         this._outputDueEnd = outputDueEnd;
+    }
+    else {
+        // This should always be performed so it can be passed to downstream.
+        this._dueIndex = this._outputDueEnd = this._dueEnd;
     }
 
     // Initialized in scheduler.
@@ -109,35 +106,20 @@ taskProto.dirty = function () {
  * @param {Object} [params]
  */
 function reset(taskIns) {
-    taskIns._dueIndex = taskIns._outputDueEnd = 0;
-    taskIns._dueEnd = count(taskIns);
+    taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
 
-    var result = taskIns._reset && taskIns._reset(taskIns.context) || {};
-
-    taskIns._noProgress = result.noProgress;
+    taskIns._progress = taskIns._reset && taskIns._reset(taskIns.context);
 
     taskIns._downstream && taskIns._downstream.dirty();
     // FIXME
     taskIns.agent && taskIns.agent.dirty();
 }
 
-function count(taskIns) {
-    return taskIns._count ? taskIns._count(taskIns.context) : 0;
-}
-
-taskProto.getProgressInfo = function () {
-    return {
-        dueIndex: this._dueIndex,
-        dueEnd: this._dueEnd,
-        outputDueEnd: this._outputDueEnd
-    };
-};
-
 /**
  * @return {boolean}
  */
 taskProto.unfinished = function () {
-    return !this._noProgress && this._dueIndex < this._dueEnd;
+    return this._progress && this._dueIndex < this._dueEnd;
 };
 
 /**

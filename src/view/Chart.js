@@ -22,8 +22,7 @@ function Chart() {
     this.uid = componentUtil.getUID('viewChart');
 
     this.renderTask = createTask({
-        reset: renderTaskReset,
-        progress: renderTaskProgress
+        reset: renderTaskReset
     }, {view: this});
 }
 
@@ -200,8 +199,9 @@ function renderTaskReset(context) {
             ? updateMethod : 'render'
         );
 
-    return view[methodName](seriesModel, ecModel, api, payload)
-        || (!incremental && {noProgress: true});
+    view[methodName](seriesModel, ecModel, api, payload);
+
+    return incremental ? renderTaskProgress : null;
 }
 
 function renderTaskProgress(params, context) {

@@ -203,7 +203,6 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
         if (!task) {
             task = createTask({
                 reset: seriesTaskReset,
-                progress: seriesTaskProgress,
                 count: seriesTaskCount
             }, {
                 model: seriesModel,
@@ -243,7 +242,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     // Moreover, it is not necessary to add stub to pipeline in the case.
     var seriesType = stageHandler.seriesType;
     seriesType && ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
-        var stub = stubs[stubIndex] = stubs[stubIndex] || createTask({reset: emptyTaskReset});
+        var stub = stubs[stubIndex] = stubs[stubIndex] || createTask();
         stubIndex++;
         stub.agent = overallTask;
         stub.__block = true;
@@ -254,13 +253,8 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     stubs.length = stubIndex;
 }
 
-function emptyTaskReset() {
-    return {noProgress: true};
-}
-
 function overallTaskReset(context) {
     context.overallReset(context.ecModel, context.api, context.payload);
-    return {noProgress: true};
 }
 
 function seriesTaskReset(context) {
@@ -270,11 +264,11 @@ function seriesTaskReset(context) {
     var resetDefine = context.reset(
         context.model, context.ecModel, context.api, context.payload
     );
-    if (!resetDefine) {
-        return {noProgress: true};
+    if (resetDefine) {
+        context.dataEach = resetDefine.dataEach;
+        context.progress = resetDefine.progress;
+        return seriesTaskProgress;
     }
-    context.dataEach = resetDefine.dataEach;
-    context.progress = resetDefine.progress;
 }
 
 function seriesTaskProgress(params, context) {

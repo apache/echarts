@@ -67,7 +67,6 @@ var SeriesModel = ComponentModel.extend({
         // this.settingTask = createTask();
 
         this.initTask = createTask({
-            reset: initTaskReset,
             count: initTaskCount
         }, {model: this});
 
@@ -382,10 +381,6 @@ zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
 function initTaskCount(context) {
     return context.model.getRawData().getProvider().count();
-}
-
-function initTaskReset(context) {
-    return {noProgress: true};
 }
 
 export default SeriesModel;
