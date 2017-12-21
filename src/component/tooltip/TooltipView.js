@@ -220,7 +220,7 @@ export default echarts.extendComponentView({
     manuallyHideTip: function (tooltipModel, ecModel, api, payload) {
         var tooltipContent = this._tooltipContent;
 
-        if (!this._alwaysShowContent) {
+        if (!this._alwaysShowContent && this._tooltipModel) {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
