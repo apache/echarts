@@ -66,8 +66,9 @@ var SeriesModel = ComponentModel.extend({
 
         // this.settingTask = createTask();
 
-        this.initTask = createTask({
-            count: initTaskCount
+        this.dataTask = createTask({
+            count: dataTaskCount,
+            reset: dataTaskReset
         }, {model: this});
 
         this.mergeDefaultAndTheme(option, ecModel);
@@ -141,7 +142,7 @@ var SeriesModel = ComponentModel.extend({
 
         var data = this.getInitialData(newSeriesOption, ecModel);
         // ??? set dirty on ecModel, becusue it will call mergeOption({})?
-        this.initTask.dirty();
+        this.dataTask.dirty();
 
         inner(this).dataBeforeProcessed = data;
     },
@@ -330,9 +331,8 @@ var SeriesModel = ComponentModel.extend({
         return animationEnabled;
     },
 
-    restoreData: function (notDirty) {
-        this.setData(this.getRawData().cloneShallow());
-        !notDirty && this.initTask.dirty();
+    restoreData: function () {
+        this.dataTask.dirty();
     },
 
     getColorFromPalette: function (name, scope) {
@@ -379,8 +379,18 @@ var SeriesModel = ComponentModel.extend({
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
-function initTaskCount(context) {
+function dataTaskCount(context) {
     return context.model.getRawData().getProvider().count();
+}
+
+function dataTaskReset(context) {
+    var seriesModel = context.model;
+    seriesModel.setData(context.data = seriesModel.getRawData().cloneShallow());
+    return dataTaskProgress;
+}
+
+function dataTaskProgress(param, context) {
+    context.model.getRawData().cloneShallow(context.data);
 }
 
 export default SeriesModel;

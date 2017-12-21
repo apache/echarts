@@ -58,12 +58,12 @@ proto.restorePipelines = function (ecModel) {
     var pipelines = scheduler._pipelineMap = createHashMap();
 
     ecModel.eachSeries(function (seriesModel) {
-        var initTask = seriesModel.initTask;
+        var dataTask = seriesModel.dataTask;
         var progressive = seriesModel.get('progressive');
 
         pipelines.set(seriesModel.uid, {
-            head: initTask,
-            tail: initTask,
+            head: dataTask,
+            tail: dataTask,
             threshold: seriesModel.get('progressiveThreshold'),
             incremental: progressive
                 && !(seriesModel.banIncremental && seriesModel.banIncremental()),
@@ -72,7 +72,7 @@ proto.restorePipelines = function (ecModel) {
             count: 2
         });
 
-        initTask.__pipelineId = seriesModel.uid;
+        dataTask.__pipelineId = seriesModel.uid;
     });
 };
 
@@ -160,7 +160,7 @@ proto.performSeriesTasks = function (ecModel) {
 
     ecModel.eachSeries(function (seriesModel) {
         // Progress to the end for dataInit and dataRestore.
-        unfinished |= seriesModel.initTask.perform();
+        unfinished |= seriesModel.dataTask.perform();
     });
 
     this.unfinished |= unfinished;

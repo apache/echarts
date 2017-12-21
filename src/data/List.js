@@ -1318,9 +1318,11 @@ listProto.eachItemGraphicEl = function (cb, context) {
  * Shallow clone a new list except visual and layout properties, and graph elements.
  * New list only change the indices.
  */
-listProto.cloneShallow = function () {
-    var dimensionInfoList = zrUtil.map(this.dimensions, this.getDimensionInfo, this);
-    var list = new List(dimensionInfoList, this.hostModel);
+listProto.cloneShallow = function (list) {
+    if (!list) {
+        var dimensionInfoList = zrUtil.map(this.dimensions, this.getDimensionInfo, this);
+        list = new List(dimensionInfoList, this.hostModel);
+    }
 
     // FIXME
     list._storage = this._storage;
