@@ -1400,12 +1400,14 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
 
         var renderTask = chartView.renderTask;
         var performInfo = scheduler.getPerformInfo(renderTask, seriesModel);
-        payload !== 'none' && (renderTask.context.payload = payload);
-        renderTask.context.incremental = performInfo.incremental;
+        var renderTaskCtx = renderTask.context;
+        payload !== 'none' && (renderTaskCtx.payload = payload);
+        var incremental = performInfo.incremental;
 
-        if (dirtySeriesModels) {
+        if (dirtySeriesModels || incremental ^ renderTaskCtx.incremental) {
             renderTask.dirty();
         }
+        renderTask.context.incremental = incremental;
         unfinished |= renderTask.perform(performInfo);
 
         chartView.group.silent = !!seriesModel.get('silent');
