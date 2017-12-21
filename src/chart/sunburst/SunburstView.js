@@ -40,6 +40,11 @@ var SunburstView = ChartView.extend({
 
         renderRollUp(virtualRoot, newRoot);
 
+        if (payload && payload.highlight && payload.highlight.piece) {
+            var highlightPolicy = seriesModel.getShallow('highlightPolicy');
+            payload.highlight.piece.onEmphasis(highlightPolicy);
+        }
+
         this._initEvents();
 
         this._oldRoot = newRoot;

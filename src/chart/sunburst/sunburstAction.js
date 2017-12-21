@@ -31,3 +31,27 @@ echarts.registerAction(
         }
     }
 );
+
+
+
+var HIGHLIGHT_ACTION = 'sunburstHighlight';
+
+echarts.registerAction(
+    {type: HIGHLIGHT_ACTION, update: 'updateView'},
+    function (payload, ecModel) {
+
+        ecModel.eachComponent(
+            {mainType: 'series', subType: 'sunburst', query: payload},
+            handleHighlight
+        );
+
+        function handleHighlight(model, index) {
+            var targetInfo = helper
+                .retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
+
+            if (targetInfo) {
+                payload.highlight = targetInfo.node;
+            }
+        }
+    }
+);

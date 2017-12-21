@@ -115,6 +115,13 @@
                         }
                     }
                 });
+
+                setTimeout(function () {
+                    chart.dispatchAction({
+                        type: 'sunburstHighlight',
+                        targetNodeId: 'Cousin Jenny'
+                    });
+                }, 3000);
             });
 
         </script>

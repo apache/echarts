@@ -357,6 +357,7 @@ function updatePiece(node, state) {
         : (isHighlight ? DEFAULT_SECTOR_HIGHLIGHT_Z : DEFAULT_SECTOR_Z);
     sector.attr('z', sectorZ);
 
+    sector.stopAnimation(true);
     sector.animateTo({
         style: {
             opacity: itemModel.get('opacity') || 1
@@ -373,6 +374,7 @@ function updatePiece(node, state) {
         : (isHighlight ? DEFAULT_TEXT_HIGHLIGHT_Z : DEFAULT_TEXT_Z);
     text.attr('z', textZ);
 
+    text.stopAnimation(true);
     text.animateTo({
         style: {
             opacity: labelModel.get('opacity') || 1
