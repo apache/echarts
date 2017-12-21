@@ -169,9 +169,9 @@ var SeriesModel = ComponentModel.extend({
     /**
      * Append data to list
      */
-    appendData: function (parmas) {
+    appendData: function (params) {
         var data = this.getRawData();
-        data.appendData(parmas.data);
+        data.appendData(params.data);
     },
 
     /**
