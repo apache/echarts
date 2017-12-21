@@ -1389,11 +1389,11 @@ function render(ecIns, ecModel, api, payload) {
  * Render each chart and component
  * @private
  */
-function renderSeries(ecIns, ecModel, api, payload, seriesModels) {
+function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
     // Render all charts
     var scheduler = ecIns._scheduler;
     var unfinished;
-    seriesModels ? each(seriesModels, doEach) : ecModel.eachSeries(doEach);
+    dirtySeriesModels ? each(dirtySeriesModels, doEach) : ecModel.eachSeries(doEach);
     function doEach(seriesModel) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
@@ -1402,8 +1402,11 @@ function renderSeries(ecIns, ecModel, api, payload, seriesModels) {
         var performInfo = scheduler.getPerformInfo(renderTask, seriesModel);
         payload !== 'none' && (renderTask.context.payload = payload);
         renderTask.context.incremental = performInfo.incremental;
+
+        if (dirtySeriesModels) {
+            renderTask.dirty();
+        }
         unfinished |= renderTask.perform(performInfo);
-        // chartView.render(seriesModel, ecModel, api, payload);
 
         chartView.group.silent = !!seriesModel.get('silent');
 

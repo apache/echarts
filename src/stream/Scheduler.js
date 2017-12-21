@@ -123,12 +123,9 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
         if (overallTask) {
             if (opt.setDirty) {
                 overallTask.dirty();
-                unfinished = true;
             }
-            else {
-                overallTask.context.payload = payload;
-                unfinished |= overallTask.perform(scheduler.getPerformInfo(overallTask));
-            }
+            overallTask.context.payload = payload;
+            unfinished |= overallTask.perform(scheduler.getPerformInfo(overallTask));
         }
         else if (seriesTaskMap) {
             opt.seriesModels
