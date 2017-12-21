@@ -122,6 +122,12 @@
                         targetNodeId: 'Cousin Jenny'
                     });
                 }, 3000);
+
+                setTimeout(function () {
+                    chart.dispatchAction({
+                        type: 'sunburstUnhighlight'
+                    });
+                }, 5000);
             });
 
         </script>

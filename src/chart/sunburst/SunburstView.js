@@ -44,6 +44,15 @@ var SunburstView = ChartView.extend({
             var highlightPolicy = seriesModel.getShallow('highlightPolicy');
             payload.highlight.piece.onEmphasis(highlightPolicy);
         }
+        else if (payload && payload.unhighlight) {
+            var piece = virtualRoot.piece;
+            if (!piece && virtualRoot.children.length) {
+                piece = virtualRoot.children[0].piece;
+            }
+            if (piece) {
+                piece.onNormal();
+            }
+        }
 
         this._initEvents();
 

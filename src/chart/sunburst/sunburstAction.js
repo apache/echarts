@@ -33,7 +33,6 @@ echarts.registerAction(
 );
 
 
-
 var HIGHLIGHT_ACTION = 'sunburstHighlight';
 
 echarts.registerAction(
@@ -52,6 +51,24 @@ echarts.registerAction(
             if (targetInfo) {
                 payload.highlight = targetInfo.node;
             }
+        }
+    }
+);
+
+
+var UNHIGHLIGHT_ACTION = 'sunburstUnhighlight';
+
+echarts.registerAction(
+    {type: UNHIGHLIGHT_ACTION, update: 'updateView'},
+    function (payload, ecModel) {
+
+        ecModel.eachComponent(
+            {mainType: 'series', subType: 'sunburst', query: payload},
+            handleUnighlight
+        );
+
+        function handleUnighlight(model, index) {
+            payload.unhighlight = true;
         }
     }
 );
