@@ -214,7 +214,7 @@ gridProto.resize = function (gridModel, api, ignoreContainLabel) {
             var extent = isHorizontal ? [0, gridRect.width] : [0, gridRect.height];
             var idx = axis.inverse ? 1 : 0;
             axis.setExtent(extent[idx], extent[1 - idx]);
-            updateAxisTransfrom(axis, isHorizontal ? gridRect.x : gridRect.y);
+            updateAxisTransform(axis, isHorizontal ? gridRect.x : gridRect.y);
         });
     }
 };
@@ -535,7 +535,7 @@ gridProto.getTooltipAxes = function (dim) {
 /**
  * @inner
  */
-function updateAxisTransfrom(axis, coordBase) {
+function updateAxisTransform(axis, coordBase) {
     var axisExtent = axis.getExtent();
     var axisExtentSum = axisExtent[0] + axisExtent[1];
 

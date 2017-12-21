@@ -281,7 +281,7 @@ echartsProto._onframe = function () {
             // console.log('------------- ec frame visual -------------', remainTime);
             scheduler.performStageTasks(visualFuncs, ecModel);
 
-            performRender(this, this._model, this._api, 'none');
+            render(this, this._model, this._api, 'none');
 
             remainTime -= (+new Date() - startTime);
         }
@@ -781,7 +781,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
         scheduler.performStageTasks(visualFuncs, ecModel, payload);
 
-        performRender(this, ecModel, api, payload, true);
+        render(this, ecModel, api, payload, true);
 
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -833,6 +833,46 @@ var updateMethods = {
      * @param {Object} payload
      * @private
      */
+    updateTransform: function (payload) {
+        var ecModel = this._model;
+        var ecIns = this;
+        var api = this._api;
+
+        // update before setOption
+        if (!ecModel) {
+            return;
+        }
+
+        ChartView.markUpdateMethod(payload, 'updateTransform');
+
+        var seriesModels = [];
+        ecModel.eachSeries(function (seriesModel) {
+            var chartView = ecIns._chartsMap[seriesModel.__viewId];
+            if (chartView.updateTransform) {
+                var result = chartView.updateTransform
+                    && chartView.updateTransform(seriesModel, ecModel, api, payload);
+                result && result.update && seriesModels.push(seriesModel);
+            }
+            else {
+                seriesModels.push(seriesModel);
+            }
+        });
+
+        // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+        // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
+        this._scheduler.performStageTasks(
+            visualFuncs, ecModel, payload, {setDirty: true, seriesModels: seriesModels}
+        );
+
+        render(this, ecModel, this._api, payload, true, seriesModels);
+
+        performPostUpdateFuncs(ecModel, this._api);
+    },
+
+    /**
+     * @param {Object} payload
+     * @private
+     */
     updateView: function (payload) {
         var ecModel = this._model;
 
@@ -848,7 +888,7 @@ var updateMethods = {
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
-        performRender(this, this._model, this._api, payload, true);
+        render(this, this._model, this._api, payload, true);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -872,7 +912,7 @@ var updateMethods = {
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
 
-        performRender(this, this._model, this._api, payload, true);
+        render(this, this._model, this._api, payload, true);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -895,7 +935,7 @@ var updateMethods = {
         // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
         this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
-        performRender(this, this._model, this._api, payload, true);
+        render(this, this._model, this._api, payload, true);
 
         performPostUpdateFuncs(ecModel, this._api);
     }
@@ -1326,7 +1366,7 @@ function clearColorPalette(ecModel) {
  * Render each chart and component
  * @private
  */
-function performRender(ecIns, ecModel, api, payload, isReset) {
+function render(ecIns, ecModel, api, payload, isReset, seriesModels) {
     if (isReset) {
         // Render all components
         each(ecIns._componentsViews, function (componentView) {
@@ -1344,7 +1384,8 @@ function performRender(ecIns, ecModel, api, payload, isReset) {
     // Render all charts
     var scheduler = ecIns._scheduler;
     var unfinished;
-    ecModel.eachSeries(function (seriesModel) {
+    seriesModels ? each(seriesModels, doEach) : ecModel.eachSeries(doEach);
+    function doEach(seriesModel) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
 
@@ -1360,7 +1401,7 @@ function performRender(ecIns, ecModel, api, payload, isReset) {
         updateZ(seriesModel, chartView);
 
         // ??? updateProgressiveAndBlend(seriesModel, chartView);
-    });
+    }
     scheduler.unfinished |= unfinished;
 
     // If use hover layer

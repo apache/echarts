@@ -32,14 +32,14 @@ Chart.prototype = {
     type: 'chart',
 
     /**
-     * Init the chart
+     * Init the chart.
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
      */
     init: function (ecModel, api) {},
 
     /**
-     * Render the chart
+     * Render the chart.
      * @param  {module:echarts/model/Series} seriesModel
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
@@ -48,7 +48,7 @@ Chart.prototype = {
     render: function (seriesModel, ecModel, api, payload) {},
 
     /**
-     * Highlight series or specified data item
+     * Highlight series or specified data item.
      * @param  {module:echarts/model/Series} seriesModel
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
@@ -59,7 +59,7 @@ Chart.prototype = {
     },
 
     /**
-     * Downplay series or specified data item
+     * Downplay series or specified data item.
      * @param  {module:echarts/model/Series} seriesModel
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
@@ -70,7 +70,7 @@ Chart.prototype = {
     },
 
     /**
-     * Remove self
+     * Remove self.
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
      */
@@ -79,19 +79,39 @@ Chart.prototype = {
     },
 
     /**
-     * Dispose self
+     * Dispose self.
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
      */
     dispose: function () {},
 
+    /**
+     * Rendering preparation in progressive mode.
+     * @param  {module:echarts/model/Series} seriesModel
+     * @param  {module:echarts/model/Global} ecModel
+     * @param  {module:echarts/ExtensionAPI} api
+     * @param  {Object} payload
+     */
     incrementalPrepareRender: null,
 
+    /**
+     * Render in progressive mode.
+     * @param  {module:echarts/model/Series} seriesModel
+     * @param  {module:echarts/model/Global} ecModel
+     * @param  {module:echarts/ExtensionAPI} api
+     * @param  {Object} payload
+     */
     incrementalRender: null,
 
-    incrementalPrepareLayout: null,
-
-    incrementalLayout: null,
+    /**
+     * Update transform directly.
+     * @param  {module:echarts/model/Series} seriesModel
+     * @param  {module:echarts/model/Global} ecModel
+     * @param  {module:echarts/ExtensionAPI} api
+     * @param  {Object} payload
+     * @return {Object} {update: true}
+     */
+    updateTransform: null
 
     /**
      * The view contains the given point.
@@ -166,10 +186,10 @@ function renderTaskReset(context) {
     var incremental = context.incremental;
     var view = context.view;
 
-    if (inner(view).incremental ^ incremental) {
-        view.remove(ecModel, api);
-    }
-    inner(view).incremental = incremental;
+    // if (inner(view).incremental ^ incremental) {
+    //     view.remove(ecModel, api);
+    // }
+    // inner(view).incremental = incremental;
 
     var updateMethod = payload && inner(payload).updateMethod;
     var methodName = incremental

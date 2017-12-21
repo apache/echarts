@@ -222,7 +222,7 @@ export default TimelineView.extend({
 
         var viewRect = layoutInfo.viewRect;
         if (layoutInfo.orient === 'vertical') {
-            // transfrom to horizontal, inverse rotate by left-top point.
+            // transform to horizontal, inverse rotate by left-top point.
             var m = matrix.create();
             var rotateOriginX = viewRect.x;
             var rotateOriginY = viewRect.y + viewRect.height;

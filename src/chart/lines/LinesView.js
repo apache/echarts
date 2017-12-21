@@ -14,6 +14,8 @@ export default echarts.extendChartView({
     init: function () {},
 
     render: function (seriesModel, ecModel, api) {
+        this.remove(ecModel, api);
+
         var data = seriesModel.getData();
 
         var lineDraw = this._updateLineDraw(data, seriesModel);
@@ -65,6 +67,8 @@ export default echarts.extendChartView({
     },
 
     incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this.remove(ecModel, api);
+
         var data = seriesModel.getData();
         var lineDraw = this._updateLineDraw(data, seriesModel);
         lineDraw.incrementalPrepareRender(data);

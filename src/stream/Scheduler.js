@@ -131,13 +131,18 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
             }
         }
         else if (seriesTaskMap) {
-            stageHandler.seriesType
-                ? ecModel.eachRawSeriesByType(stageHandler.seriesType, eachSeries)
+            opt.seriesModels
+                ? each(opt.seriesModels, eachSeries)
                 : ecModel.eachRawSeries(eachSeries);
         }
 
         function eachSeries(seriesModel) {
             var task = seriesTaskMap.get(seriesModel.uid);
+
+            if (!task) {
+                return;
+            }
+
             if (opt.setDirty) {
                 task.dirty();
                 unfinished = true;

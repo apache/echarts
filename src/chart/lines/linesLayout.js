@@ -44,8 +44,8 @@ export default {
 
                     var pts = [];
                     if (isPolyline) {
-                        for (var i = 0; i < len; i++) {
-                            pts.push(coordSys.dataToPoint(lineCoords[i]));
+                        for (var j = 0; j < len; j++) {
+                            pts.push(coordSys.dataToPoint(lineCoords[j]));
                         }
                     }
                     else {
