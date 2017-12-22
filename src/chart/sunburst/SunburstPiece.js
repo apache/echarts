@@ -359,9 +359,7 @@ function updatePiece(node, state) {
 
     sector.stopAnimation(true);
     sector.animateTo({
-        style: {
-            opacity: itemModel.get('opacity') || 1
-        }
+        style: itemModel.getItemStyle()
     });
 
     // Update text
