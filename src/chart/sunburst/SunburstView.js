@@ -98,24 +98,22 @@ var SunburstView = ChartView.extend({
                         // Update
                         oldNode.piece
                             .updateData(false, newNode, seriesModel, ecModel);
-                        return;
+                    }
+                    else {
+                        // Remove
+                        removeNode(oldNode);
                     }
                 }
-                else {
-                    if (newNode) {
-                        // Add
-                        var piece = new SunburstPiece(
-                            newNode,
-                            seriesModel,
-                            ecModel
-                        );
-                        group.add(piece);
-                        return;
-                    }
+                else if (newNode) {
+                    // Add
+                    var piece = new SunburstPiece(
+                        newNode,
+                        seriesModel,
+                        ecModel
+                    );
+                    group.add(piece);
                 }
             }
-            // Remove
-            removeNode(oldNode);
         }
 
         function removeNode(node) {

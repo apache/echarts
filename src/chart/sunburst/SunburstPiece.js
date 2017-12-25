@@ -357,9 +357,19 @@ function updatePiece(node, state) {
         : (isHighlight ? DEFAULT_SECTOR_HIGHLIGHT_Z : DEFAULT_SECTOR_Z);
     sector.attr('z', sectorZ);
 
-    sector.stopAnimation(true);
+    var sectorStyle = state === 'normal'
+        ? itemModel.getItemStyle()
+        : zrUtil.merge(
+            itemModel.getItemStyle(),
+            node.getModel('itemStyle.normal').getItemStyle()
+        );
+    if (sectorStyle.opacity == null) {
+        sectorStyle.opacity = 1;
+    }
+
+    sector.stopAnimation(false);
     sector.animateTo({
-        style: itemModel.getItemStyle()
+        style: sectorStyle
     });
 
     // Update text
@@ -372,7 +382,7 @@ function updatePiece(node, state) {
         : (isHighlight ? DEFAULT_TEXT_HIGHLIGHT_Z : DEFAULT_TEXT_Z);
     text.attr('z', textZ);
 
-    text.stopAnimation(true);
+    text.stopAnimation(false);
     text.animateTo({
         style: {
             opacity: labelModel.get('opacity') || 1
