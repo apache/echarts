@@ -14,8 +14,6 @@ export default echarts.extendChartView({
     init: function () {},
 
     render: function (seriesModel, ecModel, api) {
-        this.remove(ecModel, api);
-
         var data = seriesModel.getData();
 
         var lineDraw = this._updateLineDraw(data, seriesModel);
@@ -61,44 +59,41 @@ export default echarts.extendChartView({
         this._lastZlevel = zlevel;
     },
 
-    updateLayout: function (seriesModel, ecModel, api) {
-        this._lineDraw.updateLayout();
-        this._clearLayer(api);
-    },
-
     incrementalPrepareRender: function (seriesModel, ecModel, api) {
-        this.remove(ecModel, api);
-
         var data = seriesModel.getData();
+
         var lineDraw = this._updateLineDraw(data, seriesModel);
-        lineDraw.incrementalPrepareRender(data);
+
+        lineDraw.incrementalPrepareUpdate(data);
+
         this._clearLayer(api);
     },
 
     incrementalRender: function (taskParams, seriesModel, ecModel) {
-        this._lineDraw.incrementalRender(taskParams, seriesModel.getData());
+        this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData());
     },
 
     _updateLineDraw: function (data, seriesModel) {
         var lineDraw = this._lineDraw;
         var hasEffect = this._showEffect(seriesModel);
         var isPolyline = !!seriesModel.get('polyline');
-        var isLarge = !!seriesModel.get('large')
-            && data.count() >= seriesModel.get('largeThreshold');
+        var pipelineContext = seriesModel.pipelineContext;
+        var isLargeDraw = pipelineContext.large || pipelineContext.incrementalRender;
 
         if (__DEV__) {
-            if (hasEffect && isLarge) {
+            if (hasEffect && isLargeDraw) {
                 console.warn('Large lines not support effect');
             }
         }
-        if (hasEffect !== this._hasEffet
+        if (!lineDraw
+            || hasEffect !== this._hasEffet
             || isPolyline !== this._isPolyline
-            || isLarge !== this._isLarge
+            || isLargeDraw !== this._isLargeDraw
         ) {
             if (lineDraw) {
                 lineDraw.remove();
             }
-            lineDraw = this._lineDraw = isLarge
+            lineDraw = this._lineDraw = isLargeDraw
                 ? new LargeLineDraw()
                 : new LineDraw(
                     isPolyline
@@ -107,7 +102,7 @@ export default echarts.extendChartView({
                 );
             this._hasEffet = hasEffect;
             this._isPolyline = isPolyline;
-            this._isLarge = isLarge;
+            this._isLargeDraw = isLargeDraw;
         }
 
         this.group.add(lineDraw.group);
@@ -130,6 +125,7 @@ export default echarts.extendChartView({
 
     remove: function (ecModel, api) {
         this._lineDraw && this._lineDraw.remove(api, true);
+        this._lineDraw = null;
         // Clear motion when lineDraw is removed
         var zr = api.getZr();
         var isSvg = zr.painter.getType() === 'svg';

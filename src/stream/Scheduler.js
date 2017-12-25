@@ -36,21 +36,41 @@ function Scheduler(ecInstance, api) {
 var proto = Scheduler.prototype;
 
 // If seriesModel provided, incremental threshold is check by series data.
-proto.getPerformInfo = function (task, seriesModel) {
+proto.getPerformArgs = function (task, isBlock) {
     // For overall task
     if (!task.__pipelineId) {
         return;
     }
 
     var pipeline = this._pipelineMap.get(task.__pipelineId);
-    if (seriesModel) {
-        pipeline.thresholdFail = seriesModel.getData().count() < pipeline.threshold;
-    }
-    var incremental = pipeline.incremental
-        && task.__idxInPipeline > pipeline.bockIndex
-        && !pipeline.thresholdFail;
+    var pCtx = pipeline.context;
+    var incremental = !isBlock
+        && pipeline.incrementalEnabled
+        && (!pCtx || pCtx.incrementalRender)
+        && task.__idxInPipeline > pipeline.bockIndex;
 
-    return {incremental: incremental, step: incremental ? pipeline.step : null};
+    return {step: incremental ? pipeline.step : null};
+};
+
+/**
+ * Current, progressive rendering starts from visual and layout.
+ * Always detect render mode in the same stage, avoiding that incorrect
+ * detection caused by data filtering.
+ */
+proto.updateModes = function (ecModel) {
+    var pipelineMap = this._pipelineMap;
+    ecModel.eachSeries(function (seriesModel) {
+        var pipeline = pipelineMap.get(seriesModel.uid);
+        var data = seriesModel.getData();
+        var dataLen = data.count();
+        var incrementalRender = pipeline.incrementalEnabled && dataLen >= pipeline.threshold;
+        var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
+
+        seriesModel.pipelineContext = pipeline.context = {
+            incrementalRender: incrementalRender,
+            large: large
+        };
+    });
 };
 
 proto.restorePipelines = function (ecModel) {
@@ -65,7 +85,7 @@ proto.restorePipelines = function (ecModel) {
             head: dataTask,
             tail: dataTask,
             threshold: seriesModel.get('progressiveThreshold'),
-            incremental: progressive
+            incrementalEnabled: progressive
                 && !(seriesModel.banIncremental && seriesModel.banIncremental()),
             bockIndex: -1,
             step: progressive || 700, // ??? Temporarily number
@@ -102,13 +122,21 @@ proto.prepareView = function (view, model, ecModel, api) {
     pipe(this, model, renderTask);
 };
 
+
+proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
+    performStageTasks(this, stageHandlers, ecModel, payload);
+};
+
 // opt
 // opt.visualType: 'visual' or 'layout'
 // opt.setDirty
-proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
+proto.performVisualTasks = function (stageHandlers, ecModel, payload, opt) {
+    performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
+};
+
+function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
     opt = opt || {};
     var unfinished;
-    var scheduler = this;
 
     each(stageHandlers, function (stageHandler, idx) {
         if (opt.visualType && opt.visualType !== stageHandler.visualType) {
@@ -124,7 +152,7 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
                 overallTask.dirty();
             }
             overallTask.context.payload = payload;
-            unfinished |= overallTask.perform(scheduler.getPerformInfo(overallTask));
+            unfinished |= overallTask.perform(scheduler.getPerformArgs(overallTask, opt.block));
         }
         else if (seriesTaskMap) {
             opt.seriesModels
@@ -144,16 +172,17 @@ proto.performStageTasks = function (stageHandlers, ecModel, payload, opt) {
                 unfinished = true;
             }
             else {
-                var performInfo = scheduler.getPerformInfo(task, opt.dontCheckThreshold ? null : seriesModel);
-                performInfo.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
+                var performArgs = scheduler.getPerformArgs(task, opt.block);
+                // ??? chck skip necessary.
+                performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
                 task.context.payload = payload;
-                unfinished |= task.perform(performInfo);
+                unfinished |= task.perform(performArgs);
             }
         }
     });
 
     scheduler.unfinished |= unfinished;
-};
+}
 
 proto.performSeriesTasks = function (ecModel) {
     var unfinished;
@@ -199,12 +228,14 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
         if (!task) {
             task = createTask({
                 reset: seriesTaskReset,
+                plan: seriesTaskPlan,
                 count: seriesTaskCount
             }, {
                 model: seriesModel,
                 ecModel: ecModel,
                 api: api,
                 useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
+                plan: stageHandler.plan,
                 reset: stageHandler.reset
             });
             seriesTaskMap.set(pipelineId, task);
@@ -250,7 +281,15 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
 }
 
 function overallTaskReset(context) {
-    context.overallReset(context.ecModel, context.api, context.payload);
+    context.overallReset(
+        context.ecModel, context.api, context.payload
+    );
+}
+
+function seriesTaskPlan(context) {
+    return context.plan && context.plan(
+        context.model, context.ecModel, context.api, context.payload
+    );
 }
 
 function seriesTaskReset(context) {

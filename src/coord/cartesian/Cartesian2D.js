@@ -57,7 +57,7 @@ Cartesian2D.prototype = {
      * @param {Array.<number>} out
      * @return {Array.<number>}
      */
-    dataToPoint: function (data, out) {
+    dataToPoint: function (data, reserved, out) {
         var xAxis = this.getAxis('x');
         var yAxis = this.getAxis('y');
         out = out || [];

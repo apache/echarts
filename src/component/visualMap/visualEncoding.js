@@ -3,6 +3,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as visualSolution from '../../visual/visualSolution';
 import VisualMapping from '../../visual/VisualMapping';
 
+// ???! visualmap progress.
+
 echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT, function (ecModel) {
     ecModel.eachComponent('visualMap', function (visualMapModel) {
         processSingleVisualMap(visualMapModel, ecModel);

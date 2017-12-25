@@ -1,46 +1,48 @@
 import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import LargeSymbolDraw from '../helper/LargeSymbolDraw';
-import StreamSymbolDraw from '../helper/StreamSymbolDraw';
 
 echarts.extendChartView({
 
     type: 'scatter',
 
-    init: function () {
-        this._normalSymbolDraw = new SymbolDraw();
-        this._largeSymbolDraw = new LargeSymbolDraw();
-        this._streamSymbolDraw = new StreamSymbolDraw();
-    },
-
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-        var group = this.group;
-
-        var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
-            ? this._largeSymbolDraw
-            : this._normalSymbolDraw;
-
-        this._symbolDraw = symbolDraw;
+        var symbolDraw = this._updateSymbolDraw(data, seriesModel);
         symbolDraw.updateData(data);
-        group.add(symbolDraw.group);
-
-        this._lasySymbolDrawGroup && group.remove(this._lasySymbolDrawGroup);
-
-        this._lasySymbolDrawGroup = symbolDraw.group;
     },
 
-    updateLayout: function (seriesModel) {
-        // ??? do not support updateLayout in stream
-        this._symbolDraw.updateLayout(seriesModel);
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        var symbolDraw = this._updateSymbolDraw(data, seriesModel);
+        symbolDraw.incrementalPrepareUpdate(data);
     },
 
-    updateView: function (seriesModel) {
-        this._symbolDraw.updateView(seriesModel);
+    incrementalRender: function (taskParams, seriesModel, ecModel) {
+        this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData());
+    },
+
+    _updateSymbolDraw: function (data, seriesModel) {
+        var symbolDraw = this._symbolDraw;
+        var pipelineContext = seriesModel.pipelineContext;
+        var isLargeDraw = pipelineContext.large || pipelineContext.incrementalRender;
+
+        if (!symbolDraw || isLargeDraw !== this._isLargeDraw) {
+            symbolDraw && symbolDraw.remove();
+            symbolDraw = this._symbolDraw = isLargeDraw
+                ? new LargeSymbolDraw()
+                : new SymbolDraw();
+            this._isLargeDraw = isLargeDraw;
+        }
+
+        this.group.add(symbolDraw.group);
+
+        return symbolDraw;
     },
 
     remove: function (ecModel, api) {
         this._symbolDraw && this._symbolDraw.remove(api, true);
+        this._symbolDraw = null;
     },
 
     dispose: function () {}

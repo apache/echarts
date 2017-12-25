@@ -7,8 +7,8 @@ import CoordinateSystem from '../../CoordinateSystem';
 
 var globalObj = typeof window === 'undefined' ? global : window;
 
-var Uint32Array = globalObj.Uint32Array || Array;
-var Float64Array = globalObj.Float64Array || Array;
+var Uint32Arr = globalObj.Uint32Array || Array;
+var Float64Arr = globalObj.Float64Array || Array;
 
 // Convert [ [{coord: []}, {coord: []}] ]
 // to [ { coords: [[]] } ]
@@ -111,8 +111,8 @@ var LinesSeries = SeriesModel.extend({
         if (typeof data[0] === 'number') {
             var len = data.length;
             // Store offset and len of each segment
-            var coordsOffsetAndLenStorage = new Uint32Array(len);
-            var coordsStorage = new Float64Array(len);
+            var coordsOffsetAndLenStorage = new Uint32Arr(len);
+            var coordsStorage = new Float64Arr(len);
             var coordsCursor = 0;
             var offsetCursor = 0;
             var dataCount = 0;

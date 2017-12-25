@@ -1,9 +1,14 @@
+import createRenderPlanner from '../helper/createRenderPlanner';
+
 export default {
     seriesType: 'lines',
-    reset: function (seriesModel, ecModel) {
+
+    plan: createRenderPlanner(),
+
+    reset: function (seriesModel) {
         var coordSys = seriesModel.coordinateSystem;
         var isPolyline = seriesModel.get('polyline');
-        var isLarge = seriesModel.get('large');
+        var isLarge = seriesModel.pipelineContext.large;
 
         function progress(params, lineData) {
             var lineCoords = [];
@@ -29,7 +34,7 @@ export default {
                         points[offset++] = len;
                     }
                     for (var k = 0; k < len; k++) {
-                        pt = coordSys.dataToPoint(lineCoords[k], pt);
+                        pt = coordSys.dataToPoint(lineCoords[k], null, pt);
                         points[offset++] = pt[0];
                         points[offset++] = pt[1];
                     }

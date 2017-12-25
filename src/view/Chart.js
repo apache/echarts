@@ -4,8 +4,10 @@ import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
 import {createTask} from '../stream/task';
+import createRenderPlanner from '../chart/helper/createRenderPlanner';
 
 var inner = modelUtil.makeInner();
+var renderPlanner = createRenderPlanner();
 
 function Chart() {
 
@@ -22,6 +24,7 @@ function Chart() {
     this.uid = componentUtil.getUID('viewChart');
 
     this.renderTask = createTask({
+        plan: renderTaskPlan,
         reset: renderTaskReset
     }, {view: this});
 }
@@ -149,7 +152,6 @@ function elSetState(el, state) {
  * @param  {module:echarts/data/List} data
  * @param  {Object} payload
  * @param  {string} state 'normal'|'emphasis'
- * @inner
  */
 function toggleHighlight(data, payload, state) {
     var dataIndex = modelUtil.queryDataIndex(data, payload);
@@ -176,19 +178,18 @@ Chart.markUpdateMethod = function (payload, methodName) {
     inner(payload).updateMethod = methodName;
 };
 
+function renderTaskPlan(context) {
+    return renderPlanner(context.model);
+}
+
 function renderTaskReset(context) {
     var seriesModel = context.model;
     var ecModel = context.ecModel;
     var api = context.api;
     var payload = context.payload;
     // ???! remove updateView updateVisual
-    var incremental = context.incremental;
+    var incremental = seriesModel.pipelineContext.incrementalRender;
     var view = context.view;
-
-    // if (inner(view).incremental ^ incremental) {
-    //     view.remove(ecModel, api);
-    // }
-    // inner(view).incremental = incremental;
 
     var updateMethod = payload && inner(payload).updateMethod;
     var methodName = incremental

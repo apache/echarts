@@ -264,7 +264,6 @@ echartsProto._onframe = function () {
     var remainTime = TEST_FRAME_REMAIN_TIME;
     var scheduler = this._scheduler;
     var ecModel = this._model;
-
     if (scheduler.unfinished) {
         scheduler.unfinished = false;
         do {
@@ -273,13 +272,15 @@ echartsProto._onframe = function () {
             scheduler.performSeriesTasks(ecModel);
 
             // Currently dataProcessorFuncs do not check threshold.
-            scheduler.performStageTasks(dataProcessorFuncs, ecModel);
+            scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
+
+            scheduler.updateModes(ecModel);
 
             // ???! coordSys create
             // this._coordSysMgr.update();
 
             // console.log('------------- ec frame visual -------------', remainTime);
-            scheduler.performStageTasks(visualFuncs, ecModel);
+            scheduler.performVisualTasks(visualFuncs, ecModel);
 
             render(this, this._model, this._api, 'none');
 
@@ -771,7 +772,9 @@ var updateMethods = {
         // ??? if some processor do not use task, it should also process in progress,
         // otherwise, consider data extent, both dependent.
 
-        scheduler.performStageTasks(dataProcessorFuncs, ecModel, payload);
+        scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel, payload);
+
+        scheduler.updateModes(ecModel);
 
         stackSeriesData.call(this, ecModel);
 
@@ -779,7 +782,7 @@ var updateMethods = {
         coordSysMgr.update(ecModel, api);
 
         clearColorPalette(ecModel);
-        scheduler.performStageTasks(visualFuncs, ecModel, payload);
+        scheduler.performVisualTasks(visualFuncs, ecModel, payload);
 
         render(this, ecModel, api, payload);
 
@@ -859,8 +862,8 @@ var updateMethods = {
         });
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
-        this._scheduler.performStageTasks(
+        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
+        this._scheduler.performVisualTasks(
             visualFuncs, ecModel, payload, {setDirty: true, seriesModels: seriesModels}
         );
 
@@ -886,7 +889,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
         render(this, this._model, this._api, payload);
 
@@ -910,7 +913,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
+        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
 
         render(this, this._model, this._api, payload);
 
@@ -932,8 +935,8 @@ var updateMethods = {
         ChartView.markUpdateMethod(payload, 'updateLayout');
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performStageTasks(visualFuncs, ecModel, payload, 'layout', true);
-        this._scheduler.performStageTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
+        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
         render(this, this._model, this._api, payload);
 
@@ -1011,6 +1014,9 @@ echartsProto.resize = function (opts) {
     var optionChanged = ecModel && ecModel.resetOption('media');
 
     optionChanged && ecModel.settingTask.dirty();
+
+    // ???
+    // can not visual???
 
     ecModel.eachComponent(function (model, componentType) {
         optionChanged && model.settingTask.dirty();
@@ -1398,16 +1404,9 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
         chartView.__alive = true;
 
         var renderTask = chartView.renderTask;
-        var performInfo = scheduler.getPerformInfo(renderTask, seriesModel);
-        var renderTaskCtx = renderTask.context;
-        payload !== 'none' && (renderTaskCtx.payload = payload);
-        var incremental = performInfo.incremental;
-
-        if (dirtySeriesModels || incremental ^ renderTaskCtx.incremental) {
-            renderTask.dirty();
-        }
-        renderTask.context.incremental = incremental;
-        unfinished |= renderTask.perform(performInfo);
+        payload !== 'none' && (renderTask.context.payload = payload);
+        dirtySeriesModels && renderTask.dirty();
+        unfinished |= renderTask.perform(scheduler.getPerformArgs(renderTask));
 
         chartView.group.silent = !!seriesModel.get('silent');
 

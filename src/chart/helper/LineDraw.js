@@ -4,7 +4,7 @@
 
 import * as graphic from '../../util/graphic';
 import LineGroup from './Line';
-import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
+// import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
 /**
  * @alias module:echarts/component/marker/LineDraw
@@ -77,6 +77,7 @@ function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScop
     lineDraw.group.add(itemEl);
 }
 
+// ???
 lineDrawProto.updateLayout = function () {
     var lineData = this._lineData;
     lineData.eachItemGraphicEl(function (el, idx) {
@@ -84,26 +85,27 @@ lineDrawProto.updateLayout = function () {
     }, this);
 };
 
-lineDrawProto.incrementalPrepareRender = function (lineData) {
-    this._seriesScope = makeSeriesScope(this);
-    this._lineData = lineData;
-    this._clearIncremental();
+// lineDrawProto.incrementalPrepareRender = function (lineData) {
+//     this._seriesScope = makeSeriesScope(this);
+//     this._lineData = lineData;
+//     this._clearIncremental();
 
-    !this._incremental && this.group.add(
-        this._incremental = new IncrementalDisplayable()
-    );
-};
+//     !this._incremental && this.group.add(
+//         this._incremental = new IncrementalDisplayable()
+//     );
+// };
 
-lineDrawProto.incrementalRender = function (taskParams, lineData) {
-    for (var idx = taskParams.start; idx < taskParams.end; idx++) {
-        var itemLayout = lineData.getItemLayout(idx);
+// lineDrawProto.incrementalRender = function (taskParams, lineData) {
+//     for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+//         var itemLayout = lineData.getItemLayout(idx);
 
-        if (lineNeedsDraw(itemLayout)) {
-            var el = new this._ctor(lineData, idx, this._seriesScope);
-            this._incremental.addDisplayable(el, true);
-        }
-    }
-};
+//         if (lineNeedsDraw(itemLayout)) {
+//             // ??? IncrementalDisplayable do not support Group.
+//             var el = new this._ctor(lineData, idx, this._seriesScope);
+//             this._incremental.addDisplayable(el, true);
+//         }
+//     }
+// };
 
 function makeSeriesScope(lineData) {
     var hostModel = lineData.hostModel;
@@ -111,8 +113,7 @@ function makeSeriesScope(lineData) {
         lineStyle: hostModel.getModel('lineStyle.normal').getLineStyle(),
         hoverLineStyle: hostModel.getModel('lineStyle.emphasis').getLineStyle(),
         labelModel: hostModel.getModel('label.normal'),
-        hoverLabelModel: hostModel.getModel('label.emphasis'),
-        isLargeMode: hostModel.get('large')
+        hoverLabelModel: hostModel.getModel('label.emphasis')
     };
 }
 

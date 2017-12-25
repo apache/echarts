@@ -195,12 +195,6 @@ var List = function (dimensions, hostModel) {
     this._count = 0;
 
     /**
-     * @type {number}
-     * @private
-     */
-    this._chunkSize;
-
-    /**
      * Data storage
      * @type {Object.<key, Array.<TypedArray|Array>>}
      * @private
@@ -250,6 +244,13 @@ var List = function (dimensions, hostModel) {
     this._itemVisuals = [];
 
     /**
+     * Key: visual type, Value: boolean
+     * @type {Object}
+     * @readOnly
+     */
+    this.hasItemVisual = {};
+
+    /**
      * Item layout properties after layout
      * @type {Array.<Object>}
      * @private
@@ -287,6 +288,12 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._extent;
+
+    /**
+     * @type {Object}
+     * @private
+     */
+    this._extentEnds;
 };
 
 var listProto = List.prototype;
@@ -421,10 +428,52 @@ listProto._initDataFromProvider = function (start, end) {
 
     // Reset cached extent
     this._extent = {};
+    this._extentEnds = {};
 
     // Create more chunk storage.
-    var chunkIndex = this._chunkCount;
-    var volume = chunkIndex * chunkSize;
+    // var chunkIndex = this._chunkCount;
+    // var volume = chunkIndex * chunkSize;
+    // for (var i = 0; i < dimensions.length; i++) {
+    //     var dim = dimensions[i];
+
+    //     var dimInfo = dimensionInfoMap[dim];
+    //     if (dimInfo.otherDims.itemName === 0) {
+    //         nameDimIdx = i;
+    //     }
+    //     var DataCtor = dataCtors[dimInfo.type];
+
+    //     if (!storage[dim]) {
+    //         storage[dim] = [];
+    //     }
+    //     if (storage[dim][chunkIndex]) {
+    //         var resizeChunkArray = storage[dim][chunkIndex];
+    //         var newSize;
+    //         if (volume < end) {
+    //             newSize = chunkSize;
+    //         }
+    //         else {
+    //             newStore = end - chunkIndex * chunkSize;
+    //         }
+    //         var newStore = new DataCtor(newSize);
+    //         for (var i = 0; i < resizeChunkArray.length; i++) {
+    //             newStore[i] = resizeChunkArray[i];
+    //         }
+    //         storage[dim][chunkIndex] = newStore;
+    //     }
+    // }
+    // Create new chunks
+    // for (var k = volume; k < end; k += chunkSize) {
+    //     for (var i = 0; i < dimensions.length; i++) {
+    //         var dim = dimensions[i];
+    //         var dimInfo = dimensionInfoMap[dim];
+    //         var DataCtor = dataCtors[dimInfo.type];
+    //         storage[dim][this._chunkCount] = new DataCtor(Math.min(end - k, chunkSize));
+    //     }
+    //     this._chunkCount++;
+    // }
+
+    var chunkCount = this._chunkCount;
+    var lastChunkIndex = chunkCount - 1;
     for (var i = 0; i < dimensions.length; i++) {
         var dim = dimensions[i];
 
@@ -437,33 +486,22 @@ listProto._initDataFromProvider = function (start, end) {
         if (!storage[dim]) {
             storage[dim] = [];
         }
-        if (storage[dim][chunkIndex]) {
-            var resizeChunkArray = storage[dim][chunkIndex];
-            var newSize;
-            if (volume < end) {
-                newSize = chunkSize;
+        var resizeChunkArray = storage[dim][lastChunkIndex];
+        if (resizeChunkArray && resizeChunkArray.length < chunkSize) {
+            var newStore = new DataCtor(Math.min(end - lastChunkIndex * chunkSize, chunkSize));
+            // The cost of the copy is probably inconsiderable
+            // within the initial chunkSize.
+            for (var j = 0; j < resizeChunkArray.length; j++) {
+                newStore[j] = resizeChunkArray[j];
             }
-            else {
-                newStore = end - chunkIndex * chunkSize;
-            }
-            var newStore = new DataCtor(newSize);
-            for (var i = 0; i < resizeChunkArray.length; i++) {
-                newStore[i] = resizeChunkArray[i];
-            }
-            storage[dim][chunkIndex] = newStore;
+            storage[dim][lastChunkIndex] = newStore;
         }
 
-    }
-
-    // Create new chunks
-    for (var k = volume; k < end; k += chunkSize) {
-        for (var i = 0; i < dimensions.length; i++) {
-            var dim = dimensions[i];
-            var dimInfo = dimensionInfoMap[dim];
-            var DataCtor = dataCtors[dimInfo.type];
-            storage[dim][this._chunkCount] = new DataCtor(Math.min(end - k, chunkSize));
+        // Create new chunks.
+        for (var k = chunkCount * chunkSize; k < end; k += chunkSize) {
+            storage[dim].push(new DataCtor(Math.min(end - k, chunkSize)));
         }
-        this._chunkCount++;
+        this._chunkCount = storage[dim].length;
     }
 
     for (var idx = start; idx < end; idx++) {
@@ -512,7 +550,6 @@ listProto._initDataFromProvider = function (start, end) {
             id != null && (idList[idx] = id);
         }
     }
-
 
     this._count = end;
 };
@@ -623,35 +660,43 @@ listProto.hasValue = function (idx) {
  * @param {Function} filter
  */
 listProto.getDataExtent = function (dim, stack, filter) {
+    // Consider the stream or append data cases: If at the begining the data
+    // is empty or little, the extent should not be simply cached.
+
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
-    var dimInfo = this.getDimensionInfo(dim);
-    stack = (dimInfo && dimInfo.stackable) && stack;
-    var dimExtent = (this._extent || (this._extent = {}))[dim + (!!stack)];
-    var value;
-    if (dimExtent) {
-        return dimExtent;
-    }
 
     if (!dimData) {
         return [Infinity, -Infinity];
     }
 
+    var dimInfo = this.getDimensionInfo(dim);
+    stack = (dimInfo && dimInfo.stackable) && stack;
+    var cacheName = dim + (!!stack);
+    var dimExtent = this._extent[cacheName];
+    var dimExtentEnd = this._extentEnds[cacheName] || 0;
+    var currEnd = this.count();
+
+    // Assume that dimExtentEnd > currEnd will never happen.
+    // When data appended, dimExtenEnd < currEnd.
+    if (dimExtent && dimExtentEnd === currEnd) {
+        return dimExtent;
+    }
+
     var min = Infinity;
     var max = -Infinity;
-    // var isOrdinal = dimInfo.type === 'ordinal';
-    for (var i = 0, len = this.count(); i < len; i++) {
-        value = this.get(dim, i, stack);
-        // FIXME
-        // if (isOrdinal && typeof value === 'string') {
-        //     value = zrUtil.indexOf(dimData, value);
-        // }
+    dimExtent && (min = dimExtent[0], max = dimExtent[1]);
+
+    for (var i = dimExtentEnd; i < currEnd; i++) {
+        var value = this.get(dim, i, stack);
         if (!filter || filter(value, dim, i)) {
             value < min && (min = value);
             value > max && (max = value);
         }
     }
-    return (this._extent[dim + !!stack] = [min, max]);
+
+    this._extentEnds[cacheName] = currEnd;
+    return (this._extent[cacheName] = [min, max]);
 };
 
 /**
@@ -944,6 +989,7 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
 
     // Reset data extent
     this._extent = {};
+    this._extentEnds = {};
 
     return this;
 };
@@ -1246,17 +1292,20 @@ listProto.getItemVisual = function (idx, key, ignoreParent) {
  */
 listProto.setItemVisual = function (idx, key, value) {
     var itemVisual = this._itemVisuals[idx] || {};
+    var hasItemVisual = this.hasItemVisual;
     this._itemVisuals[idx] = itemVisual;
 
     if (isObject(key)) {
         for (var name in key) {
             if (key.hasOwnProperty(name)) {
                 itemVisual[name] = key[name];
+                hasItemVisual[name] = true;
             }
         }
         return;
     }
     itemVisual[key] = value;
+    hasItemVisual[key] = true;
 };
 
 /**
@@ -1265,6 +1314,7 @@ listProto.setItemVisual = function (idx, key, value) {
 listProto.clearAllVisual = function () {
     this._visual = {};
     this._itemVisuals = [];
+    this.hasItemVisual = {};
 };
 
 var setItemDataAndSeriesIndex = function (child) {
@@ -1338,7 +1388,8 @@ listProto.cloneShallow = function (list) {
     }
 
     if (this._extent) {
-        list._extent = zrUtil.extend({}, this._extent);
+        list._extent = zrUtil.clone(this._extent);
+        list._extentEnds = zrUtil.clone(this._extentEnds);
     }
 
     return list;

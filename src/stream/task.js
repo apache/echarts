@@ -13,6 +13,7 @@ export function createTask(define, context) {
  * @constructor
  * @param {Object} define
  * @param {Function} define.reset Custom reset
+ * @param {Function} [define.plan] Returns 'reset' indicate reset immediately.
  * @param {Function} [define.count] count is used to determin data task.
  * @param {Object} [context]
  */
@@ -20,6 +21,7 @@ function Task(define, context) {
     define = define || {};
 
     this._reset = define.reset;
+    this._plan = define.plan;
     this._count = define.count;
 
     this._dirty = true;
@@ -35,7 +37,13 @@ var taskProto = Task.prototype;
  * @param {number} [performArgs.skip] Skip customer perform call.
  */
 taskProto.perform = function (performArgs) {
-    if (this._dirty) {
+
+    var planResult;
+    if (this._plan) {
+        planResult = this._plan(this.context);
+    }
+
+    if (this._dirty || planResult === 'reset') {
         this._dirty = false;
         reset(this);
     }

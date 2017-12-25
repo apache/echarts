@@ -371,8 +371,16 @@ var SeriesModel = ComponentModel.extend({
     /**
      * Convinient for override in extended class.
      * @protected
+     * @type {Function}
      */
-    banIncremental: null
+    banIncremental: null,
+
+    /**
+     * @public
+     * @readOnly
+     * @type {Object}
+     */
+    pipelineContext: null
 
 });
 
