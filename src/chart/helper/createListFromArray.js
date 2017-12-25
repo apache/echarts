@@ -26,8 +26,17 @@ function createListFromArray(data, seriesModel, ecModel) {
     data = data || [];
 
     if (__DEV__) {
-        if (!zrUtil.isArray(data)) {
+        if (!zrUtil.isArrayLike(data)) {
             throw new Error('Invalid data.');
+        }
+    }
+
+    var isDataTypedArray = zrUtil.isTypedArray(data);
+    if (isDataTypedArray) {
+        if (__DEV__) {
+            if (!seriesModel.get('dimensions')) {
+                throw new Error('dimensions must be given if data is a ' + Object.prototype.toString.call(data));
+            }
         }
     }
 
@@ -39,9 +48,14 @@ function createListFromArray(data, seriesModel, ecModel) {
         dimsDef: seriesModel.get('dimensions')
     };
 
+    if (isDataTypedArray) {
+        completeDimOpt.dimCount = completeDimOpt.dimsDef.length;
+    }
+
     // FIXME
     var axesInfo = creator && creator(data, seriesModel, ecModel, completeDimOpt);
     var dimensions = axesInfo && axesInfo.dimensions;
+
     if (!dimensions) {
         // Get dimensions from registered coordinate system
         dimensions = (registeredCoordSys && (

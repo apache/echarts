@@ -380,7 +380,7 @@ zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
 function dataTaskCount(context) {
-    return context.model.getRawData().getProvider().count();
+    return context.model.getRawData().count();
 }
 
 function dataTaskReset(context) {

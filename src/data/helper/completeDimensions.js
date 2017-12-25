@@ -56,6 +56,7 @@ function completeDimensions(sysDims, data, opt) {
     var coordDimNameMap = zrUtil.createHashMap();
     // var valueCandidate;
     var result = [];
+    var isDataTypedArray = zrUtil.isTypedArray(data);
 
     var dimCount = opt.dimCount;
     if (dimCount == null) {
@@ -161,8 +162,10 @@ function completeDimensions(sysDims, data, opt) {
             dataDimNameMap
         ));
 
-        resultItem.type == null && guessOrdinal(data, resultDimIdx)
-            && (resultItem.type = 'ordinal');
+        if (!isDataTypedArray) {
+            resultItem.type == null && guessOrdinal(data, resultDimIdx)
+                && (resultItem.type = 'ordinal');
+        }
     }
 
     return result;

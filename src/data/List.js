@@ -62,27 +62,29 @@ function DefaultDataProvider(dataArray, dimSize) {
                 throw new Error('Typed array data must specify dimension size');
             }
         }
+        this._offset = 0;
         this._dimSize = dimSize;
         this._array = dataArray;
         methods = typedArrayProviderMethods;
-        this.pure = true;
-
-        this._isTyped = true;
     }
     // Normal array.
     else {
         this._array = dataArray || [];
         methods = normalProviderMethods;
-
-        this._isTyped = false;
     }
 
     zrUtil.extend(this, methods);
 }
 
+// If data is pure without style configuration
 DefaultDataProvider.prototype.pure = false;
+// If data is persistent and will not be released after use.
+DefaultDataProvider.prototype.persistent = true;
 
 var normalProviderMethods = {
+
+    persistent: true,
+
     count: function () {
         return this._array.length;
     },
@@ -96,10 +98,16 @@ var normalProviderMethods = {
     }
 };
 var typedArrayProviderMethods = {
+
+    persistent: false,
+
+    pure: true,
+
     count: function () {
-        return this._array.length / this._dimSize;
+        return this._array ? (this._array.length / this._dimSize) : 0;
     },
     getItem: function (idx) {
+        idx = idx - this._offset;
         var item = [];
         var offset = this._dimSize * idx;
         for (var i = 0; i < this._dimSize; i++) {
@@ -114,7 +122,15 @@ var typedArrayProviderMethods = {
             }
             return;
         }
-        this._array = zrUtil.concatArray(this._array, newData);
+
+        this._array = newData;
+    },
+
+    // Clean self if data is already used.
+    clean: function () {
+        // PENDING
+        this._offset += this.count();
+        this._array = null;
     }
 };
 
@@ -396,10 +412,13 @@ listProto.getProvider = function () {
 };
 
 listProto.appendData = function (data) {
-    var start = this._rawData.count();
-    this._rawData.addData(data);
-    var end = this._rawData.count();
-
+    var rawData = this._rawData;
+    var start = this.count();
+    rawData.addData(data);
+    var end = rawData.count();
+    if (!rawData.persistent) {
+        end += start;
+    }
     this._initDataFromProvider(start, end);
 };
 
@@ -410,7 +429,7 @@ listProto._initDataFromProvider = function (start, end) {
     }
 
     var chunkSize = this._chunkSize;
-    var data = this._rawData;
+    var rawData = this._rawData;
     var storage = this._storage;
     var dimensions = this.dimensions;
     var dimensionInfoMap = this._dimensionInfos;
@@ -468,7 +487,7 @@ listProto._initDataFromProvider = function (start, end) {
 
     for (var idx = start; idx < end; idx++) {
         // NOTICE: Try not to write things into dataItem
-        var dataItem = data.getItem(idx);
+        var dataItem = rawData.getItem(idx);
         // Each data item is value
         // [1, 2]
         // 2
@@ -487,7 +506,7 @@ listProto._initDataFromProvider = function (start, end) {
         }
 
         // Use the name in option and create id
-        if (!data.pure) {
+        if (!rawData.pure) {
             if (!nameList[idx] && dataItem) {
                 if (dataItem.name != null) {
                     nameList[idx] = dataItem.name;
@@ -513,6 +532,10 @@ listProto._initDataFromProvider = function (start, end) {
         }
     }
 
+    if (!rawData.persistent && rawData.clean) {
+        // Clean unused data if data source is typed array.
+        rawData.clean();
+    }
 
     this._count = end;
 };
@@ -811,7 +834,17 @@ listProto.getRawIndex = function (idx) {
  * @return {number}
  */
 listProto.getRawDataItem = function (idx) {
-    return this._rawData.getItem(this.getRawIndex(idx));
+    if (!this._rawData.persistent) {
+        var val = [];
+        for (var i = 0; i < this.dimensions.length; i++) {
+            var dim = this.dimensions[i];
+            val.push(this.get(dim, idx));
+        }
+        return val;
+    }
+    else {
+        return this._rawData.getItem(this.getRawIndex(idx));
+    }
 };
 
 /**
@@ -1102,7 +1135,7 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
 listProto.getItemModel = function (idx) {
     var hostModel = this.hostModel;
     idx = this.getRawIndex(idx);
-    return new Model(this._rawData.getItem(idx), hostModel, hostModel && hostModel.ecModel);
+    return new Model(this.getRawDataItem(idx), hostModel, hostModel && hostModel.ecModel);
 };
 
 /**
