@@ -124,14 +124,14 @@ proto.prepareView = function (view, model, ecModel, api) {
 
 
 proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
-    performStageTasks(this, stageHandlers, ecModel, payload);
+    performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
 };
 
 // opt
 // opt.visualType: 'visual' or 'layout'
 // opt.setDirty
 proto.performVisualTasks = function (stageHandlers, ecModel, payload, opt) {
-    performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
+    performStageTasks(this, stageHandlers, ecModel, payload);
 };
 
 function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
