@@ -35,7 +35,7 @@ var LargeSymbolPath = graphic.extendShape({
 
             if (size[0] < 4) {
                 // Optimize for small symbol
-                // PENDING
+                // PENDING, Do fill in buildPath??
                 ctx.fillRect(
                     x - size[0] / 2, y - size[1] / 2,
                     size[0], size[1]
