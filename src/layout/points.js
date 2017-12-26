@@ -11,7 +11,7 @@ export default function (seriesType) {
             var data = seriesModel.getData();
             var coordSys = seriesModel.coordinateSystem;
             var pipelineContext = seriesModel.pipelineContext;
-            var isLargeRender = pipelineContext.large || pipelineContext.incrementalRender;
+            var isLargeRender = pipelineContext.large;
 
             if (!coordSys) {
                 return;

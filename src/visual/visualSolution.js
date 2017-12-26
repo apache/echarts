@@ -96,6 +96,7 @@ export function replaceVisualOption(thisOption, newOption, keys) {
  * @param {object} [scope] Scope for getValueState
  * @param {string} [dimension] Concrete dimension, if used.
  */
+// ???! handle brush?
 export function applyVisual(stateList, visualMappings, data, getValueState, scope, dimension) {
     var visualTypesMap = {};
     zrUtil.each(stateList, function (state) {
@@ -140,4 +141,48 @@ export function applyVisual(stateList, visualMappings, data, getValueState, scop
             );
         }
     }
+}
+
+export function incrementalApplyVisual(data, stateList, visualMappings, getValueState, dimension) {
+
+    var visualTypesMap = {};
+    zrUtil.each(stateList, function (state) {
+        var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
+        visualTypesMap[state] = visualTypes;
+    });
+
+    var dataIndex;
+
+    function getVisual(key) {
+        return data.getItemVisual(dataIndex, key);
+    }
+
+    function setVisual(key, value) {
+        data.setItemVisual(dataIndex, key, value);
+    }
+
+    function dataEach(data, idx) {
+        dataIndex = idx;
+        var rawDataItem = data.getRawDataItem(dataIndex);
+
+        // Consider performance
+        if (rawDataItem && rawDataItem.visualMap === false) {
+            return;
+        }
+
+        var value = dimension
+            ? data.get(data.getDimension(dimension), dataIndex, true)
+            : dataIndex;
+
+        var valueState = getValueState(value);
+        var mappings = visualMappings[valueState];
+        var visualTypes = visualTypesMap[valueState];
+
+        for (var i = 0, len = visualTypes.length; i < len; i++) {
+            var type = visualTypes[i];
+            mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
+        }
+    }
+
+    return {dataEach: dataEach};
 }

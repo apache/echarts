@@ -18,12 +18,22 @@
         <div id="main"></div>
         <script>
 
-            var lngRange = [-10.781327, 131.48];
-            var latRange = [18.252847, 52.33];
-            var chunkMax = 5;
+            var chunkMax = 4;
             var chunkCount = 0;
 
-            function genData(count) {
+            function genData1(count) {
+                var lngRange = [-10.781327, 131.48];
+                var latRange = [18.252847, 52.33];
+                return genData(count, lngRange, latRange);
+            }
+
+            function genData2(count) {
+                var lngRange = [100.781327, 231.48];
+                var latRange = [-18.252847, 30.33];
+                return genData(count, lngRange, latRange);
+            }
+
+            function genData(count, lngRange, latRange) {
                 lngRange[1] += 5;
                 lngRange[0] -= 10;
                 latRange[1] += 4;
@@ -39,8 +49,6 @@
                 }
                 return data;
             }
-
-            var initData = genData(2001);
 
             require([
                 'echarts'
@@ -62,7 +70,7 @@
                         legend: {
                             orient: 'vertical',
                             left: 'left',
-                            data:['categoryA','categoryB','categoryC']
+                            data:['pm2.5','pm10']
                         },
                         // ???
                         // visualMap: {
@@ -84,7 +92,7 @@
                         series : [{
                             name: 'pm2.5',
                             type: 'scatter',
-                            data: initData,
+                            data: genData1(2001),
                             xAxisIndex: 0,
                             yAxisIndex: 0,
                             symbolSize: 2,
@@ -96,9 +104,9 @@
                             },
                             progressive: 3000
                         }, {
-                            name: 'pm2.5',
+                            name: 'pm10',
                             type: 'scatter',
-                            data: initData,
+                            data: genData2(2001),
                             xAxisIndex: 0,
                             yAxisIndex: 0,
                             symbolSize: 2,
@@ -118,11 +126,13 @@
                         alert('asdf');
                     });
 
+                    window.onresize = chart.resize;
+
                     next();
 
                     function next() {
                         if (chunkCount++ < chunkMax) {
-                            var newData = genData(20000);
+                            var newData = genData1(20000);
                             chart.addData({seriesIndex: 0, data: newData});
                             setTimeout(next, 3000);
                         }

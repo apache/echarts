@@ -4,7 +4,7 @@
 
 import * as graphic from '../../util/graphic';
 import SymbolClz from './Symbol';
-// import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
+import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
 /**
  * @constructor
@@ -81,37 +81,38 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     this._data = data;
 };
 
-// ??? remove
-symbolDrawProto.updateLayout = function () {
-    var data = this._data;
-    if (data) {
-        // Not use animation
-        data.eachItemGraphicEl(function (el, idx) {
-            var point = data.getItemLayout(idx);
-            el.attr('position', point);
-        });
-    }
-};
-
-// symbolDrawProto.incrementalPrepareUpdate = function (data) {
-//     this._seriesScope = makeSeriesScope(data);
-//     this._clearIncremental();
-
-//     !this._incremental && this.group.add(
-//         this._incremental = new IncrementalDisplayable()
-//     );
-// };
-
-// symbolDrawProto.incrementalUpdate = function (taskParams, data) {
-//     for (var idx = taskParams.start; idx < taskParams.end; idx++) {
-//         var point = data.getItemLayout(idx);
-//         // ??? IncrementalDisplayable do not support Group.
-//         symbolNeedsDraw(data, point, idx) && this._incremental.addDisplayable(
-//             new this._symbolCtor(data, idx, this._seriesScope),
-//             true
-//         );
+// symbolDrawProto.updateLayout = function () {
+//     var data = this._data;
+//     if (data) {
+//         // Not use animation
+//         data.eachItemGraphicEl(function (el, idx) {
+//             var point = data.getItemLayout(idx);
+//             el.attr('position', point);
+//         });
 //     }
 // };
+
+symbolDrawProto.incrementalPrepareUpdate = function (data) {
+    this._seriesScope = makeSeriesScope(data);
+    this._clearIncremental();
+
+    !this._incremental && this.group.add(
+        this._incremental = new IncrementalDisplayable()
+    );
+};
+
+symbolDrawProto.incrementalUpdate = function (taskParams, data) {
+    for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+        var point = data.getItemLayout(idx);
+        // ???! IncrementalDisplayable do not support Group.
+        var el = new this._symbolCtor(data, idx, this._seriesScope).childAt(0);
+        el.attr('position', point);
+        // data.setItemGraphicEl(idx, el);
+        if (symbolNeedsDraw(data, point, idx)) {
+            this._incremental.addDisplayable(el, true);
+        }
+    }
+};
 
 symbolDrawProto.remove = function (enableAnimation) {
     // this._incremental = null;
@@ -132,12 +133,12 @@ symbolDrawProto.remove = function (enableAnimation) {
     }
 };
 
-// symbolDrawProto._clearIncremental = function () {
-//     var incremental = this._incremental;
-//     if (incremental) {
-//         incremental.clearDisplaybles();
-//     }
-// };
+symbolDrawProto._clearIncremental = function () {
+    var incremental = this._incremental;
+    if (incremental) {
+        incremental.clearDisplaybles();
+    }
+};
 
 function makeSeriesScope(data) {
     var seriesModel = data.hostModel;

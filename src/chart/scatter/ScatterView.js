@@ -25,7 +25,7 @@ echarts.extendChartView({
     _updateSymbolDraw: function (data, seriesModel) {
         var symbolDraw = this._symbolDraw;
         var pipelineContext = seriesModel.pipelineContext;
-        var isLargeDraw = pipelineContext.large || pipelineContext.incrementalRender;
+        var isLargeDraw = pipelineContext.large;
 
         if (!symbolDraw || isLargeDraw !== this._isLargeDraw) {
             symbolDraw && symbolDraw.remove();

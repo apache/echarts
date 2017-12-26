@@ -3,34 +3,34 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as visualSolution from '../../visual/visualSolution';
 import VisualMapping from '../../visual/VisualMapping';
 
-// ???! visualmap progress.
+var VISUAL_PRIORITY = echarts.PRIORITY.VISUAL.COMPONENT;
 
-echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT, function (ecModel) {
-    ecModel.eachComponent('visualMap', function (visualMapModel) {
-        processSingleVisualMap(visualMapModel, ecModel);
-    });
+echarts.registerVisual(VISUAL_PRIORITY, {
+    reset: function (seriesModel, ecModel) {
+        var resetDefines = [];
+        ecModel.eachComponent('visualMap', function (visualMapModel) {
+            if (!visualMapModel.isTargetSeries(seriesModel)) {
+                return;
+            }
 
-    prepareVisualMeta(ecModel);
+            var data = seriesModel.getData();
+
+            resetDefines.push(visualSolution.incrementalApplyVisual(
+                data,
+                visualMapModel.stateList,
+                visualMapModel.targetVisuals,
+                zrUtil.bind(visualMapModel.getValueState, visualMapModel),
+                visualMapModel.getDataDimension(data)
+            ));
+        });
+
+        return resetDefines;
+    }
 });
 
-function processSingleVisualMap(visualMapModel, ecModel) {
-    visualMapModel.eachTargetSeries(function (seriesModel) {
-        var data = seriesModel.getData();
-
-        visualSolution.applyVisual(
-            visualMapModel.stateList,
-            visualMapModel.targetVisuals,
-            data,
-            visualMapModel.getValueState,
-            visualMapModel,
-            visualMapModel.getDataDimension(data)
-        );
-    });
-}
-
 // Only support color.
-function prepareVisualMeta(ecModel) {
-    ecModel.eachSeries(function (seriesModel) {
+echarts.registerVisual(VISUAL_PRIORITY, {
+    reset: function (seriesModel, ecModel) {
         var data = seriesModel.getData();
         var visualMetaList = [];
 
@@ -46,8 +46,8 @@ function prepareVisualMeta(ecModel) {
 
         // console.log(JSON.stringify(visualMetaList.map(a => a.stops)));
         seriesModel.getData().setVisual('visualMeta', visualMetaList);
-    });
-}
+    }
+});
 
 // FIXME
 // performance and export for heatmap?

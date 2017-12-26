@@ -7,7 +7,7 @@ import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
-// import arrayEqual from '../util/array/equal';
+import {normalizeToArray} from '../util/model';
 
 /**
  * @constructor
@@ -300,26 +300,26 @@ function seriesTaskReset(context) {
     if (context.useClearVisual) {
         context.model.getData().clearAllVisual();
     }
-    var resetDefine = context.reset(
+    var resetDefines = context.resetDefines = normalizeToArray(context.reset(
         context.model, context.ecModel, context.api, context.payload
-    );
-    if (resetDefine) {
-        context.dataEach = resetDefine.dataEach;
-        context.progress = resetDefine.progress;
+    ));
+    if (resetDefines.length) {
         return seriesTaskProgress;
     }
 }
 
 function seriesTaskProgress(params, context) {
     var data = context.model.getData();
-    if (data) {
-        if (context.dataEach) {
+    var resetDefines = context.resetDefines;
+    for (var k = 0; k < resetDefines.length; k++) {
+        var resetDefine = resetDefines[k];
+        if (resetDefine.dataEach) {
             for (var i = params.start; i < params.end; i++) {
-                context.dataEach(data, i);
+                resetDefine.dataEach(data, i);
             }
         }
-        else if (context.progress) {
-            context.progress(params, data);
+        else if (resetDefine.progress) {
+            resetDefine.progress(params, data);
         }
     }
 }

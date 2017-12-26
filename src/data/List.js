@@ -449,48 +449,6 @@ listProto._initDataFromProvider = function (start, end) {
     this._extent = {};
     this._extentEnds = {};
 
-    // Create more chunk storage.
-    // var chunkIndex = this._chunkCount;
-    // var volume = chunkIndex * chunkSize;
-    // for (var i = 0; i < dimensions.length; i++) {
-    //     var dim = dimensions[i];
-
-    //     var dimInfo = dimensionInfoMap[dim];
-    //     if (dimInfo.otherDims.itemName === 0) {
-    //         nameDimIdx = i;
-    //     }
-    //     var DataCtor = dataCtors[dimInfo.type];
-
-    //     if (!storage[dim]) {
-    //         storage[dim] = [];
-    //     }
-    //     if (storage[dim][chunkIndex]) {
-    //         var resizeChunkArray = storage[dim][chunkIndex];
-    //         var newSize;
-    //         if (volume < end) {
-    //             newSize = chunkSize;
-    //         }
-    //         else {
-    //             newStore = end - chunkIndex * chunkSize;
-    //         }
-    //         var newStore = new DataCtor(newSize);
-    //         for (var i = 0; i < resizeChunkArray.length; i++) {
-    //             newStore[i] = resizeChunkArray[i];
-    //         }
-    //         storage[dim][chunkIndex] = newStore;
-    //     }
-    // }
-    // Create new chunks
-    // for (var k = volume; k < end; k += chunkSize) {
-    //     for (var i = 0; i < dimensions.length; i++) {
-    //         var dim = dimensions[i];
-    //         var dimInfo = dimensionInfoMap[dim];
-    //         var DataCtor = dataCtors[dimInfo.type];
-    //         storage[dim][this._chunkCount] = new DataCtor(Math.min(end - k, chunkSize));
-    //     }
-    //     this._chunkCount++;
-    // }
-
     var chunkCount = this._chunkCount;
     var lastChunkIndex = chunkCount - 1;
     for (var i = 0; i < dimensions.length; i++) {
