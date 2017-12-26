@@ -96,8 +96,8 @@ var SunburstView = ChartView.extend({
                 if (oldNode && oldNode.piece) {
                     if (newNode) {
                         // Update
-                        oldNode.piece
-                            .updateData(false, newNode, seriesModel, ecModel);
+                        oldNode.piece.updateData(
+                            false, newNode, 'normal', seriesModel, ecModel);
                     }
                     else {
                         // Remove
@@ -135,8 +135,8 @@ var SunburstView = ChartView.extend({
                 // Render
                 if (virtualRoot.piece) {
                     // Update
-                    virtualRoot.piece
-                        .updateData(false, virtualRoot, seriesModel, ecModel);
+                    virtualRoot.piece.updateData(
+                        false, virtualRoot, 'normal', seriesModel, ecModel);
                 }
                 else {
                     // Add
