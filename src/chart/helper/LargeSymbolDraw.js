@@ -20,6 +20,7 @@ var LargeSymbolPath = graphic.extendShape({
 
         var symbolProxy = this.symbolProxy;
         var symbolProxyShape = symbolProxy.shape;
+        var ctx = path.getContext ? path.getContext() : path;
         for (var i = 0; i < points.length;) {
             var x = points[i++];
             var y = points[i++];
@@ -34,7 +35,8 @@ var LargeSymbolPath = graphic.extendShape({
 
             if (size[0] < 4) {
                 // Optimize for small symbol
-                path.rect(
+                // PENDING
+                ctx.fillRect(
                     x - size[0] / 2, y - size[1] / 2,
                     size[0], size[1]
                 );
