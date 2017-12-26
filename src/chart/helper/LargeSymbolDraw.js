@@ -21,6 +21,8 @@ var LargeSymbolPath = graphic.extendShape({
         var symbolProxy = this.symbolProxy;
         var symbolProxyShape = symbolProxy.shape;
         var ctx = path.getContext ? path.getContext() : path;
+        var canBoost = ctx && size[0] < 4;
+
         for (var i = 0; i < points.length;) {
             var x = points[i++];
             var y = points[i++];
@@ -33,7 +35,7 @@ var LargeSymbolPath = graphic.extendShape({
                 size = sizes[i];
             }
 
-            if (size[0] < 4) {
+            if (canBoost) {
                 // Optimize for small symbol
                 // PENDING, Do fill in buildPath??
                 ctx.fillRect(
