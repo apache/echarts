@@ -260,33 +260,44 @@ echartsProto._onframe = function () {
         triggerUpdatedEvent.call(this, silent);
     }
 
-    // Stream progress.
-    var remainTime = TEST_FRAME_REMAIN_TIME;
-    var scheduler = this._scheduler;
-    var ecModel = this._model;
-    if (scheduler.unfinished) {
-        scheduler.unfinished = false;
-        do {
-            var startTime = +new Date();
+    // Avoid do both lazy update and progress in one frame.
+    else {
+        // Stream progress.
+        var remainTime = TEST_FRAME_REMAIN_TIME;
+        var scheduler = this._scheduler;
+        var ecModel = this._model;
 
-            scheduler.performSeriesTasks(ecModel);
+        if (scheduler.unfinished) {
+            scheduler.unfinished = false;
+            do {
+                var startTime = +new Date();
 
-            // Currently dataProcessorFuncs do not check threshold.
-            scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
+                scheduler.performSeriesTasks(ecModel);
 
-            scheduler.updateModes(ecModel);
+                // Currently dataProcessorFuncs do not check threshold.
+                scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
 
-            // ???! coordSys create
-            // this._coordSysMgr.update();
+                scheduler.updateModes(ecModel);
 
-            // console.log('------------- ec frame visual -------------', remainTime);
-            scheduler.performVisualTasks(visualFuncs, ecModel);
+                // ???! coordSys create
+                // this._coordSysMgr.update();
 
-            render(this, this._model, this._api, 'none');
+                // console.log('--- ec frame visual ---', remainTime);
+                scheduler.performVisualTasks(visualFuncs, ecModel);
 
-            remainTime -= (+new Date() - startTime);
+                render(this, this._model, this._api, 'none');
+
+                remainTime -= (+new Date() - startTime);
+            }
+            while (remainTime > 0 && scheduler.unfinished);
+
+            if (!scheduler.unfinished) {
+                this._zr && this._zr.flush();
+                this.trigger('finished');
+            }
+            // Else, zr flushing be ensue within the same frame,
+            // because zr flushing is after onframe event.
         }
-        while (remainTime > 0 && scheduler.unfinished);
     }
 };
 

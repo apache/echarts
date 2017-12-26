@@ -14,8 +14,18 @@
                 height: 100%;
                 margin: 0;
             }
+
+            #snapshot {
+                position: fixed;
+                right: 10;
+                bottom: 10;
+                width: 200;
+                height: 200;
+                background: #fff;
+            }
         </style>
         <div id="main"></div>
+        <img id="snapshot"/>
         <script>
 
             var chunkMax = 4;
@@ -124,6 +134,13 @@
 
                     chart.on('click', function (param) {
                         alert('asdf');
+                    });
+
+                    chart.on('finished', function () {
+                        console.log('Render finished');
+                        var url = chart.getDataURL();
+                        var snapshotEl = document.getElementById('snapshot');
+                        snapshotEl.src = url;
                     });
 
                     window.onresize = chart.resize;
