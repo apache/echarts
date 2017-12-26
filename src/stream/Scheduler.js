@@ -131,7 +131,7 @@ proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
 // opt.visualType: 'visual' or 'layout'
 // opt.setDirty
 proto.performVisualTasks = function (stageHandlers, ecModel, payload, opt) {
-    performStageTasks(this, stageHandlers, ecModel, payload);
+    performStageTasks(this, stageHandlers, ecModel, payload, opt);
 };
 
 function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
