@@ -192,13 +192,11 @@ function renderTaskReset(context) {
     var view = context.view;
 
     var updateMethod = payload && inner(payload).updateMethod;
-    var methodName = incremental
-        ? ((updateMethod && view.incrementalPrepareLayout)
-            ? 'incrementalPrepareLayout' : 'incrementalPrepareRender'
-        )
-        : ((updateMethod && view[updateMethod])
-            ? updateMethod : 'render'
-        );
+    var methodName = (incremental && view.incrementalPrepareRender)
+        ? 'incrementalPrepareRender'
+        : (updateMethod && view[updateMethod])
+        ? updateMethod
+        : 'render';
 
     view[methodName](seriesModel, ecModel, api, payload);
 
@@ -206,16 +204,9 @@ function renderTaskReset(context) {
 }
 
 function renderTaskProgress(params, context) {
-    var view = context.view;
-    var seriesModel = context.model;
-    var ecModel = context.ecModel;
-    var api = context.api;
-    var payload = context.payload;
-    var updateMethod = payload && inner(payload).updateMethod;
-    var methodName = (updateMethod && view.incrementalLayout)
-        ? 'incrementalLayout' : 'incrementalRender';
-
-    view[methodName](params, seriesModel, ecModel, api, payload);
+    context.view.incrementalRender(
+        params, context.model, context.ecModel, context.api, context.payload
+    );
 }
 
 

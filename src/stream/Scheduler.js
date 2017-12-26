@@ -45,7 +45,7 @@ proto.getPerformArgs = function (task, isBlock) {
     var pipeline = this._pipelineMap.get(task.__pipelineId);
     var pCtx = pipeline.context;
     var incremental = !isBlock
-        && pipeline.incrementalEnabled
+        && pipeline.progressiveEnabled
         && (!pCtx || pCtx.incrementalRender)
         && task.__idxInPipeline > pipeline.bockIndex;
 
@@ -57,20 +57,19 @@ proto.getPerformArgs = function (task, isBlock) {
  * Always detect render mode in the same stage, avoiding that incorrect
  * detection caused by data filtering.
  */
-proto.updateModes = function (ecModel) {
-    var pipelineMap = this._pipelineMap;
-    ecModel.eachSeries(function (seriesModel) {
-        var pipeline = pipelineMap.get(seriesModel.uid);
-        var data = seriesModel.getData();
-        var dataLen = data.count();
-        var incrementalRender = pipeline.incrementalEnabled && dataLen >= pipeline.threshold;
-        var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
+proto.updateStreamModes = function (seriesModel, view) {
+    var pipeline = this._pipelineMap.get(seriesModel.uid);
+    var data = seriesModel.getData();
+    var dataLen = data.count();
+    var incrementalRender = pipeline.progressiveEnabled
+        && view.incrementalPrepareRender
+        && dataLen >= pipeline.threshold;
+    var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
 
-        seriesModel.pipelineContext = pipeline.context = {
-            incrementalRender: incrementalRender,
-            large: large
-        };
-    });
+    seriesModel.pipelineContext = pipeline.context = {
+        incrementalRender: incrementalRender,
+        large: large
+    };
 };
 
 proto.restorePipelines = function (ecModel) {
@@ -85,8 +84,8 @@ proto.restorePipelines = function (ecModel) {
             head: dataTask,
             tail: dataTask,
             threshold: seriesModel.get('progressiveThreshold'),
-            incrementalEnabled: progressive
-                && !(seriesModel.banIncremental && seriesModel.banIncremental()),
+            progressiveEnabled: progressive
+                && !(seriesModel.banProgressive && seriesModel.banProgressive()),
             bockIndex: -1,
             step: progressive || 700, // ??? Temporarily number
             count: 2

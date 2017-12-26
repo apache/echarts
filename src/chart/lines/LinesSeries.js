@@ -192,7 +192,7 @@ var LinesSeries = SeriesModel.extend({
         return encodeHTML(html.join(' > '));
     },
 
-    banIncremental: function () {
+    banProgressive: function () {
         return !!this.get('effect.show');
     },
 

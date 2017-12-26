@@ -277,7 +277,7 @@ echartsProto._onframe = function () {
                 // Currently dataProcessorFuncs do not check threshold.
                 scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
 
-                scheduler.updateModes(ecModel);
+                updateStreamModes(this, ecModel);
 
                 // ???! coordSys create
                 // this._coordSysMgr.update();
@@ -785,7 +785,7 @@ var updateMethods = {
 
         scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel, payload);
 
-        scheduler.updateModes(ecModel);
+        updateStreamModes(this, ecModel);
 
         stackSeriesData.call(this, ecModel);
 
@@ -1051,6 +1051,14 @@ function refresh(ecIns, needPrepare, silent) {
     flushPendingActions.call(ecIns, silent);
 
     triggerUpdatedEvent.call(ecIns, silent);
+}
+
+function updateStreamModes(ecIns, ecModel) {
+    var chartsMap = ecIns._chartsMap;
+    var scheduler = ecIns._scheduler;
+    ecModel.eachSeries(function (seriesModel) {
+        scheduler.updateStreamModes(seriesModel, chartsMap[seriesModel.__viewId]);
+    });
 }
 
 /**
