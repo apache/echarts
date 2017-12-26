@@ -4,7 +4,7 @@
 
 import * as graphic from '../../util/graphic';
 import SymbolClz from './Symbol';
-import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
+// import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
 /**
  * @constructor
@@ -114,8 +114,7 @@ symbolDrawProto.updateLayout = function () {
 // };
 
 symbolDrawProto.remove = function (enableAnimation) {
-    this._clearIncremental();
-    this._incremental = null;
+    // this._incremental = null;
 
     var group = this.group;
     var data = this._data;
@@ -133,12 +132,12 @@ symbolDrawProto.remove = function (enableAnimation) {
     }
 };
 
-symbolDrawProto._clearIncremental = function () {
-    var incremental = this._incremental;
-    if (incremental) {
-        incremental.clearDisplaybles();
-    }
-};
+// symbolDrawProto._clearIncremental = function () {
+//     var incremental = this._incremental;
+//     if (incremental) {
+//         incremental.clearDisplaybles();
+//     }
+// };
 
 function makeSeriesScope(data) {
     var seriesModel = data.hostModel;

@@ -103,6 +103,7 @@ export default echarts.extendChartView({
             this._hasEffet = hasEffect;
             this._isPolyline = isPolyline;
             this._isLargeDraw = isLargeDraw;
+            this.group.removeAll();
         }
 
         this.group.add(lineDraw.group);
@@ -124,7 +125,7 @@ export default echarts.extendChartView({
     },
 
     remove: function (ecModel, api) {
-        this._lineDraw && this._lineDraw.remove(api, true);
+        this._lineDraw && this._lineDraw.remove();
         this._lineDraw = null;
         // Clear motion when lineDraw is removed
         var zr = api.getZr();

@@ -33,6 +33,7 @@ echarts.extendChartView({
                 ? new LargeSymbolDraw()
                 : new SymbolDraw();
             this._isLargeDraw = isLargeDraw;
+            this.group.removeAll();
         }
 
         this.group.add(symbolDraw.group);
@@ -41,7 +42,7 @@ echarts.extendChartView({
     },
 
     remove: function (ecModel, api) {
-        this._symbolDraw && this._symbolDraw.remove(api, true);
+        this._symbolDraw && this._symbolDraw.remove(true);
         this._symbolDraw = null;
     },
 

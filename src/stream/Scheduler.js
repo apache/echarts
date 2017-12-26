@@ -255,7 +255,7 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
 function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
         || createTask(
-            {reset: overallTaskReset},
+            {plan: overallTaskPlan, reset: overallTaskReset},
             {ecModel: ecModel, api: api, overallReset: stageHandler.overallReset}
         );
 
@@ -284,6 +284,10 @@ function overallTaskReset(context) {
     context.overallReset(
         context.ecModel, context.api, context.payload
     );
+}
+
+function overallTaskPlan(context) {
+    return 'reset';
 }
 
 function seriesTaskPlan(context) {
