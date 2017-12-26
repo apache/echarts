@@ -1412,7 +1412,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
 
         updateZ(seriesModel, chartView);
 
-        // ??? updateProgressiveAndBlend(seriesModel, chartView);
+        updateBlend(seriesModel, chartView);
     }
     scheduler.unfinished |= unfinished;
 
@@ -1539,29 +1539,7 @@ function updateHoverLayerStatus(zr, ecModel) {
  * @param {module:echarts/model/Series|module:echarts/model/Component} model
  * @param {module:echarts/view/Component|module:echarts/view/Chart} view
  */
-function updateProgressiveAndBlend(seriesModel, chartView) {
-    // Progressive configuration
-    var elCount = 0;
-    chartView.group.traverse(function (el) {
-        if (el.type !== 'group' && !el.ignore) {
-            elCount++;
-        }
-    });
-    var frameDrawNum = +seriesModel.get('progressive');
-    var needProgressive = elCount > seriesModel.get('progressiveThreshold') && frameDrawNum && !env.node;
-    if (needProgressive) {
-        chartView.group.traverse(function (el) {
-            // FIXME marker and other components
-            if (!el.isGroup) {
-                el.progressive = needProgressive ?
-                    Math.floor(elCount++ / frameDrawNum) : -1;
-                if (needProgressive) {
-                    el.stopAnimation(true);
-                }
-            }
-        });
-    }
-
+function updateBlend(seriesModel, chartView) {
     // Blend configration
     // ???
     var blendMode = seriesModel.get('blendMode') || null;
@@ -1574,6 +1552,11 @@ function updateProgressiveAndBlend(seriesModel, chartView) {
         // FIXME marker and other components
         if (!el.isGroup) {
             el.setStyle('blend', blendMode);
+        }
+        if (el.eachPendingDisplayable) {
+            el.eachPendingDisplayable(function (displayable) {
+                displayable.setStyle('blend', blendMode);
+            });
         }
     });
 }
