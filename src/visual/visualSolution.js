@@ -143,13 +143,24 @@ export function applyVisual(stateList, visualMappings, data, getValueState, scop
     }
 }
 
-export function incrementalApplyVisual(data, stateList, visualMappings, getValueState, dimension) {
+/**
+ * @param {module:echarts/data/List} data
+ * @param {Array.<string>} stateList
+ * @param {Object} visualMappings <state, Object.<visualType, module:echarts/visual/VisualMapping>>
+ * @param {Function} getValueState param: valueOrIndex, return: state.
+ * @param {number} [dim] dimension or dimension index.
+ */
+export function incrementalApplyVisual(data, stateList, visualMappings, getValueState, dim) {
 
     var visualTypesMap = {};
     zrUtil.each(stateList, function (state) {
         var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
+
+    if (dim != null) {
+        dim = data.getDimension(dim);
+    }
 
     var dataIndex;
 
@@ -170,8 +181,8 @@ export function incrementalApplyVisual(data, stateList, visualMappings, getValue
             return;
         }
 
-        var value = dimension
-            ? data.get(data.getDimension(dimension), dataIndex, true)
+        var value = dim != null
+            ? data.get(dim, dataIndex, true)
             : dataIndex;
 
         var valueState = getValueState(value);
