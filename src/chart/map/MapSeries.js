@@ -205,25 +205,22 @@ var MapSeries = SeriesModel.extend({
         scaleLimit: null,
 
         label: {
-            normal: {
-                show: false,
-                color: '#000'
-            },
-            emphasis: {
-                show: true,
-                color: 'rgb(100,0,0)'
-            }
+            show: false,
+            color: '#000'
         },
         // scaleLimit: null,
         itemStyle: {
-            normal: {
-                // color: 各异,
-                borderWidth: 0.5,
-                borderColor: '#444',
-                areaColor: '#eee'
+            borderWidth: 0.5,
+            borderColor: '#444',
+            areaColor: '#eee'
+        },
+
+        emphasis: {
+            label: {
+                show: true,
+                color: 'rgb(100,0,0)'
             },
-            // 也是选中样式
-            emphasis: {
+            itemStyle: {
                 areaColor: 'rgba(255,215,0,0.8)'
             }
         }

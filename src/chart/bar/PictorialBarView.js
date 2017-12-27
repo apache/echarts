@@ -6,7 +6,7 @@ import {parsePercent, isNumeric} from '../../util/number';
 import {setLabel} from './helper';
 
 
-var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'borderWidth'];
+var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'];
 
 // index: +isHorizontal
 var LAYOUT_ATTRS = [
@@ -729,8 +729,8 @@ function updateCommon(bar, opt, symbolMeta) {
     var itemModel = symbolMeta.itemModel;
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    var normalStyle = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
-    var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+    var normalStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
+    var hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
     var cursorStyle = itemModel.getShallow('cursor');
 
     eachPath(bar, function (path) {

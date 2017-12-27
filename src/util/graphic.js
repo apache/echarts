@@ -279,16 +279,16 @@ function doSingleEnterHover(el) {
 
         // styles can be:
         // {
-        //     label: {
-        //         normal: {
-        //             show: false,
-        //             position: 'outside',
-        //             fontSize: 18
-        //         },
-        //         emphasis: {
-        //             show: true
-        //         }
-        //     }
+        //    label: {
+        //        show: false,
+        //        position: 'outside',
+        //        fontSize: 18
+        //    },
+        //    emphasis: {
+        //        label: {
+        //            show: true
+        //        }
+        //    }
         // },
         // where properties of `emphasis` may not appear in `normal`. We previously use
         // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
@@ -606,10 +606,8 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
     //     data: [{
     //         value: 12,
     //         label: {
-    //             normal: {
-    //                 rich: {
-    //                     // no 'a' here but using parent 'a'.
-    //                 }
+    //             rich: {
+    //                 // no 'a' here but using parent 'a'.
     //             }
     //         }
     //     }],
@@ -646,10 +644,8 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
 //     data: [{
 //         value: 12,
 //         label: {
-//             normal: {
-//                 rich: {
-//                     // no 'a' here but using parent 'a'.
-//                 }
+//             rich: {
+//                 // no 'a' here but using parent 'a'.
 //             }
 //         }
 //     }],

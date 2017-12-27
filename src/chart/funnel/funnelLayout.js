@@ -34,10 +34,10 @@ function getSortedIndices(data, sort) {
 function labelLayout(data) {
     data.each(function (idx) {
         var itemModel = data.getItemModel(idx);
-        var labelModel = itemModel.getModel('label.normal');
+        var labelModel = itemModel.getModel('label');
         var labelPosition = labelModel.get('position');
 
-        var labelLineModel = itemModel.getModel('labelLine.normal');
+        var labelLineModel = itemModel.getModel('labelLine');
 
         var layout = data.getItemLayout(idx);
         var points = layout.points;

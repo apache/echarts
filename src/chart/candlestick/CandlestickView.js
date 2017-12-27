@@ -17,8 +17,8 @@ var CandlestickView = ChartView.extend({
 zrUtil.mixin(CandlestickView, viewMixin, true);
 
 // Update common properties
-var normalStyleAccessPath = ['itemStyle', 'normal'];
-var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
+var normalStyleAccessPath = ['itemStyle'];
+var emphasisStyleAccessPath = ['emphasis', 'itemStyle'];
 
 function updateStyle(itemGroup, data, idx) {
     var itemModel = data.getItemModel(idx);

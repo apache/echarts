@@ -57,7 +57,7 @@ export default {
                         pts[0] = coordSys.dataToPoint(lineCoords[0]);
                         pts[1] = coordSys.dataToPoint(lineCoords[1]);
 
-                        var curveness = itemModel.get('lineStyle.normal.curveness');
+                        var curveness = itemModel.get('lineStyle.curveness');
                         if (+curveness) {
                             pts[2] = [
                                 (pts[0][0] + pts[1][0]) / 2 - (pts[0][1] - pts[1][1]) * curveness,

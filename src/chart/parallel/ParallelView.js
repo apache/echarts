@@ -184,12 +184,12 @@ function addEl(data, dataGroup, dataIndex, dimensions, coordSys) {
 }
 
 function updateElCommon(data, smooth) {
-    var seriesStyleModel = data.hostModel.getModel('lineStyle.normal');
+    var seriesStyleModel = data.hostModel.getModel('lineStyle');
     var lineStyle = seriesStyleModel.getLineStyle();
     data.eachItemGraphicEl(function (line, dataIndex) {
         if (data.hasItemOption) {
             var itemModel = data.getItemModel(dataIndex);
-            var lineStyleModel = itemModel.getModel('lineStyle.normal', seriesStyleModel);
+            var lineStyleModel = itemModel.getModel('lineStyle', seriesStyleModel);
             lineStyle = lineStyleModel.getLineStyle(['color', 'stroke']);
         }
 

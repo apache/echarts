@@ -46,15 +46,14 @@ var ChordSeries = SeriesModel.extend({
         startAngle: 90,
         clockwise: true,
 
-        itemStyle: {
-            normal: {},
-            emphasis: {}
+        itemStyle: {},
+
+        emphasis: {
+            itemStyle: {},
+            chordStyle: {}
         },
 
-        chordStyle: {
-            normal: {},
-            emphasis: {}
-        }
+        chordStyle: {}
     }
 });
 

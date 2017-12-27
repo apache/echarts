@@ -208,12 +208,12 @@ MarkerView.extend({
 
         areaData.eachItemGraphicEl(function (polygon, idx) {
             var itemModel = areaData.getItemModel(idx);
-            var labelModel = itemModel.getModel('label.normal');
-            var labelHoverModel = itemModel.getModel('label.emphasis');
+            var labelModel = itemModel.getModel('label');
+            var labelHoverModel = itemModel.getModel('emphasis.label');
             var color = areaData.getItemVisual(idx, 'color');
             polygon.useStyle(
                 zrUtil.defaults(
-                    itemModel.getModel('itemStyle.normal').getItemStyle(),
+                    itemModel.getModel('itemStyle').getItemStyle(),
                     {
                         fill: colorUtil.modifyAlpha(color, 0.4),
                         stroke: color
@@ -221,7 +221,7 @@ MarkerView.extend({
                 )
             );
 
-            polygon.hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+            polygon.hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
 
             graphic.setLabelStyle(
                 polygon.style, polygon.hoverStyle, labelModel, labelHoverModel,

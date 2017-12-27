@@ -36,19 +36,14 @@ export default SeriesModel.extend({
         // cursor: null,
 
         label: {
-            normal: {
-                position: 'top'
-            }
+            position: 'top'
         },
         // itemStyle: {
-        //     normal: {},
-        //     emphasis: {}
         // },
+
         lineStyle: {
-            normal: {
-                width: 2,
-                type: 'solid'
-            }
+            width: 2,
+            type: 'solid'
         },
         // areaStyle: {},
         // false, 'start', 'end', 'middle'

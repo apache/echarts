@@ -241,7 +241,7 @@ export default MarkerView.extend({
 
         // Update visual and layout of line
         lineData.each(function (idx) {
-            var lineColor = lineData.getItemModel(idx).get('lineStyle.normal.color');
+            var lineColor = lineData.getItemModel(idx).get('lineStyle.color');
             lineData.setItemVisual(idx, {
                 color: lineColor || fromData.getItemVisual(idx, 'color')
             });

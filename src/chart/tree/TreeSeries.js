@@ -100,33 +100,25 @@ export default SeriesModel.extend({
         initialTreeDepth: 2,
 
         lineStyle: {
-            normal: {
-                color: '#ccc',
-                width: 1.5,
-                curveness: 0.5
-            }
+            color: '#ccc',
+            width: 1.5,
+            curveness: 0.5
         },
 
         itemStyle: {
-            normal: {
-                color: 'lightsteelblue',
-                borderColor: '#c23531',
-                borderWidth: 1.5
-            }
+            color: 'lightsteelblue',
+            borderColor: '#c23531',
+            borderWidth: 1.5
         },
 
         label: {
-            normal: {
-                show: true,
-                color: '#555'
-            }
+            show: true,
+            color: '#555'
         },
 
         leaves: {
             label: {
-                normal: {
-                    show: true
-                }
+                show: true
             }
         },
 

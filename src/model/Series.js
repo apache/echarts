@@ -46,7 +46,7 @@ var SeriesModel = ComponentModel.extend({
     /**
      * Access path of color for visual
      */
-    visualColorAccessPath: 'itemStyle.normal.color',
+    visualColorAccessPath: 'itemStyle.color',
 
     /**
      * Support merge layout params.
@@ -120,7 +120,7 @@ var SeriesModel = ComponentModel.extend({
         zrUtil.merge(option, this.getDefaultOption());
 
         // Default label emphasis `show`
-        modelUtil.defaultEmphasis(option.label, ['show']);
+        modelUtil.defaultEmphasis(option, 'label', ['show']);
 
         this.fillDataTextStyle(option.data);
 
@@ -155,7 +155,7 @@ var SeriesModel = ComponentModel.extend({
             var props = ['show'];
             for (var i = 0; i < data.length; i++) {
                 if (data[i] && data[i].label) {
-                    modelUtil.defaultEmphasis(data[i].label, props);
+                    modelUtil.defaultEmphasis(data[i], 'label', props);
                 }
             }
         }

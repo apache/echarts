@@ -43,7 +43,7 @@ var LinesSeries = SeriesModel.extend({
 
     dependencies: ['grid', 'polar'],
 
-    visualColorAccessPath: 'lineStyle.normal.color',
+    visualColorAccessPath: 'lineStyle.color',
 
     init: function (option) {
         // Not using preprocessor because mergeOption may not have series.type
@@ -225,7 +225,7 @@ var LinesSeries = SeriesModel.extend({
             loop: true,
             // Length of trail, 0 - 1
             trailLength: 0.2
-            // Same with lineStyle.normal.color
+            // Same with lineStyle.color
             // color
         },
 
@@ -241,18 +241,14 @@ var LinesSeries = SeriesModel.extend({
         polyline: false,
 
         label: {
-            normal: {
-                show: false,
-                position: 'end'
-                // distance: 5,
-                // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-            }
+            show: false,
+            position: 'end'
+            // distance: 5,
+            // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
         },
 
         lineStyle: {
-            normal: {
-                opacity: 0.5
-            }
+            opacity: 0.5
         }
     }
 });

@@ -160,11 +160,11 @@ largeLineProto._setCommon = function (data, isIncremental) {
 
     lineEl.setShape({
         polyline: hostModel.get('polyline'),
-        curveness: hostModel.get('lineStyle.normal.curveness')
+        curveness: hostModel.get('lineStyle.curveness')
     });
 
     lineEl.useStyle(
-        hostModel.getModel('lineStyle.normal').getLineStyle()
+        hostModel.getModel('lineStyle').getLineStyle()
     );
 
     var visualColor = data.getVisual('color');

@@ -126,14 +126,14 @@ export default echarts.extendChartView({
         var group = this.group;
         var data = seriesModel.getData();
 
-        var itemStyleQuery = 'itemStyle.normal';
-        var hoverItemStyleQuery = 'itemStyle.emphasis';
-        var labelQuery = 'label.normal';
-        var hoverLabelQuery = 'label.emphasis';
+        var itemStyleQuery = 'itemStyle';
+        var hoverItemStyleQuery = 'emphasis.itemStyle';
+        var labelQuery = 'label';
+        var hoverLabelQuery = 'emphasis.label';
         var style = seriesModel.getModel(itemStyleQuery).getItemStyle(['color']);
         var hoverStl = seriesModel.getModel(hoverItemStyleQuery).getItemStyle();
-        var labelModel = seriesModel.getModel('label.normal');
-        var hoverLabelModel = seriesModel.getModel('label.emphasis');
+        var labelModel = seriesModel.getModel(labelQuery);
+        var hoverLabelModel = seriesModel.getModel(hoverLabelQuery);
         var coordSysType = coordSys.type;
 
         var dataDims = coordSysType === 'cartesian2d'

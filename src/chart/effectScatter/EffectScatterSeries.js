@@ -55,9 +55,7 @@ export default SeriesModel.extend({
         // largeThreshold: 2000,
 
         // itemStyle: {
-        //     normal: {
-        //         opacity: 1
-        //     }
+        //     opacity: 1
         // }
     }
 

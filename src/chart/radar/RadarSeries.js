@@ -50,15 +50,11 @@ var RadarSeries = SeriesModel.extend({
         legendHoverLink: true,
         radarIndex: 0,
         lineStyle: {
-            normal: {
-                width: 2,
-                type: 'solid'
-            }
+            width: 2,
+            type: 'solid'
         },
         label: {
-            normal: {
-                position: 'top'
-            }
+            position: 'top'
         },
         // areaStyle: {
         // },
