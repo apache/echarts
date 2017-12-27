@@ -43,11 +43,12 @@ var BoxplotSeries = SeriesModel.extend({
         boxWidth: [7, 50],       // [min, max] can be percent of band width.
 
         itemStyle: {
-            normal: {
-                color: '#fff',
-                borderWidth: 1
-            },
-            emphasis: {
+            color: '#fff',
+            borderWidth: 1
+        },
+
+        emphasis: {
+            itemStyle: {
                 borderWidth: 2,
                 shadowBlur: 5,
                 shadowOffsetX: 2,

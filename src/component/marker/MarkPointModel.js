@@ -15,17 +15,15 @@ export default MarkerModel.extend({
             trigger: 'item'
         },
         label: {
-            normal: {
-                show: true,
-                position: 'inside'
-            },
-            emphasis: {
-                show: true
-            }
+            show: true,
+            position: 'inside'
         },
         itemStyle: {
-            normal: {
-                borderWidth: 2
+            borderWidth: 2
+        },
+        emphasis: {
+            label: {
+                show: true
             }
         }
     }

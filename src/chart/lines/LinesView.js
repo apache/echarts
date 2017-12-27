@@ -119,7 +119,7 @@ export default echarts.extendChartView({
         // Not use motion when dragging or zooming
         var zr = api.getZr();
         var isSvg = zr.painter.getType() === 'svg';
-        if (!isSvg) {
+        if (!isSvg && this._lastZlevel != null) {
             zr.painter.getLayer(this._lastZlevel).clear(true);
         }
     },
@@ -128,11 +128,7 @@ export default echarts.extendChartView({
         this._lineDraw && this._lineDraw.remove();
         this._lineDraw = null;
         // Clear motion when lineDraw is removed
-        var zr = api.getZr();
-        var isSvg = zr.painter.getType() === 'svg';
-        if (!isSvg) {
-            zr.painter.getLayer(this._lastZlevel).clear(true);
-        }
+        this._clearLayer(api);
     },
 
     dispose: function () {}

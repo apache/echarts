@@ -143,13 +143,13 @@ symbolDrawProto._clearIncremental = function () {
 function makeSeriesScope(data) {
     var seriesModel = data.hostModel;
     return {
-        itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
-        hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
+        itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
+        hoverItemStyle: seriesModel.getModel('emphasis.itemStyle').getItemStyle(),
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
         hoverAnimation: seriesModel.get('hoverAnimation'),
-        labelModel: seriesModel.getModel('label.normal'),
-        hoverLabelModel: seriesModel.getModel('label.emphasis'),
+        labelModel: seriesModel.getModel('label'),
+        hoverLabelModel: seriesModel.getModel('emphasis.label'),
         cursorStyle: seriesModel.get('cursor')
     };
 }

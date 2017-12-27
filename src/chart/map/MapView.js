@@ -108,8 +108,8 @@ export default echarts.extendChartView({
                 var fullIndex = fullData.indexOfName(name);
 
                 var itemModel = originalData.getItemModel(idx);
-                var labelModel = itemModel.getModel('label.normal');
-                var hoverLabelModel = itemModel.getModel('label.emphasis');
+                var labelModel = itemModel.getModel('label');
+                var hoverLabelModel = itemModel.getModel('emphasis.label');
 
                 var polygonGroups = fullData.getItemGraphicEl(fullIndex);
 

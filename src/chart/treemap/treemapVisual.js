@@ -4,7 +4,7 @@ import * as zrUtil from 'zrender/src/core/util';
 
 var isArray = zrUtil.isArray;
 
-var ITEM_STYLE_NORMAL = 'itemStyle.normal';
+var ITEM_STYLE_NORMAL = 'itemStyle';
 
 export default function (ecModel, api, payload) {
 

@@ -31,8 +31,8 @@ Breadcrumb.prototype = {
             return;
         }
 
-        var normalStyleModel = model.getModel('itemStyle.normal');
-        // var emphasisStyleModel = model.getModel('itemStyle.emphasis');
+        var normalStyleModel = model.getModel('itemStyle');
+        // var emphasisStyleModel = model.getModel('emphasis.itemStyle');
         var textStyleModel = normalStyleModel.getModel('textStyle');
 
         var layoutParam = {

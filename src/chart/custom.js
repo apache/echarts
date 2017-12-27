@@ -14,10 +14,10 @@ import preparePolar from '../coord/polar/prepareCustom';
 import prepareCalendar from '../coord/calendar/prepareCustom';
 
 
-var ITEM_STYLE_NORMAL_PATH = ['itemStyle', 'normal'];
-var ITEM_STYLE_EMPHASIS_PATH = ['itemStyle', 'emphasis'];
-var LABEL_NORMAL = ['label', 'normal'];
-var LABEL_EMPHASIS = ['label', 'emphasis'];
+var ITEM_STYLE_NORMAL_PATH = ['itemStyle'];
+var ITEM_STYLE_EMPHASIS_PATH = ['emphasis', 'itemStyle'];
+var LABEL_NORMAL = ['label'];
+var LABEL_EMPHASIS = ['emphasis', 'label'];
 // Use prefix to avoid index to be the same as el.name,
 // which will cause weird udpate animation.
 var GROUP_DIFF_PREFIX = 'e\0\0';

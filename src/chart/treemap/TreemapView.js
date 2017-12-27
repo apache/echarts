@@ -677,8 +677,8 @@ function renderNode(
     var thisViewChildren = thisNode.viewChildren;
     var upperHeight = thisLayout.upperHeight;
     var isParent = thisViewChildren && thisViewChildren.length;
-    var itemStyleNormalModel = thisNode.getModel('itemStyle.normal');
-    var itemStyleEmphasisModel = thisNode.getModel('itemStyle.emphasis');
+    var itemStyleNormalModel = thisNode.getModel('itemStyle');
+    var itemStyleEmphasisModel = thisNode.getModel('emphasis.itemStyle');
 
     // End of closure ariables available in "Procedures in renderNode".
     // -----------------------------------------------------------------

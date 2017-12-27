@@ -7,7 +7,7 @@ import Model from '../../model/Model';
 import barItemStyle from './barItemStyle';
 
 
-var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'barBorderWidth'];
+var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
 
 // FIXME
 // Just for compatible with ec2.
@@ -238,8 +238,8 @@ function updateStyle(
 ) {
     var color = data.getItemVisual(dataIndex, 'color');
     var opacity = data.getItemVisual(dataIndex, 'opacity');
-    var itemStyleModel = itemModel.getModel('itemStyle.normal');
-    var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
+    var itemStyleModel = itemModel.getModel('itemStyle');
+    var hoverStyle = itemModel.getModel('emphasis.itemStyle').getBarItemStyle();
 
     if (!isPolar) {
         el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);

@@ -110,10 +110,10 @@ lineDrawProto.updateLayout = function () {
 function makeSeriesScope(lineData) {
     var hostModel = lineData.hostModel;
     return {
-        lineStyle: hostModel.getModel('lineStyle.normal').getLineStyle(),
-        hoverLineStyle: hostModel.getModel('lineStyle.emphasis').getLineStyle(),
-        labelModel: hostModel.getModel('label.normal'),
-        hoverLabelModel: hostModel.getModel('label.emphasis')
+        lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
+        hoverLineStyle: hostModel.getModel('emphasis.lineStyle').getLineStyle(),
+        labelModel: hostModel.getModel('label'),
+        hoverLabelModel: hostModel.getModel('emphasis.label')
     };
 }
 

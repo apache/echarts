@@ -6,7 +6,7 @@ function normalize(a) {
     return a;
 }
 
-var opacityQuery = 'lineStyle.normal.opacity'.split('.');
+var opacityQuery = 'lineStyle.opacity'.split('.');
 
 export default {
     seriesType: 'lines',

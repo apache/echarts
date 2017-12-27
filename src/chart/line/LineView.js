@@ -100,7 +100,7 @@ function createGridClipShape(cartesian, hasAnimation, seriesModel) {
     var y = Math.min(yExtent[0], yExtent[1]);
     var width = Math.max(xExtent[0], xExtent[1]) - x;
     var height = Math.max(yExtent[0], yExtent[1]) - y;
-    var lineWidth = seriesModel.get('lineStyle.normal.width') || 2;
+    var lineWidth = seriesModel.get('lineStyle.width') || 2;
     // Expand clip shape to avoid clipping when line value exceeds axis
     var expandSize = seriesModel.get('clipOverflow') ? lineWidth / 2 : Math.max(width, height);
     if (isHorizontal) {
@@ -312,7 +312,7 @@ export default ChartView.extend({
         var coordSys = seriesModel.coordinateSystem;
         var group = this.group;
         var data = seriesModel.getData();
-        var lineStyleModel = seriesModel.getModel('lineStyle.normal');
+        var lineStyleModel = seriesModel.getModel('lineStyle');
         var areaStyleModel = seriesModel.getModel('areaStyle.normal');
 
         var points = data.mapArray(data.getItemLayout, true);

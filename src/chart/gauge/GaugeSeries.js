@@ -82,9 +82,7 @@ var GaugeSeries = SeriesModel.extend({
             width: 8
         },
         itemStyle: {
-            normal: {
-                color: 'auto'
-            }
+            color: 'auto'
         },
         title: {
             show: true,

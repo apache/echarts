@@ -22,30 +22,30 @@ export function normalizeToArray(value) {
  * Sync default option between normal and emphasis like `position` and `show`
  * In case some one will write code like
  *     label: {
- *         normal: {
- *             show: false,
- *             position: 'outside',
- *             fontSize: 18
- *         },
- *         emphasis: {
- *             show: true
- *         }
+ *          show: false,
+ *          position: 'outside',
+ *          fontSize: 18
+ *     },
+ *     emphasis: {
+ *          label: { show: true }
  *     }
  * @param {Object} opt
+ * @param {string} key
  * @param {Array.<string>} subOpts
  */
-export function defaultEmphasis(opt, subOpts) {
+export function defaultEmphasis(opt, key, subOpts) {
     if (opt) {
-        var emphasisOpt = opt.emphasis = opt.emphasis || {};
-        var normalOpt = opt.normal = opt.normal || {};
+        opt[key] = opt[key] || {};
+        opt.emphasis = opt.emphasis || {};
+        opt.emphasis[key] = opt.emphasis[key] || {};
 
         // Default emphasis option from normal
         for (var i = 0, len = subOpts.length; i < len; i++) {
             var subOptName = subOpts[i];
-            if (!emphasisOpt.hasOwnProperty(subOptName)
-                && normalOpt.hasOwnProperty(subOptName)
+            if (!opt.emphasis[key].hasOwnProperty(subOptName)
+                && opt[key].hasOwnProperty(subOptName)
             ) {
-                emphasisOpt[subOptName] = normalOpt[subOptName];
+                opt.emphasis[key][subOptName] = opt[key][subOptName];
             }
         }
     }
@@ -196,7 +196,10 @@ export var dataFormatMixin = {
             params.value = params.value[dimIndex];
         }
 
-        var formatter = itemModel.get([labelProp || 'label', status, 'formatter']);
+
+        var formatter = itemModel.get(status === 'normal' ?
+            [labelProp || 'label', 'formatter'] : [labelProp || 'label', status, 'formatter']
+        );
 
         if (typeof formatter === 'function') {
             params.status = status;

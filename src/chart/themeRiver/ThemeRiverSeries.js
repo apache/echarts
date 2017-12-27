@@ -285,15 +285,16 @@ var ThemeRiverSeries = SeriesModel.extend({
         animationEasing: 'linear',
 
         label: {
-            normal: {
-                margin: 4,
-                textAlign: 'right',
-                show: true,
-                position: 'left',
-                color: '#000',
-                fontSize: 11
-            },
-            emphasis: {
+            margin: 4,
+            textAlign: 'right',
+            show: true,
+            position: 'left',
+            color: '#000',
+            fontSize: 11
+        },
+
+        emphasis: {
+            label: {
                 show: true
             }
         }

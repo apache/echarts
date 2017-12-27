@@ -1,8 +1,8 @@
 
-var positiveBorderColorQuery = ['itemStyle', 'normal', 'borderColor'];
-var negativeBorderColorQuery = ['itemStyle', 'normal', 'borderColor0'];
-var positiveColorQuery = ['itemStyle', 'normal', 'color'];
-var negativeColorQuery = ['itemStyle', 'normal', 'color0'];
+var positiveBorderColorQuery = ['itemStyle', 'borderColor'];
+var negativeBorderColorQuery = ['itemStyle', 'borderColor0'];
+var positiveColorQuery = ['itemStyle', 'color'];
+var negativeColorQuery = ['itemStyle', 'color0'];
 
 export default function (ecModel, api) {
 

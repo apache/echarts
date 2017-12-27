@@ -9,7 +9,7 @@ export default SeriesModel.extend({
 
     dependencies: ['parallel'],
 
-    visualColorAccessPath: 'lineStyle.normal.color',
+    visualColorAccessPath: 'lineStyle.color',
 
     getInitialData: function (option, ecModel) {
         var parallelModel = ecModel.getComponent(
@@ -83,24 +83,23 @@ export default SeriesModel.extend({
         parallelIndex: 0,
 
         label: {
-            normal: {
-                show: false
-            },
-            emphasis: {
-                show: false
-            }
+            show: false
         },
 
         inactiveOpacity: 0.05,
         activeOpacity: 1,
 
         lineStyle: {
-            normal: {
-                width: 1,
-                opacity: 0.45,
-                type: 'solid'
+            width: 1,
+            opacity: 0.45,
+            type: 'solid'
+        },
+        emphasis: {
+            label: {
+                show: false
             }
         },
+
         progressive: false, // 100
         smooth: false,
 

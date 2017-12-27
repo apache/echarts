@@ -1435,7 +1435,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
     scheduler.unfinished |= unfinished;
 
     // If use hover layer
-    // ??? updateHoverLayerStatus(this._zr, ecModel);
+    updateHoverLayerStatus(ecIns._zr, ecModel);
 }
 
 function performPostUpdateFuncs(ecModel, api) {
@@ -1546,6 +1546,7 @@ function updateHoverLayerStatus(zr, ecModel) {
     if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
         storage.traverse(function (el) {
             if (!el.isGroup) {
+                // Don't switch back.
                 el.useHoverLayer = true;
             }
         });

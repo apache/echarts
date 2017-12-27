@@ -18,19 +18,17 @@ export default MarkerModel.extend({
             trigger: 'item'
         },
         label: {
-            normal: {
-                show: true,
-                position: 'end'
-            },
-            emphasis: {
-                show: true
-            }
+            show: true,
+            position: 'end'
         },
         lineStyle: {
-            normal: {
-                type: 'dashed'
+            type: 'dashed'
+        },
+        emphasis: {
+            label: {
+                show: true
             },
-            emphasis: {
+            lineStyle: {
                 width: 3
             }
         },

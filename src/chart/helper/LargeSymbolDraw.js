@@ -156,7 +156,7 @@ largeSymbolProto._setCommon = function (data, isIncremental) {
     symbolEl.setColor = symbolEl.symbolProxy.setColor;
 
     symbolEl.useStyle(
-        hostModel.getModel('itemStyle.normal').getItemStyle(['color'])
+        hostModel.getModel('itemStyle').getItemStyle(['color'])
     );
 
     var visualColor = data.getVisual('color');
