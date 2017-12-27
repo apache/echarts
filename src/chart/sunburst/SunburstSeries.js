@@ -73,8 +73,8 @@ export default SeriesModel.extend({
         // 'ancestor', 'self'
         highlightPolicy: 'descendant',
 
-        // 'zoomToNode', 'link', or false
-        nodeClick: 'zoomToNode',
+        // 'rootToNode', 'link', or false
+        nodeClick: 'rootToNode',
 
         renderLabelForZeroData: false,
 

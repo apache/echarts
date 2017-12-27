@@ -10,11 +10,6 @@ var SunburstView = ChartView.extend({
     type: 'sunburst',
 
     init: function () {
-        /**
-         * @private
-         * @type {module:echarts/data/Node}
-         */
-        this._oldRoot;
     },
 
     render: function (seriesModel, ecModel, api, payload) {
@@ -26,17 +21,19 @@ var SunburstView = ChartView.extend({
 
         var virtualRoot = seriesModel.getData().tree.root;
 
-        var oldRoot = this._oldRoot;
         var newRoot = seriesModel.getViewRoot();
 
         var group = this.group;
 
         var renderLabelForZeroData = seriesModel.get('renderLabelForZeroData');
 
-        dualTravel(
-            newRoot ? [newRoot] : [],
-            oldRoot ? [oldRoot] : []
-        );
+        var newChildren = [];
+        newRoot.eachNode(function (node) {
+            newChildren.push(node);
+        });
+        var oldChildren = this._oldChildren || [];
+
+        dualTravel(newChildren, oldChildren);
 
         renderRollUp(virtualRoot, newRoot);
 
@@ -56,7 +53,7 @@ var SunburstView = ChartView.extend({
 
         this._initEvents();
 
-        this._oldRoot = newRoot;
+        this._oldChildren = newChildren;
 
         function dualTravel(newChildren, oldChildren) {
             if (newChildren.length === 0 && oldChildren.length === 0) {
@@ -78,11 +75,6 @@ var SunburstView = ChartView.extend({
                 var oldNode = oldId == null ? null : oldChildren[oldId];
 
                 doRenderNode(newNode, oldNode);
-
-                dualTravel(
-                    newNode && newNode.children || [],
-                    oldNode && oldNode.children || []
-                );
             }
         }
 
@@ -92,7 +84,7 @@ var SunburstView = ChartView.extend({
                 newNode = null;
             }
 
-            if (newNode !== virtualRoot) {
+            if (newNode !== virtualRoot && oldNode !== virtualRoot) {
                 if (oldNode && oldNode.piece) {
                     if (newNode) {
                         // Update
@@ -125,13 +117,10 @@ var SunburstView = ChartView.extend({
                 group.remove(node.piece);
                 node.piece = null;
             }
-            zrUtil.each(node.children, function (child) {
-                removeNode(child);
-            });
         }
 
         function renderRollUp(virtualRoot, viewRoot) {
-            if (virtualRoot !== viewRoot) {
+            if (viewRoot.depth > 0) {
                 // Render
                 if (virtualRoot.piece) {
                     // Update
@@ -148,9 +137,14 @@ var SunburstView = ChartView.extend({
                     group.add(virtualRoot.piece);
                 }
 
-                virtualRoot.piece.on('click', function (e) {
+                if (viewRoot.piece._onclickEvent) {
+                    viewRoot.piece.off('click', viewRoot.piece._onclickEvent);
+                }
+                var event = function (e) {
                     that._rootToNode(viewRoot.parentNode);
-                });
+                };
+                viewRoot.piece._onclickEvent = event;
+                virtualRoot.piece.on('click', event);
             }
             else if (virtualRoot.piece) {
                 // Remove
@@ -169,7 +163,7 @@ var SunburstView = ChartView.extend({
     _initEvents: function () {
         var that = this;
 
-        this.group.on('click', function (e) {
+        var event = function (e) {
             var nodeClick = that.seriesModel.get('nodeClick', true);
             if (!nodeClick) {
                 return;
@@ -181,7 +175,7 @@ var SunburstView = ChartView.extend({
                 if (!targetFound
                     && node.piece && node.piece.childAt(0) === e.target
                 ) {
-                    if (nodeClick === 'zoomToNode') {
+                    if (nodeClick === 'rootToNode') {
                         that._rootToNode(node);
                     }
                     else if (nodeClick === 'link') {
@@ -196,19 +190,27 @@ var SunburstView = ChartView.extend({
                     targetFound = true;
                 }
             });
-        });
+        };
+
+        if (this.group._onclickEvent) {
+            this.group.off('click', this.group._onclickEvent);
+        }
+        this.group.on('click', event);
+        this.group._onclickEvent = event;
     },
 
     /**
      * @private
      */
     _rootToNode: function (node) {
-        this.api.dispatchAction({
-            type: ROOT_TO_NODE_ACTION,
-            from: this.uid,
-            seriesId: this.seriesModel.id,
-            targetNode: node
-        });
+        if (node !== this.seriesModel.getViewRoot()) {
+            this.api.dispatchAction({
+                type: ROOT_TO_NODE_ACTION,
+                from: this.uid,
+                seriesId: this.seriesModel.id,
+                targetNode: node
+            });
+        }
     },
 
     /**

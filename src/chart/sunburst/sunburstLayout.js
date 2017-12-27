@@ -46,7 +46,7 @@ export default function (seriesType, ecModel, api, payload) {
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
-        var renderRollupNode = treeRoot !== virtualRoot;
+        var renderRollupNode = treeRoot.depth > 0;
         var levels = treeRoot.height - (renderRollupNode ? -1 : 1);
         var rPerLevel = (r - r0) / (levels || 1);
 

@@ -1,6 +1,5 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import Model from '../../model/Model';
 
 var NodeHighlightPolicy = {
     NONE: 'none', // not downplay others
@@ -69,7 +68,6 @@ SunburstPieceProto.updateData = function (
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
-    // Update common style
     var itemStyleModel = itemModel.getModel('itemStyle');
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
@@ -127,9 +125,8 @@ SunburstPieceProto.updateData = function (
         this._initEvents(sector, node, seriesModel, highlightPolicy);
     }
 
-
-    this._seriesModel = seriesModel;
-    this._ecModel = ecModel;
+    this._seriesModel = seriesModel || this._seriesModel;
+    this._ecModel = ecModel || this._ecModel;
 };
 
 SunburstPieceProto.onEmphasis = function (highlightPolicy) {
