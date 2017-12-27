@@ -9,6 +9,6 @@ import visualSymbol from '../visual/symbol';
 import orthogonalLayout from './tree/orthogonalLayout';
 import radialLayout from './tree/radialLayout';
 
-echarts.registerVisual(zrUtil.curry(visualSymbol, 'tree', 'circle', null));
+echarts.registerVisual(visualSymbol('tree', 'circle'));
 echarts.registerLayout(orthogonalLayout);
 echarts.registerLayout(radialLayout);

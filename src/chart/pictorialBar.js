@@ -14,6 +14,4 @@ import '../component/gridSimple';
 echarts.registerLayout(zrUtil.curry(
     barLayoutGrid, 'pictorialBar'
 ));
-echarts.registerVisual(zrUtil.curry(
-    visualSymbol, 'pictorialBar', 'roundRect', null
-));
+echarts.registerVisual(visualSymbol('pictorialBar', 'roundRect'));

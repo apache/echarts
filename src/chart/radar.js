@@ -14,7 +14,7 @@ import dataFilter from '../processor/dataFilter';
 import backwardCompat from './radar/backwardCompat';
 
 echarts.registerVisual(zrUtil.curry(dataColor, 'radar'));
-echarts.registerVisual(zrUtil.curry(visualSymbol, 'radar', 'circle', null));
+echarts.registerVisual(visualSymbol('radar', 'circle'));
 echarts.registerLayout(radarLayout);
 echarts.registerProcessor(zrUtil.curry(dataFilter, 'radar'));
 echarts.registerPreprocessor(backwardCompat);
