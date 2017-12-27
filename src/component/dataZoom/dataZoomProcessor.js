@@ -25,6 +25,16 @@ echarts.registerProcessor(function (ecModel, api) {
         dataZoomModel.eachTargetAxis(filterSingleAxis);
     });
 
+    function resetSingleAxis(dimNames, axisIndex, dataZoomModel) {
+        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel, api);
+    }
+
+    function filterSingleAxis(dimNames, axisIndex, dataZoomModel) {
+        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel, api);
+    }
+});
+
+echarts.registerProcessor(function (ecModel, api) {
     ecModel.eachComponent('dataZoom', function (dataZoomModel) {
         // Fullfill all of the range props so that user
         // is able to get them from chart.getOption().
@@ -39,13 +49,5 @@ echarts.registerProcessor(function (ecModel, api) {
             endValue: valueRange[1]
         }, true);
     });
-
-    function resetSingleAxis(dimNames, axisIndex, dataZoomModel) {
-        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel, api);
-    }
-
-    function filterSingleAxis(dimNames, axisIndex, dataZoomModel) {
-        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel, api);
-    }
 });
 

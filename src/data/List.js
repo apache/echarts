@@ -35,7 +35,7 @@ function cloneChunk(originalChunk) {
 
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList',
-    '_rawData', '_chunkSize', '_dimValueGetter', '_count'
+    '_rawData', '_rawExtent', '_chunkSize', '_dimValueGetter', '_count'
 ];
 
 function transferProperties(a, b) {
@@ -300,16 +300,28 @@ var List = function (dimensions, hostModel) {
     this._rawData;
 
     /**
+     * Raw extent will not be cloned, but only transfered.
+     * It will not be calculated util needed.
+     * key: dim,
+     * value: {end: number, extent: Array.<number>}
      * @type {Object}
      * @private
      */
-    this._extent;
+    this._rawExtent = {};
 
     /**
      * @type {Object}
      * @private
      */
-    this._extentEnds;
+    this._extent = {};
+
+    /**
+     * key: dim
+     * value: extent
+     * @type {Object}
+     * @private
+     */
+    this._approximateExtent = {};
 };
 
 var listProto = List.prototype;
@@ -444,10 +456,6 @@ listProto._initDataFromProvider = function (start, end) {
     var idList = this._idList;
     var nameRepeatCount = this._nameRepeatCount = {};
     var nameDimIdx;
-
-    // Reset cached extent
-    this._extent = {};
-    this._extentEnds = {};
 
     var chunkCount = this._chunkCount;
     var lastChunkIndex = chunkCount - 1;
@@ -641,32 +649,51 @@ listProto.hasValue = function (idx) {
  * @param {Function} filter
  */
 listProto.getDataExtent = function (dim, stack, filter) {
-    // Consider the stream or append data cases: If at the begining the data
-    // is empty or little, the extent should not be simply cached.
-
+    console.time('getExtent');
+    // Make sure use concrete dim as cache name.
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
+    var initialExtent = [Infinity, -Infinity];
 
     if (!dimData) {
-        return [Infinity, -Infinity];
+        return initialExtent;
     }
 
-    var dimInfo = this.getDimensionInfo(dim);
-    stack = (dimInfo && dimInfo.stackable) && stack;
-    var cacheName = dim + (!!stack);
-    var dimExtent = this._extent[cacheName];
-    var dimExtentEnd = this._extentEnds[cacheName] || 0;
+    // Make more strict checkings to ensure hitting cache.
+    var stacked = isStacked(this, dim);
     var currEnd = this.count();
+    // Consider that the data is incremental, the extent should be
+    // cached by not only dim, but also the end index.
+    var cacheName = [dim, !!(stack && stacked), currEnd].join('_');
 
-    // Assume that dimExtentEnd > currEnd will never happen.
-    // When data appended, dimExtenEnd < currEnd.
-    if (dimExtent && dimExtentEnd === currEnd) {
-        return dimExtent;
+    // Consider the most cases when using data zoom, `getDataExtent`
+    // happened before filtering. We cache raw extent, which is not
+    // necessary to be cleared and recalculated when restore data.
+    var useRaw = !this._indices && !filter && !stacked;
+    var rawExtentCache = this._rawExtent[dim] = this._rawExtent[dim] || {};
+    var dimExtent;
+    var dimExtentEnd;
+
+    // Assume that rawExtentCache.end > currEnd will never happen.
+    // After data appended, rawExtentCache.end < currEnd.
+    if (useRaw) {
+        dimExtent = rawExtentCache.extent || initialExtent;
+        dimExtentEnd = rawExtentCache.end || 0;
+        if (dimExtentEnd === currEnd) {
+            return dimExtent.slice();
+        }
+    }
+    else {
+        dimExtent = this._extent[cacheName];
+        if (dimExtent) {
+            return dimExtent.slice();
+        }
+        dimExtent = initialExtent;
+        dimExtentEnd = 0;
     }
 
-    var min = Infinity;
-    var max = -Infinity;
-    dimExtent && (min = dimExtent[0], max = dimExtent[1]);
+    var min = dimExtent[0];
+    var max = dimExtent[1];
 
     for (var i = dimExtentEnd; i < currEnd; i++) {
         var value = this.get(dim, i, stack);
@@ -676,9 +703,38 @@ listProto.getDataExtent = function (dim, stack, filter) {
         }
     }
 
-    this._extentEnds[cacheName] = currEnd;
-    return (this._extent[cacheName] = [min, max]);
+    dimExtent = [min, max];
+
+    if (useRaw) {
+        rawExtentCache.extent = dimExtent;
+        rawExtentCache.end = currEnd;
+    }
+    this._extent[cacheName] = dimExtent;
+
+    // console.timeEnd('getExtent');
+    return dimExtent;
 };
+
+/**
+ * Optimize for the scenario that data is filtered by a given extent.
+ * Consider that if data amount is more than hundreds of thousand,
+ * extent calculation will cost more than 10ms and the cache will
+ * be erased because of the filtering.
+ */
+listProto.getApproximateExtent = function (dim, stack, filter) {
+    dim = this.getDimension(dim);
+    return this._approximateExtent[dim] || this.getDataExtent(dim, stack, filter);
+};
+
+listProto.setApproximateExtent = function (extent, dim, stack) {
+    dim = this.getDimension(dim);
+    this._approximateExtent[dim] = extent.slice();
+};
+
+function isStacked(list, concreteDim) {
+    var dimensionInfo = list._dimensionInfos[concreteDim];
+    return dimensionInfo && dimensionInfo.stackable && list.stackedOn;
+}
 
 /**
  * Get sum of data in one dimension
@@ -980,7 +1036,6 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
 
     // Reset data extent
     this._extent = {};
-    this._extentEnds = {};
 
     return this;
 };
@@ -1378,10 +1433,8 @@ listProto.cloneShallow = function (list) {
         list._indices = null;
     }
 
-    if (this._extent) {
-        list._extent = zrUtil.clone(this._extent);
-        list._extentEnds = zrUtil.clone(this._extentEnds);
-    }
+    list._extent = zrUtil.clone(this._extent);
+    list._approximateExtent = zrUtil.clone(this._approximateExtent);
 
     return list;
 };

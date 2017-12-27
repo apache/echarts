@@ -337,6 +337,7 @@ AxisProxy.prototype = {
                     else {
                         seriesData.filterSelf(dim, isInWindow);
                     }
+                    seriesData.setApproximateExtent(valueWindow, dim);
                 });
             }
         });
@@ -354,7 +355,7 @@ function calculateDataExtent(axisProxy, axisDim, seriesModels) {
         var seriesData = seriesModel.getData();
         if (seriesData) {
             each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
-                var seriesExtent = seriesData.getDataExtent(dim);
+                var seriesExtent = seriesData.getApproximateExtent(dim);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
             });

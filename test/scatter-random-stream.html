@@ -22,6 +22,7 @@
                 width: 200;
                 height: 200;
                 background: #fff;
+                border: 5px solid rgba(0,0,0,0.5);
             }
         </style>
         <div id="main"></div>
@@ -31,14 +32,25 @@
             var chunkMax = 4;
             var chunkCount = 0;
 
-            function genData1(count) {
+            function genData1(len, offset) {
                 var lngRange = [-10.781327, 131.48];
                 var latRange = [18.252847, 52.33];
-                return genData(count, lngRange, latRange);
+
+                var data = [];
+                while (len--) {
+                    var x = +(Math.random() * 10).toFixed(3);
+                    data.push([
+                        x,
+                        +(Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random()).toFixed(3) + (offset || 0) / 10,
+                        Math.random() * 100
+                    ]);
+                }
+
+                return data;
             }
 
             function genData2(count) {
-                var lngRange = [100.781327, 231.48];
+                var lngRange = [-10.781327, 31.48];
                 var latRange = [-18.252847, 30.33];
                 return genData(count, lngRange, latRange);
             }
@@ -80,7 +92,7 @@
                         legend: {
                             orient: 'vertical',
                             left: 'left',
-                            data:['pm2.5','pm10']
+                            data: ['pm2.5','pm10']
                         },
                         // ???
                         // visualMap: {
@@ -99,9 +111,13 @@
                         }],
                         yAxis: [{
                         }],
+                        dataZoom: [{
+                        }],
+                        animation: false,
                         series : [{
                             name: 'pm2.5',
                             type: 'scatter',
+                            large: true,
                             data: genData1(2001),
                             xAxisIndex: 0,
                             yAxisIndex: 0,
@@ -113,22 +129,22 @@
                                 }
                             },
                             progressive: 3000
-                        }, {
-                            name: 'pm10',
-                            type: 'scatter',
-                            data: genData2(2001),
-                            xAxisIndex: 0,
-                            yAxisIndex: 0,
-                            symbolSize: 2,
-                            // symbol: 'rect',
-                            itemStyle: {
-                                normal: {
-                                    borderWidth: 0.5,
-                                    borderColor: '#e01',
-                                    color: '#128de3'
-                                }
-                            },
-                            progressive: 3000
+                        // }, {
+                        //     name: 'pm10',
+                        //     type: 'scatter',
+                        //     data: genData2(2001),
+                        //     xAxisIndex: 0,
+                        //     yAxisIndex: 0,
+                        //     symbolSize: 2,
+                        //     // symbol: 'rect',
+                        //     itemStyle: {
+                        //         normal: {
+                        //             borderWidth: 0.5,
+                        //             borderColor: '#e01',
+                        //             color: '#128de3'
+                        //         }
+                        //     },
+                        //     progressive: 3000
                         }]
                     });
 
@@ -149,8 +165,9 @@
 
                     function next() {
                         if (chunkCount++ < chunkMax) {
-                            var newData = genData1(20000);
+                            var newData = genData1(100000, chunkCount);
                             chart.addData({seriesIndex: 0, data: newData});
+                            console.log('Data loaded');
                             setTimeout(next, 3000);
                         }
                     }

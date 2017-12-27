@@ -102,6 +102,9 @@ largeSymbolProto.updateData = function (data) {
     this.group.removeAll();
     var symbolEl = this._symbolEl;
 
+    this._symbolEl.setShape({
+        points: data.getLayout('symbolPoints')
+    });
     this._setCommon(data);
 
     // Add back

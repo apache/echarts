@@ -242,6 +242,8 @@ echartsProto._onframe = function () {
         return;
     }
 
+    var scheduler = this._scheduler;
+
     // Lazy update
     if (this[OPTION_UPDATED]) {
         var silent = this[OPTION_UPDATED].silent;
@@ -259,45 +261,42 @@ echartsProto._onframe = function () {
 
         triggerUpdatedEvent.call(this, silent);
     }
-
     // Avoid do both lazy update and progress in one frame.
-    else {
+    else if (scheduler.unfinished) {
         // Stream progress.
         var remainTime = TEST_FRAME_REMAIN_TIME;
-        var scheduler = this._scheduler;
         var ecModel = this._model;
+        var api = this._api;
+        scheduler.unfinished = false;
+        do {
+            var startTime = +new Date();
 
-        if (scheduler.unfinished) {
-            scheduler.unfinished = false;
-            do {
-                var startTime = +new Date();
+            scheduler.performSeriesTasks(ecModel);
 
-                scheduler.performSeriesTasks(ecModel);
+            // Currently dataProcessorFuncs do not check threshold.
+            scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
 
-                // Currently dataProcessorFuncs do not check threshold.
-                scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
+            updateStreamModes(this, ecModel);
 
-                updateStreamModes(this, ecModel);
+            // ??? coordSys create, consider cartesian?
+            // But update coord will dirty all of the original layouts and rendering.
+            // this._coordSysMgr.update(ecModel, api);
 
-                // ???! coordSys create
-                // this._coordSysMgr.update();
+            // console.log('--- ec frame visual ---', remainTime);
+            scheduler.performVisualTasks(visualFuncs, ecModel);
 
-                // console.log('--- ec frame visual ---', remainTime);
-                scheduler.performVisualTasks(visualFuncs, ecModel);
+            render(this, this._model, api, 'none');
 
-                render(this, this._model, this._api, 'none');
-
-                remainTime -= (+new Date() - startTime);
-            }
-            while (remainTime > 0 && scheduler.unfinished);
-
-            if (!scheduler.unfinished) {
-                this._zr && this._zr.flush();
-                this.trigger('finished');
-            }
-            // Else, zr flushing be ensue within the same frame,
-            // because zr flushing is after onframe event.
+            remainTime -= (+new Date() - startTime);
         }
+        while (remainTime > 0 && scheduler.unfinished);
+
+        if (!scheduler.unfinished) {
+            this._zr && this._zr.flush();
+            this.trigger('finished');
+        }
+        // Else, zr flushing be ensue within the same frame,
+        // because zr flushing is after onframe event.
     }
 };
 
