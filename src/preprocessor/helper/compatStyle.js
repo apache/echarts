@@ -155,8 +155,8 @@ function processSeries(seriesOpt) {
         var mlData = markLine.data;
         for (var i = 0; i < mlData.length; i++) {
             if (zrUtil.isArray(mlData[i])) {
-                compatEC3CommonStyles(mpData[i][0]);
-                compatEC3CommonStyles(mpData[i][1]);
+                compatEC3CommonStyles(mlData[i][0]);
+                compatEC3CommonStyles(mlData[i][1]);
             }
             else {
                 compatEC3CommonStyles(mlData[i]);
