@@ -168,33 +168,33 @@
                     }
                 });
 
-                // setTimeout(function () {
-                //     data.push({
-                //         name: 'Stranger',
-                //         children: [{
-                //             name: 'S1',
-                //             value: 4
-                //         }, {
-                //             name: 'S2',
-                //             value: 1
-                //         }]
-                //     });
-                //     chart.setOption({
-                //         series: {
-                //             data: data
-                //         }
-                //     });
-                // }, 3000);
+                setTimeout(function () {
+                    data.push({
+                        name: 'Stranger',
+                        children: [{
+                            name: 'S1',
+                            value: 4
+                        }, {
+                            name: 'S2',
+                            value: 1
+                        }]
+                    });
+                    chart.setOption({
+                        series: {
+                            data: data
+                        }
+                    });
+                }, 3000);
 
-                // setTimeout(function () {
-                //     data.splice(1, 1);
-                //     data[0].value = 32;
-                //     chart.setOption({
-                //         series: {
-                //             data: data
-                //         }
-                //     });
-                // }, 6000);
+                setTimeout(function () {
+                    data.splice(1, 1);
+                    data[0].value = 32;
+                    chart.setOption({
+                        series: {
+                            data: data
+                        }
+                    });
+                }, 6000);
 
             });
 
