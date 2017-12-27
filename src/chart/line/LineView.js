@@ -313,7 +313,7 @@ export default ChartView.extend({
         var group = this.group;
         var data = seriesModel.getData();
         var lineStyleModel = seriesModel.getModel('lineStyle');
-        var areaStyleModel = seriesModel.getModel('areaStyle.normal');
+        var areaStyleModel = seriesModel.getModel('areaStyle');
 
         var points = data.mapArray(data.getItemLayout, true);
 

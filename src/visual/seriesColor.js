@@ -4,7 +4,7 @@ export default {
     processRawSeries: true,
     reset: function (seriesModel, ecModel) {
         var data = seriesModel.getData();
-        var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.normal.color').split('.');
+        var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.color').split('.');
         var color = seriesModel.get(colorAccessPath) // Set in itemStyle
             || seriesModel.getColorFromPalette(seriesModel.get('name'));  // Default color
 
