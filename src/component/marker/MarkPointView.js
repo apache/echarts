@@ -82,7 +82,7 @@ export default MarkerView.extend({
             }
             mpData.setItemVisual(idx, {
                 symbolSize: symbolSize,
-                color: itemModel.get('itemStyle.normal.color')
+                color: itemModel.get('itemStyle.color')
                     || seriesData.getVisual('color'),
                 symbol: itemModel.getShallow('symbol')
             });

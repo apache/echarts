@@ -9,10 +9,10 @@ var mathMin = Math.min;
 var retrieveValue = zrUtil.retrieve;
 var each = zrUtil.each;
 
-var PATH_BORDER_WIDTH = ['itemStyle', 'normal', 'borderWidth'];
-var PATH_GAP_WIDTH = ['itemStyle', 'normal', 'gapWidth'];
-var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'normal', 'show'];
-var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'normal', 'height'];
+var PATH_BORDER_WIDTH = ['itemStyle', 'borderWidth'];
+var PATH_GAP_WIDTH = ['itemStyle', 'gapWidth'];
+var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'show'];
+var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'height'];
 
 /**
  * @public

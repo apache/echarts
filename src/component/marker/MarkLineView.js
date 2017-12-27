@@ -278,7 +278,7 @@ export default MarkerView.extend({
             data.setItemVisual(idx, {
                 symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
-                color: itemModel.get('itemStyle.normal.color') || seriesData.getVisual('color')
+                color: itemModel.get('itemStyle.color') || seriesData.getVisual('color')
             });
         }
 

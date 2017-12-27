@@ -24,7 +24,7 @@ export default function (seriesType, ecModel) {
                 if (!singleDataColor) {
                     // FIXME Performance
                     var itemModel = dataAll.getItemModel(rawIdx);
-                    var color = itemModel.get('itemStyle.normal.color')
+                    var color = itemModel.get('itemStyle.color')
                         || seriesModel.getColorFromPalette(dataAll.getName(rawIdx), paletteScope);
                     // Legend may use the visual info in data before processed
                     dataAll.setItemVisual(rawIdx, 'color', color);

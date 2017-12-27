@@ -113,7 +113,7 @@ export default TimelineView.extend({
     },
 
     _layout: function (timelineModel, api) {
-        var labelPosOpt = timelineModel.get('label.normal.position');
+        var labelPosOpt = timelineModel.get('label.position');
         var orient = timelineModel.get('orient');
         var viewRect = getViewRect(timelineModel, api);
         // Auto label offset.
@@ -153,7 +153,7 @@ export default TimelineView.extend({
         var sizePlusGap = controlSize + controlGap;
 
         // Special label rotate.
-        var labelRotation = timelineModel.get('label.normal.rotate') || 0;
+        var labelRotation = timelineModel.get('label.rotate') || 0;
         labelRotation = labelRotation * PI / 180; // To radian.
 
         var playPosition;
@@ -193,9 +193,9 @@ export default TimelineView.extend({
             rotation: rotationMap[orient],
             labelRotation: labelRotation,
             labelPosOpt: labelPosOpt,
-            labelAlign: timelineModel.get('label.normal.align') || labelAlignMap[orient],
-            labelBaseline: timelineModel.get('label.normal.verticalAlign')
-                || timelineModel.get('label.normal.baseline')
+            labelAlign: timelineModel.get('label.align') || labelAlignMap[orient],
+            labelBaseline: timelineModel.get('label.verticalAlign')
+                || timelineModel.get('label.baseline')
                 || labelBaselineMap[orient],
 
             // Based on mainGroup.
