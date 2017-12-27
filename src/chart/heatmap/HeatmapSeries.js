@@ -1,11 +1,19 @@
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
+import CoordinateSystem from '../../CoordinateSystem';
 
 export default SeriesModel.extend({
     type: 'series.heatmap',
 
     getInitialData: function (option, ecModel) {
         return createListFromArray(option.data, this, ecModel);
+    },
+
+    preventIncremental: function () {
+        var coordSysCreator = CoordinateSystem.get(this.get('coordinateSystem'));
+        if (coordSysCreator && coordSysCreator.dimensions) {
+            return coordSysCreator.dimensions[0] === 'lng' && coordSysCreator.dimensions[1] === 'lat';
+        }
     },
 
     defaultOption: {

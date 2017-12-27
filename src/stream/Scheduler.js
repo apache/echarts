@@ -85,7 +85,7 @@ proto.restorePipelines = function (ecModel) {
             tail: dataTask,
             threshold: seriesModel.get('progressiveThreshold'),
             progressiveEnabled: progressive
-                && !(seriesModel.banProgressive && seriesModel.banProgressive()),
+                && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
             bockIndex: -1,
             step: progressive || 700, // ??? Temporarily number
             count: 2

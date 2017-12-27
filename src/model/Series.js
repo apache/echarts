@@ -373,7 +373,7 @@ var SeriesModel = ComponentModel.extend({
      * @protected
      * @type {Function}
      */
-    banProgressive: null,
+    preventIncremental: null,
 
     /**
      * @public
