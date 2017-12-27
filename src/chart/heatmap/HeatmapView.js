@@ -77,9 +77,12 @@ export default echarts.extendChartView({
         }
 
         this.group.removeAll();
+
+        this._incrementalDisplayable = null;
+
         var coordSys = seriesModel.coordinateSystem;
         if (coordSys.type === 'cartesian2d' || coordSys.type === 'calendar') {
-            this._renderOnCartesianAndCalendar(coordSys, seriesModel, api);
+            this._renderOnCartesianAndCalendar(seriesModel, api, 0, seriesModel.getData().count());
         }
         else if (isGeoCoordSys(coordSys)) {
             this._renderOnGeo(
@@ -88,10 +91,20 @@ export default echarts.extendChartView({
         }
     },
 
-    dispose: function () {},
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this.group.removeAll();
+    },
 
-    _renderOnCartesianAndCalendar: function (coordSys, seriesModel, api) {
+    incrementalRender: function (params, seriesModel, ecModel, api) {
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys) {
+            this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
+        }
+    },
 
+    _renderOnCartesianAndCalendar: function (seriesModel, api, start, end, incremental) {
+
+        var coordSys = seriesModel.coordinateSystem;
         if (coordSys.type === 'cartesian2d') {
             var xAxis = coordSys.getAxis('x');
             var yAxis = coordSys.getAxis('y');
@@ -134,7 +147,7 @@ export default echarts.extendChartView({
                 seriesModel.coordDimToDataDim('value')[0]
             ];
 
-        data.each(function (idx) {
+        for (var idx = start; idx < end; idx++) {
             var rect;
 
             if (coordSysType === 'cartesian2d') {
@@ -206,9 +219,17 @@ export default echarts.extendChartView({
             rect.setStyle(style);
             graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
 
+            rect.incremental = incremental;
+            // PENDING
+            if (incremental) {
+                rect.needsClear = start === 0;
+                // Rect must use hover layer if it's incremental.
+                rect.useHoverLayer = true;
+            }
+
             group.add(rect);
             data.setItemGraphicEl(idx, rect);
-        });
+        }
     },
 
     _renderOnGeo: function (geo, seriesModel, visualMapModel, api) {
@@ -272,5 +293,7 @@ export default echarts.extendChartView({
             silent: true
         });
         this.group.add(img);
-    }
+    },
+
+    dispose: function () {}
 });

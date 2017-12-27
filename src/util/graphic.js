@@ -21,6 +21,7 @@ import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
+import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
 
 var round = Math.round;
@@ -1073,6 +1074,7 @@ export {
     Line,
     BezierCurve,
     Arc,
+    IncrementalDisplayable,
     CompoundPath,
     LinearGradient,
     RadialGradient,
