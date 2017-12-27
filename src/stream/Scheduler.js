@@ -147,9 +147,7 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
         var overallTask = stageHandlerRecord.overallTask;
 
         if (overallTask) {
-            if (opt.setDirty) {
-                overallTask.dirty();
-            }
+            opt.setDirty && overallTask.dirty();
             overallTask.context.payload = payload;
             unfinished |= overallTask.perform(scheduler.getPerformArgs(overallTask, opt.block));
         }
@@ -166,17 +164,12 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
                 return;
             }
 
-            if (opt.setDirty) {
-                task.dirty();
-                unfinished = true;
-            }
-            else {
-                var performArgs = scheduler.getPerformArgs(task, opt.block);
-                // ??? chck skip necessary.
-                performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
-                task.context.payload = payload;
-                unfinished |= task.perform(performArgs);
-            }
+            opt.setDirty && task.dirty();
+            var performArgs = scheduler.getPerformArgs(task, opt.block);
+            // ??? chck skip necessary.
+            performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
+            task.context.payload = payload;
+            unfinished |= task.perform(performArgs);
         }
     });
 
