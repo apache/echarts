@@ -564,7 +564,7 @@ listProto.getIndices = function () {
     var Ctor = getIndicesCtor(this.count());
     var arr = new Ctor(this.count());
     for (var i = 0; i < arr.length; i++) {
-        arr[i] = arr;
+        arr[i] = i;
     }
     return arr;
 };
@@ -1163,8 +1163,6 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var list = cloneListForMapAndSample(this, [dimension]);
     var targetStorage = list._storage;
 
-    var indices = list._indices = [];
-
     var frameValues = [];
     var frameSize = Math.floor(1 / rate);
 
@@ -1172,6 +1170,9 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var len = this.count();
     var chunkSize = this._chunkSize;
 
+    var newIndices = new (getIndicesCtor(len))(len);
+
+    var offset = 0;
     for (var i = 0; i < len; i += frameSize) {
         // Last frame
         if (frameSize > len - i) {
@@ -1179,19 +1180,23 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
             frameValues.length = frameSize;
         }
         for (var k = 0; k < frameSize; k++) {
-            var dataIdx = i + k;
+            var dataIdx = this.getRawIndex(i + k);
             var originalChunkIndex = Math.floor(dataIdx / chunkSize);
             var originalChunkOffset = dataIdx % chunkSize;
             frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
         }
         var value = sampleValue(frameValues);
-        var sampleFrameIdx = sampleIndex(frameValues, value) || 0;
+        var sampleFrameIdx = this.getRawIndex(i + sampleIndex(frameValues, value) || 0);
         var sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
         var sampleChunkOffset = sampleFrameIdx % chunkSize;
         // Only write value on the filtered data
         dimStore[sampleChunkIndex][sampleChunkOffset] = value;
-        indices.push(sampleFrameIdx);
+
+        newIndices[offset++] = sampleFrameIdx;
     }
+
+    list._count = offset;
+    list._indices = newIndices;
 
     return list;
 };
