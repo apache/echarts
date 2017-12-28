@@ -423,6 +423,9 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         );
     };
 
+    // Reset raw extent.
+    this._rawExtent = {};
+
     this._initDataFromProvider(0, data.count());
 
     // If data has no item option.
@@ -459,6 +462,7 @@ listProto._initDataFromProvider = function (start, end) {
     var dimensionInfoMap = this._dimensionInfos;
     var nameList = this._nameList;
     var idList = this._idList;
+    var rawExtent = this._rawExtent;
     var nameRepeatCount = this._nameRepeatCount = {};
     var nameDimIdx;
 
@@ -466,6 +470,9 @@ listProto._initDataFromProvider = function (start, end) {
     var lastChunkIndex = chunkCount - 1;
     for (var i = 0; i < dimensions.length; i++) {
         var dim = dimensions[i];
+        if (!rawExtent[dim]) {
+            rawExtent[dim] = [Infinity, -Infinity];
+        }
 
         var dimInfo = dimensionInfoMap[dim];
         if (dimInfo.otherDims.itemName === 0) {
@@ -511,7 +518,15 @@ listProto._initDataFromProvider = function (start, end) {
             var dim = dimensions[k];
             var dimStorage = storage[dim][chunkIndex];
             // PENDING NULL is empty or zero
-            dimStorage[chunkOffset] = this._dimValueGetter(dataItem, dim, idx, k);
+            var val = this._dimValueGetter(dataItem, dim, idx, k);
+            dimStorage[chunkOffset] = val;
+
+            if (val < rawExtent[dim][0]) {
+                rawExtent[dim][0] = val;
+            }
+            if (val > rawExtent[dim][1]) {
+                rawExtent[dim][1] = val;
+            }
         }
 
         // Use the name in option and create id
@@ -668,13 +683,14 @@ listProto.hasValue = function (idx) {
  * Get extent of data in one dimension
  * @param {string} dim
  * @param {boolean} stack
- * @param {Function} filter
  */
-listProto.getDataExtent = function (dim, stack, filter) {
+listProto.getDataExtent = function (dim, stack) {
     // Make sure use concrete dim as cache name.
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
     var initialExtent = [Infinity, -Infinity];
+
+    stack = stack || false;
 
     if (!dimData) {
         return initialExtent;
@@ -690,46 +706,29 @@ listProto.getDataExtent = function (dim, stack, filter) {
     // Consider the most cases when using data zoom, `getDataExtent`
     // happened before filtering. We cache raw extent, which is not
     // necessary to be cleared and recalculated when restore data.
-    var useRaw = !this._indices && !filter && !stacked;
-    var rawExtentCache = this._rawExtent[dim] = this._rawExtent[dim] || {};
+    var useRaw = !this._indices && !stacked;
     var dimExtent;
-    var dimExtentEnd;
 
-    // Assume that rawExtentCache.end > currEnd will never happen.
-    // After data appended, rawExtentCache.end < currEnd.
     if (useRaw) {
-        dimExtent = rawExtentCache.extent || initialExtent;
-        dimExtentEnd = rawExtentCache.end || 0;
-        if (dimExtentEnd === currEnd) {
-            return dimExtent.slice();
-        }
+        return this._rawExtent[dim].slice();
     }
-    else {
-        dimExtent = this._extent[cacheName];
-        if (dimExtent) {
-            return dimExtent.slice();
-        }
-        dimExtent = initialExtent;
-        dimExtentEnd = 0;
+    dimExtent = this._extent[cacheName];
+    if (dimExtent) {
+        return dimExtent.slice();
     }
+    dimExtent = initialExtent;
 
     var min = dimExtent[0];
     var max = dimExtent[1];
 
-    for (var i = dimExtentEnd; i < currEnd; i++) {
-        var value = this.get(dim, i, stack);
-        if (!filter || filter(value, dim, i)) {
-            value < min && (min = value);
-            value > max && (max = value);
-        }
+    for (var i = 0; i < currEnd; i++) {
+        var value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
+        value < min && (min = value);
+        value > max && (max = value);
     }
 
     dimExtent = [min, max];
 
-    if (useRaw) {
-        rawExtentCache.extent = dimExtent;
-        rawExtentCache.end = currEnd;
-    }
     this._extent[cacheName] = dimExtent;
 
     return dimExtent;
@@ -741,9 +740,9 @@ listProto.getDataExtent = function (dim, stack, filter) {
  * extent calculation will cost more than 10ms and the cache will
  * be erased because of the filtering.
  */
-listProto.getApproximateExtent = function (dim, stack, filter) {
+listProto.getApproximateExtent = function (dim, stack) {
     dim = this.getDimension(dim);
-    return this._approximateExtent[dim] || this.getDataExtent(dim, stack, filter);
+    return this._approximateExtent[dim] || this.getDataExtent(dim, stack);
 };
 
 listProto.setApproximateExtent = function (extent, dim, stack) {
