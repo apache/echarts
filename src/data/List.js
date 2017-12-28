@@ -611,6 +611,15 @@ listProto.get = function (dim, idx, stack) {
     return value;
 };
 
+// FIXME Use `get` on chrome maybe slow(in filterSelf and selectRange).
+// Hack a much simpler _getFast
+listProto._getFast = function (dim, rawIdx) {
+    var chunkIndex = Math.floor(rawIdx / this._chunkSize);
+    var chunkOffset = rawIdx % this._chunkSize;
+    var chunkStore = this._storage[dim][chunkIndex];
+    return chunkStore[chunkOffset];
+};
+
 /**
  * Get value for multi dimensions.
  * @param {Array.<string>} [dimensions] If ignored, using all dimensions.
@@ -1035,22 +1044,24 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
 
     for (var i = 0; i < count; i++) {
         var keep;
+        var rawIdx = this.getRawIndex(i);
         // Simple optimization
         if (dimSize === 0) {
             keep = cb.call(context, i);
         }
         else if (dimSize === 1) {
-            keep = cb.call(context, this.get(dim0, i, stack), i);
+            var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIdx);
+            keep = cb.call(context, val, i);
         }
         else {
             for (var k = 0; k < dimSize; k++) {
-                value[k] = this.get(dimensions[k], i, stack);
+                value[k] = stack ? this.get(dimensions[k], i, true) : this._getFast(dim0, rawIdx);
             }
             value[k] = i;
             keep = cb.apply(context, value);
         }
         if (keep) {
-            newIndices[offset++] = this.getRawIndex(i);
+            newIndices[offset++] = rawIdx;
         }
     }
 
@@ -1086,9 +1097,9 @@ listProto.selectRange = function (range, stack) {
         return;
     }
 
-    var count = this.count();
-    var Ctor = getIndicesCtor(count);
-    var newIndices = new Ctor(count);
+    var originalCount = this.count();
+    var Ctor = getIndicesCtor(originalCount);
+    var newIndices = new Ctor(originalCount);
 
     var offset = 0;
     var dim0 = dimensions[0];
@@ -1096,20 +1107,9 @@ listProto.selectRange = function (range, stack) {
     if (dimSize === 1) {
         var min = range[dim0][0];
         var max = range[dim0][1];
-        for (var i = 0; i < count; i++) {
-            var val;
+        for (var i = 0; i < originalCount; i++) {
             var rawIndex = this.getRawIndex(i);
-            if (stack) {
-                val = this.get(dim, i, true);
-            }
-            else {
-                var storage = this._storage;
-                var chunkIndex = Math.floor(i / this._chunkSize);
-                var chunkOffset = i % this._chunkSize;
-
-                var chunkStore = storage[dim][chunkIndex];
-                var val = chunkStore[chunkOffset];
-            }
+            var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
 
             if (val >= min && val <= max) {
                 newIndices[offset++] = rawIndex;
@@ -1117,12 +1117,13 @@ listProto.selectRange = function (range, stack) {
         }
     }
     else {
-        for (var i = 0; i < count; i++) {
+        for (var i = 0; i < originalCount; i++) {
             var keep = true;
+            var rawIndex = this.getRawIndex(i);
             for (var k = 0; k < dimSize; k++) {
-                var dimName = dimensions[k];
-                var val = this.get(dimName, i, stack);
-                if (val < range[dimName][0] || val > range[dimName][1]) {
+                var dimk = dimensions[k];
+                var val = stack ? this.get(dimk, i, true) : this._getFast(dim, rawIndex);
+                if (val < range[dimk][0] || val > range[dimk][1]) {
                     keep = false;
                 }
             }
@@ -1133,7 +1134,7 @@ listProto.selectRange = function (range, stack) {
     }
 
     // Set indices after filtered.
-    if (offset < count) {
+    if (offset < originalCount) {
         this._indices = newIndices;
     }
     this._count = offset;
@@ -1281,7 +1282,9 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
             frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
         }
         var value = sampleValue(frameValues);
-        var sampleFrameIdx = this.getRawIndex(i + sampleIndex(frameValues, value) || 0);
+        var sampleFrameIdx = this.getRawIndex(
+            Math.min(i + sampleIndex(frameValues, value) || 0, len - 1)
+        );
         var sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
         var sampleChunkOffset = sampleFrameIdx % chunkSize;
         // Only write value on the filtered data
