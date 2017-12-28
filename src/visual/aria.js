@@ -6,6 +6,8 @@ export default function (dom, ecModel) {
         return;
     }
 
+    var maxDataCnt = ariaModel.get('maxDataCnt') || 10;
+
     var series = [];
     ecModel.eachSeries(function (seriesModel, idx) {
         var type = seriesModel.type.substr('series.'.length);
@@ -28,10 +30,7 @@ export default function (dom, ecModel) {
             ariaLabel += '关于“' + title + '”的';
         }
 
-        if (series.length === 1) {
-            ariaLabel += getSeriesTypeName(series[0].type);
-        }
-        else {
+        if (series.length > 1) {
             ariaLabel += '图表，它由' + series.length + '个图表系列组成。';
         }
 
@@ -61,6 +60,9 @@ export default function (dom, ecModel) {
                 return '柱状图';
             case 'line':
                 return '折线图';
+            case 'scatter':
+            case 'effectScatter':
+                return '散点图';
             default:
                 return '图';
         }
@@ -72,21 +74,27 @@ export default function (dom, ecModel) {
         var seriesName = seriesModel.get('name');
 
         var desc = (seriesName ? '表示' + seriesName + '的' : '')
-            + getSeriesTypeName(type) + '，包括' + dataCnt + '个数据项——';
+            + getSeriesTypeName(type) + '，包括' + dataCnt + '个数据项';
+        if (dataCnt > maxDataCnt) {
+            desc += '。其中，前' + maxDataCnt + '项是';
+        }
+        desc += '——';
 
         switch (type) {
             case 'pie':
                 data.each('value', function (value, id) {
-                    var percent = seriesModel.getDataParams(id).percent;
+                    if (id < maxDataCnt) {
+                        var percent = seriesModel.getDataParams(id).percent;
 
-                    desc += data.getName(id) + '的数据是' + value
-                        + '，占' + percent + '%';
+                        desc += data.getName(id) + '的数据是' + value
+                            + '，占' + percent + '%';
 
-                    if (id < dataCnt - 1) {
-                        desc += '；';
-                    }
-                    else {
-                        desc += '。';
+                        if (id < maxDataCnt - 1) {
+                            desc += '；';
+                        }
+                        else {
+                            desc += '。';
+                        }
                     }
                 });
                 break;
@@ -97,17 +105,36 @@ export default function (dom, ecModel) {
                 var labels = baseAxis.scale.getTicksLabels();
 
                 zrUtil.each(data.indices, function (id, i) {
-                    desc += labels[id] + '：' + seriesModel.getRawValue(id);
+                    if (id < maxDataCnt) {
+                        desc += labels[id] + '：' + seriesModel.getRawValue(id);
 
-                    if (i < data.indices.length - 1) {
-                        desc += '、';
-                    }
-                    else {
-                        desc += '。';
+                        if (i < maxDataCnt - 1) {
+                            desc += '、';
+                        }
+                        else {
+                            desc += '。';
+                        }
                     }
                 });
 
                 break;
+
+            case 'scatter':
+            case 'effectScatter':
+                zrUtil.each(data.indices, function (id, i) {
+                    if (id < maxDataCnt) {
+                        desc += '[' + seriesModel.getRawValue(id) + ']';
+
+                        if (i < maxDataCnt - 1) {
+                            desc += '、';
+                        }
+                        else {
+                            desc += '。';
+                        }
+                    }
+                });
+                break;
+
         }
 
         return desc;
