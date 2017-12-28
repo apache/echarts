@@ -393,12 +393,12 @@ function dataTaskCount(context) {
 
 function dataTaskReset(context) {
     var seriesModel = context.model;
-    seriesModel.setData(context.data = seriesModel.getRawData().cloneShallow());
+    seriesModel.setData(context.outputData = seriesModel.getRawData().cloneShallow());
     return dataTaskProgress;
 }
 
 function dataTaskProgress(param, context) {
-    context.model.getRawData().cloneShallow(context.data);
+    context.model.getRawData().cloneShallow(context.outputData);
 }
 
 export default SeriesModel;

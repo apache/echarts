@@ -56,6 +56,8 @@ proto.getPerformArgs = function (task, isBlock) {
  * Current, progressive rendering starts from visual and layout.
  * Always detect render mode in the same stage, avoiding that incorrect
  * detection caused by data filtering.
+ * Caution:
+ * `updateStreamModes` use `seriesModel.getData()`.
  */
 proto.updateStreamModes = function (seriesModel, view) {
     var pipeline = this._pipelineMap.get(seriesModel.uid);
@@ -123,7 +125,8 @@ proto.prepareView = function (view, model, ecModel, api) {
 
 
 proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
-    performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
+    // performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
+    performStageTasks(this, stageHandlers, ecModel, payload);
 };
 
 // opt
@@ -261,7 +264,9 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     // Moreover, it is not necessary to add stub to pipeline in the case.
     var seriesType = stageHandler.seriesType;
     seriesType && ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
-        var stub = stubs[stubIndex] = stubs[stubIndex] || createTask();
+        var stub = stubs[stubIndex] = stubs[stubIndex] || createTask(
+            {plan: prepareData, reset: pullData}, {model: seriesModel}
+        );
         stubIndex++;
         stub.agent = overallTask;
         stub.__block = true;
@@ -282,42 +287,74 @@ function overallTaskPlan(context) {
     return 'reset';
 }
 
-function seriesTaskPlan(context) {
+function seriesTaskPlan(context, upstreamContext) {
+    // ???! setData can be called in plan, progress, overalltask, how to deal with that
+    prepareData(context, upstreamContext);
+
     return context.plan && context.plan(
         context.model, context.ecModel, context.api, context.payload
     );
 }
 
-function seriesTaskReset(context) {
+function prepareData(context, upstreamContext) {
+    // Consider some method like `filter`, `map` need make new data,
+    // We should make sure that `seriesModel.getData()` get correct
+    // data in the stream procedure. So we fetch data from upstream
+    // each time `task.perform` called.
+    context.model.setData(context.data);
+}
+
+function pullData(context, upstreamContext) {
+    context.model.setData(
+        context.data = context.outputData = upstreamContext.outputData
+    );
+}
+
+function seriesTaskReset(context, upstreamContext) {
+    pullData(context, upstreamContext);
+
     if (context.useClearVisual) {
-        context.model.getData().clearAllVisual();
+        context.data.clearAllVisual();
     }
     var resetDefines = context.resetDefines = normalizeToArray(context.reset(
         context.model, context.ecModel, context.api, context.payload
     ));
     if (resetDefines.length) {
+        // ???! temp experiment
+        if (resetDefines[0].filter) {
+            context.model.setData(
+                context.outputData = context.data.cloneShallow()
+            );
+        }
+
         return seriesTaskProgress;
     }
 }
 
 function seriesTaskProgress(params, context) {
-    var data = context.model.getData();
+    var data = context.data;
     var resetDefines = context.resetDefines;
+
     for (var k = 0; k < resetDefines.length; k++) {
         var resetDefine = resetDefines[k];
-        if (resetDefine.dataEach) {
+        if (resetDefine && resetDefine.dataEach) {
             for (var i = params.start; i < params.end; i++) {
                 resetDefine.dataEach(data, i);
             }
         }
-        else if (resetDefine.progress) {
+        else if (resetDefine && resetDefine.progress) {
             resetDefine.progress(params, data);
+        }
+        else if (resetDefine && resetDefine.filter) {
+            // ???! temp experiment
+            if (k !== 0) {throw new Error();}
+            return context.data.filterTo(params, context.outputData, resetDefine.filter);
         }
     }
 }
 
 function seriesTaskCount(context) {
-    return context.model.getData().count();
+    return context.data.count();
 }
 
 function pipe(scheduler, seriesModel, task) {

@@ -40,7 +40,7 @@ taskProto.perform = function (performArgs) {
 
     var planResult;
     if (this._plan) {
-        planResult = this._plan(this.context);
+        planResult = this._plan(this.context, this._upstream && this._upstream.context);
     }
 
     if (this._dirty || planResult === 'reset') {
@@ -55,6 +55,7 @@ taskProto.perform = function (performArgs) {
         if (__DEV__) {
             assert(upTask._outputDueEnd != null);
         }
+        // ??? FIXME move to schedueler?
         this._dueEnd = Math.max(upTask._outputDueEnd, this._dueEnd);
     }
     else {
@@ -116,9 +117,13 @@ taskProto.dirty = function () {
 function reset(taskIns) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
 
-    taskIns._progress = taskIns._reset && taskIns._reset(taskIns.context);
+    taskIns._progress = taskIns._reset && taskIns._reset(
+        taskIns.context,
+        taskIns._upstream && taskIns._upstream.context
+    );
 
-    taskIns._downstream && taskIns._downstream.dirty();
+    var downstream = taskIns._downstream;
+    downstream && downstream.dirty();
     // FIXME
     taskIns.agent && taskIns.agent.dirty();
 }

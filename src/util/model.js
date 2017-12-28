@@ -643,7 +643,7 @@ export function dataDimToCoordDim(data, dataDim) {
  * @see {module:echarts/data/helper/completeDimensions}
  * @param {module:echarts/data/List} data
  * @param {string} coordDim
- * @return {Array.<string>} data dimensions on the coordDim.
+ * @return {Array.<string>} data dimensions on the coordDim (concrete dim).
  */
 export function coordDimToDataDim(data, coordDim) {
     var dataDim = [];
