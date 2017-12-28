@@ -148,8 +148,8 @@ export default echarts.extendChartView({
             );
             polyline.hoverStyle = itemModel.getModel('emphasis.lineStyle').getLineStyle();
 
-            var areaStyleModel = itemModel.getModel('areaStyle.normal');
-            var hoverAreaStyleModel = itemModel.getModel('areaStyle.emphasis');
+            var areaStyleModel = itemModel.getModel('areaStyle');
+            var hoverAreaStyleModel = itemModel.getModel('areaStyle');
             var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
             var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
 

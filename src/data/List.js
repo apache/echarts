@@ -25,7 +25,12 @@ var dataCtors = {
     'time': Array
 };
 
-var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
+function getIndicesCtor(count) {
+    var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
+    var CtorUint16Array = typeof globalObj.Uint16Array === UNDEFINED ? Array : globalObj.Uint16Array;
+
+    return count > 65535 ? CtorUint32Array : CtorUint16Array;
+}
 
 function cloneChunk(originalChunk) {
     var Ctor = originalChunk.constructor;
@@ -167,7 +172,7 @@ var List = function (dimensions, hostModel) {
         else {
             dimensionInfo = dimensions[i];
             dimensionName = dimensionInfo.name;
-            dimensionInfo.type = dimensionInfo.type || 'number';
+            dimensionInfo.type = dimensionInfo.type || 'float';
             if (!dimensionInfo.coordDim) {
                 dimensionInfo.coordDim = dimensionName;
                 dimensionInfo.coordDimIndex = 0;
@@ -547,16 +552,19 @@ listProto._initDataFromProvider = function (start, end) {
  * @return {number}
  */
 listProto.count = function () {
-    return this._indices ? this._indices.length : this._count;
+    return this._count;
 };
 
 listProto.getIndices = function () {
     if (this._indices) {
-        return this._indices;
+        var Ctor = this._indices.constructor;
+        return new Ctor(this._indices.buffer, 0, this._count);
     }
-    var arr = new CtorUint32Array(this.count());
+
+    var Ctor = getIndicesCtor(this.count());
+    var arr = new Ctor(this.count());
     for (var i = 0; i < arr.length; i++) {
-        arr[i] = arr;
+        arr[i] = i;
     }
     return arr;
 };
@@ -569,6 +577,10 @@ listProto.getIndices = function () {
  * @return {number}
  */
 listProto.get = function (dim, idx, stack) {
+    if (idx < 0 || idx >= this._count) {
+        return NaN;
+    }
+
     idx = this.getRawIndex(idx);
 
     var storage = this._storage;
@@ -576,7 +588,7 @@ listProto.get = function (dim, idx, stack) {
     var chunkOffset = idx % this._chunkSize;
 
     var chunkStore = storage[dim][chunkIndex];
-    var value = chunkStore ? chunkStore[chunkOffset] : NaN;
+    var value = chunkStore[chunkOffset];
     // FIXME ordinal data type is not stackable
     if (stack) {
         var dimensionInfo = this._dimensionInfos[dim];
@@ -595,6 +607,7 @@ listProto.get = function (dim, idx, stack) {
             }
         }
     }
+
     return value;
 };
 
@@ -649,7 +662,6 @@ listProto.hasValue = function (idx) {
  * @param {Function} filter
  */
 listProto.getDataExtent = function (dim, stack, filter) {
-    console.time('getExtent');
     // Make sure use concrete dim as cache name.
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
@@ -711,7 +723,6 @@ listProto.getDataExtent = function (dim, stack, filter) {
     }
     this._extent[cacheName] = dimExtent;
 
-    // console.timeEnd('getExtent');
     return dimExtent;
 };
 
@@ -879,13 +890,18 @@ listProto.indicesOfNearest = function (dim, value, stack, maxDistance) {
  * @param {number} idx
  * @return {number}
  */
-listProto.getRawIndex = function (idx) {
-    if (!this._indices) {
-        return idx;
+listProto.getRawIndex = getRawIndexWithoutIndices;
+
+function getRawIndexWithoutIndices(idx) {
+    return idx;
+}
+
+function getRawIndexWithIndices(idx) {
+    if (idx < this._count && idx >= 0) {
+        return this._indices[idx];
     }
-    var rawIdx = this._indices[idx];
-    return rawIdx == null ? -1 : rawIdx;
-};
+    return -1;
+}
 
 /**
  * Get raw data item
@@ -992,33 +1008,39 @@ listProto.each = function (dims, cb, stack, context) {
  * @param {*} [context=this]
  */
 listProto.filterSelf = function (dimensions, cb, stack, context) {
+    'use strict';
+
     if (typeof dimensions === 'function') {
         context = stack;
         stack = cb;
         cb = dimensions;
         dimensions = [];
     }
+    stack = stack || false;
 
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this
     );
 
-    var newIndices = [];
+    var count = this.count();
+    var Ctor = getIndicesCtor(count);
+    var newIndices = new Ctor(count);
     var value = [];
     var dimSize = dimensions.length;
 
     context = context || this;
 
-    for (var i = 0; i < this.count(); i++) {
+    var offset = 0;
+    var dim0 = dimensions[0];
+
+    for (var i = 0; i < count; i++) {
         var keep;
         // Simple optimization
-        if (!dimSize) {
+        if (dimSize === 0) {
             keep = cb.call(context, i);
         }
         else if (dimSize === 1) {
-            keep = cb.call(
-                context, this.get(dimensions[0], i, stack), i
-            );
+            keep = cb.call(context, this.get(dim0, i, stack), i);
         }
         else {
             for (var k = 0; k < dimSize; k++) {
@@ -1028,14 +1050,19 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
             keep = cb.apply(context, value);
         }
         if (keep) {
-            newIndices.push(this.getRawIndex(i));
+            newIndices[offset++] = this.getRawIndex(i);
         }
     }
 
-    this._indices = new Uint32Array(newIndices);
-
+    // Set indices after filtered.
+    if (offset < count) {
+        this._indices = newIndices;
+    }
+    this._count = offset;
     // Reset data extent
     this._extent = {};
+
+    this.getRawIndex = this._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
     return this;
 };
@@ -1112,6 +1139,7 @@ listProto.map = function (dimensions, cb, stack, context) {
     // Following properties are all immutable.
     // So we can reference to the same value
     list._indices = this._indices;
+    list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
     var storage = list._storage;
 
@@ -1152,8 +1180,6 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var list = cloneListForMapAndSample(this, [dimension]);
     var targetStorage = list._storage;
 
-    var indices = list._indices = [];
-
     var frameValues = [];
     var frameSize = Math.floor(1 / rate);
 
@@ -1161,6 +1187,9 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var len = this.count();
     var chunkSize = this._chunkSize;
 
+    var newIndices = new (getIndicesCtor(len))(len);
+
+    var offset = 0;
     for (var i = 0; i < len; i += frameSize) {
         // Last frame
         if (frameSize > len - i) {
@@ -1168,19 +1197,25 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
             frameValues.length = frameSize;
         }
         for (var k = 0; k < frameSize; k++) {
-            var dataIdx = i + k;
+            var dataIdx = this.getRawIndex(i + k);
             var originalChunkIndex = Math.floor(dataIdx / chunkSize);
             var originalChunkOffset = dataIdx % chunkSize;
             frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
         }
         var value = sampleValue(frameValues);
-        var sampleFrameIdx = sampleIndex(frameValues, value) || 0;
+        var sampleFrameIdx = this.getRawIndex(i + sampleIndex(frameValues, value) || 0);
         var sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
         var sampleChunkOffset = sampleFrameIdx % chunkSize;
         // Only write value on the filtered data
         dimStore[sampleChunkIndex][sampleChunkOffset] = value;
-        indices.push(sampleFrameIdx);
+
+        newIndices[offset++] = sampleFrameIdx;
     }
+
+    list._count = offset;
+    list._indices = newIndices;
+
+    list.getRawIndex = getRawIndexWithIndices;
 
     return list;
 };
@@ -1427,11 +1462,13 @@ listProto.cloneShallow = function (list) {
 
     // Clone will not change the data extent and indices
     if (this._indices) {
-        list._indices = new CtorUint32Array(this._indices);
+        var Ctor = this._indices.constructor;
+        list._indices = new Ctor(this._indices);
     }
     else {
         list._indices = null;
     }
+    list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
     list._extent = zrUtil.clone(this._extent);
     list._approximateExtent = zrUtil.clone(this._approximateExtent);
