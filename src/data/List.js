@@ -172,7 +172,7 @@ var List = function (dimensions, hostModel) {
         else {
             dimensionInfo = dimensions[i];
             dimensionName = dimensionInfo.name;
-            dimensionInfo.type = dimensionInfo.type || 'number';
+            dimensionInfo.type = dimensionInfo.type || 'float';
             if (!dimensionInfo.coordDim) {
                 dimensionInfo.coordDim = dimensionName;
                 dimensionInfo.coordDimIndex = 0;
@@ -577,6 +577,10 @@ listProto.getIndices = function () {
  * @return {number}
  */
 listProto.get = function (dim, idx, stack) {
+    if (idx < 0 || idx >= this._count) {
+        return NaN;
+    }
+
     idx = this.getRawIndex(idx);
 
     var storage = this._storage;
@@ -584,7 +588,7 @@ listProto.get = function (dim, idx, stack) {
     var chunkOffset = idx % this._chunkSize;
 
     var chunkStore = storage[dim][chunkIndex];
-    var value = chunkStore ? chunkStore[chunkOffset] : NaN;
+    var value = chunkStore[chunkOffset];
     // FIXME ordinal data type is not stackable
     if (stack) {
         var dimensionInfo = this._dimensionInfos[dim];
@@ -603,6 +607,7 @@ listProto.get = function (dim, idx, stack) {
             }
         }
     }
+
     return value;
 };
 
@@ -657,7 +662,6 @@ listProto.hasValue = function (idx) {
  * @param {Function} filter
  */
 listProto.getDataExtent = function (dim, stack, filter) {
-    console.time('getExtent');
     // Make sure use concrete dim as cache name.
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
@@ -719,7 +723,6 @@ listProto.getDataExtent = function (dim, stack, filter) {
     }
     this._extent[cacheName] = dimExtent;
 
-    // console.timeEnd('getExtent');
     return dimExtent;
 };
 
@@ -887,13 +890,18 @@ listProto.indicesOfNearest = function (dim, value, stack, maxDistance) {
  * @param {number} idx
  * @return {number}
  */
-listProto.getRawIndex = function (idx) {
-    if (!this._indices) {
-        return idx;
+listProto.getRawIndex = getRawIndexWithoutIndices;
+
+function getRawIndexWithoutIndices(idx) {
+    return idx;
+}
+
+function getRawIndexWithIndices(idx) {
+    if (idx < this._count && idx >= 0) {
+        return this._indices[idx];
     }
-    var rawIdx = this._indices[idx];
-    return rawIdx == null ? -1 : rawIdx;
-};
+    return -1;
+}
 
 /**
  * Get raw data item
@@ -1000,35 +1008,39 @@ listProto.each = function (dims, cb, stack, context) {
  * @param {*} [context=this]
  */
 listProto.filterSelf = function (dimensions, cb, stack, context) {
+    'use strict';
+
     if (typeof dimensions === 'function') {
         context = stack;
         stack = cb;
         cb = dimensions;
         dimensions = [];
     }
+    stack = stack || false;
 
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this
     );
 
-    var Ctor = getIndicesCtor(this.count());
-    var newIndices = new Ctor(this.count());
+    var count = this.count();
+    var Ctor = getIndicesCtor(count);
+    var newIndices = new Ctor(count);
     var value = [];
     var dimSize = dimensions.length;
 
     context = context || this;
 
     var offset = 0;
-    for (var i = 0; i < this.count(); i++) {
+    var dim0 = dimensions[0];
+
+    for (var i = 0; i < count; i++) {
         var keep;
         // Simple optimization
-        if (!dimSize) {
+        if (dimSize === 0) {
             keep = cb.call(context, i);
         }
         else if (dimSize === 1) {
-            keep = cb.call(
-                context, this.get(dimensions[0], i, stack), i
-            );
+            keep = cb.call(context, this.get(dim0, i, stack), i);
         }
         else {
             for (var k = 0; k < dimSize; k++) {
@@ -1043,10 +1055,14 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
     }
 
     // Set indices after filtered.
-    this._indices = newIndices;
+    if (offset < count) {
+        this._indices = newIndices;
+    }
     this._count = offset;
     // Reset data extent
     this._extent = {};
+
+    this.getRawIndex = this._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
     return this;
 };
@@ -1123,6 +1139,7 @@ listProto.map = function (dimensions, cb, stack, context) {
     // Following properties are all immutable.
     // So we can reference to the same value
     list._indices = this._indices;
+    list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
     var storage = list._storage;
 
@@ -1197,6 +1214,8 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
 
     list._count = offset;
     list._indices = newIndices;
+
+    list.getRawIndex = getRawIndexWithIndices;
 
     return list;
 };
@@ -1449,6 +1468,7 @@ listProto.cloneShallow = function (list) {
     else {
         list._indices = null;
     }
+    list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
     list._extent = zrUtil.clone(this._extent);
     list._approximateExtent = zrUtil.clone(this._approximateExtent);
