@@ -335,7 +335,11 @@ AxisProxy.prototype = {
                         );
                     }
                     else {
-                        seriesData.filterSelf(dim, isInWindow);
+                        var range = {};
+                        range[dim] = valueWindow;
+                        // console.time('select');
+                        seriesData.selectRange(range);
+                        // console.timeEnd('select');
                     }
                     seriesData.setApproximateExtent(valueWindow, dim);
                 });

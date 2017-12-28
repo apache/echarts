@@ -1018,6 +1018,8 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
     }
     stack = stack || false;
 
+    context = context || this;
+
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this
     );
@@ -1027,8 +1029,6 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
     var newIndices = new Ctor(count);
     var value = [];
     var dimSize = dimensions.length;
-
-    context = context || this;
 
     var offset = 0;
     var dim0 = dimensions[0];
@@ -1051,6 +1051,82 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
         }
         if (keep) {
             newIndices[offset++] = this.getRawIndex(i);
+        }
+    }
+
+    // Set indices after filtered.
+    if (offset < count) {
+        this._indices = newIndices;
+    }
+    this._count = offset;
+    // Reset data extent
+    this._extent = {};
+
+    this.getRawIndex = this._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
+
+    return this;
+};
+
+/**
+ * Select data in range.
+ */
+listProto.selectRange = function (range, stack) {
+    'use strict';
+
+    stack = stack || false;
+
+    var dimensions = [];
+    for (var dim in range) {
+        dimensions.push(dim);
+    }
+    var dimSize = dimensions.length;
+    if (!dimSize) {
+        return;
+    }
+
+    var count = this.count();
+    var Ctor = getIndicesCtor(count);
+    var newIndices = new Ctor(count);
+
+    var offset = 0;
+    var dim0 = dimensions[0];
+
+    if (dimSize === 1) {
+        var min = range[dim0][0];
+        var max = range[dim0][1];
+        for (var i = 0; i < count; i++) {
+            var val;
+            var rawIndex = this.getRawIndex(i);
+            if (stack) {
+                val = this.get(dim, i, true);
+            }
+            else {
+                var storage = this._storage;
+                var chunkIndex = Math.floor(i / this._chunkSize);
+                var chunkOffset = i % this._chunkSize;
+
+                var chunkStore = storage[dim][chunkIndex];
+                var val = chunkStore[chunkOffset];
+            }
+
+            if (val >= min && val <= max) {
+                newIndices[offset++] = rawIndex;
+            }
+        }
+    }
+    else {
+        for (var i = 0; i < count; i++) {
+            var keep = true;
+            for (var k = 0; k < dimSize; k++) {
+                var dimName = dimensions[k];
+                var val = this.get(dimName, i, stack);
+                if (val < range[dimName][0] || val > range[dimName][1]) {
+                    keep = false;
+                }
+            }
+            if (keep) {
+                newIndices[offset++] = this.getRawIndex(i);
+            }
         }
     }
 
