@@ -285,11 +285,6 @@ var SliderZoomView = DataZoomView.extend({
         var seriesModel = info.series;
         var data = seriesModel.getRawData();
 
-        // FIXME rough. ???
-        if (data.count() > 1e5) {
-            return;
-        }
-
         var otherDim = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;

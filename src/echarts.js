@@ -278,14 +278,16 @@ echartsProto._onframe = function () {
 
             updateStreamModes(this, ecModel);
 
-            // ??? coordSys create, consider cartesian?
-            // But update coord will dirty all of the original layouts and rendering.
+            // Do not update coordinate system here. Because that coord system update in
+            // each frame is not a good user experience. So we follow the rule that
+            // the extent of the coordinate system is determin in the first frame (the
+            // frame is executed immedietely after task reset.
             // this._coordSysMgr.update(ecModel, api);
 
             // console.log('--- ec frame visual ---', remainTime);
             scheduler.performVisualTasks(visualFuncs, ecModel);
 
-            render(this, this._model, api, 'none');
+            renderSeries(this, this._model, api, 'remain');
 
             remainTime -= (+new Date() - startTime);
         }
@@ -1422,7 +1424,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
         chartView.__alive = true;
 
         var renderTask = chartView.renderTask;
-        payload !== 'none' && (renderTask.context.payload = payload);
+        payload !== 'remain' && (renderTask.context.payload = payload);
         dirtySeriesModels && renderTask.dirty();
         unfinished |= renderTask.perform(scheduler.getPerformArgs(renderTask));
 

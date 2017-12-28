@@ -295,10 +295,6 @@ function overallTaskReset(context) {
     );
 }
 
-function overallTaskPlan(context) {
-    return 'reset';
-}
-
 function seriesTaskPlan(context, upstreamContext) {
     // ???! setData can be called in plan, progress, overalltask, how to deal with that
     prepareData(context, upstreamContext);
