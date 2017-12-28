@@ -1,7 +1,7 @@
 import {__DEV__} from '../../config';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
-import * as zrUtil from 'zrender/src/core/util';
+import { concatArray } from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import CoordinateSystem from '../../CoordinateSystem';
 
@@ -9,33 +9,6 @@ var globalObj = typeof window === 'undefined' ? global : window;
 
 var Uint32Arr = globalObj.Uint32Array || Array;
 var Float64Arr = globalObj.Float64Array || Array;
-
-// Convert [ [{coord: []}, {coord: []}] ]
-// to [ { coords: [[]] } ]
-function preprocessOption(seriesOpt) {
-    var data = seriesOpt.data;
-    if (data && data[0] && data[0][0] && data[0][0].coord) {
-        if (__DEV__) {
-            console.warn('Lines data configuration has been changed to'
-                + ' { coords:[[1,2],[2,3]] }');
-        }
-        seriesOpt.data = zrUtil.map(data, function (itemOpt) {
-            var coords = [
-                itemOpt[0].coord, itemOpt[1].coord
-            ];
-            var target = {
-                coords: coords
-            };
-            if (itemOpt[0].name) {
-                target.fromName = itemOpt[0].name;
-            }
-            if (itemOpt[1].name) {
-                target.toName = itemOpt[1].name;
-            }
-            return zrUtil.mergeAll([target, itemOpt[0], itemOpt[1]]);
-        });
-    }
-}
 
 var LinesSeries = SeriesModel.extend({
 
@@ -46,18 +19,42 @@ var LinesSeries = SeriesModel.extend({
     visualColorAccessPath: 'lineStyle.color',
 
     init: function (option) {
-        // Not using preprocessor because mergeOption may not have series.type
-        preprocessOption(option);
-        this._processFlatCoordsArray(option);
+        var result = this._processFlatCoordsArray(option.data);
+        this._flatCoords = result.flatCoords;
+        this._flatCoordsOffset = result.flatCoordsOffset;
+        if (result.flatCoords) {
+            option.data = new Float32Array(result.count);
+        }
 
         LinesSeries.superApply(this, 'init', arguments);
     },
 
     mergeOption: function (option) {
-        preprocessOption(option);
-        this._processFlatCoordsArray(option);
+        var result = this._processFlatCoordsArray(option.data);
+        this._flatCoords = result.flatCoords;
+        this._flatCoordsOffset = result.flatCoordsOffset;
+        if (result.flatCoords) {
+            option.data = new Float32Array(result.count);
+        }
 
         LinesSeries.superApply(this, 'mergeOption', arguments);
+    },
+
+    appendData: function (params) {
+        var result = this._processFlatCoordsArray(params.data);
+        if (result.flatCoords) {
+            if (!this._flatCoords) {
+                this._flatCoords = result.flatCoords;
+                this._flatCoordsOffset = result.flatCoordsOffset;
+            }
+            else {
+                this._flatCoords = concatArray(this._flatCoords, result.flatCoords);
+                this._flatCoordsOffset = concatArray(this._flatCoordsOffset, result.flatCoordsOffset);
+            }
+            params.data = new Float32Array(result.count);
+        }
+
+        this.getRawData().appendData(params.data);
     },
 
     _getCoordsFromItemModel: function (idx) {
@@ -104,8 +101,11 @@ var LinesSeries = SeriesModel.extend({
         }
     },
 
-    _processFlatCoordsArray: function (option) {
-        var data = option.data;
+    _processFlatCoordsArray: function (data) {
+        var startOffset = 0;
+        if (this._flatCoords) {
+            startOffset = this._flatCoords.length;
+        }
         // Stored as a typed array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
         if (typeof data[0] === 'number') {
@@ -120,7 +120,7 @@ var LinesSeries = SeriesModel.extend({
                 dataCount++;
                 var count = data[i++];
                 // Offset
-                coordsOffsetAndLenStorage[offsetCursor++] = coordsCursor;
+                coordsOffsetAndLenStorage[offsetCursor++] = coordsCursor + startOffset;
                 // Len
                 coordsOffsetAndLenStorage[offsetCursor++] = count;
                 for (var k = 0; k < count; k++) {
@@ -137,15 +137,18 @@ var LinesSeries = SeriesModel.extend({
                 }
             }
 
-            this._flatCoordsOffset = coordsOffsetAndLenStorage;
-            this._flatCoords = coordsStorage;
+            return {
+                flatCoordsOffset: new Uint32Array(coordsOffsetAndLenStorage.buffer, 0, offsetCursor),
+                flatCoords: coordsStorage,
+                count: dataCount
+            };
+        }
 
-            // Fill with zero values.
-            option.data = new Float32Array(dataCount);
-        }
-        else {
-            this._flatCoordsOffset = this._flatCoords = null;
-        }
+        return {
+            flatCoordsOffset: null,
+            flatCoords: null,
+            count: data.length
+        };
     },
 
     getInitialData: function (option, ecModel) {
