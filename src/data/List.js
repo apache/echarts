@@ -25,7 +25,12 @@ var dataCtors = {
     'time': Array
 };
 
-var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
+function getIndicesCtor(count) {
+    var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
+    var CtorUint16Array = typeof globalObj.Uint16Array === UNDEFINED ? Array : globalObj.Uint16Array;
+
+    return count > 65535 ? CtorUint32Array : CtorUint16Array;
+}
 
 function cloneChunk(originalChunk) {
     var Ctor = originalChunk.constructor;
@@ -547,14 +552,17 @@ listProto._initDataFromProvider = function (start, end) {
  * @return {number}
  */
 listProto.count = function () {
-    return this._indices ? this._indices.length : this._count;
+    return this._count;
 };
 
 listProto.getIndices = function () {
     if (this._indices) {
-        return this._indices;
+        var Ctor = this._indices.constructor;
+        return new Ctor(this._indices.buffer, 0, this._count);
     }
-    var arr = new CtorUint32Array(this.count());
+
+    var Ctor = getIndicesCtor(this.count());
+    var arr = new Ctor(this.count());
     for (var i = 0; i < arr.length; i++) {
         arr[i] = arr;
     }
@@ -1003,12 +1011,14 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
         normalizeDimensions(dimensions), this.getDimension, this
     );
 
-    var newIndices = [];
+    var Ctor = getIndicesCtor(this.count());
+    var newIndices = new Ctor(this.count());
     var value = [];
     var dimSize = dimensions.length;
 
     context = context || this;
 
+    var offset = 0;
     for (var i = 0; i < this.count(); i++) {
         var keep;
         // Simple optimization
@@ -1028,12 +1038,13 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
             keep = cb.apply(context, value);
         }
         if (keep) {
-            newIndices.push(this.getRawIndex(i));
+            newIndices[offset++] = this.getRawIndex(i);
         }
     }
 
-    this._indices = new Uint32Array(newIndices);
-
+    // Set indices after filtered.
+    this._indices = newIndices;
+    this._count = offset;
     // Reset data extent
     this._extent = {};
 
@@ -1427,7 +1438,8 @@ listProto.cloneShallow = function (list) {
 
     // Clone will not change the data extent and indices
     if (this._indices) {
-        list._indices = new CtorUint32Array(this._indices);
+        var Ctor = this._indices.constructor;
+        list._indices = new Ctor(this._indices);
     }
     else {
         list._indices = null;

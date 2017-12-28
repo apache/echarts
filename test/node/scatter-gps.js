@@ -44,7 +44,7 @@ chart.setOption({
         type: 'scatter',
         progressive: 1e5,
         coordinateSystem: 'geo',
-        symbolSize: 1,
+        symbolSize: 0.5,
         blendMode: 'lighter',
         large: true,
         itemStyle: {
