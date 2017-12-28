@@ -124,8 +124,6 @@ function reset(taskIns) {
 
     var downstream = taskIns._downstream;
     downstream && downstream.dirty();
-    // FIXME
-    taskIns.agent && taskIns.agent.dirty();
 }
 
 /**

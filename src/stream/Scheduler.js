@@ -126,7 +126,7 @@ proto.prepareView = function (view, model, ecModel, api) {
 
 proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
     // performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
-    performStageTasks(this, stageHandlers, ecModel, payload);
+    performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
 };
 
 // opt
@@ -250,7 +250,8 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
 function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
         || createTask(
-            {plan: overallTaskPlan, reset: overallTaskReset},
+            // For overall task, the function only be called on reset stage.
+            {reset: overallTaskReset},
             {ecModel: ecModel, api: api, overallReset: stageHandler.overallReset}
         );
 
@@ -259,11 +260,21 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     // Reuse orignal stubs.
     var stubs = overallTask.agentStubs = overallTask.agentStubs || [];
     var stubIndex = 0;
-    // If no series type detected, we do not set overallTask block. Otherwise the
-    // progressive rendering of all pipelines will be disabled unexpectedly.
-    // Moreover, it is not necessary to add stub to pipeline in the case.
+
+    // If no seriesType detected and no getTargetSeries method, we do not set
+    // overallTask block. Otherwise the progressive rendering of all pipelines
+    // will be disabled unexpectedly. Moreover, it is not necessary to add stub
+    // to pipeline in the case.
     var seriesType = stageHandler.seriesType;
-    seriesType && ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
+    var getTargetSeries = stageHandler.getTargetSeries;
+    if (seriesType) {
+        ecModel.eachRawSeriesByType(seriesType, createStub);
+    }
+    else if (getTargetSeries) {
+        each(getTargetSeries(ecModel, api), createStub);
+    }
+
+    function createStub(seriesModel) {
         var stub = stubs[stubIndex] = stubs[stubIndex] || createTask(
             {plan: prepareData, reset: pullData}, {model: seriesModel}
         );
@@ -273,7 +284,8 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
 
         // ???! sequence of call should be caution (when to set dirty), so move it to task.js?
         pipe(scheduler, seriesModel, stub);
-    });
+    }
+
     stubs.length = stubIndex;
 }
 

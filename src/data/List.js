@@ -1068,7 +1068,7 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
 };
 
 /**
- * Select data in range.
+ * Select data in range. (For optimization of filter)
  */
 listProto.selectRange = function (range, stack) {
     'use strict';
@@ -1077,7 +1077,9 @@ listProto.selectRange = function (range, stack) {
 
     var dimensions = [];
     for (var dim in range) {
-        dimensions.push(dim);
+        if (range.hasOwnProperty(dim)) {
+            dimensions.push(dim);
+        }
     }
     var dimSize = dimensions.length;
     if (!dimSize) {
