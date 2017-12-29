@@ -99,6 +99,8 @@ echarts.extendChartView({
         var group = this.group;
         var renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
+        this.group.removeAll();
+
         data.diff(oldData)
             .add(function (newIdx) {
                 data.hasValue(newIdx) && createOrUpdate(
