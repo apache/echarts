@@ -231,7 +231,7 @@ View.prototype = {
      * @param {Array.<number>} data
      * @return {Array.<number>}
      */
-    dataToPoint: function (data, out) {
+    dataToPoint: function (data, preserved, out) {
         var transform = this.transform;
         out = out || [];
         return transform

@@ -195,7 +195,7 @@ Geo.prototype = {
      * @param {string|Array.<number>} data
      * @return {Array.<number>}
      */
-    dataToPoint: function (data, out) {
+    dataToPoint: function (data, preserved, out) {
         if (typeof data === 'string') {
             // Map area name to geoCoord
             data = this.getGeoCoord(data);
