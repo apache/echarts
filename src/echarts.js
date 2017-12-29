@@ -768,7 +768,7 @@ var updateMethods = {
             return;
         }
 
-        ecModel.restoreData();
+        ecModel.restoreData(payload);
 
         scheduler.performSeriesTasks(ecModel);
 

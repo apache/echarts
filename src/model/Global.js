@@ -572,7 +572,7 @@ var GlobalModel = Model.extend({
         createSeriesIndices(this, filteredSeries);
     },
 
-    restoreData: function () {
+    restoreData: function (payload) {
         var componentsMap = this._componentsMap;
 
         createSeriesIndices(this, componentsMap.get('series'));
@@ -587,13 +587,25 @@ var GlobalModel = Model.extend({
             ComponentModel.getAllClassMainTypes(),
             function (componentType, dependencies) {
                 each(componentsMap.get(componentType), function (component) {
-                    component.restoreData();
+                    (componentType !== 'series' || !isNotTargetSeries(component, payload))
+                        && component.restoreData();
                 });
             }
         );
     }
 
 });
+
+function isNotTargetSeries(seriesModel, payload) {
+    if (payload) {
+        var index = payload.seiresIndex;
+        var id = payload.seriesId;
+        var name = payload.seriesName;
+        return (index != null && seriesModel.componentIndex !== index)
+            || (id != null && seriesModel.id !== id)
+            || (name != null && seriesModel.name !== name);
+    }
+}
 
 /**
  * @inner

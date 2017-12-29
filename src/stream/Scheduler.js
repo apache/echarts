@@ -270,36 +270,40 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
             {ecModel: ecModel, api: api, overallReset: stageHandler.overallReset}
         );
 
-    // Consider 2 cases:
-    // 1) An overall task with seriesType detected or has `getTargetSeries`, we add
-    // stub in each pipelines, it will set the overall task dirty when the pipeline
-    // progress. Moreover, to avoid call the overall task each frame (too frequent),
-    // we set the pipeline block.
-    // 2) Otherwise, (usually it is legancy case), the overall task will only be
-    // executed when upstream dirty. Otherwise the progressive rendering of all
-    // pipelines will be disabled unexpectedly.
-
     // Reuse orignal stubs.
     var stubs = overallTask.agentStubs = overallTask.agentStubs || [];
     var stubIndex = 0;
 
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
+    var overallProgress = true;
+
+    // An overall task with seriesType detected or has `getTargetSeries`, we add
+    // stub in each pipelines, it will set the overall task dirty when the pipeline
+    // progress. Moreover, to avoid call the overall task each frame (too frequent),
+    // we set the pipeline block.
     if (seriesType) {
         ecModel.eachRawSeriesByType(seriesType, createStub);
     }
     else if (getTargetSeries) {
         each(getTargetSeries(ecModel, api), createStub);
     }
+    // Otherwise, (usually it is legancy case), the overall task will only be
+    // executed when upstream dirty. Otherwise the progressive rendering of all
+    // pipelines will be disabled unexpectedly.
+    else {
+        overallProgress = false;
+        each(ecModel.getSeries(), createStub);
+    }
 
     function createStub(seriesModel) {
         var stub = stubs[stubIndex] = stubs[stubIndex] || createTask(
             {plan: prepareData, reset: stubReset, onDirty: stubOnDirty},
-            {model: seriesModel}
+            {model: seriesModel, overallProgress: overallProgress}
         );
         stubIndex++;
         stub.agent = overallTask;
-        stub.__block = true;
+        stub.__block = overallProgress;
 
         pipe(scheduler, seriesModel, stub);
     }
@@ -315,7 +319,7 @@ function overallTaskReset(context) {
 
 function stubReset(context, upstreamContext) {
     pullData(context, upstreamContext);
-    return stubProgress;
+    return context.overallProgress && stubProgress;
 }
 
 function stubProgress() {
@@ -324,7 +328,7 @@ function stubProgress() {
 }
 
 function stubOnDirty() {
-    this.agent && (this.agent._dirty = true);
+    this.agent && this.agent.dirty();
 }
 
 function seriesTaskPlan(context, upstreamContext) {
@@ -447,8 +451,10 @@ mockMethods(apiMock, ExtensionAPI);
 ecModelMock.eachSeriesByType = ecModelMock.eachRawSeriesByType = function (type) {
     seriesType = type;
 };
-ecModelMock.filterSeries = function () {
-    seriesType = 'ALL_SERIES';
+ecModelMock.eachComponent = function (cond) {
+    if (cond.mainType === 'series' && cond.subType) {
+        seriesType = cond.subType;
+    }
 };
 
 function mockMethods(target, Clz) {

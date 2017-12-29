@@ -1,7 +1,7 @@
 import * as echarts from '../../echarts';
 
 echarts.registerProcessor({
-    getTargetSeries: function (ecModel, api) {
+    getTargetSeries: function (ecModel) {
         var seriesModels = [];
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {

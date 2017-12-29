@@ -17,12 +17,11 @@ var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'height'];
 /**
  * @public
  */
-export default function (ecModel, api, payload) {
-    // Layout result in each node:
-    // {x, y, width, height, area, borderWidth}
-    var condition = {mainType: 'series', subType: 'treemap', query: payload};
-    ecModel.eachComponent(condition, function (seriesModel) {
-
+export default {
+    seriesType: 'treemap',
+    reset: function (seriesModel, ecModel, api, payload) {
+        // Layout result in each node:
+        // {x, y, width, height, area, borderWidth}
         var ecWidth = api.getWidth();
         var ecHeight = api.getHeight();
         var seriesOption = seriesModel.option;
@@ -118,8 +117,8 @@ export default function (ecModel, api, payload) {
             viewRoot,
             0
         );
-    });
-}
+    }
+};
 
 /**
  * Layout treemap with squarify algorithm.
