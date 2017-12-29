@@ -222,7 +222,6 @@ export default echarts.extendChartView({
             rect.incremental = incremental;
             // PENDING
             if (incremental) {
-                rect.needsClear = start === 0;
                 // Rect must use hover layer if it's incremental.
                 rect.useHoverLayer = true;
             }

@@ -1572,11 +1572,17 @@ function updateBlend(seriesModel, chartView) {
     chartView.group.traverse(function (el) {
         // FIXME marker and other components
         if (!el.isGroup) {
-            el.setStyle('blend', blendMode);
+            // Only set if blendMode is changed. In case element is incremental and don't wan't to rerender.
+            if (el.style.blend !== blendMode) {
+                el.setStyle('blend', blendMode);
+            }
         }
         if (el.eachPendingDisplayable) {
             el.eachPendingDisplayable(function (displayable) {
-                displayable.setStyle('blend', blendMode);
+                // Only set if blendMode is changed. In case element is incremental and don't wan't to rerender.
+                if (el.style.blend !== blendMode) {
+                    el.setStyle('blend', blendMode);
+                }
             });
         }
     });
