@@ -122,6 +122,26 @@ echarts.extendChartView({
         this._data = data;
     },
 
+    incrementalPrepareRender: function (customSeries, ecModel, api) {
+        this.group.removeAll();
+        this._data = null;
+    },
+
+    incrementalRender: function (params, customSeries, ecModel, api) {
+        var data = customSeries.getData();
+        var renderItem = makeRenderItem(customSeries, data, ecModel, api);
+        function setIncrementalAndHoverLayer(el) {
+            if (!el.isGroup) {
+                el.incremental = true;
+                el.useHoverLayer = true;
+            }
+        }
+        for (var idx = params.start; idx < params.end; idx++) {
+            var el = createOrUpdate(null, idx, renderItem(idx), customSeries, this.group, data);
+            el.traverse(setIncrementalAndHoverLayer);
+        }
+    },
+
     /**
      * @override
      */
@@ -457,6 +477,8 @@ function wrapEncodeDef(data) {
 function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
     el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data);
     el && data.setItemGraphicEl(dataIndex, el);
+
+    return el;
 }
 
 function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
