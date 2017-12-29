@@ -397,9 +397,12 @@ var SliderZoomView = DataZoomView.extend({
                 var otherDim = getOtherDim(dimNames.name);
                 var otherAxisInverse;
                 var coordSys = seriesModel.coordinateSystem;
+
                 if (otherDim != null && coordSys.getOtherAxis) {
                     otherAxisInverse = coordSys.getOtherAxis(thisAxis).inverse;
                 }
+
+                otherDim = seriesModel.coordDimToDataDim(otherDim)[0];
 
                 result = {
                     thisAxis: thisAxis,
