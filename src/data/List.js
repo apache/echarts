@@ -595,10 +595,14 @@ listProto.get = function (dim, idx, stack) {
     if (idx < 0 || idx >= this._count) {
         return NaN;
     }
+    var storage = this._storage;
+    if (!storage[dim]) {
+        // TODO Warn ?
+        return NaN;
+    }
 
     idx = this.getRawIndex(idx);
 
-    var storage = this._storage;
     var chunkIndex = Math.floor(idx / this._chunkSize);
     var chunkOffset = idx % this._chunkSize;
 
@@ -957,6 +961,14 @@ function normalizeDimensions(dimensions) {
     return dimensions;
 }
 
+function validateDimensions(list, dims) {
+    for (var i = 0; i < dims.length; i++) {
+        if (!list._storage[dims[i]]) {
+            console.error('Unkown dimension ' + dims[i]);
+        }
+    }
+}
+
 /**
  * Data iteration
  * @param {string|Array.<string>}
@@ -970,6 +982,8 @@ function normalizeDimensions(dimensions) {
  *  list.each(function (idx) {})
  */
 listProto.each = function (dims, cb, stack, context) {
+    'use strict';
+
     if (typeof dims === 'function') {
         context = stack;
         stack = cb;
@@ -978,6 +992,10 @@ listProto.each = function (dims, cb, stack, context) {
     }
 
     dims = zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
+
+    if (__DEV__) {
+        validateDimensions(this, dims);
+    }
 
     var dimSize = dims.length;
 
@@ -1031,6 +1049,11 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this
     );
+
+    if (__DEV__) {
+        validateDimensions(this, dimensions);
+    }
+
 
     var count = this.count();
     var Ctor = getIndicesCtor(count);
@@ -1091,6 +1114,11 @@ listProto.selectRange = function (range, stack) {
             dimensions.push(dim);
         }
     }
+
+    if (__DEV__) {
+        validateDimensions(this, dimensions);
+    }
+
     var dimSize = dimensions.length;
     if (!dimSize) {
         return;
@@ -1154,11 +1182,17 @@ listProto.selectRange = function (range, stack) {
  * @return {Array}
  */
 listProto.mapArray = function (dimensions, cb, stack, context) {
+    'use strict';
+
     if (typeof dimensions === 'function') {
         context = stack;
         stack = cb;
         cb = dimensions;
         dimensions = [];
+    }
+
+    if (__DEV__) {
+        validateDimensions(this, dimensions);
     }
 
     var result = [];
@@ -1208,9 +1242,15 @@ function cloneDimStore(originalDimStore) {
  * @return {Array}
  */
 listProto.map = function (dimensions, cb, stack, context) {
+    'use strict';
+
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this
     );
+
+    if (__DEV__) {
+        validateDimensions(this, dimensions);
+    }
 
     var list = cloneListForMapAndSample(this, dimensions);
 
