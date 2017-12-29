@@ -700,15 +700,17 @@ var SliderZoomView = DataZoomView.extend({
 
         this._updateView(!realtime);
 
-        if (realtime) {
-            realtime && this._dispatchZoomAction();
-        }
+        realtime && this._dispatchZoomAction();
     },
 
     _onDragEnd: function () {
         this._dragging = false;
         this._showDataInfo(false);
-        this._dispatchZoomAction();
+
+        // While in realtime mode and stream mode, dispatch action when
+        // drag end will cause the whole view rerender, which is unnecessary.
+        var realtime = this.dataZoomModel.get('realtime');
+        !realtime && this._dispatchZoomAction();
     },
 
     _onClickPanelClick: function (e) {

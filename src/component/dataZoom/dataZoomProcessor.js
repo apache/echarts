@@ -11,12 +11,17 @@ echarts.registerProcessor({
         });
         return seriesModels;
     },
+    // Consider appendData, where filter should be performed. Because data process is
+    // in block mode currently, it is not need to worry about that the overallProgress
+    // execute every frame.
     overallReset: function (ecModel, api) {
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because
             // reset should be called after seriesData.restoreData.
-            dataZoomModel.eachTargetAxis(resetSingleAxis);
+            dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
+                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel, api);
+            });
 
             // Caution: data zoom filtering is order sensitive when using
             // percent range and no min/max/scale set on axis.
@@ -32,33 +37,24 @@ echarts.registerProcessor({
             // while sliding y-dataZoom will only change the range of yAxis.
             // So we should filter x-axis after reset x-axis immediately,
             // and then reset y-axis and filter y-axis.
-            dataZoomModel.eachTargetAxis(filterSingleAxis);
+            dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
+                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel, api);
+            });
         });
 
-        function resetSingleAxis(dimNames, axisIndex, dataZoomModel) {
-            dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel, api);
-        }
+        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
+            // Fullfill all of the range props so that user
+            // is able to get them from chart.getOption().
+            var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+            var percentRange = axisProxy.getDataPercentWindow();
+            var valueRange = axisProxy.getDataValueWindow();
 
-        function filterSingleAxis(dimNames, axisIndex, dataZoomModel) {
-            dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel, api);
-        }
+            dataZoomModel.setRawRange({
+                start: percentRange[0],
+                end: percentRange[1],
+                startValue: valueRange[0],
+                endValue: valueRange[1]
+            }, true);
+        });
     }
 });
-
-echarts.registerProcessor(function (ecModel, api) {
-    ecModel.eachComponent('dataZoom', function (dataZoomModel) {
-        // Fullfill all of the range props so that user
-        // is able to get them from chart.getOption().
-        var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
-        var percentRange = axisProxy.getDataPercentWindow();
-        var valueRange = axisProxy.getDataValueWindow();
-
-        dataZoomModel.setRawRange({
-            start: percentRange[0],
-            end: percentRange[1],
-            startValue: valueRange[0],
-            endValue: valueRange[1]
-        }, true);
-    });
-});
-

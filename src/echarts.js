@@ -768,8 +768,8 @@ var updateMethods = {
             return;
         }
 
-        // Fixme First time update ?
         ecModel.restoreData();
+
         scheduler.performSeriesTasks(ecModel);
 
         // TODO
@@ -779,18 +779,16 @@ var updateMethods = {
         // Create new coordinate system each update
         // In LineView may save the old coordinate system and use it to get the orignal point
         coordSysMgr.create(ecModel, api);
-        // ??? coord data travel
-
-        // ??? if some processor do not use task, it should also process in progress,
-        // otherwise, consider data extent, both dependent.
 
         scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel, payload);
 
+        // Current stream render is not supported in data process. So we can update
+        // stream modes after data processing, where the filtered data is used to
+        // deteming whether use progressive rendering.
         updateStreamModes(this, ecModel);
 
         stackSeriesData.call(this, ecModel);
 
-        // ??? coord data travel
         coordSysMgr.update(ecModel, api);
 
         clearColorPalette(ecModel);
@@ -1424,7 +1422,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
         chartView.__alive = true;
 
         var renderTask = chartView.renderTask;
-        payload !== 'remain' && (renderTask.context.payload = payload);
+        scheduler.updatePayload(renderTask, payload);
         dirtySeriesModels && renderTask.dirty();
         unfinished |= renderTask.perform(scheduler.getPerformArgs(renderTask));
 

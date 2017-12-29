@@ -125,7 +125,7 @@ proto.prepareView = function (view, model, ecModel, api) {
 
 
 proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
-    // performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
+    // If we do not use `block` here, it should be considered when to update modes.
     performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
 };
 
@@ -150,9 +150,20 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
         var overallTask = stageHandlerRecord.overallTask;
 
         if (overallTask) {
-            opt.setDirty && overallTask.dirty();
-            overallTask.context.payload = payload;
-            unfinished |= overallTask.perform(scheduler.getPerformArgs(overallTask, opt.block));
+            if (opt.setDirty) {
+                overallTask.dirty();
+                each(overallTask.agentStubs, function (stub) {
+                    stub.dirty();
+                });
+            }
+            updatePayload(overallTask, payload);
+            var performArgs = scheduler.getPerformArgs(overallTask, opt.block);
+            // Execute stubs firstly, which may set the overall task dirty,
+            // then execute the overall task.
+            each(overallTask.agentStubs, function (agentStub) {
+                agentStub.perform(performArgs);
+            });
+            unfinished |= overallTask.perform(performArgs);
         }
         else if (seriesTaskMap) {
             opt.seriesModels
@@ -171,7 +182,7 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
             var performArgs = scheduler.getPerformArgs(task, opt.block);
             // ??? chck skip necessary.
             performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
-            task.context.payload = payload;
+            updatePayload(task, payload);
             unfinished |= task.perform(performArgs);
         }
     });
@@ -203,6 +214,10 @@ proto.plan = function () {
         }
         while (task);
     });
+};
+
+var updatePayload = proto.updatePayload = function (task, payload) {
+    payload !== 'remain' && (task.context.payload = payload);
 };
 
 function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
@@ -255,16 +270,19 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
             {ecModel: ecModel, api: api, overallReset: stageHandler.overallReset}
         );
 
-    // The overall stage task process more then one seires. We simply create stubs
-    // for each pipeline to represent the overall task.
+    // Consider 2 cases:
+    // 1) An overall task with seriesType detected or has `getTargetSeries`, we add
+    // stub in each pipelines, it will set the overall task dirty when the pipeline
+    // progress. Moreover, to avoid call the overall task each frame (too frequent),
+    // we set the pipeline block.
+    // 2) Otherwise, (usually it is legancy case), the overall task will only be
+    // executed when upstream dirty. Otherwise the progressive rendering of all
+    // pipelines will be disabled unexpectedly.
+
     // Reuse orignal stubs.
     var stubs = overallTask.agentStubs = overallTask.agentStubs || [];
     var stubIndex = 0;
 
-    // If no seriesType detected and no getTargetSeries method, we do not set
-    // overallTask block. Otherwise the progressive rendering of all pipelines
-    // will be disabled unexpectedly. Moreover, it is not necessary to add stub
-    // to pipeline in the case.
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
     if (seriesType) {
@@ -276,13 +294,13 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
 
     function createStub(seriesModel) {
         var stub = stubs[stubIndex] = stubs[stubIndex] || createTask(
-            {plan: prepareData, reset: pullData}, {model: seriesModel}
+            {plan: prepareData, reset: stubReset, onDirty: stubOnDirty},
+            {model: seriesModel}
         );
         stubIndex++;
         stub.agent = overallTask;
         stub.__block = true;
 
-        // ???! sequence of call should be caution (when to set dirty), so move it to task.js?
         pipe(scheduler, seriesModel, stub);
     }
 
@@ -293,6 +311,20 @@ function overallTaskReset(context) {
     context.overallReset(
         context.ecModel, context.api, context.payload
     );
+}
+
+function stubReset(context, upstreamContext) {
+    pullData(context, upstreamContext);
+    return stubProgress;
+}
+
+function stubProgress() {
+    this.agent.dirty();
+    this.getDownstream().dirty();
+}
+
+function stubOnDirty() {
+    this.agent && (this.agent._dirty = true);
 }
 
 function seriesTaskPlan(context, upstreamContext) {
@@ -412,8 +444,11 @@ var seriesType;
 
 mockMethods(ecModelMock, GlobalModel);
 mockMethods(apiMock, ExtensionAPI);
-ecModelMock.eachSeriesByType = ecModelMock.eachRawSeriesByType = function seriesByTypeGetter(type) {
+ecModelMock.eachSeriesByType = ecModelMock.eachRawSeriesByType = function (type) {
     seriesType = type;
+};
+ecModelMock.filterSeries = function () {
+    seriesType = 'ALL_SERIES';
 };
 
 function mockMethods(target, Clz) {

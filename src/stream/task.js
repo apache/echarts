@@ -15,6 +15,7 @@ export function createTask(define, context) {
  * @param {Function} define.reset Custom reset
  * @param {Function} [define.plan] Returns 'reset' indicate reset immediately.
  * @param {Function} [define.count] count is used to determin data task.
+ * @param {Function} [define.onDirty] count is used to determin data task.
  * @param {Object} [context]
  */
 function Task(define, context) {
@@ -23,6 +24,7 @@ function Task(define, context) {
     this._reset = define.reset;
     this._plan = define.plan;
     this._count = define.count;
+    this._onDirty = define.onDirty;
 
     this._dirty = true;
 
@@ -95,20 +97,12 @@ taskProto.perform = function (performArgs) {
         this._dueIndex = this._outputDueEnd = this._dueEnd;
     }
 
-    // Initialized in scheduler.
-    each(this.agentStubs, function (agentStub) {
-        agentStub.perform(performArgs);
-    });
-
     return this.unfinished();
 };
 
 taskProto.dirty = function () {
     this._dirty = true;
-    this.agentStubs && each(this.agentStubs, function (stub) {
-        stub._dirty = true;
-    });
-    this.agent && (this.agent._dirty = true);
+    this._onDirty && this._onDirty(this.context);
 };
 
 /**
@@ -166,3 +160,8 @@ taskProto.dispose = function () {
 taskProto.getUpstream = function () {
     return this._upstream;
 };
+
+taskProto.getDownstream = function () {
+    return this._downstream;
+};
+
