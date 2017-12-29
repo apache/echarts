@@ -1,6 +1,7 @@
 import Gradient from 'zrender/src/graphic/Gradient';
 
 export default {
+    allSeries: true,
     processRawSeries: true,
     reset: function (seriesModel, ecModel) {
         var data = seriesModel.getData();

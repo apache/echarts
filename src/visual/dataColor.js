@@ -8,13 +8,14 @@ export default function (seriesType) {
             // Pie and funnel may use diferrent scope
             var paletteScope = {};
             var seiresModels = [];
+
             ecModel.eachSeriesByType(seriesType, function (seriesModel) {
                 seriesModel.__paletteScope = paletteScope;
                 seriesModel.push(seriesModel);
             });
             return seiresModels;
         },
-        overallReset: function (seriesModel, ecModel) {
+        reset: function (seriesModel, ecModel) {
             var dataAll = seriesModel.getRawData();
             var idxMap = {};
             var data = seriesModel.getData();

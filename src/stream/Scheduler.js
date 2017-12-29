@@ -224,9 +224,21 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
     var seriesTaskMap = stageHandlerRecord.seriesTaskMap || (stageHandlerRecord.seriesTaskMap = createHashMap());
     var pipelineIdMap = createHashMap();
 
-    stageHandler.seriesType
-        ? ecModel.eachRawSeriesByType(stageHandler.seriesType, create)
-        : ecModel.eachRawSeries(create);
+    var seriesType = stageHandler.seriesType;
+    var getTargetSeries = stageHandler.getTargetSeries;
+
+    // If a stageHandler should cover all series, `allSeries` should be declared mandatorily,
+    // to avoid some typo or abuse. Otherwise if an extension do not specify a `seriesType`,
+    // it works but it may cause other irrelevant charts blocked.
+    if (stageHandler.allSeries) {
+        ecModel.eachRawSeries(create);
+    }
+    else if (seriesType) {
+        ecModel.eachRawSeriesByType(seriesType, create);
+    }
+    else if (getTargetSeries) {
+        each(getTargetSeries(ecModel, api), create);
+    }
 
     function create(seriesModel) {
         var pipelineId = seriesModel.uid;
