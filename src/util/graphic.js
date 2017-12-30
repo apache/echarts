@@ -5,7 +5,7 @@ import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import Path from 'zrender/src/graphic/Path';
 import Transformable from 'zrender/src/mixin/Transformable';
-import Image from 'zrender/src/graphic/Image';
+import ZImage from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
 import Circle from 'zrender/src/graphic/shape/Circle';
@@ -1044,7 +1044,7 @@ export function createIcon(iconStr, opt, rect) {
             ? (
                 style.image = iconStr.slice(8),
                 zrUtil.defaults(style, rect),
-                new Image(opt)
+                new ZImage(opt)
             )
             : (
                 makePath(
@@ -1059,7 +1059,7 @@ export function createIcon(iconStr, opt, rect) {
 
 export {
     Group,
-    Image,
+    ZImage as Image,
     Text,
     Circle,
     Sector,

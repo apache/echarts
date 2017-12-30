@@ -1577,10 +1577,7 @@ function updateBlend(seriesModel, chartView) {
         }
         if (el.eachPendingDisplayable) {
             el.eachPendingDisplayable(function (displayable) {
-                // Only set if blendMode is changed. In case element is incremental and don't wan't to rerender.
-                if (el.style.blend !== blendMode) {
-                    el.setStyle('blend', blendMode);
-                }
+                displayable.setStyle('blend', blendMode);
             });
         }
     });
