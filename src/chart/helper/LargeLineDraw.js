@@ -2,8 +2,8 @@
 
 import * as graphic from '../../util/graphic';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
-// import * as lineContain from 'zrender/src/contain/line';
-// import * as quadraticContain from 'zrender/src/contain/quadratic';
+import * as lineContain from 'zrender/src/contain/line';
+import * as quadraticContain from 'zrender/src/contain/quadratic';
 
 var LargeLineShape = graphic.extendShape({
 
@@ -48,46 +48,54 @@ var LargeLineShape = graphic.extendShape({
     },
 
     findDataIndex: function (x, y) {
-        // TODO
-        // support incremental
-        // ???
-        // Typed array support
 
-        // var shape = this.shape;
-        // var segs = shape.segs;
-        // var isPolyline = shape.polyline;
-        // var lineWidth = Math.max(this.style.lineWidth, 1);
+        var shape = this.shape;
+        var segs = shape.segs;
+        var curveness = shape.curveness;
 
-        // // TODO ???
-        // // Not consider transform
-        // for (var i = 0; i < segs.length; i++) {
-        //     var seg = segs[i];
-        //     if (isPolyline) {
-        //         for (var j = 1; j < seg.length; j++) {
-        //             if (lineContain.containStroke(
-        //                 seg[j - 1][0], seg[j - 1][1], seg[j][0], seg[j][1], lineWidth, x, y
-        //             )) {
-        //                 return i;
-        //             }
-        //         }
-        //     }
-        //     else {
-        //         if (seg.length > 2) {
-        //             if (quadraticContain.containStroke(
-        //                 seg[0][0], seg[0][1], seg[2][0], seg[2][1], seg[1][0], seg[1][1], lineWidth, x, y
-        //             )) {
-        //                 return i;
-        //             }
-        //         }
-        //         else {
-        //             if (lineContain.containStroke(
-        //                 seg[0][0], seg[0][1], seg[1][0], seg[1][1], lineWidth, x, y
-        //             )) {
-        //                 return i;
-        //             }
-        //         }
-        //     }
-        // }
+        if (shape.polyline) {
+            var dataIndex = 0;
+            for (var i = 0; i < segs.length;) {
+                var count = segs[i++];
+                if (count > 0) {
+                    var x0 = segs[i++];
+                    var y0 = segs[i++];
+                    for (var k = 1; k < count; k++) {
+                        var x1 = segs[i++];
+                        var y1 = segs[i++];
+                        if (lineContain.containStroke(x0, y0, x1, y1)) {
+                            return dataIndex;
+                        }
+                    }
+                }
+
+                dataIndex++;
+            }
+        }
+        else {
+            var dataIndex = 0;
+            for (var i = 0; i < segs.length;) {
+                var x0 = segs[i++];
+                var y0 = segs[i++];
+                var x1 = segs[i++];
+                var y1 = segs[i++];
+                if (curveness > 0) {
+                    var x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    var y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+
+                    if (quadraticContain.containStroke(x0, y0, x2, y2, x1, y1)) {
+                        return dataIndex;
+                    }
+                }
+                else {
+                    if (lineContain.containStroke(x0, y0, x1, y1)) {
+                        return dataIndex;
+                    }
+                }
+
+                dataIndex++;
+            }
+        }
 
         return -1;
     }
@@ -95,8 +103,6 @@ var LargeLineShape = graphic.extendShape({
 
 function LargeLineDraw() {
     this.group = new graphic.Group();
-
-    this._lineEl = new LargeLineShape();
 }
 
 var largeLineProto = LargeLineDraw.prototype;
@@ -108,16 +114,20 @@ var largeLineProto = LargeLineDraw.prototype;
 largeLineProto.updateData = function (data) {
     this.group.removeAll();
 
-    var lineEl = this._lineEl;
-
+    var lineEl = new LargeLineShape({
+        rectHover: true,
+        cursor: 'default'
+    });
     lineEl.setShape({
         segs: data.getLayout('linesPoints')
     });
 
-    this._setCommon(data);
+    this._setCommon(lineEl, data);
 
     // Add back
     this.group.add(lineEl);
+
+    this._incremental = null;
 };
 
 /**
@@ -126,23 +136,40 @@ largeLineProto.updateData = function (data) {
 largeLineProto.incrementalPrepareUpdate = function (data) {
     this.group.removeAll();
 
-    this._setCommon(data, true);
     this._clearIncremental();
 
-    if (!this._incremental) {
-        this._incremental = new IncrementalDisplayable();
+    if (data.count() > 5e5) {
+        if (!this._incremental) {
+            this._incremental = new IncrementalDisplayable({
+                silent: true
+            });
+        }
+        this.group.add(this._incremental);
     }
-    this.group.add(this._incremental);
+    else {
+        this._incremental = null;
+    }
 };
 
 /**
  * @override
  */
 largeLineProto.incrementalUpdate = function (taskParams, data) {
-    this._lineEl.setShape({
+    var lineEl = new LargeLineShape();
+    lineEl.setShape({
         segs: data.getLayout('linesPoints')
     });
-    this._incremental.addDisplayable(this._lineEl, true);
+    this._setCommon(lineEl, data, !!this._incremental);
+
+    if (!this._incremental) {
+        lineEl.rectHover = true;
+        lineEl.cursor = 'default';
+        lineEl.__startIndex = taskParams.start;
+        this.group.add(lineEl);
+    }
+    else {
+        this._incremental.addDisplayable(lineEl, true);
+    }
 };
 
 /**
@@ -154,8 +181,7 @@ largeLineProto.remove = function () {
     this.group.removeAll();
 };
 
-largeLineProto._setCommon = function (data, isIncremental) {
-    var lineEl = this._lineEl;
+largeLineProto._setCommon = function (lineEl, data, isIncremental) {
     var hostModel = data.hostModel;
 
     lineEl.setShape({
@@ -182,7 +208,7 @@ largeLineProto._setCommon = function (data, isIncremental) {
             var dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
             if (dataIndex > 0) {
                 // Provide dataIndex for tooltip
-                lineEl.dataIndex = dataIndex;
+                lineEl.dataIndex = dataIndex + lineEl.__startIndex;
             }
         });
     }

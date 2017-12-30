@@ -13,8 +13,6 @@ import LineGroup from './Line';
 function LineDraw(ctor) {
     this._ctor = ctor || LineGroup;
 
-    this._incremental;
-
     this.group = new graphic.Group();
 }
 
@@ -85,27 +83,30 @@ lineDrawProto.updateLayout = function () {
     }, this);
 };
 
-// lineDrawProto.incrementalPrepareRender = function (lineData) {
-//     this._seriesScope = makeSeriesScope(this);
-//     this._lineData = lineData;
-//     this._clearIncremental();
+lineDrawProto.incrementalPrepareUpdate = function (lineData) {
+    this._seriesScope = makeSeriesScope(lineData);
+    this._lineData = null;
+    this.group.removeAll();
+};
 
-//     !this._incremental && this.group.add(
-//         this._incremental = new IncrementalDisplayable()
-//     );
-// };
+lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
+    function updateIncrementalAndHover(el) {
+        if (!el.isGroup) {
+            el.incremental = el.useHoverLayer = true;
+        }
+    }
 
-// lineDrawProto.incrementalRender = function (taskParams, lineData) {
-//     for (var idx = taskParams.start; idx < taskParams.end; idx++) {
-//         var itemLayout = lineData.getItemLayout(idx);
+    for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+        var itemLayout = lineData.getItemLayout(idx);
 
-//         if (lineNeedsDraw(itemLayout)) {
-//             // ??? IncrementalDisplayable do not support Group.
-//             var el = new this._ctor(lineData, idx, this._seriesScope);
-//             this._incremental.addDisplayable(el, true);
-//         }
-//     }
-// };
+        if (lineNeedsDraw(itemLayout)) {
+            // ??? IncrementalDisplayable do not support Group.
+            var el = new this._ctor(lineData, idx, this._seriesScope);
+            el.traverse(updateIncrementalAndHover);
+            this.group.add(el);
+        }
+    }
+};
 
 function makeSeriesScope(lineData) {
     var hostModel = lineData.hostModel;

@@ -78,7 +78,7 @@ export default echarts.extendChartView({
         var hasEffect = this._showEffect(seriesModel);
         var isPolyline = !!seriesModel.get('polyline');
         var pipelineContext = seriesModel.pipelineContext;
-        var isLargeDraw = pipelineContext.large || pipelineContext.incrementalRender;
+        var isLargeDraw = pipelineContext.large;
 
         if (__DEV__) {
             if (hasEffect && isLargeDraw) {

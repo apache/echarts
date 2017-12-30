@@ -97,7 +97,7 @@ symbolDrawProto.incrementalPrepareUpdate = function (data) {
     this.group.removeAll();
 };
 
-symbolDrawProto.incrementalUpdate = function (taskParams, data) {
+symbolDrawProto.incrementalUpdate = function (taskParams, data, isIgnore) {
 
     function updateIncrementalAndHover(el) {
         if (!el.isGroup) {
@@ -106,12 +106,13 @@ symbolDrawProto.incrementalUpdate = function (taskParams, data) {
     }
     for (var idx = taskParams.start; idx < taskParams.end; idx++) {
         var point = data.getItemLayout(idx);
-        var el = new this._symbolCtor(data, idx, this._seriesScope);
-        el.traverse(updateIncrementalAndHover);
-        el.attr('position', point);
-        this.group.add(el);
-
-        data.setItemGraphicEl(idx, el);
+        if (symbolNeedsDraw(data, point, idx, isIgnore)) {
+            var el = new this._symbolCtor(data, idx, this._seriesScope);
+            el.traverse(updateIncrementalAndHover);
+            el.attr('position', point);
+            this.group.add(el);
+            data.setItemGraphicEl(idx, el);
+        }
     }
 };
 
