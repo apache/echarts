@@ -23,7 +23,7 @@ export default {
             }
 
             // itemStyle in each data item
-            var dataEach = function (idx) {
+            var dataEach = function (data, idx) {
                 var itemModel = data.getItemModel(idx);
                 var color = itemModel.get(colorAccessPath, true);
                 if (color != null) {
