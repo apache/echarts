@@ -7,15 +7,13 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 var LargeSymbolPath = graphic.extendShape({
 
     shape: {
-        points: null,
-        sizes: null
+        points: null
     },
 
     symbolProxy: null,
 
     buildPath: function (path, shape) {
         var points = shape.points;
-        var sizes = shape.sizes;
         var size = shape.size;
 
         var symbolProxy = this.symbolProxy;
@@ -31,9 +29,6 @@ var LargeSymbolPath = graphic.extendShape({
                 continue;
             }
 
-            if (sizes) {
-                size = sizes[i];
-            }
 
             if (canBoost) {
                 // Optimize for small symbol
@@ -55,29 +50,27 @@ var LargeSymbolPath = graphic.extendShape({
     },
 
     findDataIndex: function (x, y) {
-        // TODO
-        // support incremental, Typed array.
-
         // TODO ???
         // Consider transform
 
-        // var shape = this.shape;
-        // var points = shape.points;
-        // var sizes = shape.sizes;
+        var shape = this.shape;
+        var points = shape.points;
+        var size = shape.size;
 
-        // // Not consider transform
-        // // Treat each element as a rect
-        // // top down traverse
-        // for (var i = points.length - 1; i >= 0; i--) {
-        //     var pt = points[i];
-        //     var size = sizes[i];
-        //     var x0 = pt[0] - size[0] / 2;
-        //     var y0 = pt[1] - size[1] / 2;
-        //     if (x >= x0 && y >= y0 && x <= x0 + size[0] && y <= y0 + size[1]) {
-        //         // i is dataIndex
-        //         return i;
-        //     }
-        // }
+        var w = Math.max(size[0], 4);
+        var h = Math.max(size[1], 4);
+
+        // Not consider transform
+        // Treat each element as a rect
+        // top down traverse
+        for (var idx = points.length / 2 - 1; idx >= 0; idx--) {
+            var i = idx * 2;
+            var x0 = points[i] - w / 2;
+            var y0 = points[i + 1] - h / 2;
+            if (x >= x0 && y >= y0 && x <= x0 + w && y <= y0 + h) {
+                return idx;
+            }
+        }
 
         return -1;
     }
@@ -85,11 +78,6 @@ var LargeSymbolPath = graphic.extendShape({
 
 function LargeSymbolDraw() {
     this.group = new graphic.Group();
-
-    this._symbolEl = new LargeSymbolPath({
-        // rectHover: true,
-        // cursor: 'default'
-    });
 }
 
 var largeSymbolProto = LargeSymbolDraw.prototype;
@@ -100,38 +88,62 @@ var largeSymbolProto = LargeSymbolDraw.prototype;
  */
 largeSymbolProto.updateData = function (data) {
     this.group.removeAll();
-    var symbolEl = this._symbolEl;
+    var symbolEl = new LargeSymbolPath({
+        rectHover: true,
+        cursor: 'default'
+    });
 
-    this._symbolEl.setShape({
+    symbolEl.setShape({
         points: data.getLayout('symbolPoints')
     });
-    this._setCommon(data);
-
-    // Add back
+    this._setCommon(symbolEl, data);
     this.group.add(symbolEl);
+
+    this._incremental = null;
 };
 
 largeSymbolProto.incrementalPrepareUpdate = function (data) {
     this.group.removeAll();
 
-    this._setCommon(data, true);
     this._clearIncremental();
-
-    if (!this._incremental) {
-        this._incremental = new IncrementalDisplayable();
+    // Only use incremental displayables when data amount is larger than 2 million.
+    // PENDING Incremental data?
+    if (data.count() > 2e6) {
+        if (!this._incremental) {
+            this._incremental = new IncrementalDisplayable({
+                silent: true
+            });
+        }
+        this.group.add(this._incremental);
     }
-    this.group.add(this._incremental);
+    else {
+        this._incremental = null;
+    }
 };
 
 largeSymbolProto.incrementalUpdate = function (taskParams, data) {
-    this._symbolEl.setShape({
+    var symbolEl;
+    if (this._incremental) {
+        symbolEl = new LargeSymbolPath();
+        this._incremental.addDisplayable(symbolEl, true);
+    }
+    else {
+        symbolEl = new LargeSymbolPath({
+            rectHover: true,
+            cursor: 'default'
+        });
+        symbolEl.incremental = true;
+        symbolEl.__startIndex = taskParams.start;
+        this.group.add(symbolEl);
+    }
+
+    symbolEl.setShape({
         points: data.getLayout('symbolPoints')
     });
-    this._incremental.addDisplayable(this._symbolEl, true);
+    this._setCommon(symbolEl, data, !!this._incremental);
 };
 
-largeSymbolProto._setCommon = function (data, isIncremental) {
-    var symbolEl = this._symbolEl;
+largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
     var hostModel = data.hostModel;
 
     if (data.hasItemVisual.symbolSize) {
@@ -173,7 +185,7 @@ largeSymbolProto._setCommon = function (data, isIncremental) {
             var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
             if (dataIndex >= 0) {
                 // Provide dataIndex for tooltip
-                symbolEl.dataIndex = dataIndex;
+                symbolEl.dataIndex = dataIndex + symbolEl.__startIndex;
             }
         });
     }
