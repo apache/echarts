@@ -45,7 +45,7 @@ export default function (seriesType) {
                         points[offset++] = point ? point[1] : NaN;
                     }
                     else {
-                        data.setItemLayout(i, point || [NaN, NaN]);
+                        data.setItemLayout(i, (point && point.slice()) || [NaN, NaN]);
                     }
                 }
 
