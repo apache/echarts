@@ -37,7 +37,7 @@ export default function (seriesType) {
                         var x = tmpIn[0] = data.get(dims[0], i, true);
                         var y = tmpIn[1] = data.get(dims[1], i, true);
                         // Also {Array.<number>}, not undefined to avoid if...else... statement
-                        point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, tmpOut);
+                        point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
                     }
 
                     if (isLargeRender) {

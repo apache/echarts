@@ -10,35 +10,55 @@ echarts.extendChartView({
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
         this._removeRoamTransformInPoints(seriesModel, 0, data.count());
+        this._updateGroupTransform(seriesModel);
 
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
         symbolDraw.updateData(data);
+
+        this._finished = true;
     },
 
     incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this._updateGroupTransform(seriesModel);
+
         var data = seriesModel.getData();
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
+
         symbolDraw.incrementalPrepareUpdate(data);
+
+        this._finished = false;
     },
 
     incrementalRender: function (taskParams, seriesModel, ecModel) {
         this._removeRoamTransformInPoints(seriesModel, taskParams.start, taskParams.end);
         this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData());
+
+        this._finished = taskParams.end === seriesModel.getData().count();
     },
 
     updateTransform: function (seriesModel, ecModel, api) {
         var coordSys = seriesModel.coordinateSystem;
+        var update = true;
         // Must mark group dirty and make sure the incremental layer will be cleared
         // PENDING
         this.group.dirty();
-        if (coordSys.getRoamTransform && this._symbolDraw.isPersistent()) {
-            this.group.transform = matrix.clone(coordSys.getRoamTransform());
-            this.group.decomposeTransform();
+        if (coordSys.getRoamTransform) {
+            update = false;
+            this._updateGroupTransform(seriesModel);
         }
-        else {
+
+        if (update || !this._finished || !this._symbolDraw.isPersistent()) {
             return {
                 update: true
             };
+        }
+    },
+
+    _updateGroupTransform: function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys && coordSys.getRoamTransform) {
+            this.group.transform = matrix.clone(coordSys.getRoamTransform());
+            this.group.decomposeTransform();
         }
     },
 

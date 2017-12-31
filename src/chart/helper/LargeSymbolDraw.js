@@ -51,7 +51,7 @@ var LargeSymbolPath = graphic.extendShape({
             return;
         }
 
-        // Don't consider transform.
+        this.setTransform(ctx);
         // PENDING If style or other canvas status changed?
         for (var i = 0; i < points.length;) {
             var x = points[i++];
@@ -66,6 +66,8 @@ var LargeSymbolPath = graphic.extendShape({
                 size[0], size[1]
             );
         }
+
+        this.restoreTransform(ctx);
     },
 
     findDataIndex: function (x, y) {
