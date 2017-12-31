@@ -153,7 +153,7 @@ export default echarts.extendChartView({
             if (coordSysType === 'cartesian2d') {
                 // Ignore empty data
                 if (isNaN(data.get(dataDims[2], idx))) {
-                    return;
+                    continue;
                 }
 
                 var point = coordSys.dataToPoint([
@@ -177,7 +177,7 @@ export default echarts.extendChartView({
             else {
                 // Ignore empty data
                 if (isNaN(data.get(dataDims[1], idx))) {
-                    return;
+                    continue;
                 }
 
                 rect = new graphic.Rect({
