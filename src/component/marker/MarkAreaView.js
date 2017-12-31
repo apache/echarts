@@ -98,7 +98,9 @@ function getSingleMarkerEndPoint(data, idx, dims, seriesModel, api) {
         else {
             var x = data.get(dims[0], idx);
             var y = data.get(dims[1], idx);
-            point = coordSys.dataToPoint([x, y], true);
+            var pt = [x, y];
+            coordSys.clampData && coordSys.clampData(pt, pt);
+            point = coordSys.dataToPoint(pt, true);
         }
         if (coordSys.type === 'cartesian2d') {
             var xAxis = coordSys.getAxis('x');
