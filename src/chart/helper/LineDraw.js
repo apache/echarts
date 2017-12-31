@@ -18,6 +18,10 @@ function LineDraw(ctor) {
 
 var lineDrawProto = LineDraw.prototype;
 
+lineDrawProto.isPersistent = function () {
+    return true;
+};
+
 /**
  * @param {module:echarts/data/List} lineData
  */
@@ -100,7 +104,6 @@ lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
         var itemLayout = lineData.getItemLayout(idx);
 
         if (lineNeedsDraw(itemLayout)) {
-            // ??? IncrementalDisplayable do not support Group.
             var el = new this._ctor(lineData, idx, this._seriesScope);
             el.traverse(updateIncrementalAndHover);
             this.group.add(el);

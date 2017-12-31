@@ -107,6 +107,10 @@ function LargeLineDraw() {
 
 var largeLineProto = LargeLineDraw.prototype;
 
+largeLineProto.isPersistent = function () {
+    return !this._incremental;
+};
+
 /**
  * Update symbols draw by new data
  * @param {module:echarts/data/List} data
@@ -192,6 +196,7 @@ largeLineProto._setCommon = function (lineEl, data, isIncremental) {
     lineEl.useStyle(
         hostModel.getModel('lineStyle').getLineStyle()
     );
+    lineEl.style.strokeNoScale = true;
 
     var visualColor = data.getVisual('color');
     if (visualColor) {

@@ -67,7 +67,7 @@ echarts.extendChartView({
         if (coordSys && coordSys.removeRoamTransformInPoint) {
             var data = seriesModel.getData();
             var pt = [];
-            if (seriesModel.get('large')) {
+            if (seriesModel.pipelineContext.large) {
                 var points = data.getLayout('symbolPoints');
                 if (points) {
                     for (var i = 0; i < points.length; i += 2) {

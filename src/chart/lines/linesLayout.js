@@ -34,7 +34,9 @@ export default {
                         points[offset++] = len;
                     }
                     for (var k = 0; k < len; k++) {
-                        pt = coordSys.dataToPoint(lineCoords[k], null, pt);
+                        // Second parameter is used in coordinate system geo, view.
+                        // FIXME, if other coordinate system has second parameter.
+                        pt = coordSys.dataToPoint(lineCoords[k], true, pt);
                         points[offset++] = pt[0];
                         points[offset++] = pt[1];
                     }

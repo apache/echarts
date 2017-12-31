@@ -6,6 +6,7 @@ import Line from '../helper/Line';
 import Polyline from '../helper/Polyline';
 import EffectPolyline from '../helper/EffectPolyline';
 import LargeLineDraw from '../helper/LargeLineDraw';
+import * as matrix from 'zrender/src/core/matrix';
 
 export default echarts.extendChartView({
 
@@ -15,6 +16,8 @@ export default echarts.extendChartView({
 
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
+
+        this._updateGroupTransform(seriesModel);
 
         var lineDraw = this._updateLineDraw(data, seriesModel);
 
@@ -62,6 +65,8 @@ export default echarts.extendChartView({
     incrementalPrepareRender: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
 
+        this._updateGroupTransform(seriesModel);
+
         var lineDraw = this._updateLineDraw(data, seriesModel);
 
         lineDraw.incrementalPrepareUpdate(data);
@@ -71,6 +76,32 @@ export default echarts.extendChartView({
 
     incrementalRender: function (taskParams, seriesModel, ecModel) {
         this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData());
+    },
+
+    updateTransform: function (seriesModel, ecModel, api) {
+        var coordSys = seriesModel.coordinateSystem;
+        var update = true;
+        // Must mark group dirty and make sure the incremental layer will be cleared
+        // PENDING
+        this.group.dirty();
+        if (coordSys.getRoamTransform) {
+            update = false;
+            this._updateGroupTransform(seriesModel);
+        }
+
+        if (update || !this._finished || !this._lineDraw.isPersistent()) {
+            return {
+                update: true
+            };
+        }
+    },
+
+    _updateGroupTransform: function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys && coordSys.getRoamTransform) {
+            this.group.transform = matrix.clone(coordSys.getRoamTransform());
+            this.group.decomposeTransform();
+        }
     },
 
     _updateLineDraw: function (data, seriesModel) {
