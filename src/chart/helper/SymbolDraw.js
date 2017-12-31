@@ -80,6 +80,10 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     this._data = data;
 };
 
+symbolDrawProto.isPersistent = function () {
+    return true;
+};
+
 symbolDrawProto.updateLayout = function () {
     var data = this._data;
     if (data) {

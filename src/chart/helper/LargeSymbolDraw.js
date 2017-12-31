@@ -20,6 +20,10 @@ var LargeSymbolPath = graphic.extendShape({
         var symbolProxyShape = symbolProxy.shape;
         var ctx = path.getContext ? path.getContext() : path;
         var canBoost = ctx && size[0] < 4;
+        // Do draw in afterBrush.
+        if (canBoost) {
+            return;
+        }
 
         for (var i = 0; i < points.length;) {
             var x = points[i++];
@@ -29,23 +33,38 @@ var LargeSymbolPath = graphic.extendShape({
                 continue;
             }
 
+            symbolProxyShape.x = x - size[0] / 2;
+            symbolProxyShape.y = y - size[1] / 2;
+            symbolProxyShape.width = size[0];
+            symbolProxyShape.height = size[1];
 
-            if (canBoost) {
-                // Optimize for small symbol
-                // PENDING, Do fill in buildPath??
-                ctx.fillRect(
-                    x - size[0] / 2, y - size[1] / 2,
-                    size[0], size[1]
-                );
-            }
-            else {
-                symbolProxyShape.x = x - size[0] / 2;
-                symbolProxyShape.y = y - size[1] / 2;
-                symbolProxyShape.width = size[0];
-                symbolProxyShape.height = size[1];
+            symbolProxy.buildPath(path, symbolProxyShape, true);
+        }
+    },
 
-                symbolProxy.buildPath(path, symbolProxyShape, true);
+    afterBrush: function (ctx) {
+        var shape = this.shape;
+        var points = shape.points;
+        var size = shape.size;
+        var canBoost = size[0] < 4;
+        if (!canBoost) {
+            return;
+        }
+
+        // Don't consider transform.
+        // PENDING If style or other canvas status changed?
+        for (var i = 0; i < points.length;) {
+            var x = points[i++];
+            var y = points[i++];
+            if (isNaN(x) || isNaN(y)) {
+                continue;
             }
+            // fillRect is faster than building a rect path and draw.
+            // And it support light globalCompositeOperation.
+            ctx.fillRect(
+                x - size[0] / 2, y - size[1] / 2,
+                size[0], size[1]
+            );
         }
     },
 
@@ -81,6 +100,10 @@ function LargeSymbolDraw() {
 }
 
 var largeSymbolProto = LargeSymbolDraw.prototype;
+
+largeSymbolProto.isPersistent = function () {
+    return !this._incremental;
+};
 
 /**
  * Update symbols draw by new data

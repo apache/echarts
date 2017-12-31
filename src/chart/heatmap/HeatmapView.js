@@ -246,7 +246,7 @@ export default echarts.extendChartView({
         hmLayer.maxOpacity = seriesModel.get('maxOpacity');
 
         var rect = geo.getViewRect().clone();
-        var roamTransform = geo.getRoamTransform().transform;
+        var roamTransform = geo.getRoamTransform();
         rect.applyTransform(roamTransform);
 
         // Clamp on viewport
