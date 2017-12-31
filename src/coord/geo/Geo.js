@@ -201,7 +201,7 @@ Geo.prototype = {
             data = this.getGeoCoord(data);
         }
         if (data) {
-            return View.prototype.dataToPoint.call(this, data, out);
+            return View.prototype.dataToPoint.call(this, data, preserved, out);
         }
     },
 
