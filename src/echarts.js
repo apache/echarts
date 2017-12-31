@@ -1021,7 +1021,14 @@ echartsProto.resize = function (opts) {
 
     var ecModel = this._model;
 
-    var optionChanged = ecModel && ecModel.resetOption('media');
+    // Resize loading effect
+    this._loadingFX && this._loadingFX.resize();
+
+    if (!ecModel) {
+        return;
+    }
+
+    var optionChanged = ecModel.resetOption('media');
 
     optionChanged && ecModel.settingTask.dirty();
 
@@ -1041,9 +1048,6 @@ function refresh(ecIns, needPrepare, silent) {
 
     needPrepare && prepare(ecIns);
     updateMethods.update.call(ecIns);
-
-    // Resize loading effect
-    ecIns._loadingFX && ecIns._loadingFX.resize();
 
     ecIns[IN_MAIN_PROCESS] = false;
 
