@@ -858,26 +858,26 @@ var updateMethods = {
 
         ChartView.markUpdateMethod(payload, 'updateTransform');
 
-        var seriesModels = [];
+        var dirtyMap = zrUtil.createHashMap();
         ecModel.eachSeries(function (seriesModel) {
             var chartView = ecIns._chartsMap[seriesModel.__viewId];
             if (chartView.updateTransform) {
                 var result = chartView.updateTransform
                     && chartView.updateTransform(seriesModel, ecModel, api, payload);
-                result && result.update && seriesModels.push(seriesModel);
+                result && result.update && dirtyMap.set(seriesModel.uid, 1);
             }
             else {
-                seriesModels.push(seriesModel);
+                dirtyMap.set(seriesModel.uid, 1);
             }
         });
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
         this._scheduler.performVisualTasks(
-            visualFuncs, ecModel, payload, {setDirty: true, seriesModels: seriesModels}
+            visualFuncs, ecModel, payload, {setDirty: true, dirtyMap: dirtyMap}
         );
 
-        renderSeries(this, ecModel, this._api, payload, seriesModels);
+        renderSeries(this, ecModel, this._api, payload, dirtyMap);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -1412,18 +1412,21 @@ function render(ecIns, ecModel, api, payload) {
  * Render each chart and component
  * @private
  */
-function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
+function renderSeries(ecIns, ecModel, api, payload, dirtyMap) {
     // Render all charts
     var scheduler = ecIns._scheduler;
     var unfinished;
-    dirtySeriesModels ? each(dirtySeriesModels, doEach) : ecModel.eachSeries(doEach);
-    function doEach(seriesModel) {
+    ecModel.eachSeries(function (seriesModel) {
         var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
 
         var renderTask = chartView.renderTask;
         scheduler.updatePayload(renderTask, payload);
-        dirtySeriesModels && renderTask.dirty();
+
+        if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
+            renderTask.dirty();
+        }
+
         unfinished |= renderTask.perform(scheduler.getPerformArgs(renderTask));
 
         chartView.group.silent = !!seriesModel.get('silent');
@@ -1431,7 +1434,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtySeriesModels) {
         updateZ(seriesModel, chartView);
 
         updateBlend(seriesModel, chartView);
-    }
+    });
     scheduler.unfinished |= unfinished;
 
     // If use hover layer

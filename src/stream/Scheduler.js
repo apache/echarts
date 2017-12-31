@@ -150,12 +150,14 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
         var overallTask = stageHandlerRecord.overallTask;
 
         if (overallTask) {
-            if (opt.setDirty) {
-                overallTask.dirty();
-                each(overallTask.agentStubs, function (stub) {
+            var overallNeedDirty;
+            each(overallTask.agentStubs, function (stub) {
+                if (needSetDirty(opt, stub)) {
                     stub.dirty();
-                });
-            }
+                    overallNeedDirty = true;
+                }
+            });
+            overallNeedDirty && overallTask.dirty();
             updatePayload(overallTask, payload);
             var performArgs = scheduler.getPerformArgs(overallTask, opt.block);
             // Execute stubs firstly, which may set the overall task dirty,
@@ -166,26 +168,29 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
             unfinished |= overallTask.perform(performArgs);
         }
         else if (seriesTaskMap) {
-            opt.seriesModels
-                ? each(opt.seriesModels, eachSeries)
-                : ecModel.eachRawSeries(eachSeries);
-        }
+            ecModel.eachRawSeries(function (seriesModel) {
+                var pipelineId = seriesModel.uid;
+                var task = seriesTaskMap.get(pipelineId);
 
-        function eachSeries(seriesModel) {
-            var task = seriesTaskMap.get(seriesModel.uid);
+                if (!task) {
+                    return;
+                }
 
-            if (!task) {
-                return;
-            }
-
-            opt.setDirty && task.dirty();
-            var performArgs = scheduler.getPerformArgs(task, opt.block);
-            // ??? chck skip necessary.
-            performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
-            updatePayload(task, payload);
-            unfinished |= task.perform(performArgs);
+                if (needSetDirty(opt, task)) {
+                    task.dirty();
+                }
+                var performArgs = scheduler.getPerformArgs(task, opt.block);
+                // ??? chck skip necessary.
+                performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
+                updatePayload(task, payload);
+                unfinished |= task.perform(performArgs);
+            });
         }
     });
+
+    function needSetDirty(opt, task) {
+        return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipelineId));
+    }
 
     scheduler.unfinished |= unfinished;
 }
