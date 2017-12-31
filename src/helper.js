@@ -1,5 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
+import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
 import * as axisHelper from './coord/axisHelper';
 import axisModelCommonMixin from './coord/axisModelCommonMixin';
 import Model from './model/Model';
@@ -12,6 +13,11 @@ import Model from './model/Model';
 export function createList(seriesModel) {
     var data = seriesModel.get('data');
     return createListFromArray(data, seriesModel, seriesModel.ecModel);
+}
+
+export function createGraph(seriesModel) {
+    var data = seriesModel.get('data');
+    return createGraphFromNodeEdge(data, seriesModel, seriesModel.ecModel);
 }
 
 /**
