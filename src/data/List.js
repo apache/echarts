@@ -541,7 +541,7 @@ listProto._initDataFromProvider = function (start, end) {
             }
             var name = nameList[idx];
             // Try using the id in option
-            var id = dataItem && dataItem.id;
+            var id = dataItem == null ? null : dataItem.id;
 
             if (id == null && name) {
                 // Use name as id and add counter to avoid same name
