@@ -11,7 +11,7 @@ export default function (seriesType) {
 
             ecModel.eachSeriesByType(seriesType, function (seriesModel) {
                 seriesModel.__paletteScope = paletteScope;
-                seriesModel.push(seriesModel);
+                seiresModels.push(seriesModel);
             });
             return seiresModels;
         },

@@ -592,7 +592,7 @@ listProto.getIndices = function () {
  * @return {number}
  */
 listProto.get = function (dim, idx, stack) {
-    if (idx < 0 || idx >= this._count) {
+    if (!(idx >= 0 && idx < this._count)) {
         return NaN;
     }
     var storage = this._storage;
@@ -1189,10 +1189,6 @@ listProto.mapArray = function (dimensions, cb, stack, context) {
         stack = cb;
         cb = dimensions;
         dimensions = [];
-    }
-
-    if (__DEV__) {
-        validateDimensions(this, dimensions);
     }
 
     var result = [];
