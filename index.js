@@ -56,9 +56,9 @@ require("./lib/chart/pictorialBar");
 
 require("./lib/chart/themeRiver");
 
-require("./lib/chart/custom");
-
 require("./lib/chart/sunburst");
+
+require("./lib/chart/custom");
 
 require("./lib/component/graphic");
 
