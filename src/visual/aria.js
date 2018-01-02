@@ -5,6 +5,10 @@ export default function (dom, ecModel) {
     if (!ariaModel.get('show')) {
         return;
     }
+    else if (ariaModel.get('desc')) {
+        dom.setAttribute('aria-label', ariaModel.get('desc'));
+        return;
+    }
 
     var maxDataCnt = ariaModel.get('maxDataCnt') || 10;
     var maxSeriesCnt = ariaModel.get('maxSeriesCnt') || 10;
