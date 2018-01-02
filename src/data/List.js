@@ -561,6 +561,9 @@ listProto._initDataFromProvider = function (start, end) {
         rawData.clean();
     }
     this._count = end;
+
+    // Reset data extent
+    this._extent = {};
 };
 
 /**
@@ -702,9 +705,7 @@ listProto.getDataExtent = function (dim, stack) {
 
     // Make more strict checkings to ensure hitting cache.
     var currEnd = this.count();
-    // Consider that the data is incremental, the extent should be
-    // cached by not only dim, but also the end index.
-    var cacheName = [dim, !!stack, currEnd].join('_');
+    var cacheName = [dim, !!stack].join('_');
 
     // Consider the most cases when using data zoom, `getDataExtent`
     // happened before filtering. We cache raw extent, which is not
@@ -983,6 +984,10 @@ function validateDimensions(list, dims) {
 listProto.each = function (dims, cb, stack, context) {
     'use strict';
 
+    if (!this._count) {
+        return;
+    }
+
     if (typeof dims === 'function') {
         context = stack;
         stack = cb;
@@ -1034,6 +1039,10 @@ listProto.each = function (dims, cb, stack, context) {
  */
 listProto.filterSelf = function (dimensions, cb, stack, context) {
     'use strict';
+
+    if (!this._count) {
+        return;
+    }
 
     if (typeof dimensions === 'function') {
         context = stack;
@@ -1105,6 +1114,10 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
 listProto.selectRange = function (range, stack) {
     'use strict';
 
+    if (!this._count) {
+        return;
+    }
+
     stack = stack || false;
 
     var dimensions = [];
@@ -1130,15 +1143,15 @@ listProto.selectRange = function (range, stack) {
     var offset = 0;
     var dim0 = dimensions[0];
 
-    if (dimSize === 1) {
-        var min = range[dim0][0];
-        var max = range[dim0][1];
-        stack = stack || isStacked(this, dim0);
+    var min = range[dim0][0];
+    var max = range[dim0][1];
 
-        var dimStorage = this._storage[dim0];
-        if (!this._indices && !stack) {
-            // Extreme optimization for common case. About 2x faster in chrome.
-            var idx = 0;
+    var quickFinished = false;
+    if (!this._indices && !stack) {
+        // Extreme optimization for common case. About 2x faster in chrome.
+        var idx = 0;
+        if (dimSize === 1) {
+            var dimStorage = this._storage[dimensions[0]];
             for (var k = 0; k < this._chunkCount; k++) {
                 var chunkStorage = dimStorage[k];
                 var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
@@ -1150,8 +1163,32 @@ listProto.selectRange = function (range, stack) {
                     idx++;
                 }
             }
+            quickFinished = true;
         }
-        else {
+        else if (dimSize === 2) {
+            var dimStorage = this._storage[dim0];
+            var dimStorage2 = this._storage[dimensions[1]];
+            var min2 = range[dimensions[1]][0];
+            var max2 = range[dimensions[1]][1];
+            for (var k = 0; k < this._chunkCount; k++) {
+                var chunkStorage = dimStorage[k];
+                var chunkStorage2= dimStorage2[k];
+                var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+                for (var i = 0; i < len; i++) {
+                    var val = chunkStorage[i];
+                    var val2 = chunkStorage2[i];
+                    if (val >= min && val <= max && val2 >= min2 && val2 <= max2) {
+                        newIndices[offset++] = idx;
+                    }
+                    idx++;
+                }
+            }
+            quickFinished = true;
+        }
+    }
+    if (!quickFinished) {
+        if (dimSize === 1) {
+            stack = stack || isStacked(this, dim0);
             for (var i = 0; i < originalCount; i++) {
                 var rawIndex = this.getRawIndex(i);
                 var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
@@ -1160,20 +1197,20 @@ listProto.selectRange = function (range, stack) {
                 }
             }
         }
-    }
-    else {
-        for (var i = 0; i < originalCount; i++) {
-            var keep = true;
-            var rawIndex = this.getRawIndex(i);
-            for (var k = 0; k < dimSize; k++) {
-                var dimk = dimensions[k];
-                var val = stack ? this.get(dimk, i, true) : this._getFast(dim, rawIndex);
-                if (val < range[dimk][0] || val > range[dimk][1]) {
-                    keep = false;
+        else {
+            for (var i = 0; i < originalCount; i++) {
+                var keep = true;
+                var rawIndex = this.getRawIndex(i);
+                for (var k = 0; k < dimSize; k++) {
+                    var dimk = dimensions[k];
+                    var val = stack ? this.get(dimk, i, true) : this._getFast(dim, rawIndex);
+                    if (val < range[dimk][0] || val > range[dimk][1]) {
+                        keep = false;
+                    }
                 }
-            }
-            if (keep) {
-                newIndices[offset++] = this.getRawIndex(i);
+                if (keep) {
+                    newIndices[offset++] = this.getRawIndex(i);
+                }
             }
         }
     }

@@ -75,6 +75,9 @@ function createListFromArray(data, seriesModel, ecModel) {
     var categories = {};
     var dimValueGetter = (categoryIndex >= 0 && ifNeedCompleteOrdinalData(data))
         ? function (itemOpt, dimName, dataIndex, dimIndex) {
+            if (isDataTypedArray) {
+                return itemOpt[dimIndex];
+            }
             // If any dataItem is like { value: 10 }
             if (isDataItemOption(itemOpt)) {
                 list.hasItemOption = true;
@@ -86,6 +89,9 @@ function createListFromArray(data, seriesModel, ecModel) {
                 : converDataValue(getDataItemValue(itemOpt), dimensions[dimIndex]);
         }
         : function (itemOpt, dimName, dataIndex, dimIndex) {
+            if (isDataTypedArray) {
+                return itemOpt[dimIndex];
+            }
             var value = getDataItemValue(itemOpt);
             var val = converDataValue(value && value[dimIndex], dimensions[dimIndex]);
             // If any dataItem is like { value: 10 }
