@@ -2,12 +2,13 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
+import {each, assert, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {normalizeToArray} from '../util/model';
+import { __DEV__ } from '../config';
 
 /**
  * @constructor
@@ -263,7 +264,8 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
                 api: api,
                 useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
                 plan: stageHandler.plan,
-                reset: stageHandler.reset
+                reset: stageHandler.reset,
+                scheduler: scheduler
             });
             seriesTaskMap.set(pipelineId, task);
         }
@@ -283,12 +285,20 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
         || createTask(
             // For overall task, the function only be called on reset stage.
-            {reset: overallTaskReset},
-            {ecModel: ecModel, api: api, overallReset: stageHandler.overallReset}
+            {
+                reset: overallTaskReset
+            },
+            {
+                ecModel: ecModel,
+                api: api,
+                overallReset: stageHandler.overallReset,
+                scheduler: scheduler
+            }
         );
 
     // Reuse orignal stubs.
-    var stubs = overallTask.agentStubs = overallTask.agentStubs || [];
+    var agentStubs = overallTask.agentStubs = overallTask.agentStubs || [];
+    var agentStubMap = overallTask.agentStubMap = createHashMap();
     var stubIndex = 0;
 
     var seriesType = stageHandler.seriesType;
@@ -314,7 +324,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     }
 
     function createStub(seriesModel) {
-        var stub = stubs[stubIndex] = stubs[stubIndex] || createTask(
+        var stub = agentStubs[stubIndex] = agentStubs[stubIndex] || createTask(
             {plan: prepareData, reset: stubReset, onDirty: stubOnDirty},
             {model: seriesModel, overallProgress: overallProgress}
         );
@@ -323,15 +333,60 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
         stub.__block = overallProgress;
 
         pipe(scheduler, seriesModel, stub);
+        agentStubMap.set(seriesModel.uid, stub);
     }
 
-    stubs.length = stubIndex;
+    agentStubs.length = stubIndex;
 }
 
 function overallTaskReset(context) {
+    mountTaskMethods(this);
     context.overallReset(
         context.ecModel, context.api, context.payload
     );
+    unmountTaskMethods(this);
+}
+
+function mountTaskMethods(task) {
+    var context = task.context;
+    var api = context.api;
+    api.setTaskOutputData = setTaskOutputData;
+    api.setTaskOutputEnd = setTaskOutputEnd;
+    api.__task = task;
+}
+
+function unmountTaskMethods(task) {
+    var api = task.context.api;
+    api.setTaskOutputData = api.setTaskOutputEnd = null;
+}
+
+function setTaskOutputData(data, seriesModel) {
+    var task = this.__task;
+    var context = task.context;
+    if (__DEV__) {
+        assert(!task.agentStubs || seriesModel);
+    }
+    if (!task.agentStubs) {
+        context.model.setData(context.outputData = data);
+    }
+    else {
+        var stub = task.agentStubMap.get(seriesModel.uid);
+        seriesModel.setData(stub.context.outputData = data);
+    }
+}
+
+function setTaskOutputEnd(end, seriesModel) {
+    var task = this.__task;
+    if (__DEV__) {
+        assert(!task.agentStubs || seriesModel);
+    }
+    if (!task.agentStubs) {
+        task.setOutputEnd(end);
+    }
+    else {
+        var stub = task.agentStubMap.get(seriesModel.uid);
+        stub.setOutputEnd(end);
+    }
 }
 
 function stubReset(context, upstreamContext) {
@@ -377,17 +432,18 @@ function seriesTaskReset(context, upstreamContext) {
     if (context.useClearVisual) {
         context.data.clearAllVisual();
     }
+    mountTaskMethods(this);
     var resetDefines = context.resetDefines = normalizeToArray(context.reset(
         context.model, context.ecModel, context.api, context.payload
     ));
+    unmountTaskMethods(this);
     if (resetDefines.length) {
         // ???! temp experiment
-        if (resetDefines[0].filter) {
-            context.model.setData(
-                context.outputData = context.data.cloneShallow()
-            );
-        }
-
+        // if (resetDefines[0].filter) {
+        //     context.model.setData(
+        //         context.outputData = context.data.cloneShallow()
+        //     );
+        // }
         return seriesTaskProgress;
     }
 }
@@ -396,6 +452,7 @@ function seriesTaskProgress(params, context) {
     var data = context.data;
     var resetDefines = context.resetDefines;
 
+    mountTaskMethods(this);
     for (var k = 0; k < resetDefines.length; k++) {
         var resetDefine = resetDefines[k];
         if (resetDefine && resetDefine.dataEach) {
@@ -406,12 +463,13 @@ function seriesTaskProgress(params, context) {
         else if (resetDefine && resetDefine.progress) {
             resetDefine.progress(params, data);
         }
-        else if (resetDefine && resetDefine.filter) {
+        // else if (resetDefine && resetDefine.filter) {
             // ???! temp experiment
-            if (k !== 0) {throw new Error();}
-            return context.data.filterTo(params, context.outputData, resetDefine.filter);
-        }
+            // if (k !== 0) {throw new Error();}
+            // return context.data.filterTo(params, context.outputData, resetDefine.filter);
+        // }
     }
+    unmountTaskMethods(this);
 }
 
 function seriesTaskCount(context) {

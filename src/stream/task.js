@@ -165,3 +165,6 @@ taskProto.getDownstream = function () {
     return this._downstream;
 };
 
+taskProto.setOutputEnd = function (end) {
+    this._outputDueEnd = end;
+}
