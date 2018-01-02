@@ -33,20 +33,27 @@
             var chunkCount = 0;
 
             function genData1(len, offset) {
+                // console.profile('gen');
                 var lngRange = [-10.781327, 131.48];
                 var latRange = [18.252847, 52.33];
 
-                var data = [];
-                while (len--) {
-                    var x = +(Math.random() * 10).toFixed(3);
-                    data.push([
-                        x,
-                        +(Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random()).toFixed(3) + (offset || 0) / 10,
-                        Math.random() * 100
-                    ]);
-                }
+                var arr = new Float32Array(len * 2);
+                var off = 0;
 
-                return data;
+                // var data = [];
+                for (var i = 0; i < len; i++) {
+                    var x = +Math.random() * 10;
+                    var y = +Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random() + (offset || 0) / 10;
+                    arr[off++] = x;
+                    arr[off++] = y;
+                    // data.push([
+                    //     x,
+                    //     y
+                    // ]);
+                }
+                // console.profileEnd('gen');
+                return arr;
+                // return data;
             }
 
             function genData2(count) {
@@ -118,14 +125,20 @@
                             name: 'pm2.5',
                             type: 'scatter',
                             large: true,
-                            data: genData1(1e6),
+                            data: genData1(5e6),
+                            dimensions: ['x', 'y'],
+                            encode: {
+                                x: 0,
+                                y: 1
+                            },
                             xAxisIndex: 0,
                             yAxisIndex: 0,
-                            symbolSize: 2,
+                            symbolSize: 1,
                             // symbol: 'rect',
                             itemStyle: {
                                 normal: {
-                                    color: '#128de3'
+                                    color: '#128de3',
+                                    opacity: 0.2
                                 }
                             },
                             progressive: 3000
@@ -161,7 +174,7 @@
 
                     window.onresize = chart.resize;
 
-                    next();
+                    // next();
 
                     function next() {
                         if (chunkCount++ < chunkMax) {
