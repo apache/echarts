@@ -40,7 +40,7 @@ function cloneChunk(originalChunk) {
 
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList',
-    '_rawData', '_rawExtent', '_chunkSize', '_dimValueGetter', '_count'
+    '_rawData', '_rawExtent', '_chunkSize', '_chunkCount', '_dimValueGetter', '_count'
 ];
 
 function transferProperties(a, b) {
@@ -694,23 +694,22 @@ listProto.getDataExtent = function (dim, stack) {
     var dimData = this._storage[dim];
     var initialExtent = [Infinity, -Infinity];
 
-    stack = stack || false;
+    stack = (stack || false) && isStacked(this, dim);
 
     if (!dimData) {
         return initialExtent;
     }
 
     // Make more strict checkings to ensure hitting cache.
-    var stacked = isStacked(this, dim);
     var currEnd = this.count();
     // Consider that the data is incremental, the extent should be
     // cached by not only dim, but also the end index.
-    var cacheName = [dim, !!(stack && stacked), currEnd].join('_');
+    var cacheName = [dim, !!stack, currEnd].join('_');
 
     // Consider the most cases when using data zoom, `getDataExtent`
     // happened before filtering. We cache raw extent, which is not
     // necessary to be cleared and recalculated when restore data.
-    var useRaw = !this._indices && !stacked;
+    var useRaw = !this._indices && !stack;
     var dimExtent;
 
     if (useRaw) {
@@ -1134,12 +1133,31 @@ listProto.selectRange = function (range, stack) {
     if (dimSize === 1) {
         var min = range[dim0][0];
         var max = range[dim0][1];
-        for (var i = 0; i < originalCount; i++) {
-            var rawIndex = this.getRawIndex(i);
-            var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
+        stack = stack || isStacked(this, dim0);
 
-            if (val >= min && val <= max) {
-                newIndices[offset++] = rawIndex;
+        var dimStorage = this._storage[dim0];
+        if (!this._indices && !stack) {
+            // Extreme optimization for common case. About 2x faster in chrome.
+            var idx = 0;
+            for (var k = 0; k < this._chunkCount; k++) {
+                var chunkStorage = dimStorage[k];
+                var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+                for (var i = 0; i < len; i++) {
+                    var val = chunkStorage[i];
+                    if (val >= min && val <= max) {
+                        newIndices[offset++] = idx;
+                    }
+                    idx++;
+                }
+            }
+        }
+        else {
+            for (var i = 0; i < originalCount; i++) {
+                var rawIndex = this.getRawIndex(i);
+                var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
+                if (val >= min && val <= max) {
+                    newIndices[offset++] = rawIndex;
+                }
             }
         }
     }
