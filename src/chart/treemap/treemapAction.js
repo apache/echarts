@@ -3,7 +3,7 @@
  */
 
 import * as echarts from '../../echarts';
-import * as helper from './helper';
+import * as helper from '../helper/treeHelper';
 
 var noop = function () {};
 
@@ -27,7 +27,8 @@ echarts.registerAction(
         );
 
         function handleRootToNode(model, index) {
-            var targetInfo = helper.retrieveTargetInfo(payload, model);
+            var types = ['treemapZoomToNode', 'treemapRootToNode'];
+            var targetInfo = helper.retrieveTargetInfo(payload, types, model);
 
             if (targetInfo) {
                 var originViewRoot = model.getViewRoot();

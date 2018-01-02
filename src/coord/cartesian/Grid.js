@@ -42,7 +42,7 @@ function rotateTextRect(textRect, rotate) {
 
 function getLabelUnionRect(axis) {
     var axisModel = axis.model;
-    var labels = axisModel.getFormattedLabels();
+    var labels = axisModel.get('axisLabel.show') ? axisModel.getFormattedLabels() : [];
     var axisLabelModel = axisModel.getModel('axisLabel');
     var rect;
     var step = 1;

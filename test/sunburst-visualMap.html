@@ -35,11 +35,6 @@
                         }, {
                             name: 'Cousin Mary',
                             value: 5,
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.2
-                                }
-                            },
                             children: [{
                                 name: 'Jackson',
                                 value: 2
@@ -47,44 +42,29 @@
                         }, {
                             name: 'Cousin Ben',
                             value: 4
-                        }],
-                        itemStyle: {
-                            normal: {
-                                color: '#660'
-                            }
-                        }
+                        }]
                     }, {
                         name: 'Aunt Jane',
                         children: [{
                             name: 'Cousin Kate',
-                            value: 4,
-                            itemStyle: {
-                                normal: {
-                                    color: 'blue'
-                                }
-                            }
+                            value: 4
                         }]
                     }, {
                         name: 'Father',
                         value: 10,
                         children: [{
                             name: 'Me',
-                            value: 5
+                            value: 5,
+                            itemStyle: {
+                                normal: {
+                                    color: 'red'
+                                }
+                            }
                         }, {
                             name: 'Brother Peter',
                             value: 1
-                        }],
-                        itemStyle: {
-                            downplay: {
-                                opacity: 0.1
-                            }
-                        }
-                    }],
-                    itemStyle: {
-                        downplay: {
-                            opacity: 0.8
-                        }
-                    }
+                        }]
+                    }]
                 }, {
                     name: 'Mike',
                     children: [{
@@ -116,86 +96,38 @@
                 }];
 
                 chart.setOption({
+                    visualMap: {
+                        type: 'continuous',
+                        min: 0,
+                        max: 10,
+                        inRange: {
+                            color: ['#2D5F73', '#538EA6', '#F2D1B3', '#F2B8A2', '#F28C8C']
+                        }
+                    },
                     series: {
                         type: 'sunburst',
-                        // highlightPolicy: 'ancestor',
                         data: data,
                         radius: [0, '90%'],
                         label: {
                             normal: {
                                 rotate: 'radial'
                             }
-                        },
-                        levels: [{
-                            itemStyle: {
-                                normal: {
-                                    opacity: 1,
-                                    color: '#70d'
-                                }
-                            }
-                        }, {
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.8,
-                                    color: '#f0f'
-                                }
-                            },
-                            label: {
-                                normal: {
-                                    opacity: 0.8,
-                                    formatter: '{a}: {b}'
-                                }
-                            }
-                        }, {
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.6,
-                                    color: '#00f'
-                                }
-                            },
-                            label: {
-                                normal: {
-                                    opacity: 0.6
-                                }
-                            }
-                        }, {
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.4
-                                }
-                            }
-                        }]
+                        }
                     }
                 });
 
                 setTimeout(function () {
-                    data.push({
-                        name: 'Stranger',
-                        children: [{
-                            name: 'S1',
-                            value: 4
-                        }, {
-                            name: 'S2',
-                            value: 1
-                        }]
-                    });
-                    chart.setOption({
-                        series: {
-                            data: data
-                        }
+                    chart.dispatchAction({
+                        type: 'sunburstHighlight',
+                        targetNodeId: 'Cousin Jenny'
                     });
                 }, 3000);
 
                 setTimeout(function () {
-                    data.splice(1, 1);
-                    data[0].value = 32;
-                    chart.setOption({
-                        series: {
-                            data: data
-                        }
+                    chart.dispatchAction({
+                        type: 'sunburstUnhighlight'
                     });
-                }, 6000);
-
+                }, 5000);
             });
 
         </script>

@@ -1,8 +1,8 @@
 
 /*!
- * ECharts, a javascript interactive chart library.
+ * ECharts, a free, powerful charting and visualization library.
  *
- * Copyright (c) 2015, Baidu Inc.
+ * Copyright (c) 2017, Baidu Inc.
  * All rights reserved.
  *
  * LICENSE

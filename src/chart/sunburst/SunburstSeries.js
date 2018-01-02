@@ -1,7 +1,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
-import {wrapTreePathInfo} from '../treemap/helper';
+import {wrapTreePathInfo} from '../helper/treeHelper';
 
 export default SeriesModel.extend({
 
@@ -73,6 +73,11 @@ export default SeriesModel.extend({
         // 'ancestor', 'self'
         highlightPolicy: 'descendant',
 
+        // 'rootToNode', 'link', or false
+        nodeClick: 'rootToNode',
+
+        renderLabelForZeroData: false,
+
         label: {
             normal: {
                 // could be: 'radial', 'tangential', or 'none'
@@ -104,16 +109,25 @@ export default SeriesModel.extend({
         // Animation type canbe expansion, scale
         animationType: 'expansion',
         animationDuration: 1000,
-        animationUpdateDuration: 300,
-        animationEasing: 'sinusoidalInOut',
+        animationUpdateDuration: 500,
+        animationEasing: 'cubicOut',
 
         data: [],
 
         levels: [],
 
-        // null for not sorting,
-        // 'desc' and 'asc' for descend and ascendant order
-        sortOrder: 'desc'
+        /**
+         * Sort order.
+         *
+         * Valid values: 'desc', 'asc', null, or callback function.
+         * 'desc' and 'asc' for descend and ascendant order;
+         * null for not sorting;
+         * example of callback function:
+         * function(nodeA, nodeB) {
+         *     return nodeA.getValue() - nodeB.getValue();
+         * }
+         */
+        sort: 'desc'
     },
 
     getViewRoot: function () {

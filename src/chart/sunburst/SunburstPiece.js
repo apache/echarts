@@ -1,6 +1,5 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import Model from '../../model/Model';
 
 var NodeHighlightPolicy = {
     NONE: 'none', // not downplay others
@@ -11,8 +10,6 @@ var NodeHighlightPolicy = {
 
 var DEFAULT_SECTOR_Z = 2;
 var DEFAULT_TEXT_Z = 4;
-var DEFAULT_SECTOR_HIGHLIGHT_Z = 3;
-var DEFAULT_TEXT_HIGHLIGHT_Z = 5;
 
 /**
  * Sunburstce of Sunburst including Sector, Label, LabelLine
@@ -33,9 +30,7 @@ function SunburstPiece(node, seriesModel, ecModel) {
     this.add(sector);
     this.add(text);
 
-    this.node = node;
-
-    this.updateData(true, node, seriesModel, ecModel);
+    this.updateData(true, node, 'normal', seriesModel, ecModel);
 
     // Hover to change label and labelLine
     function onEmphasis() {
@@ -55,64 +50,83 @@ var SunburstPieceProto = SunburstPiece.prototype;
 SunburstPieceProto.updateData = function (
     firstCreate,
     node,
+    state,
     seriesModel,
     ecModel
 ) {
     this.node = node;
     node.piece = this;
 
+    seriesModel = seriesModel || this._seriesModel;
+    ecModel = ecModel || this._ecModel;
+
     var sector = this.childAt(0);
+    sector.dataIndex = node.dataIndex;
 
     var itemModel = node.getModel();
     var layout = node.getLayout();
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
-    if (firstCreate) {
-        sector.setShape(sectorShape);
-        sector.shape.r = layout.r0;
-
-        var duration = seriesModel.getShallow('animationDuration')
-            / Math.max(node.depth + node.height, 1);
-        var delay = (node.depth - 1) * duration;
-        var easing = seriesModel.getShallow('animationEasing');
-
-        sector.animateTo({
-            shape: {
-                r: layout.r
-            }
-        }, duration, delay, easing);
-    }
-    else {
-        graphic.updateProps(sector, {
-            shape: sectorShape
-        }, seriesModel);
-    }
-
-    // Update common style
     var itemStyleModel = itemModel.getModel('itemStyle');
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
-    sector.useStyle(
-        zrUtil.defaults(
-            {
-                lineJoin: 'bevel',
-                fill: visualColor
-            },
-            itemStyleModel.getModel('normal').getItemStyle()
-        )
+    var normalStyle = itemStyleModel.getModel('normal').getItemStyle();
+    var style;
+    if (state === 'normal') {
+        style = normalStyle;
+    }
+    else {
+        var stateStyle = itemStyleModel.getModel(state).getItemStyle();
+        style = zrUtil.merge(stateStyle, normalStyle);
+    }
+    style = zrUtil.defaults(
+        {
+            lineJoin: 'bevel',
+            fill: visualColor
+        },
+        style
     );
-    sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+
+    if (firstCreate) {
+        sector.setShape(sectorShape);
+        sector.shape.r = layout.r0;
+        graphic.updateProps(
+            sector,
+            {
+                shape: {
+                    r: layout.r
+                }
+            },
+            seriesModel,
+            node.dataIndex
+        );
+        sector.useStyle(style);
+    }
+    else {
+        graphic.updateProps(sector, {
+            shape: sectorShape,
+            style: style
+        }, seriesModel);
+    }
+
+    if (state === 'normal') {
+        sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+        graphic.setHoverStyle(this);
+    }
+
+    this._updateLabel(seriesModel, ecModel, visualColor);
 
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
 
-    var highlightPolicy = seriesModel.getShallow('highlightPolicy');
-    this._initEvents(sector, node, seriesModel, highlightPolicy);
+    if (firstCreate) {
+        var highlightPolicy = seriesModel.getShallow('highlightPolicy');
+        this._initEvents(sector, node, seriesModel, highlightPolicy);
+    }
 
-    this._updateLabel(seriesModel, ecModel, visualColor);
-
-    graphic.setHoverStyle(this);
+    this._seriesModel = seriesModel || this._seriesModel;
+    this._ecModel = ecModel || this._ecModel;
 };
 
 SunburstPieceProto.onEmphasis = function (highlightPolicy) {
@@ -132,17 +146,17 @@ SunburstPieceProto.onEmphasis = function (highlightPolicy) {
 SunburstPieceProto.onNormal = function () {
     this.node.hostTree.root.eachNode(function (n) {
         if (n.piece) {
-            updatePiece(n, 'normal');
+            n.piece.updateData(false, n, 'normal');
         }
     });
 };
 
 SunburstPieceProto.onHighlight = function () {
-    updatePiece(this.node, 'highlight');
+    this.updateData(false, this.node, 'highlight');
 };
 
 SunburstPieceProto.onDownplay = function () {
-    updatePiece(this.node, 'downplay');
+    this.updateData(false, this.node, 'downplay');
 };
 
 SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
@@ -284,20 +298,33 @@ export default SunburstPiece;
  * @param {module:echarts/model/Global} ecModel echarts defaults
  */
 function getNodeColor(node, seriesModel, ecModel) {
-    if (node.depth === 0) {
-        // Virtual root node
-        return 'transparent';
+    // Color from visualMap
+    var visualColor = node.getVisual('color');
+    var visualMetaList = node.getVisual('visualMeta');
+    if (visualMetaList.length === 0) {
+        // Use first-generation color if has no visualMap
+        visualColor = null;
     }
-    else {
-        // Self color or level color
-        var color = node.getModel('itemStyle.normal').get('color');
-        if (!color) {
-            // First-generation color
-            color = ecModel.option.color[getRootId(node)];
-        }
 
+    // Self color or level color
+    var color = node.getModel('itemStyle.normal').get('color');
+    if (color) {
         return color;
     }
+    else if (visualColor) {
+        // Color mapping
+        return visualColor;
+    }
+    else if (node.depth === 0) {
+        // Virtual root node
+        return ecModel.option.color[0];
+    }
+    else {
+        // First-generation color
+        var length = ecModel.option.color.length;
+        color = ecModel.option.color[getRootId(node) % length];
+    }
+    return color;
 }
 
 /**
@@ -329,40 +356,4 @@ function isNodeHighlighted(node, activeNode, policy) {
     else {
         return node === activeNode || node.isDescendantOf(activeNode);
     }
-}
-
-function updatePiece(node, state) {
-    var isHighlight = state === 'highlight';
-
-    // Update sector
-    var itemModel = node.getModel('itemStyle.' + state);
-    var itemZ = itemModel.get('z');
-
-    var sector = node.piece.childAt(0);
-    var sectorZ = itemZ != null
-        ? itemZ
-        : (isHighlight ? DEFAULT_SECTOR_HIGHLIGHT_Z : DEFAULT_SECTOR_Z);
-    sector.attr('z', sectorZ);
-
-    sector.animateTo({
-        style: {
-            opacity: itemModel.get('opacity') || 1
-        }
-    });
-
-    // Update text
-    var labelModel = node.getModel('label.' + state);
-    var labelZ = labelModel.get('z');
-
-    var text = node.piece.childAt(1);
-    var textZ = labelZ != null
-        ? labelZ
-        : (isHighlight ? DEFAULT_TEXT_HIGHLIGHT_Z : DEFAULT_TEXT_Z);
-    text.attr('z', textZ);
-
-    text.animateTo({
-        style: {
-            opacity: labelModel.get('opacity') || 1
-        }
-    });
 }

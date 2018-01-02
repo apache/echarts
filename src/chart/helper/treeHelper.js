@@ -1,12 +1,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 
-export function retrieveTargetInfo(payload, seriesModel) {
-    if (payload
-        && (
-            payload.type === 'treemapZoomToNode'
-            || payload.type === 'treemapRootToNode'
-        )
-    ) {
+export function retrieveTargetInfo(payload, validPayloadTypes, seriesModel) {
+    if (payload && zrUtil.indexOf(validPayloadTypes, payload.type) >= 0) {
         var root = seriesModel.getData().tree.root;
         var targetNode = payload.targetNode;
         if (targetNode && root.contains(targetNode)) {
