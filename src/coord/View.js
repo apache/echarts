@@ -163,12 +163,6 @@ View.prototype = {
         return this._roamTransformable.getLocalTransform();
     },
 
-    removeRoamTransformInPoint: function (pt) {
-        if (this._roamTransformable.invTransform) {
-            vector.applyTransform(pt, pt, this._roamTransformable.invTransform);
-        }
-    },
-
     /**
      * Remove roam
      */

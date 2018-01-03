@@ -3,6 +3,8 @@ import SymbolDraw from '../helper/SymbolDraw';
 import EffectSymbol from '../helper/EffectSymbol';
 import * as matrix from 'zrender/src/core/matrix';
 
+import pointsLayout from '../../layout/points';
+
 export default echarts.extendChartView({
 
     type: 'effectScatter',
@@ -12,8 +14,6 @@ export default echarts.extendChartView({
     },
 
     render: function (seriesModel, ecModel, api) {
-        this._removeRoamTransformInPoints(seriesModel);
-
         var data = seriesModel.getData();
         var effectSymbolDraw = this._symbolDraw;
         effectSymbolDraw.updateData(data);
@@ -21,18 +21,16 @@ export default echarts.extendChartView({
     },
 
     updateTransform: function (seriesModel, ecModel, api) {
-        var coordSys = seriesModel.coordinateSystem;
-        // Must mark group dirty and make sure the incremental layer will be cleared
-        // PENDING
+        var data = seriesModel.getData();
+
         this.group.dirty();
-        if (coordSys.getRoamTransform) {
-            this._updateGroupTransform(seriesModel);
+
+        var res = pointsLayout().reset(seriesModel);
+        if (res.progress) {
+            res.progress({ start: 0, end: data.count() }, seriesModel);
         }
-        else {
-            return {
-                update: true
-            };
-        }
+
+        this._symbolDraw.updateLayout(data);
     },
 
     _updateGroupTransform: function (seriesModel) {
@@ -40,17 +38,6 @@ export default echarts.extendChartView({
         if (coordSys && coordSys.getRoamTransform) {
             this.group.transform = matrix.clone(coordSys.getRoamTransform());
             this.group.decomposeTransform();
-        }
-    },
-
-    _removeRoamTransformInPoints: function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys && coordSys.removeRoamTransformInPoint) {
-            var data = seriesModel.getData();
-            data.each(function (i) {
-                var pt = data.getItemLayout(i);
-                coordSys.removeRoamTransformInPoint(pt);
-            });
         }
     },
 
