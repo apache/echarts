@@ -8,7 +8,7 @@ export default SeriesModel.extend({
     dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     },
 
     brushSelector: 'point',

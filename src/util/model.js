@@ -1,6 +1,5 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as formatUtil from './format';
-import * as nubmerUtil from './number';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -595,7 +594,7 @@ export function parseFinder(ecModel, finder, opt) {
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * @see {module:echarts/data/helper/createDimensions}
  * @param {module:echarts/data/List} data
  * @param {string|number} dataDim
  * @return {string}
@@ -612,7 +611,7 @@ export function dataDimToCoordDim(data, dataDim) {
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * @see {module:echarts/data/helper/createDimensions}
  * @param {module:echarts/data/List} data
  * @param {string} coordDim
  * @return {Array.<string>} data dimensions on the coordDim (concrete dim).
@@ -629,7 +628,7 @@ export function coordDimToDataDim(data, coordDim) {
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * @see {module:echarts/data/helper/createDimensions}
  * @param {module:echarts/data/List} data
  * @param {string} otherDim Can be `otherDims`
  *                        like 'label' or 'tooltip'.

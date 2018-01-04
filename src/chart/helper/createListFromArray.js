@@ -1,26 +1,20 @@
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
+import createDimensions from '../../data/helper/createDimensions';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
 
-function firstDataNotNull(data) {
-    var i = 0;
-    while (i < data.length && data[i] == null) {
-        i++;
-    }
-    return data[i];
-}
-function isNeedCompleteOrdinalData(data) {
-    var sampleItem = firstDataNotNull(data);
-    return sampleItem != null
-        && !zrUtil.isArray(getDataItemValue(sampleItem));
-}
-
 /**
- * Helper function to create a list from option data
+ * @param {Object} source
+ * {
+ *     data: mandatory
+ *     encodeDefine: optional
+ *     dimensionsDefine: optional
+ * }
+ * @param {module:echarts/model/Series} seriesModel
  */
-function doCreateListFromArray(dataAttr, seriesModel, ecModel) {
+function createListFromArray(source, seriesModel) {
     var coordSysName = seriesModel.get('coordinateSystem');
     var registeredCoordSys = CoordinateSystem.get(coordSysName);
 
@@ -50,14 +44,12 @@ function doCreateListFromArray(dataAttr, seriesModel, ecModel) {
         )) || ['x', 'y'];
     }
 
-    var source = seriesModel.getSource({
-        dataAttr: dataAttr,
+    var dimInfoList = createDimensions(zrUtil.defaults({
         sysDimensions: coordSysDimDefs
-    });
+    }, source));
 
     // Consider empty data.
     var data = source.data || [];
-    var dimInfoList = source.dimensionsInfo;
 
     var firstCategoryDimIndex;
     coordSysDefine && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
@@ -76,7 +68,7 @@ function doCreateListFromArray(dataAttr, seriesModel, ecModel) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
                 ? dataIndex
-                : List.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
+                : this.defaultDimValueGetter(itemOpt, dimName, dataIndex, dimIndex);
         }
         : null;
 
@@ -98,12 +90,17 @@ function getDimTypeByAxis(axisType) {
         : 'float';
 }
 
-function createListFromArray(data, seriesModel, ecModel) {
-    // Compatibal with previous interface, the first parameter is `data`,
-    // but the meaning of "data" it is not used currently, only the meaning
-    // of "seriesDataAttr" used.
-    !zrUtil.isString(data) && (data = null);
-    return doCreateListFromArray(data, seriesModel, ecModel);
+function firstDataNotNull(data) {
+    var i = 0;
+    while (i < data.length && data[i] == null) {
+        i++;
+    }
+    return data[i];
+}
+function isNeedCompleteOrdinalData(data) {
+    var sampleItem = firstDataNotNull(data);
+    return sampleItem != null
+        && !zrUtil.isArray(getDataItemValue(sampleItem));
 }
 
 export default createListFromArray;

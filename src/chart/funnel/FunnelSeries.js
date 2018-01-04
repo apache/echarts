@@ -1,7 +1,6 @@
 import * as echarts from '../../echarts';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import {defaultEmphasis} from '../../util/model';
-import completeDimensions from '../../data/helper/completeDimensions';
 
 var FunnelSeries = echarts.extendSeriesModel({
 
@@ -20,10 +19,7 @@ var FunnelSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        var dimensions = completeDimensions(['value'], option.data);
-        var list = new List(dimensions, this);
-        list.initData(option.data);
-        return list;
+        return createListSimply(this, ['value']);
     },
 
     _defaultLabelLine: function (option) {

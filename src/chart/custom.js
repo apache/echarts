@@ -72,7 +72,7 @@ echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     }
 });
 

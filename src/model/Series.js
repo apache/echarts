@@ -19,7 +19,6 @@ import {
     getDatasetModel,
     makeDefaultEncode
 } from '../data/helper/sourceHelper';
-import completeDimensions from '../data/helper/completeDimensions';
 
 var inner = modelUtil.makeInner();
 
@@ -201,46 +200,37 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
-     * Usage:
+     * [Scenarios]:
      * (1) Provide source data directly:
-     * series: {
-     *     encode: {...},
-     *     dimensions: [...]
-     *     data: [[...]]
-     * }
-     *
+     *     series: {
+     *         encode: {...},
+     *         dimensions: [...]
+     *         data: [[...]]
+     *     }
      * (2) Ignore datasetIndex means `datasetIndex: 0`,
-     * and the dimensions defination in dataset is used:
-     * series: {
-     *     encode: {...}
-     * }
-     *
+     *     and the dimensions defination in dataset is used:
+     *     series: {
+     *         encode: {...}
+     *     }
      * (3) Use different datasets, and the dimensions defination
-     * in dataset is used:
-     * series: {
-     *     nodes: {datasetIndex: 1, encode: {...}},
-     *     links: {datasetIndex: 2, encode: {...}}
-     * }
+     *     in dataset is used:
+     *     series: {
+     *         nodes: {datasetIndex: 1, encode: {...}},
+     *         links: {datasetIndex: 2, encode: {...}}
+     *     }
      *
      * Get data from series itself or datset.
-     * @param {Object} [opt]
-     * @param {string} [opt.dataAttr='data'] Or can be like 'nodes', 'links'
-     * @param {string} [opt.sysDimensions=[]] See module `echarts/src/data/helpercompleteDimensions`.
-     * @param {string} [opt.extraPrefix] See module `echarts/src/data/helpercompleteDimensions`.
-     * @param {string} [opt.extraFromZero] See module `echarts/src/data/helpercompleteDimensions`.
-     * @param {string} [opt.dimensionCount] See module `echarts/src/data/helpercompleteDimensions`.
+     * @param {string} [dataAttr='data'] Or can be like 'nodes', 'links'
      * @return {Object}
      * {
      *      modelUID: <string> Not null/undefined.
      *      data: <Array> Not null/undefined.
-     *      dimensionsInfo: <Array.<Object>> Not null/undefined.
      *      dimensionsDefine: <Array.<Object|string>> Original define, can be null/undefined.
      *      encodeDefine: <Object> Original define, can be null/undefined.
      * }
      */
-    getSource: function (opt) {
-        opt = opt || {};
-        var dataAttr = opt.dataAttr || 'data';
+    getSource: function (dataAttr) {
+        dataAttr = dataAttr || 'data';
 
         var thisOption = this.option;
         var thisData = thisOption[dataAttr];
@@ -265,43 +255,11 @@ var SeriesModel = ComponentModel.extend({
             }
         }
 
-        // Consider empty data.
-        data = data || [];
-
-        if (__DEV__) {
-            if (!zrUtil.isArrayLike(data)) {
-                throw new Error('Invalid data.');
-            }
-        }
-
-        var dimensionCount = opt.dimensionCount;
-
-        var isDataTypedArray = zrUtil.isTypedArray(data);
-        if (isDataTypedArray) {
-            if (__DEV__) {
-                if (!dimensionsDefine) {
-                    throw new Error('dimensions must be given if data is a ' + Object.prototype.toString.call(data));
-                }
-            }
-            dimensionCount = dimensionsDefine.length;
-        }
-
-        var encodeDefine = inner(this).encode;
-
-        var dimensionsInfo = completeDimensions(opt.sysDims || [], data, {
-            dimsDef: dimensionsDefine,
-            encodeDef: encodeDefine,
-            dimCount: dimensionCount,
-            extraPrefix: opt.extraPrefix,
-            extraFromZero: opt.extraFromZero
-        });
-
         return {
             modelUID: modelUID,
             data: data,
-            dimensionsInfo: dimensionsInfo,
             dimensionsDefine: dimensionsDefine,
-            encodeDefine: encodeDefine
+            encodeDefine: inner(this).encode
         };
     },
 

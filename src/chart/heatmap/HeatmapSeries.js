@@ -6,7 +6,7 @@ export default SeriesModel.extend({
     type: 'series.heatmap',
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     },
 
     preventIncremental: function () {

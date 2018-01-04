@@ -423,7 +423,7 @@ listProto.initData = function (data, defaultNameDimIndex, dimValueGetter) {
     }
     // Default dim value getter
     this._dimValueGetter = dimValueGetter = dimValueGetter
-        || defaultDimValueGetter;
+        || this.defaultDimValueGetter;
 
     // Reset raw extent.
     this._rawExtent = {};
@@ -1642,7 +1642,7 @@ listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 // Methods that change indices of this list should be listed here.
 // listProto.CHANGABLE_METHODS = ['filterSelf'];
 
-var defaultDimValueGetter = List.defaultDimValueGetter = function (dataItem, dimName, dataIndex, dimIndex) {
+listProto.defaultDimValueGetter = function (dataItem, dimName, dataIndex, dimIndex) {
     var value = modelUtil.getDataItemValue(dataItem);
     // If any dataItem is like { value: 10 }
     if (!this._rawData.pure && modelUtil.isDataItemOption(dataItem)) {

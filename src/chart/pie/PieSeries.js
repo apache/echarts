@@ -1,9 +1,8 @@
 import * as echarts from '../../echarts';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import completeDimensions from '../../data/helper/completeDimensions';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 
 var PieSeries = echarts.extendSeriesModel({
@@ -32,10 +31,7 @@ var PieSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        var dimensions = completeDimensions(['value'], option.data);
-        var list = new List(dimensions, this);
-        list.initData(option.data);
-        return list;
+        return createListSimply(this, ['value']);
     },
 
     // Overwrite

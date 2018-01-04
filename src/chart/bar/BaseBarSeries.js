@@ -6,7 +6,7 @@ export default SeriesModel.extend({
     type: 'series.__base_bar__',
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     },
 
     getMarkerPosition: function (value) {

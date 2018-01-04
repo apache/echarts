@@ -1,7 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import completeDimensions from '../../data/helper/completeDimensions';
 import {encodeHTML, addCommas} from '../../util/format';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import geoCreator from '../../coord/geo/geoCreator';
@@ -37,13 +36,7 @@ var MapSeries = SeriesModel.extend({
     },
 
     getInitialData: function (option) {
-        var dimensions = completeDimensions(['value'], option.data || []);
-
-        var list = new List(dimensions, this);
-
-        list.initData(option.data);
-
-        return list;
+        return createListSimply(this, ['value']);
     },
 
     mergeOption: function (newOption) {

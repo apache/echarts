@@ -10,12 +10,11 @@ import Model from './model/Model';
  * @return {module:echarts/data/List} list
  */
 export function createList(seriesModel) {
-    var data = seriesModel.get('data');
-    return createListFromArray(data, seriesModel, seriesModel.ecModel);
+    return createListFromArray(seriesModel.getSource(), seriesModel);
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * // TODO: @deprecated
  */
 export {default as completeDimensions} from './data/helper/completeDimensions';
 

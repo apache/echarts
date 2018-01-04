@@ -1,9 +1,12 @@
 /**
+ * @deprecated
+ * Use `echarts/data/helper/createDimensions` instead.
  * Complete dimensions by data (guess dimension).
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {normalizeToArray} from '../../util/model';
+import {normalizeToArray, getDataItemValue} from '../../util/model';
+import guessOrdinal from './guessOrdinal';
 
 var each = zrUtil.each;
 var isString = zrUtil.isString;
@@ -27,7 +30,7 @@ var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
  * @param {Object} [opt]
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
  *      For example: ['asdf', {name, type}, ...].
- * @param {Object} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
+ * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
  * @param {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
  * @param {string} [opt.extraFromZero] If specified, extra dim names will be:
  *                      extraPrefix + 0, extraPrefix + extraBaseIndex + 1 ...
@@ -68,7 +71,7 @@ function completeDimensions(sysDims, data, opt) {
         // So only necessary dims will be initialized.
         // But custom series should be considered. where other dims
         // may be visited.
-        var value0 = retrieveValue(data[0]);
+        var value0 = getDataItemValue(data[0]);
         dimCount = Math.max(
             zrUtil.isArray(value0) && value0.length || 1,
             sysDims.length,
@@ -200,33 +203,6 @@ function completeDimensions(sysDims, data, opt) {
         map.set(name, true);
         return name;
     }
-}
-
-// The rule should not be complex, otherwise user might not
-// be able to known where the data is wrong.
-var guessOrdinal = completeDimensions.guessOrdinal = function (data, dimIndex) {
-    for (var i = 0, len = data.length; i < len; i++) {
-        var value = retrieveValue(data[i]);
-
-        if (!zrUtil.isArray(value)) {
-            return false;
-        }
-
-        var value = value[dimIndex];
-        // Consider usage convenience, '1', '2' will be treated as "number".
-        // `isFinit('')` get `true`.
-        if (value != null && isFinite(value) && value !== '') {
-            return false;
-        }
-        else if (isString(value) && value !== '-') {
-            return true;
-        }
-    }
-    return false;
-};
-
-function retrieveValue(o) {
-    return zrUtil.isArray(o) ? o : zrUtil.isObject(o) ? o.value: o;
 }
 
 export default completeDimensions;

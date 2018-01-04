@@ -1,7 +1,7 @@
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import completeDimensions from '../../data/helper/completeDimensions';
+import guessOrdinal from '../../data/helper/guessOrdinal';
 
 export default SeriesModel.extend({
 
@@ -17,11 +17,13 @@ export default SeriesModel.extend({
         );
         var parallelAxisIndices = parallelModel.parallelAxisIndex;
 
-        var rawData = option.data;
+        var source = this.getSource();
+        var rawData = source.data;
         var modelDims = parallelModel.dimensions;
 
         var dataDims = generateDataDims(modelDims, rawData);
 
+        // ??? need support encode?
         var dataDimsInfo = zrUtil.map(dataDims, function (dim, dimIndex) {
 
             var modelDimsIndex = zrUtil.indexOf(modelDims, dim);
@@ -34,7 +36,7 @@ export default SeriesModel.extend({
                 return {name: dim, type: 'ordinal'};
             }
             else if (modelDimsIndex < 0) {
-                return completeDimensions.guessOrdinal(rawData, dimIndex)
+                return guessOrdinal(rawData, dimIndex)
                     ? {name: dim, type: 'ordinal'}
                     : dim;
             }

@@ -105,14 +105,14 @@ function addSourceModelUID(ordinalMeta, sourceModelUID) {
             ? sourceModelUID
             : MULTIPLE_SOURCE;
     }
-};
+}
 
 // Do not create map until needed.
 function getOrCreateMap(ordinalMeta) {
     return ordinalMeta._map || (
         ordinalMeta._map = createHashMap(ordinalMeta.categories)
     );
-};
+}
 
 function getName(obj) {
     if (isObject(obj) && obj.value != null) {

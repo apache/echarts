@@ -3,9 +3,8 @@
  * @author Deqing Li(annong035@gmail.com)
  */
 
-import completeDimensions from '../../data/helper/completeDimensions';
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import nest from '../../util/array/nest';
@@ -110,8 +109,6 @@ var ThemeRiverSeries = SeriesModel.extend({
      */
     getInitialData: function (option, ecModel) {
 
-        var dimensions = [];
-
         var singleAxisModel = ecModel.queryComponents({
             mainType: 'singleAxis',
             index: this.get('singleAxisIndex'),
@@ -119,26 +116,6 @@ var ThemeRiverSeries = SeriesModel.extend({
         })[0];
 
         var axisType = singleAxisModel.get('type');
-
-        dimensions = [
-            {
-                name: 'time',
-                // FIXME common?
-                type: axisType === 'category'
-                    ? 'ordinal'
-                    : axisType === 'time'
-                    ? 'time'
-                    : 'float'
-            },
-            {
-                name: 'value',
-                type: 'float'
-            },
-            {
-                name: 'name',
-                type: 'ordinal'
-            }
-        ];
 
         // filter the data item with the value of label is undefined
         var filterData = zrUtil.filter(option.data, function (dataItem) {
@@ -158,13 +135,27 @@ var ThemeRiverSeries = SeriesModel.extend({
             }
         }
 
-        dimensions = completeDimensions(dimensions, data);
+        var sysDimensions = [
+            {
+                name: 'time',
+                // FIXME common?
+                type: axisType === 'category'
+                    ? 'ordinal'
+                    : axisType === 'time'
+                    ? 'time'
+                    : 'float'
+            },
+            {
+                name: 'value',
+                type: 'float'
+            },
+            {
+                name: 'name',
+                type: 'ordinal'
+            }
+        ];
 
-        var list = new List(dimensions, this);
-
-        list.initData(data, nameList);
-
-        return list;
+        return createListSimply(this, sysDimensions);
     },
 
     /**

@@ -2,7 +2,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import Graph from '../../data/Graph';
 import linkList from '../../data/helper/linkList';
-import completeDimensions from '../../data/helper/completeDimensions';
+import createDimensions from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../CoordinateSystem';
 import createListFromArray from './createListFromArray';
 
@@ -57,16 +57,16 @@ export default function (nodes, matrix, hostModel, directed) {
     var coordSys = hostModel.get('coordinateSystem');
     var nodeData;
     if (coordSys === 'cartesian2d' || coordSys === 'polar') {
-        nodeData = createListFromArray(nodes, hostModel, hostModel.ecModel);
+        nodeData = createListFromArray({data: nodes}, hostModel);
     }
     else {
         // FIXME
         var coordSysCtor = CoordinateSystem.get(coordSys);
         // FIXME
-        var dimensionNames = completeDimensions(
-            ((coordSysCtor && coordSysCtor.type !== 'view') ? (coordSysCtor.dimensions || []) : []).concat(['value']),
-            nodes
-        );
+        var dimensionNames = createDimensions({
+            sysDimensions: ((coordSysCtor && coordSysCtor.type !== 'view') ? (coordSysCtor.dimensions || []) : []).concat(['value']),
+            data: nodes
+        });
         nodeData = new List(dimensionNames, hostModel);
         nodeData.initData(nodes);
     }
