@@ -29,6 +29,7 @@ import * as graphic from './util/graphic';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import seriesColor from './visual/seriesColor';
+import aria from './visual/aria';
 import loadingDefault from './loading/default';
 
 var each = zrUtil.each;
@@ -1313,6 +1314,9 @@ function doRender(ecModel, payload) {
             chart.remove(ecModel, api);
         }
     }, this);
+
+    // Add aria
+    aria(this._zr.dom, ecModel);
 }
 
 var MOUSE_EVENT_NAMES = [
