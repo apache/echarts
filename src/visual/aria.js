@@ -10,8 +10,8 @@ export default function (dom, ecModel) {
         return;
     }
 
-    var maxDataCnt = ariaModel.get('maxDataCnt') || 10;
-    var maxSeriesCnt = ariaModel.get('maxSeriesCnt') || 10;
+    var maxDataCnt = ariaModel.get('maxDataCount') || 10;
+    var maxSeriesCnt = ariaModel.get('maxSeriesCount') || 10;
 
     var series = [];
     var seriesCnt = 0;
