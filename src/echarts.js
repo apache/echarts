@@ -885,6 +885,7 @@ var updateMethods = {
             }
         });
 
+        clearColorPalette(ecModel);
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
         this._scheduler.performVisualTasks(
