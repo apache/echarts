@@ -72,7 +72,7 @@ export function makePath(pathData, opts, rect, layout) {
  * @param {string} [layout=cover] 'center' or 'cover'
  */
 export function makeImage(imageUrl, rect, layout) {
-    var path = new Image({
+    var path = new ZImage({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -788,13 +788,13 @@ function rollbackInsideStyle(style) {
 export function getFont(opt, ecModel) {
     // ecModel or default text style model.
     var gTextStyleModel = ecModel || ecModel.getModel('textStyle');
-    return [
+    return zrUtil.trim([
         // FIXME in node-canvas fontWeight is before fontStyle
         opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',
         opt.fontWeight || gTextStyleModel && gTextStyleModel.getShallow('fontWeight') || '',
         (opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || 12) + 'px',
         opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'
-    ].join(' ');
+    ].join(' '));
 }
 
 function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) {

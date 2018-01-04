@@ -2,7 +2,7 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import DataDiffer from '../../data/DataDiffer';
-import * as helper from './helper';
+import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
 import RoamController from '../../component/helper/RoamController';
 import BoundingRect from 'zrender/src/core/BoundingRect';
@@ -105,7 +105,9 @@ export default echarts.extendChartView({
         this.api = api;
         this.ecModel = ecModel;
 
-        var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
+        var types = ['treemapZoomToNode', 'treemapRootToNode'];
+        var targetInfo = helper
+            .retrieveTargetInfo(payload, types, seriesModel);
         var payloadType = payload && payload.type;
         var layoutInfo = seriesModel.layoutInfo;
         var isInit = !this._oldTree;

@@ -4,7 +4,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import {findLabelValueDim} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
-import barGrid from '../layout/barGrid';
+import { getLayoutOnAxis } from '../layout/barGrid';
 import DataDiffer from '../data/DataDiffer';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -437,7 +437,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
     function barLayout(opt) {
         if (coordSys.getBaseAxis) {
             var baseAxis = coordSys.getBaseAxis();
-            return barGrid.getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt), api);
+            return getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt), api);
         }
     }
 

@@ -2,7 +2,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
 import * as layout from '../../util/layout';
-import * as helper from './helper';
+import * as helper from '../helper/treeHelper';
 
 var mathMax = Math.max;
 var mathMin = Math.min;
@@ -46,7 +46,9 @@ export default {
 
         // Fetch payload info.
         var payloadType = payload && payload.type;
-        var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
+        var types = ['treemapZoomToNode', 'treemapRootToNode'];
+        var targetInfo = helper
+            .retrieveTargetInfo(payload, types, seriesModel);
         var rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
             ? payload.rootRect : null;
         var viewRoot = seriesModel.getViewRoot();

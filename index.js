@@ -58,6 +58,8 @@ require("./lib/chart/themeRiver");
 
 require("./lib/chart/custom");
 
+require("./lib/chart/sunburst");
+
 require("./lib/component/graphic");
 
 require("./lib/component/grid");

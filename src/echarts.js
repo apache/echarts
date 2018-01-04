@@ -1,8 +1,8 @@
 
 /*!
- * ECharts, a javascript interactive chart library.
+ * ECharts, a free, powerful charting and visualization library.
  *
- * Copyright (c) 2015, Baidu Inc.
+ * Copyright (c) 2017, Baidu Inc.
  * All rights reserved.
  *
  * LICENSE
@@ -29,6 +29,7 @@ import * as graphic from './util/graphic';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import seriesColor from './visual/seriesColor';
+import aria from './visual/aria';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
 
@@ -1461,6 +1462,9 @@ function renderSeries(ecIns, ecModel, api, payload, dirtyMap) {
 
     // If use hover layer
     updateHoverLayerStatus(ecIns._zr, ecModel);
+
+    // Add aria
+    aria(ecIns._zr.dom, ecModel);
 }
 
 function performPostUpdateFuncs(ecModel, api) {

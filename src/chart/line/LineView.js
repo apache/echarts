@@ -48,14 +48,27 @@ function sign(val) {
  * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
  * @param {module:echarts/data/List} data
  * @param {Array.<Array.<number>>} points
+ * @param {string} origin origin of areaStyle. Valid values: 'auto', 'start',
+ *                        'end'.
+ *                        auto: from axisLine to data
+ *                        start: from min to data
+ *                        end: from data to max
  * @private
  */
-function getStackedOnPoints(coordSys, data) {
+function getStackedOnPoints(coordSys, data, origin) {
     var baseAxis = coordSys.getBaseAxis();
     var valueAxis = coordSys.getOtherAxis(baseAxis);
 
     var valueStart = 0;
-    if (!baseAxis.onZero) {
+    var extent = valueAxis.scale.getExtent();
+    if (origin === 'start') {
+        valueStart = extent[0];
+    }
+    else if (origin === 'end') {
+        valueStart = extent[1];
+    }
+    else {
+        // auto
         var extent = valueAxis.scale.getExtent();
         if (extent[0] > 0) {
             // Both positive
@@ -329,7 +342,8 @@ export default ChartView.extend({
         var hasAnimation = seriesModel.get('animation');
 
         var isAreaChart = !areaStyleModel.isEmpty();
-        var stackedOnPoints = getStackedOnPoints(coordSys, data);
+        var origin = areaStyleModel.get('origin');
+        var stackedOnPoints = getStackedOnPoints(coordSys, data, origin);
 
         var showSymbol = seriesModel.get('showSymbol');
 

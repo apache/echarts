@@ -45,7 +45,7 @@ export default SeriesModel.extend({
             width: 2,
             type: 'solid'
         },
-        // areaStyle: {},
+        // areaStyle: {origin: 'auto'},
         // false, 'start', 'end', 'middle'
         step: false,
 
