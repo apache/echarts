@@ -112,13 +112,14 @@ export function getScaleExtent(scale, model) {
         }
     }
 
-    // If bars are placed on a base axis of type time or interval account for axis boundary overflow and current axis is base axis
+    // If bars are placed on a base axis of type time or interval account for axis boundary overflow and current axis
+    // is base axis
     var ecModel = model.ecModel;
     if (ecModel) {
         var isBaseAxisAndHasBarSeries = zrUtil.filter(ecModel.getSeriesByType('bar'), function (seriesModel) {
             return seriesModel.getBaseAxis() === model.axis;
         }).length > 0;
-        if ((scaleType === 'time' || scaleType === 'interval') && isBaseAxisAndHasBarSeries){
+        if ((scaleType === 'time' || scaleType === 'interval') && isBaseAxisAndHasBarSeries) {
             // Adjust axis min and max to account for overflow
             var adjustedScale = adjustScaleForOverflow(min, max, model);
             min = adjustedScale.min;
@@ -131,7 +132,7 @@ export function getScaleExtent(scale, model) {
 
 export function adjustScaleForOverflow(min, max, model) {
 
-    var ecModel = model.getModel().ecModel;
+    var ecModel = model.ecModel;
     // Get Axis Length
     var axisExtent = model.axis.getExtent();
     var axisLength = axisExtent[1] - axisExtent[0];
@@ -150,12 +151,18 @@ export function adjustScaleForOverflow(min, max, model) {
     var baseAxisKey = model.axis.dim + model.axis.index;
     var barsOnCurrentAxis = barWidthAndOffset[baseAxisKey];
     if (barsOnCurrentAxis === undefined) {
-        return { 'min': min, 'max': max };
+        return {min: min, max: max};
     }
 
-    var minOverflow = Math.abs(Math.min.apply(null, Object.values(barsOnCurrentAxis).map(function (x) { return x.offset; })));
-    var maxOverflow = Math.max.apply(null, Object.values(barsOnCurrentAxis).map(function (x) { return x.offset + x.width; }));
-    var totalOverFlow = minOverflow + maxOverflow;
+    var minOverflow = Infinity;
+    zrUtil.each(barsOnCurrentAxis, function (item) {
+        minOverflow = Math.min(item.offset, minOverflow);
+    });
+    var maxOverflow = -Infinity;
+    zrUtil.each(barsOnCurrentAxis, function (item) {
+        maxOverflow = Math.max(item.offset + item.width, maxOverflow);
+    });
+    var totalOverFlow = Math.abs(minOverflow) + maxOverflow;
 
     // Calulate required buffer based on old range and overflow
     var oldRange = max - min;
@@ -165,7 +172,7 @@ export function adjustScaleForOverflow(min, max, model) {
     max += overflowBuffer * (maxOverflow / totalOverFlow);
     min -= overflowBuffer * (minOverflow / totalOverFlow);
 
-    return { 'min': min, 'max': max };
+    return {min: min, max: max};
 }
 
 export function niceScaleExtent(scale, model) {
