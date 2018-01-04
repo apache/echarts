@@ -858,26 +858,40 @@ var updateMethods = {
 
         ChartView.markUpdateMethod(payload, 'updateTransform');
 
-        var dirtyMap = zrUtil.createHashMap();
+        var componentDirtyList = [];
+        ecModel.eachComponent(function (componentType, componentModel) {
+            var componentView = ecIns.getViewOfComponentModel(componentModel);
+            if (componentView && componentView.__alive) {
+                if (componentView.updateTransform) {
+                    var result = componentView.updateTransform(componentModel, ecModel, api, payload);
+                    result && result.update && componentDirtyList.push(componentView);
+                }
+                else {
+                    componentDirtyList.push(componentView);
+                }
+            }
+        });
+
+        var seriesDirtyMap = zrUtil.createHashMap();
         ecModel.eachSeries(function (seriesModel) {
             var chartView = ecIns._chartsMap[seriesModel.__viewId];
             if (chartView.updateTransform) {
-                var result = chartView.updateTransform
-                    && chartView.updateTransform(seriesModel, ecModel, api, payload);
-                result && result.update && dirtyMap.set(seriesModel.uid, 1);
+                var result = chartView.updateTransform(seriesModel, ecModel, api, payload);
+                result && result.update && seriesDirtyMap.set(seriesModel.uid, 1);
             }
             else {
-                dirtyMap.set(seriesModel.uid, 1);
+                seriesDirtyMap.set(seriesModel.uid, 1);
             }
         });
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
         // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
         this._scheduler.performVisualTasks(
-            visualFuncs, ecModel, payload, {setDirty: true, dirtyMap: dirtyMap}
+            visualFuncs, ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
         );
 
-        renderSeries(this, ecModel, this._api, payload, dirtyMap);
+        renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
+        renderSeries(ecIns, ecModel, api, payload, seriesDirtyMap);
 
         performPostUpdateFuncs(ecModel, this._api);
     },
@@ -1390,13 +1404,8 @@ function clearColorPalette(ecModel) {
 }
 
 function render(ecIns, ecModel, api, payload) {
-    // Render all components
-    each(ecIns._componentsViews, function (componentView) {
-        var componentModel = componentView.__model;
-        componentView.render(componentModel, ecModel, api, payload);
 
-        updateZ(componentModel, componentView);
-    });
+    renderComponents(ecIns, ecModel, api, payload);
 
     each(ecIns._chartsViews, function (chart) {
         chart.__alive = false;
@@ -1409,6 +1418,15 @@ function render(ecIns, ecModel, api, payload) {
         if (!chart.__alive) {
             chart.remove(ecModel, api);
         }
+    });
+}
+
+function renderComponents(ecIns, ecModel, api, payload, dirtyList) {
+    each(dirtyList || ecIns._componentsViews, function (componentView) {
+        var componentModel = componentView.__model;
+        componentView.render(componentModel, ecModel, api, payload);
+
+        updateZ(componentModel, componentView);
     });
 }
 
