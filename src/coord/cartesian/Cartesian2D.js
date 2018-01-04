@@ -54,30 +54,51 @@ Cartesian2D.prototype = {
 
     /**
      * @param {Array.<number>} data
-     * @param {boolean} [clamp=false]
+     * @param {Array.<number>} out
      * @return {Array.<number>}
      */
-    dataToPoint: function (data, clamp) {
+    dataToPoint: function (data, reserved, out) {
         var xAxis = this.getAxis('x');
         var yAxis = this.getAxis('y');
-        return [
-            xAxis.toGlobalCoord(xAxis.dataToCoord(data[0], clamp)),
-            yAxis.toGlobalCoord(yAxis.dataToCoord(data[1], clamp))
-        ];
+        out = out || [];
+        out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(data[0]));
+        out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(data[1]));
+        return out;
+    },
+
+    /**
+     * @param {Array.<number>} data
+     * @param {Array.<number>} out
+     * @return {Array.<number>}
+     */
+    clampData: function (data, out) {
+        var xAxisExtent = this.getAxis('x').scale.getExtent();
+        var yAxisExtent = this.getAxis('y').scale.getExtent();
+        out = out || [];
+        out[0] = Math.min(
+            Math.max(Math.min(xAxisExtent[0], xAxisExtent[1]), data[0]),
+            Math.max(xAxisExtent[0], xAxisExtent[1])
+        );
+        out[1] = Math.min(
+            Math.max(Math.min(yAxisExtent[0], yAxisExtent[1]), data[1]),
+            Math.max(yAxisExtent[0], yAxisExtent[1])
+        );
+
+        return out;
     },
 
     /**
      * @param {Array.<number>} point
-     * @param {boolean} [clamp=false]
+     * @param {Array.<number>} out
      * @return {Array.<number>}
      */
-    pointToData: function (point, clamp) {
+    pointToData: function (point, out) {
         var xAxis = this.getAxis('x');
         var yAxis = this.getAxis('y');
-        return [
-            xAxis.coordToData(xAxis.toLocalCoord(point[0]), clamp),
-            yAxis.coordToData(yAxis.toLocalCoord(point[1]), clamp)
-        ];
+        out = out || [];
+        out[0] = xAxis.coordToData(xAxis.toLocalCoord(point[0]));
+        out[1] = yAxis.coordToData(yAxis.toLocalCoord(point[1]));
+        return out;
     },
 
     /**

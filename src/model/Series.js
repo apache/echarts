@@ -7,7 +7,6 @@ import {
     addCommas,
     getTooltipMarker
 } from '../util/format';
-import {set, get} from '../util/clazz';
 import * as modelUtil from '../util/model';
 import ComponentModel from './Component';
 import colorPaletteMixin from './mixin/colorPalette';
@@ -15,6 +14,13 @@ import {
     getLayoutParams,
     mergeLayoutParam
 } from '../util/layout';
+import {createTask} from '../stream/task';
+import {
+    getDatasetModel,
+    makeDefaultEncode
+} from '../data/helper/sourceHelper';
+
+var inner = modelUtil.makeInner();
 
 var SeriesModel = ComponentModel.extend({
 
@@ -44,7 +50,7 @@ var SeriesModel = ComponentModel.extend({
     /**
      * Access path of color for visual
      */
-    visualColorAccessPath: 'itemStyle.normal.color',
+    visualColorAccessPath: 'itemStyle.color',
 
     /**
      * Support merge layout params.
@@ -62,24 +68,37 @@ var SeriesModel = ComponentModel.extend({
          */
         this.seriesIndex = this.componentIndex;
 
+        // this.settingTask = createTask();
+
+        this.dataTask = createTask({
+            count: dataTaskCount,
+            reset: dataTaskReset
+        }, {model: this});
+
         this.mergeDefaultAndTheme(option, ecModel);
 
+        setDefaultEncode(this);
+
         var data = this.getInitialData(option, ecModel);
+
         if (__DEV__) {
             zrUtil.assert(data, 'getInitialData returned invalid data.');
         }
+
         /**
          * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
          * @private
          */
-        set(this, 'dataBeforeProcessed', data);
+        inner(this).dataBeforeProcessed = data;
 
         // If we reverse the order (make data firstly, and then make
         // dataBeforeProcessed by cloneShallow), cloneShallow will
         // cause data.graph.data !== data when using
         // module:echarts/data/Graph or module:echarts/data/Tree.
         // See module:echarts/data/helper/linkList
-        this.restoreData();
+
+        // ??? should not restoreData here? but called by echart?
+        // this.restoreData();
     },
 
     /**
@@ -107,7 +126,7 @@ var SeriesModel = ComponentModel.extend({
         zrUtil.merge(option, this.getDefaultOption());
 
         // Default label emphasis `show`
-        modelUtil.defaultEmphasis(option.label, ['show']);
+        modelUtil.defaultEmphasis(option, 'label', ['show']);
 
         this.fillDataTextStyle(option.data);
 
@@ -117,6 +136,8 @@ var SeriesModel = ComponentModel.extend({
     },
 
     mergeOption: function (newSeriesOption, ecModel) {
+        // this.settingTask.dirty();
+
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
         this.fillDataTextStyle(newSeriesOption.data);
 
@@ -125,12 +146,13 @@ var SeriesModel = ComponentModel.extend({
             mergeLayoutParam(this.option, newSeriesOption, layoutMode);
         }
 
+        setDefaultEncode(this);
+
         var data = this.getInitialData(newSeriesOption, ecModel);
-        // TODO Merge data?
-        if (data) {
-            set(this, 'data', data);
-            set(this, 'dataBeforeProcessed', data.cloneShallow());
-        }
+        // ??? set dirty on ecModel, becusue it will call mergeOption({})?
+        this.dataTask.dirty();
+
+        inner(this).dataBeforeProcessed = data;
     },
 
     fillDataTextStyle: function (data) {
@@ -141,7 +163,7 @@ var SeriesModel = ComponentModel.extend({
             var props = ['show'];
             for (var i = 0; i < data.length; i++) {
                 if (data[i] && data[i].label) {
-                    modelUtil.defaultEmphasis(data[i].label, props);
+                    modelUtil.defaultEmphasis(data[i], 'label', props);
                 }
             }
         }
@@ -154,11 +176,19 @@ var SeriesModel = ComponentModel.extend({
     getInitialData: function () {},
 
     /**
+     * Append data to list
+     */
+    appendData: function (params) {
+        var data = this.getRawData();
+        data.appendData(params.data);
+    },
+
+    /**
      * @param {string} [dataType]
      * @return {module:echarts/data/List}
      */
     getData: function (dataType) {
-        var data = get(this, 'data');
+        var data = inner(this).data;
         return dataType == null ? data : data.getLinkedData(dataType);
     },
 
@@ -166,7 +196,71 @@ var SeriesModel = ComponentModel.extend({
      * @param {module:echarts/data/List} data
      */
     setData: function (data) {
-        set(this, 'data', data);
+        inner(this).data = data;
+    },
+
+    /**
+     * [Scenarios]:
+     * (1) Provide source data directly:
+     *     series: {
+     *         encode: {...},
+     *         dimensions: [...]
+     *         data: [[...]]
+     *     }
+     * (2) Ignore datasetIndex means `datasetIndex: 0`,
+     *     and the dimensions defination in dataset is used:
+     *     series: {
+     *         encode: {...}
+     *     }
+     * (3) Use different datasets, and the dimensions defination
+     *     in dataset is used:
+     *     series: {
+     *         nodes: {datasetIndex: 1, encode: {...}},
+     *         links: {datasetIndex: 2, encode: {...}}
+     *     }
+     *
+     * Get data from series itself or datset.
+     * @param {string} [dataAttr='data'] Or can be like 'nodes', 'links'
+     * @return {Object}
+     * {
+     *      modelUID: <string> Not null/undefined.
+     *      data: <Array> Not null/undefined.
+     *      dimensionsDefine: <Array.<Object|string>> Original define, can be null/undefined.
+     *      encodeDefine: <Object> Original define, can be null/undefined.
+     * }
+     */
+    getSource: function (dataAttr) {
+        dataAttr = dataAttr || 'data';
+
+        var thisOption = this.option;
+        var thisData = thisOption[dataAttr];
+        var dimensionsDefine = thisOption.dimensions;
+        var data;
+        var modelUID;
+
+        if (thisData && thisData.datasetIndex == null) {
+            data = thisData;
+            modelUID = this.uid;
+        }
+        else {
+            var datasetModel = getDatasetModel(this);
+            if (datasetModel) {
+                var datasetOption = datasetModel.option;
+                if (datasetOption) {
+                    data = datasetOption[dataAttr];
+                    modelUID = datasetModel.uid;
+                    dimensionsDefine = datasetOption.dimensions;
+                    dimensionsDefine && (dimensionsDefine = dimensionsDefine.slice());
+                }
+            }
+        }
+
+        return {
+            modelUID: modelUID,
+            data: data,
+            dimensionsDefine: dimensionsDefine,
+            encodeDefine: inner(this).encode
+        };
     },
 
     /**
@@ -174,7 +268,7 @@ var SeriesModel = ComponentModel.extend({
      * @return {module:echarts/data/List}
      */
     getRawData: function () {
-        return get(this, 'dataBeforeProcessed');
+        return inner(this).dataBeforeProcessed;
     },
 
     /**
@@ -224,6 +318,8 @@ var SeriesModel = ComponentModel.extend({
      */
     formatTooltip: function (dataIndex, multipleSeries, dataType) {
         function formatArrayValue(value) {
+            // ???
+            // check: category-no-encode-has-axis-data in dataset.html
             var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
                 var dimItem = data.getDimensionInfo(idx);
                 return vertially |= dimItem && dimItem.tooltip !== false && dimItem.tooltipName != null;
@@ -259,7 +355,7 @@ var SeriesModel = ComponentModel.extend({
             return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
         }
 
-        var data = get(this, 'data');
+        var data = inner(this).data;
 
         var value = this.getRawValue(dataIndex);
         var formattedValue = zrUtil.isArray(value)
@@ -310,7 +406,7 @@ var SeriesModel = ComponentModel.extend({
     },
 
     restoreData: function () {
-        set(this, 'data', get(this, 'dataBeforeProcessed').cloneShallow());
+        this.dataTask.dirty();
     },
 
     getColorFromPalette: function (name, scope) {
@@ -339,10 +435,55 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} dataIndex
      * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
      */
-    getTooltipPosition: null
+    getTooltipPosition: null,
+
+    /**
+     * @see {module:echarts/stream/Scheduler}
+     */
+    pipeTask: null,
+
+    /**
+     * Convinient for override in extended class.
+     * @protected
+     * @type {Function}
+     */
+    preventIncremental: null,
+
+    /**
+     * @public
+     * @readOnly
+     * @type {Object}
+     */
+    pipelineContext: null
+
 });
 
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
+
+function dataTaskCount(context) {
+    return context.model.getRawData().count();
+}
+
+function dataTaskReset(context) {
+    var seriesModel = context.model;
+    seriesModel.setData(context.outputData = seriesModel.getRawData().cloneShallow());
+    return dataTaskProgress;
+}
+
+function dataTaskProgress(param, context) {
+    context.model.getRawData().cloneShallow(context.outputData);
+}
+
+function setDefaultEncode(seriesModel) {
+    inner(seriesModel).encode = getOptionEncode(seriesModel)
+        || makeDefaultEncode(seriesModel);
+}
+
+function getOptionEncode(seriesModel) {
+    var thisOption = seriesModel.option;
+    var thisData = thisOption.data;
+    return thisData && thisData.encode || thisOption.encode;
+}
 
 export default SeriesModel;

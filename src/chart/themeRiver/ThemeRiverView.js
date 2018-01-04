@@ -72,7 +72,7 @@ export default echarts.extendChartView({
             var text;
             var textLayout = data.getItemLayout(indices[0]);
             var itemModel = data.getItemModel(indices[j - 1]);
-            var labelModel = itemModel.getModel('label.normal');
+            var labelModel = itemModel.getModel('label');
             var margin = labelModel.get('margin');
             if (status === 'add') {
                 var layerGroup = newLayersGroups[idx] = new graphic.Group();
@@ -123,8 +123,8 @@ export default echarts.extendChartView({
                 }, seriesModel);
             }
 
-            var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
-            var itemStyleModel = itemModel.getModel('itemStyle.normal');
+            var hoverItemStyleModel = itemModel.getModel('emphasis.itemStyle');
+            var itemStyleModel = itemModel.getModel('itemStyle');
 
             graphic.setTextStyle(text.style, labelModel, {
                 text: labelModel.get('show')

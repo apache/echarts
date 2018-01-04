@@ -5,6 +5,8 @@ import {
     getLayoutParams,
     mergeLayoutParam
 } from '../util/layout';
+import OrdinalMeta from '../data/OrdinalMeta';
+
 
 // FIXME axisType is fixed ?
 var AXIS_TYPES = ['value', 'category', 'time', 'log'];
@@ -22,7 +24,15 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
 
         BaseAxisModelClass.extend({
 
+            /**
+             * @readOnly
+             */
             type: axisName + 'Axis.' + axisType,
+
+            /**
+             * @readOnly
+             */
+            ordinalMeta: null,
 
             mergeDefaultAndTheme: function (option, ecModel) {
                 var layoutMode = this.layoutMode;
@@ -37,6 +47,22 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
 
                 if (layoutMode) {
                     mergeLayoutParam(option, inputPositionParams, layoutMode);
+                }
+            },
+
+            /**
+             * @override
+             */
+            optionUpdated: function () {
+                var thisOption = this.option;
+                if (thisOption.type === 'category') {
+                    this.ordinalMeta = new OrdinalMeta(this);
+                }
+            },
+
+            getCategories: function () {
+                if (this.option.type === 'category') {
+                    return this.ordinalMeta.categories;
                 }
             },
 

@@ -49,12 +49,23 @@ var guid = function () {
 
 var env = {};
 
-if (typeof navigator === 'undefined') {
+if (typeof document === 'undefined' && typeof self !== 'undefined') {
+    // In worker
+    env = {
+        browser: {},
+        os: {},
+        node: false,
+        worker: true,
+        canvasSupported: true
+    };
+}
+else if (typeof navigator === 'undefined') {
     // In node
     env = {
         browser: {},
         os: {},
         node: true,
+        worker: false,
         // Assume canvas is supported
         canvasSupported: true,
         svgSupported: true
@@ -156,7 +167,6 @@ function detect(ua) {
         // canvasSupported : !(browser.ie && parseFloat(browser.version) < 9)
         canvasSupported: !!document.createElement('canvas').getContext,
         svgSupported: typeof SVGRect !== 'undefined',
-        // @see <http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript>
         // works on most browsers
         // IE10/11 does not support touch event, and MS Edge supports them but not by
         // default, so we dont check navigator.maxTouchPoints for them here.
@@ -241,20 +251,24 @@ function clone(source) {
     var typeStr = objToString.call(source);
 
     if (typeStr === '[object Array]') {
-        result = [];
-        for (var i = 0, len = source.length; i < len; i++) {
-            result[i] = clone(source[i]);
+        if (!isPrimitive(source)) {
+            result = [];
+            for (var i = 0, len = source.length; i < len; i++) {
+                result[i] = clone(source[i]);
+            }
         }
     }
     else if (TYPED_ARRAY[typeStr]) {
-        var Ctor = source.constructor;
-        if (source.constructor.from) {
-            result = Ctor.from(source);
-        }
-        else {
-            result = new Ctor(source.length);
-            for (var i = 0, len = source.length; i < len; i++) {
-                result[i] = clone(source[i]);
+        if (!isPrimitive(source)) {
+            var Ctor = source.constructor;
+            if (source.constructor.from) {
+                result = Ctor.from(source);
+            }
+            else {
+                result = new Ctor(source.length);
+                for (var i = 0, len = source.length; i < len; i++) {
+                    result[i] = clone(source[i]);
+                }
             }
         }
     }
@@ -1440,12 +1454,76 @@ Eventful.prototype = {
     }
 };
 
+// 对象可以通过 onxxxx 绑定事件
 /**
- * Handler
- * @module zrender/Handler
- * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
- *         errorrik (errorrik@gmail.com)
- *         pissang (shenyi.914@gmail.com)
+ * @event module:zrender/mixin/Eventful#onclick
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseover
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseout
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousemove
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousewheel
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousedown
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseup
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondrag
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragstart
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragend
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragenter
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragleave
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragover
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondrop
+ * @type {Function}
+ * @default null
  */
 
 var SILENT = 'silent';
@@ -1501,10 +1579,7 @@ var Handler = function(storage, painter, proxy, painterRoot) {
     /**
      * Proxy of event. can be Dom, WebGLSurface, etc.
      */
-    this.proxy = proxy;
-
-    // Attach handler
-    proxy.handler = this;
+    this.proxy = null;
 
     /**
      * {target, topTarget, x, y}
@@ -1534,14 +1609,27 @@ var Handler = function(storage, painter, proxy, painterRoot) {
 
     Draggable.call(this);
 
-    each$1(handlerNames, function (name) {
-        proxy.on && proxy.on(name, this[name], this);
-    }, this);
+    this.setHandlerProxy(proxy);
 };
 
 Handler.prototype = {
 
     constructor: Handler,
+
+    setHandlerProxy: function (proxy) {
+        if (this.proxy) {
+            this.proxy.dispose();
+        }
+
+        if (proxy) {
+            each$1(handlerNames, function (name) {
+                proxy.on && proxy.on(name, this[name], this);
+            }, this);
+            // Attach handler
+            proxy.handler = this;
+        }
+        this.proxy = proxy;
+    },
 
     mousemove: function (event) {
         var x = event.zrX;
@@ -4089,10 +4177,6 @@ else if (debugMode > 1) {
 
 var zrLog = log;
 
-/**
- * @alias modue:zrender/mixin/Animatable
- * @constructor
- */
 var Animatable = function () {
 
     /**
@@ -4348,13 +4432,6 @@ Animatable.prototype = {
     }
 };
 
-/**
- * @alias module:zrender/Element
- * @constructor
- * @extends {module:zrender/mixin/Animatable}
- * @extends {module:zrender/mixin/Transformable}
- * @extends {module:zrender/mixin/Eventful}
- */
 var Element = function (opts) { // jshint ignore:line
 
     Transformable.call(this, opts);
@@ -4409,6 +4486,12 @@ Element.prototype = {
      * @readOnly
      */
     clipPath: null,
+
+    /**
+     * 是否是 Group
+     * @type {boolean}
+     */
+    isGroup: false,
 
     /**
      * Drift element
@@ -4809,12 +4892,6 @@ BoundingRect.create = function (rect) {
  *     zr.add(g);
  */
 
-/**
- * @alias module:zrender/graphic/Group
- * @constructor
- * @extends module:zrender/mixin/Transformable
- * @extends module:zrender/mixin/Eventful
- */
 var Group = function (opts) {
 
     opts = opts || {};
@@ -5760,16 +5837,6 @@ function sort(array, compare, lo, hi) {
     ts.forceMergeRuns();
 }
 
-/**
- * Storage内容仓库模块
- * @module zrender/Storage
- * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
- * @author errorrik (errorrik@gmail.com)
- * @author pissang (https://github.com/pissang/)
- */
-
-// Use timsort because in most case elements are partially sorted
-// https://jsfiddle.net/pissang/jr4x7mdm/8/
 function shapeCompareFunc(a, b) {
     if (a.zlevel === b.zlevel) {
         if (a.z === b.z) {
@@ -5801,6 +5868,8 @@ var Storage = function () { // jshint ignore:line
 Storage.prototype = {
 
     constructor: Storage,
+
+    _needsUpdateList: true,
 
     /**
      * @param  {Function} cb
@@ -5835,20 +5904,23 @@ Storage.prototype = {
      * @param {boolean} [includeIgnore=false] 是否包含 ignore 的数组
      */
     updateDisplayList: function (includeIgnore) {
-        this._displayListLen = 0;
+        if (this._needsUpdateList) {
+            this._displayListLen = 0;
+        }
+
         var roots = this._roots;
         var displayList = this._displayList;
         for (var i = 0, len = roots.length; i < len; i++) {
             this._updateAndAddDisplayable(roots[i], null, includeIgnore);
         }
-        displayList.length = this._displayListLen;
 
-        // for (var i = 0, len = displayList.length; i < len; i++) {
-        //     displayList[i].__renderidx = i;
-        // }
+        if (this._needsUpdateList) {
+            displayList.length = this._displayListLen;
+        }
 
-        // displayList.sort(shapeCompareFunc);
         env$1.canvasSupported && sort(displayList, shapeCompareFunc);
+
+        this._needsUpdateList = false;
     },
 
     _updateAndAddDisplayable: function (el, clipPaths, includeIgnore) {
@@ -5915,7 +5987,9 @@ Storage.prototype = {
         else {
             el.__clipPaths = clipPaths;
 
-            this._displayList[this._displayListLen++] = el;
+            if (this._needsUpdateList) {
+                this._displayList[this._displayListLen++] = el;
+            }
         }
     },
 
@@ -5976,15 +6050,18 @@ Storage.prototype = {
     },
 
     addToStorage: function (el) {
-        el.__storage = this;
-        el.dirty(false);
-
+        if (el) {
+            el.__storage = this;
+            el.dirty(false);
+            this._needsUpdateList = true;    
+        }
         return this;
     },
 
     delFromStorage: function (el) {
         if (el) {
             el.__storage = null;
+            this._needsUpdateList = true;
         }
 
         return this;
@@ -5999,6 +6076,25 @@ Storage.prototype = {
     },
 
     displayableSortFunc: shapeCompareFunc
+};
+
+var SHADOW_PROPS = {
+    'shadowBlur': 1,
+    'shadowOffsetX': 1,
+    'shadowOffsetY': 1,
+    'textShadowBlur': 1,
+    'textShadowOffsetX': 1,
+    'textShadowOffsetY': 1,
+    'textBoxShadowBlur': 1,
+    'textBoxShadowOffsetX': 1,
+    'textBoxShadowOffsetY': 1
+};
+
+var fixShadow = function (ctx, propName, value) {
+    if (SHADOW_PROPS.hasOwnProperty(propName)) {
+        return value *= ctx.dpr;
+    }
+    return value;
 };
 
 var STYLE_COMMON_PROPS = [
@@ -6358,7 +6454,8 @@ Style.prototype = {
 
             if (firstDraw || style[styleName] !== prevStyle[styleName]) {
                 // FIXME Invalid property value will cause style leak from previous element.
-                ctx[styleName] = style[styleName] || prop[1];
+                ctx[styleName] =
+                    fixShadow(ctx, styleName, style[styleName] || prop[1]);
             }
         }
 
@@ -6591,13 +6688,22 @@ Layer.prototype = {
 
     constructor: Layer,
 
-    elCount: 0,
-
     __dirty: true,
+
+    __used: false,
+
+    __drawIndex: 0,
+    __startIndex: 0,
+    __endIndex: 0,
+
+    isIncremental: false,
+
+    getElementCount: function () {
+        return this.__endIndex - this.__startIndex;
+    },
 
     initContext: function () {
         this.ctx = this.dom.getContext('2d');
-        this.ctx.__currentValues = {};
         this.ctx.dpr = this.dpr;
     },
 
@@ -6606,7 +6712,6 @@ Layer.prototype = {
 
         this.domBack = createDom('back-' + this.id, this.painter, dpr);
         this.ctxBack = this.domBack.getContext('2d');
-        this.ctxBack.__currentValues = {};
 
         if (dpr != 1) {
             this.ctxBack.scale(dpr, dpr);
@@ -7563,7 +7668,6 @@ function buildPath(ctx, shape) {
     r1 !== 0 && ctx.quadraticCurveTo(x, y, x + r1, y);
 }
 
-// TODO: Have not support 'start', 'end' yet.
 var VALID_TEXT_ALIGN = {left: 1, right: 1, center: 1};
 var VALID_TEXT_VERTICAL_ALIGN = {top: 1, bottom: 1, middle: 1};
 
@@ -7966,11 +8070,7 @@ function getBoxPosition(blockHeiht, style, rect) {
 }
 
 function setCtx(ctx, prop, value) {
-    // FIXME ??? performance try
-    // if (ctx.__currentValues[prop] !== value) {
-        // ctx[prop] = ctx.__currentValues[prop] = value;
-    ctx[prop] = value;
-    // }
+    ctx[prop] = fixShadow(ctx, prop, value);
     return ctx[prop];
 }
 
@@ -8094,11 +8194,6 @@ RectText.prototype = {
  */
 
 
-/**
- * @alias module:zrender/graphic/Displayable
- * @extends module:zrender/Element
- * @extends module:zrender/graphic/mixin/RectText
- */
 function Displayable(opts) {
 
     opts = opts || {};
@@ -8221,9 +8316,14 @@ Displayable.prototype = {
     /**
      * Render the element progressively when the value >= 0,
      * usefull for large data.
-     * @type {number}
+     * @type {boolean}
      */
-    progressive: -1,
+    progressive: false,
+
+    /**
+     * @type {boolean}
+     */
+    isIncremental: false,
 
     beforeBrush: function (ctx) {},
 
@@ -8343,13 +8443,8 @@ Displayable.prototype = {
 inherits(Displayable, Element);
 
 mixin(Displayable, RectText);
+// zrUtil.mixin(Displayable, Stateful);
 
-/**
- * @alias zrender/graphic/Image
- * @extends module:zrender/graphic/Displayable
- * @constructor
- * @param {Object} opts
- */
 function ZImage(opts) {
     Displayable.call(this, opts);
 }
@@ -8430,10 +8525,10 @@ ZImage.prototype = {
             ctx.drawImage(image, x, y, width, height);
         }
 
-        this.restoreTransform(ctx);
-
         // Draw rect text
         if (style.text != null) {
+            // Only restore transform when needs draw text.
+            this.restoreTransform(ctx);    
             this.drawRectText(ctx, this.getBoundingRect());
         }
     },
@@ -8450,20 +8545,6 @@ ZImage.prototype = {
 };
 
 inherits(ZImage, Displayable);
-
-/**
- * Default canvas painter
- * @module zrender/Painter
- * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
- *         errorrik (errorrik@gmail.com)
- *         pissang (https://www.github.com/pissang)
- */
-
-// PENDIGN
-// Layer exceeds MAX_PROGRESSIVE_LAYER_NUMBER may have some problem when flush directly second time.
-//
-// Maximum progressive layer. When exceeding this number. All elements will be drawed in the last layer.
-var MAX_PROGRESSIVE_LAYER_NUMBER = 5;
 
 function parseInt10(val) {
     return parseInt(val, 10);
@@ -8485,16 +8566,6 @@ function isLayerValid(layer) {
     }
 
     return true;
-}
-
-function preProcessLayer(layer) {
-    layer.__unusedCount++;
-}
-
-function postProcessLayer(layer) {
-    if (layer.__unusedCount == 1) {
-        layer.clear();
-    }
 }
 
 var tmpRect = new BoundingRect(0, 0, 0, 0);
@@ -8654,14 +8725,11 @@ var Painter = function (root, storage, opts) {
         this._domRoot = root;
     }
 
-    // Layers for progressive rendering
-    this._progressiveLayers = [];
-
     /**
      * @type {module:zrender/Layer}
      * @private
      */
-    this._hoverlayer;
+    this._hoverlayer = null;
 
     this._hoverElements = [];
 };
@@ -8720,10 +8788,6 @@ Painter.prototype = {
         }
 
         this.refreshHover();
-
-        if (this._progressiveLayers.length) {
-            this._startProgessive();
-        }
 
         return this;
     },
@@ -8808,43 +8872,8 @@ Painter.prototype = {
         hoverLayer.ctx.restore();
     },
 
-    _startProgessive: function () {
-        var self = this;
-
-        if (!self._furtherProgressive) {
-            return;
-        }
-
-        // Use a token to stop progress steps triggered by
-        // previous zr.refresh calling.
-        var token = self._progressiveToken = +new Date();
-
-        self._progress++;
-        requestAnimationFrame(step);
-
-        function step() {
-            // In case refreshed or disposed
-            if (token === self._progressiveToken && self.storage) {
-
-                self._doPaintList(self.storage.getDisplayList());
-
-                if (self._furtherProgressive) {
-                    self._progress++;
-                    requestAnimationFrame(step);
-                }
-                else {
-                    self._progressiveToken = -1;
-                }
-            }
-        }
-    },
-
-    _clearProgressive: function () {
-        this._progressiveToken = -1;
-        this._progress = 0;
-        each$1(this._progressiveLayers, function (layer) {
-            layer.__dirty && layer.clear();
-        });
+    getHoverLayer: function () {
+        return this._hoverlayer;
     },
 
     _paintList: function (list, paintAll) {
@@ -8855,149 +8884,52 @@ Painter.prototype = {
 
         this._updateLayerStatus(list);
 
-        this._clearProgressive();
-
-        this.eachBuiltinLayer(preProcessLayer);
-
         this._doPaintList(list, paintAll);
-
-        this.eachBuiltinLayer(postProcessLayer);
     },
 
     _doPaintList: function (list, paintAll) {
-        var currentLayer;
-        var currentZLevel;
-        var ctx;
-
-        // var invTransform = [];
-        var scope;
-
-        var progressiveLayerIdx = 0;
-        var currentProgressiveLayer;
-
-        var width = this._width;
-        var height = this._height;
-        var layerProgress;
-        var frame = this._progress;
-        function flushProgressiveLayer(layer) {
-            var dpr = ctx.dpr || 1;
-            ctx.save();
-            ctx.globalAlpha = 1;
-            ctx.shadowBlur = 0;
-            // Avoid layer don't clear in next progressive frame
-            currentLayer.__dirty = true;
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.drawImage(layer.dom, 0, 0, width * dpr, height * dpr);
-            ctx.restore();
+        var layerList = [];
+        for (var zi = 0; zi < this._zlevelList.length; zi++) {
+            var zlevel = this._zlevelList[zi];
+            var layer = this._layers[zlevel];
+            if (layer.__builtin__
+                && layer !== this._hoverlayer
+                && (layer.__dirty || paintAll)
+            ) {
+                layerList.push(layer);
+            }
         }
-
-        for (var i = 0, l = list.length; i < l; i++) {
-            var el = list[i];
-            var elZLevel = this._singleCanvas ? 0 : el.zlevel;
-
-            var elFrame = el.__frame;
-
-            // Flush at current context
-            // PENDING
-            if (elFrame < 0 && currentProgressiveLayer) {
-                flushProgressiveLayer(currentProgressiveLayer);
-                currentProgressiveLayer = null;
-            }
-
-            // Change draw layer
-            if (currentZLevel !== elZLevel) {
-                if (ctx) {
-                    ctx.restore();
-                }
-
-                // Reset scope
-                scope = {};
-
-                // Only 0 zlevel if only has one canvas
-                currentZLevel = elZLevel;
-                currentLayer = this.getLayer(currentZLevel);
-
-                if (!currentLayer.__builtin__) {
-                    zrLog(
-                        'ZLevel ' + currentZLevel
-                        + ' has been used by unkown layer ' + currentLayer.id
-                    );
-                }
-
-                ctx = currentLayer.ctx;
-                ctx.save();
-
-                // Reset the count
-                currentLayer.__unusedCount = 0;
-
-                if (currentLayer.__dirty || paintAll) {
-                    currentLayer.clear();
-                }
-            }
-
-            if (!(currentLayer.__dirty || paintAll)) {
-                continue;
-            }
-
-            if (elFrame >= 0) {
-                // Progressive layer changed
-                if (!currentProgressiveLayer) {
-                    currentProgressiveLayer = this._progressiveLayers[
-                        Math.min(progressiveLayerIdx++, MAX_PROGRESSIVE_LAYER_NUMBER - 1)
-                    ];
-
-                    currentProgressiveLayer.ctx.save();
-                    currentProgressiveLayer.renderScope = {};
-
-                    if (currentProgressiveLayer
-                        && (currentProgressiveLayer.__progress > currentProgressiveLayer.__maxProgress)
-                    ) {
-                        // flushProgressiveLayer(currentProgressiveLayer);
-                        // Quick jump all progressive elements
-                        // All progressive element are not dirty, jump over and flush directly
-                        i = currentProgressiveLayer.__nextIdxNotProg - 1;
-                        // currentProgressiveLayer = null;
-                        continue;
-                    }
-
-                    layerProgress = currentProgressiveLayer.__progress;
-
-                    if (!currentProgressiveLayer.__dirty) {
-                        // Keep rendering
-                        frame = layerProgress;
-                    }
-
-                    currentProgressiveLayer.__progress = frame + 1;
-                }
-
-                if (elFrame === frame) {
-                    this._doPaintEl(el, currentProgressiveLayer, true, currentProgressiveLayer.renderScope);
-                }
-            }
-            else {
-                this._doPaintEl(el, currentLayer, paintAll, scope);
-            }
-
-            el.__dirty = false;
-        }
-
-        if (currentProgressiveLayer) {
-            flushProgressiveLayer(currentProgressiveLayer);
-        }
-
-        // Restore the lastLayer ctx
-        ctx && ctx.restore();
-        // If still has clipping state
-        // if (scope.prevElClipPaths) {
-        //     ctx.restore();
+        // if (layerList > 1) {
+        //     // PENDING
+        //     layerList.sort(function (a, b) {
+        //         return a.getElementCount() - b.getElementCount();
+        //     });
         // }
 
-        this._furtherProgressive = false;
-        each$1(this._progressiveLayers, function (layer) {
-            if (layer.__maxProgress >= layer.__progress) {
-                this._furtherProgressive = true;
+        for (var k = 0; k < layerList.length; k++) {
+            var layer = layerList[k];
+            var ctx = layer.ctx;
+            var scope = {};
+            ctx.save();
+
+            if (layer.__startIndex === layer.__drawIndex) {
+                if (layer.isIncremental) {
+                    var firstEL = list[layer.__drawIndex];
+                    if (firstEL && firstEL.needsClear()) {
+                        layer.clear();
+                    }
+                }
+                else {
+                    layer.clear();
+                }
             }
-        }, this);
+            for (var i = layer.__drawIndex; i < layer.__endIndex; i++) {
+                var el = list[i];
+                this._doPaintEl(el, layer, paintAll, scope);
+                el.__dirty = false;
+            }
+            ctx.restore();
+        }
     },
 
     _doPaintEl: function (el, currentLayer, forcePaint, scope) {
@@ -9190,99 +9122,59 @@ Painter.prototype = {
 
     _updateLayerStatus: function (list) {
 
-        var layers = this._layers;
-        var progressiveLayers = this._progressiveLayers;
-
-        var elCountsLastFrame = {};
-        var progressiveElCountsLastFrame = {};
-
         this.eachBuiltinLayer(function (layer, z) {
-            elCountsLastFrame[z] = layer.elCount;
-            layer.elCount = 0;
-            layer.__dirty = false;
+            layer.__dirty = layer.__used = false;
         });
 
-        each$1(progressiveLayers, function (layer, idx) {
-            progressiveElCountsLastFrame[idx] = layer.elCount;
-            layer.elCount = 0;
-            layer.__dirty = false;
-        });
+        function updatePrevLayer(idx) {
+            if (prevLayer) {
+                if (prevLayer.__endIndex !== idx) {
+                    prevLayer.__dirty = true;
+                }
+                prevLayer.__endIndex = idx;
+            }
+        }
 
-        var progressiveLayerCount = 0;
-        var currentProgressiveLayer;
-        var lastProgressiveKey;
-        var frameCount = 0;
-        for (var i = 0, l = list.length; i < l; i++) {
+        var prevLayer = null;
+        // TODO
+        var incrementalLayerLevel = 0.001;
+        var incrementalLayerCount = 0;
+        for (var i = 0; i < list.length; i++) {
             var el = list[i];
             var zlevel = this._singleCanvas ? 0 : el.zlevel;
-            var layer = layers[zlevel];
-            var elProgress = el.progressive;
-            if (layer) {
-                layer.elCount++;
-                layer.__dirty = layer.__dirty || el.__dirty;
-            }
-
-            /////// Update progressive
-            if (elProgress >= 0) {
-                // Fix wrong progressive sequence problem.
-                if (lastProgressiveKey !== elProgress) {
-                    lastProgressiveKey = elProgress;
-                    frameCount++;
-                }
-                var elFrame = el.__frame = frameCount - 1;
-                if (!currentProgressiveLayer) {
-                    var idx = Math.min(progressiveLayerCount, MAX_PROGRESSIVE_LAYER_NUMBER - 1);
-                    currentProgressiveLayer = progressiveLayers[idx];
-                    if (!currentProgressiveLayer) {
-                        currentProgressiveLayer = progressiveLayers[idx] = new Layer(
-                            'progressive', this, this.dpr
-                        );
-                        currentProgressiveLayer.initContext();
-                    }
-                    currentProgressiveLayer.__maxProgress = 0;
-                }
-                currentProgressiveLayer.__dirty = currentProgressiveLayer.__dirty || el.__dirty;
-                currentProgressiveLayer.elCount++;
-
-                currentProgressiveLayer.__maxProgress = Math.max(
-                    currentProgressiveLayer.__maxProgress, elFrame
-                );
-
-                if (currentProgressiveLayer.__maxProgress >= currentProgressiveLayer.__progress) {
-                    // Should keep rendering this  layer because progressive rendering is not finished yet
-                    layer.__dirty = true;
-                }
+            var layer;
+            if (el.isIncremental) {
+                layer = this.getLayer(zlevel + incrementalLayerLevel);
+                layer.isIncremental = true;
+                incrementalLayerCount = 1;
             }
             else {
-                el.__frame = -1;
+                layer = this.getLayer(zlevel + incrementalLayerCount > 0 ? 0.01 : 0);
+            }
 
-                if (currentProgressiveLayer) {
-                    currentProgressiveLayer.__nextIdxNotProg = i;
-                    progressiveLayerCount++;
-                    currentProgressiveLayer = null;
+            if (!layer.__builtin__) {
+                zrLog('ZLevel ' + zlevel + ' has been used by unkown layer ' + layer.id);
+            }
+
+            if (layer !== prevLayer) {
+                layer.__used = true;
+                if (layer.__startIndex !== i) {
+                    layer.__dirty = true;
                 }
+                layer.__startIndex = layer.__drawIndex = i;
+                updatePrevLayer(i);
+                prevLayer = layer;
             }
+            layer.__dirty = layer.__dirty || el.__dirty;
         }
 
-        if (currentProgressiveLayer) {
-            progressiveLayerCount++;
-            currentProgressiveLayer.__nextIdxNotProg = i;
-        }
+        updatePrevLayer(i);
 
-        // 层中的元素数量有发生变化
         this.eachBuiltinLayer(function (layer, z) {
-            if (elCountsLastFrame[z] !== layer.elCount) {
+            // Used in last frame but not in this frame. Needs clear
+            if (!layer.__used && layer.getElementCount() > 0) {
                 layer.__dirty = true;
-            }
-        });
-
-        progressiveLayers.length = Math.min(progressiveLayerCount, MAX_PROGRESSIVE_LAYER_NUMBER);
-        each$1(progressiveLayers, function (layer, idx) {
-            if (progressiveElCountsLastFrame[idx] !== layer.elCount) {
-                el.__dirty = true;
-            }
-            if (layer.__dirty) {
-                layer.__progress = 0;
+                layer.__startIndex = layer.__endIndex = layer.__drawIndex = 0;
             }
         });
     },
@@ -9348,40 +9240,51 @@ Painter.prototype = {
      * 区域大小变化后重绘
      */
     resize: function (width, height) {
-        var domRoot = this._domRoot;
-        // FIXME Why ?
-        domRoot.style.display = 'none';
-
-        // Save input w/h
-        var opts = this._opts;
-        width != null && (opts.width = width);
-        height != null && (opts.height = height);
-
-        width = this._getSize(0);
-        height = this._getSize(1);
-
-        domRoot.style.display = '';
-
-        // 优化没有实际改变的resize
-        if (this._width != width || height != this._height) {
-            domRoot.style.width = width + 'px';
-            domRoot.style.height = height + 'px';
-
-            for (var id in this._layers) {
-                if (this._layers.hasOwnProperty(id)) {
-                    this._layers[id].resize(width, height);
-                }
+        if (!this._domRoot.style) { // Maybe in node or worker
+            if (width == null || height == null) {
+                return;
             }
-            each$1(this._progressiveLayers, function (layer) {
-                layer.resize(width, height);
-            });
+            this._width = width;
+            this._height = height;
 
-            this.refresh(true);
+            this.getLayer(0).resize(width, height);
         }
+        else {
+            var domRoot = this._domRoot;
+            // FIXME Why ?
+            domRoot.style.display = 'none';
 
-        this._width = width;
-        this._height = height;
+            // Save input w/h
+            var opts = this._opts;
+            width != null && (opts.width = width);
+            height != null && (opts.height = height);
 
+            width = this._getSize(0);
+            height = this._getSize(1);
+
+            domRoot.style.display = '';
+
+            // 优化没有实际改变的resize
+            if (this._width != width || height != this._height) {
+                domRoot.style.width = width + 'px';
+                domRoot.style.height = height + 'px';
+
+                for (var id in this._layers) {
+                    if (this._layers.hasOwnProperty(id)) {
+                        this._layers[id].resize(width, height);
+                    }
+                }
+                each$1(this._progressiveLayers, function (layer) {
+                    layer.resize(width, height);
+                });
+
+                this.refresh(true);
+            }
+
+            this._width = width;
+            this._height = height;
+
+        }
         return this;
     },
 
@@ -9510,9 +9413,9 @@ Painter.prototype = {
         var ctx = canvas.getContext('2d');
         var rect = path.getBoundingRect();
         var style = path.style;
-        var shadowBlurSize = style.shadowBlur;
-        var shadowOffsetX = style.shadowOffsetX;
-        var shadowOffsetY = style.shadowOffsetY;
+        var shadowBlurSize = style.shadowBlur * dpr;
+        var shadowOffsetX = style.shadowOffsetX * dpr;
+        var shadowOffsetY = style.shadowOffsetY * dpr;
         var lineWidth = style.hasStroke() ? style.lineWidth : 0;
 
         var leftMargin = Math.max(lineWidth / 2, -shadowOffsetX + shadowBlurSize);
@@ -9712,6 +9615,8 @@ function notLeftMouse(e) {
     return e.which > 1;
 }
 
+// 做向上兼容
+
 /**
  * 动画主类, 调度和管理所有动画控制器
  *
@@ -9722,34 +9627,6 @@ function notLeftMouse(e) {
 // http://iosoteric.com/additive-animations-animatewithduration-in-ios-8/
 // https://developer.apple.com/videos/wwdc2014/#236
 
-/**
- * @typedef {Object} IZRenderStage
- * @property {Function} update
- */
-
-/**
- * @alias module:zrender/animation/Animation
- * @constructor
- * @param {Object} [options]
- * @param {Function} [options.onframe]
- * @param {IZRenderStage} [options.stage]
- * @example
- *     var animation = new Animation();
- *     var obj = {
- *         x: 100,
- *         y: 100
- *     };
- *     animation.animate(node.position)
- *         .when(1000, {
- *             x: 500,
- *             y: 500
- *         })
- *         .when(2000, {
- *             x: 100,
- *             y: 100
- *         })
- *         .start('spline');
- */
 var Animation = function (options) {
 
     options = options || {};
@@ -10558,7 +10435,7 @@ var ZRender = function (id, dom, opts) {
     this.storage = storage;
     this.painter = painter;
 
-    var handerProxy = !env$1.node ? new HandlerDomProxy(painter.getViewportRoot()) : null;
+    var handerProxy = (!env$1.node && !env$1.worker) ? new HandlerDomProxy(painter.getViewportRoot()) : null;
     this.handler = new Handler(storage, painter, handerProxy, painter.root);
 
     /**
@@ -11356,11 +11233,6 @@ var number = (Object.freeze || Object)({
 	isNumeric: isNumeric
 });
 
-/**
- * 每三位默认加,格式化
- * @param {string|number} x
- * @return {string}
- */
 function addCommas(x) {
     if (isNaN(x)) {
         return '-';
@@ -13420,21 +13292,6 @@ function containStroke$1(x0, y0, x1, y1, lineWidth, x, y) {
     return _s <= _l / 2 * _l / 2;
 }
 
-/**
- * 三次贝塞尔曲线描边包含判断
- * @param  {number}  x0
- * @param  {number}  y0
- * @param  {number}  x1
- * @param  {number}  y1
- * @param  {number}  x2
- * @param  {number}  y2
- * @param  {number}  x3
- * @param  {number}  y3
- * @param  {number}  lineWidth
- * @param  {number}  x
- * @param  {number}  y
- * @return {boolean}
- */
 function containStroke$2(x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, x, y) {
     if (lineWidth === 0) {
         return false;
@@ -13456,19 +13313,6 @@ function containStroke$2(x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, x, y) {
     return d <= _l / 2;
 }
 
-/**
- * 二次贝塞尔曲线描边包含判断
- * @param  {number}  x0
- * @param  {number}  y0
- * @param  {number}  x1
- * @param  {number}  y1
- * @param  {number}  x2
- * @param  {number}  y2
- * @param  {number}  lineWidth
- * @param  {number}  x
- * @param  {number}  y
- * @return {boolean}
- */
 function containStroke$3(x0, y0, x1, y1, x2, y2, lineWidth, x, y) {
     if (lineWidth === 0) {
         return false;
@@ -14088,10 +13932,10 @@ Path.prototype = {
             ctx.setLineDash([]);
         }
 
-        this.restoreTransform(ctx);
-
         // Draw rect text
         if (style.text != null) {
+            // Only restore transform when needs draw text.
+            this.restoreTransform(ctx);    
             this.drawRectText(ctx, this.getBoundingRect());
         }
     },
@@ -14411,7 +14255,6 @@ var transformPath = function (path, m) {
     }
 };
 
-// command chars
 var cc = [
     'm', 'M', 'l', 'L', 'v', 'V', 'h', 'H', 'z', 'Z',
     'c', 'C', 'q', 'Q', 't', 'T', 's', 'S', 'a', 'A'
@@ -14812,12 +14655,6 @@ function mergePath$1(pathEls, opts) {
     return pathBundle;
 }
 
-/**
- * @alias zrender/graphic/Text
- * @extends module:zrender/graphic/Displayable
- * @constructor
- * @param {Object} opts
- */
 var Text = function (opts) { // jshint ignore:line
     Displayable.call(this, opts);
 };
@@ -14927,21 +14764,6 @@ var Circle = Path.extend({
         ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2, true);
     }
 });
-
-// Fix weird bug in some version of IE11 (like 11.0.9600.178**),
-// where exception "unexpected call to method or property access"
-// might be thrown when calling ctx.fill or ctx.stroke after a path
-// whose area size is zero is drawn and ctx.clip() is called and
-// shadowBlur is set. See #4572, #3112, #5777.
-// (e.g.,
-//  ctx.moveTo(10, 10);
-//  ctx.lineTo(20, 10);
-//  ctx.closePath();
-//  ctx.clip();
-//  ctx.shadowBlur = 10;
-//  ...
-//  ctx.fill();
-// )
 
 var shadowTemp = [
     ['shadowBlur', 0],
@@ -15089,9 +14911,6 @@ var Ring = Path.extend({
  *         errorrik (errorrik@gmail.com)
  */
 
-/**
- * @inner
- */
 function interpolate(p0, p1, p2, p3, t, t2, t3) {
     var v0 = (p2 - p0) * 0.5;
     var v1 = (p3 - p1) * 0.5;
@@ -15157,17 +14976,6 @@ var smoothSpline = function (points, isLoop) {
  *         errorrik (errorrik@gmail.com)
  */
 
-/**
- * 贝塞尔平滑曲线
- * @alias module:zrender/shape/util/smoothBezier
- * @param {Array} points 线段顶点数组
- * @param {number} smooth 平滑等级, 0-1
- * @param {boolean} isLoop
- * @param {Array} constraint 将计算出来的控制点约束在一个包围盒内
- *                           比如 [[0, 0], [100, 100]], 这个包围盒会与
- *                           整个折线的包围盒做一个并集用来约束控制点。
- * @param {Array} 计算出来的控制点数组
- */
 var smoothBezier = function (points, smooth, isLoop, constraint) {
     var cps = [];
 
@@ -15676,15 +15484,6 @@ Gradient.prototype = {
 
 };
 
-/**
- * x, y, x2, y2 are all percent from 0 to 1
- * @param {number} [x=0]
- * @param {number} [y=0]
- * @param {number} [x2=1]
- * @param {number} [y2=0]
- * @param {Array.<Object>} colorStops
- * @param {boolean} [globalCoord=false]
- */
 var LinearGradient = function (x, y, x2, y2, colorStops, globalCoord) {
     // Should do nothing more in this constructor. Because gradient can be
     // declard by `color: {type: 'linear', colorStops: ...}`, where
@@ -15714,14 +15513,6 @@ LinearGradient.prototype = {
 
 inherits(LinearGradient, Gradient);
 
-/**
- * x, y, r are all percent from 0 to 1
- * @param {number} [x=0.5]
- * @param {number} [y=0.5]
- * @param {number} [r=0.5]
- * @param {Array.<Object>} [colorStops]
- * @param {boolean} [globalCoord=false]
- */
 var RadialGradient = function (x, y, r, colorStops, globalCoord) {
     // Should do nothing more in this constructor. Because gradient can be
     // declard by `color: {type: 'radial', colorStops: ...}`, where
@@ -17584,24 +17375,33 @@ function queryDataIndex(data, payload) {
  * Notice: Serialization is not supported.
  *
  * For example:
- * var get = modelUitl.makeGetter();
+ * var inner = zrUitl.makeInner();
  *
- * function some(hostObj) {
- *      get(hostObj)._someProperty = 1212;
+ * function some1(hostObj) {
+ *      inner(hostObj).someProperty = 1212;
+ *      ...
+ * }
+ * function some2() {
+ *      var fields = inner(this);
+ *      fields.someProperty1 = 1212;
+ *      fields.someProperty2 = 'xx';
  *      ...
  * }
  *
  * @return {Function}
  */
-var makeGetter = (function () {
+var makeInner = (function () {
     var index = 0;
     return function () {
-        var key = '\0__ec_prop_getter_' + index++;
+        var key = '__\0zr_inner_' + index++;
         return function (hostObj) {
             return hostObj[key] || (hostObj[key] = {});
         };
     };
 })();
+
+// ??? remove
+var makeGetter = makeInner;
 
 /**
  * @param {module:echarts/model/Global} ecModel
@@ -18803,6 +18603,7 @@ var GlobalModel = Model.extend({
         var option = this.option;
         var componentsMap = this._componentsMap;
         var newCptTypes = [];
+        var scheduler = this.scheduler;
 
         // 如果不存在对应的 component model 则直接 merge
         each$2(newOption, function (componentOption, mainType) {
@@ -18828,6 +18629,7 @@ var GlobalModel = Model.extend({
         this._seriesIndices = this._seriesIndices || [];
 
         function visitComponent(mainType, dependencies) {
+
             var newCptOptionList = normalizeToArray(newOption[mainType]);
 
             var mapResult = mappingToExists(
@@ -18890,6 +18692,9 @@ var GlobalModel = Model.extend({
                         componentModel = new ComponentModelClass(
                             newCptOption, this, this, extraOpt
                         );
+                        if (mainType === 'series') {
+                            this.scheduler.initPipeline(componentModel);
+                        }
                         extend(componentModel, extraOpt);
                         componentModel.init(newCptOption, this, this, extraOpt);
                         // Call optionUpdated after init.
@@ -18906,7 +18711,11 @@ var GlobalModel = Model.extend({
 
             // Backup series for filtering.
             if (mainType === 'series') {
-                this._seriesIndices = createSeriesIndices(componentsMap.get('series'));
+                var seriesModels = componentsMap.get('series');
+                this._seriesIndices = createSeriesIndices(seriesModels);
+                // Reset pipeline, should be after `restoreData`.
+                scheduler.clearUnusedPipelines(seriesModels);
+                scheduler.flushTemps('start', seriesModels);
             }
         }
     },
@@ -19580,6 +19389,14 @@ OptionManager.prototype = {
      * @return {Object} Init option
      */
     setOption: function (rawOption, optionPreprocessorFuncs) {
+        // ??? not a good way?
+        if (rawOption) {
+            // axis.data?
+            each$1(normalizeToArray(rawOption.series), function (series) {
+                series && series.data && setAsPrimitive(series.data);
+            });
+        }
+
         rawOption = clone$2(rawOption, true);
 
         // FIXME
@@ -20195,6 +20012,13 @@ var SeriesModel = ComponentModel.extend({
      */
     layoutMode: null,
 
+    /**
+     * Whether stream enabled.
+     * @type {boolean}
+     * @readOnly
+     */
+    streamEnabled: false,
+
     init: function (option, parentModel, ecModel, extraOpt) {
 
         /**
@@ -20209,6 +20033,7 @@ var SeriesModel = ComponentModel.extend({
         if (__DEV__) {
             assert(data, 'getInitialData returned invalid data.');
         }
+
         /**
          * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
          * @private
@@ -20220,7 +20045,9 @@ var SeriesModel = ComponentModel.extend({
         // cause data.graph.data !== data when using
         // module:echarts/data/Graph or module:echarts/data/Tree.
         // See module:echarts/data/helper/linkList
-        this.restoreData();
+
+        // ??? should not restoreData here? but called by echart?
+        // this.restoreData();
     },
 
     /**
@@ -20267,10 +20094,11 @@ var SeriesModel = ComponentModel.extend({
         }
 
         var data = this.getInitialData(newSeriesOption, ecModel);
-        // TODO Merge data?
         if (data) {
-            set$1(this, 'data', data);
-            set$1(this, 'dataBeforeProcessed', data.cloneShallow());
+            // ??? progress data?
+            set$1(this, 'dataBeforeProcessed', data);
+            // ??? should not restoreData here? but called by echart?
+            // this.restoreData();
         }
     },
 
@@ -20451,7 +20279,16 @@ var SeriesModel = ComponentModel.extend({
     },
 
     restoreData: function () {
-        set$1(this, 'data', get(this, 'dataBeforeProcessed').cloneShallow());
+        var dataBeforeProcessed = get(this, 'dataBeforeProcessed');
+        var dataCloneTask = dataBeforeProcessed.createCloneShallowTask();
+        set$1(this, 'data', dataCloneTask.output);
+
+        // var provisionTask = dataBeforeProcessed.getProvider().provisionTask;
+        var dataInitTask = dataBeforeProcessed.getInitTask();
+
+        // this.pipeTask(provisionTask, 'dataProvide');
+        this.pipeTask(dataInitTask, 'dataInit');
+        this.pipeTask(dataCloneTask, 'dataClone', 'updateBase');
     },
 
     getColorFromPalette: function (name, scope) {
@@ -20480,7 +20317,20 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} dataIndex
      * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
      */
-    getTooltipPosition: null
+    getTooltipPosition: null,
+
+    /**
+     * @see {module:echarts/stream/Scheduler}
+     */
+    pipeTask: null,
+
+    /**
+     * @public
+     */
+    useStream: function () {
+        // ???
+        return this.streamEnabled && this.get('stream');
+    }
 });
 
 mixin(SeriesModel, dataFormatMixin);
@@ -20933,6 +20783,222 @@ var loadingDefault = function (api, opts) {
     return group;
 };
 
+/**
+ * @module echarts/stream/Scheduler
+ */
+
+var inner = makeInner();
+
+/**
+ * @const
+ */
+var STAGE = {
+    dataInit: 1,
+    dataClone: 2,
+    processor: 3,
+    visual: 4,
+    render: 5
+};
+var TAG = {
+    updateBase: 1,
+    updateLayoutBase: 1,
+    updateVisualBase: 1,
+    updateViewBase: 1
+};
+
+var TEST_PROGRESS_STEP = 300;
+
+/**
+ * @constructor
+ */
+function Scheduler() {
+    this._pipelineMap = createHashMap();
+
+    var stageMap = this._stageMap = createHashMap();
+    each$1(STAGE, function (value, name) {
+        stageMap.set(name, []);
+    });
+
+    // this._stageUnfinished = [];
+
+    this.unfinished;
+}
+
+var proto = Scheduler.prototype;
+
+proto.progressStage = function (stage) {
+    // if (!this._stageUnfinished[STAGE[stage]]) {
+    //     return;
+    // }
+
+    var unfinished;
+    var tasks = this.getTasksByStage(stage);
+
+    each$1(tasks, function (task) {
+        task.progress({
+            step: TEST_PROGRESS_STEP
+        });
+        unfinished |= task.unfinished();
+    });
+
+    this.unfinished |= unfinished;
+};
+
+/**
+ * @param {Object} host Should has uid.
+ */
+proto.initPipeline = function (host) {
+    var pipelineId = host.uid;
+    if (__DEV__) {
+        assert(!this._pipelineMap.get(pipelineId) && !host.pipeTask);
+    }
+    var pipeline = {tasks: [], temps: []};
+    this._pipelineMap.set(pipelineId, pipeline);
+
+    // Inject method pipeTask
+    host.pipeTask = hostPipeTask;
+    inner(host).temps = pipeline.temps;
+};
+
+function hostPipeTask(task, stage, tags) {
+    task && inner(this).temps.push({task: task, stage: stage, tags: tags});
+}
+
+/**
+ * @param {Array.<Object>} allHosts Should has uid.
+ */
+proto.clearUnusedPipelines = function (allHosts) {
+    var pipelineMap = this._pipelineMap;
+    var idMap = createHashMap();
+    var stageMap = this._stageMap;
+    each$1(allHosts, function (host) {
+        idMap.set(host.uid, 1);
+    });
+    pipelineMap.each(function (pipeline, id) {
+        if (!idMap.get(id)) {
+            clearPipeline(stageMap, pipeline, -1);
+            pipelineMap.set(id, null);
+        }
+    });
+};
+
+proto.clearTemps = function () {
+    this._pipelineMap.each(clearPipelineTemp);
+};
+
+function clearPipelineTemp(pipeline) {
+    pipeline.temps.length = 0;
+}
+
+/**
+ * @param {string} tag
+ * @param {Array.<Object>} [hosts]
+ */
+proto.flushTemps = function (tag, hosts) {
+    var pipelineMap = this._pipelineMap;
+    var stageMap = this._stageMap;
+    var self = this;
+
+    hosts
+        ? each$1(hosts, function (host) {
+            flushPipelineTemps(pipelineMap.get(host.uid));
+        })
+        : pipelineMap.each(flushPipelineTemps);
+
+    function flushPipelineTemps(pipeline) {
+        clearPipelineDownstreams(stageMap, pipeline, tag);
+        each$1(pipeline.temps, function (tmp) {
+            self.unfinished = true;
+            pipeTask(stageMap, pipeline.tasks, tmp.task, tmp.stage, tmp.tags);
+        }, this);
+        clearPipelineTemp(pipeline);
+    }
+};
+
+/**
+ * Only clear streams start from the tagged tasks.
+ * This is for cases like `updateView`, `updateVisual` and `updateLayout`,
+ * who are partial streams, depending on the render task of the full stream,
+ * and should be cleared if another partial stream is started.
+ */
+function clearPipelineDownstreams(stageMap, pipeline, tag) {
+    var tasks = pipeline.tasks;
+    var baseIndex;
+
+    if (tag === 'start') {
+        baseIndex = -1;
+    }
+    else {
+        for (var i = 0; i < tasks.length; i++) {
+            if (inner(tasks[i])[tag]) {
+                baseIndex = i;
+                break;
+            }
+        }
+    }
+
+    clearPipeline(stageMap, pipeline, baseIndex);
+}
+
+function pipeTask(stageMap, pipelineTasks, task, stage, tags) {
+    if (__DEV__) {
+        // In case typo.
+        stage && assert(STAGE[stage] != null);
+        each$1(pipelineTasks, function (taskInPipeline) {
+            assert(taskInPipeline != task);
+        });
+    }
+
+    each$1(normalizeToArray(tags), function (tag) {
+        if (__DEV__) {
+            assert(TAG[tag]);
+        }
+        inner(task)[tag] = true;
+    });
+
+    pipelineTasks.length && pipelineTasks[pipelineTasks.length - 1].pipe(task);
+    pipelineTasks.push(task);
+
+    // ??? Should keep the original register order of tasks
+    // within single stage. Especially visual and layout.
+    stage && stageMap.get(stage).push(task);
+}
+
+proto.getTasksByStage = function (stage) {
+    return this._stageMap.get(stage).slice();
+};
+
+// taskBaseIndex can be -1;
+function clearPipeline(stageMap, pipeline, taskBaseIndex) {
+    var tasks = pipeline.tasks;
+    if (!tasks.length) {
+        return;
+    }
+
+    if (taskBaseIndex === -1) {
+        var taskBase = tasks[0];
+        taskBase.clearDownstreams();
+        taskBase.reset();
+    }
+    else {
+        tasks[taskBaseIndex].clearDownstreams();
+    }
+    for (var i = taskBaseIndex + 1; i < tasks.length; i++) {
+        inner(tasks[i]).cleared = 1;
+    }
+    tasks.length = taskBaseIndex + 1;
+
+    stageMap.each(function (stageTasks) {
+        for (var i = stageTasks.length - 1; i >= 0; i--) {
+            if (inner(stageTasks[i]).cleared) {
+                stageTasks.splice(i, 1);
+            }
+        }
+    });
+
+    i = 10;
+}
+
 /*!
  * ECharts, a javascript interactive chart library.
  *
@@ -20951,6 +21017,9 @@ var version = '3.8.5';
 var dependencies = {
     zrender: '3.7.4'
 };
+
+// ??? frame remain time in UI thread: 20ms? 16ms?
+var TEST_FRAME_REMAIN_TIME = 1;
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
@@ -20986,6 +21055,13 @@ var IN_MAIN_PROCESS = '__flagInMainProcess';
 var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
 var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
+
+// ??? defined in scheduler?
+var STAGE_DATA_INIT = 'dataInit';
+var STAGE_DATA_CLONE = 'dataClone';
+var STAGE_PROCESSOR = 'processor';
+var STAGE_VISUAL = 'visual';
+var STAGE_RENDER = 'render';
 
 
 function createRegisterEventWithLowercaseName(method) {
@@ -21104,6 +21180,11 @@ function ECharts(dom, theme, opts) {
      */
     this._api = createExtensionAPI(this);
 
+    /**
+     * @type {module:echarts/stream/Scheduler}
+     */
+    this._scheduler = new Scheduler();
+
     Eventful.call(this);
 
     /**
@@ -21111,6 +21192,8 @@ function ECharts(dom, theme, opts) {
      * @private
      */
     this._messageCenter = new MessageCenter();
+
+    // this._scheduler = new Scheduler();
 
     // Init mouse events
     this._initEvents();
@@ -21136,12 +21219,17 @@ function ECharts(dom, theme, opts) {
 var echartsProto = ECharts.prototype;
 
 echartsProto._onframe = function () {
+    if (this._disposed) {
+        return;
+    }
+
     // Lazy update
     if (this[OPTION_UPDATED]) {
         var silent = this[OPTION_UPDATED].silent;
 
         this[IN_MAIN_PROCESS] = true;
 
+        // ??? conflict?
         updateMethods.prepareAndUpdate.call(this);
 
         this[IN_MAIN_PROCESS] = false;
@@ -21152,7 +21240,35 @@ echartsProto._onframe = function () {
 
         triggerUpdatedEvent.call(this, silent);
     }
+
+    // Stream progress.
+    var remainTime = TEST_FRAME_REMAIN_TIME;
+    var scheduler = this._scheduler;
+
+    if (scheduler.unfinished) {
+        scheduler.unfinished = false;
+        do {
+            var startTime = +new Date();
+
+            scheduler.progressStage(STAGE_DATA_INIT);
+            scheduler.progressStage(STAGE_DATA_CLONE);
+            scheduler.progressStage(STAGE_PROCESSOR);
+
+            // ???
+            // coordSys update
+
+            // console.log('------------- ec frame visual -------------', remainTime);
+            scheduler.progressStage(STAGE_VISUAL);
+
+            progressRender(this, this._model);
+
+            remainTime -= (+new Date() - startTime);
+        }
+        while (remainTime > 0 && scheduler.unfinished);
+    }
 };
+
+
 /**
  * @return {HTMLElement}
  */
@@ -21199,6 +21315,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         var optionManager = new OptionManager(this._api);
         var theme = this._theme;
         var ecModel = this._model = new GlobalModel(null, null, theme, optionManager);
+        ecModel.scheduler = this._scheduler;
         ecModel.init(null, null, theme, optionManager);
     }
 
@@ -21594,7 +21711,6 @@ echartsProto.getViewOfSeriesModel = function (seriesModel) {
     return this._chartsMap[seriesModel.__viewId];
 };
 
-
 var updateMethods = {
 
     /**
@@ -21606,12 +21722,16 @@ var updateMethods = {
 
         var ecModel = this._model;
         var api = this._api;
-        var coordSysMgr = this._coordSysMgr;
         var zr = this._zr;
+        var coordSysMgr = this._coordSysMgr;
+        var scheduler = this._scheduler;
+
         // update before setOption
         if (!ecModel) {
             return;
         }
+
+        scheduler.clearTemps();
 
         // Fixme First time update ?
         ecModel.restoreData();
@@ -21622,17 +21742,24 @@ var updateMethods = {
 
         // Create new coordinate system each update
         // In LineView may save the old coordinate system and use it to get the orignal point
-        coordSysMgr.create(this._model, this._api);
+        coordSysMgr.create(ecModel, api);
+        // ??? coord data travel
 
-        processData.call(this, ecModel, api);
+        // ??? if some processor do not use task, it should also process in progress,
+        // otherwise, consider data extent, both dependent.
+
+        startProcessors(this, ecModel, api);
 
         stackSeriesData.call(this, ecModel);
 
+        // ??? coord data travel
         coordSysMgr.update(ecModel, api);
 
-        doVisualEncoding.call(this, ecModel, payload);
+        startVisualEncoding(this, ecModel, api, payload);
 
-        doRender.call(this, ecModel, payload);
+        startRender(this, ecModel, api, payload);
+
+        scheduler.flushTemps('updateBase');
 
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
@@ -21694,13 +21821,18 @@ var updateMethods = {
             return;
         }
 
+        this._scheduler.clearTemps();
+
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.getData().clearAllVisual();
         });
 
-        doVisualEncoding.call(this, ecModel, payload);
+        // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+        startVisualEncoding(this, ecModel, this._api, payload, null);
 
         invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
+
+        this._scheduler.flushTemps('updateViewBase');
     },
 
     /**
@@ -21715,13 +21847,18 @@ var updateMethods = {
             return;
         }
 
+        this._scheduler.clearTemps();
+
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.getData().clearAllVisual();
         });
 
-        doVisualEncoding.call(this, ecModel, payload, true);
+        // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+        startVisualEncoding(this, ecModel, this._api, payload, false);
 
         invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
+
+        this._scheduler.flushTemps('updateVisualBase');
     },
 
     /**
@@ -21736,9 +21873,14 @@ var updateMethods = {
             return;
         }
 
-        doLayout.call(this, ecModel, payload);
+        this._scheduler.clearTemps();
+
+        // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+        startVisualEncoding(this, ecModel, this._api, payload, true);
 
         invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
+
+        this._scheduler.flushTemps('updateLayoutBase');
     },
 
     /**
@@ -21802,12 +21944,16 @@ echartsProto.resize = function (opts) {
         assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
     }
 
-    this[IN_MAIN_PROCESS] = true;
-
     this._zr.resize(opts);
 
     var optionChanged = this._model && this._model.resetOption('media');
     var updateMethod = optionChanged ? 'prepareAndUpdate' : 'update';
+
+    refresh(updateMethod, opts && opts.silent);
+};
+
+function refresh(updateMethod, silent) {
+    this[IN_MAIN_PROCESS] = true;
 
     updateMethods[updateMethod].call(this);
 
@@ -21816,12 +21962,10 @@ echartsProto.resize = function (opts) {
 
     this[IN_MAIN_PROCESS] = false;
 
-    var silent = opts && opts.silent;
-
     flushPendingActions.call(this, silent);
 
     triggerUpdatedEvent.call(this, silent);
-};
+}
 
 /**
  * Show loading effect
@@ -22006,6 +22150,28 @@ function triggerUpdatedEvent(silent) {
     !silent && this.trigger('updated');
 }
 
+// ???
+echartsProto.addData = function (params) {
+    var seriesIndex = params.seriesIndex;
+    var ecModel = this.getModel();
+    var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
+
+    if (__DEV__) {
+        assert(params.data && seriesModel);
+    }
+
+    var provider = seriesModel.getRawData().getProvider();
+    // .provisionTask.changeInput(params.data);
+    provider.addData(params.data);
+
+    this._scheduler.unfinished = true;
+
+    // ??? Should handle this.
+    // if (!seriesModel.useStream()) {
+        // refresh('prepareAndUpdate');
+    // }
+};
+
 /**
  * Register event
  * @method
@@ -22029,18 +22195,20 @@ function invokeUpdateMethod(methodName, ecModel, payload) {
         updateZ(componentModel, component);
     }, this);
 
+    // ??? duplicate code with `startRender`?
+
     // Upate all charts
     ecModel.eachSeries(function (seriesModel, idx) {
         var chart = this._chartsMap[seriesModel.__viewId];
         chart[methodName](seriesModel, ecModel, api, payload);
 
-        updateZ(seriesModel, chart);
+        // ??? updateZ(seriesModel, chart);
 
-        updateProgressiveAndBlend(seriesModel, chart);
+        // ??? updateProgressiveAndBlend(seriesModel, chart);
     }, this);
 
     // If use hover layer
-    updateHoverLayerStatus(this._zr, ecModel);
+    // ??? updateHoverLayerStatus(this._zr, ecModel);
 
     // Post render
     each(postUpdateFuncs, function (func) {
@@ -22081,17 +22249,16 @@ function prepareView(type, ecModel) {
             var Clazz = isComponent
                 ? Component.getClass(classType.main, classType.sub)
                 : Chart.getClass(classType.sub);
-            if (Clazz) {
-                view = new Clazz();
-                view.init(ecModel, this._api);
-                viewMap[viewId] = view;
-                viewList.push(view);
-                zr.add(view.group);
+
+            if (__DEV__) {
+                assert(Clazz, classType.sub + ' does not exist.');
             }
-            else {
-                // Error
-                return;
-            }
+
+            view = new Clazz();
+            view.init(ecModel, this._api);
+            viewMap[viewId] = view;
+            viewList.push(view);
+            zr.add(view.group);
         }
 
         model.__viewId = view.__id = viewId;
@@ -22119,18 +22286,6 @@ function prepareView(type, ecModel) {
 }
 
 /**
- * Processor data in each series
- *
- * @param {module:echarts/model/Global} ecModel
- * @private
- */
-function processData(ecModel, api) {
-    each(dataProcessorFuncs, function (process) {
-        process.func(ecModel, api);
-    });
-}
-
-/**
  * @private
  */
 function stackSeriesData(ecModel) {
@@ -22150,17 +22305,12 @@ function stackSeriesData(ecModel) {
 }
 
 /**
- * Layout before each chart render there series, special visual encoding stage
- *
  * @param {module:echarts/model/Global} ecModel
  * @private
  */
-function doLayout(ecModel, payload) {
-    var api = this._api;
-    each(visualFuncs, function (visual) {
-        if (visual.isLayout) {
-            visual.func(ecModel, api, payload);
-        }
+function startProcessors(ecIns, ecModel, api) {
+    each(dataProcessorFuncs, function (processor, index) {
+        processor.func(ecModel, api);
     });
 }
 
@@ -22169,18 +22319,28 @@ function doLayout(ecModel, payload) {
  *
  * @param {module:echarts/model/Global} ecModel
  * @param {object} layout
- * @param {boolean} [excludesLayout]
+ * @param {boolean} [layoutFilter] `true`: only layout,
+ *                                 `false`: only not layout,
+ *                                 `null`/`undefined`: all.
+ * @param {string} taskBaseTag
  * @private
  */
-function doVisualEncoding(ecModel, payload, excludesLayout) {
-    var api = this._api;
-    ecModel.clearColorPalette();
-    ecModel.eachSeries(function (seriesModel) {
-        seriesModel.clearColorPalette();
-    });
-    each(visualFuncs, function (visual) {
-        (!excludesLayout || !visual.isLayout)
-            && visual.func(ecModel, api, payload);
+function startVisualEncoding(ecIns, ecModel, api, payload, layoutFilter) {
+    if (layoutFilter !== true) {
+        ecModel.clearColorPalette();
+        ecModel.eachSeries(function (seriesModel) {
+            seriesModel.clearColorPalette();
+        });
+    }
+
+    each(visualFuncs, function (visual, index) {
+        var isLayout = visual.isLayout;
+        if (layoutFilter == null
+            || (layoutFilter === false && !isLayout)
+            || (layoutFilter === true && isLayout)
+        ) {
+            visual.func(ecModel, api, payload);
+        }
     });
 }
 
@@ -22188,49 +22348,67 @@ function doVisualEncoding(ecModel, payload, excludesLayout) {
  * Render each chart and component
  * @private
  */
-function doRender(ecModel, payload) {
-    var api = this._api;
+function startRender(ecIns, ecModel, api, payload) {
     // Render all components
-    each(this._componentsViews, function (componentView) {
+    each(ecIns._componentsViews, function (componentView) {
         var componentModel = componentView.__model;
         componentView.render(componentModel, ecModel, api, payload);
 
         updateZ(componentModel, componentView);
-    }, this);
+    });
 
-    each(this._chartsViews, function (chart) {
+    each(ecIns._chartsViews, function (chart) {
         chart.__alive = false;
-    }, this);
+    });
 
+    // ??? The key should be `__viewId` but not index. consider view change !!!
     // Render all charts
-    ecModel.eachSeries(function (seriesModel, idx) {
-        var chartView = this._chartsMap[seriesModel.__viewId];
+    ecModel.eachSeries(function (seriesModel) {
+        var chartView = ecIns._chartsMap[seriesModel.__viewId];
         chartView.__alive = true;
+
         chartView.render(seriesModel, ecModel, api, payload);
 
-        chartView.group.silent = !!seriesModel.get('silent');
+        // ??? chartView.group.silent = !!seriesModel.get('silent');
 
-        updateZ(seriesModel, chartView);
+        // ??? updateZ(seriesModel, chartView);
 
-        updateProgressiveAndBlend(seriesModel, chartView);
+        // ??? updateProgressiveAndBlend(seriesModel, chartView);
 
-    }, this);
+    });
 
     // If use hover layer
-    updateHoverLayerStatus(this._zr, ecModel);
+    // ??? updateHoverLayerStatus(this._zr, ecModel);
 
     // Remove groups of unrendered charts
-    each(this._chartsViews, function (chart) {
+    each(ecIns._chartsViews, function (chart) {
         if (!chart.__alive) {
             chart.remove(ecModel, api);
         }
-    }, this);
+    });
+}
+
+function progressRender(ecIns, ecModel) {
+
+    ecIns._scheduler.progressStage(STAGE_RENDER);
+
+    // ???
+    // ecModel.eachSeries(function (seriesModel, idx) {
+        // ??? var chartView = ecIns._chartsMap[seriesModel.__viewId];
+
+        // ??? chartView.group.silent = !!seriesModel.get('silent');
+
+        // ??? updateZ(seriesModel, chartView);
+
+        // ??? updateProgressiveAndBlend(seriesModel, chartView);
+    // });
 }
 
 var MOUSE_EVENT_NAMES = [
     'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove',
     'mousedown', 'mouseup', 'globalout', 'contextmenu'
 ];
+
 /**
  * @private
  */
@@ -22314,70 +22492,6 @@ echartsProto.dispose = function () {
 
 mixin(ECharts, Eventful);
 
-function updateHoverLayerStatus(zr, ecModel) {
-    var storage = zr.storage;
-    var elCount = 0;
-    storage.traverse(function (el) {
-        if (!el.isGroup) {
-            elCount++;
-        }
-    });
-    if (elCount > ecModel.get('hoverLayerThreshold') && !env$1.node) {
-        storage.traverse(function (el) {
-            if (!el.isGroup) {
-                el.useHoverLayer = true;
-            }
-        });
-    }
-}
-
-/**
- * Update chart progressive and blend.
- * @param {module:echarts/model/Series|module:echarts/model/Component} model
- * @param {module:echarts/view/Component|module:echarts/view/Chart} view
- */
-function updateProgressiveAndBlend(seriesModel, chartView) {
-    // Progressive configuration
-    var elCount = 0;
-    chartView.group.traverse(function (el) {
-        if (el.type !== 'group' && !el.ignore) {
-            elCount++;
-        }
-    });
-    var frameDrawNum = +seriesModel.get('progressive');
-    var needProgressive = elCount > seriesModel.get('progressiveThreshold') && frameDrawNum && !env$1.node;
-    if (needProgressive) {
-        chartView.group.traverse(function (el) {
-            // FIXME marker and other components
-            if (!el.isGroup) {
-                el.progressive = needProgressive ?
-                    Math.floor(elCount++ / frameDrawNum) : -1;
-                if (needProgressive) {
-                    el.stopAnimation(true);
-                }
-            }
-        });
-    }
-
-    // Blend configration
-    var blendMode = seriesModel.get('blendMode') || null;
-    if (__DEV__) {
-        if (!env$1.canvasSupported && blendMode && blendMode !== 'source-over') {
-            console.warn('Only canvas support blendMode');
-        }
-    }
-    chartView.group.traverse(function (el) {
-        // FIXME marker and other components
-        if (!el.isGroup) {
-            el.setStyle('blend', blendMode);
-        }
-    });
-}
-
-/**
- * @param {module:echarts/model/Series|module:echarts/model/Component} model
- * @param {module:echarts/view/Component|module:echarts/view/Chart} view
- */
 function updateZ(model, view) {
     var z = model.get('z');
     var zlevel = model.get('zlevel');
@@ -22443,9 +22557,9 @@ var postUpdateFuncs = [];
 /**
  * Visual encoding functions of each stage
  * @type {Array.<Object.<string, Function>>}
- * @inner
  */
 var visualFuncs = [];
+
 /**
  * Theme storage
  * @type {Object.<key, Object>}
@@ -22663,22 +22777,10 @@ function registerPreprocessor(preprocessorFunc) {
 
 /**
  * @param {number} [priority=1000]
- * @param {Function} processorFunc
+ * @param {Object|Function} processor
  */
-function registerProcessor(priority, processorFunc) {
-    if (typeof priority === 'function') {
-        processorFunc = priority;
-        priority = PRIORITY_PROCESSOR_FILTER;
-    }
-    if (__DEV__) {
-        if (isNaN(priority)) {
-            throw new Error('Unkown processor priority');
-        }
-    }
-    dataProcessorFuncs.push({
-        prio: priority,
-        func: processorFunc
-    });
+function registerProcessor(priority, processor) {
+    normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_FILTER);
 }
 
 /**
@@ -22757,43 +22859,45 @@ function getCoordinateSystemDimensions(type) {
  * But each chart has it's own layout algorithm
  *
  * @param {number} [priority=1000]
- * @param {Function} layoutFunc
+ * @param {Function} layoutTask
  */
-function registerLayout(priority, layoutFunc) {
-    if (typeof priority === 'function') {
-        layoutFunc = priority;
-        priority = PRIORITY_VISUAL_LAYOUT;
-    }
-    if (__DEV__) {
-        if (isNaN(priority)) {
-            throw new Error('Unkown layout priority');
-        }
-    }
-    visualFuncs.push({
-        prio: priority,
-        func: layoutFunc,
-        isLayout: true
-    });
+function registerLayout(priority, layoutTask) {
+    var wrap = normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT);
+    wrap.isLayout = true;
 }
 
 /**
  * @param {number} [priority=3000]
- * @param {Function} visualFunc
+ * @param {module:echarts/stream/Task} visualTask
  */
-function registerVisual(priority, visualFunc) {
-    if (typeof priority === 'function') {
-        visualFunc = priority;
-        priority = PRIORITY_VISUAL_CHART;
+function registerVisual(priority, visualTask) {
+    normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART);
+}
+
+function normalizeRegister(targetList, priority, fn, defaultPriority) {
+    if (isFunction(priority)) {
+        fn = priority;
+        priority = defaultPriority;
     }
+
     if (__DEV__) {
-        if (isNaN(priority)) {
-            throw new Error('Unkown visual priority');
+        if (isNaN(priority) || priority == null) {
+            throw new Error('Illegal priority');
         }
+        // Check duplicate
+        each$1(targetList, function (wrap) {
+            assert(wrap.func !== fn);
+        });
     }
-    visualFuncs.push({
+
+    var wrap = {
         prio: priority,
-        func: visualFunc
-    });
+        func: fn
+    };
+
+    targetList.push(wrap);
+
+    return wrap;
 }
 
 /**
@@ -23065,6 +23169,229 @@ function initIndexMap(arr, map, keyArr, keyGetterName, dataDiffer) {
     }
 }
 
+var inner$1 = makeInner();
+
+/**
+ * @param {Object} define
+ * @param {Function} define.progress
+ * @param {Object|Array} define.input {count: Function} or a pure array.
+ * @return See the return of `createTask`.
+ */
+function createTask(define) {
+    return new Task(define);
+}
+
+/**
+ * @return {boolean}
+ */
+
+
+// ----------------
+// Task
+// ----------------
+
+/**
+ * @constructor
+ * @param {Object} define
+ * @param {Function} define.progress Custom progress
+ * @param {Function} define.reset Custom reset
+ * @param {Function} [define.input] {count: Function}
+ * @param {Function} [define.output] {count: Function}
+ */
+function Task(define) {
+    var fields = inner$1(this);
+
+    fields.downstreams = [];
+    fields.upstreams = [];
+    var input = fields.input = this.input = define.input;
+    // Just for programing convenience.
+    this.output = define.output || input;
+
+    this._progressCustom = define.progress;
+    this._resetCustom = define.reset;
+    this._progressNotify = bind(progressNotify, this);
+    this._count = isArray(input) ? arrayCount : listCount;
+
+    this.reset();
+}
+
+var taskProto = Task.prototype;
+
+/**
+ * @param {Object} [params]
+ */
+taskProto.reset = function (params) {
+    var fields = inner$1(this);
+
+    fields.started = false;
+    fields.dueEnd = fields.upstreams.length ? 0 : null;
+    fields.dueIndex = fields.outputDueEnd = 0;
+
+    this._resetCustom && this._resetCustom(params);
+
+    each$1(fields.downstreams, function (downTask) {
+        downTask.reset(params);
+    });
+};
+
+/**
+ * @param {Array|Object} input
+ */
+taskProto.changeInput = function (input) {
+    var fields = inner$1(this);
+
+    // ???
+    assert(!fields.upstreams.length);
+
+    fields.input = this.input = input;
+    fields.dueIndex = 0;
+    // Keep outputDueEnd, should not rollback.
+    fields.dueEnd = null;
+};
+
+/**
+ * @param {Object} [params]
+ * @param {number} [params.step] Specified step.
+ *  If not specified, progress to current dueEnd.
+ */
+taskProto.progress = function (params) {
+    params = params || {};
+    var fields = inner$1(this);
+
+    fields.started = true;
+
+    this._progressCustom({
+        dueEnd: Math.min(
+            params.step != null ? fields.dueIndex + params.step : Infinity,
+            fields.dueEnd != null ? fields.dueEnd : Infinity,
+            this._count()
+        ),
+        dueIndex: fields.dueIndex
+    }, this._progressNotify);
+};
+
+function progressNotify(dueIndex, outputDueEnd) {
+    var fields = inner$1(this);
+
+    assert(dueIndex != null);
+
+    fields.dueIndex = dueIndex;
+
+    // If no `outputDueEnd`, assume that output data and
+    // input data is the same, so use `dueIndex` as `outputDueEnd`.
+    outputDueEnd = outputDueEnd != null ? outputDueEnd : dueIndex;
+
+    // ??? Can not rollback.
+    assert(outputDueEnd >= fields.outputDueEnd);
+
+    fields.outputDueEnd = outputDueEnd;
+
+    each$1(fields.downstreams, function (downTask) {
+        downTask.plan();
+    });
+}
+
+/**
+ * Receive notify. ??? Only on notify? check pipe.
+ */
+taskProto.plan = function () {
+    var fields = inner$1(this);
+
+    var upDueEnd;
+    each$1(fields.upstreams, function (upTask) {
+        var dueEnd = upTask.getOutputDueEnd();
+        upDueEnd = upDueEnd != null
+            // Current no scenario that upstreams
+            // outputs data are not the same.
+            ? Math.min(upDueEnd, dueEnd)
+            : dueEnd;
+    });
+
+    assert(upDueEnd >= fields.dueEnd);
+    fields.dueEnd = upDueEnd;
+};
+
+/**
+ * @return {number}
+ */
+taskProto.getOutputDueEnd = function () {
+    return inner$1(this).outputDueEnd;
+};
+
+/**
+ * @return {boolean}
+ */
+taskProto.unfinished = function () {
+    var fields = inner$1(this);
+
+    return fields.dueIndex < (
+        fields.dueEnd != null ? fields.dueEnd : this._count()
+    );
+};
+
+/**
+ * @param {Object} downTask The downstream task.
+ * @return {Object} The downstream task.
+ */
+taskProto.pipe = function (downTask) {
+    // ???
+    assert(!inner$1(downTask).disposed);
+
+    var fields = inner$1(this);
+
+    var downTaskUpstreams = inner$1(downTask).upstreams;
+    if (indexOf(downTaskUpstreams, this) >= 0) {
+        return;
+    }
+
+    downTask.reset();
+
+    fields.downstreams.push(downTask);
+    downTaskUpstreams.push(this);
+
+    downTask.plan();
+
+    return downTask;
+};
+
+/**
+ * Remove all downstreams.
+ */
+taskProto.clearDownstreams = function () {
+    var downstreams = inner$1(this).downstreams;
+    each$1(downstreams, function (downTask) {
+        // ??? Current forbiden reuse task to avoid troubles
+        // (piped by multiple task but difficult to unpipe).
+        downTask.dispose();
+        // var downTaskUpstream = inner(downTask).upstreams;
+        // downTaskUpstream.splice(indexOf(downTaskUpstream, this), 1);
+        // // Stop the down task, but do not leave it from all its upstreams,
+        // // because it may keep working with its other upstreams.
+        // downTask.reset();
+    }, this);
+    downstreams.length = 0;
+};
+
+taskProto.dispose = function () {
+    var fields = inner$1(this);
+    each$1(fields.upstreams, function (upTask) {
+        // var downTaskUpstream = inner(downTask).upstreams;
+        // downTaskUpstream.splice(indexOf(downTaskUpstream, this), 1);
+        var upTaskDownstream = inner$1(upTask).downstreams;
+        upTaskDownstream.splice(indexOf(upTaskDownstream, this), 1);
+    }, this);
+    this.reset();
+    fields.disposed = true;
+};
+
+function listCount() {
+    return inner$1(this).input.count();
+}
+
+function arrayCount() {
+    return inner$1(this).input.length;
+}
+
 /**
  * List for data storage
  * @module echarts/data/List
@@ -23086,6 +23413,12 @@ var dataCtors = {
     'time': Array
 };
 
+function cloneChunk(originalChunk) {
+    var Ctor = originalChunk.constructor;
+    // Only shallow clone is enough when Array.
+    return Ctor === Array ? originalChunk.slice() : new Ctor(originalChunk);
+}
+
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData'
 ];
@@ -23100,17 +23433,73 @@ function transferProperties(a, b) {
     a.__wrappedMethods = b.__wrappedMethods;
 }
 
+/**
+ * If normal array used, mutable chunk size is supported.
+ * If typed array used, chunk size must be fixed.
+ */
 function DefaultDataProvider(dataArray) {
-    this._array = dataArray || [];
+    var methods;
+
+    // Typed array.
+    if (dataArray && !isArray(dataArray)) {
+        this._chunkSize = dataArray.length;
+        this._array = [dataArray];
+        methods = typedArrayProviderMethods;
+    }
+    // Normal array.
+    else {
+        this._array = dataArray || [];
+        methods = normalProviderMethods;
+    }
+
+    extend(this, methods);
 }
 
 DefaultDataProvider.prototype.pure = false;
 
-DefaultDataProvider.prototype.count = function () {
-    return this._array.length;
+var normalProviderMethods = {
+    count: function () {
+        return this._array.length;
+    },
+    getItem: function (idx) {
+        return this._array[idx];
+    }
 };
-DefaultDataProvider.prototype.getItem = function (idx) {
-    return this._array[idx];
+var typedArrayProviderMethods = {
+    count: function () {
+        return this._array.length * this._chunkSize;
+    },
+    getItem: function (idx) {
+        var chunkSize = this._chunkSize;
+        var chunk = this._array[Math.floor(idx / chunkSize)];
+        return chunk ? chunk[idx % chunkSize] : null;
+    }
+};
+
+DefaultDataProvider.prototype.addData = function (newData) {
+    if (newData == null || !newData.length) {
+        return;
+    }
+
+    var chunkSize = this._chunkSize;
+
+    if (__DEV__) {
+        // If using typed array, should always use typed array with the same size.
+        var isArrayData = isArray(newData);
+        assert(
+            (isArrayData && chunkSize == null)
+            || (!isArrayData && chunkSize === newData.length),
+            'Should always use normal array or typed array with the same size.'
+        );
+    }
+
+    var thisArray = this._array;
+    if (chunkSize == null) {
+        thisArray.push.apply(thisArray, newData);
+    }
+    else if (chunkSize === newData.length) {
+        thisArray.push(newData);
+    }
 };
 
 /**
@@ -23188,8 +23577,34 @@ var List = function (dimensions, hostModel) {
     this.indices = [];
 
     /**
+     * Speed up the query.
+     * @type {Array.<number>}
+     * @private
+     */
+    this._chunkOffsets = [];
+
+    /**
+     * Speed up the query.
+     * @type {Array.<number>}
+     * @private
+     */
+    this._chunkIndices = [];
+
+    /**
+     * @type {number}
+     * @private
+     */
+    this._chunkSize;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    this._chunkCount = 0;
+
+    /**
      * Data storage
-     * @type {Object.<key, TypedArray|Array>}
+     * @type {Object.<key, Array.<TypedArray|Array>>}
      * @private
      */
     this._storage = {};
@@ -23319,34 +23734,34 @@ listProto.initData = function (data, nameList, dimValueGetter) {
     this._rawData = data;
 
     // Clear
-    var storage = this._storage = {};
-    var indices = this.indices = [];
+    this._storage = {};
+    this.indices = [];
+    this._chunkOffsets = [];
+    this._chunkIndices = [];
 
-    var dimensions = this.dimensions;
     var dimensionInfoMap = this._dimensionInfos;
 
-    var size = data.count();
+    var size = this._chunkSize = data.count();
 
-    var idList = [];
-    var nameRepeatCount = {};
-    var nameDimIdx;
+    this._nameList = nameList = nameList || [];
+    this._idList = [];
 
-    nameList = nameList || [];
+    this._nameRepeatCount = {};
 
     // Init storage
-    for (var i = 0; i < dimensions.length; i++) {
-        var dimInfo = dimensionInfoMap[dimensions[i]];
-        dimInfo.otherDims.itemName === 0 && (nameDimIdx = i);
-        var DataCtor = dataCtors[dimInfo.type];
-        storage[dimensions[i]] = new DataCtor(size);
-    }
+    // for (var i = 0; i < dimensions.length; i++) {
+    //     var dimInfo = dimensionInfoMap[dimensions[i]];
+    //     dimInfo.otherDims.itemName === 0 && (nameDimIdx = i);
+    //     var DataCtor = dataCtors[dimInfo.type];
+    //     storage[dimensions[i]] = [new DataCtor(size)];
+    // }
 
     var self = this;
     if (!dimValueGetter) {
         self.hasItemOption = false;
     }
     // Default dim value getter
-    dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
+    this._dimValueGetter = dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
         var value = getDataItemValue(dataItem);
         // If any dataItem is like { value: 10 }
         if (isDataItemOption(dataItem)) {
@@ -23361,9 +23776,68 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         );
     };
 
-    for (var i = 0; i < size; i++) {
+    doInit(this, 0, size, true);
+};
+
+listProto.getProvider = function () {
+    return this._rawData;
+};
+
+listProto.getInitTask = function () {
+    if (!this._initTask) {
+        this._initTask = createTask({
+            input: this._rawData,
+            progress: bind(initProgress, this)
+        });
+    }
+    return this._initTask;
+};
+
+function initProgress(params, notify) {
+    notify(doInit(this, params.dueIndex, params.dueEnd));
+}
+
+function doInit(list, dueIndex, dueEnd, isInit) {
+    var data = list._rawData;
+    var storage = list._storage;
+    var indices = list.indices;
+    var chunkOffsets = list._chunkOffsets;
+    var chunkIndices = list._chunkIndices;
+    var dimensions = list.dimensions;
+    var dimensionInfoMap = list._dimensionInfos;
+    var nameList = list._nameList;
+    var idList = list._idList;
+    var chunkSize = list._chunkSize;
+    var nameRepeatCount = list._nameRepeatCount = {};
+    var nameDimIdx;
+
+    // Reset cached extent
+    list._extent = {};
+
+    // Create more chunk storage.
+    var newChunkCount = Math.ceil(dueEnd / chunkSize);
+    for (var i = 0; i < dimensions.length; i++) {
+        var dim = dimensions[i];
+
+        var dimInfo = dimensionInfoMap[dim];
+        if (dimInfo.otherDims.itemName === 0) {
+            nameDimIdx = i;
+        }
+        if (!storage[dim]) {
+            storage[dim] = [];
+        }
+        var DataCtor = dataCtors[dimInfo.type];
+        for (var j = list._chunkCount; j < newChunkCount; j++) {
+            storage[dim][j] = new DataCtor(chunkSize);
+        }
+    }
+    list._chunkCount = newChunkCount;
+
+    var chunkIndex = newChunkCount - 1;
+    for (; dueIndex < dueEnd; dueIndex++) {
+
         // NOTICE: Try not to write things into dataItem
-        var dataItem = data.getItem(i);
+        var dataItem = data.getItem(dueIndex);
         // Each data item is value
         // [1, 2]
         // 2
@@ -23371,47 +23845,51 @@ listProto.initData = function (data, nameList, dimValueGetter) {
         // only gives the 'y' value. 'x' value is the indices of cateogry
         // Use a tempValue to normalize the value to be a (x, y) value
 
+        var chunkOffset = dueIndex % chunkSize;
+
         // Store the data by dimensions
         for (var k = 0; k < dimensions.length; k++) {
             var dim = dimensions[k];
-            var dimStorage = storage[dim];
+            var dimStorage = storage[dim][chunkIndex];
             // PENDING NULL is empty or zero
-            dimStorage[i] = dimValueGetter(dataItem, dim, i, k);
+            dimStorage[chunkOffset] = list._dimValueGetter(dataItem, dim, dueIndex, k);
         }
 
-        indices.push(i);
-    }
+        indices.push(chunkIndex * chunkSize + chunkOffset);
+        chunkOffsets.push(chunkOffset);
+        chunkIndices.push(chunkIndex);
 
-    // Use the name in option and create id
-    for (var i = 0; i < size; i++) {
-        var dataItem = data.getItem(i);
-        if (!nameList[i] && dataItem) {
+        // Use the name in option and create id
+        if (!nameList[dueIndex] && dataItem) {
             if (dataItem.name != null) {
-                nameList[i] = dataItem.name;
+                nameList[dueIndex] = dataItem.name;
             }
             else if (nameDimIdx != null) {
-                nameList[i] = storage[dimensions[nameDimIdx]][i];
+                nameList[dueIndex] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
             }
         }
-        var name = nameList[i] || '';
-        // Try using the id in option
-        var id = dataItem && dataItem.id;
 
-        if (!id && name) {
-            // Use name as id and add counter to avoid same name
-            nameRepeatCount[name] = nameRepeatCount[name] || 0;
-            id = name;
-            if (nameRepeatCount[name] > 0) {
-                id += '__ec__' + nameRepeatCount[name];
+        // ??? do not fill idList and do not checked by nameRepeatCount when init.
+        if (isInit) {
+            var name = nameList[dueIndex];
+            // Try using the id in option
+            var id = dataItem && dataItem.id;
+
+            if (id == null && name) {
+                // Use name as id and add counter to avoid same name
+                nameRepeatCount[name] = nameRepeatCount[name] || 0;
+                id = name;
+                if (nameRepeatCount[name] > 0) {
+                    id += '__ec__' + nameRepeatCount[name];
+                }
+                nameRepeatCount[name]++;
             }
-            nameRepeatCount[name]++;
+            id != null && (idList[dueIndex] = id);
         }
-        id && (idList[i] = id);
     }
 
-    this._nameList = nameList;
-    this._idList = idList;
-};
+    return dueIndex;
+}
 
 /**
  * @return {number}
@@ -23429,14 +23907,16 @@ listProto.count = function () {
  */
 listProto.get = function (dim, idx, stack) {
     var storage = this._storage;
-    var dataIndex = this.indices[idx];
+    var chunkOffset = this._chunkOffsets[idx];
+    var chunkIndex = this._chunkIndices[idx];
 
     // If value not exists
-    if (dataIndex == null || !storage[dim]) {
+    if (chunkOffset == null || !storage[dim]) {
         return NaN;
     }
 
-    var value = storage[dim][dataIndex];
+    var chunkStore = storage[dim][chunkIndex];
+    var value = chunkStore ? chunkStore[chunkOffset] : NaN;
     // FIXME ordinal data type is not stackable
     if (stack) {
         var dimensionInfo = this._dimensionInfos[dim];
@@ -23518,27 +23998,26 @@ listProto.getDataExtent = function (dim, stack, filter$$1) {
     if (dimExtent) {
         return dimExtent;
     }
-    // var dimInfo = this._dimensionInfos[dim];
-    if (dimData) {
-        var min = Infinity;
-        var max = -Infinity;
-        // var isOrdinal = dimInfo.type === 'ordinal';
-        for (var i = 0, len = this.count(); i < len; i++) {
-            value = this.get(dim, i, stack);
-            // FIXME
-            // if (isOrdinal && typeof value === 'string') {
-            //     value = zrUtil.indexOf(dimData, value);
-            // }
-            if (!filter$$1 || filter$$1(value, dim, i)) {
-                value < min && (min = value);
-                value > max && (max = value);
-            }
-        }
-        return (this._extent[dim + !!stack] = [min, max]);
-    }
-    else {
+
+    if (!dimData) {
         return [Infinity, -Infinity];
     }
+
+    var min = Infinity;
+    var max = -Infinity;
+    // var isOrdinal = dimInfo.type === 'ordinal';
+    for (var i = 0, len = this.count(); i < len; i++) {
+        value = this.get(dim, i, stack);
+        // FIXME
+        // if (isOrdinal && typeof value === 'string') {
+        //     value = zrUtil.indexOf(dimData, value);
+        // }
+        if (!filter$$1 || filter$$1(value, dim, i)) {
+            value < min && (min = value);
+            value > max && (max = value);
+        }
+    }
+    return (this._extent[dim + !!stack] = [min, max]);
 };
 
 /**
@@ -23570,12 +24049,11 @@ listProto.getSum = function (dim, stack) {
 listProto.indexOf = function (dim, value) {
     var storage = this._storage;
     var dimData = storage[dim];
-    var indices = this.indices;
+    var chunkOffsets = this._chunkOffsets;
 
     if (dimData) {
-        for (var i = 0, len = indices.length; i < len; i++) {
-            var rawIndex = indices[i];
-            if (dimData[rawIndex] === value) {
+        for (var i = 0, len = chunkOffsets.length; i < len; i++) {
+            if (dimData[this._chunkIndices[i]][chunkOffsets[i]] === value) {
                 return i;
             }
         }
@@ -23594,8 +24072,7 @@ listProto.indexOfName = function (name) {
     var nameList = this._nameList;
 
     for (var i = 0, len = indices.length; i < len; i++) {
-        var rawIndex = indices[i];
-        if (nameList[rawIndex] === name) {
+        if (nameList[indices[i]] === name) {
             return i;
         }
     }
@@ -23735,6 +24212,10 @@ function normalizeDimensions(dimensions) {
  *  list.each(function (idx) {})
  */
 listProto.each = function (dims, cb, stack, context) {
+
+    // ???
+    // merge to createTaskForEach?
+
     if (typeof dims === 'function') {
         context = stack;
         stack = cb;
@@ -23744,7 +24225,6 @@ listProto.each = function (dims, cb, stack, context) {
 
     dims = map(normalizeDimensions(dims), this.getDimension, this);
 
-    var value = [];
     var dimSize = dims.length;
     var indices = this.indices;
 
@@ -23763,7 +24243,9 @@ listProto.each = function (dims, cb, stack, context) {
                 cb.call(context, this.get(dims[0], i, stack), this.get(dims[1], i, stack), i);
                 break;
             default:
-                for (var k = 0; k < dimSize; k++) {
+                var k = 0;
+                var value = [];
+                for (; k < dimSize; k++) {
                     value[k] = this.get(dims[k], i, stack);
                 }
                 // Index
@@ -23773,6 +24255,84 @@ listProto.each = function (dims, cb, stack, context) {
     }
 };
 
+/**
+ * Data iteration
+ *
+ *
+ * @param {string|Array.<string>}
+ * @param {Function} cb
+ * @param {boolean} [stack=false]
+ * @param {*} [context=this]
+ * @return {Object} task
+ *
+ * @example
+ *  var task = list.createEachTask('x', function (val) {
+ *      // val: 1212
+ *  });
+ *
+ *  var task = list.createEachTask(['x', 'y'], function (vals) {
+ *      // vals: [1212, 3434]
+ *  });
+ *
+ *  task.progress(100); // Work by chunk size.
+ *  task.unfinished();
+ */
+listProto.createEachTask = function (dims, cb, stack) {
+    if (typeof dims === 'function') {
+        stack = cb;
+        cb = dims;
+        dims = [];
+    }
+
+    var list = this;
+    dims = map(normalizeDimensions(dims), list.getDimension, list);
+
+    return createTask({
+
+        input: list,
+
+        progress: function (params, notify) {
+            var dimSize = dims.length;
+            var dueIndex = params.dueIndex;
+
+            for (; dueIndex < params.dueEnd; dueIndex++) {
+                // Simple optimization
+                switch (dimSize) {
+                    case 0:
+                        cb(
+                            dueIndex
+                        );
+                        break;
+                    case 1:
+                        cb(
+                            list.get(dims[0], dueIndex, stack),
+                            dueIndex
+                        );
+                        break;
+                    case 2:
+                        cb(
+                            list.get(dims[0], dueIndex, stack),
+                            list.get(dims[1], dueIndex, stack),
+                            dueIndex
+                        );
+                        break;
+                    default:
+                        var k = 0;
+                        var value = [];
+                        for (; k < dimSize; k++) {
+                            value[k] = list.get(dims[k], dueIndex, stack);
+                        }
+                        value[k] = dueIndex;
+                        cb(value);
+                }
+            }
+
+            notify(dueIndex);
+        }
+    });
+};
+
+// ??? remove
 /**
  * Data filter
  * @param {string|Array.<string>}
@@ -23853,6 +24413,7 @@ listProto.mapArray = function (dimensions, cb, stack, context) {
     return result;
 };
 
+// Data in excludeDimensions is copied, otherwise transfered.
 function cloneListForMapAndSample(original, excludeDimensions) {
     var allDimensions = original.dimensions;
     var list = new List(
@@ -23867,18 +24428,20 @@ function cloneListForMapAndSample(original, excludeDimensions) {
     // Init storage
     for (var i = 0; i < allDimensions.length; i++) {
         var dim = allDimensions[i];
-        var dimStore = originalStorage[dim];
-        if (indexOf(excludeDimensions, dim) >= 0) {
-            storage[dim] = new dimStore.constructor(
-                originalStorage[dim].length
-            );
-        }
-        else {
+        storage[dim] = indexOf(excludeDimensions, dim) >= 0
+            ? cloneDimStore(originalStorage[dim])
             // Direct reference for other dimensions
-            storage[dim] = originalStorage[dim];
-        }
+            : originalStorage[dim];
     }
     return list;
+}
+
+function cloneDimStore(originalDimStore) {
+    var newDimStore = new Array(originalDimStore.length);
+    for (var j = 0; j < originalDimStore.length; j++) {
+        newDimStore[j] = cloneChunk(originalDimStore[j]);
+    }
+    return newDimStore;
 }
 
 /**
@@ -23895,9 +24458,12 @@ listProto.map = function (dimensions, cb, stack, context) {
     );
 
     var list = cloneListForMapAndSample(this, dimensions);
+
     // Following properties are all immutable.
     // So we can reference to the same value
-    var indices = list.indices = this.indices;
+    list.indices = this.indices;
+    var chunkIndices = list._chunkIndices = this._chunkIndices;
+    var chunkOffsets = list._chunkOffsets = this._chunkOffsets;
 
     var storage = list._storage;
 
@@ -23914,9 +24480,8 @@ listProto.map = function (dimensions, cb, stack, context) {
             for (var i = 0; i < retValue.length; i++) {
                 var dim = dimensions[i];
                 var dimStore = storage[dim];
-                var rawIdx = indices[idx];
                 if (dimStore) {
-                    dimStore[rawIdx] = retValue[i];
+                    dimStore[chunkIndices[idx]][chunkOffsets[idx]] = retValue[i];
                 }
             }
         }
@@ -23934,22 +24499,22 @@ listProto.map = function (dimensions, cb, stack, context) {
  */
 listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var list = cloneListForMapAndSample(this, [dimension]);
-    var storage = this._storage;
     var targetStorage = list._storage;
 
-    var originalIndices = this.indices;
+    var originalChunkOffsets = this._chunkOffsets;
+    var originalChunkIndices = this._chunkIndices;
+    var chunkOffsets = list._chunkOffsets = [];
+    var chunkIndices = list._chunkIndices = [];
     var indices = list.indices = [];
 
     var frameValues = [];
-    var frameIndices = [];
+    var frameChunkOffsets = [];
+    var frameChunkIndices = [];
     var frameSize = Math.floor(1 / rate);
 
     var dimStore = targetStorage[dimension];
     var len = this.count();
-    // Copy data from original data
-    for (var i = 0; i < storage[dimension].length; i++) {
-        targetStorage[dimension][i] = storage[dimension][i];
-    }
+
     for (var i = 0; i < len; i += frameSize) {
         // Last frame
         if (frameSize > len - i) {
@@ -23957,15 +24522,22 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
             frameValues.length = frameSize;
         }
         for (var k = 0; k < frameSize; k++) {
-            var idx = originalIndices[i + k];
-            frameValues[k] = dimStore[idx];
-            frameIndices[k] = idx;
+            var dataIdx = i + k;
+            var originalChunkOffset = originalChunkOffsets[dataIdx];
+            var originalChunkIndex = originalChunkIndices[dataIdx];
+            frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
+            frameChunkOffsets[k] = originalChunkOffset;
+            frameChunkIndices[k] = originalChunkIndex;
         }
         var value = sampleValue(frameValues);
-        var idx = frameIndices[sampleIndex(frameValues, value) || 0];
+        var sampleFrameIdx = sampleIndex(frameValues, value) || 0;
+        var sampleChunkOffset = frameChunkOffsets[sampleFrameIdx];
+        var sampleChunkIndex = frameChunkIndices[sampleFrameIdx];
         // Only write value on the filtered data
-        dimStore[idx] = value;
-        indices.push(idx);
+        dimStore[sampleChunkIndex][sampleChunkOffset] = value;
+        chunkIndices.push(sampleChunkIndex);
+        chunkOffsets.push(sampleChunkOffset);
+        indices.push(sampleChunkIndex * this._chunkSize + sampleChunkOffset);
     }
 
     return list;
@@ -24208,12 +24780,35 @@ listProto.cloneShallow = function () {
 
     // Clone will not change the data extent and indices
     list.indices = this.indices.slice();
+    list._chunkIndices = this._chunkIndices.slice();
+    list._chunkOffsets = this._chunkOffsets.slice();
 
     if (this._extent) {
         list._extent = extend({}, this._extent);
     }
 
+    list._frameSize = this._frameSize;
+
     return list;
+};
+
+// ??? duplicate with cloneShallow?
+listProto.createCloneShallowTask = function () {
+    var input = this;
+    var output = this.cloneShallow();
+    return createTask({
+        input: input,
+        output: output,
+        progress: function (params, notify) {
+            var dueIndex = params.dueIndex;
+            for (; dueIndex < params.dueEnd; dueIndex++) {
+                output.indices[dueIndex] = input.indices[dueIndex];
+                output._chunkIndices[dueIndex] = input._chunkIndices[dueIndex];
+                output._chunkOffsets[dueIndex] = input._chunkOffsets[dueIndex];
+            }
+            notify(dueIndex);
+        }
+    });
 };
 
 /**
@@ -24238,7 +24833,7 @@ listProto.wrapMethod = function (methodName, injectFunction) {
 // Notice that those method should `RETURN` the new list.
 listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 // Methods that change indices of this list should be listed here.
-listProto.CHANGABLE_METHODS = ['filterSelf'];
+// listProto.CHANGABLE_METHODS = ['filterSelf'];
 
 /**
  * Complete dimensions by data (guess dimension).
@@ -24776,9 +25371,6 @@ function createNameList(result, data) {
  * @module echarts/scale/Scale
  */
 
-/**
- * @param {Object} [setting]
- */
 function Scale(setting) {
     this._setting = setting || {};
 
@@ -25512,7 +26104,6 @@ TimeScale.create = function (model) {
  * @module echarts/scale/Log
  */
 
-// Use some method of IntervalScale
 var scaleProto$1 = Scale.prototype;
 var intervalScaleProto$1 = IntervalScale.prototype;
 
@@ -25619,6 +26210,7 @@ var LogScale = Scale.extend({
      * @override
      */
     unionExtentFromData: function (data, dim) {
+        // ??? filter is abandoned.
         this.unionExtent(data.getDataExtent(dim, true, function (val) {
             return val > 0;
         }));
@@ -25687,10 +26279,6 @@ function fixRoundingError(val, originalVal) {
     return roundingErrorFix(val, getPrecisionSafe$1(originalVal));
 }
 
-/**
- * Get axis scale extent before niced.
- * Item of returned array can only be number (including Infinity and NaN).
- */
 function getScaleExtent(scale, model) {
     var scaleType = scale.type;
 
@@ -26056,10 +26644,6 @@ var axisModelCommonMixin = {
 
 // Symbol factory
 
-/**
- * Triangle shape
- * @inner
- */
 var Triangle = extendShape({
     type: 'triangle',
     shape: {
@@ -26407,20 +26991,13 @@ function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
     return symbolPath;
 }
 
-/**
- * Create a muti dimension List structure from seriesModel.
- * @param  {module:echarts/model/Model} seriesModel
- * @return {module:echarts/data/List} list
- */
 function createList(seriesModel) {
     var data = seriesModel.get('data');
     return createListFromArray(data, seriesModel, seriesModel.ecModel);
 }
 
 /**
- * Create scale
- * @param {Array.<number>} dataExtent
- * @param {Object|module:echarts/Model} option
+ * @see {module:echarts/data/helper/completeDimensions}
  */
 function createScale(dataExtent, option) {
     var axisModel = option;
@@ -26770,11 +27347,6 @@ function contain$1(points, x, y) {
  * @module echarts/coord/geo/Region
  */
 
-/**
- * @param {string} name
- * @param {Array} geometries
- * @param {Array.<number>} cp
- */
 function Region(name, geometries, cp) {
 
     /**
@@ -27495,11 +28067,6 @@ inherits(SymbolClz$1, Group);
  * @module echarts/chart/helper/SymbolDraw
  */
 
-/**
- * @constructor
- * @alias module:echarts/chart/helper/SymbolDraw
- * @param {module:zrender/graphic/Group} [symbolCtor]
- */
 function SymbolDraw(symbolCtor) {
     this.group = new Group();
 
@@ -27583,6 +28150,21 @@ symbolDrawProto.updateData = function (data, isIgnore) {
         .execute();
 
     this._data = data;
+};
+
+symbolDrawProto.progress = function (data) {
+    var seriesModel = data.hostModel;
+    var seriesScope = {
+        itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
+        hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
+        symbolRotate: seriesModel.get('symbolRotate'),
+        symbolOffset: seriesModel.get('symbolOffset'),
+        hoverAnimation: seriesModel.get('hoverAnimation'),
+
+        labelModel: seriesModel.getModel('label.normal'),
+        hoverLabelModel: seriesModel.getModel('label.emphasis'),
+        cursorStyle: seriesModel.get('cursor')
+    };
 };
 
 symbolDrawProto.updateLayout = function () {
@@ -28772,79 +29354,94 @@ Chart.extend({
     }
 });
 
-var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
-
+var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol, ecModel) {
     // Encoding visual for all series include which is filtered for legend drawing
     ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
-        var data = seriesModel.getData();
-
-        var symbolType = seriesModel.get('symbol') || defaultSymbolType;
-        var symbolSize = seriesModel.get('symbolSize');
-
-        data.setVisual({
-            legendSymbol: legendSymbol || symbolType,
-            symbol: symbolType,
-            symbolSize: symbolSize
-        });
-
-        // Only visible series has each data be visual encoded
-        if (!ecModel.isSeriesFiltered(seriesModel)) {
-            if (typeof symbolSize === 'function') {
-                data.each(function (idx) {
-                    var rawValue = seriesModel.getRawValue(idx);
-                    // FIXME
-                    var params = seriesModel.getDataParams(idx);
-                    data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
-                });
-            }
-            data.each(function (idx) {
-                var itemModel = data.getItemModel(idx);
-                var itemSymbolType = itemModel.getShallow('symbol', true);
-                var itemSymbolSize = itemModel.getShallow('symbolSize', true);
-                // If has item symbol
-                if (itemSymbolType != null) {
-                    data.setItemVisual(idx, 'symbol', itemSymbolType);
-                }
-                if (itemSymbolSize != null) {
-                    // PENDING Transform symbolSize ?
-                    data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
-                }
-            });
-        }
+        seriesModel.pipeTask(
+            createTask$1(seriesModel, defaultSymbolType, legendSymbol, ecModel),
+            'visual'
+        );
     });
 };
+
+function createTask$1(seriesModel, defaultSymbolType, legendSymbol, ecModel) {
+    var data = seriesModel.getData();
+
+    var symbolType = seriesModel.get('symbol') || defaultSymbolType;
+    var symbolSize = seriesModel.get('symbolSize');
+
+    data.setVisual({
+        legendSymbol: legendSymbol || symbolType,
+        symbol: symbolType,
+        symbolSize: symbolSize
+    });
+
+    // Only visible series has each data be visual encoded
+    if (ecModel.isSeriesFiltered(seriesModel)) {
+        return;
+    }
+
+    return data.createEachTask(function (idx) {
+        if (typeof symbolSize === 'function') {
+            var rawValue = seriesModel.getRawValue(idx);
+            // FIXME
+            var params = seriesModel.getDataParams(idx);
+            data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
+        }
+
+        var itemModel = data.getItemModel(idx);
+        var itemSymbolType = itemModel.getShallow('symbol', true);
+        var itemSymbolSize = itemModel.getShallow('symbolSize', true);
+        // If has item symbol
+        if (itemSymbolType != null) {
+            data.setItemVisual(idx, 'symbol', itemSymbolType);
+        }
+        if (itemSymbolSize != null) {
+            // PENDING Transform symbolSize ?
+            data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+        }
+    });
+}
 
 var layoutPoints = function (seriesType, ecModel) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-        var data = seriesModel.getData();
-        var coordSys = seriesModel.coordinateSystem;
-
-        if (!coordSys) {
-            return;
-        }
-
-        var dims = [];
-        var coordDims = coordSys.dimensions;
-        for (var i = 0; i < coordDims.length; i++) {
-            dims.push(seriesModel.coordDimToDataDim(coordSys.dimensions[i])[0]);
-        }
-
-        if (dims.length === 1) {
-            data.each(dims[0], function (x, idx) {
-                // Also {Array.<number>}, not undefined to avoid if...else... statement
-                data.setItemLayout(idx, isNaN(x) ? [NaN, NaN] : coordSys.dataToPoint(x));
-            });
-        }
-        else if (dims.length === 2) {
-            data.each(dims, function (x, y, idx) {
-                // Also {Array.<number>}, not undefined to avoid if...else... statement
-                data.setItemLayout(
-                    idx, (isNaN(x) || isNaN(y)) ? [NaN, NaN] : coordSys.dataToPoint([x, y])
-                );
-            }, true);
-        }
+        seriesModel.pipeTask(
+            createTask$2(seriesType, seriesModel),
+            'visual'
+        );
     });
 };
+
+function createTask$2(seriesType, seriesModel) {
+    var coordSys = seriesModel.coordinateSystem;
+    if (!coordSys) {
+        return;
+    }
+
+    var data = seriesModel.getData();
+    var dims = [];
+    for (var i = 0; i < coordSys.dimensions.length; i++) {
+        dims.push(seriesModel.coordDimToDataDim(coordSys.dimensions[i])[0]);
+    }
+
+    var task;
+    if (dims.length === 1) {
+        task = data.createEachTask(dims[0], function (x, idx) {
+            // Also {Array.<number>}, not undefined to avoid if...else... statement
+            data.setItemLayout(idx, isNaN(x) ? [NaN, NaN] : coordSys.dataToPoint(x));
+        });
+    }
+    else if (dims.length === 2) {
+        task = data.createEachTask(dims, function (x, y, idx) {
+            // Also {Array.<number>}, not undefined to avoid if...else... statement
+            data.setItemLayout(
+                idx, (isNaN(x) || isNaN(y)) ? [NaN, NaN] : coordSys.dataToPoint([x, y])
+            );
+        });
+    }
+
+    return task;
+}
 
 var samplers = {
     average: function (frame) {
@@ -29121,16 +29718,6 @@ Cartesian2D.prototype = {
 
 inherits(Cartesian2D, Cartesian);
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var Axis2D = function (dim, scale, coordExtent, axisType, position) {
     Axis.call(this, dim, scale, coordExtent);
     /**
@@ -29362,6 +29949,10 @@ axisDefault.categoryAxis = merge({
 axisDefault.valueAxis = merge({
     // 数值起始和结束两端空白策略
     boundaryGap: [0, 0],
+
+    // ???
+    // min/max: [30, datamin, 60] or [20, datamin] or [datamin, 60]
+
     // 最小值, 设置成 'dataMin' 则从数据中计算最小值
     // min: null,
     // 最大值，设置成 'dataMax' 则从数据中计算最大值
@@ -29391,7 +29982,6 @@ axisDefault.logAxis = defaults({
     logBase: 10
 }, axisDefault.valueAxis);
 
-// FIXME axisType is fixed ?
 var AXIS_TYPES = ['value', 'category', 'time', 'log'];
 
 /**
@@ -29547,7 +30137,6 @@ ComponentModel.extend({
  * TODO Default cartesian
  */
 
-// Depends on GridModel, AxisModel, which performs preprocess.
 var each$8 = each$1;
 var ifAxisCrossZero$1 = ifAxisCrossZero;
 var niceScaleExtent$1 = niceScaleExtent;
@@ -31230,9 +31819,6 @@ function makeKey(model) {
     return model.type + '||' + model.id;
 }
 
-/**
- * Base class of AxisView.
- */
 var AxisView = extendComponentView({
 
     type: 'axis',
@@ -31328,13 +31914,6 @@ AxisView.getAxisPointerClass = function (type) {
     return type && axisPointerClazz[type];
 };
 
-/**
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, labelInterval, z2
- * }
- */
 function layout(gridModel, axisModel, opt) {
     opt = opt || {};
     var grid = gridModel.coordinateSystem;
@@ -31629,7 +32208,6 @@ CartesianAxisView.extend({
     type: 'yAxis'
 });
 
-// Grid view
 extendComponentView({
 
     type: 'grid',
@@ -31657,7 +32235,6 @@ registerPreprocessor(function (option) {
     }
 });
 
-// In case developer forget to include grid component
 registerVisual(curry(
     visualSymbol, 'line', 'circle', 'line'
 ));
@@ -32381,7 +32958,6 @@ function getLineWidth(itemModel, rawLayout) {
     return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
 }
 
-// In case developer forget to include grid component
 registerLayout(curry(barLayoutGrid, 'bar'));
 
 // Visual coding for legend
@@ -32623,11 +33199,6 @@ var PieSeries = extendSeriesModel({
 
 mixin(PieSeries, selectableMixin);
 
-/**
- * @param {module:echarts/model/Series} seriesModel
- * @param {boolean} hasAnimation
- * @inner
- */
 function updateDataSelected(uid, seriesModel, hasAnimation, api) {
     var data = seriesModel.getData();
     var dataIndex = this.dataIndex;
@@ -33511,6 +34082,8 @@ SeriesModel.extend({
 
     brushSelector: 'point',
 
+    streamEnabled: true,
+
     defaultOption: {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,
@@ -33552,7 +34125,9 @@ SeriesModel.extend({
                 opacity: 0.8
                 // color: 各异
             }
-        }
+        },
+
+        progressive: null
     }
 
 });
@@ -33701,6 +34276,226 @@ largeSymbolProto.remove = function () {
     this.group.removeAll();
 };
 
+/**
+ * Displayable for incremental rendering. It will be rendered in a separate layer
+ * IncrementalDisplay have too main methods. `clearDisplayables` and `addDisplayables`
+ * addDisplayables will render the added displayables incremetally.
+ * clearDisplayables will clear the layer.
+ * Notice: Added displaybles can't be modified and removed.
+ */
+function IncrementalDisplayble(opts) {
+
+    Displayable.call(this, opts);
+
+    this._displayables = [];
+
+    this._temporaryDisplayables = [];
+
+    this._cursor = 0;
+
+    this._needsClear = true;
+}
+
+IncrementalDisplayble.prototype.isIncremental = true;
+
+IncrementalDisplayble.prototype.needsClear = function () {
+    return this._needsClear;
+};
+
+IncrementalDisplayble.prototype.clearDisplaybles = function () {
+    this._displayables = [];
+    this._temporaryDisplayables = [];
+    this._cursor = 0;
+    this.dirty();
+    this._needsClear = true;
+};
+
+IncrementalDisplayble.prototype.addDisplayable = function (displayable, notPersistent) {
+    if (notPersistent) {
+        this._temporaryDisplayables.push(displayable);
+    }
+    else {
+        this._displayables.push(displayable);
+    }
+    this.dirty();
+};
+
+IncrementalDisplayble.prototype.addDisplayables = function (displayables, notPersistent) {
+    notPersistent = notPersistent || false;
+    for (var i = 0; i < displayables.length; i++) {
+        this.addDisplayable(displayables[i], notPersistent);
+    }
+};
+
+IncrementalDisplayble.prototype.update = function () {
+    this.updateTransform();
+    for (var i = this._cursor; i < this._displayables.length; i++) {
+        var displayable = this._displayables[i];
+        // PENDING
+        displayable.parent = this;
+        displayable.update();
+        displayable.parent = null;
+    }
+    for (var i = 0; i < this._temporaryDisplayables.length; i++) {
+        var displayable = this._temporaryDisplayables[i];
+        // PENDING
+        displayable.parent = this;
+        displayable.update();
+        displayable.parent = null;
+    }
+};
+
+IncrementalDisplayble.prototype.brush = function (ctx, prevEl) {
+    // Render persistant displayables.
+    for (var i = this._cursor; i < this._displayables.length; i++) {
+        this._displayables[i].brush(ctx, i === this._cursor ? null : this._displayables[i - 1]);
+    }
+    this._cursor = i;
+    // Render temporary displayables.
+    for (var i = 0; i < this._temporaryDisplayables.length; i++) {
+        this._temporaryDisplayables[i].brush(ctx, i === 0 ? null : this._temporaryDisplayables[i - 1]);
+    }
+    this._temporaryDisplayables = [];
+    this._needsClear = false;
+};
+
+var m = [];
+IncrementalDisplayble.prototype.getBoundingRect = function () {
+    if (!this._rect) {
+        var rect = new BoundingRect(Infinity, Infinity, -Infinity, -Infinity);
+        for (var i = 0; i < this._displayables.length; i++) {
+            var displayable = this._displayables[i];
+            var childRect = displayable.getBoundingRect().clone();
+            if (displayable.needLocalTransform()) {
+                childRect.applyTransform(displayable.getLocalTransform(m));
+            }
+            rect.union(childRect);
+        }
+        this._rect = rect;
+    }
+    return this._rect;
+};
+
+IncrementalDisplayble.prototype.contain = function (x, y) {
+    var localPos = this.transformCoordToLocal(x, y);
+    var rect = this.getBoundingRect();
+
+    if (rect.contain(localPos[0], localPos[1])) {
+        for (var i = 0; i < this._displayables.length; i++) {
+            var displayable = this._displayables[i];
+            if (displayable.contain(x, y)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
+inherits(IncrementalDisplayble, Displayable);
+
+// Temp.
+
+/**
+ * @constructor
+ */
+function SymbolDraw$2(symbolCtor) {
+    this.root = new IncrementalDisplayble();
+
+    this._symbolCtor = symbolCtor || SymbolClz$1;
+}
+
+var symbolDrawProto$1 = SymbolDraw$2.prototype;
+
+function symbolNeedsDraw$1(data, idx, isIgnore) {
+    var point = data.getItemLayout(idx);
+    // Is an object
+    // if (point && point.hasOwnProperty('point')) {
+    //     point = point.point;
+    // }
+    return point && !isNaN(point[0]) && !isNaN(point[1]) && !(isIgnore && isIgnore(idx))
+                && data.getItemVisual(idx, 'symbol') !== 'none';
+}
+
+symbolDrawProto$1.updateData = function (data, isIgnore) {
+    var seriesModel = this._seriesModel = data.hostModel;
+    this._isIgnore = isIgnore;
+
+    this.root.clearDisplaybles();
+
+    doRender(this, seriesModel, isIgnore);
+};
+
+function doRender(self, seriesModel, isIgnore) {
+    var root = self.root;
+    var data = seriesModel.getData();
+    var seriesModel = data.hostModel;
+    var seriesScope = self._seriesScope = {
+        itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
+        hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
+        symbolRotate: seriesModel.get('symbolRotate'),
+        symbolOffset: seriesModel.get('symbolOffset'),
+        hoverAnimation: seriesModel.get('hoverAnimation'),
+
+        labelModel: seriesModel.getModel('label.normal'),
+        hoverLabelModel: seriesModel.getModel('label.emphasis'),
+        cursorStyle: seriesModel.get('cursor')
+    };
+
+    var dataEachTask = data.createEachTask(function (newIdx) {
+        var point = data.getItemLayout(newIdx);
+        if (symbolNeedsDraw$1(data, newIdx, isIgnore)) {
+            // var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+            // symbolEl.attr('position', point);
+            // ??? not a good interface? which must ensure data index
+            // corresponding implicitly.
+
+            // ??? group?
+            var symbolEl = new Circle({
+                shape: {
+                    r: 1 + Math.random() * 1
+                },
+                style: {
+                    fill: '#121',
+                    blend: 'lighter'
+                },
+                position: point
+            });
+            data.setItemGraphicEl(newIdx, symbolEl);
+
+            root.addDisplayable(symbolEl, true);
+        }
+    });
+
+    seriesModel.pipeTask(dataEachTask, 'render', ['updateViewBase']);
+}
+
+// ???
+symbolDrawProto$1.updateView = function () {
+    var seriesModel = this._seriesModel;
+    if (!seriesModel) {
+        return;
+    }
+
+    doRender(this, this._seriesModel, this._isIgnore);
+};
+
+symbolDrawProto$1.remove = function (enableAnimation) {
+    var root = this.root;
+    var data = this._data;
+    if (data) {
+        if (enableAnimation) {
+            data.eachItemGraphicEl(function (el) {
+                el.fadeOut(function () {
+                    root.remove(el);
+                });
+            });
+        }
+        else {
+            root.clearDisplaybles();
+        }
+    }
+};
+
 extendChartView({
 
     type: 'scatter',
@@ -33708,29 +34503,34 @@ extendChartView({
     init: function () {
         this._normalSymbolDraw = new SymbolDraw();
         this._largeSymbolDraw = new LargeSymbolDraw();
+        this._streamSymbolDraw = new SymbolDraw$2();
     },
 
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-        var largeSymbolDraw = this._largeSymbolDraw;
-        var normalSymbolDraw = this._normalSymbolDraw;
         var group = this.group;
 
-        var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
-            ? largeSymbolDraw : normalSymbolDraw;
+        var symbolDraw = seriesModel.useStream()
+            ? this._streamSymbolDraw
+            : seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
+            ? this._largeSymbolDraw
+            : this._normalSymbolDraw;
 
         this._symbolDraw = symbolDraw;
         symbolDraw.updateData(data);
-        group.add(symbolDraw.group);
+        group.add(symbolDraw.group || symbolDraw.root);
 
-        group.remove(
-            symbolDraw === largeSymbolDraw
-            ? normalSymbolDraw.group : largeSymbolDraw.group
-        );
+        this._lasySymbolDrawGroup && group.remove(this._lasySymbolDrawGroup);
+
+        this._lasySymbolDrawGroup = symbolDraw.group;
     },
 
     updateLayout: function (seriesModel) {
         this._symbolDraw.updateLayout(seriesModel);
+    },
+
+    updateView: function (seriesModel) {
+        this._symbolDraw.updateView(seriesModel);
     },
 
     remove: function (ecModel, api) {
@@ -33740,9 +34540,11 @@ extendChartView({
     dispose: function () {}
 });
 
-// In case developer forget to include grid component
 registerVisual(curry(visualSymbol, 'scatter', 'circle', null));
 registerLayout(curry(layoutPoints, 'scatter'));
+
+// echarts.registerVisual(zrUtil.curry(visualSymbol, 'streamScatter', 'circle', null));
+// echarts.registerLayout(zrUtil.curry(layoutPoints, 'streamScatter'));
 
 function IndicatorAxis(dim, scale, radiusExtent) {
     Axis.call(this, dim, scale, radiusExtent);
@@ -34635,7 +35437,6 @@ var backwardCompat$1 = function (option) {
     });
 };
 
-// Must use radar component
 registerVisual(curry(dataColor, 'radar'));
 registerVisual(curry(visualSymbol, 'radar', 'circle', null));
 registerLayout(radarLayout);
@@ -35040,7 +35841,6 @@ var fixDiaoyuIsland = function (geo) {
     }
 };
 
-// Geo fix functions
 var geoFixFuncs = [
     fixNanhai,
     fixTextCoord,
@@ -35267,11 +36067,6 @@ function doConvert(methodName, ecModel, finder, value) {
     return coordSys === this ? coordSys[methodName](value) : null;
 }
 
-/**
- * Resize method bound to the geo
- * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function resizeGeo(geoModel, api) {
 
     var boundingCoords = geoModel.get('boundingCoords');
@@ -35769,13 +36564,6 @@ registerAction(
     function () {}
 );
 
-/**
- * @alias module:echarts/component/helper/RoamController
- * @constructor
- * @mixin {module:zrender/mixin/Eventful}
- *
- * @param {module:zrender/zrender~ZRender} zr
- */
 function RoamController(zr) {
 
     /**
@@ -36596,19 +37384,10 @@ function updateCenterAndZoom(
     };
 }
 
-/**
- * @payload
- * @property {string} [componentType=series]
- * @property {number} [dx]
- * @property {number} [dy]
- * @property {number} [zoom]
- * @property {number} [originX]
- * @property {number} [originY]
- */
 registerAction({
     type: 'geoRoam',
     event: 'geoRoam',
-    update: 'updateLayout'
+    update: 'updateView'
 }, function (payload, ecModel) {
     var componentType = payload.componentType || 'series';
 
@@ -36712,12 +37491,6 @@ var mapVisual = function (ecModel) {
     });
 };
 
-// FIXME 公用？
-/**
- * @param {Array.<module:echarts/data/List>} datas
- * @param {string} statisticType 'average' 'sum'
- * @inner
- */
 function dataStatistics(datas, statisticType) {
     var dataNameMap = {};
     var dims = ['value'];
@@ -36876,9 +37649,9 @@ function linkList(opt) {
 
     // Only mainData trigger change, because struct.update may trigger
     // another changable methods, which may bring about dead lock.
-    each$10(mainData.CHANGABLE_METHODS, function (methodName) {
-        mainData.wrapMethod(methodName, curry(changeInjection, opt));
-    });
+    // each(mainData.CHANGABLE_METHODS, function (methodName) {
+    //     mainData.wrapMethod(methodName, zrUtil.curry(changeInjection, opt));
+    // });
 
     // Make sure datas contains mainData.
     assert(datas[mainData.dataType] === mainData);
@@ -36898,10 +37671,10 @@ function transferInjection(opt, res) {
     return res;
 }
 
-function changeInjection(opt, res) {
-    opt.struct && opt.struct.update(this);
-    return res;
-}
+// function changeInjection(opt, res) {
+//     opt.struct && opt.struct.update(this);
+//     return res;
+// }
 
 function cloneShallowInjection(opt, res) {
     // cloneShallow, which brings about some fragilities, may be inappropriate
@@ -36959,11 +37732,6 @@ function linkSingle(data, dataType, mainData, opt) {
  * @module echarts/data/Tree
  */
 
-/**
- * @constructor module:echarts/data/Tree~TreeNode
- * @param {string} name
- * @param {module:echarts/data/Tree} hostTree
- */
 var TreeNode = function (name, hostTree) {
     /**
      * @type {string}
@@ -37577,10 +38345,6 @@ SeriesModel.extend({
  * @see https://github.com/d3/d3-hierarchy
  */
 
-/**
- * Initialize all computational message for following algorithm
- * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
- */
 function init$2(root) {
     root.hierNode = {
         defaultAncestor: null,
@@ -37889,14 +38653,14 @@ extendChartView({
 
         data.diff(oldData)
             .add(function (newIdx) {
-                if (symbolNeedsDraw$1(data, newIdx)) {
+                if (symbolNeedsDraw$2(data, newIdx)) {
                     // create node and edge
                     updateNode(data, newIdx, null, group, seriesModel, seriesScope);
                 }
             })
             .update(function (newIdx, oldIdx) {
                 var symbolEl = oldData.getItemGraphicEl(oldIdx);
-                if (!symbolNeedsDraw$1(data, newIdx)) {
+                if (!symbolNeedsDraw$2(data, newIdx)) {
                     symbolEl && removeNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
                     return;
                 }
@@ -37933,7 +38697,7 @@ extendChartView({
 
 });
 
-function symbolNeedsDraw$1(data, dataIndex) {
+function symbolNeedsDraw$2(data, dataIndex) {
     var layout = data.getItemLayout(dataIndex);
 
     return layout
@@ -38895,21 +39659,6 @@ function packEventData(el, seriesModel, itemNode) {
     };
 }
 
-/**
- * @param {number} [time=500] Time in ms
- * @param {string} [easing='linear']
- * @param {number} [delay=0]
- * @param {Function} [callback]
- *
- * @example
- *  // Animate position
- *  animation
- *      .createWrap()
- *      .add(el1, {position: [10, 10]})
- *      .add(el2, {shape: {width: 500}, style: {fill: 'red'}}, 400)
- *      .done(function () { // done })
- *      .start('cubicOut');
- */
 function createWrap() {
 
     var storage = [];
@@ -41329,7 +42078,6 @@ registerLayout(treemapLayout);
  * @author Yi Shen(https://www.github.com/pissang)
  */
 
-// id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey (id) {
     return '_EC_' + id;
 }
@@ -44502,11 +45250,6 @@ var FunnelSeries = extendSeriesModel({
     }
 });
 
-/**
- * Piece of pie including Sector, Label, LabelLine
- * @constructor
- * @extends {module:zrender/graphic/Group}
- */
 function FunnelPiece(data, idx) {
 
     Group.call(this);
@@ -44925,14 +45668,6 @@ function mergeAxisOptionFromParallel(option) {
     });
 }
 
-/**
- * @constructor module:echarts/coord/parallel/ParallelAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- */
 var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -45831,11 +46566,6 @@ ComponentModel.extend({
 
 });
 
-/**
- * @payload
- * @property {string} parallelAxisId
- * @property {Array.<Array.<number>>} intervals
- */
 var actionInfo$1 = {
     type: 'axisAreaSelect',
     event: 'axisAreaSelected',
@@ -47887,10 +48617,6 @@ function createGridClipShape$2(rect, seriesModel, cb) {
     return rectEl;
 }
 
-/**
- * nest helper used to group by the array.
- * can specified the keys and sort the keys.
- */
 function nest() {
 
     var keysFunction = [];
@@ -49701,8 +50427,6 @@ registerLayout(curry(
     layoutPoints, 'effectScatter'
 ));
 
-// Convert [ [{coord: []}, {coord: []}] ]
-// to [ { coords: [[]] } ]
 function preprocessOption(seriesOpt) {
     var data = seriesOpt.data;
     if (data && data[0] && data[0][0] && data[0][0].coord) {
@@ -49855,11 +50579,6 @@ var LinesSeries = SeriesModel.extend({
  * @module echarts/chart/helper/EffectLine
  */
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Line}
- */
 function EffectLine(lineData, idx, seriesScope) {
     Group.call(this);
 
@@ -50031,11 +50750,6 @@ inherits(EffectLine, Group);
  * @module echarts/chart/helper/Line
  */
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Polyline}
- */
 function Polyline$2(lineData, idx, seriesScope) {
     Group.call(this);
 
@@ -50111,11 +50825,6 @@ inherits(Polyline$2, Group);
  * @module echarts/chart/helper/EffectLine
  */
 
-/**
- * @constructor
- * @extends {module:echarts/chart/helper/EffectLine}
- * @alias {module:echarts/chart/helper/Polyline}
- */
 function EffectPolyline(lineData, idx, seriesScope) {
     EffectLine.call(this, lineData, idx, seriesScope);
     this._lastFrame = 0;
@@ -51784,7 +52493,6 @@ function toIntTimes(times) {
         : Math.ceil(times);
 }
 
-// In case developer forget to include grid component
 registerLayout(curry(
     barLayoutGrid, 'pictorialBar'
 ));
@@ -51792,15 +52500,6 @@ registerVisual(curry(
     visualSymbol, 'pictorialBar', 'roundRect', null
 ));
 
-/**
- * @constructor  module:echarts/coord/single/SingleAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var SingleAxis = function (dim, scale, coordExtent, axisType, position) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -51890,13 +52589,6 @@ inherits(SingleAxis, Axis);
  * Single coordinates system.
  */
 
-/**
- * Create a single coordinates system.
- *
- * @param {module:echarts/coord/single/AxisModel} axisModel
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function Single(axisModel, ecModel, api) {
 
     /**
@@ -52157,13 +52849,6 @@ Single.prototype = {
  * Single coordinate system creator.
  */
 
-/**
- * Create single coordinate system and inject it into seriesModel.
- *
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- * @return {Array.<module:echarts/coord/single/Single>}
- */
 function create$3(ecModel, api) {
     var singles = [];
 
@@ -52196,13 +52881,6 @@ CoordinateSystemManager.register('single', {
     dimensions: Single.prototype.dimensions
 });
 
-/**
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, labelInterval, z2
- * }
- */
 function layout$1 (axisModel, opt) {
     opt = opt || {};
     var single = axisModel.coordinateSystem;
@@ -52455,11 +53133,6 @@ merge(AxisModel$4.prototype, axisModelCommonMixin);
 
 axisModelCreator('single', AxisModel$4, getAxisType$2, defaultOption$2);
 
-/**
- * @param {Object} finder contains {seriesIndex, dataIndex, dataIndexInside}
- * @param {module:echarts/model/Global} ecModel
- * @return {Object} {point: [x, y], el: ...} point Will not be null.
- */
 var findPointFromSeries = function (finder, ecModel) {
     var point = [];
     var seriesIndex = finder.seriesIndex;
@@ -53657,9 +54330,6 @@ function updateMandatoryProps(group, axisPointerModel, silent) {
 
 enableClassExtend(BaseAxisPointer);
 
-/**
- * @param {module:echarts/model/Model} axisPointerModel
- */
 function buildElStyle(axisPointerModel) {
     var axisPointerType = axisPointerModel.get('type');
     var styleModel = axisPointerModel.getModel(axisPointerType + 'Style');
@@ -53981,9 +54651,6 @@ function getAxisDimIndex(axis) {
 
 AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 
-// CartesianAxisPointer is not supposed to be required here. But consider
-// echarts.simple.js and online build tooltip, which only require gridSimple,
-// CartesianAxisPointer should be able to required somewhere.
 registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.
     if (option) {
@@ -55476,10 +56143,6 @@ function processRemove(oldIndex) {
     child && context.group.remove(child);
 }
 
-// -------------
-// Preprocessor
-// -------------
-
 registerPreprocessor(function (option) {
     var graphicOption = option.graphic;
 
@@ -56248,13 +56911,6 @@ registerAction(
     curry(legendSelectActionHandler, 'unSelect')
 );
 
-/**
- * Layout list like component.
- * It will box layout each items in group of component and then position the whole group in the viewport
- * @param {module:zrender/group/Group} group
- * @param {module:echarts/model/Component} componentModel
- * @param {module:echarts/ExtensionAPI}
- */
 function layout$2(group, componentModel, api) {
     var boxLayoutParams = componentModel.getBoxLayoutParams();
     var padding = componentModel.get('padding');
@@ -56673,7 +57329,6 @@ var legendFilter = function (ecModel) {
 
 // Do not contain scrollable legend, for sake of file size.
 
-// Series Filter
 registerProcessor(legendFilter);
 
 ComponentModel.registerSubTypeDefaulter('legend', function () {
@@ -57124,12 +57779,6 @@ var ScrollableLegendView = LegendView.extend({
 
 });
 
-/**
- * @event legendScroll
- * @type {Object}
- * @property {string} type 'legendScroll'
- * @property {string} scrollDataIndex
- */
 registerAction(
     'legendScroll', 'legendscroll',
     function (payload, ecModel) {
@@ -58278,14 +58927,6 @@ function isCenterAlign(align) {
 
 // FIXME Better way to pack data in graphic element
 
-/**
- * @action
- * @property {string} type
- * @property {number} seriesIndex
- * @property {number} dataIndex
- * @property {number} [x]
- * @property {number} [y]
- */
 registerAction(
     {
         type: 'showTip',
@@ -58663,11 +59304,6 @@ inherits(AngleAxis, Axis);
  * @module echarts/coord/polar/Polar
  */
 
-/**
- * @alias {module:echarts/coord/polar/Polar}
- * @constructor
- * @param {string} name
- */
 var Polar = function (name) {
 
     /**
@@ -58993,12 +59629,6 @@ extendComponentModel({
 
 // TODO Axis scale
 
-// 依赖 PolarModel 做预处理
-/**
- * Resize method bound to the polar
- * @param {module:echarts/coord/polar/PolarModel} polarModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function resizePolar(polar, polarModel, api) {
     var center = polarModel.get('center');
     var width = api.getWidth();
@@ -59622,7 +60252,6 @@ var pointerShapeBuilder$2 = {
 
 AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
-// For reducing size of echarts.min, barLayoutPolar is required by polar.
 registerLayout(curry(barLayoutPolar, 'bar'));
 
 // Polar view
@@ -60048,15 +60677,6 @@ function applyVisual(stateList, visualMappings, data, getValueState, scope, dime
     }
 }
 
-// Key of the first level is brushType: `line`, `rect`, `polygon`.
-// Key of the second level is chart element type: `point`, `rect`.
-// See moudule:echarts/component/helper/BrushController
-// function param:
-//      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
-//      {Object} selectors {point: selector, rect: selector, ...}
-//      {Object} area {range: [[], [], ..], boudingRect}
-// function return:
-//      {boolean} Whether in the given brush.
 var selector = {
     lineX: getLineSelectors(0),
     lineY: getLineSelectors(1),
@@ -60259,9 +60879,9 @@ function BrushTargetManager(option, ecModel, opt) {
     });
 }
 
-var proto = BrushTargetManager.prototype;
+var proto$1 = BrushTargetManager.prototype;
 
-proto.setOutputRanges = function (areas, ecModel) {
+proto$1.setOutputRanges = function (areas, ecModel) {
     this.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys) {
         (area.coordRanges || (area.coordRanges = [])).push(coordRange);
         // area.coordRange is the first of area.coordRanges
@@ -60281,7 +60901,7 @@ proto.setOutputRanges = function (areas, ecModel) {
     });
 };
 
-proto.matchOutputRanges = function (areas, ecModel, cb) {
+proto$1.matchOutputRanges = function (areas, ecModel, cb) {
     each$23(areas, function (area) {
         var targetInfo = this.findTargetInfo(area, ecModel);
 
@@ -60297,7 +60917,7 @@ proto.matchOutputRanges = function (areas, ecModel, cb) {
     }, this);
 };
 
-proto.setInputRanges = function (areas, ecModel) {
+proto$1.setInputRanges = function (areas, ecModel) {
     each$23(areas, function (area) {
         var targetInfo = this.findTargetInfo(area, ecModel);
 
@@ -60336,7 +60956,7 @@ proto.setInputRanges = function (areas, ecModel) {
     }, this);
 };
 
-proto.makePanelOpts = function (api, getDefaultBrushType) {
+proto$1.makePanelOpts = function (api, getDefaultBrushType) {
     return map(this._targetInfoList, function (targetInfo) {
         var rect = targetInfo.getPanelRect();
         return {
@@ -60351,7 +60971,7 @@ proto.makePanelOpts = function (api, getDefaultBrushType) {
     });
 };
 
-proto.controlSeries = function (area, seriesModel, ecModel) {
+proto$1.controlSeries = function (area, seriesModel, ecModel) {
     // Check whether area is bound in coord, and series do not belong to that coord.
     // If do not do this check, some brush (like lineX) will controll all axes.
     var targetInfo = this.findTargetInfo(area, ecModel);
@@ -60369,7 +60989,7 @@ proto.controlSeries = function (area, seriesModel, ecModel) {
  * @param {Array} targetInfoList
  * @return {Object|boolean}
  */
-proto.findTargetInfo = function (area, ecModel) {
+proto$1.findTargetInfo = function (area, ecModel) {
     var targetInfoList = this._targetInfoList;
     var foundCpts = parseFinder$1(ecModel, area);
 
@@ -61145,14 +61765,6 @@ function updateController(brushModel, ecModel, api, payload) {
         .updateCovers(brushModel.areas.slice());
 }
 
-/**
- * payload: {
- *      brushIndex: number, or,
- *      brushId: string, or,
- *      brushName: string,
- *      globalRanges: Array
- * }
- */
 registerAction(
         {type: 'brush', event: 'brush', update: 'updateView'},
     function (payload, ecModel) {
@@ -61273,11 +61885,11 @@ Brush.defaultOption = {
     title: clone(brushLang.title)
 };
 
-var proto$1 = Brush.prototype;
+var proto$2 = Brush.prototype;
 
-proto$1.render =
-proto$1.updateView =
-proto$1.updateLayout = function (featureModel, ecModel, api) {
+proto$2.render =
+proto$2.updateView =
+proto$2.updateLayout = function (featureModel, ecModel, api) {
     var brushType;
     var brushMode;
     var isBrushed;
@@ -61304,7 +61916,7 @@ proto$1.updateLayout = function (featureModel, ecModel, api) {
     });
 };
 
-proto$1.getIcons = function () {
+proto$2.getIcons = function () {
     var model = this.model;
     var availableIcons = model.get('icon', true);
     var icons = {};
@@ -61316,7 +61928,7 @@ proto$1.getIcons = function () {
     return icons;
 };
 
-proto$1.onclick = function (ecModel, api, type) {
+proto$2.onclick = function (ecModel, api, type) {
     var brushType = this._brushType;
     var brushMode = this._brushMode;
 
@@ -61358,7 +61970,6 @@ register$1('brush', Brush);
 
 registerPreprocessor(preprocessor$1);
 
-// (24*60*60*1000)
 var PROXIMATE_ONE_DAY = 86400000;
 
 /**
@@ -62420,7 +63031,6 @@ extendComponentView({
  * @author dxh
  */
 
-// Model
 extendComponentModel({
 
     type: 'title',
@@ -65895,7 +66505,6 @@ var VisualMapModel = extendComponentModel({
 
 });
 
-// Constant
 var DEFAULT_BAR_BOUND = [20, 140];
 
 var ContinuousModel = VisualMapModel.extend({
@@ -66277,12 +66886,6 @@ var VisualMapView = extendComponentView({
 
 });
 
-/**
- * @param {module:echarts/component/visualMap/VisualMapModel} visualMapModel\
- * @param {module:echarts/ExtensionAPI} api
- * @param {Array.<number>} itemSize always [short, long]
- * @return {string} 'left' or 'right' or 'top' or 'bottom'
- */
 function getItemAlign(visualMapModel, api, itemSize) {
     var modelOption = visualMapModel.option;
     var itemAlign = modelOption.align;
@@ -69569,16 +70172,6 @@ var TimelineView = Component.extend({
     type: 'timeline'
 });
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var TimelineAxis = function (dim, scale, coordExtent, axisType) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -70669,9 +71262,9 @@ SaveAsImage.defaultOption = {
 
 SaveAsImage.prototype.unusable = !env$1.canvasSupported;
 
-var proto$2 = SaveAsImage.prototype;
+var proto$3 = SaveAsImage.prototype;
 
-proto$2.onclick = function (ecModel, api) {
+proto$3.onclick = function (ecModel, api) {
     var model = this.model;
     var title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
     var $a = document.createElement('a');
@@ -70745,9 +71338,9 @@ MagicType.defaultOption = {
     seriesIndex: {}
 };
 
-var proto$3 = MagicType.prototype;
+var proto$4 = MagicType.prototype;
 
-proto$3.getIcons = function () {
+proto$4.getIcons = function () {
     var model = this.model;
     var availableIcons = model.get('icon');
     var icons = {};
@@ -70809,7 +71402,7 @@ var radioTypes = [
     ['stack', 'tiled']
 ];
 
-proto$3.onclick = function (ecModel, api, type) {
+proto$4.onclick = function (ecModel, api, type) {
     var model = this.model;
     var seriesIndex = model.get('seriesIndex.' + type);
     // Not supported magicType
@@ -71461,7 +72054,6 @@ DataZoomView.extend({
  * DataZoom component entry
  */
 
-// Use dataZoomSelect
 var dataZoomLang = lang.toolbox.dataZoom;
 var each$31 = each$1;
 
@@ -71496,9 +72088,9 @@ DataZoom.defaultOption = {
     title: clone(dataZoomLang.title)
 };
 
-var proto$4 = DataZoom.prototype;
+var proto$5 = DataZoom.prototype;
 
-proto$4.render = function (featureModel, ecModel, api, payload) {
+proto$5.render = function (featureModel, ecModel, api, payload) {
     this.model = featureModel;
     this.ecModel = ecModel;
     this.api = api;
@@ -71507,15 +72099,15 @@ proto$4.render = function (featureModel, ecModel, api, payload) {
     updateBackBtnStatus(featureModel, ecModel);
 };
 
-proto$4.onclick = function (ecModel, api, type) {
+proto$5.onclick = function (ecModel, api, type) {
     handlers$1[type].call(this);
 };
 
-proto$4.remove = function (ecModel, api) {
+proto$5.remove = function (ecModel, api) {
     this._brushController.unmount();
 };
 
-proto$4.dispose = function (ecModel, api) {
+proto$5.dispose = function (ecModel, api) {
     this._brushController.dispose();
 };
 
@@ -71542,7 +72134,7 @@ var handlers$1 = {
 /**
  * @private
  */
-proto$4._onBrush = function (areas, opt) {
+proto$5._onBrush = function (areas, opt) {
     if (!opt.isEnd || !areas.length) {
         return;
     }
@@ -71607,7 +72199,7 @@ proto$4._onBrush = function (areas, opt) {
 /**
  * @private
  */
-proto$4._dispatchZoomAction = function (snapshot) {
+proto$5._dispatchZoomAction = function (snapshot) {
     var batch = [];
 
     // Convert from hash map to array.
@@ -71763,9 +72355,9 @@ Restore.defaultOption = {
     title: restoreLang.title
 };
 
-var proto$5 = Restore.prototype;
+var proto$6 = Restore.prototype;
 
-proto$5.onclick = function (ecModel, api, type) {
+proto$6.onclick = function (ecModel, api, type) {
     clear$1(ecModel);
 
     api.dispatchAction({
@@ -72853,10 +73445,10 @@ if (!env$1.canvasSupported) {
 
     // In case Displayable has been mixed in RectText
     for (var i$3 = 0; i$3 < list.length; i$3++) {
-        var proto$6 = list[i$3].prototype;
-        proto$6.drawRectText = drawRectText;
-        proto$6.removeRectText = removeRectText;
-        proto$6.appendRectText = appendRectText;
+        var proto$7 = list[i$3].prototype;
+        proto$7.drawRectText = drawRectText;
+        proto$7.removeRectText = removeRectText;
+        proto$7.appendRectText = appendRectText;
     }
 
     Text.prototype.brushVML = function (vmlRoot) {
@@ -73176,7 +73768,7 @@ function bindStyle(svgEl, style, isText) {
         var strokeWidth = isText
             ? style.textStrokeWidth
             : style.lineWidth;
-        var strokeScale = style.strokeNoScale
+        var strokeScale = !isText && style.strokeNoScale
             ? style.host.getLineScale()
             : 1;
         attr(svgEl, 'stroke-width', strokeWidth / strokeScale);
@@ -73789,12 +74381,14 @@ var MARK_USED = '1';
 function Definable(
     svgRoot,
     tagNames,
-    markLabel
+    markLabel,
+    domName
 ) {
 
     this._svgRoot = svgRoot;
     this._tagNames = typeof tagNames === 'string' ? [tagNames] : tagNames;
     this._markLabel = markLabel;
+    this._domName = domName || '_dom';
 
     this.nextId = 0;
 }
@@ -73860,17 +74454,17 @@ Definable.prototype.update = function (element, onUpdate) {
     }
 
     var defs = this.getDefs(false);
-    if (element._dom && defs.contains(element._dom)) {
+    if (element[this._domName] && defs.contains(element[this._domName])) {
         // Update DOM
         if (typeof onUpdate === 'function') {
-            onUpdate();
+            onUpdate(element);
         }
     }
     else {
         // No previous dom, create new
         var dom = this.add(element);
         if (dom) {
-            element._dom = dom;
+            element[this._domName] = dom;
         }
     }
 };
@@ -73894,7 +74488,10 @@ Definable.prototype.addDom = function (dom) {
  */
 Definable.prototype.removeDom = function (element) {
     var defs = this.getDefs(false);
-    defs.removeChild(element._dom);
+    if (defs) {
+        defs.removeChild(element[this._domName]);
+        element[this._domName] = null;
+    }
 };
 
 
@@ -74017,13 +74614,6 @@ Definable.prototype.getSvgElement = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG gradient elements.
- *
- * @class
- * @extends Definable
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function GradientManager(svgRoot) {
     Definable.call(
         this,
@@ -74217,13 +74807,6 @@ GradientManager.prototype.markUsed = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG clipPath elements.
- *
- * @class
- * @extends Definable
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function ClippathManager(svgRoot) {
     Definable.call(this, svgRoot, 'clipPath', '__clippath_in_use__');
 }
@@ -74333,6 +74916,8 @@ ClippathManager.prototype.updateDom = function (
         }
 
         var pathEl = this.getSvgElement(clipPath);
+
+        clipPathEl.innerHTML = '';
         /**
          * Use `cloneNode()` here to appendChild to multiple parents,
          * which may happend when Text and other shapes are using the same
@@ -74374,6 +74959,203 @@ ClippathManager.prototype.markUsed = function (displayable) {
         });
     }
 };
+
+/**
+ * @file Manages SVG shadow elements.
+ * @author Zhang Wenli
+ */
+
+function ShadowManager(svgRoot) {
+    Definable.call(
+        this,
+        svgRoot,
+        ['filter'],
+        '__filter_in_use__',
+        '_shadowDom'
+    );
+}
+
+
+inherits(ShadowManager, Definable);
+
+
+/**
+ * Create new shadow DOM for fill or stroke if not exist,
+ * but will not update shadow if exists.
+ *
+ * @param {SvgElement}  svgElement   SVG element to paint
+ * @param {Displayable} displayable  zrender displayable element
+ */
+ShadowManager.prototype.addWithoutUpdate = function (
+    svgElement,
+    displayable
+) {
+    if (displayable && hasShadow(displayable.style)) {
+        var style = displayable.style;
+
+        // Create dom in <defs> if not exists
+        var dom;
+        if (style._shadowDom) {
+            // Gradient exists
+            dom = style._shadowDom;
+
+            var defs = this.getDefs(true);
+            if (!defs.contains(style._shadowDom)) {
+                // _shadowDom is no longer in defs, recreate
+                this.addDom(dom);
+            }
+        }
+        else {
+            // New dom
+            dom = this.add(displayable);
+        }
+
+        this.markUsed(displayable);
+
+        var id = dom.getAttribute('id');
+        svgElement.style.filter = 'url(#' + id + ')';
+    }
+};
+
+
+/**
+ * Add a new shadow tag in <defs>
+ *
+ * @param {Displayable} displayable  zrender displayable element
+ * @return {SVGFilterElement} created DOM
+ */
+ShadowManager.prototype.add = function (displayable) {
+    var dom = this.createElement('filter');
+    var style = displayable.style;
+
+    // Set dom id with shadow id, since each shadow instance
+    // will have no more than one dom element.
+    // id may exists before for those dirty elements, in which case
+    // id should remain the same, and other attributes should be
+    // updated.
+    style._shadowDomId = style._shadowDomId || this.nextId++;
+    dom.setAttribute('id', 'zr-shadow-' + style._shadowDomId);
+
+    this.updateDom(displayable, dom);
+    this.addDom(dom);
+
+    return dom;
+};
+
+
+/**
+ * Update shadow.
+ *
+ * @param {Displayable} displayable  zrender displayable element
+ */
+ShadowManager.prototype.update = function (svgElement, displayable) {
+    var style = displayable.style;
+    if (hasShadow(style)) {
+        var that = this;
+        Definable.prototype.update.call(this, displayable, function (style) {
+            that.updateDom(displayable, style._shadowDom);
+        });
+    }
+    else {
+        // Remove shadow
+        this.remove(svgElement, style);
+    }
+};
+
+
+/**
+ * Remove DOM and clear parent filter
+ */
+ShadowManager.prototype.remove = function (svgElement, style) {
+    if (style._shadowDomId != null) {
+        this.removeDom(style);
+        svgElement.style.filter = '';
+    }
+};
+
+
+/**
+ * Update shadow dom
+ *
+ * @param {Displayable} displayable  zrender displayable element
+ * @param {SVGFilterElement} dom DOM to update
+ */
+ShadowManager.prototype.updateDom = function (displayable, dom) {
+    var domChild = dom.getElementsByTagName('feDropShadow');
+    if (domChild.length === 0) {
+        domChild = this.createElement('feDropShadow');
+    }
+    else {
+        domChild = domChild[0];
+    }
+
+    var style = displayable.style;
+    var scaleX = displayable.scale ? (displayable.scale[0] || 1) : 1;
+    var scaleY = displayable.scale ? (displayable.scale[1] || 1) : 1;
+
+    // TODO: textBoxShadowBlur is not supported yet
+    var offsetX, offsetY, blur, color;
+    if (style.shadowBlur || style.shadowOffsetX || style.shadowOffsetY) {
+        offsetX = style.shadowOffsetX;
+        offsetY = style.shadowOffsetY;
+        blur = style.shadowBlur;
+        color = style.shadowColor;
+    }
+    else if (style.textShadowBlur) {
+        offsetX = style.textShadowOffsetX;
+        offsetY = style.textShadowOffsetY;
+        blur = style.textShadowBlur;
+        color = style.textShadowColor;
+    }
+    else {
+        // Remove shadow
+        this.removeDom(dom, style);
+        return;
+    }
+
+    domChild.setAttribute('dx', offsetX / scaleX);
+    domChild.setAttribute('dy', offsetY / scaleY);
+    domChild.setAttribute('flood-color', color);
+
+    // Divide by two here so that it looks the same as in canvas
+    // See: https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-shadowblur
+    var stdDx = blur / 2 / scaleX;
+    var stdDy = blur / 2 / scaleY;
+    var stdDeviation = stdDx + ' ' + stdDy;
+    domChild.setAttribute('stdDeviation', stdDeviation);
+
+    // Fix filter clipping problem
+    dom.setAttribute('x', '-100%');
+    dom.setAttribute('y', '-100%');
+    dom.setAttribute('width', Math.ceil(blur / 2 * 200) + '%');
+    dom.setAttribute('height', Math.ceil(blur / 2 * 200) + '%');
+
+    dom.appendChild(domChild);
+
+    // Store dom element in shadow, to avoid creating multiple
+    // dom instances for the same shadow element
+    style._shadowDom = dom;
+};
+
+/**
+ * Mark a single shadow to be used
+ *
+ * @param {Displayable} displayable displayable element
+ */
+ShadowManager.prototype.markUsed = function (displayable) {
+    var style = displayable.style;
+    if (style && style._shadowDom) {
+        Definable.prototype.markUsed.call(this, style._shadowDom);
+    }
+};
+
+function hasShadow(style) {
+    // TODO: textBoxShadowBlur is not supported yet
+    return style
+        && (style.shadowBlur || style.shadowOffsetX || style.shadowOffsetY
+            || style.textShadowBlur || style.textShadowOffsetX
+            || style.textShadowOffsetY);
+}
 
 /**
  * SVG Painter
@@ -74450,11 +75232,11 @@ var SVGPainter = function (root, storage, opts) {
     svgRoot.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svgRoot.setAttribute('version', '1.1');
     svgRoot.setAttribute('baseProfile', 'full');
-    svgRoot.style['user-select'] = 'none';
-    svgRoot.style.cssText = 'position:absolute;left:0;top:0;';
+    svgRoot.style.cssText = 'user-select:none;position:absolute;left:0;top:0;';
 
     this.gradientManager = new GradientManager(svgRoot);
     this.clipPathManager = new ClippathManager(svgRoot);
+    this.shadowManager = new ShadowManager(svgRoot);
 
     var viewport = document.createElement('div');
     viewport.style.cssText = 'overflow:hidden;position:relative';
@@ -74502,6 +75284,7 @@ SVGPainter.prototype = {
     _paintList: function (list) {
         this.gradientManager.markAllUnused();
         this.clipPathManager.markAllUnused();
+        this.shadowManager.markAllUnused();
 
         var svgRoot = this._svgRoot;
         var visibleList = this._visibleList;
@@ -74512,6 +75295,8 @@ SVGPainter.prototype = {
         for (i = 0; i < listLen; i++) {
             var displayable = list[i];
             var svgProxy = getSvgProxy(displayable);
+            var svgElement = getSvgElement(displayable)
+                || getTextSvgElement(displayable);
             if (!displayable.invisible) {
                 if (displayable.__dirty) {
                     svgProxy && svgProxy.brush(displayable);
@@ -74519,12 +75304,15 @@ SVGPainter.prototype = {
                     // Update clipPath
                     this.clipPathManager.update(displayable);
 
-                    // Update gradient
+                    // Update gradient and shadow
                     if (displayable.style) {
                         this.gradientManager
                             .update(displayable.style.fill);
                         this.gradientManager
                             .update(displayable.style.stroke);
+
+                        this.shadowManager
+                            .update(svgElement, displayable);
                     }
 
                     displayable.__dirty = false;
@@ -74578,6 +75366,8 @@ SVGPainter.prototype = {
 
                     this.gradientManager
                         .addWithoutUpdate(svgElement, displayable);
+                    this.shadowManager
+                        .addWithoutUpdate(prevSvgElement, displayable);
                     this.clipPathManager.markUsed(displayable);
                 }
             }
@@ -74594,6 +75384,10 @@ SVGPainter.prototype = {
                     this.gradientManager
                         .addWithoutUpdate(svgElement, displayable);
 
+                    this.shadowManager.markUsed(displayable);
+                    this.shadowManager
+                        .addWithoutUpdate(svgElement, displayable);
+
                     this.clipPathManager.markUsed(displayable);
                 }
             }
@@ -74601,6 +75395,7 @@ SVGPainter.prototype = {
 
         this.gradientManager.removeUnused();
         this.clipPathManager.removeUnused();
+        this.shadowManager.removeUnused();
 
         this._visibleList = newVisibleList;
     },
@@ -74747,8 +75542,6 @@ each$1([
 
 registerPainter('svg', SVGPainter);
 
-// Import all charts and components
-
 exports.version = version;
 exports.dependencies = dependencies;
 exports.PRIORITY = PRIORITY;
@@ -74792,6 +75585,8 @@ exports.Model = Model;
 exports.Axis = Axis;
 exports.env = env$1;
 exports.parseGeoJson = parseGeoJson;
+
+exports.bundleVersion = "1512541507733";
 
 })));
 //# sourceMappingURL=echarts.js.map

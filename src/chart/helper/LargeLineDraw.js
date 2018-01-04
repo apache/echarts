@@ -1,73 +1,99 @@
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';
+import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as lineContain from 'zrender/src/contain/line';
 import * as quadraticContain from 'zrender/src/contain/quadratic';
 
 var LargeLineShape = graphic.extendShape({
+
     shape: {
         polyline: false,
-
+        curveness: 0,
         segs: []
     },
 
     buildPath: function (path, shape) {
         var segs = shape.segs;
-        var isPolyline = shape.polyline;
+        var curveness = shape.curveness;
 
-        for (var i = 0; i < segs.length; i++) {
-            var seg = segs[i];
-            if (isPolyline) {
-                path.moveTo(seg[0][0], seg[0][1]);
-                for (var j = 1; j < seg.length; j++) {
-                    path.lineTo(seg[j][0], seg[j][1]);
+        if (shape.polyline) {
+            for (var i = 0; i < segs.length;) {
+                var count = segs[i++];
+                if (count > 0) {
+                    path.moveTo(segs[i++], segs[i++]);
+                    for (var k = 1; k < count; k++) {
+                        path.lineTo(segs[i++], segs[i++]);
+                    }
                 }
             }
-            else {
-                path.moveTo(seg[0][0], seg[0][1]);
-                if (seg.length > 2) {
-                    path.quadraticCurveTo(seg[2][0], seg[2][1], seg[1][0], seg[1][1]);
+        }
+        else {
+            for (var i = 0; i < segs.length;) {
+                var x0 = segs[i++];
+                var y0 = segs[i++];
+                var x1 = segs[i++];
+                var y1 = segs[i++];
+                path.moveTo(x0, y0);
+                if (curveness > 0) {
+                    var x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    var y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+                    path.quadraticCurveTo(x2, y2, x1, y1);
                 }
                 else {
-                    path.lineTo(seg[1][0], seg[1][1]);
+                    path.lineTo(x1, y1);
                 }
             }
         }
     },
 
     findDataIndex: function (x, y) {
+
         var shape = this.shape;
         var segs = shape.segs;
-        var isPolyline = shape.polyline;
-        var lineWidth = Math.max(this.style.lineWidth, 1);
+        var curveness = shape.curveness;
 
-        // Not consider transform
-        for (var i = 0; i < segs.length; i++) {
-            var seg = segs[i];
-            if (isPolyline) {
-                for (var j = 1; j < seg.length; j++) {
-                    if (lineContain.containStroke(
-                        seg[j - 1][0], seg[j - 1][1], seg[j][0], seg[j][1], lineWidth, x, y
-                    )) {
-                        return i;
+        if (shape.polyline) {
+            var dataIndex = 0;
+            for (var i = 0; i < segs.length;) {
+                var count = segs[i++];
+                if (count > 0) {
+                    var x0 = segs[i++];
+                    var y0 = segs[i++];
+                    for (var k = 1; k < count; k++) {
+                        var x1 = segs[i++];
+                        var y1 = segs[i++];
+                        if (lineContain.containStroke(x0, y0, x1, y1)) {
+                            return dataIndex;
+                        }
                     }
                 }
+
+                dataIndex++;
             }
-            else {
-                if (seg.length > 2) {
-                    if (quadraticContain.containStroke(
-                        seg[0][0], seg[0][1], seg[2][0], seg[2][1], seg[1][0], seg[1][1], lineWidth, x, y
-                    )) {
-                        return i;
+        }
+        else {
+            var dataIndex = 0;
+            for (var i = 0; i < segs.length;) {
+                var x0 = segs[i++];
+                var y0 = segs[i++];
+                var x1 = segs[i++];
+                var y1 = segs[i++];
+                if (curveness > 0) {
+                    var x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    var y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+
+                    if (quadraticContain.containStroke(x0, y0, x2, y2, x1, y1)) {
+                        return dataIndex;
                     }
                 }
                 else {
-                    if (lineContain.containStroke(
-                        seg[0][0], seg[0][1], seg[1][0], seg[1][1], lineWidth, x, y
-                    )) {
-                        return i;
+                    if (lineContain.containStroke(x0, y0, x1, y1)) {
+                        return dataIndex;
                     }
                 }
+
+                dataIndex++;
             }
         }
 
@@ -77,11 +103,13 @@ var LargeLineShape = graphic.extendShape({
 
 function LargeLineDraw() {
     this.group = new graphic.Group();
-
-    this._lineEl = new LargeLineShape();
 }
 
 var largeLineProto = LargeLineDraw.prototype;
+
+largeLineProto.isPersistent = function () {
+    return !this._incremental;
+};
 
 /**
  * Update symbols draw by new data
@@ -90,18 +118,85 @@ var largeLineProto = LargeLineDraw.prototype;
 largeLineProto.updateData = function (data) {
     this.group.removeAll();
 
-    var lineEl = this._lineEl;
+    var lineEl = new LargeLineShape({
+        rectHover: true,
+        cursor: 'default'
+    });
+    lineEl.setShape({
+        segs: data.getLayout('linesPoints')
+    });
 
-    var seriesModel = data.hostModel;
+    this._setCommon(lineEl, data);
+
+    // Add back
+    this.group.add(lineEl);
+
+    this._incremental = null;
+};
+
+/**
+ * @override
+ */
+largeLineProto.incrementalPrepareUpdate = function (data) {
+    this.group.removeAll();
+
+    this._clearIncremental();
+
+    if (data.count() > 5e5) {
+        if (!this._incremental) {
+            this._incremental = new IncrementalDisplayable({
+                silent: true
+            });
+        }
+        this.group.add(this._incremental);
+    }
+    else {
+        this._incremental = null;
+    }
+};
+
+/**
+ * @override
+ */
+largeLineProto.incrementalUpdate = function (taskParams, data) {
+    var lineEl = new LargeLineShape();
+    lineEl.setShape({
+        segs: data.getLayout('linesPoints')
+    });
+    this._setCommon(lineEl, data, !!this._incremental);
+
+    if (!this._incremental) {
+        lineEl.rectHover = true;
+        lineEl.cursor = 'default';
+        lineEl.__startIndex = taskParams.start;
+        this.group.add(lineEl);
+    }
+    else {
+        this._incremental.addDisplayable(lineEl, true);
+    }
+};
+
+/**
+ * @override
+ */
+largeLineProto.remove = function () {
+    this._clearIncremental();
+    this._incremental = null;
+    this.group.removeAll();
+};
+
+largeLineProto._setCommon = function (lineEl, data, isIncremental) {
+    var hostModel = data.hostModel;
 
     lineEl.setShape({
-        segs: data.mapArray(data.getItemLayout),
-        polyline: seriesModel.get('polyline')
+        polyline: hostModel.get('polyline'),
+        curveness: hostModel.get('lineStyle.curveness')
     });
 
     lineEl.useStyle(
-        seriesModel.getModel('lineStyle.normal').getLineStyle()
+        hostModel.getModel('lineStyle').getLineStyle()
     );
+    lineEl.style.strokeNoScale = true;
 
     var visualColor = data.getVisual('color');
     if (visualColor) {
@@ -109,31 +204,26 @@ largeLineProto.updateData = function (data) {
     }
     lineEl.setStyle('fill');
 
-    // Enable tooltip
-    // PENDING May have performance issue when path is extremely large
-    lineEl.seriesIndex = seriesModel.seriesIndex;
-    lineEl.on('mousemove', function (e) {
-        lineEl.dataIndex = null;
-        var dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
-        if (dataIndex > 0) {
-            // Provide dataIndex for tooltip
-            lineEl.dataIndex = dataIndex;
-        }
-    });
-
-    // Add back
-    this.group.add(lineEl);
+    if (!isIncremental) {
+        // Enable tooltip
+        // PENDING May have performance issue when path is extremely large
+        lineEl.seriesIndex = hostModel.seriesIndex;
+        lineEl.on('mousemove', function (e) {
+            lineEl.dataIndex = null;
+            var dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
+            if (dataIndex > 0) {
+                // Provide dataIndex for tooltip
+                lineEl.dataIndex = dataIndex + lineEl.__startIndex;
+            }
+        });
+    }
 };
 
-largeLineProto.updateLayout = function (seriesModel) {
-    var data = seriesModel.getData();
-    this._lineEl.setShape({
-        segs: data.mapArray(data.getItemLayout)
-    });
-};
-
-largeLineProto.remove = function () {
-    this.group.removeAll();
+largeLineProto._clearIncremental = function () {
+    var incremental = this._incremental;
+    if (incremental) {
+        incremental.clearDisplaybles();
+    }
 };
 
 export default LargeLineDraw;

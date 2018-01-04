@@ -10,12 +10,8 @@ import dataSample from '../processor/dataSample';
 // In case developer forget to include grid component
 import '../component/gridSimple';
 
-echarts.registerVisual(zrUtil.curry(
-    visualSymbol, 'line', 'circle', 'line'
-));
-echarts.registerLayout(zrUtil.curry(
-    layoutPoints, 'line'
-));
+echarts.registerVisual(visualSymbol('line', 'circle', 'line'));
+echarts.registerLayout(layoutPoints('line'));
 
 // Down sample after filter
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(

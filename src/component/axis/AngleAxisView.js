@@ -107,7 +107,7 @@ export default AxisView.extend({
     _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
         var axis = angleAxisModel.axis;
 
-        var categoryData = angleAxisModel.get('data');
+        var categoryData = angleAxisModel.getCategories();
 
         var labelModel = angleAxisModel.getModel('axisLabel');
         var labels = angleAxisModel.getFormattedLabels();

@@ -1,9 +1,8 @@
 import * as echarts from '../../echarts';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import completeDimensions from '../../data/helper/completeDimensions';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 
 var PieSeries = echarts.extendSeriesModel({
@@ -32,10 +31,7 @@ var PieSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        var dimensions = completeDimensions(['value'], option.data);
-        var list = new List(dimensions, this);
-        list.initData(option.data);
-        return list;
+        return createListSimply(this, ['value']);
     },
 
     // Overwrite
@@ -61,15 +57,15 @@ var PieSeries = echarts.extendSeriesModel({
 
     _defaultLabelLine: function (option) {
         // Extend labelLine emphasis
-        modelUtil.defaultEmphasis(option.labelLine, ['show']);
+        modelUtil.defaultEmphasis(option, 'labelLine', ['show']);
 
-        var labelLineNormalOpt = option.labelLine.normal;
-        var labelLineEmphasisOpt = option.labelLine.emphasis;
+        var labelLineNormalOpt = option.labelLine;
+        var labelLineEmphasisOpt = option.emphasis.labelLine;
         // Not show label line if `label.normal.show = false`
         labelLineNormalOpt.show = labelLineNormalOpt.show
-            && option.label.normal.show;
+            && option.label.show;
         labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
-            && option.label.emphasis.show;
+            && option.emphasis.label.show;
     },
 
     defaultOption: {
@@ -106,39 +102,31 @@ var PieSeries = echarts.extendSeriesModel({
         // cursor: null,
 
         label: {
-            normal: {
-                // If rotate around circle
-                rotate: false,
-                show: true,
-                // 'outer', 'inside', 'center'
-                position: 'outer'
-                // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                // 默认使用全局文本样式，详见TEXTSTYLE
-                // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
-            },
-            emphasis: {}
+            // If rotate around circle
+            rotate: false,
+            show: true,
+            // 'outer', 'inside', 'center'
+            position: 'outer'
+            // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+            // 默认使用全局文本样式，详见TEXTSTYLE
+            // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
         },
         // Enabled when label.normal.position is 'outer'
         labelLine: {
-            normal: {
-                show: true,
-                // 引导线两段中的第一段长度
-                length: 15,
-                // 引导线两段中的第二段长度
-                length2: 15,
-                smooth: false,
-                lineStyle: {
-                    // color: 各异,
-                    width: 1,
-                    type: 'solid'
-                }
+            show: true,
+            // 引导线两段中的第一段长度
+            length: 15,
+            // 引导线两段中的第二段长度
+            length2: 15,
+            smooth: false,
+            lineStyle: {
+                // color: 各异,
+                width: 1,
+                type: 'solid'
             }
         },
         itemStyle: {
-            normal: {
-                borderWidth: 1
-            },
-            emphasis: {}
+            borderWidth: 1
         },
 
         // Animation type canbe expansion, scale

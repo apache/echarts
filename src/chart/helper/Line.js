@@ -255,11 +255,11 @@ lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
     if (!seriesScope || lineData.hasItemOption) {
         var itemModel = lineData.getItemModel(idx);
 
-        lineStyle = itemModel.getModel('lineStyle.normal').getLineStyle();
-        hoverLineStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
+        lineStyle = itemModel.getModel('lineStyle').getLineStyle();
+        hoverLineStyle = itemModel.getModel('emphasis.lineStyle').getLineStyle();
 
-        labelModel = itemModel.getModel('label.normal');
-        hoverLabelModel = itemModel.getModel('label.emphasis');
+        labelModel = itemModel.getModel('label');
+        hoverLabelModel = itemModel.getModel('emphasis.label');
     }
 
     var visualColor = lineData.getItemVisual(idx, 'color');

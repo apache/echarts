@@ -14,10 +14,10 @@ import preparePolar from '../coord/polar/prepareCustom';
 import prepareCalendar from '../coord/calendar/prepareCustom';
 
 
-var ITEM_STYLE_NORMAL_PATH = ['itemStyle', 'normal'];
-var ITEM_STYLE_EMPHASIS_PATH = ['itemStyle', 'emphasis'];
-var LABEL_NORMAL = ['label', 'normal'];
-var LABEL_EMPHASIS = ['label', 'emphasis'];
+var ITEM_STYLE_NORMAL_PATH = ['itemStyle'];
+var ITEM_STYLE_EMPHASIS_PATH = ['emphasis', 'itemStyle'];
+var LABEL_NORMAL = ['label'];
+var LABEL_EMPHASIS = ['emphasis', 'label'];
 // Use prefix to avoid index to be the same as el.name,
 // which will cause weird udpate animation.
 var GROUP_DIFF_PREFIX = 'e\0\0';
@@ -72,7 +72,7 @@ echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     }
 });
 
@@ -99,6 +99,8 @@ echarts.extendChartView({
         var group = this.group;
         var renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
+        this.group.removeAll();
+
         data.diff(oldData)
             .add(function (newIdx) {
                 data.hasValue(newIdx) && createOrUpdate(
@@ -120,6 +122,26 @@ echarts.extendChartView({
             .execute();
 
         this._data = data;
+    },
+
+    incrementalPrepareRender: function (customSeries, ecModel, api) {
+        this.group.removeAll();
+        this._data = null;
+    },
+
+    incrementalRender: function (params, customSeries, ecModel, api) {
+        var data = customSeries.getData();
+        var renderItem = makeRenderItem(customSeries, data, ecModel, api);
+        function setIncrementalAndHoverLayer(el) {
+            if (!el.isGroup) {
+                el.incremental = true;
+                el.useHoverLayer = true;
+            }
+        }
+        for (var idx = params.start; idx < params.end; idx++) {
+            var el = createOrUpdate(null, idx, renderItem(idx), customSeries, this.group, data);
+            el.traverse(setIncrementalAndHoverLayer);
+        }
     },
 
     /**
@@ -457,6 +479,8 @@ function wrapEncodeDef(data) {
 function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
     el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data);
     el && data.setItemGraphicEl(dataIndex, el);
+
+    return el;
 }
 
 function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {

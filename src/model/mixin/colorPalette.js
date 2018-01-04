@@ -1,15 +1,18 @@
-import {set, get} from '../../util/clazz';
+import {makeInner} from '../../util/model';
+
+var inner = makeInner();
 
 export default {
     clearColorPalette: function () {
-        set(this, 'colorIdx', 0);
-        set(this, 'colorNameMap', {});
+        inner(this).colorIdx = 0;
+        inner(this).colorNameMap = {};
     },
 
     getColorFromPalette: function (name, scope) {
         scope = scope || this;
-        var colorIdx = get(scope, 'colorIdx') || 0;
-        var colorNameMap = get(scope, 'colorNameMap') || set(scope, 'colorNameMap', {});
+        var scopeFields = inner(scope);
+        var colorIdx = scopeFields.colorIdx || 0;
+        var colorNameMap = scopeFields.colorNameMap = scopeFields.colorNameMap || {};
         // Use `hasOwnProperty` to avoid conflict with Object.prototype.
         if (colorNameMap.hasOwnProperty(name)) {
             return colorNameMap[name];
@@ -23,7 +26,7 @@ export default {
         if (name) {
             colorNameMap[name] = color;
         }
-        set(scope, 'colorIdx', (colorIdx + 1) % colorPalette.length);
+        scopeFields.colorIdx = (colorIdx + 1) % colorPalette.length;
 
         return color;
     }

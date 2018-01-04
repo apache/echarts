@@ -141,11 +141,11 @@ export default function (seriesModel, r, viewWidth, viewHeight) {
         var layout = data.getItemLayout(idx);
 
         var itemModel = data.getItemModel(idx);
-        var labelModel = itemModel.getModel('label.normal');
+        var labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
-        var labelPosition = labelModel.get('position') || itemModel.get('label.emphasis.position');
+        var labelPosition = labelModel.get('position') || itemModel.get('emphasis.label.position');
 
-        var labelLineModel = itemModel.getModel('labelLine.normal');
+        var labelLineModel = itemModel.getModel('labelLine');
         var labelLineLen = labelLineModel.get('length');
         var labelLineLen2 = labelLineModel.get('length2');
 

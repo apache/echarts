@@ -139,6 +139,14 @@ OptionManager.prototype = {
      * @return {Object} Init option
      */
     setOption: function (rawOption, optionPreprocessorFuncs) {
+        // ??? not a good way?
+        if (rawOption) {
+            // axis.data?
+            zrUtil.each(modelUtil.normalizeToArray(rawOption.series), function (series) {
+                series && series.data && zrUtil.setAsPrimitive(series.data);
+            });
+        }
+
         rawOption = clone(rawOption, true);
 
         // FIXME

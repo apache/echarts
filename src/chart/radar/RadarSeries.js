@@ -1,6 +1,5 @@
 import SeriesModel from '../../model/Series';
-import List from '../../data/List';
-import completeDimensions from '../../data/helper/completeDimensions';
+import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 
@@ -23,13 +22,10 @@ var RadarSeries = SeriesModel.extend({
     },
 
     getInitialData: function (option, ecModel) {
-        var data = option.data || [];
-        var dimensions = completeDimensions(
-            [], data, {extraPrefix: 'indicator_', extraFromZero: true}
-        );
-        var list = new List(dimensions, this);
-        list.initData(data);
-        return list;
+        return createListSimply(this, {
+            extraPrefix: 'indicator_',
+            extraFromZero: true
+        });
     },
 
     formatTooltip: function (dataIndex) {
@@ -50,15 +46,11 @@ var RadarSeries = SeriesModel.extend({
         legendHoverLink: true,
         radarIndex: 0,
         lineStyle: {
-            normal: {
-                width: 2,
-                type: 'solid'
-            }
+            width: 2,
+            type: 'solid'
         },
         label: {
-            normal: {
-                position: 'top'
-            }
+            position: 'top'
         },
         // areaStyle: {
         // },

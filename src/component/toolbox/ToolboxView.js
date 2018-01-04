@@ -100,6 +100,7 @@ export default echarts.extendComponentView({
 
         function createIconPaths(featureModel, feature, featureName) {
             var iconStyleModel = featureModel.getModel('iconStyle');
+            var iconStyleEmphasisModel = featureModel.getModel('emphasis.iconStyle');
 
             // If one feature has mutiple icon. they are orginaized as
             // {
@@ -134,8 +135,8 @@ export default echarts.extendComponentView({
                         height: itemSize
                     }
                 );
-                path.setStyle(iconStyleModel.getModel('normal').getItemStyle());
-                path.hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
+                path.setStyle(iconStyleModel.getItemStyle());
+                path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
 
                 graphic.setHoverStyle(path);
 
@@ -143,7 +144,7 @@ export default echarts.extendComponentView({
                     path.__title = titles[iconName];
                     path.on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
-                            var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
+                            var hoverStyle = iconStyleEmphasisModel.getItemStyle();
                             path.setStyle({
                                 text: titles[iconName],
                                 textPosition: hoverStyle.textPosition || 'bottom',

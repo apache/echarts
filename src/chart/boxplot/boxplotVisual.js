@@ -1,5 +1,5 @@
 
-var borderColorQuery = ['itemStyle', 'normal', 'borderColor'];
+var borderColorQuery = ['itemStyle', 'borderColor'];
 
 export default function (ecModel, api) {
 

@@ -9,7 +9,7 @@ var addCommas = formatUtil.addCommas;
 var encodeHTML = formatUtil.encodeHTML;
 
 function fillLabel(opt) {
-    modelUtil.defaultEmphasis(opt.label, ['show']);
+    modelUtil.defaultEmphasis(opt, 'label', ['show']);
 }
 var MarkerModel = echarts.extendComponentModel({
 

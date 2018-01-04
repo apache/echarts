@@ -2,18 +2,29 @@
 // Applicable for charts that require applying color palette
 // in data level (like pie, funnel, chord).
 
-export default function (seriesType, ecModel) {
-    // Pie and funnel may use diferrent scope
-    var paletteScope = {};
-    ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
-        var dataAll = seriesModel.getRawData();
-        var idxMap = {};
-        if (!ecModel.isSeriesFiltered(seriesModel)) {
+export default function (seriesType) {
+    return {
+        getTargetSeries: function (ecModel) {
+            // Pie and funnel may use diferrent scope
+            var paletteScope = {};
+            var seiresModels = [];
+
+            ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+                seriesModel.__paletteScope = paletteScope;
+                seiresModels.push(seriesModel);
+            });
+            return seiresModels;
+        },
+        reset: function (seriesModel, ecModel) {
+            var dataAll = seriesModel.getRawData();
+            var idxMap = {};
             var data = seriesModel.getData();
+
             data.each(function (idx) {
                 var rawIdx = data.getRawIndex(idx);
                 idxMap[rawIdx] = idx;
             });
+
             dataAll.each(function (rawIdx) {
                 var filteredIdx = idxMap[rawIdx];
 
@@ -24,8 +35,10 @@ export default function (seriesType, ecModel) {
                 if (!singleDataColor) {
                     // FIXME Performance
                     var itemModel = dataAll.getItemModel(rawIdx);
-                    var color = itemModel.get('itemStyle.normal.color')
-                        || seriesModel.getColorFromPalette(dataAll.getName(rawIdx), paletteScope);
+                    var color = itemModel.get('itemStyle.color')
+                        || seriesModel.getColorFromPalette(
+                            dataAll.getName(rawIdx), seriesModel.__paletteScope
+                        );
                     // Legend may use the visual info in data before processed
                     dataAll.setItemVisual(rawIdx, 'color', color);
 
@@ -40,5 +53,5 @@ export default function (seriesType, ecModel) {
                 }
             });
         }
-    });
+    };
 }

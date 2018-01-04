@@ -284,6 +284,7 @@ var SliderZoomView = DataZoomView.extend({
         var size = this._size;
         var seriesModel = info.series;
         var data = seriesModel.getRawData();
+
         var otherDim = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
@@ -396,9 +397,12 @@ var SliderZoomView = DataZoomView.extend({
                 var otherDim = getOtherDim(dimNames.name);
                 var otherAxisInverse;
                 var coordSys = seriesModel.coordinateSystem;
+
                 if (otherDim != null && coordSys.getOtherAxis) {
                     otherAxisInverse = coordSys.getOtherAxis(thisAxis).inverse;
                 }
+
+                otherDim = seriesModel.coordDimToDataDim(otherDim)[0];
 
                 result = {
                     thisAxis: thisAxis,
@@ -699,15 +703,17 @@ var SliderZoomView = DataZoomView.extend({
 
         this._updateView(!realtime);
 
-        if (realtime) {
-            realtime && this._dispatchZoomAction();
-        }
+        realtime && this._dispatchZoomAction();
     },
 
     _onDragEnd: function () {
         this._dragging = false;
         this._showDataInfo(false);
-        this._dispatchZoomAction();
+
+        // While in realtime mode and stream mode, dispatch action when
+        // drag end will cause the whole view rerender, which is unnecessary.
+        var realtime = this.dataZoomModel.get('realtime');
+        !realtime && this._dispatchZoomAction();
     },
 
     _onClickPanelClick: function (e) {

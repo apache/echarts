@@ -18,14 +18,10 @@ function SymbolDraw(symbolCtor) {
 
 var symbolDrawProto = SymbolDraw.prototype;
 
-function symbolNeedsDraw(data, idx, isIgnore) {
-    var point = data.getItemLayout(idx);
-    // Is an object
-    // if (point && point.hasOwnProperty('point')) {
-    //     point = point.point;
-    // }
-    return point && !isNaN(point[0]) && !isNaN(point[1]) && !(isIgnore && isIgnore(idx))
-                && data.getItemVisual(idx, 'symbol') !== 'none';
+function symbolNeedsDraw(data, point, idx, isIgnore) {
+    return point && !isNaN(point[0]) && !isNaN(point[1])
+        && !(isIgnore && isIgnore(idx))
+        && data.getItemVisual(idx, 'symbol') !== 'none';
 }
 /**
  * Update symbols draw by new data
@@ -36,25 +32,14 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     var group = this.group;
     var seriesModel = data.hostModel;
     var oldData = this._data;
-
     var SymbolCtor = this._symbolCtor;
 
-    var seriesScope = {
-        itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
-        hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
-        symbolRotate: seriesModel.get('symbolRotate'),
-        symbolOffset: seriesModel.get('symbolOffset'),
-        hoverAnimation: seriesModel.get('hoverAnimation'),
-
-        labelModel: seriesModel.getModel('label.normal'),
-        hoverLabelModel: seriesModel.getModel('label.emphasis'),
-        cursorStyle: seriesModel.get('cursor')
-    };
+    var seriesScope = makeSeriesScope(data);
 
     data.diff(oldData)
         .add(function (newIdx) {
             var point = data.getItemLayout(newIdx);
-            if (symbolNeedsDraw(data, newIdx, isIgnore)) {
+            if (symbolNeedsDraw(data, point, newIdx, isIgnore)) {
                 var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                 symbolEl.attr('position', point);
                 data.setItemGraphicEl(newIdx, symbolEl);
@@ -64,7 +49,7 @@ symbolDrawProto.updateData = function (data, isIgnore) {
         .update(function (newIdx, oldIdx) {
             var symbolEl = oldData.getItemGraphicEl(oldIdx);
             var point = data.getItemLayout(newIdx);
-            if (!symbolNeedsDraw(data, newIdx, isIgnore)) {
+            if (!symbolNeedsDraw(data, point, newIdx, isIgnore)) {
                 group.remove(symbolEl);
                 return;
             }
@@ -95,6 +80,10 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     this._data = data;
 };
 
+symbolDrawProto.isPersistent = function () {
+    return true;
+};
+
 symbolDrawProto.updateLayout = function () {
     var data = this._data;
     if (data) {
@@ -103,6 +92,31 @@ symbolDrawProto.updateLayout = function () {
             var point = data.getItemLayout(idx);
             el.attr('position', point);
         });
+    }
+};
+
+symbolDrawProto.incrementalPrepareUpdate = function (data) {
+    this._seriesScope = makeSeriesScope(data);
+    this._data = null;
+    this.group.removeAll();
+};
+
+symbolDrawProto.incrementalUpdate = function (taskParams, data, isIgnore) {
+
+    function updateIncrementalAndHover(el) {
+        if (!el.isGroup) {
+            el.incremental = el.useHoverLayer = true;
+        }
+    }
+    for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+        var point = data.getItemLayout(idx);
+        if (symbolNeedsDraw(data, point, idx, isIgnore)) {
+            var el = new this._symbolCtor(data, idx, this._seriesScope);
+            el.traverse(updateIncrementalAndHover);
+            el.attr('position', point);
+            this.group.add(el);
+            data.setItemGraphicEl(idx, el);
+        }
     }
 };
 
@@ -122,5 +136,19 @@ symbolDrawProto.remove = function (enableAnimation) {
         }
     }
 };
+
+function makeSeriesScope(data) {
+    var seriesModel = data.hostModel;
+    return {
+        itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
+        hoverItemStyle: seriesModel.getModel('emphasis.itemStyle').getItemStyle(),
+        symbolRotate: seriesModel.get('symbolRotate'),
+        symbolOffset: seriesModel.get('symbolOffset'),
+        hoverAnimation: seriesModel.get('hoverAnimation'),
+        labelModel: seriesModel.getModel('label'),
+        hoverLabelModel: seriesModel.getModel('emphasis.label'),
+        cursorStyle: seriesModel.get('cursor')
+    };
+}
 
 export default SymbolDraw;

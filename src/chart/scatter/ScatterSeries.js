@@ -8,7 +8,7 @@ export default SeriesModel.extend({
     dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     },
 
     brushSelector: 'point',
@@ -40,21 +40,19 @@ export default SeriesModel.extend({
         // cursor: null,
 
         // label: {
-            // normal: {
-                // show: false
-                // distance: 5,
-                // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                //           'inside'|'left'|'right'|'top'|'bottom'
-                // 默认使用全局文本样式，详见TEXTSTYLE
-        //     }
+            // show: false
+            // distance: 5,
+            // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+            // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+            //           'inside'|'left'|'right'|'top'|'bottom'
+            // 默认使用全局文本样式，详见TEXTSTYLE
         // },
         itemStyle: {
-            normal: {
-                opacity: 0.8
-                // color: 各异
-            }
-        }
+            opacity: 0.8
+            // color: 各异
+        },
+
+        progressive: null
     }
 
 });
