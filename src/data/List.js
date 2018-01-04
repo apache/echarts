@@ -1701,7 +1701,7 @@ listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 
 listProto.defaultDimValueGetter = function (dataItem, dimName, dataIndex, dimIndex) {
     if (this._rawData.isTypedArray) {
-        return dataIndex[dimIndex];
+        return dataItem[dimIndex];
     }
 
     var value = modelUtil.getDataItemValue(dataItem);
