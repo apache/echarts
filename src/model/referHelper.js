@@ -88,7 +88,7 @@ var fetchers = {
             }
         }
 
-        result.coordSysDims = ['singleAxis'];
+        result.coordSysDims = ['single'];
         axisMap.set('single', singleAxisModel);
 
         if (isCategory(singleAxisModel)) {

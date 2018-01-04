@@ -31,7 +31,7 @@ export default function (seriesType) {
 
                     if (dimLen === 1) {
                         var x = data.get(dims[0], i, true);
-                        point = isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
+                        point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
                     }
                     else {
                         var x = tmpIn[0] = data.get(dims[0], i, true);
