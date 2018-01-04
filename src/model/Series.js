@@ -19,6 +19,7 @@ import {
     getDatasetModel,
     makeDefaultEncode
 } from '../data/helper/sourceHelper';
+import completeDimensions from '../data/helper/completeDimensions';
 
 var inner = modelUtil.makeInner();
 
@@ -222,21 +223,28 @@ var SeriesModel = ComponentModel.extend({
      * }
      *
      * Get data from series itself or datset.
-     * @param {string} [seriesDataAttr='data'] Or can be like 'nodes', 'links'
+     * @param {Object} [opt]
+     * @param {string} [opt.dataAttr='data'] Or can be like 'nodes', 'links'
+     * @param {string} [opt.sysDimensions=[]] See module `echarts/src/data/helpercompleteDimensions`.
+     * @param {string} [opt.extraPrefix] See module `echarts/src/data/helpercompleteDimensions`.
+     * @param {string} [opt.extraFromZero] See module `echarts/src/data/helpercompleteDimensions`.
+     * @param {string} [opt.dimensionCount] See module `echarts/src/data/helpercompleteDimensions`.
      * @return {Object}
      * {
-     *     modelUID,
-     *     data,
-     *     dimensions,
-     *     encode,
+     *      modelUID: <string> Not null/undefined.
+     *      data: <Array> Not null/undefined.
+     *      dimensionsInfo: <Array.<Object>> Not null/undefined.
+     *      dimensionsDefine: <Array.<Object|string>> Original define, can be null/undefined.
+     *      encodeDefine: <Object> Original define, can be null/undefined.
      * }
      */
-    getSource: function (seriesDataAttr) {
-        seriesDataAttr = seriesDataAttr || 'data';
+    getSource: function (opt) {
+        opt = opt || {};
+        var dataAttr = opt.dataAttr || 'data';
 
         var thisOption = this.option;
-        var thisData = thisOption.data;
-        var dimensions = thisOption.dimensions;
+        var thisData = thisOption[dataAttr];
+        var dimensionsDefine = thisOption.dimensions;
         var data;
         var modelUID;
 
@@ -249,19 +257,51 @@ var SeriesModel = ComponentModel.extend({
             if (datasetModel) {
                 var datasetOption = datasetModel.option;
                 if (datasetOption) {
-                    data = datasetOption.data;
+                    data = datasetOption[dataAttr];
                     modelUID = datasetModel.uid;
-                    dimensions = datasetOption.dimensions;
-                    dimensions && (dimensions = dimensions.slice());
+                    dimensionsDefine = datasetOption.dimensions;
+                    dimensionsDefine && (dimensionsDefine = dimensionsDefine.slice());
                 }
             }
         }
 
+        // Consider empty data.
+        data = data || [];
+
+        if (__DEV__) {
+            if (!zrUtil.isArrayLike(data)) {
+                throw new Error('Invalid data.');
+            }
+        }
+
+        var dimensionCount = opt.dimensionCount;
+
+        var isDataTypedArray = zrUtil.isTypedArray(data);
+        if (isDataTypedArray) {
+            if (__DEV__) {
+                if (!dimensionsDefine) {
+                    throw new Error('dimensions must be given if data is a ' + Object.prototype.toString.call(data));
+                }
+            }
+            dimensionCount = dimensionsDefine.length;
+        }
+
+        var encodeDefine = inner(this).encode;
+
+        var dimensionsInfo = completeDimensions(opt.sysDims || [], data, {
+            dimsDef: dimensionsDefine,
+            encodeDef: encodeDefine,
+            dimCount: dimensionCount,
+            extraPrefix: opt.extraPrefix,
+            extraFromZero: opt.extraFromZero
+        });
+
         return {
             modelUID: modelUID,
             data: data,
-            dimensions: dimensions,
-            encode: inner(this).encode
+            dimensionsInfo: dimensionsInfo,
+            dimensionsDefine: dimensionsDefine,
+            encodeDefine: encodeDefine
         };
     },
 

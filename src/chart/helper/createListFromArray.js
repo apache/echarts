@@ -1,7 +1,5 @@
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
-import completeDimensions from '../../data/helper/completeDimensions';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
@@ -22,35 +20,7 @@ function isNeedCompleteOrdinalData(data) {
 /**
  * Helper function to create a list from option data
  */
-function doCreateListFromArray(seriesDataAttr, seriesModel, ecModel) {
-    var source = seriesModel.getSource(seriesDataAttr);
-    // Consider empty data.
-    var data = source.data || [];
-
-    if (__DEV__) {
-        if (!zrUtil.isArrayLike(data)) {
-            throw new Error('Invalid data.');
-        }
-    }
-
-    var isDataTypedArray = zrUtil.isTypedArray(data);
-    if (isDataTypedArray) {
-        if (__DEV__) {
-            if (!source.dimensions) {
-                throw new Error('dimensions must be given if data is a ' + Object.prototype.toString.call(data));
-            }
-        }
-    }
-
-    var completeDimOpt = {
-        encodeDef: source.encode,
-        dimsDef: source.dimensions
-    };
-
-    if (isDataTypedArray) {
-        completeDimOpt.dimCount = completeDimOpt.dimsDef.length;
-    }
-
+function doCreateListFromArray(dataAttr, seriesModel, ecModel) {
     var coordSysName = seriesModel.get('coordinateSystem');
     var registeredCoordSys = CoordinateSystem.get(coordSysName);
 
@@ -80,7 +50,14 @@ function doCreateListFromArray(seriesDataAttr, seriesModel, ecModel) {
         )) || ['x', 'y'];
     }
 
-    var dimInfoList = completeDimensions(coordSysDimDefs, data, completeDimOpt);
+    var source = seriesModel.getSource({
+        dataAttr: dataAttr,
+        sysDimensions: coordSysDimDefs
+    });
+
+    // Consider empty data.
+    var data = source.data || [];
+    var dimInfoList = source.dimensionsInfo;
 
     var firstCategoryDimIndex;
     coordSysDefine && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
