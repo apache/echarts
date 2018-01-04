@@ -127,6 +127,19 @@ largeSymbolProto.updateData = function (data) {
     this._incremental = null;
 };
 
+largeSymbolProto.updateLayout = function (data) {
+    if (this._incremental) {
+        return;
+    }
+
+    var points = data.getLayout('symbolPoints');
+    this.group.eachChild(function (child) {
+        var len = (child.endIndex - child.startIndex) * 2;
+        var byteOffset = child.startIndex * 4 * 2;
+        child.setShape('points', new Float32Array(points.buffer, byteOffset, len));
+    });
+};
+
 largeSymbolProto.incrementalPrepareUpdate = function (data) {
     this.group.removeAll();
 
@@ -155,10 +168,11 @@ largeSymbolProto.incrementalUpdate = function (taskParams, data) {
     else {
         symbolEl = new LargeSymbolPath({
             rectHover: true,
-            cursor: 'default'
+            cursor: 'default',
+            startIndex: taskParams.start,
+            endIndex: taskParams.end
         });
         symbolEl.incremental = true;
-        symbolEl.__startIndex = taskParams.start;
         this.group.add(symbolEl);
     }
 
@@ -210,7 +224,7 @@ largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
             var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
             if (dataIndex >= 0) {
                 // Provide dataIndex for tooltip
-                symbolEl.dataIndex = dataIndex + symbolEl.__startIndex;
+                symbolEl.dataIndex = dataIndex + symbolEl.startIndex;
             }
         });
     }

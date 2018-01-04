@@ -3,14 +3,14 @@ import SymbolDraw from '../helper/SymbolDraw';
 import LargeSymbolDraw from '../helper/LargeSymbolDraw';
 import * as matrix from 'zrender/src/core/matrix';
 
+import pointsLayout from '../../layout/points';
+
 echarts.extendChartView({
 
     type: 'scatter',
 
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-        this._removeRoamTransformInPoints(seriesModel, 0, data.count());
-        this._updateGroupTransform(seriesModel);
 
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
         symbolDraw.updateData(data);
@@ -19,8 +19,6 @@ echarts.extendChartView({
     },
 
     incrementalPrepareRender: function (seriesModel, ecModel, api) {
-        this._updateGroupTransform(seriesModel);
-
         var data = seriesModel.getData();
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
 
@@ -30,61 +28,29 @@ echarts.extendChartView({
     },
 
     incrementalRender: function (taskParams, seriesModel, ecModel) {
-        this._removeRoamTransformInPoints(seriesModel, taskParams.start, taskParams.end);
         this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData());
 
         this._finished = taskParams.end === seriesModel.getData().count();
     },
 
     updateTransform: function (seriesModel, ecModel, api) {
-        var coordSys = seriesModel.coordinateSystem;
-        var update = true;
+        var data = seriesModel.getData();
         // Must mark group dirty and make sure the incremental layer will be cleared
         // PENDING
         this.group.dirty();
-        if (coordSys.getRoamTransform) {
-            update = false;
-            this._updateGroupTransform(seriesModel);
-        }
 
-        if (update || !this._finished || !this._symbolDraw.isPersistent()) {
+        if (!this._finished || data.count() > 2e5 || !this._symbolDraw.isPersistent()) {
             return {
                 update: true
             };
         }
-    },
-
-    _updateGroupTransform: function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys && coordSys.getRoamTransform) {
-            this.group.transform = matrix.clone(coordSys.getRoamTransform());
-            this.group.decomposeTransform();
-        }
-    },
-
-    _removeRoamTransformInPoints: function (seriesModel, start, end) {
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys && coordSys.removeRoamTransformInPoint) {
-            var data = seriesModel.getData();
-            var pt = [];
-            if (seriesModel.pipelineContext.large) {
-                var points = data.getLayout('symbolPoints');
-                if (points) {
-                    for (var i = 0; i < points.length; i += 2) {
-                        pt[0] = points[i];
-                        pt[1] = points[i + 1];
-                        coordSys.removeRoamTransformInPoint(pt);
-                        points[i] = pt[0];
-                        points[i + 1] = pt[1];
-                    }
-                }
+        else {
+            var res = pointsLayout().reset(seriesModel);
+            if (res.progress) {
+                res.progress({ start: 0, end: data.count() }, seriesModel);
             }
-            else {
-                for (var i = start; i < end; i++) {
-                    var pt = data.getItemLayout(i);
-                    coordSys.removeRoamTransformInPoint(pt);
-                }
-            }
+
+            this._symbolDraw.updateLayout(data);
         }
     },
 
