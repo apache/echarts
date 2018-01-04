@@ -8,6 +8,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import * as modelUtil from '../util/model';
+import {parseDate} from '../util/number';
 
 var isObject = zrUtil.isObject;
 
@@ -146,6 +147,10 @@ var typedArrayProviderMethods = {
  * @param {Array.<string|Object>} dimensions
  *      For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
  *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
+ *      Spetial fields: {
+ *          ordinalMeta: <module:echarts/data/OrdinalMeta>,
+ *          sourceModelUID: <string>
+ *      }
  * @param {module:echarts/model/Model} hostModel
  */
 var List = function (dimensions, hostModel) {
@@ -368,16 +373,21 @@ listProto.parseDimensions = function (dims) {
  *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
  */
 listProto.getDimensionInfo = function (dim) {
-    return zrUtil.clone(this._dimensionInfos[this.getDimension(dim)]);
+    // Do not clone, because there may be categories in dimInfo.
+    return this._dimensionInfos[this.getDimension(dim)];
 };
 
 /**
  * Initialize from data
  * @param {Array.<Object|number|Array>} data
- * @param {Array.<string>} [nameList]
+ * @param {number|Array.<string>} [defaultNameDimIndex] The name of a datum is used on data diff and
+ *        defualt label/tooltip. It can be specified in raw data, or by nameList provided outside
+ *        (usually provided categroy axis).
+ *        If it is a number, the default name is fetched from the dim.
+ *        If it is an array, it is nameList (this approach has been deprecated).
  * @param {Function} [dimValueGetter] (dataItem, dimName, dataIndex, dimIndex) => number
  */
-listProto.initData = function (data, nameList, dimValueGetter) {
+listProto.initData = function (data, defaultNameDimIndex, dimValueGetter) {
     data = data || [];
 
     var isDataArray = zrUtil.isArrayLike(data);
@@ -396,32 +406,24 @@ listProto.initData = function (data, nameList, dimValueGetter) {
     this._storage = {};
     this._indices = null;
 
-    var dimensionInfoMap = this._dimensionInfos;
+    this._nameList = [];
+    // @deprecated
+    if (zrUtil.isArray(defaultNameDimIndex)) {
+        this._nameList = defaultNameDimIndex;
+        defaultNameDimIndex = null;
+    }
+    this._defaultNameDimIndex = defaultNameDimIndex;
 
-    this._nameList = nameList = nameList || [];
     this._idList = [];
 
     this._nameRepeatCount = {};
 
-    var self = this;
     if (!dimValueGetter) {
         this.hasItemOption = false;
     }
     // Default dim value getter
-    this._dimValueGetter = dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
-        var value = modelUtil.getDataItemValue(dataItem);
-        // If any dataItem is like { value: 10 }
-        if (!data.pure && modelUtil.isDataItemOption(dataItem)) {
-            self.hasItemOption = true;
-        }
-        return modelUtil.converDataValue(
-            (value instanceof Array)
-                ? value[dimIndex]
-                // If value is a single number or something else not array.
-                : value,
-            dimensionInfoMap[dimName]
-        );
-    };
+    this._dimValueGetter = dimValueGetter = dimValueGetter
+        || defaultDimValueGetter;
 
     // Reset raw extent.
     this._rawExtent = {};
@@ -461,6 +463,7 @@ listProto._initDataFromProvider = function (start, end) {
     var dimensions = this.dimensions;
     var dimensionInfoMap = this._dimensionInfos;
     var nameList = this._nameList;
+    var defaultNameDimIndex = this._defaultNameDimIndex;
     var idList = this._idList;
     var rawExtent = this._rawExtent;
     var nameRepeatCount = this._nameRepeatCount = {};
@@ -531,19 +534,37 @@ listProto._initDataFromProvider = function (start, end) {
 
         // Use the name in option and create id
         if (!rawData.pure) {
-            if (!nameList[idx] && dataItem) {
+            var name = null;
+
+            if (dataItem) {
                 if (dataItem.name != null) {
-                    nameList[idx] = dataItem.name;
+                    name = dataItem.name;
                 }
                 else if (nameDimIdx != null) {
-                    nameList[idx] = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
+                    name = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
                 }
             }
-            var name = nameList[idx];
+
+            if (name == null) {
+                if (defaultNameDimIndex != null) {
+                    var dimInfo = dimensionInfoMap[dimensions[defaultNameDimIndex]];
+                    var ordinalMeta = dimInfo.ordinalMeta;
+                    if (ordinalMeta) {
+                        name = ordinalMeta.categories[idx];
+                    }
+                }
+                else {
+                    // If nameList is given.
+                    name = nameList[idx];
+                }
+            }
+
+            nameList[idx] = name;
+
             // Try using the id in option
             var id = dataItem && dataItem.id;
 
-            if (id == null && name) {
+            if (id == null && name != null) {
                 // Use name as id and add counter to avoid same name
                 nameRepeatCount[name] = nameRepeatCount[name] || 0;
                 id = name;
@@ -560,6 +581,7 @@ listProto._initDataFromProvider = function (start, end) {
         // Clean unused data if data source is typed array.
         rawData.clean();
     }
+
     this._count = end;
 };
 
@@ -1619,5 +1641,55 @@ listProto.wrapMethod = function (methodName, injectFunction) {
 listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 // Methods that change indices of this list should be listed here.
 // listProto.CHANGABLE_METHODS = ['filterSelf'];
+
+var defaultDimValueGetter = List.defaultDimValueGetter = function (dataItem, dimName, dataIndex, dimIndex) {
+    var value = modelUtil.getDataItemValue(dataItem);
+    // If any dataItem is like { value: 10 }
+    if (!this._rawData.pure && modelUtil.isDataItemOption(dataItem)) {
+        this.hasItemOption = true;
+    }
+    return converDataValue(
+        (value instanceof Array)
+            ? value[dimIndex]
+            // If value is a single number or something else not array.
+            : value,
+        this._dimensionInfos[dimName]
+    );
+};
+
+/**
+ * This helper method convert value in data.
+ * @param {string|number|Date} value
+ * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
+ *        If "dimInfo.ordinalParseAndSave", ordinal value can be parsed.
+ */
+function converDataValue(value, dimInfo) {
+    // Performance sensitive.
+    var dimType = dimInfo && dimInfo.type;
+    if (dimType === 'ordinal') {
+        // If given value is a category string
+        var ordinalMeta = dimInfo && dimInfo.ordinalMeta;
+        return !ordinalMeta
+            ? value
+            : typeof value === 'string'
+            ? ordinalMeta.parseAndCollect(value, dimInfo.sourceModelUID)
+            : NaN;
+    }
+
+    if (dimType === 'time'
+        // spead up when using timestamp
+        && typeof value !== 'number'
+        && value != null
+        && value !== '-'
+    ) {
+        value = +parseDate(value);
+    }
+
+    // dimType defaults 'number'.
+    // If dimType is not ordinal and value is null or undefined or NaN or '-',
+    // parse to NaN.
+    return (value == null || value === '')
+        ? NaN : +value; // If string (like '-'), using '+' parse to NaN
+};
 
 export default List;

@@ -12,6 +12,8 @@ var defaults = zrUtil.defaults;
 var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
 
 /**
+ * @see {module:echarts/test/ut/spec/data/completeDimensions}
+ *
  * Complete the dimensions array, by user defined `dimension` and `encode`,
  * and guessing from the data structure.
  * If no 'value' dimension specified, the first no-named dimension will be
@@ -60,6 +62,12 @@ function completeDimensions(sysDims, data, opt) {
 
     var dimCount = opt.dimCount;
     if (dimCount == null) {
+        // ??? TODO
+        // Originally detect dimCount by data[0]. Should we
+        // optimize it to only by sysDims and dimensions and encode.
+        // So only necessary dims will be initialized.
+        // But custom series should be considered. where other dims
+        // may be visited.
         var value0 = retrieveValue(data[0]);
         dimCount = Math.max(
             zrUtil.isArray(value0) && value0.length || 1,

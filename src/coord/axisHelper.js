@@ -26,7 +26,7 @@ export function getScaleExtent(scale, model) {
     var boundaryGap;
     var span;
     if (scaleType === 'ordinal') {
-        axisDataLen = (model.get('data') || []).length;
+        axisDataLen = model.getCategories().length;
     }
     else {
         boundaryGap = model.get('boundaryGap');
@@ -159,7 +159,7 @@ export function createScaleByModel(model, axisType) {
             // Buildin scale
             case 'category':
                 return new OrdinalScale(
-                    model.getCategories(), [Infinity, -Infinity]
+                    model.ordinalMeta, [Infinity, -Infinity]
                 );
             case 'value':
                 return new IntervalScale();

@@ -108,7 +108,7 @@ export default SeriesModel.extend({
 });
 
 function translateCategoryValue(axisModel, dim, rawData) {
-    var axisData = axisModel.get('data');
+    var axisData = axisModel.getCategories();
     var numberDim = convertDimNameToNumber(dim);
 
     if (axisData && axisData.length) {

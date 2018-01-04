@@ -15,6 +15,10 @@ import {
     mergeLayoutParam
 } from '../util/layout';
 import {createTask} from '../stream/task';
+import {
+    getDatasetModel,
+    makeDefaultEncode
+} from '../data/helper/sourceHelper';
 
 var inner = modelUtil.makeInner();
 
@@ -72,6 +76,8 @@ var SeriesModel = ComponentModel.extend({
         }, {model: this});
 
         this.mergeDefaultAndTheme(option, ecModel);
+
+        setDefaultEncode(this);
 
         var data = this.getInitialData(option, ecModel);
 
@@ -140,6 +146,8 @@ var SeriesModel = ComponentModel.extend({
             mergeLayoutParam(this.option, newSeriesOption, layoutMode);
         }
 
+        setDefaultEncode(this);
+
         var data = this.getInitialData(newSeriesOption, ecModel);
         // ??? set dirty on ecModel, becusue it will call mergeOption({})?
         this.dataTask.dirty();
@@ -189,6 +197,72 @@ var SeriesModel = ComponentModel.extend({
      */
     setData: function (data) {
         inner(this).data = data;
+    },
+
+    /**
+     * Usage:
+     * (1) Provide source data directly:
+     * series: {
+     *     encode: {...},
+     *     dimensions: [...]
+     *     data: [[...]]
+     * }
+     *
+     * (2) Ignore datasetIndex means `datasetIndex: 0`,
+     * and the dimensions defination in dataset is used:
+     * series: {
+     *     encode: {...}
+     * }
+     *
+     * (3) Use different datasets, and the dimensions defination
+     * in dataset is used:
+     * series: {
+     *     nodes: {datasetIndex: 1, encode: {...}},
+     *     links: {datasetIndex: 2, encode: {...}}
+     * }
+     *
+     * Get data from series itself or datset.
+     * @param {string} [seriesDataAttr='data'] Or can be like 'nodes', 'links'
+     * @return {Object}
+     * {
+     *     modelUID,
+     *     data,
+     *     dimensions,
+     *     encode,
+     * }
+     */
+    getSource: function (seriesDataAttr) {
+        seriesDataAttr = seriesDataAttr || 'data';
+
+        var thisOption = this.option;
+        var thisData = thisOption.data;
+        var dimensions = thisOption.dimensions;
+        var data;
+        var modelUID;
+
+        if (thisData && thisData.datasetIndex == null) {
+            data = thisData;
+            modelUID = this.uid;
+        }
+        else {
+            var datasetModel = getDatasetModel(this);
+            if (datasetModel) {
+                var datasetOption = datasetModel.option;
+                if (datasetOption) {
+                    data = datasetOption.data;
+                    modelUID = datasetModel.uid;
+                    dimensions = datasetOption.dimensions;
+                    dimensions && (dimensions = dimensions.slice());
+                }
+            }
+        }
+
+        return {
+            modelUID: modelUID,
+            data: data,
+            dimensions: dimensions,
+            encode: inner(this).encode
+        };
     },
 
     /**
@@ -246,6 +320,8 @@ var SeriesModel = ComponentModel.extend({
      */
     formatTooltip: function (dataIndex, multipleSeries, dataType) {
         function formatArrayValue(value) {
+            // ???
+            // check: category-no-encode-has-axis-data in dataset.html
             var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
                 var dimItem = data.getDimensionInfo(idx);
                 return vertially |= dimItem && dimItem.tooltip !== false && dimItem.tooltipName != null;
@@ -399,6 +475,17 @@ function dataTaskReset(context) {
 
 function dataTaskProgress(param, context) {
     context.model.getRawData().cloneShallow(context.outputData);
+}
+
+function setDefaultEncode(seriesModel) {
+    inner(seriesModel).encode = getOptionEncode(seriesModel)
+        || makeDefaultEncode(seriesModel);
+}
+
+function getOptionEncode(seriesModel) {
+    var thisOption = seriesModel.option;
+    var thisData = thisOption.data;
+    return thisData && thisData.encode || thisOption.encode;
 }
 
 export default SeriesModel;

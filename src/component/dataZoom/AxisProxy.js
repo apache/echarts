@@ -394,7 +394,7 @@ function fixExtentByAxis(axisProxy, dataExtent) {
     // For category axis, if min/max/scale are not set, extent is determined
     // by axis.data by default.
     var isCategoryAxis = axisModel.get('type') === 'category';
-    var axisDataLen = isCategoryAxis && (axisModel.get('data') || []).length;
+    var axisDataLen = isCategoryAxis && axisModel.getCategories().length;
 
     if (min != null && min !== 'dataMin' && typeof min !== 'function') {
         dataExtent[0] = min;

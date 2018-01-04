@@ -787,7 +787,7 @@ var updateMethods = {
         // deteming whether use progressive rendering.
         updateStreamModes(this, ecModel);
 
-        stackSeriesData.call(this, ecModel);
+        stackSeriesData(ecModel);
 
         coordSysMgr.update(ecModel, api);
 

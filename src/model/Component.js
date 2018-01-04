@@ -12,7 +12,6 @@ import {makeInner} from '../util/model';
 import * as layout from '../util/layout';
 import boxLayoutMixin from './mixin/boxLayout';
 
-var arrayPush = Array.prototype.push;
 var inner = makeInner();
 
 /**
@@ -184,12 +183,20 @@ componentUtil.enableTopologicalTravel(ComponentModel, getDependencies);
 function getDependencies(componentType) {
     var deps = [];
     zrUtil.each(ComponentModel.getClassesByMainType(componentType), function (Clazz) {
-        arrayPush.apply(deps, Clazz.prototype.dependencies || []);
+        deps = deps.concat(Clazz.prototype.dependencies || []);
     });
-    // Ensure main type
-    return zrUtil.map(deps, function (type) {
+
+    // Ensure main type.
+    deps = zrUtil.map(deps, function (type) {
         return parseClassType(type).main;
     });
+
+    // Hack dataset for convenience.
+    if (componentType !== 'dataset' && zrUtil.indexOf(deps, 'dataset') <= 0) {
+        deps.unshift('dataset');
+    }
+
+    return deps;
 }
 
 zrUtil.mixin(ComponentModel, boxLayoutMixin);

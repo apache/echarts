@@ -28,6 +28,7 @@ import Model from './Model';
 import ComponentModel from './Component';
 import globalDefault from './globalDefault';
 import colorPaletteMinin from './mixin/colorPalette';
+import {resetDefaultEncode} from '../data/helper/sourceHelper';
 // import {createTask} from '../stream/task';
 
 var OPTION_INNER_KEY = '\0_ec_inner';
@@ -125,9 +126,11 @@ var GlobalModel = Model.extend({
         var option = this.option;
         var componentsMap = this._componentsMap;
         var newCptTypes = [];
-        // var globalSettingTask = this.settingTask;
 
-        // 如果不存在对应的 component model 则直接 merge
+        resetDefaultEncode(this);
+
+        // If no component class, merge directly.
+        // For example: color, animaiton options, etc.
         each(newOption, function (componentOption, mainType) {
             if (componentOption == null) {
                 return;
@@ -139,18 +142,13 @@ var GlobalModel = Model.extend({
                     ? clone(componentOption)
                     : merge(option[mainType], componentOption, true);
             }
-            else {
+            else if (mainType) {
                 newCptTypes.push(mainType);
             }
         });
 
-        // FIXME OPTION 同步是否要改回原来的
         ComponentModel.topologicalTravel(
             newCptTypes, ComponentModel.getAllClassMainTypes(), visitComponent, this
-        );
-
-        this._seriesIndicesMap = createHashMap(
-            this._seriesIndices = this._seriesIndices || []
         );
 
         function visitComponent(mainType, dependencies) {
@@ -238,6 +236,10 @@ var GlobalModel = Model.extend({
                 createSeriesIndices(this, componentsMap.get('series'));
             }
         }
+
+        this._seriesIndicesMap = createHashMap(
+            this._seriesIndices = this._seriesIndices || []
+        );
     },
 
     /**
@@ -550,7 +552,7 @@ var GlobalModel = Model.extend({
      */
     isSeriesFiltered: function (seriesModel) {
         assertSeriesInitialized(this);
-        return !this._seriesIndicesMap.get(seriesModel.componentIndex);
+        return this._seriesIndicesMap.get(seriesModel.componentIndex) == null;
     },
 
     /**

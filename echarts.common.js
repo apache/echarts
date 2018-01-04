@@ -1,6 +1,8 @@
 export * from './src/echarts';
 export * from './src/export';
 
+import './src/component/dataset';
+
 import './src/chart/line';
 import './src/chart/bar';
 import './src/chart/pie';

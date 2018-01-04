@@ -90,34 +90,6 @@ export function isDataItemOption(dataItem) {
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 }
 
-/**
- * This helper method convert value in data.
- * @param {string|number|Date} value
- * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
- */
-export function converDataValue(value, dimInfo) {
-    // Performance sensitive.
-    var dimType = dimInfo && dimInfo.type;
-    if (dimType === 'ordinal') {
-        return value;
-    }
-
-    if (dimType === 'time'
-        // spead up when using timestamp
-        && typeof value !== 'number'
-        && value != null
-        && value !== '-'
-    ) {
-        value = +nubmerUtil.parseDate(value);
-    }
-
-    // dimType defaults 'number'.
-    // If dimType is not ordinal and value is null or undefined or NaN or '-',
-    // parse to NaN.
-    return (value == null || value === '')
-        ? NaN : +value; // If string (like '-'), using '+' parse to NaN
-}
-
 // /**
 //  * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
 //  * @param {module:echarts/data/List} data
@@ -691,4 +663,3 @@ export function getAttribute(dom, key) {
         ? dom.getAttribute(key)
         : dom[key];
 }
-
