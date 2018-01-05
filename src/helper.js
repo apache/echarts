@@ -4,7 +4,7 @@ import createListFromArray from './chart/helper/createListFromArray';
 import * as axisHelper from './coord/axisHelper';
 import axisModelCommonMixin from './coord/axisModelCommonMixin';
 import Model from './model/Model';
-import {getLayoutRect} from '../util/layout';
+import {getLayoutRect} from './util/layout';
 
 
 /**
@@ -36,7 +36,7 @@ export {default as completeDimensions} from './data/helper/completeDimensions';
  * @param {number} x
  * @param {number} y
  * @param {number} w
- * @param {number} h™
+ * @param {number} h
  * @param {string} color
  */
 export {createSymbol} from './util/symbol';
