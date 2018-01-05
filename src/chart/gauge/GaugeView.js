@@ -319,7 +319,7 @@ var GaugeView = ChartView.extend({
                 r: parsePercent(pointerModel.get('length'), posInfo.r)
             });
 
-            pointer.useStyle(itemModel.getModel('itemStyle.normal').getItemStyle());
+            pointer.useStyle(itemModel.getModel('itemStyle').getItemStyle());
 
             if (pointer.style.fill === 'auto') {
                 pointer.setStyle('fill', getColor(
@@ -328,7 +328,7 @@ var GaugeView = ChartView.extend({
             }
 
             graphic.setHoverStyle(
-                pointer, itemModel.getModel('itemStyle.emphasis').getItemStyle()
+                pointer, itemModel.getModel('emphasis.itemStyle').getItemStyle()
             );
         });
 

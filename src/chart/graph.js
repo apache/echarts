@@ -1,5 +1,4 @@
 import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
 
 import './graph/GraphSeries';
 import './graph/GraphView';
@@ -16,9 +15,7 @@ import createView from './graph/createView';
 
 echarts.registerProcessor(categoryFilter);
 
-echarts.registerVisual(zrUtil.curry(
-    visualSymbol, 'graph', 'circle', null
-));
+echarts.registerVisual(visualSymbol('graph', 'circle', null));
 echarts.registerVisual(categoryVisual);
 echarts.registerVisual(edgeVisual);
 

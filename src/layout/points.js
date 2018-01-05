@@ -1,32 +1,58 @@
+import {map} from 'zrender/src/core/util';
+import createRenderPlanner from '../chart/helper/createRenderPlanner';
 
-export default function (seriesType, ecModel) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-        var data = seriesModel.getData();
-        var coordSys = seriesModel.coordinateSystem;
+export default function (seriesType) {
+    return {
+        seriesType: seriesType,
 
-        if (!coordSys) {
-            return;
-        }
+        plan: createRenderPlanner(),
 
-        var dims = [];
-        var coordDims = coordSys.dimensions;
-        for (var i = 0; i < coordDims.length; i++) {
-            dims.push(seriesModel.coordDimToDataDim(coordSys.dimensions[i])[0]);
-        }
+        reset: function (seriesModel) {
+            var data = seriesModel.getData();
+            var coordSys = seriesModel.coordinateSystem;
+            var pipelineContext = seriesModel.pipelineContext;
+            var isLargeRender = pipelineContext.large;
 
-        if (dims.length === 1) {
-            data.each(dims[0], function (x, idx) {
-                // Also {Array.<number>}, not undefined to avoid if...else... statement
-                data.setItemLayout(idx, isNaN(x) ? [NaN, NaN] : coordSys.dataToPoint(x));
-            });
+            if (!coordSys) {
+                return;
+            }
+
+            var dims = map(coordSys.dimensions, function (dim) {
+                return data.getDimension(seriesModel.coordDimToDataDim(dim)[0]);
+            }).slice(0, 2);
+            var dimLen = dims.length;
+
+            function progress(params, seriesModel) {
+                var segCount = params.end - params.start;
+                var points = isLargeRender && new Float32Array(segCount * dimLen);
+
+                for (var i = params.start, offset = 0, tmpIn = [], tmpOut = []; i < params.end; i++) {
+                    var point;
+
+                    if (dimLen === 1) {
+                        var x = data.get(dims[0], i, true);
+                        point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
+                    }
+                    else {
+                        var x = tmpIn[0] = data.get(dims[0], i, true);
+                        var y = tmpIn[1] = data.get(dims[1], i, true);
+                        // Also {Array.<number>}, not undefined to avoid if...else... statement
+                        point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
+                    }
+
+                    if (isLargeRender) {
+                        points[offset++] = point ? point[0] : NaN;
+                        points[offset++] = point ? point[1] : NaN;
+                    }
+                    else {
+                        data.setItemLayout(i, (point && point.slice()) || [NaN, NaN]);
+                    }
+                }
+
+                isLargeRender && data.setLayout('symbolPoints', points);
+            }
+
+            return dimLen && {progress: progress};
         }
-        else if (dims.length === 2) {
-            data.each(dims, function (x, y, idx) {
-                // Also {Array.<number>}, not undefined to avoid if...else... statement
-                data.setItemLayout(
-                    idx, (isNaN(x) || isNaN(y)) ? [NaN, NaN] : coordSys.dataToPoint([x, y])
-                );
-            }, true);
-        }
-    });
+    };
 }

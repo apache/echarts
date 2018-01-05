@@ -9,20 +9,19 @@ var mathMin = Math.min;
 var retrieveValue = zrUtil.retrieve;
 var each = zrUtil.each;
 
-var PATH_BORDER_WIDTH = ['itemStyle', 'normal', 'borderWidth'];
-var PATH_GAP_WIDTH = ['itemStyle', 'normal', 'gapWidth'];
-var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'normal', 'show'];
-var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'normal', 'height'];
+var PATH_BORDER_WIDTH = ['itemStyle', 'borderWidth'];
+var PATH_GAP_WIDTH = ['itemStyle', 'gapWidth'];
+var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'show'];
+var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'height'];
 
 /**
  * @public
  */
-export default function (ecModel, api, payload) {
-    // Layout result in each node:
-    // {x, y, width, height, area, borderWidth}
-    var condition = {mainType: 'series', subType: 'treemap', query: payload};
-    ecModel.eachComponent(condition, function (seriesModel) {
-
+export default {
+    seriesType: 'treemap',
+    reset: function (seriesModel, ecModel, api, payload) {
+        // Layout result in each node:
+        // {x, y, width, height, area, borderWidth}
         var ecWidth = api.getWidth();
         var ecHeight = api.getHeight();
         var seriesOption = seriesModel.option;
@@ -120,8 +119,8 @@ export default function (ecModel, api, payload) {
             viewRoot,
             0
         );
-    });
-}
+    }
+};
 
 /**
  * Layout treemap with squarify algorithm.

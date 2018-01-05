@@ -139,17 +139,17 @@ export default echarts.extendChartView({
 
             polyline.useStyle(
                 zrUtil.defaults(
-                    itemModel.getModel('lineStyle.normal').getLineStyle(),
+                    itemModel.getModel('lineStyle').getLineStyle(),
                     {
                         fill: 'none',
                         stroke: color
                     }
                 )
             );
-            polyline.hoverStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
+            polyline.hoverStyle = itemModel.getModel('emphasis.lineStyle').getLineStyle();
 
-            var areaStyleModel = itemModel.getModel('areaStyle.normal');
-            var hoverAreaStyleModel = itemModel.getModel('areaStyle.emphasis');
+            var areaStyleModel = itemModel.getModel('areaStyle');
+            var hoverAreaStyleModel = itemModel.getModel('areaStyle');
             var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
             var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
 
@@ -167,10 +167,10 @@ export default echarts.extendChartView({
             );
             polygon.hoverStyle = hoverAreaStyleModel.getAreaStyle();
 
-            var itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
-            var itemHoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
-            var labelModel = itemModel.getModel('label.normal');
-            var labelHoverModel = itemModel.getModel('label.emphasis');
+            var itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
+            var itemHoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
+            var labelModel = itemModel.getModel('label');
+            var labelHoverModel = itemModel.getModel('emphasis.label');
             symbolGroup.eachChild(function (symbolPath) {
                 symbolPath.setStyle(itemStyle);
                 symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);

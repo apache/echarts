@@ -224,10 +224,10 @@ piePieceProto._updateLabel = function (data, idx) {
         z2: 10
     });
 
-    var labelModel = itemModel.getModel('label.normal');
-    var labelHoverModel = itemModel.getModel('label.emphasis');
-    var labelLineModel = itemModel.getModel('labelLine.normal');
-    var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+    var labelModel = itemModel.getModel('label');
+    var labelHoverModel = itemModel.getModel('emphasis.label');
+    var labelLineModel = itemModel.getModel('labelLine');
+    var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
     var visualColor = data.getItemVisual(idx, 'color');
 
     graphic.setLabelStyle(

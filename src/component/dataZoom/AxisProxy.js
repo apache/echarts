@@ -269,7 +269,7 @@ AxisProxy.prototype = {
     /**
      * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
      */
-    filterData: function (dataZoomModel) {
+    filterData: function (dataZoomModel, api) {
         if (dataZoomModel !== this._dataZoomModel) {
             return;
         }
@@ -305,7 +305,7 @@ AxisProxy.prototype = {
             var dataDims = seriesModel.coordDimToDataDim(axisDim);
 
             if (filterMode === 'weakFilter') {
-                seriesData && seriesData.filterSelf(function (dataIndex) {
+                seriesData.filterSelf(function (dataIndex) {
                     var leftOut;
                     var rightOut;
                     var hasValue;
@@ -326,19 +326,27 @@ AxisProxy.prototype = {
                 });
             }
             else {
-                seriesData && each(dataDims, function (dim) {
+                each(dataDims, function (dim) {
                     if (filterMode === 'empty') {
-                        seriesModel.setData(
+                        api.setTaskOutputData(
                             seriesData.map(dim, function (value) {
                                 return !isInWindow(value) ? NaN : value;
-                            })
+                            }),
+                            seriesModel
                         );
                     }
                     else {
-                        seriesData.filterSelf(dim, isInWindow);
+                        var range = {};
+                        range[dim] = valueWindow;
+                        // console.time('select');
+                        seriesData.selectRange(range);
+                        // console.timeEnd('select');
                     }
+                    seriesData.setApproximateExtent(valueWindow, dim);
                 });
             }
+
+            api.setTaskOutputEnd(seriesData.count(), seriesModel);
         });
 
         function isInWindow(value) {
@@ -354,7 +362,7 @@ function calculateDataExtent(axisProxy, axisDim, seriesModels) {
         var seriesData = seriesModel.getData();
         if (seriesData) {
             each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
-                var seriesExtent = seriesData.getDataExtent(dim);
+                var seriesExtent = seriesData.getApproximateExtent(dim);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
             });
@@ -386,7 +394,7 @@ function fixExtentByAxis(axisProxy, dataExtent) {
     // For category axis, if min/max/scale are not set, extent is determined
     // by axis.data by default.
     var isCategoryAxis = axisModel.get('type') === 'category';
-    var axisDataLen = isCategoryAxis && (axisModel.get('data') || []).length;
+    var axisDataLen = isCategoryAxis && axisModel.getCategories().length;
 
     if (min != null && min !== 'dataMin' && typeof min !== 'function') {
         dataExtent[0] = min;

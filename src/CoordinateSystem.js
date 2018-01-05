@@ -23,7 +23,6 @@ CoordinateSystemManager.prototype = {
 
     update: function (ecModel, api) {
         zrUtil.each(this._coordinateSystems, function (coordSys) {
-            // FIXME MUST have
             coordSys.update && coordSys.update(ecModel, api);
         });
     },

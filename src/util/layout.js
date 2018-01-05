@@ -339,7 +339,7 @@ export function positionElement(el, positionInfo, containerRect, margin, opt) {
     );
 
     // Because 'tranlate' is the last step in transform
-    // (see zrender/core/Transformable#getLocalTransfrom),
+    // (see zrender/core/Transformable#getLocalTransform),
     // we can just only modify el.position to get final result.
     var elPos = el.position;
     var dx = h ? positionInfo.x - rect.x : 0;

@@ -1,6 +1,5 @@
 
-import List from '../../data/List';
-import completeDimensions from '../../data/helper/completeDimensions';
+import createListSimply from '../helper/createListSimply';
 import WhiskerBoxDraw from '../helper/WhiskerBoxDraw';
 import * as zrUtil from 'zrender/src/core/util';
 
@@ -60,28 +59,24 @@ export var seriesModelMixin = {
         });
 
         var defaultValueDimensions = this.defaultValueDimensions;
-        var dimensions = [{
-            name: baseAxisDim,
-            otherDims: {
-                tooltip: false
+
+        return createListSimply(
+            this,
+            {
+                sysDimensions: [{
+                    name: baseAxisDim,
+                    otherDims: {
+                        tooltip: false
+                    },
+                    dimsDef: ['base']
+                }, {
+                    name: otherAxisDim,
+                    dimsDef: defaultValueDimensions.slice()
+                }],
+                dimensionsCount: defaultValueDimensions.length + 1
             },
-            dimsDef: ['base']
-        }, {
-            name: otherAxisDim,
-            dimsDef: defaultValueDimensions.slice()
-        }];
-
-        dimensions = completeDimensions(dimensions, data, {
-            encodeDef: this.get('encode'),
-            dimsDef: this.get('dimensions'),
-            // Consider empty data entry.
-            dimCount: defaultValueDimensions.length + 1
-        });
-
-        var list = new List(dimensions, this);
-        list.initData(data, categories ? categories.slice() : null);
-
-        return list;
+            categories && categories.slice()
+        );
     },
 
     /**

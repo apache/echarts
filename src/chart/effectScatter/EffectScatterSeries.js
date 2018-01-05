@@ -8,8 +8,7 @@ export default SeriesModel.extend({
     dependencies: ['grid', 'polar'],
 
     getInitialData: function (option, ecModel) {
-        var list = createListFromArray(option.data, this, ecModel);
-        return list;
+        return createListFromArray(this.getSource(), this);
     },
 
     brushSelector: 'point',
@@ -55,9 +54,7 @@ export default SeriesModel.extend({
         // largeThreshold: 2000,
 
         // itemStyle: {
-        //     normal: {
-        //         opacity: 1
-        //     }
+        //     opacity: 1
         // }
     }
 

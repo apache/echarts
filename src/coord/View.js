@@ -30,9 +30,9 @@ function View(name) {
 
     Transformable.call(this);
 
-    this._roamTransform = new TransformDummy();
+    this._roamTransformable = new TransformDummy();
 
-    this._viewTransform = new TransformDummy();
+    this._rawTransformable = new TransformDummy();
 
     this._center;
     this._zoom;
@@ -92,13 +92,13 @@ View.prototype = {
      */
     transformTo: function (x, y, width, height) {
         var rect = this.getBoundingRect();
-        var viewTransform = this._viewTransform;
+        var rawTransform = this._rawTransformable;
 
-        viewTransform.transform = rect.calculateTransform(
+        rawTransform.transform = rect.calculateTransform(
             new BoundingRect(x, y, width, height)
         );
 
-        viewTransform.decomposeTransform();
+        rawTransform.decomposeTransform();
 
         this._updateTransform();
     },
@@ -160,19 +160,23 @@ View.prototype = {
      * @return {Array.<number}
      */
     getRoamTransform: function () {
-        return this._roamTransform;
+        return this._roamTransformable.getLocalTransform();
     },
+
+    /**
+     * Remove roam
+     */
 
     _updateCenterAndZoom: function () {
         // Must update after view transform updated
-        var viewTransformMatrix = this._viewTransform.getLocalTransform();
-        var roamTransform = this._roamTransform;
+        var rawTransformMatrix = this._rawTransformable.getLocalTransform();
+        var roamTransform = this._roamTransformable;
         var defaultCenter = this.getDefaultCenter();
         var center = this.getCenter();
         var zoom = this.getZoom();
 
-        center = vector.applyTransform([], center, viewTransformMatrix);
-        defaultCenter = vector.applyTransform([], defaultCenter, viewTransformMatrix);
+        center = vector.applyTransform([], center, rawTransformMatrix);
+        defaultCenter = vector.applyTransform([], defaultCenter, rawTransformMatrix);
 
         roamTransform.origin = center;
         roamTransform.position = [
@@ -189,23 +193,20 @@ View.prototype = {
      * @private
      */
     _updateTransform: function () {
-        var roamTransform = this._roamTransform;
-        var viewTransform = this._viewTransform;
+        var roamTransformable = this._roamTransformable;
+        var rawTransformable = this._rawTransformable;
 
-        viewTransform.parent = roamTransform;
-        roamTransform.updateTransform();
-        viewTransform.updateTransform();
+        rawTransformable.parent = roamTransformable;
+        roamTransformable.updateTransform();
+        rawTransformable.updateTransform();
 
-        viewTransform.transform
-            && matrix.copy(this.transform || (this.transform = []), viewTransform.transform);
+        matrix.copy(this.transform || (this.transform = []), rawTransformable.transform || matrix.create());
 
-        if (this.transform) {
-            this.invTransform = this.invTransform || [];
-            matrix.invert(this.invTransform, this.transform);
-        }
-        else {
-            this.invTransform = null;
-        }
+        this._rawTransform = rawTransformable.getLocalTransform();
+
+        this.invTransform = this.invTransform || [];
+        matrix.invert(this.invTransform, this.transform);
+
         this.decomposeTransform();
     },
 
@@ -229,13 +230,16 @@ View.prototype = {
     /**
      * Convert a single (lon, lat) data item to (x, y) point.
      * @param {Array.<number>} data
+     * @param {boolean} noRoam
+     * @param {Array.<number>} [out]
      * @return {Array.<number>}
      */
-    dataToPoint: function (data) {
-        var transform = this.transform;
+    dataToPoint: function (data, noRoam, out) {
+        var transform = noRoam ? this._rawTransform : this.transform;
+        out = out || [];
         return transform
-            ? v2ApplyTransform([], data, transform)
-            : [data[0], data[1]];
+            ? v2ApplyTransform(out, data, transform)
+            : vector.copy(out, data);
     },
 
     /**

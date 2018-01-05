@@ -147,10 +147,10 @@ MapDraw.prototype = {
 
         group.removeAll();
 
-        var itemStyleAccessPath = ['itemStyle', 'normal'];
-        var hoverItemStyleAccessPath = ['itemStyle', 'emphasis'];
-        var labelAccessPath = ['label', 'normal'];
-        var hoverLabelAccessPath = ['label', 'emphasis'];
+        var itemStyleAccessPath = ['itemStyle'];
+        var hoverItemStyleAccessPath = ['emphasis', 'itemStyle'];
+        var labelAccessPath = ['label'];
+        var hoverLabelAccessPath = ['emphasis', 'label'];
         var nameMap = zrUtil.createHashMap();
 
         zrUtil.each(geo.regions, function (region) {

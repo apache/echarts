@@ -6,14 +6,14 @@ export default SeriesModel.extend({
     type: 'series.__base_bar__',
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(option.data, this, ecModel);
+        return createListFromArray(this.getSource(), this);
     },
 
     getMarkerPosition: function (value) {
         var coordSys = this.coordinateSystem;
         if (coordSys) {
             // PENDING if clamp ?
-            var pt = coordSys.dataToPoint(value, true);
+            var pt = coordSys.dataToPoint(coordSys.clampData(value));
             var data = this.getData();
             var offset = data.getLayout('offset');
             var size = data.getLayout('size');
@@ -49,15 +49,9 @@ export default SeriesModel.extend({
         // 类目间柱形距离，默认为类目间距的20%，可设固定值
         // barCategoryGap: '20%',
         // label: {
-        //     normal: {
-        //         show: false
-        //     }
+        //      show: false
         // },
-        itemStyle: {
-            // normal: {
-                // color: '各异'
-            // },
-            // emphasis: {}
-        }
+        itemStyle: {},
+        emphasis: {}
     }
 });

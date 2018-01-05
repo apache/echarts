@@ -1,7 +1,6 @@
 import * as echarts from '../../echarts';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import {defaultEmphasis} from '../../util/model';
-import completeDimensions from '../../data/helper/completeDimensions';
 
 var FunnelSeries = echarts.extendSeriesModel({
 
@@ -20,23 +19,20 @@ var FunnelSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        var dimensions = completeDimensions(['value'], option.data);
-        var list = new List(dimensions, this);
-        list.initData(option.data);
-        return list;
+        return createListSimply(this, ['value']);
     },
 
     _defaultLabelLine: function (option) {
         // Extend labelLine emphasis
-        defaultEmphasis(option.labelLine, ['show']);
+        defaultEmphasis(option, 'labelLine', ['show']);
 
-        var labelLineNormalOpt = option.labelLine.normal;
-        var labelLineEmphasisOpt = option.labelLine.emphasis;
+        var labelLineNormalOpt = option.labelLine;
+        var labelLineEmphasisOpt = option.emphasis.labelLine;
         // Not show label line if `label.normal.show = false`
         labelLineNormalOpt.show = labelLineNormalOpt.show
-            && option.label.normal.show;
+            && option.label.show;
         labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
-            && option.label.emphasis.show;
+            && option.emphasis.label.show;
     },
 
     // Overwrite
@@ -71,35 +67,27 @@ var FunnelSeries = echarts.extendSeriesModel({
         gap: 0,
         funnelAlign: 'center',
         label: {
-            normal: {
-                show: true,
-                position: 'outer'
-                // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-            },
-            emphasis: {
-                show: true
-            }
+            show: true,
+            position: 'outer'
+            // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
         },
         labelLine: {
-            normal: {
-                show: true,
-                length: 20,
-                lineStyle: {
-                    // color: 各异,
-                    width: 1,
-                    type: 'solid'
-                }
-            },
-            emphasis: {}
+            show: true,
+            length: 20,
+            lineStyle: {
+                // color: 各异,
+                width: 1,
+                type: 'solid'
+            }
         },
         itemStyle: {
-            normal: {
-                // color: 各异,
-                borderColor: '#fff',
-                borderWidth: 1
-            },
-            emphasis: {
-                // color: 各异,
+            // color: 各异,
+            borderColor: '#fff',
+            borderWidth: 1
+        },
+        emphasis: {
+            label: {
+                show: true
             }
         }
     }

@@ -58,7 +58,7 @@ export default echarts.extendChartView({
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
             orient: seriesModel.get('orient'),
-            curvature: seriesModel.get('lineStyle.normal.curveness'),
+            curvature: seriesModel.get('lineStyle.curveness'),
             symbolRotate: seriesModel.get('symbolRotate'),
             symbolOffset: seriesModel.get('symbolOffset'),
             hoverAnimation: seriesModel.get('hoverAnimation'),
@@ -122,11 +122,11 @@ function symbolNeedsDraw(data, dataIndex) {
 
 function getTreeNodeStyle(node, itemModel, seriesScope) {
     seriesScope.itemModel = itemModel;
-    seriesScope.itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
-    seriesScope.hoverItemStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
-    seriesScope.lineStyle = itemModel.getModel('lineStyle.normal').getLineStyle();
-    seriesScope.labelModel = itemModel.getModel('label.normal');
-    seriesScope.hoverLabelModel = itemModel.getModel('label.emphasis');
+    seriesScope.itemStyle = itemModel.getModel('itemStyle').getItemStyle();
+    seriesScope.hoverItemStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
+    seriesScope.lineStyle = itemModel.getModel('lineStyle').getLineStyle();
+    seriesScope.labelModel = itemModel.getModel('label');
+    seriesScope.hoverLabelModel = itemModel.getModel('emphasis.label');
 
     if (node.isExpand === false && node.children.length !== 0) {
         seriesScope.symbolInnerColor = seriesScope.itemStyle.fill;

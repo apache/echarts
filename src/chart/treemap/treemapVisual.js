@@ -4,13 +4,11 @@ import * as zrUtil from 'zrender/src/core/util';
 
 var isArray = zrUtil.isArray;
 
-var ITEM_STYLE_NORMAL = 'itemStyle.normal';
+var ITEM_STYLE_NORMAL = 'itemStyle';
 
-export default function (ecModel, api, payload) {
-
-    var condition = {mainType: 'series', subType: 'treemap', query: payload};
-    ecModel.eachComponent(condition, function (seriesModel) {
-
+export default {
+    seriesType: 'treemap',
+    reset: function (seriesModel, ecModel, api, payload) {
         var tree = seriesModel.getData().tree;
         var root = tree.root;
         var seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
@@ -31,8 +29,8 @@ export default function (ecModel, api, payload) {
             seriesModel.getViewRoot().getAncestors(),
             seriesModel
         );
-    });
-}
+    }
+};
 
 function travelTree(
     node, designatedVisual, levelItemStyles, seriesItemStyleModel,

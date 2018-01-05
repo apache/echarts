@@ -182,10 +182,10 @@ symbolProto.updateData = function (data, idx, seriesScope) {
 };
 
 // Update common properties
-var normalStyleAccessPath = ['itemStyle', 'normal'];
-var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
-var normalLabelAccessPath = ['label', 'normal'];
-var emphasisLabelAccessPath = ['label', 'emphasis'];
+var normalStyleAccessPath = ['itemStyle'];
+var emphasisStyleAccessPath = ['emphasis', 'itemStyle'];
+var normalLabelAccessPath = ['label'];
+var emphasisLabelAccessPath = ['emphasis', 'label'];
 
 /**
  * @param {module:echarts/data/List} data

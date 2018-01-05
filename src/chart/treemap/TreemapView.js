@@ -16,10 +16,10 @@ var Rect = graphic.Rect;
 var each = zrUtil.each;
 
 var DRAG_THRESHOLD = 3;
-var PATH_LABEL_NOAMAL = ['label', 'normal'];
-var PATH_LABEL_EMPHASIS = ['label', 'emphasis'];
-var PATH_UPPERLABEL_NORMAL = ['upperLabel', 'normal'];
-var PATH_UPPERLABEL_EMPHASIS = ['upperLabel', 'emphasis'];
+var PATH_LABEL_NOAMAL = ['label'];
+var PATH_LABEL_EMPHASIS = ['emphasis', 'label'];
+var PATH_UPPERLABEL_NORMAL = ['upperLabel'];
+var PATH_UPPERLABEL_EMPHASIS = ['emphasis', 'upperLabel'];
 var Z_BASE = 10; // Should bigger than every z.
 var Z_BG = 1;
 var Z_CONTENT = 2;
@@ -679,8 +679,8 @@ function renderNode(
     var thisViewChildren = thisNode.viewChildren;
     var upperHeight = thisLayout.upperHeight;
     var isParent = thisViewChildren && thisViewChildren.length;
-    var itemStyleNormalModel = thisNode.getModel('itemStyle.normal');
-    var itemStyleEmphasisModel = thisNode.getModel('itemStyle.emphasis');
+    var itemStyleNormalModel = thisNode.getModel('itemStyle');
+    var itemStyleEmphasisModel = thisNode.getModel('emphasis.itemStyle');
 
     // End of closure ariables available in "Procedures in renderNode".
     // -----------------------------------------------------------------

@@ -79,7 +79,7 @@ export default echarts.extendComponentView({
     // render day rect
     _renderDayRect: function (calendarModel, rangeData, group) {
         var coordSys = calendarModel.coordinateSystem;
-        var itemRectStyleModel = calendarModel.getModel('itemStyle.normal').getItemStyle();
+        var itemRectStyleModel = calendarModel.getModel('itemStyle').getItemStyle();
         var sw = coordSys.getCellWidth();
         var sh = coordSys.getCellHeight();
 

@@ -9,7 +9,7 @@ var POSSIBLE_STYLES = [
     'chordStyle', 'label', 'labelLine'
 ];
 
-function compatItemStyle(opt) {
+function compatEC2ItemStyle(opt) {
     var itemStyleOpt = opt && opt.itemStyle;
     if (!itemStyleOpt) {
         return;
@@ -41,23 +41,49 @@ function compatItemStyle(opt) {
     }
 }
 
-function compatTextStyle(opt, propName) {
-    var labelOptSingle = isObject(opt) && opt[propName];
-    var textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
+function convertNormalEmphasis(opt, optType) {
+    if (opt && opt[optType] && (opt[optType].normal || opt[optType].emphasis)) {
+        var normalOpt = opt[optType].normal;
+        var emphasisOpt = opt[optType].emphasis;
+
+        if (normalOpt) {
+            opt[optType] = normalOpt;
+        }
+        if (emphasisOpt) {
+            opt.emphasis = opt.emphasis || {};
+            opt.emphasis[optType] = emphasisOpt;
+        }
+    }
+}
+function removeEC3NormalStatus(opt) {
+    convertNormalEmphasis(opt, 'itemStyle');
+    convertNormalEmphasis(opt, 'lineStyle');
+    convertNormalEmphasis(opt, 'areaStyle');
+    convertNormalEmphasis(opt, 'label');
+    convertNormalEmphasis(opt, 'labelLine');
+    // treemap
+    convertNormalEmphasis(opt, 'upperLabel');
+    // graph
+    convertNormalEmphasis(opt, 'edgeLabel');
+}
+
+function compatTextStyle(labelOpt) {
+    var textStyle = isObject(labelOpt) && labelOpt.textStyle;
     if (textStyle) {
         for (var i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
             var propName = modelUtil.TEXT_STYLE_OPTIONS[i];
             if (textStyle.hasOwnProperty(propName)) {
-                labelOptSingle[propName] = textStyle[propName];
+                labelOpt[propName] = textStyle[propName];
             }
         }
     }
 }
 
-function compatLabelTextStyle(labelOpt) {
-    if (isObject(labelOpt)) {
-        compatTextStyle(labelOpt, 'normal');
-        compatTextStyle(labelOpt, 'emphasis');
+function compatEC3CommonStyles(opt) {
+    if (opt) {
+        removeEC3NormalStatus(opt);
+        compatTextStyle(opt.label);
+        opt.emphasis && compatTextStyle(opt.emphasis.label);
     }
 }
 
@@ -66,34 +92,52 @@ function processSeries(seriesOpt) {
         return;
     }
 
-    compatItemStyle(seriesOpt);
-    compatLabelTextStyle(seriesOpt.label);
+    compatEC2ItemStyle(seriesOpt);
+    removeEC3NormalStatus(seriesOpt);
+
+    compatTextStyle(seriesOpt.label);
     // treemap
-    compatLabelTextStyle(seriesOpt.upperLabel);
+    compatTextStyle(seriesOpt.upperLabel);
     // graph
-    compatLabelTextStyle(seriesOpt.edgeLabel);
+    compatTextStyle(seriesOpt.edgeLabel);
+    if (seriesOpt.emphasis) {
+        compatTextStyle(seriesOpt.emphasis.label);
+        // treemap
+        compatTextStyle(seriesOpt.emphasis.upperLabel);
+        // graph
+        compatTextStyle(seriesOpt.emphasis.edgeLabel);
+    }
 
     var markPoint = seriesOpt.markPoint;
-    compatItemStyle(markPoint);
-    compatLabelTextStyle(markPoint && markPoint.label);
+    if (markPoint) {
+        compatEC2ItemStyle(markPoint);
+        compatEC3CommonStyles(markPoint);
+    }
 
     var markLine = seriesOpt.markLine;
-    compatItemStyle(seriesOpt.markLine);
-    compatLabelTextStyle(markLine && markLine.label);
+    if (markLine) {
+        compatEC2ItemStyle(markLine);
+        compatEC3CommonStyles(markLine);
+    }
 
     var markArea = seriesOpt.markArea;
-    compatLabelTextStyle(markArea && markArea.label);
-
-    // For gauge
-    compatTextStyle(seriesOpt, 'axisLabel');
-    compatTextStyle(seriesOpt, 'title');
-    compatTextStyle(seriesOpt, 'detail');
+    if (markArea) {
+        compatEC3CommonStyles(markArea);
+    }
 
     var data = seriesOpt.data;
-    if (data) {
+    if (seriesOpt.type === 'graph') {
+        data = data || seriesOpt.nodes;
+        var edgeData = seriesOpt.links || seriesOpt.edges;
+        if (edgeData && !zrUtil.isTypedArray(edgeData)) {
+            for (var i = 0; i < edgeData.length; i++) {
+                compatEC3CommonStyles(edgeData[i]);
+            }
+        }
+    }
+    if (data && !zrUtil.isTypedArray(data)) {
         for (var i = 0; i < data.length; i++) {
-            compatItemStyle(data[i]);
-            compatLabelTextStyle(data[i] && data[i].label);
+            compatEC3CommonStyles(data[i]);
         }
     }
 
@@ -102,8 +146,7 @@ function processSeries(seriesOpt) {
     if (markPoint && markPoint.data) {
         var mpData = markPoint.data;
         for (var i = 0; i < mpData.length; i++) {
-            compatItemStyle(mpData[i]);
-            compatLabelTextStyle(mpData[i] && mpData[i].label);
+            compatEC3CommonStyles(mpData[i]);
         }
     }
     // mark line data
@@ -112,17 +155,30 @@ function processSeries(seriesOpt) {
         var mlData = markLine.data;
         for (var i = 0; i < mlData.length; i++) {
             if (zrUtil.isArray(mlData[i])) {
-                compatItemStyle(mlData[i][0]);
-                compatLabelTextStyle(mlData[i][0] && mlData[i][0].label);
-                compatItemStyle(mlData[i][1]);
-                compatLabelTextStyle(mlData[i][1] && mlData[i][1].label);
+                compatEC3CommonStyles(mlData[i][0]);
+                compatEC3CommonStyles(mlData[i][1]);
             }
             else {
-                compatItemStyle(mlData[i]);
-                compatLabelTextStyle(mlData[i] && mlData[i].label);
+                compatEC3CommonStyles(mlData[i]);
             }
         }
     }
+
+    // Series
+    if (seriesOpt.type === 'gauge') {
+        compatTextStyle(seriesOpt, 'axisLabel');
+        compatTextStyle(seriesOpt, 'title');
+        compatTextStyle(seriesOpt, 'detail');
+    }
+    else if (seriesOpt.type === 'treemap') {
+        convertNormalEmphasis(seriesOpt.breadcrumb, 'itemStyle');
+    }
+    else if (seriesOpt.levels || seriesOpt.categories) {
+        zrUtil.each(seriesOpt.levels || seriesOpt.categories, function (opt) {
+            removeEC3NormalStatus(opt);
+        });
+    }
+
 }
 
 function toArr(o) {
@@ -172,14 +228,27 @@ export default function (option, isTheme) {
 
     each(toArr(option.geo), function (geoOpt) {
         if (isObject(geoOpt)) {
-            compatLabelTextStyle(geoOpt.label);
+            compatEC3CommonStyles(geoOpt);
             each(toArr(geoOpt.regions), function (regionObj) {
-                compatLabelTextStyle(regionObj.label);
+                compatEC3CommonStyles(regionObj);
             });
         }
     });
 
-    compatLabelTextStyle(toObj(option.timeline).label);
+    each(toArr(option.timeline), function (timelineOpt) {
+        compatEC3CommonStyles(timelineOpt);
+        convertNormalEmphasis(timelineOpt, 'controlStyle');
+        convertNormalEmphasis(timelineOpt, 'checkpointStyle');
+    });
+
+
+    each(toArr(option.toolbox), function (toolboxOpt) {
+        convertNormalEmphasis(toolboxOpt, 'iconStyle');
+        each(toolboxOpt.feature, function (featureOpt) {
+            convertNormalEmphasis(featureOpt, 'iconStyle');
+        });
+    });
+
     compatTextStyle(toObj(option.axisPointer), 'label');
     compatTextStyle(toObj(option.tooltip).axisPointer, 'label');
 }

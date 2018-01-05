@@ -1,7 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import completeDimensions from '../../data/helper/completeDimensions';
 import {encodeHTML, addCommas} from '../../util/format';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import geoCreator from '../../coord/geo/geoCreator';
@@ -37,13 +36,7 @@ var MapSeries = SeriesModel.extend({
     },
 
     getInitialData: function (option) {
-        var dimensions = completeDimensions(['value'], option.data || []);
-
-        var list = new List(dimensions, this);
-
-        list.initData(option.data);
-
-        return list;
+        return createListSimply(this, ['value']);
     },
 
     mergeOption: function (newOption) {
@@ -205,25 +198,22 @@ var MapSeries = SeriesModel.extend({
         scaleLimit: null,
 
         label: {
-            normal: {
-                show: false,
-                color: '#000'
-            },
-            emphasis: {
-                show: true,
-                color: 'rgb(100,0,0)'
-            }
+            show: false,
+            color: '#000'
         },
         // scaleLimit: null,
         itemStyle: {
-            normal: {
-                // color: 各异,
-                borderWidth: 0.5,
-                borderColor: '#444',
-                areaColor: '#eee'
+            borderWidth: 0.5,
+            borderColor: '#444',
+            areaColor: '#eee'
+        },
+
+        emphasis: {
+            label: {
+                show: true,
+                color: 'rgb(100,0,0)'
             },
-            // 也是选中样式
-            emphasis: {
+            itemStyle: {
                 areaColor: 'rgba(255,215,0,0.8)'
             }
         }

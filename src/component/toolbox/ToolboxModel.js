@@ -54,11 +54,11 @@ var ToolboxModel = echarts.extendComponentModel({
         showTitle: true,
 
         iconStyle: {
-            normal: {
-                borderColor: '#666',
-                color: 'none'
-            },
-            emphasis: {
+            borderColor: '#666',
+            color: 'none'
+        },
+        emphasis: {
+            iconStyle: {
                 borderColor: '#3E98C5'
             }
         }

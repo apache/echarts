@@ -36,16 +36,17 @@ var CandlestickSeries = SeriesModel.extend({
         layout: null, // 'horizontal' or 'vertical'
 
         itemStyle: {
-            normal: {
-                color: '#c23531', // 阳线 positive
-                color0: '#314656', // 阴线 negative     '#c23531', '#314656'
-                borderWidth: 1,
-                // FIXME
-                // ec2中使用的是lineStyle.color 和 lineStyle.color0
-                borderColor: '#c23531',
-                borderColor0: '#314656'
-            },
-            emphasis: {
+            color: '#c23531', // 阳线 positive
+            color0: '#314656', // 阴线 negative     '#c23531', '#314656'
+            borderWidth: 1,
+            // FIXME
+            // ec2中使用的是lineStyle.color 和 lineStyle.color0
+            borderColor: '#c23531',
+            borderColor0: '#314656'
+        },
+
+        emphasis: {
+            itemStyle: {
                 borderWidth: 2
             }
         },

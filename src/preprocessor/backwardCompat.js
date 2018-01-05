@@ -48,12 +48,6 @@ var COMPATITABLE_COMPONENTS = [
     'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
 ];
 
-var COMPATITABLE_SERIES = [
-    'bar', 'boxplot', 'candlestick', 'chord', 'effectScatter',
-    'funnel', 'gauge', 'lines', 'graph', 'heatmap', 'line', 'map', 'parallel',
-    'pie', 'radar', 'sankey', 'scatter', 'treemap'
-];
-
 export default function (option, isTheme) {
     compatStyle(option, isTheme);
 
@@ -78,12 +72,7 @@ export default function (option, isTheme) {
                 && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
         }
 
-        for (var i = 0; i < COMPATITABLE_SERIES.length; i++) {
-            if (COMPATITABLE_SERIES[i] === seriesOpt.type) {
-                compatLayoutProperties(seriesOpt);
-                break;
-            }
-        }
+        compatLayoutProperties(seriesOpt);
     });
 
     // dataRange has changed to visualMap

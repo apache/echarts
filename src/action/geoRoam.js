@@ -14,7 +14,7 @@ import {updateCenterAndZoom} from './roamHelper';
 echarts.registerAction({
     type: 'geoRoam',
     event: 'geoRoam',
-    update: 'updateLayout'
+    update: 'updateTransform'
 }, function (payload, ecModel) {
     var componentType = payload.componentType || 'series';
 

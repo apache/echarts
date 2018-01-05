@@ -122,6 +122,10 @@ axisDefault.categoryAxis = zrUtil.merge({
 axisDefault.valueAxis = zrUtil.merge({
     // 数值起始和结束两端空白策略
     boundaryGap: [0, 0],
+
+    // ???
+    // min/max: [30, datamin, 60] or [20, datamin] or [datamin, 60]
+
     // 最小值, 设置成 'dataMin' 则从数据中计算最小值
     // min: null,
     // 最大值，设置成 'dataMax' 则从数据中计算最大值

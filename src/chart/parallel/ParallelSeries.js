@@ -1,7 +1,7 @@
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import completeDimensions from '../../data/helper/completeDimensions';
+import guessOrdinal from '../../data/helper/guessOrdinal';
 
 export default SeriesModel.extend({
 
@@ -9,7 +9,7 @@ export default SeriesModel.extend({
 
     dependencies: ['parallel'],
 
-    visualColorAccessPath: 'lineStyle.normal.color',
+    visualColorAccessPath: 'lineStyle.color',
 
     getInitialData: function (option, ecModel) {
         var parallelModel = ecModel.getComponent(
@@ -17,11 +17,13 @@ export default SeriesModel.extend({
         );
         var parallelAxisIndices = parallelModel.parallelAxisIndex;
 
-        var rawData = option.data;
+        var source = this.getSource();
+        var rawData = source.data;
         var modelDims = parallelModel.dimensions;
 
         var dataDims = generateDataDims(modelDims, rawData);
 
+        // ??? need support encode?
         var dataDimsInfo = zrUtil.map(dataDims, function (dim, dimIndex) {
 
             var modelDimsIndex = zrUtil.indexOf(modelDims, dim);
@@ -34,7 +36,7 @@ export default SeriesModel.extend({
                 return {name: dim, type: 'ordinal'};
             }
             else if (modelDimsIndex < 0) {
-                return completeDimensions.guessOrdinal(rawData, dimIndex)
+                return guessOrdinal(rawData, dimIndex)
                     ? {name: dim, type: 'ordinal'}
                     : dim;
             }
@@ -83,24 +85,23 @@ export default SeriesModel.extend({
         parallelIndex: 0,
 
         label: {
-            normal: {
-                show: false
-            },
-            emphasis: {
-                show: false
-            }
+            show: false
         },
 
         inactiveOpacity: 0.05,
         activeOpacity: 1,
 
         lineStyle: {
-            normal: {
-                width: 1,
-                opacity: 0.45,
-                type: 'solid'
+            width: 1,
+            opacity: 0.45,
+            type: 'solid'
+        },
+        emphasis: {
+            label: {
+                show: false
             }
         },
+
         progressive: false, // 100
         smooth: false,
 
@@ -109,7 +110,7 @@ export default SeriesModel.extend({
 });
 
 function translateCategoryValue(axisModel, dim, rawData) {
-    var axisData = axisModel.get('data');
+    var axisData = axisModel.getCategories();
     var numberDim = convertDimNameToNumber(dim);
 
     if (axisData && axisData.length) {

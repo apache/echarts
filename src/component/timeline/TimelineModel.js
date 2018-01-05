@@ -38,15 +38,9 @@ var TimelineModel = ComponentModel.extend({
 
         currentIndex: 0,
 
-        itemStyle: {
-            normal: {},
-            emphasis: {}
-        },
+        itemStyle: {},
         label: {
-            normal: {
-                color: '#000'
-            },
-            emphasis: {}
+            color: '#000'
         },
 
         data: []

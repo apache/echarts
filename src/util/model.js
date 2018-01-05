@@ -1,7 +1,5 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as formatUtil from './format';
-import * as nubmerUtil from './number';
-import Model from '../model/Model';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -23,30 +21,30 @@ export function normalizeToArray(value) {
  * Sync default option between normal and emphasis like `position` and `show`
  * In case some one will write code like
  *     label: {
- *         normal: {
- *             show: false,
- *             position: 'outside',
- *             fontSize: 18
- *         },
- *         emphasis: {
- *             show: true
- *         }
+ *          show: false,
+ *          position: 'outside',
+ *          fontSize: 18
+ *     },
+ *     emphasis: {
+ *          label: { show: true }
  *     }
  * @param {Object} opt
+ * @param {string} key
  * @param {Array.<string>} subOpts
  */
-export function defaultEmphasis(opt, subOpts) {
+export function defaultEmphasis(opt, key, subOpts) {
     if (opt) {
-        var emphasisOpt = opt.emphasis = opt.emphasis || {};
-        var normalOpt = opt.normal = opt.normal || {};
+        opt[key] = opt[key] || {};
+        opt.emphasis = opt.emphasis || {};
+        opt.emphasis[key] = opt.emphasis[key] || {};
 
         // Default emphasis option from normal
         for (var i = 0, len = subOpts.length; i < len; i++) {
             var subOptName = subOpts[i];
-            if (!emphasisOpt.hasOwnProperty(subOptName)
-                && normalOpt.hasOwnProperty(subOptName)
+            if (!opt.emphasis[key].hasOwnProperty(subOptName)
+                && opt[key].hasOwnProperty(subOptName)
             ) {
-                emphasisOpt[subOptName] = normalOpt[subOptName];
+                opt.emphasis[key][subOptName] = opt[key][subOptName];
             }
         }
     }
@@ -91,56 +89,28 @@ export function isDataItemOption(dataItem) {
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 }
 
-/**
- * This helper method convert value in data.
- * @param {string|number|Date} value
- * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
- */
-export function converDataValue(value, dimInfo) {
-    // Performance sensitive.
-    var dimType = dimInfo && dimInfo.type;
-    if (dimType === 'ordinal') {
-        return value;
-    }
+// /**
+//  * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+//  * @param {module:echarts/data/List} data
+//  * @param {Object} opt
+//  * @param {string} [opt.seriesIndex]
+//  * @param {Object} [opt.name]
+//  * @param {Object} [opt.mainType]
+//  * @param {Object} [opt.subType]
+//  */
+// export function createDataFormatModel(data, opt) {
+//     var model = new Model();
+//     zrUtil.mixin(model, dataFormatMixin);
+//     model.seriesIndex = opt.seriesIndex;
+//     model.name = opt.name || '';
+//     model.mainType = opt.mainType;
+//     model.subType = opt.subType;
 
-    if (dimType === 'time'
-        // spead up when using timestamp
-        && typeof value !== 'number'
-        && value != null
-        && value !== '-'
-    ) {
-        value = +nubmerUtil.parseDate(value);
-    }
-
-    // dimType defaults 'number'.
-    // If dimType is not ordinal and value is null or undefined or NaN or '-',
-    // parse to NaN.
-    return (value == null || value === '')
-        ? NaN : +value; // If string (like '-'), using '+' parse to NaN
-}
-
-/**
- * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
- * @param {module:echarts/data/List} data
- * @param {Object} opt
- * @param {string} [opt.seriesIndex]
- * @param {Object} [opt.name]
- * @param {Object} [opt.mainType]
- * @param {Object} [opt.subType]
- */
-export function createDataFormatModel(data, opt) {
-    var model = new Model();
-    zrUtil.mixin(model, dataFormatMixin);
-    model.seriesIndex = opt.seriesIndex;
-    model.name = opt.name || '';
-    model.mainType = opt.mainType;
-    model.subType = opt.subType;
-
-    model.getData = function () {
-        return data;
-    };
-    return model;
-}
+//     model.getData = function () {
+//         return data;
+//     };
+//     return model;
+// }
 
 // PENDING A little ugly
 export var dataFormatMixin = {
@@ -197,7 +167,10 @@ export var dataFormatMixin = {
             params.value = params.value[dimIndex];
         }
 
-        var formatter = itemModel.get([labelProp || 'label', status, 'formatter']);
+
+        var formatter = itemModel.get(status === 'normal' ?
+            [labelProp || 'label', 'formatter'] : [labelProp || 'label', status, 'formatter']
+        );
 
         if (typeof formatter === 'function') {
             params.status = status;
@@ -504,24 +477,33 @@ export function queryDataIndex(data, payload) {
  * Notice: Serialization is not supported.
  *
  * For example:
- * var get = modelUitl.makeGetter();
+ * var inner = zrUitl.makeInner();
  *
- * function some(hostObj) {
- *      get(hostObj)._someProperty = 1212;
+ * function some1(hostObj) {
+ *      inner(hostObj).someProperty = 1212;
+ *      ...
+ * }
+ * function some2() {
+ *      var fields = inner(this);
+ *      fields.someProperty1 = 1212;
+ *      fields.someProperty2 = 'xx';
  *      ...
  * }
  *
  * @return {Function}
  */
-export var makeGetter = (function () {
+export var makeInner = (function () {
     var index = 0;
     return function () {
-        var key = '\0__ec_prop_getter_' + index++;
+        var key = '__\0zr_inner_' + index++;
         return function (hostObj) {
             return hostObj[key] || (hostObj[key] = {});
         };
     };
 })();
+
+// ??? remove
+export var makeGetter = makeInner;
 
 /**
  * @param {module:echarts/model/Global} ecModel
@@ -612,7 +594,7 @@ export function parseFinder(ecModel, finder, opt) {
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * @see {module:echarts/data/helper/createDimensions}
  * @param {module:echarts/data/List} data
  * @param {string|number} dataDim
  * @return {string}
@@ -629,10 +611,10 @@ export function dataDimToCoordDim(data, dataDim) {
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * @see {module:echarts/data/helper/createDimensions}
  * @param {module:echarts/data/List} data
  * @param {string} coordDim
- * @return {Array.<string>} data dimensions on the coordDim.
+ * @return {Array.<string>} data dimensions on the coordDim (concrete dim).
  */
 export function coordDimToDataDim(data, coordDim) {
     var dataDim = [];
@@ -646,7 +628,7 @@ export function coordDimToDataDim(data, coordDim) {
 }
 
 /**
- * @see {module:echarts/data/helper/completeDimensions}
+ * @see {module:echarts/data/helper/createDimensions}
  * @param {module:echarts/data/List} data
  * @param {string} otherDim Can be `otherDims`
  *                        like 'label' or 'tooltip'.
@@ -667,4 +649,16 @@ export function otherDimToDataDim(data, otherDim) {
 
 function has(obj, prop) {
     return obj && obj.hasOwnProperty(prop);
+}
+
+export function setAttribute(dom, key, value) {
+    dom.setAttribute
+        ? dom.setAttribute(key, value)
+        : (dom[key] = value);
+}
+
+export function getAttribute(dom, key) {
+    return dom.getAttribute
+        ? dom.getAttribute(key)
+        : dom[key];
 }
