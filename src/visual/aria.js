@@ -5,8 +5,8 @@ export default function (dom, ecModel) {
     if (!ariaModel.get('show')) {
         return;
     }
-    else if (ariaModel.get('desc')) {
-        dom.setAttribute('aria-label', ariaModel.get('desc'));
+    else if (ariaModel.get('description')) {
+        dom.setAttribute('aria-label', ariaModel.get('description'));
         return;
     }
 
