@@ -101,6 +101,14 @@ var axisDefault = {};
 axisDefault.categoryAxis = zrUtil.merge({
     // 类目起始和结束两端空白策略
     boundaryGap: true,
+    // Set false to faster category collection.
+    // Only usefull in the case like: category is
+    // ['2012-01-01', '2012-01-02', ...], where the input
+    // data has been ensured not duplicate and is large data.
+    // null means "auto":
+    // if axis.data provided, do not deduplication,
+    // else do deduplication.
+    deduplication: null,
     // splitArea: {
         // show: false
     // },

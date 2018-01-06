@@ -60,7 +60,13 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
                 }
             },
 
+            /**
+             * Should not be called before all of 'getInitailData' finished.
+             * Because categories are collected during initializing data.
+             */
             getCategories: function () {
+                // FIXME
+                // warning if called before all of 'getInitailData' finished.
                 if (this.option.type === 'category') {
                     return this.ordinalMeta.categories;
                 }

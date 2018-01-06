@@ -8,7 +8,7 @@
 // check: "modelHelper" of tooltip and "BrushTargetManager".
 
 import {__DEV__} from '../config';
-import {createHashMap, retrieve} from 'zrender/src/core/util';
+import {createHashMap, retrieve, each} from 'zrender/src/core/util';
 
 /**
  * @return {Object} For example:
@@ -25,6 +25,7 @@ import {createHashMap, retrieve} from 'zrender/src/core/util';
  *     }),
  *     // It also indicate that whether there is category axis.
  *     firstCategoryDimIndex: 1,
+ *     // To replace user specified encode.
  * }
  */
 export function getCoordSysDefineBySeries(seriesModel) {
@@ -127,6 +128,25 @@ var fetchers = {
 
     geo: function (seriesModel, result, axisMap, categoryAxisMap) {
         result.coordSysDims = ['lng', 'lat'];
+    },
+
+    parallel: function (seriesModel, result, axisMap, categoryAxisMap) {
+        var ecModel = seriesModel.ecModel;
+        var parallelModel = ecModel.getComponent(
+            'parallel', seriesModel.get('parallelIndex')
+        );
+        var coordSysDims = result.coordSysDims = parallelModel.dimensions.slice();
+
+        each(parallelModel.parallelAxisIndex, function (axisIndex, index) {
+            var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
+            var axisDim = coordSysDims[index];
+            axisMap.set(axisDim, axisModel);
+
+            if (isCategory(axisModel) && result.firstCategoryDimIndex == null) {
+                categoryAxisMap.set(axisDim, axisModel);
+                result.firstCategoryDimIndex = index;
+            }
+        });
     }
 };
 

@@ -6,7 +6,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {normalizeToArray, getDataItemValue} from '../../util/model';
-import guessOrdinal from './guessOrdinal';
+import {guessOrdinal} from './sourceHelper';
 
 var each = zrUtil.each;
 var isString = zrUtil.isString;
@@ -69,8 +69,11 @@ function completeDimensions(sysDims, data, opt) {
         // Originally detect dimCount by data[0]. Should we
         // optimize it to only by sysDims and dimensions and encode.
         // So only necessary dims will be initialized.
-        // But custom series should be considered. where other dims
+        // But
+        // (1) custom series should be considered. where other dims
         // may be visited.
+        // (2) sometimes user need to calcualte bubble size or use visualMap
+        // on other dimensions besides coordSys needed.
         var value0 = getDataItemValue(data[0]);
         dimCount = Math.max(
             zrUtil.isArray(value0) && value0.length || 1,
@@ -173,9 +176,11 @@ function completeDimensions(sysDims, data, opt) {
             dataDimNameMap
         ));
 
-        if (!isDataTypedArray) {
-            resultItem.type == null && guessOrdinal(data, resultDimIdx)
-                && (resultItem.type = 'ordinal');
+        if (!isDataTypedArray
+            && resultItem.type == null
+            && guessOrdinal(data, resultDimIdx)
+        ) {
+            resultItem.type = 'ordinal';
         }
     }
 

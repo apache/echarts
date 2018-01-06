@@ -1,17 +1,13 @@
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
+import {getDimTypeByAxis} from '../../data/helper/sourceHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
 
 /**
- * @param {Object} source
- * {
- *     data: mandatory
- *     encodeDefine: optional
- *     dimensionsDefine: optional
- * }
+ * @param {module:echarts/data/Source} source
  * @param {module:echarts/model/Series} seriesModel
  */
 function createListFromArray(source, seriesModel) {
@@ -57,7 +53,7 @@ function createListFromArray(source, seriesModel) {
         var categoryAxisModel = coordSysDefine.categoryAxisMap.get(coordDim);
         if (categoryAxisModel) {
             firstCategoryDimIndex == null && (firstCategoryDimIndex = dimIndex);
-            categoryAxisModel.ordinalMeta.prepareDimInfo(dimInfo, source);
+            dimInfo.ordinalMeta = categoryAxisModel.ordinalMeta;
         }
     });
 
@@ -80,14 +76,6 @@ function createListFromArray(source, seriesModel) {
 
 function isStackable(axisType) {
     return axisType !== 'category' && axisType !== 'time';
-}
-
-function getDimTypeByAxis(axisType) {
-    return axisType === 'category'
-        ? 'ordinal'
-        : axisType === 'time'
-        ? 'time'
-        : 'float';
 }
 
 function firstDataNotNull(data) {

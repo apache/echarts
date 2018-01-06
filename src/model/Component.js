@@ -94,7 +94,6 @@ var ComponentModel = Model.extend({
         this.uid = componentUtil.getUID('componentModel');
     },
 
-
     init: function (option, parentModel, ecModel, extraOpt) {
         this.mergeDefaultAndTheme(option, ecModel);
     },

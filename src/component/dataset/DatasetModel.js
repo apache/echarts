@@ -1,14 +1,30 @@
 import * as echarts from '../../echarts';
+import { detectSourceFormat } from '../../data/helper/sourceHelper';
 
 var DatasetModel = echarts.extendComponentModel({
 
     type: 'dataset',
 
     /**
+     * @readOnly
+     */
+    parsedData: null,
+
+    /**
      * @protected
      */
     defaultOption: {
-        sourceType: 'rows', // 'rows', 'columns', 'objects'
+
+        // 'row', 'column'
+        seriesLayoutBy: 'column',
+
+        // see "module:echarts/data/helper/sourceHelper#detectSourceFormat"
+        sourceFormat: 'unknown',
+
+        header: true,
+
+        dimensions: null,
+
         source: null
     },
 
@@ -16,30 +32,13 @@ var DatasetModel = echarts.extendComponentModel({
      * @override
      */
     optionUpdated: function () {
-        parseData(this.option);
+        var option = this.option;
+        var sourceFormat = option.sourceFormat;
+        if (sourceFormat == null || sourceFormat === 'unknown') {
+            option.sourceFormat = detectSourceFormat(option.source);
+        }
     }
 
 });
-
-function parseData(option) {
-    var sourceType = option.sourceType;
-    var parser = parsers[sourceType];
-    if (parser && option.source) {
-        option.data = parser(option.source, option);
-    }
-    option.source = null;
-}
-
-var parsers = {
-    rows: function (source, option) {
-        return source;
-    },
-    columns: function (source, option) {
-        // TODO
-    },
-    objects: function (source, option) {
-        // TODO
-    }
-};
 
 export default DatasetModel;

@@ -153,8 +153,7 @@ var typedArrayProviderMethods = {
  *      For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
  *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
  *      Spetial fields: {
- *          ordinalMeta: <module:echarts/data/OrdinalMeta>,
- *          sourceModelUID: <string>
+ *          ordinalMeta: <module:echarts/data/OrdinalMeta>
  *      }
  * @param {module:echarts/model/Model} hostModel
  */
@@ -1733,7 +1732,7 @@ function converDataValue(value, dimInfo) {
         return !ordinalMeta
             ? value
             : typeof value === 'string'
-            ? ordinalMeta.parseAndCollect(value, dimInfo.sourceModelUID)
+            ? ordinalMeta.parseAndCollect(value)
             : NaN;
     }
 
