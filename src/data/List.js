@@ -100,7 +100,7 @@ var normalProviderMethods = {
     getItem: function (idx) {
         return this._array[idx];
     },
-    addData: function (newData) {
+    appendData: function (newData) {
         for (var i = 0; i < newData.length; i++) {
             this._array.push(newData[i]);
         }
@@ -126,7 +126,7 @@ var typedArrayProviderMethods = {
         }
         return item;
     },
-    addData: function (newData) {
+    appendData: function (newData) {
         if (!zrUtil.isTypedArray(newData)) {
             if (__DEV__) {
                 throw new Error('Added data must be TypedArray if data in initialization is TypedArray');
@@ -448,7 +448,7 @@ listProto.getProvider = function () {
 listProto.appendData = function (data) {
     var rawData = this._rawData;
     var start = this.count();
-    rawData.addData(data);
+    rawData.appendData(data);
     var end = rawData.count();
     if (!rawData.persistent) {
         end += start;

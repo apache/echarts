@@ -127,7 +127,7 @@
                     function next() {
                         if (chunkCount++ < chunkMax) {
                             var newData = genData(1000);
-                            chart.addData({seriesIndex: 0, data: newData});
+                            chart.appendData({seriesIndex: 0, data: newData});
                             setTimeout(next, 1000);
                         }
                     }
