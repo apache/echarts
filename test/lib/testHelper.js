@@ -104,9 +104,90 @@
          */
         dir: function () {
             return location.origin + testHelper.resolve(location.pathname, '..');
-        }
+        },
 
+        /**
+         * @param {string} elId The data table will be inserted before the el.
+         * @param {Array|Object} data [[], [], ...] or [{}, {}, ...] or {xx: [...], yy: [...]}
+         */
+        createDataTable: function (elId, data) {
+            var sourceFormat = detectSourceFormat(data);
+            var el = document.getElementById(elId);
+
+            if (!el || !sourceFormat) {
+                return;
+            }
+
+            var html = ['<table class="test-data-table"><tbody>'];
+
+            if (sourceFormat === 'arrayRows') {
+                for (var i = 0; i < data.length; i++) {
+                    var line = data[i];
+                    var htmlLine = ['<tr>'];
+                    for (var j = 0; j < line.length; j++) {
+                        var val = line[j];
+                        htmlLine.push('<td>' + testHelper.encodeHTML(val) + '</td>');
+                    }
+                    htmlLine.push('</tr>');
+                    html.push(htmlLine.join(''));
+                }
+            }
+            else if (sourceFormat === 'objectRows') {
+                for (var i = 0; i < data.length; i++) {
+                    var line = data[i];
+                    var htmlLine = ['<tr>'];
+                    for (var key in line) {
+                        if (line.hasOwnProperty(key)) {
+                            htmlLine.push('<td class="test-data-table-key">' + testHelper.encodeHTML(key) + '</td>');
+                            htmlLine.push('<td>' + testHelper.encodeHTML(line[key]) + '</td>');
+                        }
+                    }
+                    htmlLine.push('</tr>');
+                    html.push(htmlLine.join(''));
+                }
+            }
+            else if (sourceFormat === 'keyedColumns') {
+                for (var key in data) {
+                    var htmlLine = ['<tr>'];
+                    htmlLine.push('<td class="test-data-table-key">' + testHelper.encodeHTML(key) + '</td>');
+                    if (data.hasOwnProperty(key)) {
+                        var col = data[key] || [];
+                        for (var i = 0; i < col.length; i++) {
+                            htmlLine.push('<td>' + testHelper.encodeHTML(col[i]) + '</td>');
+                        }
+                    }
+                    htmlLine.push('</tr>');
+                    html.push(htmlLine.join(''));
+                }
+            }
+
+            html.push('</tbody></table>');
+            var container = document.createElement('div');
+            container.innerHTML = html.join('');
+            el.parentNode.insertBefore(container, el);
+        }
     };
+
+    function detectSourceFormat(data) {
+        if (data.length) {
+            for (var i = 0, len = data.length; i < len; i++) {
+                var item = data[i];
+
+                if (item == null) {
+                    continue;
+                }
+                else if (item.length) {
+                    return 'arrayRows';
+                }
+                else if (typeof data === 'object') {
+                    return 'objectRows';
+                }
+            }
+        }
+        else if (typeof data === 'object') {
+            return 'keyedColumns';
+        }
+    }
 
     // resolves . and .. elements in a path array with directory names there
     // must be no slashes or device names (c:\) in the array
