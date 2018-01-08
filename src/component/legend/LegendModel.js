@@ -69,13 +69,13 @@ var LegendModel = echarts.extendComponentModel({
          * @type {Array.<string>}
          * @private
          */
-        this._availableNames = zrUtil.filter(availableNames, function (name) {
-            return name !== DEFAULT_COMPONENT_NAME;
-        });
+        this._availableNames = availableNames;
 
         // If legend.data not specified in option, use availableNames as data,
         // which is convinient for user preparing option.
-        var rawData = this.get('data') || availableNames;
+        var rawData = this.get('data') || zrUtil.filter(availableNames, function (name) {
+            return name !== DEFAULT_COMPONENT_NAME;
+        });
 
         var legendData = zrUtil.map(rawData, function (dataItem) {
             // Can be string or number

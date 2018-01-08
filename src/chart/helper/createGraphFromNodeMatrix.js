@@ -63,9 +63,11 @@ export default function (nodes, matrix, hostModel, directed) {
         // FIXME
         var coordSysCtor = CoordinateSystem.get(coordSys);
         // FIXME
-        var dimensionNames = createDimensions({
-            sysDimensions: ((coordSysCtor && coordSysCtor.type !== 'view') ? (coordSysCtor.dimensions || []) : []).concat(['value']),
-            data: nodes
+        var dimensionNames = createDimensions(nodes, {
+            sysDimensions: (
+                (coordSysCtor && coordSysCtor.type !== 'view')
+                ? (coordSysCtor.dimensions || []) : []
+            ).concat(['value'])
         });
         nodeData = new List(dimensionNames, hostModel);
         nodeData.initData(nodes);

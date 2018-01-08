@@ -17,8 +17,7 @@ import {
 import {createTask} from '../stream/task';
 import {
     prepareSource,
-    getSource,
-    getSeriesAutoName
+    getSource
 } from '../data/helper/sourceHelper';
 
 var inner = modelUtil.makeInner();
@@ -428,6 +427,17 @@ function autoSeriesName(seriesModel) {
     if (modelUtil.DEFAULT_COMPONENT_NAME === name) {
         seriesModel.name = getSeriesAutoName(seriesModel) || name;
     }
+}
+
+function getSeriesAutoName(seriesModel) {
+    var data = seriesModel.getRawData();
+    var dataDims = modelUtil.otherDimToDataDim(data, 'seriesName');
+    var nameArr = [];
+    zrUtil.each(dataDims, function (dataDim) {
+        var dimInfo = data.getDimensionInfo(dataDim);
+        dimInfo.name && nameArr.push(dimInfo.name);
+    });
+    return nameArr.join(' ');
 }
 
 function dataTaskCount(context) {

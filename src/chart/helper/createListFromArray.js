@@ -1,7 +1,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
-import {getDimTypeByAxis} from '../../data/helper/sourceHelper';
+import {getDimTypeByAxis, SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
@@ -40,12 +40,9 @@ function createListFromArray(source, seriesModel) {
         )) || ['x', 'y'];
     }
 
-    var dimInfoList = createDimensions(zrUtil.defaults({
+    var dimInfoList = createDimensions(source, {
         sysDimensions: coordSysDimDefs
-    }, source));
-
-    // Consider empty data.
-    var data = source.data || [];
+    });
 
     var firstCategoryDimIndex;
     coordSysDefine && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
@@ -59,7 +56,7 @@ function createListFromArray(source, seriesModel) {
 
     var list = new List(dimInfoList, seriesModel);
 
-    var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(data))
+    var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
         ? function (itemOpt, dimName, dataIndex, dimIndex) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
@@ -69,7 +66,7 @@ function createListFromArray(source, seriesModel) {
         : null;
 
     list.hasItemOption = false;
-    list.initData(data, firstCategoryDimIndex, dimValueGetter);
+    list.initData(source, firstCategoryDimIndex, dimValueGetter);
 
     return list;
 }
@@ -78,17 +75,20 @@ function isStackable(axisType) {
     return axisType !== 'category' && axisType !== 'time';
 }
 
+function isNeedCompleteOrdinalData(source) {
+    if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+        var sampleItem = firstDataNotNull(source.data || []);
+        return sampleItem != null
+            && !zrUtil.isArray(getDataItemValue(sampleItem));
+    }
+}
+
 function firstDataNotNull(data) {
     var i = 0;
     while (i < data.length && data[i] == null) {
         i++;
     }
     return data[i];
-}
-function isNeedCompleteOrdinalData(data) {
-    var sampleItem = firstDataNotNull(data);
-    return sampleItem != null
-        && !zrUtil.isArray(getDataItemValue(sampleItem));
 }
 
 export default createListFromArray;

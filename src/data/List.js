@@ -7,8 +7,8 @@ import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
-import * as modelUtil from '../util/model';
-import {parseDate} from '../util/number';
+import Source from './Source';
+import {defaultDimValueGetters, DefaultDataProvider} from './helper/dataProvider';
 
 var isObject = zrUtil.isObject;
 
@@ -54,96 +54,10 @@ function transferProperties(a, b) {
     a.__wrappedMethods = b.__wrappedMethods;
 }
 
-/**
- * If normal array used, mutable chunk size is supported.
- * If typed array used, chunk size must be fixed.
- */
-function DefaultDataProvider(dataArray, dimSize) {
-    var methods;
 
-    // Typed array. TODO IE10+?
-    if (dataArray && zrUtil.isTypedArray(dataArray)) {
-        if (__DEV__) {
-            if (dimSize == null) {
-                throw new Error('Typed array data must specify dimension size');
-            }
-        }
-        this._offset = 0;
-        this._dimSize = dimSize;
-        this._array = dataArray;
-        methods = typedArrayProviderMethods;
-    }
-    // Normal array.
-    else {
-        this._array = dataArray || [];
-        methods = normalProviderMethods;
-    }
 
-    zrUtil.extend(this, methods);
-}
 
-var providerProto = DefaultDataProvider.prototype;
-// If data is pure without style configuration
-providerProto.pure = false;
-// If data is persistent and will not be released after use.
-providerProto.persistent = true;
-// If data is isTypedArray.
-providerProto.isTypedArray = false;
 
-var normalProviderMethods = {
-
-    persistent: true,
-
-    count: function () {
-        return this._array.length;
-    },
-    getItem: function (idx) {
-        return this._array[idx];
-    },
-    appendData: function (newData) {
-        for (var i = 0; i < newData.length; i++) {
-            this._array.push(newData[i]);
-        }
-    }
-};
-var typedArrayProviderMethods = {
-
-    persistent: false,
-
-    pure: true,
-
-    isTypedArray: true,
-
-    count: function () {
-        return this._array ? (this._array.length / this._dimSize) : 0;
-    },
-    getItem: function (idx) {
-        idx = idx - this._offset;
-        var item = [];
-        var offset = this._dimSize * idx;
-        for (var i = 0; i < this._dimSize; i++) {
-            item[i] = this._array[offset + i];
-        }
-        return item;
-    },
-    appendData: function (newData) {
-        if (!zrUtil.isTypedArray(newData)) {
-            if (__DEV__) {
-                throw new Error('Added data must be TypedArray if data in initialization is TypedArray');
-            }
-            return;
-        }
-
-        this._array = newData;
-    },
-
-    // Clean self if data is already used.
-    clean: function () {
-        // PENDING
-        this._offset += this.count();
-        this._array = null;
-    }
-};
 
 /**
  * @constructor
@@ -383,7 +297,7 @@ listProto.getDimensionInfo = function (dim) {
 
 /**
  * Initialize from data
- * @param {Array.<Object|number|Array>} data
+ * @param {Array.<Object|number|Array>} data source or data or data provider.
  * @param {number|Array.<string>} [defaultNameDimIndex] The name of a datum is used on data diff and
  *        defualt label/tooltip. It can be specified in raw data, or by nameList provided outside
  *        (usually provided categroy axis).
@@ -392,14 +306,14 @@ listProto.getDimensionInfo = function (dim) {
  * @param {Function} [dimValueGetter] (dataItem, dimName, dataIndex, dimIndex) => number
  */
 listProto.initData = function (data, defaultNameDimIndex, dimValueGetter) {
-    data = data || [];
 
-    var isDataArray = zrUtil.isArrayLike(data);
-    if (isDataArray) {
+    var notProvider = data instanceof Source || zrUtil.isArrayLike(data);
+    if (notProvider) {
         data = new DefaultDataProvider(data, this.dimensions.length);
     }
+
     if (__DEV__) {
-        if (!isDataArray && (typeof data.getItem != 'function' || typeof data.count != 'function')) {
+        if (!notProvider && (typeof data.getItem != 'function' || typeof data.count != 'function')) {
             throw new Error('Inavlid data provider.');
         }
     }
@@ -425,6 +339,14 @@ listProto.initData = function (data, defaultNameDimIndex, dimValueGetter) {
     if (!dimValueGetter) {
         this.hasItemOption = false;
     }
+
+    /**
+     * @readOnly
+     */
+    this.defaultDimValueGetter = defaultDimValueGetters[
+        this._rawData.getSource().sourceFormat
+    ];
+
     // Default dim value getter
     this._dimValueGetter = dimValueGetter = dimValueGetter
         || this.defaultDimValueGetter;
@@ -536,6 +458,8 @@ listProto._initDataFromProvider = function (start, end) {
             }
         }
 
+        // ??? TODO
+        // If category dim exists, and pure, also calculate name?
         // Use the name in option and create id
         if (!rawData.pure) {
             var name = null;
@@ -1697,59 +1621,5 @@ listProto.wrapMethod = function (methodName, injectFunction) {
 listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 // Methods that change indices of this list should be listed here.
 // listProto.CHANGABLE_METHODS = ['filterSelf'];
-
-listProto.defaultDimValueGetter = function (dataItem, dimName, dataIndex, dimIndex) {
-    if (this._rawData.isTypedArray) {
-        return dataItem[dimIndex];
-    }
-
-    var value = modelUtil.getDataItemValue(dataItem);
-    // If any dataItem is like { value: 10 }
-    if (!this._rawData.pure && modelUtil.isDataItemOption(dataItem)) {
-        this.hasItemOption = true;
-    }
-    return converDataValue(
-        (value instanceof Array)
-            ? value[dimIndex]
-            // If value is a single number or something else not array.
-            : value,
-        this._dimensionInfos[dimName]
-    );
-};
-
-/**
- * This helper method convert value in data.
- * @param {string|number|Date} value
- * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
- *        If "dimInfo.ordinalParseAndSave", ordinal value can be parsed.
- */
-function converDataValue(value, dimInfo) {
-    // Performance sensitive.
-    var dimType = dimInfo && dimInfo.type;
-    if (dimType === 'ordinal') {
-        // If given value is a category string
-        var ordinalMeta = dimInfo && dimInfo.ordinalMeta;
-        return !ordinalMeta
-            ? value
-            : typeof value === 'string'
-            ? ordinalMeta.parseAndCollect(value)
-            : NaN;
-    }
-
-    if (dimType === 'time'
-        // spead up when using timestamp
-        && typeof value !== 'number'
-        && value != null
-        && value !== '-'
-    ) {
-        value = +parseDate(value);
-    }
-
-    // dimType defaults 'number'.
-    // If dimType is not ordinal and value is null or undefined or NaN or '-',
-    // parse to NaN.
-    return (value == null || value === '')
-        ? NaN : +value; // If string (like '-'), using '+' parse to NaN
-};
 
 export default List;

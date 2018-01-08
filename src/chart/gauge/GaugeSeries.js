@@ -1,4 +1,4 @@
-import List from '../../data/List';
+import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 import * as zrUtil from 'zrender/src/core/util';
 
@@ -7,14 +7,12 @@ var GaugeSeries = SeriesModel.extend({
     type: 'series.gauge',
 
     getInitialData: function (option, ecModel) {
-        var list = new List(['value'], this);
         var dataOpt = option.data || [];
         if (!zrUtil.isArray(dataOpt)) {
             dataOpt = [dataOpt];
         }
-        // Only use the first data item
-        list.initData(dataOpt);
-        return list;
+        option.data = dataOpt;
+        return createListSimply(this, ['value']);
     },
 
     defaultOption: {

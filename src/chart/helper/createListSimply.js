@@ -24,10 +24,10 @@ export default function (seriesModel, opt, nameList) {
 
     var source = seriesModel.getSource();
 
-    var dimensionsInfo = createDimensions(extend(opt, source));
+    var dimensionsInfo = createDimensions(source, opt);
 
     var list = new List(dimensionsInfo, seriesModel);
-    list.initData(source.data || [], nameList);
+    list.initData(source, nameList);
 
     return list;
 }

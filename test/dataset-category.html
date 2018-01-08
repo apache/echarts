@@ -12,13 +12,14 @@
             h1 {
                 line-height: 60px;
                 height: 60px;
-                background: #ddd;
+                background: rgb(97, 17, 97);
+                color: #fff;
                 text-align: center;
-                font-weight: bold;
+                font-weight: normal;
                 font-size: 14px;
             }
             .chart {
-                height: 500px;
+                height: 400px;
             }
         </style>
 
@@ -42,8 +43,8 @@
         <div class="chart" id="category"></div>
         <h1>two value axes (A: {x: 2, y: 1}, B: {x: 4, y: 1})</h1>
         <div class="chart" id="two-value-axes"></div>
-        <!-- <h1>data and dataset undefined, only axis shown.</h1>
-        <div class="chart" id="empty-data"></div> -->
+        <h1>data and dataset undefined, only axis shown.</h1>
+        <div class="chart" id="empty-data"></div>
 
 
 
@@ -176,7 +177,7 @@
                             name:'{x: 1, y: 2}',
                             type:'line',
                             encode: {x: 1, y: 2},
-                            data: {datasetIndex: 1}
+                            datasetIndex: 1
                         },
                         {
                             name: '{x: 2, y: 0}',

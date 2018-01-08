@@ -1,14 +1,12 @@
 import * as echarts from '../../echarts';
-import { detectSourceFormat } from '../../data/helper/sourceHelper';
+import {
+    SERIES_LAYOUT_BY_COLUMN,
+    detectSourceFormat
+} from '../../data/helper/sourceHelper';
 
 var DatasetModel = echarts.extendComponentModel({
 
     type: 'dataset',
-
-    /**
-     * @readOnly
-     */
-    parsedData: null,
 
     /**
      * @protected
@@ -16,27 +14,18 @@ var DatasetModel = echarts.extendComponentModel({
     defaultOption: {
 
         // 'row', 'column'
-        seriesLayoutBy: 'column',
+        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
 
-        // see "module:echarts/data/helper/sourceHelper#detectSourceFormat"
-        sourceFormat: 'unknown',
-
-        header: true,
+        // null/'auto': auto detect header, see "module:echarts/data/helper/sourceHelper"
+        sourceHeader: null,
 
         dimensions: null,
 
         source: null
     },
 
-    /**
-     * @override
-     */
     optionUpdated: function () {
-        var option = this.option;
-        var sourceFormat = option.sourceFormat;
-        if (sourceFormat == null || sourceFormat === 'unknown') {
-            option.sourceFormat = detectSourceFormat(option.source);
-        }
+        detectSourceFormat(this);
     }
 
 });

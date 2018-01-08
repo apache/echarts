@@ -193,11 +193,12 @@ export var dataFormatMixin = {
      * Get raw value in option
      * @param {number} idx
      * @param {string} [dataType]
-     * @return {Object}
+     * @return {Array|number|string}
      */
     getRawValue: function (idx, dataType) {
         var data = this.getData(dataType);
         var dataItem = data.getRawDataItem(idx);
+        // ??? check: source format.
         if (dataItem != null) {
             return (isObject(dataItem) && !(dataItem instanceof Array))
                 ? dataItem.value : dataItem;
