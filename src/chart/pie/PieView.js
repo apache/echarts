@@ -135,7 +135,6 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     }
 
     // Update common style
-    var itemStyleModel = itemModel.getModel('itemStyle');
     var visualColor = data.getItemVisual(idx, 'color');
 
     sector.useStyle(
@@ -144,10 +143,10 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
                 lineJoin: 'bevel',
                 fill: visualColor
             },
-            itemStyleModel.getModel('normal').getItemStyle()
+            itemModel.getModel('itemStyle').getItemStyle()
         )
     );
-    sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+    sector.hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
 
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
