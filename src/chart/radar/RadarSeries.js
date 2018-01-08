@@ -33,7 +33,7 @@ var RadarSeries = SeriesModel.extend({
         var coordSys = this.coordinateSystem;
         var indicatorAxes = coordSys.getIndicatorAxes();
         var name = this.getData().getName(dataIndex);
-        return encodeHTML(name === '' ? this.name : name) + '<br/>'
+        return encodeHTML(name === '' ? this.getDisplayName() : name) + '<br/>'
             + zrUtil.map(indicatorAxes, function (axis, idx) {
                 return encodeHTML(axis.name + ' : ' + value[idx]);
             }).join('<br />');

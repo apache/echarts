@@ -66,7 +66,7 @@ var LegendModel = echarts.extendComponentModel({
         this._data = legendData;
 
         var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
-            return series.name;
+            return series.getDisplayName();
         });
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.legendDataProvider) {

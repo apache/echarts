@@ -5,6 +5,13 @@ var each = zrUtil.each;
 var isObject = zrUtil.isObject;
 
 /**
+ * name may be displayed on screen, so use '-'.
+ * But we should make sure it is not duplicated
+ * with user specified name, so use '\0';
+ */
+export var DEFAULT_COMPONENT_NAME = '\0-';
+
+/**
  * If value is not array, then translate it to array.
  * @param  {*} value
  * @return {Array} [value] or value
@@ -357,7 +364,7 @@ export function makeIdAndName(mapResult) {
             ? opt.name + ''
             : existCpt
             ? existCpt.name
-            : '\0-'; // name may be displayed on screen, so use '-'.
+            : DEFAULT_COMPONENT_NAME;
 
         if (existCpt) {
             keyInfo.id = existCpt.id;
