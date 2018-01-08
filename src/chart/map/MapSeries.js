@@ -104,7 +104,7 @@ var MapSeries = SeriesModel.extend({
             var otherIndex = seriesGroup[i].originalData.indexOfName(name);
             if (!isNaN(seriesGroup[i].originalData.get('value', otherIndex))) {
                 seriesNames.push(
-                    encodeHTML(seriesGroup[i].getDisplayName())
+                    encodeHTML(seriesGroup[i].name)
                 );
             }
         }
