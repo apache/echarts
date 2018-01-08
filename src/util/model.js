@@ -174,9 +174,10 @@ export var dataFormatMixin = {
             params.value = params.value[dimIndex];
         }
 
-
-        var formatter = itemModel.get(status === 'normal' ?
-            [labelProp || 'label', 'formatter'] : [labelProp || 'label', status, 'formatter']
+        var formatter = itemModel.get(
+            status === 'normal'
+            ? [labelProp || 'label', 'formatter']
+            : [status, labelProp || 'label', 'formatter']
         );
 
         if (typeof formatter === 'function') {
