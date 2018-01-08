@@ -8,14 +8,11 @@ import * as zrUtil from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal} from './sourceHelper';
 import Source from '../Source';
+import {SPECIAL_DIMENSIONS} from './dimensionHelper';
 
 var each = zrUtil.each;
 var isString = zrUtil.isString;
 var defaults = zrUtil.defaults;
-
-var OTHER_DIMS = zrUtil.createHashMap({
-    tooltip: 1, label: 1, itemName: 1, seriesName: 1
-});
 
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
@@ -146,7 +143,7 @@ function completeDimensions(sysDims, source, opt) {
     });
 
     function applyDim(resultItem, coordDim, coordDimIndex) {
-        if (OTHER_DIMS.get(coordDim)) {
+        if (SPECIAL_DIMENSIONS.get(coordDim) != null) {
             resultItem.otherDims[coordDim] = coordDimIndex;
         }
         else {

@@ -9,6 +9,7 @@ import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import Source from './Source';
 import {defaultDimValueGetters, DefaultDataProvider} from './helper/dataProvider';
+import {summarizeDimensions} from './helper/dimensionHelper';
 
 var isObject = zrUtil.isObject;
 
@@ -250,6 +251,13 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._approximateExtent = {};
+
+    /**
+     * Cache summary info for fast visit. See "dimensionHelper".
+     * @readOnly
+     * @type {Object}
+     */
+    this.dimensionsSummary = summarizeDimensions(this);
 };
 
 var listProto = List.prototype;

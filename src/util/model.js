@@ -636,26 +636,6 @@ export function coordDimToDataDim(data, coordDim) {
     return dataDim;
 }
 
-/**
- * @see {module:echarts/data/helper/createDimensions}
- * @param {module:echarts/data/List} data
- * @param {string} otherDim Can be `otherDims`
- *                        like 'label' or 'tooltip'.
- * @return {Array.<string>} data dimensions on the otherDim.
- */
-export function otherDimToDataDim(data, otherDim) {
-    var dataDim = [];
-    each(data.dimensions, function (dimName) {
-        var dimItem = data.getDimensionInfo(dimName);
-        var otherDims = dimItem.otherDims;
-        var dimIndex = otherDims[otherDim];
-        if (dimIndex != null && dimIndex !== false) {
-            dataDim[dimIndex] = dimItem.name;
-        }
-    });
-    return dataDim;
-}
-
 function has(obj, prop) {
     return obj && obj.hasOwnProperty(prop);
 }

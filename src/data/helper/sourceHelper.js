@@ -416,11 +416,3 @@ export function guessOrdinal(source, dimIndex, dimName) {
 
     return false;
 }
-
-export function getDimTypeByAxis(axisType) {
-    return axisType === 'category'
-        ? 'ordinal'
-        : axisType === 'time'
-        ? 'time'
-        : 'float';
-}

@@ -19,6 +19,7 @@ import {
     prepareSource,
     getSource
 } from '../data/helper/sourceHelper';
+import {otherDimToDataDim} from '../data/helper/dimensionHelper';
 
 var inner = modelUtil.makeInner();
 
@@ -280,7 +281,7 @@ var SeriesModel = ComponentModel.extend({
             }, 0);
 
             var result = [];
-            var tooltipDims = modelUtil.otherDimToDataDim(data, 'tooltip');
+            var tooltipDims = otherDimToDataDim(data, 'tooltip');
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dimIdx) {
@@ -431,7 +432,7 @@ function autoSeriesName(seriesModel) {
 
 function getSeriesAutoName(seriesModel) {
     var data = seriesModel.getRawData();
-    var dataDims = modelUtil.otherDimToDataDim(data, 'seriesName');
+    var dataDims = otherDimToDataDim(data, 'seriesName');
     var nameArr = [];
     zrUtil.each(dataDims, function (dataDim) {
         var dimInfo = data.getDimensionInfo(dataDim);

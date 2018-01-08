@@ -6,7 +6,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
 import {parsePercent} from '../../util/number';
-import {findLabelValueDim} from './labelHelper';
+import {getDefaultLabel} from './labelHelper';
 
 
 function getSymbolSize(data, idx) {
@@ -259,15 +259,14 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     }
 
     var useNameLabel = seriesScope && seriesScope.useNameLabel;
-    var valueDim = !useNameLabel && findLabelValueDim(data);
 
-    if (useNameLabel || valueDim != null) {
+    if (useNameLabel || !data.dimensionsSummary.noDefaultLabel) {
         graphic.setLabelStyle(
             elStyle, hoverItemStyle, labelModel, hoverLabelModel,
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
-                defaultText: useNameLabel ? data.getName(idx) : data.get(valueDim, idx),
+                defaultText: useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx),
                 isRectText: true,
                 autoColor: color
             }
