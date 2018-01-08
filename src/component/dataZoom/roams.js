@@ -187,17 +187,22 @@ function dispatchAction(api, batch) {
  * Merge roamController settings when multiple dataZooms share one roamController.
  */
 function mergeControllerParams(dataZoomInfos) {
-    var controlType;
+    var controlType = 'none';
     var opt = {};
+    // DO NOT use reserved word (true, false, undefined) as key literally. Even if encapsulated
+    // as string, it is probably revert to reserved word by compress tool. See #7411.
+    var prefix = 'type_';
     var typePriority = {
-        'true': 2,
-        'move': 1,
-        'false': 0,
-        'undefined': -1
+        'type_true': 2,
+        'type_move': 1,
+        'type_false': 0,
+        'type_undefined': -1
     };
     zrUtil.each(dataZoomInfos, function (dataZoomInfo) {
         var oneType = dataZoomInfo.disabled ? false : dataZoomInfo.zoomLock ? 'move' : true;
-        typePriority[oneType] > typePriority[controlType] && (controlType = oneType);
+        if (typePriority[prefix + oneType] > typePriority[prefix + controlType]) {
+            controlType = oneType;
+        }
         // Do not support that different 'shift'/'ctrl'/'alt' setting used in one coord sys.
         zrUtil.extend(opt, dataZoomInfo.roamControllerOpt);
     });
