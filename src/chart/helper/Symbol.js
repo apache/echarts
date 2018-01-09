@@ -260,7 +260,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 
     var useNameLabel = seriesScope && seriesScope.useNameLabel;
 
-    if (useNameLabel || !data.dimensionsSummary.noDefaultLabel) {
+    if (useNameLabel || !data.getDimensionBrief('noDefaultLabel')) {
         graphic.setLabelStyle(
             elStyle, hoverItemStyle, labelModel, hoverLabelModel,
             {

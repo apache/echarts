@@ -8,8 +8,23 @@ import * as zrUtil from 'zrender/src/core/util';
 
 export default {
 
+    /**
+     * @param {Array.<Object>|module:echars/data/List} targetList
+     *        If targetList is an array, it should like [{name: ..., value: ...}, ...].
+     *        If targetList is a "List", it must have coordDim: 'value' dimension and name.
+     */
     updateSelectedMap: function (targetList) {
-        this._targetList = targetList.slice();
+        if (zrUtil.isArray(targetList)) {
+            this._targetList = targetList.slice();
+        }
+        else {
+            var ecList = targetList;
+            var valueDim = ecList.mapDimension('value');
+            var targetList = this._targetList = [];
+            for (var i = 0, len = ecList.count(); i < len; i++) {
+                targetList.push({name: ecList.getName(), value: ecList.get(valueDim, i)});
+            }
+        }
         this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
             targetMap.set(target.name, target);
             return targetMap;

@@ -16,7 +16,7 @@ export default function (ecModel) {
             var geo = subMapSeries.coordinateSystem;
             var data = subMapSeries.originalData;
             if (subMapSeries.get('showLegendSymbol') && ecModel.getComponent('legend')) {
-                data.each('value', function (value, idx) {
+                data.each(data.mapDimension('value'), function (value, idx) {
                     var name = data.getName(idx);
                     var region = geo.getRegion(name);
 

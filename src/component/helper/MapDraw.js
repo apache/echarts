@@ -220,7 +220,7 @@ MapDraw.prototype = {
             var showLabel = labelModel.get('show');
             var hoverShowLabel = hoverLabelModel.get('show');
 
-            var isDataNaN = data && isNaN(data.get('value', dataIdx));
+            var isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx));
             var itemLayout = data && data.getItemLayout(dataIdx);
             // In the following cases label will be drawn
             // 1. In map series and data value is NaN

@@ -270,6 +270,7 @@ var GaugeView = ChartView.extend({
         var angleExtent = [startAngle, endAngle];
 
         var data = seriesModel.getData();
+        var valueDim = data.mapDimension('value');
 
         data.diff(oldData)
             .add(function (idx) {
@@ -281,7 +282,7 @@ var GaugeView = ChartView.extend({
 
                 graphic.initProps(pointer, {
                     shape: {
-                        angle: linearMap(data.get('value', idx), valueExtent, angleExtent, true)
+                        angle: linearMap(data.get(valueDim, idx), valueExtent, angleExtent, true)
                     }
                 }, seriesModel);
 
@@ -293,7 +294,7 @@ var GaugeView = ChartView.extend({
 
                 graphic.updateProps(pointer, {
                     shape: {
-                        angle: linearMap(data.get('value', newIdx), valueExtent, angleExtent, true)
+                        angle: linearMap(data.get(valueDim, newIdx), valueExtent, angleExtent, true)
                     }
                 }, seriesModel);
 
@@ -323,7 +324,7 @@ var GaugeView = ChartView.extend({
 
             if (pointer.style.fill === 'auto') {
                 pointer.setStyle('fill', getColor(
-                    linearMap(data.get('value', idx), valueExtent, [0, 1], true)
+                    linearMap(data.get(valueDim, idx), valueExtent, [0, 1], true)
                 ));
             }
 
@@ -338,6 +339,8 @@ var GaugeView = ChartView.extend({
     _renderTitle: function (
         seriesModel, ecModel, api, getColor, posInfo
     ) {
+        var data = seriesModel.getData();
+        var valueDim = data.mapDimension('value');
         var titleModel = seriesModel.getModel('title');
         if (titleModel.get('show')) {
             var offsetCenter = titleModel.get('offsetCenter');
@@ -346,7 +349,7 @@ var GaugeView = ChartView.extend({
 
             var minVal = +seriesModel.get('min');
             var maxVal = +seriesModel.get('max');
-            var value = seriesModel.getData().get('value', 0);
+            var value = seriesModel.getData().get(valueDim, 0);
             var autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );
@@ -357,7 +360,7 @@ var GaugeView = ChartView.extend({
                     x: x,
                     y: y,
                     // FIXME First data name ?
-                    text: seriesModel.getData().getName(0),
+                    text: data.getName(0),
                     textAlign: 'center',
                     textVerticalAlign: 'middle'
                 }, {autoColor: autoColor, forceRich: true})
@@ -377,7 +380,8 @@ var GaugeView = ChartView.extend({
             var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
             var width = parsePercent(detailModel.get('width'), posInfo.r);
             var height = parsePercent(detailModel.get('height'), posInfo.r);
-            var value = seriesModel.getData().get('value', 0);
+            var data = seriesModel.getData();
+            var value = data.get(data.mapDimension('value'), 0);
             var autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );

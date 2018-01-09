@@ -366,7 +366,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         var opacity = data.getItemVisual(dataIndexInside, 'opacity');
         opacity != null && (itemStyle.opacity = opacity);
 
-        if (!data.dimensionsSummary.noDefaultLabel) {
+        if (!data.getDimensionBrief('noDefaultLabel')) {
             graphicUtil.setTextStyle(itemStyle, currLabelNormalModel, null, {
                 autoColor: currVisualColor,
                 isRectText: true

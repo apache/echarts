@@ -8,6 +8,9 @@ var RADIAN = Math.PI / 180;
 
 export default function (seriesType, ecModel, api, payload) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+        var data = seriesModel.getData();
+        var valueDim = data.mapDimension('value');
+
         var center = seriesModel.get('center');
         var radius = seriesModel.get('radius');
 
@@ -26,18 +29,16 @@ export default function (seriesType, ecModel, api, payload) {
         var r0 = parsePercent(radius[0], size / 2);
         var r = parsePercent(radius[1], size / 2);
 
-        var data = seriesModel.getData();
-
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
 
         var minAngle = seriesModel.get('minAngle') * RADIAN;
 
         var validDataCount = 0;
-        data.each('value', function (value) {
+        data.each(valueDim, function (value) {
             !isNaN(value) && validDataCount++;
         });
 
-        var sum = data.getSum('value');
+        var sum = data.getSum(valueDim);
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
@@ -47,7 +48,7 @@ export default function (seriesType, ecModel, api, payload) {
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
-        var extent = data.getDataExtent('value');
+        var extent = data.getDataExtent(valueDim);
         extent[0] = 0;
 
         // In the case some sector angle is smaller than minAngle
@@ -57,7 +58,7 @@ export default function (seriesType, ecModel, api, payload) {
         var currentAngle = startAngle;
         var dir = clockwise ? 1 : -1;
 
-        data.each('value', function (value, idx) {
+        data.each(valueDim, function (value, idx) {
             var angle;
             if (isNaN(value)) {
                 data.setItemLayout(idx, {
@@ -116,7 +117,7 @@ export default function (seriesType, ecModel, api, payload) {
             // Constrained by minAngle
             if (restAngle <= 1e-3) {
                 var angle = PI2 / validDataCount;
-                data.each('value', function (value, idx) {
+                data.each(valueDim, function (value, idx) {
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         layout.angle = angle;
@@ -128,7 +129,7 @@ export default function (seriesType, ecModel, api, payload) {
             else {
                 unitRadian = restAngle / valueSumLargerThanMinAngle;
                 currentAngle = startAngle;
-                data.each('value', function (value, idx) {
+                data.each(valueDim, function (value, idx) {
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         var angle = layout.angle === minAngle

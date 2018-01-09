@@ -260,8 +260,9 @@ function createList(coordSys, seriesModel, maModel) {
     var dims = ['x0', 'y0', 'x1', 'y1'];
     if (coordSys) {
         coordDimsInfos = zrUtil.map(coordSys && coordSys.dimensions, function (coordDim) {
-            var info = seriesModel.getData().getDimensionInfo(
-                seriesModel.coordDimToDataDim(coordDim)[0]
+            var data = seriesModel.getData();
+            var info = data.getDimensionInfo(
+                data.mapDimension(coordDim)
             ) || {}; // In map series data don't have lng and lat dimension. Fallback to same with coordSys
             info.name = coordDim;
             return info;

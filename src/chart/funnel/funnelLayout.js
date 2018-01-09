@@ -11,7 +11,8 @@ function getViewRect(seriesModel, api) {
 }
 
 function getSortedIndices(data, sort) {
-    var valueArr = data.mapArray('value', function (val) {
+    var valueDim = data.mapDimension('value');
+    var valueArr = data.mapArray(valueDim, function (val) {
         return val;
     });
     var indices = [];
@@ -99,6 +100,7 @@ function labelLayout(data) {
 export default function (ecModel, api, payload) {
     ecModel.eachSeriesByType('funnel', function (seriesModel) {
         var data = seriesModel.getData();
+        var valueDim = data.mapDimension('value');
         var sort = seriesModel.get('sort');
         var viewRect = getViewRect(seriesModel, api);
         var indices = getSortedIndices(data, sort);
@@ -107,7 +109,7 @@ export default function (ecModel, api, payload) {
             parsePercent(seriesModel.get('minSize'), viewRect.width),
             parsePercent(seriesModel.get('maxSize'), viewRect.width)
         ];
-        var dataExtent = data.getDataExtent('value');
+        var dataExtent = data.getDataExtent(valueDim);
         var min = seriesModel.get('min');
         var max = seriesModel.get('max');
         if (min == null) {
@@ -125,7 +127,7 @@ export default function (ecModel, api, payload) {
 
         var getLinePoints = function (idx, offY) {
             // End point index is data.count() and we assign it 0
-            var val = data.get('value', idx) || 0;
+            var val = data.get(valueDim, idx) || 0;
             var itemWidth = linearMap(val, [min, max], sizeExtent, true);
             var x0;
             switch (funnelAlign) {

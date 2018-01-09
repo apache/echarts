@@ -1,44 +1,50 @@
-import {each, createHashMap} from 'zrender/src/core/util';
+import {each, createHashMap, assert} from 'zrender/src/core/util';
+import { __DEV__ } from '../../config';
 
-export var SPECIAL_DIMENSIONS = createHashMap([
+export var OTHER_DIMENSIONS = createHashMap([
     'tooltip', 'label', 'itemName', 'seriesName'
 ]);
 
-/**
- * Summarize and cache for avoiding repeat calculation while travel data.
- * @return {Object}
- * {
- *     each of SPECIAL_DIMENSIONS in concrete dim. Array not null/undefined.
- *     lastValueDimension: a set of DIMENSION_TYPES in concrete dim. Array not null/undefined.
- * }
- */
 export function summarizeDimensions(data) {
     var summary = {};
-    SPECIAL_DIMENSIONS.each(function (v, dimType) {
-        summary[dimType] = otherDimToDataDim(data, dimType);
-    });
-    summary.lastValueDimension = findTheLastValueDimensions(data);
-    summary.noDefaultLabel = !(summary.label[0] || summary.lastValueDimension);
-    return summary;
-}
 
-/**
- * @see {module:echarts/data/helper/createDimensions}
- * @param {module:echarts/data/List} data
- * @param {string} otherDim See OTHER_DIMS
- * @return {Array.<string>} data dimensions on the otherDim.
- */
-export function otherDimToDataDim(data, otherDim) {
-    var dataDim = [];
+    var encode = summary.encode = {};
     each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
-        var otherDims = dimItem.otherDims;
-        var dimIndex = otherDims[otherDim];
-        if (dimIndex != null && dimIndex !== false) {
-            dataDim[dimIndex] = dimItem.name;
+
+        var coordDim = dimItem.coordDim;
+        if (coordDim) {
+            if (__DEV__) {
+                assert(OTHER_DIMENSIONS.get(coordDim) == null);
+            }
+            var coordDimArr = encode[coordDim];
+            if (!encode.hasOwnProperty(coordDim)) {
+                coordDimArr = encode[coordDim] = [];
+            }
+            coordDimArr[dimItem.coordDimIndex] = dimItem.name;
         }
+
+        OTHER_DIMENSIONS.each(function (v, otherDim) {
+            var otherDimArr = encode[otherDim];
+            if (!encode.hasOwnProperty(otherDim)) {
+                otherDimArr = encode[otherDim] = [];
+            }
+
+            var dimIndex = dimItem.otherDims[otherDim];
+            if (dimIndex != null && dimIndex !== false) {
+                otherDimArr[dimIndex] = dimItem.name;
+            }
+        });
     });
-    return dataDim;
+
+    var labelEncode = summary.encode.label;
+    var briefLastValueType = findTheLastValueDimensions(data);
+    summary.brief = {
+        lastValueType: briefLastValueType,
+        noDefaultLabel: !(labelEncode && labelEncode[0]) && briefLastValueType == null
+    };
+
+    return summary;
 }
 
 export function getValueTypeByAxis(axisType) {

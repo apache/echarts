@@ -8,7 +8,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal} from './sourceHelper';
 import Source from '../Source';
-import {SPECIAL_DIMENSIONS} from './dimensionHelper';
+import {OTHER_DIMENSIONS} from './dimensionHelper';
 
 var each = zrUtil.each;
 var isString = zrUtil.isString;
@@ -143,7 +143,7 @@ function completeDimensions(sysDims, source, opt) {
     });
 
     function applyDim(resultItem, coordDim, coordDimIndex) {
-        if (SPECIAL_DIMENSIONS.get(coordDim) != null) {
+        if (OTHER_DIMENSIONS.get(coordDim) != null) {
             resultItem.otherDims[coordDim] = coordDimIndex;
         }
         else {

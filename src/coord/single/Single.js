@@ -99,7 +99,7 @@ Single.prototype = {
                 var data = seriesModel.getData();
                 var dim = this.dimension;
                 this._axis.scale.unionExtentFromData(
-                    data, seriesModel.coordDimToDataDim(dim)
+                    data, data.mapDimension(dim, true)
                 );
                 axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);
             }

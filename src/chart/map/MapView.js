@@ -66,7 +66,7 @@ export default echarts.extendChartView({
         var originalData = mapModel.originalData;
         var group = this.group;
 
-        originalData.each('value', function (value, idx) {
+        originalData.each(originalData.mapDimension('value'), function (value, idx) {
             if (isNaN(value)) {
                 return;
             }

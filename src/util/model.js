@@ -602,40 +602,6 @@ export function parseFinder(ecModel, finder, opt) {
     return result;
 }
 
-/**
- * @see {module:echarts/data/helper/createDimensions}
- * @param {module:echarts/data/List} data
- * @param {string|number} dataDim
- * @return {string}
- */
-export function dataDimToCoordDim(data, dataDim) {
-    var dimensions = data.dimensions;
-    dataDim = data.getDimension(dataDim);
-    for (var i = 0; i < dimensions.length; i++) {
-        var dimItem = data.getDimensionInfo(dimensions[i]);
-        if (dimItem.name === dataDim) {
-            return dimItem.coordDim;
-        }
-    }
-}
-
-/**
- * @see {module:echarts/data/helper/createDimensions}
- * @param {module:echarts/data/List} data
- * @param {string} coordDim
- * @return {Array.<string>} data dimensions on the coordDim (concrete dim).
- */
-export function coordDimToDataDim(data, coordDim) {
-    var dataDim = [];
-    each(data.dimensions, function (dimName) {
-        var dimItem = data.getDimensionInfo(dimName);
-        if (dimItem.coordDim === coordDim) {
-            dataDim[dimItem.coordDimIndex] = dimItem.name;
-        }
-    });
-    return dataDim;
-}
-
 function has(obj, prop) {
     return obj && obj.hasOwnProperty(prop);
 }

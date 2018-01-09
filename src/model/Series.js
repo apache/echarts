@@ -19,7 +19,6 @@ import {
     prepareSource,
     getSource
 } from '../data/helper/sourceHelper';
-import {otherDimToDataDim} from '../data/helper/dimensionHelper';
 
 var inner = modelUtil.makeInner();
 
@@ -99,7 +98,10 @@ var SeriesModel = ComponentModel.extend({
         // module:echarts/data/Graph or module:echarts/data/Tree.
         // See module:echarts/data/helper/linkList
 
-        // ??? should not restoreData here? but called by echart?
+        // Theoretically, it is unreasonable to call `seriesModel.getData()` in the model
+        // init or merge stage, because the data can be restored. So we do not `restoreData`
+        // and `setData` here, which forbids calling `seriesModel.getData()` in this stage.
+        // Call `seriesModel.getRawData()` instead.
         // this.restoreData();
 
         autoSeriesName(this);
@@ -227,32 +229,6 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
-     * Coord dimension to data dimension.
-     *
-     * By default the result is the same as dimensions of series data.
-     * But in some series data dimensions are different from coord dimensions (i.e.
-     * candlestick and boxplot). Override this method to handle those cases.
-     *
-     * Coord dimension to data dimension can be one-to-many
-     *
-     * @param {string} coordDim
-     * @return {Array.<string>} dimensions on the axis.
-     */
-    coordDimToDataDim: function (coordDim) {
-        return modelUtil.coordDimToDataDim(this.getData(), coordDim);
-    },
-
-    /**
-     * Convert data dimension to coord dimension.
-     *
-     * @param {string|number} dataDim
-     * @return {string}
-     */
-    dataDimToCoordDim: function (dataDim) {
-        return modelUtil.dataDimToCoordDim(this.getData(), dataDim);
-    },
-
-    /**
      * Get base axis if has coordinate system and has axis.
      * By default use coordSys.getBaseAxis();
      * Can be overrided for some chart.
@@ -281,7 +257,7 @@ var SeriesModel = ComponentModel.extend({
             }, 0);
 
             var result = [];
-            var tooltipDims = otherDimToDataDim(data, 'tooltip');
+            var tooltipDims = data.mapDimension('tooltip', true);
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dimIdx) {
@@ -375,6 +351,14 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
+     * Use `data.mapDimension(coordDim, true)` instead.
+     * @deprecated
+     */
+    coordDimToDataDim: function (coordDim) {
+        return this.getRawData().mapDimension(coordDim, true);
+    },
+
+    /**
      * Get data indices for show tooltip content. See tooltip.
      * @abstract
      * @param {Array.<string>|string} dim
@@ -432,7 +416,7 @@ function autoSeriesName(seriesModel) {
 
 function getSeriesAutoName(seriesModel) {
     var data = seriesModel.getRawData();
-    var dataDims = otherDimToDataDim(data, 'seriesName');
+    var dataDims = data.mapDimension('seriesName', true);
     var nameArr = [];
     zrUtil.each(dataDims, function (dataDim) {
         var dimInfo = data.getDimensionInfo(dataDim);

@@ -159,16 +159,6 @@ var ThemeRiverSeries = SeriesModel.extend({
     },
 
     /**
-     * Used by single coordinate
-     *
-     * @param {string} axisDim  the dimension for single coordinate
-     * @return {Array.<string> } specified dimensions on the axis.
-     */
-    coordDimToDataDim: function (axisDim) {
-        return ['time'];
-    },
-
-    /**
      * The raw data is divided into multiple layers and each layer
      *     has same name.
      *
@@ -252,8 +242,8 @@ var ThemeRiverSeries = SeriesModel.extend({
      */
     formatTooltip: function (dataIndex) {
         var data = this.getData();
-        var htmlName = data.get('name', dataIndex);
-        var htmlValue = data.get('value', dataIndex);
+        var htmlName = data.getName(dataIndex);
+        var htmlValue = data.get(data.mapDimension('value'), dataIndex);
         if (isNaN(htmlValue) || htmlValue == null) {
             htmlValue = '-';
         }

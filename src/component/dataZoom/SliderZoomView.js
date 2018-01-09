@@ -402,7 +402,7 @@ var SliderZoomView = DataZoomView.extend({
                     otherAxisInverse = coordSys.getOtherAxis(thisAxis).inverse;
                 }
 
-                otherDim = seriesModel.coordDimToDataDim(otherDim)[0];
+                otherDim = seriesModel.getData().mapDimension(otherDim);
 
                 result = {
                     thisAxis: thisAxis,

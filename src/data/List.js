@@ -254,10 +254,10 @@ var List = function (dimensions, hostModel) {
 
     /**
      * Cache summary info for fast visit. See "dimensionHelper".
-     * @readOnly
      * @type {Object}
+     * @private
      */
-    this.dimensionsSummary = summarizeDimensions(this);
+    this._dimensionsSummary = summarizeDimensions(this);
 };
 
 var listProto = List.prototype;
@@ -285,14 +285,6 @@ listProto.getDimension = function (dim) {
 };
 
 /**
- * @param {Array.<string|number>} dims
- * @return {Array.<string>}
- */
-listProto.parseDimensions = function (dims) {
-    return zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
-};
-
-/**
  * Get type and stackable info of particular dimension
  * @param {string|number} dim
  *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
@@ -301,6 +293,31 @@ listProto.parseDimensions = function (dims) {
 listProto.getDimensionInfo = function (dim) {
     // Do not clone, because there may be categories in dimInfo.
     return this._dimensionInfos[this.getDimension(dim)];
+};
+
+/**
+ * @param {string} coordDim
+ * @param {number|Array} [idx=0] A coordDim may map to more than one data dim.
+ *        If idx is `true`, return a array of all mapped dims.
+ * @return {string|Array.<string>} concrete data dim.
+ *        If idx is number, and not found, return null/undefined.
+ *        If idx is `true`, and not found, return empty array.
+ */
+listProto.mapDimension = function (coordDim, idx) {
+    var dims = this._dimensionsSummary.encode[coordDim];
+    return idx === true
+        ? (dims && dims.slice() || [])
+        : dims
+        ? dims[idx || 0]
+        : null;
+};
+
+/**
+ * @type {string} Specially, can also be 'lastValueType', 'noDefaultLabel'
+ * @return {*}
+ */
+listProto.getDimensionBrief = function (type) {
+    return this._dimensionsSummary.brief[type];
 };
 
 /**

@@ -172,7 +172,7 @@ function buildPayloadsBySeries(value, axisInfo) {
     var minDiff = -1;
 
     each(axisInfo.seriesModels, function (series, idx) {
-        var dataDim = series.coordDimToDataDim(dim);
+        var dataDim = series.getData().mapDimension(dim, true);
         var seriesNestestValue;
         var dataIndices;
 

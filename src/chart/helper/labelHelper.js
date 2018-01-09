@@ -2,16 +2,15 @@ import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
 
 // Get concrete dim.
 function getLabelValueDim(data) {
-    var dimensionsSummary = data.dimensionsSummary;
-    var labelDims = dimensionsSummary.label;
+    var labelDim = data.mapDimension('label');
 
-    return labelDims[0]
-        ? labelDims[0]
+    return labelDim
+        ? labelDim
         // Only if the source is own to a series, we can use the last.
         // If the source is from dataset, it probably be shared by
         // different series.
         : data.getProvider().getSource().sourceFormat === SOURCE_FORMAT_ORIGINAL
-        ? dimensionsSummary.lastValueDimension
+        ? data.getDimensionBrief('lastValueType')
         : null;
 }
 

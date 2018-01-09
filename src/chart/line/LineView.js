@@ -83,7 +83,7 @@ function getStackedOnPoints(seriesModel, coordSys, data, origin) {
 
     var valueCoordDim = valueAxis.dim;
     var baseDataOffset = valueCoordDim === 'x' || valueCoordDim === 'radius' ? 1 : 0;
-    var valueDim = seriesModel.coordDimToDataDim(valueCoordDim)[0];
+    var valueDim = data.mapDimension(valueCoordDim);
 
     return data.mapArray(valueDim ? [valueDim] : [], function (val, idx) {
         var stackedOnSameSign;

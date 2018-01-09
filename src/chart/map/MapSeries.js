@@ -32,7 +32,7 @@ var MapSeries = SeriesModel.extend({
 
         MapSeries.superApply(this, 'init', arguments);
 
-        this.updateSelectedMap(option.data);
+        this.updateSelectedMap(this.getRawData());
     },
 
     getInitialData: function (option) {
@@ -44,7 +44,7 @@ var MapSeries = SeriesModel.extend({
 
         MapSeries.superApply(this, 'mergeOption', arguments);
 
-        this.updateSelectedMap(this.option.data);
+        this.updateSelectedMap(this.getRawData());
     },
 
     /**
@@ -74,7 +74,8 @@ var MapSeries = SeriesModel.extend({
     getRawValue: function (dataIndex) {
         // Use value stored in data instead because it is calculated from multiple series
         // FIXME Provide all value of multiple series ?
-        return this.getData().get('value', dataIndex);
+        var data = this.getData();
+        return data.get(data.mapDimension('value'), dataIndex);
     },
 
     /**
@@ -102,7 +103,8 @@ var MapSeries = SeriesModel.extend({
         var seriesNames = [];
         for (var i = 0; i < seriesGroup.length; i++) {
             var otherIndex = seriesGroup[i].originalData.indexOfName(name);
-            if (!isNaN(seriesGroup[i].originalData.get('value', otherIndex))) {
+            var valueDim = data.mapDimension('value');
+            if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex))) {
                 seriesNames.push(
                     encodeHTML(seriesGroup[i].name)
                 );

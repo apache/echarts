@@ -121,8 +121,7 @@ export function dataTransform(seriesModel, item) {
             // Each coord support max, min, average
             for (var i = 0; i < 2; i++) {
                 if (markerTypeCalculator[coord[i]]) {
-                    var dataDim = seriesModel.coordDimToDataDim(dims[i])[0];
-                    coord[i] = numCalculate(data, dataDim, coord[i]);
+                    coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i]);
                 }
             }
             item.coord = coord;
@@ -137,18 +136,30 @@ export function getAxisInfo(item, data, coordSys, seriesModel) {
     if (item.valueIndex != null || item.valueDim != null) {
         ret.valueDataDim = item.valueIndex != null
             ? data.getDimension(item.valueIndex) : item.valueDim;
-        ret.valueAxis = coordSys.getAxis(seriesModel.dataDimToCoordDim(ret.valueDataDim));
+        ret.valueAxis = coordSys.getAxis(dataDimToCoordDim(seriesModel, ret.valueDataDim));
         ret.baseAxis = coordSys.getOtherAxis(ret.valueAxis);
-        ret.baseDataDim = seriesModel.coordDimToDataDim(ret.baseAxis.dim)[0];
+        ret.baseDataDim = data.mapDimension(ret.baseAxis.dim);
     }
     else {
         ret.baseAxis = seriesModel.getBaseAxis();
         ret.valueAxis = coordSys.getOtherAxis(ret.baseAxis);
-        ret.baseDataDim = seriesModel.coordDimToDataDim(ret.baseAxis.dim)[0];
-        ret.valueDataDim = seriesModel.coordDimToDataDim(ret.valueAxis.dim)[0];
+        ret.baseDataDim = data.mapDimension(ret.baseAxis.dim);
+        ret.valueDataDim = data.mapDimension(ret.valueAxis.dim);
     }
 
     return ret;
+}
+
+function dataDimToCoordDim(seriesModel, dataDim) {
+    var data = seriesModel.getData();
+    var dimensions = data.dimensions;
+    dataDim = data.getDimension(dataDim);
+    for (var i = 0; i < dimensions.length; i++) {
+        var dimItem = data.getDimensionInfo(dimensions[i]);
+        if (dimItem.name === dataDim) {
+            return dimItem.coordDim;
+        }
+    }
 }
 
 /**
