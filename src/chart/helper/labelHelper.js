@@ -1,26 +1,25 @@
+import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
+
+// Get concrete dim.
+function getLabelValueDim(data) {
+    var dimensionsSummary = data.dimensionsSummary;
+    var labelDims = dimensionsSummary.label;
+
+    return labelDims[0]
+        ? labelDims[0]
+        // Only if the source is own to a series, we can use the last.
+        // If the source is from dataset, it probably be shared by
+        // different series.
+        : data.getProvider().getSource().sourceFormat === SOURCE_FORMAT_ORIGINAL
+        ? dimensionsSummary.lastValueDimension
+        : null;
+}
+
 /**
- * @module echarts/chart/helper/Symbol
+ * @param {module:echarts/data/List} data
+ * @param {number} dataIndex
  */
-
-import {otherDimToDataDim} from '../../util/model';
-
-export function findLabelValueDim(data) {
-    var valueDim;
-    var labelDims = otherDimToDataDim(data, 'label');
-
-    if (labelDims.length) {
-        valueDim = labelDims[0];
-    }
-    else {
-        // Get last value dim
-        var dimensions = data.dimensions.slice();
-        var dataType;
-        while (dimensions.length && (
-            valueDim = dimensions.pop(),
-            dataType = data.getDimensionInfo(valueDim).type,
-            dataType === 'ordinal' || dataType === 'time'
-        )) {} // jshint ignore:line
-    }
-
-    return valueDim;
+export function getDefaultLabel(data, dataIndex) {
+    var val = data.get(getLabelValueDim(data), dataIndex);
+    return (val == null || isNaN(val)) ? '' : val;
 }

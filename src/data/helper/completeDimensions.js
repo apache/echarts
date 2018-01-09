@@ -5,14 +5,14 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {normalizeToArray, getDataItemValue} from '../../util/model';
-import guessOrdinal from './guessOrdinal';
+import {normalizeToArray} from '../../util/model';
+import {guessOrdinal} from './sourceHelper';
+import Source from '../Source';
+import {SPECIAL_DIMENSIONS} from './dimensionHelper';
 
 var each = zrUtil.each;
 var isString = zrUtil.isString;
 var defaults = zrUtil.defaults;
-
-var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
 
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
@@ -26,7 +26,7 @@ var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
  *      provides not only dim template, but also default order.
  *      `name` of each item provides default coord name.
  *      [{dimsDef: []}, ...] can be specified to give names.
- * @param {Array} data Data list. [[1, 2, 3], [2, 3, 4]].
+ * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
  * @param {Object} [opt]
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
  *      For example: ['asdf', {name, type}, ...].
@@ -45,14 +45,20 @@ var OTHER_DIMS = {tooltip: 1, label: 1, itemName: 1};
  *      tooltipName: string optional,
  *      otherDims: {
  *          tooltip: number optional,
- *          label: number optional
+ *          label: number optional,
+ *          itemName: number optional,
+ *          seriesName: number optional,
  *      },
  *      isExtraCoord: boolean true or undefined.
  *      other props ...
  * }]
  */
-function completeDimensions(sysDims, data, opt) {
-    data = data || [];
+function completeDimensions(sysDims, source, opt) {
+    // ??? remove the compatible?
+    if (!(source instanceof Source)) {
+        source = Source.seriesDataToSource(source);
+    }
+
     opt = opt || {};
     sysDims = (sysDims || []).slice();
     var dimsDef = (opt.dimsDef || []).slice();
@@ -61,27 +67,8 @@ function completeDimensions(sysDims, data, opt) {
     var coordDimNameMap = zrUtil.createHashMap();
     // var valueCandidate;
     var result = [];
-    var isDataTypedArray = zrUtil.isTypedArray(data);
 
-    var dimCount = opt.dimCount;
-    if (dimCount == null) {
-        // ??? TODO
-        // Originally detect dimCount by data[0]. Should we
-        // optimize it to only by sysDims and dimensions and encode.
-        // So only necessary dims will be initialized.
-        // But custom series should be considered. where other dims
-        // may be visited.
-        var value0 = getDataItemValue(data[0]);
-        dimCount = Math.max(
-            zrUtil.isArray(value0) && value0.length || 1,
-            sysDims.length,
-            dimsDef.length
-        );
-        each(sysDims, function (sysDimItem) {
-            var sysDimItemDimsDef = sysDimItem.dimsDef;
-            sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
-        });
-    }
+    var dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount);
 
     // Apply user defined dims (`name` and `type`) and init result.
     for (var i = 0; i < dimCount; i++) {
@@ -101,13 +88,14 @@ function completeDimensions(sysDims, data, opt) {
 
     // Set `coordDim` and `coordDimIndex` by `encodeDef` and normalize `encodeDef`.
     encodeDef.each(function (dataDims, coordDim) {
-        dataDims = encodeDef.set(coordDim, normalizeToArray(dataDims).slice());
-        each(dataDims, function (resultDimIdx, coordDimIndex) {
+        dataDims = normalizeToArray(dataDims).slice();
+        var validDataDims = encodeDef.set(coordDim, []);
+        each(dataDims, function (resultDimIdx, idx) {
             // The input resultDimIdx can be dim name or index.
             isString(resultDimIdx) && (resultDimIdx = dataDimNameMap.get(resultDimIdx));
             if (resultDimIdx != null && resultDimIdx < dimCount) {
-                dataDims[coordDimIndex] = resultDimIdx;
-                applyDim(result[resultDimIdx], coordDim, coordDimIndex);
+                validDataDims[idx] = resultDimIdx;
+                applyDim(result[resultDimIdx], coordDim, idx);
             }
         });
     });
@@ -154,35 +142,8 @@ function completeDimensions(sysDims, data, opt) {
         });
     });
 
-    // Make sure the first extra dim is 'value'.
-    var extra = opt.extraPrefix || 'value';
-
-    // Set dim `name` and other `coordDim` and other props.
-    for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
-        var resultItem = result[resultDimIdx] = result[resultDimIdx] || {};
-        var coordDim = resultItem.coordDim;
-
-        coordDim == null && (
-            resultItem.coordDim = genName(extra, coordDimNameMap, opt.extraFromZero),
-            resultItem.coordDimIndex = 0,
-            resultItem.isExtraCoord = true
-        );
-
-        resultItem.name == null && (resultItem.name = genName(
-            resultItem.coordDim,
-            dataDimNameMap
-        ));
-
-        if (!isDataTypedArray) {
-            resultItem.type == null && guessOrdinal(data, resultDimIdx)
-                && (resultItem.type = 'ordinal');
-        }
-    }
-
-    return result;
-
     function applyDim(resultItem, coordDim, coordDimIndex) {
-        if (OTHER_DIMS[coordDim]) {
+        if (SPECIAL_DIMENSIONS.get(coordDim) != null) {
             resultItem.otherDims[coordDim] = coordDimIndex;
         }
         else {
@@ -192,17 +153,69 @@ function completeDimensions(sysDims, data, opt) {
         }
     }
 
-    function genName(name, map, fromZero) {
-        if (fromZero || map.get(name) != null) {
-            var i = 0;
-            while (map.get(name + i) != null) {
-                i++;
-            }
-            name += i;
+    // Make sure the first extra dim is 'value'.
+    var extra = opt.extraPrefix || 'value';
+
+    // Set dim `name` and other `coordDim` and other props.
+    for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
+        var resultItem = result[resultDimIdx] = result[resultDimIdx] || {};
+        var coordDim = resultItem.coordDim;
+
+        coordDim == null && (
+            resultItem.coordDim = genName(
+                extra, coordDimNameMap, opt.extraFromZero
+            ),
+            resultItem.coordDimIndex = 0,
+            resultItem.isExtraCoord = true
+        );
+
+        resultItem.name == null && (resultItem.name = genName(
+            resultItem.coordDim,
+            dataDimNameMap
+        ));
+
+        if (resultItem.type == null && guessOrdinal(source, resultDimIdx, resultItem.name)) {
+            resultItem.type = 'ordinal';
         }
-        map.set(name, true);
-        return name;
     }
+
+    return result;
+}
+
+// ??? TODO
+// Originally detect dimCount by data[0]. Should we
+// optimize it to only by sysDims and dimensions and encode.
+// So only necessary dims will be initialized.
+// But
+// (1) custom series should be considered. where other dims
+// may be visited.
+// (2) sometimes user need to calcualte bubble size or use visualMap
+// on other dimensions besides coordSys needed.
+function getDimCount(source, sysDims, dimsDef, dimCount) {
+    if (dimCount == null) {
+        dimCount = Math.max(
+            source.dimensionsDetectCount || 1,
+            sysDims.length,
+            dimsDef.length
+        );
+        each(sysDims, function (sysDimItem) {
+            var sysDimItemDimsDef = sysDimItem.dimsDef;
+            sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
+        });
+    }
+    return dimCount;
+}
+
+function genName(name, map, fromZero) {
+    if (fromZero || map.get(name) != null) {
+        var i = 0;
+        while (map.get(name + i) != null) {
+            i++;
+        }
+        name += i;
+    }
+    map.set(name, true);
+    return name;
 }
 
 export default completeDimensions;

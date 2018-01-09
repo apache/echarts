@@ -87,7 +87,7 @@ function fetchData(idx) {
             data[i+1] = rawData[i] / 1e7;
         }
 
-        chart.addData({
+        chart.appendData({
             seriesIndex: 0,
             data: data
         });

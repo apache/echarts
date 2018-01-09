@@ -1264,8 +1264,12 @@ function triggerUpdatedEvent(silent) {
     !silent && this.trigger('updated');
 }
 
-// ???
-echartsProto.addData = function (params) {
+/**
+ * @param {Object} params
+ * @param {number} params.seriesIndex
+ * @param {Array|TypedArray} params.data
+ */
+echartsProto.appendData = function (params) {
     var seriesIndex = params.seriesIndex;
     var ecModel = this.getModel();
     var seriesModel = ecModel.getSeriesByIndex(seriesIndex);

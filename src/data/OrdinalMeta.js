@@ -27,9 +27,9 @@ function OrdinalMeta(axisModel) {
 
     /**
      * @private
-     * @type {string}
+     * @type {boolean}
      */
-    this._sourceModelUID = categories ? axisModel.uid : NO_SOURCE;
+    this._preventDeduplication = axisModel.get('dedplication', true) === false;
 
     /**
      * @private
@@ -50,16 +50,21 @@ proto.getOrdinal = function (category) {
 
 /**
  * @param {string} category
- * @param {string} [dimSourceModelUID]
  * @return {number} The ordinal. If not found, return NaN.
  */
-proto.parseAndCollect = function (category, dimSourceModelUID) {
+proto.parseAndCollect = function (category) {
     var index;
     var needCollect = this._needCollect;
 
-    // Optimize for the scenario: Only a dataset dimension provide categroies
-    // and many series use the dimension. We avoid to create map.
-    if (needCollect && dimSourceModelUID === this._sourceModelUID) {
+    // Optimize for the scenario:
+    // category is ['2012-01-01', '2012-01-02', ...], where the input
+    // data has been ensured not duplicate and is large data.
+    // Notice, if a dataset dimension provide categroies, usually echarts
+    // should remove duplication except user tell echarts dont do that
+    // (set axis.deduplication = false), because echarts do not know whether
+    // the values in the category dimension has duplication (consider the
+    // parallel-aqi example)
+    if (needCollect && this._preventDeduplication) {
         index = this.categories.length;
         this.categories[index] = category;
         return index;
@@ -81,31 +86,6 @@ proto.parseAndCollect = function (category, dimSourceModelUID) {
 
     return index;
 };
-
-proto.prepareDimInfo = function (dimInfo, source) {
-    dimInfo.ordinalMeta = this;
-    addSourceModelUID(this, source.modelUID);
-    dimInfo.sourceModelUID = source.modelUID;
-};
-
-/**
- * Consider these cases:
- * (1) A category axis provides data (categories) and
- * many series refer the axis.
- * (2) Only a dataset dimension provide categroies and many
- * series use the dimension.
- *
- * In those cases above, categoryMap is not needed to be
- * created. So we use sourceModelUID to make this optimization.
- * @private
- */
-function addSourceModelUID(ordinalMeta, sourceModelUID) {
-    if (ordinalMeta._needCollect) {
-        ordinalMeta._sourceModelUID = ordinalMeta._sourceModelUID === NO_SOURCE
-            ? sourceModelUID
-            : MULTIPLE_SOURCE;
-    }
-}
 
 // Do not create map until needed.
 function getOrCreateMap(ordinalMeta) {

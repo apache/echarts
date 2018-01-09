@@ -1,4 +1,5 @@
 import * as graphic from '../../util/graphic';
+import {getDefaultLabel} from '../helper/labelHelper';
 
 export function setLabel(
     normalStyle, hoverStyle, itemModel, color, seriesModel, dataIndex, labelPositionOutside
@@ -11,7 +12,7 @@ export function setLabel(
         {
             labelFetcher: seriesModel,
             labelDataIndex: dataIndex,
-            defaultText: seriesModel.getRawValue(dataIndex),
+            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
             isRectText: true,
             autoColor: color
         }

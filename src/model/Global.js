@@ -28,8 +28,7 @@ import Model from './Model';
 import ComponentModel from './Component';
 import globalDefault from './globalDefault';
 import colorPaletteMinin from './mixin/colorPalette';
-import {resetDefaultEncode} from '../data/helper/sourceHelper';
-// import {createTask} from '../stream/task';
+import {resetSourceDefaulter} from '../data/helper/sourceHelper';
 
 var OPTION_INNER_KEY = '\0_ec_inner';
 
@@ -127,7 +126,7 @@ var GlobalModel = Model.extend({
         var componentsMap = this._componentsMap;
         var newCptTypes = [];
 
-        resetDefaultEncode(this);
+        resetSourceDefaulter(this);
 
         // If no component class, merge directly.
         // For example: color, animaiton options, etc.

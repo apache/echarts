@@ -1,7 +1,6 @@
-import List from '../../data/List';
-import * as zrUtil from 'zrender/src/core/util';
+import {each, createHashMap} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import guessOrdinal from '../../data/helper/guessOrdinal';
+import createListFromArray from '../helper/createListFromArray';
 
 export default SeriesModel.extend({
 
@@ -12,48 +11,16 @@ export default SeriesModel.extend({
     visualColorAccessPath: 'lineStyle.color',
 
     getInitialData: function (option, ecModel) {
-        var parallelModel = ecModel.getComponent(
-            'parallel', this.get('parallelIndex')
-        );
-        var parallelAxisIndices = parallelModel.parallelAxisIndex;
-
-        var source = this.getSource();
-        var rawData = source.data;
-        var modelDims = parallelModel.dimensions;
-
-        var dataDims = generateDataDims(modelDims, rawData);
-
-        // ??? need support encode?
-        var dataDimsInfo = zrUtil.map(dataDims, function (dim, dimIndex) {
-
-            var modelDimsIndex = zrUtil.indexOf(modelDims, dim);
-            var axisModel = modelDimsIndex >= 0 && ecModel.getComponent(
-                'parallelAxis', parallelAxisIndices[modelDimsIndex]
-            );
-
-            if (axisModel && axisModel.get('type') === 'category') {
-                translateCategoryValue(axisModel, dim, rawData);
-                return {name: dim, type: 'ordinal'};
-            }
-            else if (modelDimsIndex < 0) {
-                return guessOrdinal(rawData, dimIndex)
-                    ? {name: dim, type: 'ordinal'}
-                    : dim;
-            }
-            else {
-                return dim;
-            }
-        });
-
-        var list = new List(dataDimsInfo, this);
-        list.initData(rawData);
-
         // Anication is forbiden in progressive data mode.
         if (this.option.progressive) {
             this.option.animation = false;
         }
 
-        return list;
+        var source = this.getSource();
+
+        setEncodeAndDimensions(source, this);
+
+        return createListFromArray(source, this);
     },
 
     /**
@@ -109,50 +76,32 @@ export default SeriesModel.extend({
     }
 });
 
-function translateCategoryValue(axisModel, dim, rawData) {
-    var axisData = axisModel.getCategories();
-    var numberDim = convertDimNameToNumber(dim);
+function setEncodeAndDimensions(source, seriesModel) {
+    // The mapping of parallelAxis dimension to data dimension can
+    // be specified in parallelAxis.option.dim. For example, if
+    // parallelAxis.option.dim is 'dim3', it mapping to the third
+    // dimension of data. But `data.encode` has higher priority.
+    // Moreover, parallelModel.dimension should not be regarded as data
+    // dimensions. Consider dimensions = ['dim4', 'dim2', 'dim6'];
 
-    if (axisData && axisData.length) {
-        zrUtil.each(rawData, function (dataItem) {
-            if (!dataItem) {
-                return;
-            }
-            // FIXME
-            // time consuming, should use hash?
-            var index = zrUtil.indexOf(axisData, dataItem[numberDim]);
-            dataItem[numberDim] = index >= 0 ? index : NaN;
-        });
+    if (source.encodeDefine) {
+        return;
     }
-    // FIXME
-    // 如果没有设置axis data, 应自动算出，或者提示。
+
+    var parallelModel = seriesModel.ecModel.getComponent(
+        'parallel', seriesModel.get('parallelIndex')
+    );
+    if (!parallelModel) {
+        return;
+    }
+
+    var encodeDefine = source.encodeDefine = createHashMap();
+    each(parallelModel.dimensions, function (axisDim) {
+        var dataDimIndex = convertDimNameToNumber(axisDim);
+        encodeDefine.set(axisDim, dataDimIndex);
+    });
 }
 
 function convertDimNameToNumber(dimName) {
     return +dimName.replace('dim', '');
-}
-
-function generateDataDims(modelDims, rawData) {
-    // parallelModel.dimension should not be regarded as data
-    // dimensions. Consider dimensions = ['dim4', 'dim2', 'dim6'];
-
-    // We detect max dim by parallelModel.dimensions and fist
-    // item in rawData arbitrarily.
-    var maxDimNum = 0;
-    zrUtil.each(modelDims, function (dimName) {
-        var numberDim = convertDimNameToNumber(dimName);
-        numberDim > maxDimNum && (maxDimNum = numberDim);
-    });
-
-    var firstItem = rawData[0];
-    if (firstItem && firstItem.length - 1 > maxDimNum) {
-        maxDimNum = firstItem.length - 1;
-    }
-
-    var dataDims = [];
-    for (var i = 0; i <= maxDimNum; i++) {
-        dataDims.push('dim' + i);
-    }
-
-    return dataDims;
 }

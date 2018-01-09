@@ -32,6 +32,12 @@ var ComponentModel = Model.extend({
     id: '',
 
     /**
+     * Because simplified concept is probably better, series.name (or component.name)
+     * has been having too many resposibilities:
+     * (1) Generating id (which requires name in option should not be modified).
+     * (2) As an index to mapping series when merging option or calling API (a name
+     * can refer to more then one components, which is convinient is some case).
+     * (3) Display.
      * @readOnly
      */
     name: '',
@@ -93,7 +99,6 @@ var ComponentModel = Model.extend({
 
         this.uid = componentUtil.getUID('componentModel');
     },
-
 
     init: function (option, parentModel, ecModel, extraOpt) {
         this.mergeDefaultAndTheme(option, ecModel);

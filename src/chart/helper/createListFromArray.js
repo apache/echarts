@@ -1,17 +1,14 @@
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
+import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
+import {getValueTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
 
 /**
- * @param {Object} source
- * {
- *     data: mandatory
- *     encodeDefine: optional
- *     dimensionsDefine: optional
- * }
+ * @param {module:echarts/data/Source} source
  * @param {module:echarts/model/Series} seriesModel
  */
 function createListFromArray(source, seriesModel) {
@@ -28,7 +25,7 @@ function createListFromArray(source, seriesModel) {
             var axisModel = coordSysDefine.axisMap.get(dim);
             if (axisModel) {
                 var axisType = axisModel.get('type');
-                dimInfo.type = getDimTypeByAxis(axisType);
+                dimInfo.type = getValueTypeByAxis(axisType);
                 dimInfo.stackable = isStackable(axisType);
             }
             return dimInfo;
@@ -44,12 +41,9 @@ function createListFromArray(source, seriesModel) {
         )) || ['x', 'y'];
     }
 
-    var dimInfoList = createDimensions(zrUtil.defaults({
+    var dimInfoList = createDimensions(source, {
         sysDimensions: coordSysDimDefs
-    }, source));
-
-    // Consider empty data.
-    var data = source.data || [];
+    });
 
     var firstCategoryDimIndex;
     coordSysDefine && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
@@ -57,13 +51,13 @@ function createListFromArray(source, seriesModel) {
         var categoryAxisModel = coordSysDefine.categoryAxisMap.get(coordDim);
         if (categoryAxisModel) {
             firstCategoryDimIndex == null && (firstCategoryDimIndex = dimIndex);
-            categoryAxisModel.ordinalMeta.prepareDimInfo(dimInfo, source);
+            dimInfo.ordinalMeta = categoryAxisModel.ordinalMeta;
         }
     });
 
     var list = new List(dimInfoList, seriesModel);
 
-    var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(data))
+    var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
         ? function (itemOpt, dimName, dataIndex, dimIndex) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
@@ -73,7 +67,7 @@ function createListFromArray(source, seriesModel) {
         : null;
 
     list.hasItemOption = false;
-    list.initData(data, firstCategoryDimIndex, dimValueGetter);
+    list.initData(source, firstCategoryDimIndex, dimValueGetter);
 
     return list;
 }
@@ -82,12 +76,12 @@ function isStackable(axisType) {
     return axisType !== 'category' && axisType !== 'time';
 }
 
-function getDimTypeByAxis(axisType) {
-    return axisType === 'category'
-        ? 'ordinal'
-        : axisType === 'time'
-        ? 'time'
-        : 'float';
+function isNeedCompleteOrdinalData(source) {
+    if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+        var sampleItem = firstDataNotNull(source.data || []);
+        return sampleItem != null
+            && !zrUtil.isArray(getDataItemValue(sampleItem));
+    }
 }
 
 function firstDataNotNull(data) {
@@ -96,11 +90,6 @@ function firstDataNotNull(data) {
         i++;
     }
     return data[i];
-}
-function isNeedCompleteOrdinalData(data) {
-    var sampleItem = firstDataNotNull(data);
-    return sampleItem != null
-        && !zrUtil.isArray(getDataItemValue(sampleItem));
 }
 
 export default createListFromArray;

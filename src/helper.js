@@ -1,9 +1,11 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
-import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
+// import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
 import * as axisHelper from './coord/axisHelper';
 import axisModelCommonMixin from './coord/axisModelCommonMixin';
 import Model from './model/Model';
+import {getLayoutRect} from './util/layout';
+
 
 /**
  * Create a muti dimension List structure from seriesModel.
@@ -14,11 +16,13 @@ export function createList(seriesModel) {
     return createListFromArray(seriesModel.getSource(), seriesModel);
 }
 
-export function createGraph(seriesModel) {
-    var nodes = seriesModel.get('data');
-    var links = seriesModel.get('links');
-    return createGraphFromNodeEdge(nodes, links, seriesModel);
-}
+// export function createGraph(seriesModel) {
+//     var nodes = seriesModel.get('data');
+//     var links = seriesModel.get('links');
+//     return createGraphFromNodeEdge(nodes, links, seriesModel);
+// }
+
+export {getLayoutRect};
 
 /**
  * // TODO: @deprecated
@@ -32,7 +36,7 @@ export {default as completeDimensions} from './data/helper/completeDimensions';
  * @param {number} x
  * @param {number} y
  * @param {number} w
- * @param {number} h™
+ * @param {number} h
  * @param {string} color
  */
 export {createSymbol} from './util/symbol';

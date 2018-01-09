@@ -1,4 +1,8 @@
 import * as echarts from '../../echarts';
+import {
+    SERIES_LAYOUT_BY_COLUMN,
+    detectSourceFormat
+} from '../../data/helper/sourceHelper';
 
 var DatasetModel = echarts.extendComponentModel({
 
@@ -8,38 +12,22 @@ var DatasetModel = echarts.extendComponentModel({
      * @protected
      */
     defaultOption: {
-        sourceType: 'rows', // 'rows', 'columns', 'objects'
+
+        // 'row', 'column'
+        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+
+        // null/'auto': auto detect header, see "module:echarts/data/helper/sourceHelper"
+        sourceHeader: null,
+
+        dimensions: null,
+
         source: null
     },
 
-    /**
-     * @override
-     */
     optionUpdated: function () {
-        parseData(this.option);
+        detectSourceFormat(this);
     }
 
 });
-
-function parseData(option) {
-    var sourceType = option.sourceType;
-    var parser = parsers[sourceType];
-    if (parser && option.source) {
-        option.data = parser(option.source, option);
-    }
-    option.source = null;
-}
-
-var parsers = {
-    rows: function (source, option) {
-        return source;
-    },
-    columns: function (source, option) {
-        // TODO
-    },
-    objects: function (source, option) {
-        // TODO
-    }
-};
 
 export default DatasetModel;

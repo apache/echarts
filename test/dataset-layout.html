@@ -1,0 +1,122 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                padding: 20px;
+                background: rgb(0, 112, 6);
+                color: #fff;
+                font-weight: normal;
+                text-align: center;
+                font-size: 14px;
+            }
+            .chart {
+                height: 300px;
+            }
+        </style>
+
+
+        <h1>
+            [Default] seriesLayoutBy, enocde, name, head, legend
+        </h1>
+        <!-- <div class="chart" id="layout0"></div> -->
+        <h1>
+            seriesLayoutBy: 'row' and 'column'<br>
+            [Default] enocde, name, head, legend
+        </h1>
+        <div class="chart" id="layout1"></div>
+
+
+
+
+
+        <script>
+            var arrayRows0 = [
+                ['product', '2015', '2016', '2017'],
+                ['Matcha Latte', 43.3, 85.8, 93.7],
+                ['Milk Tea', 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                testHelper.createDataTable('layout0', arrayRows0);
+                testHelper.createChart(echarts, 'layout0', option);
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    xAxis: [
+                        {type: 'category', gridIndex: 0},
+                        {type: 'category', gridIndex: 1}
+                    ],
+                    yAxis: [
+                        {gridIndex: 0},
+                        {gridIndex: 1}
+                    ],
+                    grid: [
+                        {top: '55%'},
+                        {bottom: '55%'}
+                    ],
+                    series: [
+                        {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
+                        {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
+                        {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                    ]
+                };
+
+                testHelper.createDataTable('layout1', arrayRows0);
+                testHelper.createChart(echarts, 'layout1', option, {height: 500});
+            });
+        </script>
+
+
+
+    </body>
+</html>

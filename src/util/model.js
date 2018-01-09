@@ -5,6 +5,13 @@ var each = zrUtil.each;
 var isObject = zrUtil.isObject;
 
 /**
+ * name may be displayed on screen, so use '-'.
+ * But we should make sure it is not duplicated
+ * with user specified name, so use '\0';
+ */
+export var DEFAULT_COMPONENT_NAME = '\0-';
+
+/**
  * If value is not array, then translate it to array.
  * @param  {*} value
  * @return {Array} [value] or value
@@ -167,9 +174,10 @@ export var dataFormatMixin = {
             params.value = params.value[dimIndex];
         }
 
-
-        var formatter = itemModel.get(status === 'normal' ?
-            [labelProp || 'label', 'formatter'] : [labelProp || 'label', status, 'formatter']
+        var formatter = itemModel.get(
+            status === 'normal'
+            ? [labelProp || 'label', 'formatter']
+            : [status, labelProp || 'label', 'formatter']
         );
 
         if (typeof formatter === 'function') {
@@ -185,11 +193,12 @@ export var dataFormatMixin = {
      * Get raw value in option
      * @param {number} idx
      * @param {string} [dataType]
-     * @return {Object}
+     * @return {Array|number|string}
      */
     getRawValue: function (idx, dataType) {
         var data = this.getData(dataType);
         var dataItem = data.getRawDataItem(idx);
+        // ??? check: source format.
         if (dataItem != null) {
             return (isObject(dataItem) && !(dataItem instanceof Array))
                 ? dataItem.value : dataItem;
@@ -357,7 +366,7 @@ export function makeIdAndName(mapResult) {
             ? opt.name + ''
             : existCpt
             ? existCpt.name
-            : '\0-'; // name may be displayed on screen, so use '-'.
+            : DEFAULT_COMPONENT_NAME;
 
         if (existCpt) {
             keyInfo.id = existCpt.id;
@@ -622,26 +631,6 @@ export function coordDimToDataDim(data, coordDim) {
         var dimItem = data.getDimensionInfo(dimName);
         if (dimItem.coordDim === coordDim) {
             dataDim[dimItem.coordDimIndex] = dimItem.name;
-        }
-    });
-    return dataDim;
-}
-
-/**
- * @see {module:echarts/data/helper/createDimensions}
- * @param {module:echarts/data/List} data
- * @param {string} otherDim Can be `otherDims`
- *                        like 'label' or 'tooltip'.
- * @return {Array.<string>} data dimensions on the otherDim.
- */
-export function otherDimToDataDim(data, otherDim) {
-    var dataDim = [];
-    each(data.dimensions, function (dimName) {
-        var dimItem = data.getDimensionInfo(dimName);
-        var otherDims = dimItem.otherDims;
-        var dimIndex = otherDims[otherDim];
-        if (dimIndex != null && dimIndex !== false) {
-            dataDim[dimIndex] = dimItem.name;
         }
     });
     return dataDim;

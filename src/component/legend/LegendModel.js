@@ -1,6 +1,7 @@
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
+import {DEFAULT_COMPONENT_NAME} from '../../util/model';
 
 var LegendModel = echarts.extendComponentModel({
 
@@ -54,17 +55,6 @@ var LegendModel = echarts.extendComponentModel({
     },
 
     _updateData: function (ecModel) {
-        var legendData = zrUtil.map(this.get('data') || [], function (dataItem) {
-            // Can be string or number
-            if (typeof dataItem === 'string' || typeof dataItem === 'number') {
-                dataItem = {
-                    name: dataItem
-                };
-            }
-            return new Model(dataItem, this, this.ecModel);
-        }, this);
-        this._data = legendData;
-
         var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
             return series.name;
         });
@@ -74,11 +64,34 @@ var LegendModel = echarts.extendComponentModel({
                 availableNames = availableNames.concat(data.mapArray(data.getName));
             }
         });
+
         /**
          * @type {Array.<string>}
          * @private
          */
         this._availableNames = availableNames;
+
+        // If legend.data not specified in option, use availableNames as data,
+        // which is convinient for user preparing option.
+        var rawData = this.get('data') || zrUtil.filter(availableNames, function (name) {
+            return name !== DEFAULT_COMPONENT_NAME;
+        });
+
+        var legendData = zrUtil.map(rawData, function (dataItem) {
+            // Can be string or number
+            if (typeof dataItem === 'string' || typeof dataItem === 'number') {
+                dataItem = {
+                    name: dataItem
+                };
+            }
+            return new Model(dataItem, this, this.ecModel);
+        }, this);
+
+        /**
+         * @type {Array.<module:echarts/model/Model>}
+         * @private
+         */
+        this._data = legendData;
     },
 
     /**

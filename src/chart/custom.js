@@ -2,7 +2,7 @@ import {__DEV__} from '../config';
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
-import {findLabelValueDim} from './helper/labelHelper';
+import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
 import { getLayoutOnAxis } from '../layout/barGrid';
 import DataDiffer from '../data/DataDiffer';
@@ -309,7 +309,6 @@ function makeRenderItem(customSeries, data, ecModel, api) {
     var currItemModel;
     var currLabelNormalModel;
     var currLabelEmphasisModel;
-    var currLabelValueDim;
     var currVisualColor;
 
     return function (dataIndexInside) {
@@ -331,7 +330,6 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             currItemModel = data.getItemModel(dataIndexInside);
             currLabelNormalModel = currItemModel.getModel(LABEL_NORMAL);
             currLabelEmphasisModel = currItemModel.getModel(LABEL_EMPHASIS);
-            currLabelValueDim = findLabelValueDim(data);
             currVisualColor = data.getItemVisual(dataIndexInside, 'color');
 
             currDirty = false;
@@ -368,7 +366,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         var opacity = data.getItemVisual(dataIndexInside, 'opacity');
         opacity != null && (itemStyle.opacity = opacity);
 
-        if (currLabelValueDim != null) {
+        if (!data.dimensionsSummary.noDefaultLabel) {
             graphicUtil.setTextStyle(itemStyle, currLabelNormalModel, null, {
                 autoColor: currVisualColor,
                 isRectText: true
@@ -377,7 +375,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             itemStyle.text = currLabelNormalModel.getShallow('show')
                 ? zrUtil.retrieve2(
                     customSeries.getFormattedLabel(dataIndexInside, 'normal'),
-                    data.get(currLabelValueDim, dataIndexInside)
+                    getDefaultLabel(data, dataIndexInside)
                 )
                 : null;
         }

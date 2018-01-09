@@ -41,12 +41,11 @@ export default function (edges, nodes, seriesModel, directed, beforeLink) {
         // FIXME
         var coordSysCtor = CoordinateSystem.get(coordSys);
         // FIXME
-        var dimensionNames = createDimensions({
+        var dimensionNames = createDimensions(nodes, {
             sysDimensions: (
                 (coordSysCtor && coordSysCtor.type !== 'view')
                     ? (coordSysCtor.dimensions || []) : []
-            ).concat(['value']),
-            data: nodes
+            ).concat(['value'])
         });
         nodeData = new List(dimensionNames, seriesModel);
         nodeData.initData(nodes);

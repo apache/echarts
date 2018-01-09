@@ -16,9 +16,10 @@ import {
 } from '../util/layout';
 import {createTask} from '../stream/task';
 import {
-    getDatasetModel,
-    makeDefaultEncode
+    prepareSource,
+    getSource
 } from '../data/helper/sourceHelper';
+import {otherDimToDataDim} from '../data/helper/dimensionHelper';
 
 var inner = modelUtil.makeInner();
 
@@ -77,7 +78,8 @@ var SeriesModel = ComponentModel.extend({
 
         this.mergeDefaultAndTheme(option, ecModel);
 
-        setDefaultEncode(this);
+        prepareSource(this);
+
 
         var data = this.getInitialData(option, ecModel);
 
@@ -99,6 +101,8 @@ var SeriesModel = ComponentModel.extend({
 
         // ??? should not restoreData here? but called by echart?
         // this.restoreData();
+
+        autoSeriesName(this);
     },
 
     /**
@@ -146,13 +150,15 @@ var SeriesModel = ComponentModel.extend({
             mergeLayoutParam(this.option, newSeriesOption, layoutMode);
         }
 
-        setDefaultEncode(this);
+        prepareSource(this);
 
         var data = this.getInitialData(newSeriesOption, ecModel);
         // ??? set dirty on ecModel, becusue it will call mergeOption({})?
         this.dataTask.dirty();
 
         inner(this).dataBeforeProcessed = data;
+
+        autoSeriesName(this);
     },
 
     fillDataTextStyle: function (data) {
@@ -177,8 +183,13 @@ var SeriesModel = ComponentModel.extend({
 
     /**
      * Append data to list
+     * @param {Object} params
+     * @param {Array|TypedArray} params.data
      */
     appendData: function (params) {
+        // FIXME ???
+        // (1) If data from dataset, forbidden append.
+        // (2) support append data of dataset.
         var data = this.getRawData();
         data.appendData(params.data);
     },
@@ -200,67 +211,11 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
-     * [Scenarios]:
-     * (1) Provide source data directly:
-     *     series: {
-     *         encode: {...},
-     *         dimensions: [...]
-     *         data: [[...]]
-     *     }
-     * (2) Ignore datasetIndex means `datasetIndex: 0`,
-     *     and the dimensions defination in dataset is used:
-     *     series: {
-     *         encode: {...}
-     *     }
-     * (3) Use different datasets, and the dimensions defination
-     *     in dataset is used:
-     *     series: {
-     *         nodes: {datasetIndex: 1, encode: {...}},
-     *         links: {datasetIndex: 2, encode: {...}}
-     *     }
-     *
-     * Get data from series itself or datset.
-     * @param {string} [dataAttr='data'] Or can be like 'nodes', 'links'
-     * @return {Object}
-     * {
-     *      modelUID: <string> Not null/undefined.
-     *      data: <Array> Not null/undefined.
-     *      dimensionsDefine: <Array.<Object|string>> Original define, can be null/undefined.
-     *      encodeDefine: <Object> Original define, can be null/undefined.
-     * }
+     * @see {module:echarts/data/helper/sourceHelper#getSource}
+     * @return {module:echarts/data/Source} source
      */
-    getSource: function (dataAttr) {
-        dataAttr = dataAttr || 'data';
-
-        var thisOption = this.option;
-        var thisData = thisOption[dataAttr];
-        var dimensionsDefine = thisOption.dimensions;
-        var data;
-        var modelUID;
-
-        if (thisData && thisData.datasetIndex == null) {
-            data = thisData;
-            modelUID = this.uid;
-        }
-        else {
-            var datasetModel = getDatasetModel(this);
-            if (datasetModel) {
-                var datasetOption = datasetModel.option;
-                if (datasetOption) {
-                    data = datasetOption[dataAttr];
-                    modelUID = datasetModel.uid;
-                    dimensionsDefine = datasetOption.dimensions;
-                    dimensionsDefine && (dimensionsDefine = dimensionsDefine.slice());
-                }
-            }
-        }
-
-        return {
-            modelUID: modelUID,
-            data: data,
-            dimensionsDefine: dimensionsDefine,
-            encodeDefine: inner(this).encode
-        };
+    getSource: function () {
+        return getSource(this);
     },
 
     /**
@@ -326,7 +281,7 @@ var SeriesModel = ComponentModel.extend({
             }, 0);
 
             var result = [];
-            var tooltipDims = modelUtil.otherDimToDataDim(data, 'tooltip');
+            var tooltipDims = otherDimToDataDim(data, 'tooltip');
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dimIdx) {
@@ -461,6 +416,31 @@ var SeriesModel = ComponentModel.extend({
 zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
+/**
+ * MUST be called after `prepareSource` called
+ * Here we need to make auto series, especially for auto legend. But we
+ * do not modify series.name in option to avoid side effects.
+ */
+function autoSeriesName(seriesModel) {
+    // User specified name has higher priority, otherwise it may cause
+    // series can not be queried unexpectedly.
+    var name = seriesModel.name;
+    if (modelUtil.DEFAULT_COMPONENT_NAME === name) {
+        seriesModel.name = getSeriesAutoName(seriesModel) || name;
+    }
+}
+
+function getSeriesAutoName(seriesModel) {
+    var data = seriesModel.getRawData();
+    var dataDims = otherDimToDataDim(data, 'seriesName');
+    var nameArr = [];
+    zrUtil.each(dataDims, function (dataDim) {
+        var dimInfo = data.getDimensionInfo(dataDim);
+        dimInfo.name && nameArr.push(dimInfo.name);
+    });
+    return nameArr.join(' ');
+}
+
 function dataTaskCount(context) {
     return context.model.getRawData().count();
 }
@@ -473,17 +453,6 @@ function dataTaskReset(context) {
 
 function dataTaskProgress(param, context) {
     context.model.getRawData().cloneShallow(context.outputData);
-}
-
-function setDefaultEncode(seriesModel) {
-    inner(seriesModel).encode = getOptionEncode(seriesModel)
-        || makeDefaultEncode(seriesModel);
-}
-
-function getOptionEncode(seriesModel) {
-    var thisOption = seriesModel.option;
-    var thisData = thisOption.data;
-    return thisData && thisData.encode || thisOption.encode;
 }
 
 export default SeriesModel;
