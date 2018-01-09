@@ -132,7 +132,7 @@ taskProto.unfinished = function () {
  */
 taskProto.pipe = function (downTask) {
     if (__DEV__) {
-        assert(downTask && !downTask._disposed);
+        assert(downTask && !downTask._disposed && downTask !== this);
     }
 
     // If already downstream, do not dirty downTask.

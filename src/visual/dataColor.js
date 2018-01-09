@@ -1,19 +1,21 @@
 // Pick color from palette for each data item.
 // Applicable for charts that require applying color palette
 // in data level (like pie, funnel, chord).
+import {createHashMap} from 'zrender/src/core/util';
 
 export default function (seriesType) {
     return {
         getTargetSeries: function (ecModel) {
             // Pie and funnel may use diferrent scope
             var paletteScope = {};
-            var seiresModels = [];
+            var seiresModelMap = createHashMap();
 
             ecModel.eachSeriesByType(seriesType, function (seriesModel) {
                 seriesModel.__paletteScope = paletteScope;
-                seiresModels.push(seriesModel);
+                seiresModelMap.set(seriesModel.uid, seriesModel);
             });
-            return seiresModels;
+
+            return seiresModelMap;
         },
         reset: function (seriesModel, ecModel) {
             var dataAll = seriesModel.getRawData();

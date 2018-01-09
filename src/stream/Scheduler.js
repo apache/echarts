@@ -243,7 +243,7 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
         ecModel.eachRawSeriesByType(seriesType, create);
     }
     else if (getTargetSeries) {
-        each(getTargetSeries(ecModel, api), create);
+        getTargetSeries(ecModel, api).each(create);
     }
 
     function create(seriesModel) {
@@ -311,7 +311,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
         ecModel.eachRawSeriesByType(seriesType, createStub);
     }
     else if (getTargetSeries) {
-        each(getTargetSeries(ecModel, api), createStub);
+        getTargetSeries(ecModel, api).each(createStub);
     }
     // Otherwise, (usually it is legancy case), the overall task will only be
     // executed when upstream dirty. Otherwise the progressive rendering of all
@@ -442,12 +442,6 @@ function seriesTaskReset(context, upstreamContext) {
     ));
     unmountTaskMethods(this);
     if (resetDefines.length) {
-        // ???! temp experiment
-        // if (resetDefines[0].filter) {
-        //     context.model.setData(
-        //         context.outputData = context.data.cloneShallow()
-        //     );
-        // }
         return seriesTaskProgress;
     }
 }
@@ -467,11 +461,6 @@ function seriesTaskProgress(params, context) {
         else if (resetDefine && resetDefine.progress) {
             resetDefine.progress(params, data);
         }
-        // else if (resetDefine && resetDefine.filter) {
-            // ???! temp experiment
-            // if (k !== 0) {throw new Error();}
-            // return context.data.filterTo(params, context.outputData, resetDefine.filter);
-        // }
     }
     unmountTaskMethods(this);
 }
