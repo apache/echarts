@@ -77,13 +77,12 @@ proto.updateStreamModes = function (seriesModel, view) {
 
 proto.restorePipelines = function (ecModel) {
     var scheduler = this;
-    var pipelines = scheduler._pipelineMap = createHashMap();
-
+    var pipelineMap = scheduler._pipelineMap = createHashMap();
     ecModel.eachSeries(function (seriesModel) {
         var dataTask = seriesModel.dataTask;
         var progressive = seriesModel.get('progressive');
 
-        pipelines.set(seriesModel.uid, {
+        pipelineMap.set(seriesModel.uid, {
             head: dataTask,
             tail: dataTask,
             threshold: seriesModel.get('progressiveThreshold'),
@@ -91,10 +90,11 @@ proto.restorePipelines = function (ecModel) {
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
             bockIndex: -1,
             step: progressive || 700, // ??? Temporarily number
-            count: 2
+            count: 1
         });
 
         dataTask.__pipelineId = seriesModel.uid;
+        dataTask.__idxInPipeline = 0;
     });
 };
 
@@ -152,7 +152,8 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
 
         if (overallTask) {
             var overallNeedDirty;
-            each(overallTask.agentStubs, function (stub) {
+            var agentStubMap = overallTask.agentStubMap;
+            agentStubMap.each(function (stub) {
                 if (needSetDirty(opt, stub)) {
                     stub.dirty();
                     overallNeedDirty = true;
@@ -163,8 +164,9 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
             var performArgs = scheduler.getPerformArgs(overallTask, opt.block);
             // Execute stubs firstly, which may set the overall task dirty,
             // then execute the overall task.
-            each(overallTask.agentStubs, function (agentStub) {
-                agentStub.perform(performArgs);
+            ecModel.eachRawSeries(function (seriesModel) {
+                var task = agentStubMap.get(seriesModel.uid);
+                task && task.perform(performArgs);
             });
             unfinished |= overallTask.perform(performArgs);
         }
@@ -228,8 +230,6 @@ var updatePayload = proto.updatePayload = function (task, payload) {
 
 function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var seriesTaskMap = stageHandlerRecord.seriesTaskMap || (stageHandlerRecord.seriesTaskMap = createHashMap());
-    var pipelineIdMap = createHashMap();
-
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
 
@@ -248,7 +248,6 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
 
     function create(seriesModel) {
         var pipelineId = seriesModel.uid;
-        pipelineIdMap.set(pipelineId, 1);
 
         // Init tasks for each seriesModel only once.
         // Reuse original task instance.
@@ -273,8 +272,9 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
     }
 
     // Clear unused series tasks.
+    var pipelineMap = scheduler._pipelineMap;
     seriesTaskMap.each(function (task, pipelineId) {
-        if (!pipelineIdMap.get(pipelineId)) {
+        if (!pipelineMap.get(pipelineId)) {
             task.dispose();
             seriesTaskMap.removeKey(pipelineId);
         }
@@ -297,9 +297,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
         );
 
     // Reuse orignal stubs.
-    var agentStubs = overallTask.agentStubs = overallTask.agentStubs || [];
-    var agentStubMap = overallTask.agentStubMap = createHashMap();
-    var stubIndex = 0;
+    var agentStubMap = overallTask.agentStubMap = overallTask.agentStubMap || createHashMap();
 
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
@@ -324,19 +322,25 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     }
 
     function createStub(seriesModel) {
-        var stub = agentStubs[stubIndex] = agentStubs[stubIndex] || createTask(
+        var pipelineId = seriesModel.uid;
+        var stub = agentStubMap.get(pipelineId) || agentStubMap.set(pipelineId, createTask(
             {plan: prepareData, reset: stubReset, onDirty: stubOnDirty},
             {model: seriesModel, overallProgress: overallProgress}
-        );
-        stubIndex++;
+        ));
         stub.agent = overallTask;
         stub.__block = overallProgress;
 
         pipe(scheduler, seriesModel, stub);
-        agentStubMap.set(seriesModel.uid, stub);
     }
 
-    agentStubs.length = stubIndex;
+    // Clear unused stubs.
+    var pipelineMap = scheduler._pipelineMap;
+    agentStubMap.each(function (stub, pipelineId) {
+        if (!pipelineMap.get(pipelineId)) {
+            stub.dispose();
+            agentStubMap.removeKey(pipelineId);
+        }
+    });
 }
 
 function overallTaskReset(context) {
@@ -364,9 +368,9 @@ function setTaskOutputData(data, seriesModel) {
     var task = this.__task;
     var context = task.context;
     if (__DEV__) {
-        assert(!task.agentStubs || seriesModel);
+        assert(!task.agentStubMap || seriesModel);
     }
-    if (!task.agentStubs) {
+    if (!task.agentStubMap) {
         context.model.setData(context.outputData = data);
     }
     else {
@@ -378,9 +382,9 @@ function setTaskOutputData(data, seriesModel) {
 function setTaskOutputEnd(end, seriesModel) {
     var task = this.__task;
     if (__DEV__) {
-        assert(!task.agentStubs || seriesModel);
+        assert(!task.agentStubMap || seriesModel);
     }
-    if (!task.agentStubs) {
+    if (!task.agentStubMap) {
         task.setOutputEnd(end);
     }
     else {
