@@ -25,7 +25,7 @@ function SunburstPiece(node, seriesModel, ecModel) {
     });
     var text = new graphic.Text({
         z2: DEFAULT_TEXT_Z,
-        silent: node.getModel('label.normal').get('silent')
+        silent: node.getModel('label').get('silent')
     });
     this.add(sector);
     this.add(text);
@@ -71,7 +71,7 @@ SunburstPieceProto.updateData = function (
     var itemStyleModel = itemModel.getModel('itemStyle');
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
-    var normalStyle = itemStyleModel.getModel('normal').getItemStyle();
+    var normalStyle = itemStyleModel.getItemStyle();
     var style;
     if (state === 'normal') {
         style = normalStyle;
@@ -132,7 +132,7 @@ SunburstPieceProto.updateData = function (
 SunburstPieceProto.onEmphasis = function (highlightPolicy) {
     var that = this;
     this.node.hostTree.root.eachNode(function (n) {
-        if (n.piece) {
+        if (that.node !== n && n.piece) {
             if (isNodeHighlighted(n, that.node, highlightPolicy)) {
                 n.piece.childAt(0).trigger('highlight');
             }
@@ -161,7 +161,7 @@ SunburstPieceProto.onDownplay = function () {
 
 SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
     var itemModel = this.node.getModel();
-    var labelModel = itemModel.getModel('label.normal');
+    var labelModel = itemModel.getModel('label');
     var labelHoverModel = itemModel.getModel('label.emphasis');
 
     var text = zrUtil.retrieve(
@@ -307,7 +307,7 @@ function getNodeColor(node, seriesModel, ecModel) {
     }
 
     // Self color or level color
-    var color = node.getModel('itemStyle.normal').get('color');
+    var color = node.getModel('itemStyle').get('color');
     if (color) {
         return color;
     }
