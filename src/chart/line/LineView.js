@@ -55,7 +55,7 @@ function sign(val) {
  *                        end: from data to max
  * @private
  */
-function getStackedOnPoints(coordSys, data, origin) {
+function getStackedOnPoints(seriesModel, coordSys, data, origin) {
     var baseAxis = coordSys.getBaseAxis();
     var valueAxis = coordSys.getOtherAxis(baseAxis);
 
@@ -81,11 +81,11 @@ function getStackedOnPoints(coordSys, data, origin) {
         // If is one positive, and one negative, onZero shall be true
     }
 
-    var valueDim = valueAxis.dim;
+    var valueCoordDim = valueAxis.dim;
+    var baseDataOffset = valueCoordDim === 'x' || valueCoordDim === 'radius' ? 1 : 0;
+    var valueDim = seriesModel.coordDimToDataDim(valueCoordDim)[0];
 
-    var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
-
-    return data.mapArray([valueDim], function (val, idx) {
+    return data.mapArray(valueDim ? [valueDim] : [], function (val, idx) {
         var stackedOnSameSign;
         var stackedOn = data.stackedOn;
         // Find first stacked value with same sign
@@ -343,7 +343,7 @@ export default ChartView.extend({
 
         var isAreaChart = !areaStyleModel.isEmpty();
         var origin = areaStyleModel.get('origin');
-        var stackedOnPoints = getStackedOnPoints(coordSys, data, origin);
+        var stackedOnPoints = getStackedOnPoints(seriesModel, coordSys, data, origin);
 
         var showSymbol = seriesModel.get('showSymbol');
 
