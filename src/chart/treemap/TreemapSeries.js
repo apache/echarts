@@ -275,7 +275,7 @@ export default SeriesModel.extend({
             ? (this._viewRoot = viewRoot)
             : (viewRoot = this._viewRoot);
 
-        var root = this.getData().tree.root;
+        var root = this.getRawData().tree.root;
 
         if (!viewRoot
             || (viewRoot !== root && !root.contains(viewRoot))

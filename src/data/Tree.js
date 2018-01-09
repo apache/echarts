@@ -7,7 +7,8 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import linkList from './helper/linkList';
-import createListSimply from '../chart/helper/createListSimply';
+import List from './List';
+import createDimensions from './helper/createDimensions';
 
 /**
  * @constructor module:echarts/data/Tree~TreeNode
@@ -483,11 +484,13 @@ Tree.createTree = function (dataRoot, hostModel, treeOptions) {
 
     tree.root.updateDepthAndHeight(0);
 
-    var list = createListSimply(hostModel, {
+    var dimensionsInfo = createDimensions(listData, {
         sysDimensions: ['value'],
-        data: listData,
         dimCount: dimMax
     });
+
+    var list = new List(dimensionsInfo, hostModel);
+    list.initData(listData);
 
     linkList({
         mainData: list,
