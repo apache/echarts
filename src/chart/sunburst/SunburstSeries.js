@@ -82,6 +82,7 @@ export default SeriesModel.extend({
             // could be: 'radial', 'tangential', or 'none'
             rotate: 'radial',
             show: true,
+            opacity: 1,
             // could be 'inner', 'outside', 'left' or 'right'
             // 'left' is for inner side of inside, and 'right' is for outter
             // side for inside
@@ -93,6 +94,7 @@ export default SeriesModel.extend({
         itemStyle: {
             borderWidth: 1,
             borderColor: 'white',
+            opacity: 1,
             emphasis: {},
             highlight: {
                 opacity: 1

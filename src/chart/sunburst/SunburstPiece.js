@@ -132,7 +132,7 @@ SunburstPieceProto.updateData = function (
 SunburstPieceProto.onEmphasis = function (highlightPolicy) {
     var that = this;
     this.node.hostTree.root.eachNode(function (n) {
-        if (n.piece) {
+        if (that.node !== n && n.piece) {
             if (isNodeHighlighted(n, that.node, highlightPolicy)) {
                 n.piece.childAt(0).trigger('highlight');
             }
