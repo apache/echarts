@@ -26,24 +26,16 @@
 
                 var itemStyle = {
                     star5: {
-                        normal: {
-                            color: colors[0]
-                        }
+                        color: colors[0]
                     },
                     star4: {
-                        normal: {
-                            color: colors[1]
-                        }
+                        color: colors[1]
                     },
                     star3: {
-                        normal: {
-                            color: colors[2]
-                        }
+                        color: colors[2]
                     },
                     star2: {
-                        normal: {
-                            color: colors[3]
-                        }
+                        color: colors[3]
                     }
                 };
 
@@ -104,9 +96,7 @@
                 }, {
                     name: '非虚构',
                     itemStyle: {
-                        normal: {
-                            color: colors[2]
-                        }
+                        color: colors[2]
                     },
                     children: [{
                         name: '设计',
@@ -253,9 +243,7 @@
                             })(block[star].name);
 
                             block[star].label = {
-                                normal: {
-                                    color: style.normal.color
-                                },
+                                color: style.color,
                                 downplay: {
                                     opacity: 0.5
                                 }
@@ -263,19 +251,15 @@
 
                             if (block[star].children) {
                                 style = {
-                                    normal: {
-                                        opacity: 1,
-                                        color: style.normal.color
-                                    }
+                                    opacity: 1,
+                                    color: style.color
                                 };
                                 block[star].children.forEach(function (book) {
                                     book.value = 1;
                                     book.itemStyle = style;
 
                                     book.label = {
-                                        normal: {
-                                            color: style.normal.color
-                                        }
+                                        color: style.color
                                     };
 
                                     var value = 1;
@@ -297,9 +281,7 @@
                         }
 
                         level1[i].itemStyle = {
-                            normal: {
-                                color: data[j].itemStyle.normal.color
-                            }
+                            color: data[j].itemStyle.color
                         };
                     }
                 }
@@ -327,24 +309,18 @@
                             }
                         },
                         label: {
-                            normal: {
-                                rotate: 'radial',
-                                color: bgColor
-                            }
+                            rotate: 'radial',
+                            color: bgColor
                         },
                         itemStyle: {
-                            normal: {
-                                borderColor: bgColor,
-                                borderWidth: 2
-                            }
+                            borderColor: bgColor,
+                            borderWidth: 2
                         },
                         levels: [{}, {
                             r0: 0,
                             r: 40,
                             label: {
-                                normal: {
-                                    rotate: 'none'
-                                }
+                                rotate: 'none'
                             }
                         }, {
                             r0: 40,
@@ -353,34 +329,26 @@
                             r0: 115,
                             r: 140,
                             itemStyle: {
-                                normal: {
-                                    shadowBlur: 2,
-                                    shadowColor: colors[2],
-                                    color: 'transparent'
-                                }
+                                shadowBlur: 2,
+                                shadowColor: colors[2],
+                                color: 'transparent'
                             },
                             label: {
-                                normal: {
-                                    rotate: 'tangential',
-                                    fontSize: 10,
-                                    color: colors[0]
-                                }
+                                rotate: 'tangential',
+                                fontSize: 10,
+                                color: colors[0]
                             }
                         }, {
                             r0: 140,
                             r: 145,
                             itemStyle: {
-                                normal: {
-                                    shadowBlur: 80,
-                                    shadowColor: colors[0]
-                                }
+                                shadowBlur: 80,
+                                shadowColor: colors[0]
                             },
                             label: {
-                                normal: {
-                                    position: 'outside',
-                                    textShadowBlur: 5,
-                                    textShadowColor: '#333'
-                                },
+                                position: 'outside',
+                                textShadowBlur: 5,
+                                textShadowColor: '#333',
                                 downplay: {
                                     opacity: 0.5
                                 }

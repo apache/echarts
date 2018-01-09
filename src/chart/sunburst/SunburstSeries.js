@@ -79,24 +79,20 @@ export default SeriesModel.extend({
         renderLabelForZeroData: false,
 
         label: {
-            normal: {
-                // could be: 'radial', 'tangential', or 'none'
-                rotate: 'radial',
-                show: true,
-                // could be 'inner', 'outside', 'left' or 'right'
-                // 'left' is for inner side of inside, and 'right' is for outter
-                // side for inside
-                position: 'inner',
-                padding: 5,
-                silent: true
-            },
+            // could be: 'radial', 'tangential', or 'none'
+            rotate: 'radial',
+            show: true,
+            // could be 'inner', 'outside', 'left' or 'right'
+            // 'left' is for inner side of inside, and 'right' is for outter
+            // side for inside
+            position: 'inner',
+            padding: 5,
+            silent: true,
             emphasis: {}
         },
         itemStyle: {
-            normal: {
-                borderWidth: 1,
-                borderColor: 'white'
-            },
+            borderWidth: 1,
+            borderColor: 'white',
             emphasis: {},
             highlight: {
                 opacity: 1
