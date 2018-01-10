@@ -46,14 +46,23 @@ function createListFromArray(source, seriesModel) {
     });
 
     var firstCategoryDimIndex;
+    var hasNameEncode;
     coordSysDefine && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
         var coordDim = dimInfo.coordDim;
         var categoryAxisModel = coordSysDefine.categoryAxisMap.get(coordDim);
         if (categoryAxisModel) {
-            firstCategoryDimIndex == null && (firstCategoryDimIndex = dimIndex);
+            if (firstCategoryDimIndex == null) {
+                firstCategoryDimIndex = dimIndex;
+            }
             dimInfo.ordinalMeta = categoryAxisModel.ordinalMeta;
         }
+        if (dimInfo.otherDims.itemName != null) {
+            hasNameEncode = true;
+        }
     });
+    if (!hasNameEncode && firstCategoryDimIndex != null) {
+        dimInfoList[firstCategoryDimIndex].otherDims.itemName = 0;
+    }
 
     var list = new List(dimInfoList, seriesModel);
 
@@ -67,7 +76,7 @@ function createListFromArray(source, seriesModel) {
         : null;
 
     list.hasItemOption = false;
-    list.initData(source, firstCategoryDimIndex, dimValueGetter);
+    list.initData(source, null, dimValueGetter);
 
     return list;
 }

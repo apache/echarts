@@ -436,7 +436,10 @@ function dataTaskReset(context) {
 }
 
 function dataTaskProgress(param, context) {
-    context.model.getRawData().cloneShallow(context.outputData);
+    // Avoid repead cloneShallow when data just created in reset.
+    if (param.end > context.outputData.count()) {
+        context.model.getRawData().cloneShallow(context.outputData);
+    }
 }
 
 export default SeriesModel;

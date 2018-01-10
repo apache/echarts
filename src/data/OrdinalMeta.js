@@ -1,9 +1,5 @@
 import {createHashMap, isObject, map} from 'zrender/src/core/util';
 
-var MULTIPLE_SOURCE = 'multiple_source';
-// Used to avoid null/undefined comparison.
-var NO_SOURCE = 'no_source';
-
 /**
  * @constructor
  * @param {module:echart/model/Model} axisModel

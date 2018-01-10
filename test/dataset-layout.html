@@ -23,15 +23,28 @@
         </style>
 
 
+
+
+
         <h1>
             [Default] seriesLayoutBy, enocde, name, head, legend
         </h1>
-        <!-- <div class="chart" id="layout0"></div> -->
+        <div class="chart" id="layout0"></div>
+
         <h1>
             seriesLayoutBy: 'row' and 'column'<br>
             [Default] enocde, name, head, legend
         </h1>
         <div class="chart" id="layout1"></div>
+
+        <h1>
+            seriesLayoutBy: 'row' and 'column', setOption, pie<br>
+            [Default] enocde, name, head, legend
+        </h1>
+        <div class="chart" id="layout2"></div>
+
+
+
 
 
 
@@ -44,6 +57,14 @@
                 ['Milk Tea', 83.1, 73.4, 55.1],
                 ['Cheese Cocoa', 86.4, 65.2, 82.5],
                 ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRows1 = [
+                ['product', '2012', '2013', '2014', '2015', '2016', '2017'],
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
             ];
         </script>
 
@@ -115,6 +136,60 @@
                 testHelper.createChart(echarts, 'layout1', option, {height: 500});
             });
         </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataset: {
+                        source: arrayRows1
+                    },
+                    xAxis: [
+                        {type: 'category', gridIndex: 0}
+                    ],
+                    yAxis: [
+                        {gridIndex: 0},
+                    ],
+                    grid: [
+                        {top: '55%'}
+                    ],
+                    series: [
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'pie', id: 'pie', encode: {itemName: 'product', value: '2015'}}
+                    ]
+                };
+
+                testHelper.createDataTable('layout2', arrayRows1);
+                var chart = testHelper.createChart(echarts, 'layout2', option, {height: 500});
+                chart.on('click', function (event) {
+                    if (event.componentType === 'series') {
+                        var name = event.seriesName;
+                        chart.setOption({
+                            series: {
+                                id: 'pie'
+                                // seriesLayoutBy: 'row'
+                            }
+                        });
+                    }
+                    console.log(event);
+                });
+            });
+        </script>
+
 
 
 

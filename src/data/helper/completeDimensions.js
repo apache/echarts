@@ -1,18 +1,13 @@
 /**
  * @deprecated
  * Use `echarts/data/helper/createDimensions` instead.
- * Complete dimensions by data (guess dimension).
  */
 
-import * as zrUtil from 'zrender/src/core/util';
+import {createHashMap, each, isString, defaults, clone} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal} from './sourceHelper';
 import Source from '../Source';
 import {OTHER_DIMENSIONS} from './dimensionHelper';
-
-var each = zrUtil.each;
-var isString = zrUtil.isString;
-var defaults = zrUtil.defaults;
 
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
@@ -43,7 +38,7 @@ var defaults = zrUtil.defaults;
  *      coordDimIndex: number mandatory,
  *      type: string optional,
  *      tooltipName: string optional,
- *      otherDims: {
+ *      otherDims: { never null/undefined
  *          tooltip: number optional,
  *          label: number optional,
  *          itemName: number optional,
@@ -62,9 +57,9 @@ function completeDimensions(sysDims, source, opt) {
     opt = opt || {};
     sysDims = (sysDims || []).slice();
     var dimsDef = (opt.dimsDef || []).slice();
-    var encodeDef = zrUtil.createHashMap(opt.encodeDef);
-    var dataDimNameMap = zrUtil.createHashMap();
-    var coordDimNameMap = zrUtil.createHashMap();
+    var encodeDef = createHashMap(opt.encodeDef);
+    var dataDimNameMap = createHashMap();
+    var coordDimNameMap = createHashMap();
     // var valueCandidate;
     var result = [];
 
@@ -113,7 +108,7 @@ function completeDimensions(sysDims, source, opt) {
         }
         else {
             coordDim = sysDimItem.name;
-            sysDimItem = zrUtil.clone(sysDimItem);
+            sysDimItem = clone(sysDimItem);
             // `coordDimIndex` should not be set directly.
             sysDimItemDimsDef = sysDimItem.dimsDef;
             sysDimItemOtherDims = sysDimItem.otherDims;
