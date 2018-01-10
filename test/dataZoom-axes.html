@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
     </head>
     <body>
         <style>
@@ -65,18 +65,18 @@
             var els = [];
 
             require([
-                'echarts',
-                'zrender/core/util',
-                'echarts/chart/line',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/dataZoom'
-            ], function (ec, zu) {
+                'echarts'
+                // 'zrender/core/util',
+                // 'echarts/chart/line',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
                 echarts = ec;
-                zrUtil = zu;
+                zrUtil = echarts.util;
 
 
                 renderTitle('Order sensitive in processing: no min/max on y (<strong>Try zooming y slider to check if normal</strong>)');
@@ -181,7 +181,7 @@
                 el.innerHTML = '<div ' + heightStyle + ' class="ec"></div><div class="info"></div>';
                 containerEl.appendChild(el);
 
-                var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                var chart = echarts.init(el.firstChild, null, { });
                 chart.setOption(opt);
 
                 charts.push(chart);
@@ -275,6 +275,7 @@
                             id: 'xSlider',
                             name: 'xSlider',
                             show: true,
+                            handleIcon: 'image://http://echarts.baidu.com/images/favicon.png',
                             filterMode: args.xFilterMode,
                             xAxisIndex: [0],
                             start: args.xStart,
@@ -283,6 +284,7 @@
                         {
                             name: 'ySlider',
                             show: true,
+                            handleIcon: 'image://http://echarts.baidu.com/images/favicon.png',
                             filterMode: args.yFitlerMode,
                             yAxisIndex: [0],
                             start: args.yStart,

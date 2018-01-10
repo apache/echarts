@@ -1,0 +1,163 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .controller {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border-bottom: 1px solid #ccc;
+                line-height: 30px;
+                z-index: 100;
+            }
+            .controller label {
+                margin-right: 10px;
+            }
+            .item-title {
+                font-weight: bold;
+            }
+            .controller .item {
+                margin-right: 20px;
+                padding-right: 10px;
+                border-right: 1px solid #ccc;
+            }
+            .tooltip-title {
+                color: yellow;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+        </style>
+
+        <div id="main"></div>
+
+        <script src="data/disk.tree.js"></script>
+
+        <script>
+
+            var chart;
+            var formatUtil;
+
+            require([
+                'echarts'
+                // 'echarts/util/format',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/legend',
+                // 'echarts/chart/treemap'
+            ], function (echarts) {
+                formatUtil = echarts.format;
+                initEcharts(echarts);
+            });
+
+            function initEcharts(echarts) {
+                chart = echarts.init(document.getElementById('main'), null, {
+
+                });
+
+                chart.setOption({
+
+                    tooltip: {
+                        formatter: function (info) {
+                            var value = info.value;
+                            var treePathInfo = info.treePathInfo;
+                            var treePath = [];
+
+                            for (var i = 1; i < treePathInfo.length; i++) {
+                                treePath.push(treePathInfo[i].name);
+                            }
+
+                            return [
+                                '<div class="tooltip-title">' + formatUtil.encodeHTML(treePath.join('/')) + '</div>',
+                                'Disk Usage: ' + formatUtil.addCommas(value) + ' KB',
+                            ].join('');
+                        }
+                    },
+
+                    series: [
+                        {
+                            name:'Disk Usage',
+                            type:'treemap',
+                            visibleMin: 300,
+                            upperLabel: {
+                                normal: {
+                                    show: true,
+                                    height: 30,
+                                    color: 'green'
+                                }
+                            },
+                            itemStyle: {
+                                normal: {
+                                    // borderColor: '#fff'
+                                },
+                                emphasis: {
+                                    strokeColor: 'yellow',
+                                    strokeWidth: 2
+                                }
+                            },
+                            levels: [
+                                {
+                                    color: ['#d14a61'], // default color
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 5,
+                                            gapWidth: 3
+                                        },
+                                        emphasis: {
+                                            borderColor: 'red'
+                                        }
+                                    },
+                                },
+                                {
+                                    color: [
+                                        '#d14a61', '#fd9c35',
+                                        '#675bba', '#fec42c', '#dd4444',
+                                        '#d4df5a', '#cd4870'
+                                    ],
+                                    colorMappingBy: 'value',
+                                    itemStyle: {
+                                        normal: {
+                                            borderColor: '#aaa',
+                                            borderWidth: 5,
+                                            gapWidth: 3
+                                        },
+                                        emphasis: {
+                                            borderColor: 'red'
+                                        }
+                                    }
+                                },
+                                {
+                                    colorSaturation: [0.35, 0.5],
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 5,
+                                            gapWidth: 3,
+                                            borderColorSaturation: 0.6
+                                        }
+                                    }
+                                }
+                            ],
+                            data: window.disk_usage_tree
+                        }
+                    ]
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+            }
+
+        </script>
+    </body>
+</html>

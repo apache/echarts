@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset='utf-8'>
-        <script src='esl.js'></script>
-        <script src='config.js'></script>
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
         <script src='http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM'></script>
         <meta name='viewport' content='width=device-width, initial-scale=1' />
@@ -19,11 +19,11 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/lines',
-                'echarts/chart/effectScatter',
-                'echarts/component/legend',
-                'echarts/component/geo'
+                'echarts'
+                // 'echarts/chart/lines',
+                // 'echarts/chart/effectScatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo'
             ], function (echarts) {
 
                 $.get('../map/json/china.json', function (chinaJson) {
@@ -40,7 +40,13 @@
                             roam: true
                         },
 
+                        legend: {
+                            show: true,
+                            data: ['a', 'b']
+                        },
+
                         series: [{
+                            name: 'a',
                             type: 'lines',
                             coordinateSystem: 'geo',
                             polyline: true,
@@ -80,6 +86,7 @@
                             }]
                         },
                         {
+                            name: 'b',
                             type: 'lines',
                             coordinateSystem: 'geo',
                             effect: {

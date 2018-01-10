@@ -1,15 +1,10 @@
-define(function (require) {
+import * as echarts from '../echarts';
 
-    var zrUtil = require('zrender/core/util');
-    var echarts = require('../echarts');
+import './effectScatter/EffectScatterSeries';
+import './effectScatter/EffectScatterView';
 
-    require('./effectScatter/EffectScatterSeries');
-    require('./effectScatter/EffectScatterView');
+import visualSymbol from '../visual/symbol';
+import layoutPoints from '../layout/points';
 
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'effectScatter', 'circle', null
-    ));
-    echarts.registerLayout(zrUtil.curry(
-        require('../layout/points'), 'effectScatter'
-    ));
-});
+echarts.registerVisual(visualSymbol('effectScatter', 'circle'));
+echarts.registerLayout(layoutPoints('effectScatter'));

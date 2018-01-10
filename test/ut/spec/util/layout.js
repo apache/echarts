@@ -2,7 +2,7 @@ describe('util/number', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/util/layout']);
+    var testCase = utHelper.prepare(['echarts/src/util/layout']);
 
     describe('mergeLayoutParam', function () {
 

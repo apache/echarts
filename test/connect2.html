@@ -1,9 +1,9 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="./esl.js"></script>
-        <script src="./config.js"></script>
-        <link rel="stylesheet" href="./reset.css">
+        <script src="./lib/esl.js"></script>
+        <script src="./lib/config.js"></script>
+        <link rel="stylesheet" href="./lib/reset.css">
     </head>
     <body>
         <style>
@@ -42,12 +42,12 @@
                 'data/aqi/BJdata',
                 'data/aqi/GZdata',
                 'data/aqi/SHdata',
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/grid',
-                'echarts/component/visualMapContinuous'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMapContinuous'
             ], function (dataBJ, dataGZ, dataSH, echarts) {
 
                 var chart1 = echarts.init(document.getElementById('chart1'));
@@ -62,7 +62,7 @@
                     symbolSize: [10, 70],
                     color: ['rgba(255,255,255,.2)']
                 };
-                option1.visualMap.dimension = 'z';
+                option1.visualMap.dimension = 'value';
                 option1.visualMap.max = 250;
 
                 option2.visualMap.inRange = {
@@ -71,7 +71,7 @@
                 option2.visualMap.outOfRange = {
                     color: ['rgba(255,255,255,.2)']
                 };
-                option2.visualMap.dimension = 'z';
+                option2.visualMap.dimension = 'value';
                 option2.visualMap.max = 250;
 
                 chart1.setOption(option1);

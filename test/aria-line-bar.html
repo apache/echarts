@@ -1,0 +1,131 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 600px;
+            }
+        </style>
+
+        <div id="main" class="chart"></div>
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                chart.setOption({
+                    aria: {
+                        show: true
+                    },
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                            type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                    },
+                    legend: {
+                        data:['热度', '正面', '负面']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'category',
+                            axisTick : {show: false},
+                            data : ['汽车之家','今日头条','百度贴吧','一点资讯','微信','微博','知乎']
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'热度',
+                            type:'bar',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'inside'
+                                }
+                            },
+                            data:[300, 270, 340, 344, 300, 320, 310]
+                        },
+                        {
+                            name:'正面',
+                            type:'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
+                            data:[120, 102, 141, 174, 190, 250, 220]
+                        },
+                        {
+                            name:'负面',
+                            type:'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'left'
+                                }
+                            },
+                            data:[-20, -32, -21, -34, -90, -130, -110]
+                        }
+                    ]
+                });
+
+                window.onresize = chart.resize;
+            }
+        );
+        </script>
+    </body>
+</html>

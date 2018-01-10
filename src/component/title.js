@@ -1,210 +1,204 @@
-define(function(require) {
+import * as echarts from '../echarts';
+import * as graphic from '../util/graphic';
+import {getLayoutRect} from '../util/layout';
 
-    'use strict';
+// Model
+echarts.extendComponentModel({
 
-    var echarts = require('../echarts');
-    var graphic = require('../util/graphic');
-    var layout = require('../util/layout');
+    type: 'title',
 
-    // Model
-    echarts.extendComponentModel({
+    layoutMode: {type: 'box', ignoreSize: true},
 
-        type: 'title',
+    defaultOption: {
+        // 一级层叠
+        zlevel: 0,
+        // 二级层叠
+        z: 6,
+        show: true,
 
-        layoutMode: {type: 'box', ignoreSize: true},
+        text: '',
+        // 超链接跳转
+        // link: null,
+        // 仅支持self | blank
+        target: 'blank',
+        subtext: '',
 
-        defaultOption: {
-            // 一级层叠
-            zlevel: 0,
-            // 二级层叠
-            z: 6,
-            show: true,
+        // 超链接跳转
+        // sublink: null,
+        // 仅支持self | blank
+        subtarget: 'blank',
 
-            text: '',
-            // 超链接跳转
-            // link: null,
-            // 仅支持self | blank
-            target: 'blank',
-            subtext: '',
+        // 'center' ¦ 'left' ¦ 'right'
+        // ¦ {number}（x坐标，单位px）
+        left: 0,
+        // 'top' ¦ 'bottom' ¦ 'center'
+        // ¦ {number}（y坐标，单位px）
+        top: 0,
 
-            // 超链接跳转
-            // sublink: null,
-            // 仅支持self | blank
-            subtarget: 'blank',
+        // 水平对齐
+        // 'auto' | 'left' | 'right' | 'center'
+        // 默认根据 left 的位置判断是左对齐还是右对齐
+        // textAlign: null
+        //
+        // 垂直对齐
+        // 'auto' | 'top' | 'bottom' | 'middle'
+        // 默认根据 top 位置判断是上对齐还是下对齐
+        // textBaseline: null
 
-            // 'center' ¦ 'left' ¦ 'right'
-            // ¦ {number}（x坐标，单位px）
-            left: 0,
-            // 'top' ¦ 'bottom' ¦ 'center'
-            // ¦ {number}（y坐标，单位px）
-            top: 0,
+        backgroundColor: 'rgba(0,0,0,0)',
 
-            // 水平对齐
-            // 'auto' | 'left' | 'right' | 'center'
-            // 默认根据 left 的位置判断是左对齐还是右对齐
-            // textAlign: null
-            //
-            // 垂直对齐
-            // 'auto' | 'top' | 'bottom' | 'middle'
-            // 默认根据 top 位置判断是上对齐还是下对齐
-            // textBaseline: null
+        // 标题边框颜色
+        borderColor: '#ccc',
 
-            backgroundColor: 'rgba(0,0,0,0)',
+        // 标题边框线宽，单位px，默认为0（无边框）
+        borderWidth: 0,
 
-            // 标题边框颜色
-            borderColor: '#ccc',
+        // 标题内边距，单位px，默认各方向内边距为5，
+        // 接受数组分别设定上右下左边距，同css
+        padding: 5,
 
-            // 标题边框线宽，单位px，默认为0（无边框）
-            borderWidth: 0,
+        // 主副标题纵向间隔，单位px，默认为10，
+        itemGap: 10,
+        textStyle: {
+            fontSize: 18,
+            fontWeight: 'bolder',
+            color: '#333'
+        },
+        subtextStyle: {
+            color: '#aaa'
+        }
+    }
+});
 
-            // 标题内边距，单位px，默认各方向内边距为5，
-            // 接受数组分别设定上右下左边距，同css
-            padding: 5,
+// View
+echarts.extendComponentView({
 
-            // 主副标题纵向间隔，单位px，默认为10，
-            itemGap: 10,
-            textStyle: {
-                fontSize: 18,
-                fontWeight: 'bolder',
-                color: '#333'
+    type: 'title',
+
+    render: function (titleModel, ecModel, api) {
+        this.group.removeAll();
+
+        if (!titleModel.get('show')) {
+            return;
+        }
+
+        var group = this.group;
+
+        var textStyleModel = titleModel.getModel('textStyle');
+        var subtextStyleModel = titleModel.getModel('subtextStyle');
+
+        var textAlign = titleModel.get('textAlign');
+        var textBaseline = titleModel.get('textBaseline');
+
+        var textEl = new graphic.Text({
+            style: graphic.setTextStyle({}, textStyleModel, {
+                text: titleModel.get('text'),
+                textFill: textStyleModel.getTextColor()
+            }, {disableBox: true}),
+            z2: 10
+        });
+
+        var textRect = textEl.getBoundingRect();
+
+        var subText = titleModel.get('subtext');
+        var subTextEl = new graphic.Text({
+            style: graphic.setTextStyle({}, subtextStyleModel, {
+                text: subText,
+                textFill: subtextStyleModel.getTextColor(),
+                y: textRect.height + titleModel.get('itemGap'),
+                textVerticalAlign: 'top'
+            }, {disableBox: true}),
+            z2: 10
+        });
+
+        var link = titleModel.get('link');
+        var sublink = titleModel.get('sublink');
+
+        textEl.silent = !link;
+        subTextEl.silent = !sublink;
+
+        if (link) {
+            textEl.on('click', function () {
+                window.open(link, '_' + titleModel.get('target'));
+            });
+        }
+        if (sublink) {
+            subTextEl.on('click', function () {
+                window.open(sublink, '_' + titleModel.get('subtarget'));
+            });
+        }
+
+        group.add(textEl);
+        subText && group.add(subTextEl);
+        // If no subText, but add subTextEl, there will be an empty line.
+
+        var groupRect = group.getBoundingRect();
+        var layoutOption = titleModel.getBoxLayoutParams();
+        layoutOption.width = groupRect.width;
+        layoutOption.height = groupRect.height;
+        var layoutRect = getLayoutRect(
+            layoutOption, {
+                width: api.getWidth(),
+                height: api.getHeight()
+            }, titleModel.get('padding')
+        );
+        // Adjust text align based on position
+        if (!textAlign) {
+            // Align left if title is on the left. center and right is same
+            textAlign = titleModel.get('left') || titleModel.get('right');
+            if (textAlign === 'middle') {
+                textAlign = 'center';
+            }
+            // Adjust layout by text align
+            if (textAlign === 'right') {
+                layoutRect.x += layoutRect.width;
+            }
+            else if (textAlign === 'center') {
+                layoutRect.x += layoutRect.width / 2;
+            }
+        }
+        if (!textBaseline) {
+            textBaseline = titleModel.get('top') || titleModel.get('bottom');
+            if (textBaseline === 'center') {
+                textBaseline = 'middle';
+            }
+            if (textBaseline === 'bottom') {
+                layoutRect.y += layoutRect.height;
+            }
+            else if (textBaseline === 'middle') {
+                layoutRect.y += layoutRect.height / 2;
+            }
+
+            textBaseline = textBaseline || 'top';
+        }
+
+        group.attr('position', [layoutRect.x, layoutRect.y]);
+        var alignStyle = {
+            textAlign: textAlign,
+            textVerticalAlign: textBaseline
+        };
+        textEl.setStyle(alignStyle);
+        subTextEl.setStyle(alignStyle);
+
+        // Render background
+        // Get groupRect again because textAlign has been changed
+        groupRect = group.getBoundingRect();
+        var padding = layoutRect.margin;
+        var style = titleModel.getItemStyle(['color', 'opacity']);
+        style.fill = titleModel.get('backgroundColor');
+        var rect = new graphic.Rect({
+            shape: {
+                x: groupRect.x - padding[3],
+                y: groupRect.y - padding[0],
+                width: groupRect.width + padding[1] + padding[3],
+                height: groupRect.height + padding[0] + padding[2],
+                r: titleModel.get('borderRadius')
             },
-            subtextStyle: {
-                color: '#aaa'
-            }
-        }
-    });
+            style: style,
+            silent: true
+        });
+        graphic.subPixelOptimizeRect(rect);
 
-    // View
-    echarts.extendComponentView({
-
-        type: 'title',
-
-        render: function (titleModel, ecModel, api) {
-            this.group.removeAll();
-
-            if (!titleModel.get('show')) {
-                return;
-            }
-
-            var group = this.group;
-
-            var textStyleModel = titleModel.getModel('textStyle');
-            var subtextStyleModel = titleModel.getModel('subtextStyle');
-
-            var textAlign = titleModel.get('textAlign');
-            var textBaseline = titleModel.get('textBaseline');
-
-            var textEl = new graphic.Text({
-                style: {
-                    text: titleModel.get('text'),
-                    textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.getTextColor()
-                },
-                z2: 10
-            });
-
-            var textRect = textEl.getBoundingRect();
-
-            var subText = titleModel.get('subtext');
-            var subTextEl = new graphic.Text({
-                style: {
-                    text: subText,
-                    textFont: subtextStyleModel.getFont(),
-                    fill: subtextStyleModel.getTextColor(),
-                    y: textRect.height + titleModel.get('itemGap'),
-                    textBaseline: 'top'
-                },
-                z2: 10
-            });
-
-            var link = titleModel.get('link');
-            var sublink = titleModel.get('sublink');
-
-            textEl.silent = !link;
-            subTextEl.silent = !sublink;
-
-            if (link) {
-                textEl.on('click', function () {
-                    window.open(link, '_' + titleModel.get('target'));
-                });
-            }
-            if (sublink) {
-                subTextEl.on('click', function () {
-                    window.open(sublink, '_' + titleModel.get('subtarget'));
-                });
-            }
-
-            group.add(textEl);
-            subText && group.add(subTextEl);
-            // If no subText, but add subTextEl, there will be an empty line.
-
-            var groupRect = group.getBoundingRect();
-            var layoutOption = titleModel.getBoxLayoutParams();
-            layoutOption.width = groupRect.width;
-            layoutOption.height = groupRect.height;
-            var layoutRect = layout.getLayoutRect(
-                layoutOption, {
-                    width: api.getWidth(),
-                    height: api.getHeight()
-                }, titleModel.get('padding')
-            );
-            // Adjust text align based on position
-            if (!textAlign) {
-                // Align left if title is on the left. center and right is same
-                textAlign = titleModel.get('left') || titleModel.get('right');
-                if (textAlign === 'middle') {
-                    textAlign = 'center';
-                }
-                // Adjust layout by text align
-                if (textAlign === 'right') {
-                    layoutRect.x += layoutRect.width;
-                }
-                else if (textAlign === 'center') {
-                    layoutRect.x += layoutRect.width / 2;
-                }
-            }
-            if (!textBaseline) {
-                textBaseline = titleModel.get('top') || titleModel.get('bottom');
-                if (textBaseline === 'center') {
-                    textBaseline = 'middle';
-                }
-                if (textBaseline === 'bottom') {
-                    layoutRect.y += layoutRect.height;
-                }
-                else if (textBaseline === 'middle') {
-                    layoutRect.y += layoutRect.height / 2;
-                }
-
-                textBaseline = textBaseline || 'top';
-            }
-
-            group.attr('position', [layoutRect.x, layoutRect.y]);
-            var alignStyle = {
-                textAlign: textAlign,
-                textVerticalAlign: textBaseline
-            };
-            textEl.setStyle(alignStyle);
-            subTextEl.setStyle(alignStyle);
-
-            // Render background
-            // Get groupRect again because textAlign has been changed
-            groupRect = group.getBoundingRect();
-            var padding = layoutRect.margin;
-            var style = titleModel.getItemStyle(['color', 'opacity']);
-            style.fill = titleModel.get('backgroundColor');
-            var rect = new graphic.Rect({
-                shape: {
-                    x: groupRect.x - padding[3],
-                    y: groupRect.y - padding[0],
-                    width: groupRect.width + padding[1] + padding[3],
-                    height: groupRect.height + padding[0] + padding[2]
-                },
-                style: style,
-                silent: true
-            });
-            graphic.subPixelOptimizeRect(rect);
-
-            group.add(rect);
-        }
-    });
+        group.add(rect);
+    }
 });

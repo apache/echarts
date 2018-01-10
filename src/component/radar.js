@@ -1,7 +1,3 @@
-define(function (require) {
-
-    require('../coord/radar/Radar');
-    require('../coord/radar/RadarModel');
-
-    require('./radar/RadarView');
-});
+import '../coord/radar/Radar';
+import '../coord/radar/RadarModel';
+import './radar/RadarView';

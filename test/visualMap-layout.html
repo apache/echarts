@@ -1,9 +1,9 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
         <style>
             #main {
                 position: relative;
@@ -45,13 +45,13 @@
 
 
             require([
-                'echarts',
-                'zrender/core/util',
-                'echarts/chart/scatter',
-                'echarts/component/grid',
-                'echarts/component/visualMap'
-            ], function (echarts, zrUtil) {
-
+                'echarts'
+                // 'zrender/core/util',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMap'
+            ], function (echarts) {
+                var zrUtil = echarts.util;
                 makeChart({
                     show: true,
                     splitNumber: 7,
@@ -422,7 +422,7 @@
                     el.innerHTML = '<div class="ec"></div><label><pre>' + encodeHTML(label) + '</pre></label>';
                     containerEl.appendChild(el);
 
-                    var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                    var chart = echarts.init(el.firstChild, null, { });
                     chart.setOption(zrUtil.merge(opt, getOption()));
                 }
 

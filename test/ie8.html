@@ -406,6 +406,11 @@
                         name: 'a',
                         type: 'map',
                         map: 'china',
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
                         data: [
                             {name: '北京',value: Math.round(Math.random()*1000)},
                             {name: '天津',value: Math.round(Math.random()*1000)},
@@ -643,7 +648,6 @@
                         // trigger: 'axis',
                         showDelay : 0,
                         formatter : function (params) {
-                            console.log(params);
                             if (params.value) {
                                 if (params.value.length > 1) {
                                     return params.seriesName + ' :<br/>'

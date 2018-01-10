@@ -1,9 +1,9 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
         <script src="lib/jquery.min.js"></script>
     </head>
     <body>
@@ -43,11 +43,11 @@
         <script type="text/javascript">
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/visualMapPiecewise'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMapPiecewise'
             ], function (echarts) {
 
                 var main = document.getElementById('main1');
@@ -119,7 +119,7 @@
                             selected: {
                                 0: false, 1: false, 2: false, 3: false, 4: false, 5: false
                             },
-                            dimension: 'z',
+                            dimension: 'value',
                             min: 0,
                             max: 24,
                             precision: 0,
@@ -201,15 +201,15 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox',
-                'echarts/component/visualMap',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var main = document.getElementById('main2');
@@ -365,11 +365,11 @@
         <script type="text/javascript">
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/visualMapPiecewise'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMapPiecewise'
             ], function (echarts) {
 
                 var main = document.getElementById('main3');
@@ -418,7 +418,7 @@
                             left: 'right',
                             bottom: 30,
                             selectedMode: 'multiple',
-                            dimension: 'z',
+                            dimension: 'value',
                             min: 0,
                             max: 24,
                             precision: 0,
@@ -477,19 +477,19 @@
             require([
                 'echarts',
 
-                'extension/dataTool/gexf',
+                'extension/dataTool',
 
-                'echarts/chart/graph',
+                // 'echarts/chart/graph',
 
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/geo',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
 
                 'theme/vintage'
-            ], function (echarts, gexf) {
-
+            ], function (echarts, dataTool) {
+                var gexf = dataTool.gexf;
                 var main = document.getElementById('main4');
                 if (!main) {
                     return;
@@ -584,11 +584,11 @@
         <script type="text/javascript">
 
             require([
-                'echarts',
-                'echarts/chart/heatmap',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/visualMapPiecewise'
+                'echarts'
+                // 'echarts/chart/heatmap',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMapPiecewise'
             ], function (echarts) {
 
                 var main = document.getElementById('main5');
@@ -596,7 +596,7 @@
                     return;
                 }
                 var chart = echarts.init(main, null, {
-                    renderer: 'canvas'
+
                 });
 
                 var hours = ['12a', '1a', '2a', '3a', '4a', '5a', '6a',
@@ -673,11 +673,11 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/pie',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/pie',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var main = document.getElementById('main6');

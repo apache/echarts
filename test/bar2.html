@@ -1,36 +1,48 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
             }
-            #main {
-                width: 1000px;
-                background: #fff;
+            .chart {
+                height: 400px;
             }
         </style>
-        <div id="main"></div>
+
+        <div class="chart" id="main1"></div>
+        <h1>Narrow grid</h1>
+        <div class="chart" id="main2"></div>
+
+
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/markLine'
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/markLine'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+                var chart = echarts.init(document.getElementById('main1'), null, {
+
                 });
                 chart.setOption({
                     tooltip : {
@@ -143,5 +155,81 @@
             });
 
         </script>
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/pie',
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/map',
+                // 'echarts/chart/parallel',
+                // 'echarts/chart/radar',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/geo',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
+                echarts = ec;
+
+                option = {
+                    xAxis: {
+                        // data: ['a', 'b', 'c', 'd'],
+                        data: ['a', 'b'],
+                        axisTick: {show: false},
+                        axisLabel: {
+                            formatter: 'barGap: \'-100%\''
+                        }
+                    },
+                    yAxis: {
+                        splitLine: {show: false}
+                    },
+                    animationDurationUpdate: 1200,
+                    grid: {
+                        width: 100
+                    },
+                    animation: false,
+                    series: [{
+                        type: 'bar',
+                        itemStyle: {
+                            normal: {
+                                color: '#ddd'
+                            }
+                        },
+                        silent: true,
+                        barWidth: 40,
+                        barGap: '-100%', // Make series be overlap
+                        data: [60, 60]
+                    }, {
+                        type: 'bar',
+                        barWidth: 40,
+                        z: 10,
+                        data: [45, 55]
+                    }]
+                };
+
+                testHelper.createChart(echarts, 'main2', option);
+            });
+
+        </script>
+
+
+
+
     </body>
 </html>

@@ -3,12 +3,12 @@ describe('modelAndOptionMapping', function() {
     var utHelper = window.utHelper;
 
     var testCase = utHelper.prepare([
-        'echarts/component/grid',
-        'echarts/chart/line',
-        'echarts/chart/pie',
-        'echarts/chart/bar',
-        'echarts/component/toolbox',
-        'echarts/component/dataZoom'
+        'echarts/src/component/grid',
+        'echarts/src/chart/line',
+        'echarts/src/chart/pie',
+        'echarts/src/chart/bar',
+        'echarts/src/component/toolbox',
+        'echarts/src/component/dataZoom'
     ]);
 
     function getData0(chart, seriesIndex) {
@@ -30,7 +30,7 @@ describe('modelAndOptionMapping', function() {
     function countModel(chart, type) {
         // FIXME
         // access private
-        return chart.getModel()._componentsMap[type].length;
+        return chart.getModel()._componentsMap.get(type).length;
     }
 
     function getChartView(chart, series) {

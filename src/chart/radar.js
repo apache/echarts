@@ -1,23 +1,19 @@
-define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
-    var echarts = require('../echarts');
+import * as echarts from '../echarts';
 
-    // Must use radar component
-    require('../component/radar');
+// Must use radar component
+import '../component/radar';
+import './radar/RadarSeries';
+import './radar/RadarView';
 
-    require('./radar/RadarSeries');
-    require('./radar/RadarView');
+import dataColor from '../visual/dataColor';
+import visualSymbol from '../visual/symbol';
+import radarLayout from './radar/radarLayout';
+import dataFilter from '../processor/dataFilter';
+import backwardCompat from './radar/backwardCompat';
 
-    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'radar'));
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'radar', 'circle', null
-    ));
-    echarts.registerLayout(require('./radar/radarLayout'));
-
-    echarts.registerProcessor(
-        zrUtil.curry(require('../processor/dataFilter'), 'radar')
-    );
-
-    echarts.registerPreprocessor(require('./radar/backwardCompat'));
-});
+echarts.registerVisual(dataColor('radar'));
+echarts.registerVisual(visualSymbol('radar', 'circle'));
+echarts.registerLayout(radarLayout);
+echarts.registerProcessor(dataFilter('radar'));
+echarts.registerPreprocessor(backwardCompat);

@@ -1,80 +1,68 @@
-define(function (require) {
+import * as zrUtil from 'zrender/src/core/util';
 
-    var zrUtil = require('zrender/core/util');
+/**
+ * @param {Object} opt {labelInside}
+ * @return {Object} {
+ *  position, rotation, labelDirection, labelOffset,
+ *  tickDirection, labelRotate, labelInterval, z2
+ * }
+ */
+export function layout(gridModel, axisModel, opt) {
+    opt = opt || {};
+    var grid = gridModel.coordinateSystem;
+    var axis = axisModel.axis;
+    var layout = {};
 
-    var helper = {};
+    var rawAxisPosition = axis.position;
+    var axisPosition = axis.onZero ? 'onZero' : rawAxisPosition;
+    var axisDim = axis.dim;
 
-    /**
-     * @param {Object} opt {labelInside}
-     * @return {Object} {
-     *  position, rotation, labelDirection, labelOffset,
-     *  tickDirection, labelRotate, labelInterval, z2
-     * }
-     */
-    helper.layout = function (gridModel, axisModel, opt) {
-        opt = opt || {};
-        var grid = gridModel.coordinateSystem;
-        var axis = axisModel.axis;
-        var layout = {};
+    var rect = grid.getRect();
+    var rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
+    var idx = {left: 0, right: 1, top: 0, bottom: 1, onZero: 2};
+    var axisOffset = axisModel.get('offset') || 0;
 
-        var rawAxisPosition = axis.position;
-        var axisPosition = axis.onZero ? 'onZero' : rawAxisPosition;
-        var axisDim = axis.dim;
+    var posBound = axisDim === 'x'
+        ? [rectBound[2] - axisOffset, rectBound[3] + axisOffset]
+        : [rectBound[0] - axisOffset, rectBound[1] + axisOffset];
 
-        // [left, right, top, bottom]
-        var rect = grid.getRect();
-        var rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
+    if (axis.onZero) {
+        var otherAxis = grid.getAxis(axisDim === 'x' ? 'y' : 'x', axis.onZeroAxisIndex);
+        var onZeroCoord = otherAxis.toGlobalCoord(otherAxis.dataToCoord(0));
+        posBound[idx['onZero']] = Math.max(Math.min(onZeroCoord, posBound[1]), posBound[0]);
+    }
 
-        var axisOffset = axisModel.get('offset') || 0;
+    // Axis position
+    layout.position = [
+        axisDim === 'y' ? posBound[idx[axisPosition]] : rectBound[0],
+        axisDim === 'x' ? posBound[idx[axisPosition]] : rectBound[3]
+    ];
 
-        var posMap = {
-            x: { top: rectBound[2] - axisOffset, bottom: rectBound[3] + axisOffset },
-            y: { left: rectBound[0] - axisOffset, right: rectBound[1] + axisOffset }
-        };
+    // Axis rotation
+    layout.rotation = Math.PI / 2 * (axisDim === 'x' ? 0 : 1);
 
-        posMap.x.onZero = Math.max(Math.min(getZero('y'), posMap.x.bottom), posMap.x.top);
-        posMap.y.onZero = Math.max(Math.min(getZero('x'), posMap.y.right), posMap.y.left);
+    // Tick and label direction, x y is axisDim
+    var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
 
-        function getZero(dim, val) {
-            var theAxis = grid.getAxis(dim);
-            return theAxis.toGlobalCoord(theAxis.dataToCoord(0));
-        }
+    layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
+    layout.labelOffset = axis.onZero ? posBound[idx[rawAxisPosition]] - posBound[idx['onZero']] : 0;
 
-        // Axis position
-        layout.position = [
-            axisDim === 'y' ? posMap.y[axisPosition] : rectBound[0],
-            axisDim === 'x' ? posMap.x[axisPosition] : rectBound[3]
-        ];
+    if (axisModel.get('axisTick.inside')) {
+        layout.tickDirection = -layout.tickDirection;
+    }
+    if (zrUtil.retrieve(opt.labelInside, axisModel.get('axisLabel.inside'))) {
+        layout.labelDirection = -layout.labelDirection;
+    }
 
-        // Axis rotation
-        layout.rotation = Math.PI / 2 * (axisDim === 'x' ? 0 : 1);
+    // Special label rotation
+    var labelRotate = axisModel.get('axisLabel.rotate');
+    layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
 
-        // Tick and label direction, x y is axisDim
-        var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
+    // label interval when auto mode.
+    layout.labelInterval = axis.getLabelInterval();
 
-        layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
-        layout.labelOffset = axis.onZero ? posMap[axisDim][rawAxisPosition] - posMap[axisDim].onZero : 0;
+    // Over splitLine and splitArea
+    layout.z2 = 1;
 
-        if (axisModel.get('axisTick.inside')) {
-            layout.tickDirection = -layout.tickDirection;
-        }
-        if (zrUtil.retrieve(opt.labelInside, axisModel.get('axisLabel.inside'))) {
-            layout.labelDirection = -layout.labelDirection;
-        }
-
-        // Special label rotation
-        var labelRotate = axisModel.get('axisLabel.rotate');
-        layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
-
-        // label interval when auto mode.
-        layout.labelInterval = axis.getLabelInterval();
-
-        // Over splitLine and splitArea
-        layout.z2 = 1;
-
-        return layout;
-    };
-
-    return helper;
-
-});
+    return layout;
+}

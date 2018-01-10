@@ -1,0 +1,193 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: rgb(0, 112, 6);
+                color: #fff;
+            }
+        </style>
+
+
+
+
+
+        <div id="layout0"></div>
+        <div id="layout1"></div>
+        <div id="layout2"></div>
+
+
+
+
+
+
+
+
+        <script>
+            var arrayRows0 = [
+                ['product', '2015', '2016', '2017'],
+                ['Matcha Latte', 43.3, 85.8, 93.7],
+                ['Milk Tea', 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRows1 = [
+                ['product', '2012', '2013', '2014', '2015', '2016', '2017'],
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout0', {
+                    title: '[Default] seriesLayoutBy, enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows0
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    xAxis: [
+                        {type: 'category', gridIndex: 0},
+                        {type: 'category', gridIndex: 1}
+                    ],
+                    yAxis: [
+                        {gridIndex: 0},
+                        {gridIndex: 1}
+                    ],
+                    grid: [
+                        {bottom: '55%'},
+                        {top: '55%'}
+                    ],
+                    series: [
+                        {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
+                        {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
+                        {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                        {type: 'bar', xAxisIndex: 1, yAxisIndex: 1, seriesLayoutBy: 'row'},
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout1', {
+                    title: 'seriesLayoutBy: "row" and "column" \n[Default] enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    height: 500,
+                    info: {
+                        grid: option.grid,
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataset: {
+                        source: arrayRows1
+                    },
+                    xAxis: [
+                        {type: 'category', gridIndex: 0}
+                    ],
+                    yAxis: [
+                        {gridIndex: 0},
+                    ],
+                    grid: [
+                        {top: '55%'}
+                    ],
+                    series: [
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'pie', id: 'pie', encode: {itemName: 'product', value: '2015'}}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'layout2', {
+                    title: 'seriesLayoutBy: row and column, setOption, pie \n [Default] enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows1,
+                    height: 500
+                });
+
+                chart && chart.on('click', function (event) {
+                    if (event.componentType === 'series') {
+                        var name = event.seriesName;
+                        chart.setOption({
+                            series: {
+                                id: 'pie'
+                                // seriesLayoutBy: 'row'
+                            }
+                        });
+                    }
+                    console.log(event);
+                });
+            });
+        </script>
+
+
+
+
+    </body>
+</html>

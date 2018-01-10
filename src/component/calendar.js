@@ -3,11 +3,6 @@
  * @author dxh
  */
 
-define(function (require) {
-    'use strict';
-
-    require('../coord/calendar/Calendar');
-    require('../coord/calendar/CalendarModel');
-    require('./calendar/CalendarView');
-
-});
+import '../coord/calendar/Calendar';
+import '../coord/calendar/CalendarModel';
+import './calendar/CalendarView';

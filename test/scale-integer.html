@@ -2,8 +2,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
     </head>
     <body>
         <style>
@@ -16,9 +16,9 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));

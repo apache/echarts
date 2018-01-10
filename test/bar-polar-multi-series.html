@@ -1,0 +1,73 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+            #main {
+                background: #fff;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'echarts/component/grid',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                chart.setOption({
+                    angleAxis: {
+                    },
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四'],
+                        z: 10
+                    },
+                    polar: {
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [1, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        name: 'A'
+                    }, {
+                        type: 'bar',
+                        data: [2, 4, 6, 8],
+                        coordinateSystem: 'polar',
+                        name: 'B'
+                    }, {
+                        type: 'bar',
+                        data: [1, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        name: 'C'
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
+                window.onresize = chart.resize;
+            });
+        </script>
+    </body>
+</html>

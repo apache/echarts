@@ -1,30 +1,28 @@
-define(function (require) {
+import * as echarts from '../echarts';
+import * as zrUtil from 'zrender/src/core/util';
 
-    var zrUtil = require('zrender/core/util');
-    var echarts = require('../echarts');
+import './pie/PieSeries';
+import './pie/PieView';
 
-    require('./pie/PieSeries');
-    require('./pie/PieView');
+import createDataSelectAction from '../action/createDataSelectAction';
+import dataColor from '../visual/dataColor';
+import pieLayout from './pie/pieLayout';
+import dataFilter from '../processor/dataFilter';
 
-    require('../action/createDataSelectAction')('pie', [{
-        type: 'pieToggleSelect',
-        event: 'pieselectchanged',
-        method: 'toggleSelected'
-    }, {
-        type: 'pieSelect',
-        event: 'pieselected',
-        method: 'select'
-    }, {
-        type: 'pieUnSelect',
-        event: 'pieunselected',
-        method: 'unSelect'
-    }]);
+createDataSelectAction('pie', [{
+    type: 'pieToggleSelect',
+    event: 'pieselectchanged',
+    method: 'toggleSelected'
+}, {
+    type: 'pieSelect',
+    event: 'pieselected',
+    method: 'select'
+}, {
+    type: 'pieUnSelect',
+    event: 'pieunselected',
+    method: 'unSelect'
+}]);
 
-    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'pie'));
-
-    echarts.registerLayout(zrUtil.curry(
-        require('./pie/pieLayout'), 'pie'
-    ));
-
-    echarts.registerProcessor(zrUtil.curry(require('../processor/dataFilter'), 'pie'));
-});
+echarts.registerVisual(dataColor('pie'));
+echarts.registerLayout(zrUtil.curry(pieLayout, 'pie'));
+echarts.registerProcessor(dataFilter('pie'));

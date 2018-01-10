@@ -1,0 +1,168 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <div class="chart" id="main"></div>
+
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/pie',
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/map',
+                // 'echarts/chart/parallel',
+                // 'echarts/chart/radar',
+                // 'echarts/chart/graph',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/geo',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
+                echarts = ec;
+
+                option = {
+                    "title": {
+                        "text": "兴趣点",
+                        "top": "top",
+                        "left": "left"
+                    },
+                    "tooltip": { },
+                    "legend": [
+                        {
+                            "data": [ "长期", "短期" ],
+                            "selected": {
+                                "长期": true,
+                                "短期": true
+                            },
+                            "orient": "vertical",
+                            "left": "right"
+                        }
+                    ],
+                    "series": [
+                        {
+                            "type": "graph",
+                            "layout": "force",
+                            "data": [
+                                {
+                                    "name": "戴胜",
+                                    "value": 31,
+                                    "symbolSize": 0.6,
+                                    "category": 1,
+                                    "x": null,
+                                    "y": null,
+                                    "label": {
+                                        "normal": {
+                                            "position": "right",
+                                            "show": true
+                                        }
+                                    }
+                                }, {
+                                    "name": "石榴",
+                                    "value": 30,
+                                    "symbolSize": 0.3,
+                                    "category": 1,
+                                    "x": null,
+                                    "y": null,
+                                    "label": {
+                                        "normal": {
+                                            "position": "right",
+                                            "show": true
+                                        }
+                                    }
+                                }, {
+                                    "name": "水果",
+                                    "value": 30,
+                                    "symbolSize": 0.3,
+                                    "category": 1,
+                                    "x": null,
+                                    "y": null,
+                                    "label": {
+                                        "normal": {
+                                            "position": "right",
+                                            "show": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "links": [
+                                {
+                                    "source": "石榴",
+                                    "target": "水果"
+                                }
+                            ],
+                            "categories": [
+                                {
+                                    "key": "longAttentionList",
+                                    "name": "长期"
+                                }, {
+                                    "key": "shortAttentionList",
+                                    "name": "短期"
+                                }
+                            ],
+                            "roam": true,
+                            "focusNodeAdjacency": true,
+                            "label": {
+                                "emphasis": {
+                                    "position": "right",
+                                    "show": true
+                                }
+                            },
+                            "lineStyle": {
+                                "normal": {
+                                    "width": 0.5,
+                                    "curveness": 0.3,
+                                    "opacity": 0.7
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.createChart(echarts, 'main', option);
+            });
+
+        </script>
+    </body>
+</html>

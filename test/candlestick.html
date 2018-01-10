@@ -2,8 +2,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
     <body>
@@ -26,20 +26,20 @@
 
             require([
                 'echarts',
-                'data/security-sh-2013.json',
-                'echarts/chart/candlestick',
-                'echarts/chart/line',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'echarts/component/markPoint',
-                'echarts/component/markLine'
+                'data/security-sh-2013.json'
+                // 'echarts/chart/candlestick',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/markLine'
             ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
                 data = splitData(rawData);
 

@@ -1,39 +1,34 @@
-define(function(require) {
-    'use strict';
+import * as echarts from '../echarts';
+import * as zrUtil from 'zrender/src/core/util';
+import * as graphic from '../util/graphic';
 
-    var graphic = require('../util/graphic');
-    var zrUtil = require('zrender/core/util');
-    var echarts = require('../echarts');
+import '../coord/cartesian/Grid';
+import './axis';
 
-    require('../coord/cartesian/Grid');
+// Grid view
+echarts.extendComponentView({
 
-    require('./axis');
+    type: 'grid',
 
-    // Grid view
-    echarts.extendComponentView({
-
-        type: 'grid',
-
-        render: function (gridModel, ecModel) {
-            this.group.removeAll();
-            if (gridModel.get('show')) {
-                this.group.add(new graphic.Rect({
-                    shape: gridModel.coordinateSystem.getRect(),
-                    style: zrUtil.defaults({
-                        fill: gridModel.get('backgroundColor')
-                    }, gridModel.getItemStyle()),
-                    silent: true,
-                    z2: -1
-                }));
-            }
+    render: function (gridModel, ecModel) {
+        this.group.removeAll();
+        if (gridModel.get('show')) {
+            this.group.add(new graphic.Rect({
+                shape: gridModel.coordinateSystem.getRect(),
+                style: zrUtil.defaults({
+                    fill: gridModel.get('backgroundColor')
+                }, gridModel.getItemStyle()),
+                silent: true,
+                z2: -1
+            }));
         }
+    }
 
-    });
+});
 
-    echarts.registerPreprocessor(function (option) {
-        // Only create grid when need
-        if (option.xAxis && option.yAxis && !option.grid) {
-            option.grid = {};
-        }
-    });
+echarts.registerPreprocessor(function (option) {
+    // Only create grid when need
+    if (option.xAxis && option.yAxis && !option.grid) {
+        option.grid = {};
+    }
 });

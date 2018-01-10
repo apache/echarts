@@ -2,9 +2,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css"/>
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css"/>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
     <body>
@@ -30,21 +30,23 @@
             require([
                 'echarts',
                 'data/Michelson-Morley.json',
-                'extension/dataTool/prepareBoxplotData',
-                'zrender/core/env',
-                'echarts/chart/boxplot',
-                'echarts/chart/scatter',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/markLine',
-                'echarts/component/markPoint',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
-            ], function (echarts, rawData, prepareBoxplotData, env) {
+                'extension/dataTool'
+                // 'zrender/core/env'
+                // 'echarts/chart/boxplot',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/markLine',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
+            ], function (echarts, rawData, dataTool) {
+                var prepareBoxplotData = dataTool.prepareBoxplotData;
+                var env = echarts.env;
 
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 update('horizontal');
@@ -120,18 +122,6 @@
                                 name: 'boxplot',
                                 type: 'boxplot',
                                 data: data.boxData,
-                                tooltip: {
-                                    formatter: function (param) {
-                                        return [
-                                            'Experiment ' + param.name + ': ',
-                                            'upper: ' + param.data[0],
-                                            'Q1: ' + param.data[1],
-                                            'median: ' + param.data[2],
-                                            'Q3: ' + param.data[3],
-                                            'lower: ' + param.data[4]
-                                        ].join('<br/>')
-                                    }
-                                },
 
                                 markPoint: {
                                     data: [

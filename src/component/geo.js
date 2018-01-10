@@ -1,49 +1,43 @@
-define(function (require) {
+import * as echarts from '../echarts';
+import * as zrUtil from 'zrender/src/core/util';
 
-    require('../coord/geo/GeoModel');
+import '../coord/geo/GeoModel';
+import '../coord/geo/geoCreator';
+import './geo/GeoView';
+import '../action/geoRoam';
 
-    require('../coord/geo/geoCreator');
+function makeAction(method, actionInfo) {
+    actionInfo.update = 'updateView';
+    echarts.registerAction(actionInfo, function (payload, ecModel) {
+        var selected = {};
 
-    require('./geo/GeoView');
+        ecModel.eachComponent(
+            { mainType: 'geo', query: payload},
+            function (geoModel) {
+                geoModel[method](payload.name);
+                var geo = geoModel.coordinateSystem;
+                zrUtil.each(geo.regions, function (region) {
+                    selected[region.name] = geoModel.isSelected(region.name) || false;
+                });
+            }
+        );
 
-    require('../action/geoRoam');
-
-    var echarts = require('../echarts');
-    var zrUtil = require('zrender/core/util');
-
-    function makeAction(method, actionInfo) {
-        actionInfo.update = 'updateView';
-        echarts.registerAction(actionInfo, function (payload, ecModel) {
-            var selected = {};
-
-            ecModel.eachComponent(
-                { mainType: 'geo', query: payload},
-                function (geoModel) {
-                    geoModel[method](payload.name);
-                    var geo = geoModel.coordinateSystem;
-                    zrUtil.each(geo.regions, function (region) {
-                        selected[region.name] = geoModel.isSelected(region.name) || false;
-                    });
-                }
-            );
-
-            return {
-                selected: selected,
-                name: payload.name
-            };
-        });
-    }
-
-    makeAction('toggleSelected', {
-        type: 'geoToggleSelect',
-        event: 'geoselectchanged'
+        return {
+            selected: selected,
+            name: payload.name
+        };
     });
-    makeAction('select', {
-        type: 'geoSelect',
-        event: 'geoselected'
-    });
-    makeAction('unSelect', {
-        type: 'geoUnSelect',
-        event: 'geounselected'
-    });
+}
+
+makeAction('toggleSelected', {
+    type: 'geoToggleSelect',
+    event: 'geoselectchanged'
+});
+makeAction('select', {
+    type: 'geoSelect',
+    event: 'geoselected'
+});
+makeAction('unSelect', {
+    type: 'geoUnSelect',
+    event: 'geounselected'
 });

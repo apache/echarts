@@ -1,13 +1,14 @@
-define(function () {
-    return function (seriesType, ecModel) {
-        var legendModels = ecModel.findComponents({
-            mainType: 'legend'
-        });
-        if (!legendModels || !legendModels.length) {
-            return;
-        }
-        ecModel.eachSeriesByType(seriesType, function (series) {
-            var data = series.getData();
+export default function (seriesType) {
+    return {
+        seriesType: seriesType,
+        reset: function (seriesModel, ecModel) {
+            var legendModels = ecModel.findComponents({
+                mainType: 'legend'
+            });
+            if (!legendModels || !legendModels.length) {
+                return;
+            }
+            var data = seriesModel.getData();
             data.filterSelf(function (idx) {
                 var name = data.getName(idx);
                 // If in any legend component the status is not selected.
@@ -18,6 +19,6 @@ define(function () {
                 }
                 return true;
             }, this);
-        }, this);
+        }
     };
-});
+}

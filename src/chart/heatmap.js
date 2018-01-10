@@ -1,5 +1,2 @@
-define(function (require) {
-
-    require('./heatmap/HeatmapSeries');
-    require('./heatmap/HeatmapView');
-});
+import './heatmap/HeatmapSeries';
+import './heatmap/HeatmapView';

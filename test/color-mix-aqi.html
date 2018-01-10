@@ -1,9 +1,9 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="./esl.js"></script>
-        <script src="./config.js"></script>
-        <link rel="stylesheet" href="./reset.css">
+        <script src="./lib/esl.js"></script>
+        <script src="./lib/config.js"></script>
+        <link rel="stylesheet" href="./lib/reset.css">
     </head>
     <body>
         <style>
@@ -31,16 +31,16 @@
                 'data/aqi/BJdata',
                 'data/aqi/GZdata',
                 'data/aqi/SHdata',
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/grid',
-                'echarts/component/visualMapContinuous'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/grid',
+                // 'echarts/component/visualMapContinuous'
             ], function (dataBJ, dataGZ, dataSH, echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
 
@@ -139,7 +139,7 @@
                         {
                             right: 0,
                             top: 'top',
-                            dimension: 'z',
+                            dimension: 'value',
                             min: 0,
                             max: 250,
                             itemWidth: 30,

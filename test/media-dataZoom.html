@@ -1,11 +1,11 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/draggable.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="lib/reset.css">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -32,16 +32,16 @@
 
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom'
             ], function (echarts) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 draggable.init(

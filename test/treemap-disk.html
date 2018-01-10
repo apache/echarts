@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -76,13 +76,13 @@
             var formatUtil;
 
             require([
-                'echarts',
-                'echarts/util/format',
-                'echarts/component/tooltip',
-                'echarts/component/legend',
-                'echarts/chart/treemap'
-            ], function (echarts, format) {
-                formatUtil = format;
+                'echarts'
+                // 'echarts/util/format',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/legend',
+                // 'echarts/chart/treemap'
+            ], function (echarts) {
+                formatUtil = echarts.format;
                 initEcharts(echarts);
             });
 
@@ -149,7 +149,7 @@
 
             function initEcharts(echarts) {
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({
