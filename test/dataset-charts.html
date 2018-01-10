@@ -1,0 +1,153 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: rgb(182, 120, 7);
+                color: #fff;
+            }
+            .test-chart {
+                height: 250px;
+            }
+        </style>
+
+
+
+
+
+        <div id="layout0"></div>
+        <div id="layout1"></div>
+        <div id="layout2"></div>
+
+
+
+
+
+
+
+        <script>
+            var arrayRows0 = [
+                ['product', '2015', '2016', '2017'],
+                ['Matcha Latte', 43.3, 85.8, 93.7],
+                ['Milk Tea', 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRows1 = [
+                ['product', '2012', '2013', '2014', '2015', '2016', '2017'],
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie'}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout0', {
+                    title: 'pie, default encoding, legend',
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var encode = {
+                    value: '2016',
+                    itemName: 'product'
+                };
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie', encode: encode}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout1', {
+                    title: 'pie, give encoding, default legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    infoKey: 'encode',
+                    info: encode
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var encode = {
+                    value: '2016',
+                    itemName: 'product'
+                };
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie', encode: encode}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout2', {
+                    title: 'pie, give encoding, default legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    info: {
+                        legend: '<default>',
+                        series: {
+                            seriesLayoutBy: 'row',
+                            encode: encode
+                        }
+                    }
+                });
+            });
+        </script>
+
+
+
+    </body>
+</html>

@@ -134,7 +134,7 @@ Radar.prototype.update = function (ecModel, api) {
         }
         var data = radarSeries.getData();
         zrUtil.each(indicatorAxes, function (indicatorAxis) {
-            indicatorAxis.scale.unionExtentFromData(data, indicatorAxis.dim);
+            indicatorAxis.scale.unionExtentFromData(data, data.mapDimension(indicatorAxis.dim));
         });
     }, this);
 

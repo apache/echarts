@@ -46,7 +46,8 @@ import {
 /**
  * @constructor
  * @param {Object} fields
- * @param {string} sourceFormat
+ * @param {string} fields.sourceFormat
+ * @param {Array|Object} fields.fromDataset
  * @param {Array|Object} [fields.data]
  * @param {string} [seriesLayoutBy='column']
  * @param {Array.<Object|string>} [dimensionsDefine]
@@ -55,6 +56,11 @@ import {
  * @param {number} [dimensionsDetectCount]
  */
 function Source(fields) {
+
+    /**
+     * @type {boolean}
+     */
+    this.fromDataset = fields.fromDataset;
 
     /**
      * Not null/undefined.
@@ -113,7 +119,8 @@ Source.seriesDataToSource = function (data) {
         data: data,
         sourceFormat: isTypedArray(data)
             ? SOURCE_FORMAT_TYPED_ARRAY
-            : SOURCE_FORMAT_ORIGINAL
+            : SOURCE_FORMAT_ORIGINAL,
+        fromDataset: false
     });
 };
 

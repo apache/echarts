@@ -507,7 +507,7 @@ gridProto._updateScale = function (ecModel, gridModel) {
     }, this);
 
     function unionExtent(data, axis, seriesModel) {
-        each(data.mapDimension(axis.dim), function (dim) {
+        each(data.mapDimension(axis.dim, true), function (dim) {
             axis.scale.unionExtentFromData(data, dim);
         });
     }

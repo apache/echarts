@@ -10,10 +10,43 @@ body > .main {
 }
 
 
+.test-title {
+    padding: 20px;
+    background: rgb(182, 120, 7);
+    color: #fff;
+    font-weight: normal;
+    text-align: center;
+    font-size: 14px;
+}
+.test-chart-block {
+    position: relative;
+}
+.test-chart-block-has-right {
+    overflow: hidden;
+}
+.test-chart-block-has-right .test-chart-block-right {
+    float: right;
+    width: 300px;
+}
+.test-chart-block-has-right .test-chart-block-left {
+    margin-right: 320px;
+}
+.test-info {
+    border-left: 1px solid #ddd;
+    padding-left: 10px;
+    overflow: auto;
+}
+pre.test-print-object {
+    font-size: 12px;
+    font-family: Menlo, Monaco, 'Courier New', monospace;
+}
+.test-chart {
+    height: 300px;
+}
 table.test-data-table  {
-    margin: 10px auto;
     border: 1px solid #ccc;
     border-spacing: 0;
+    margin: 30px auto 40px auto;
 }
 table.test-data-table td {
     border: 1px solid #ccc;

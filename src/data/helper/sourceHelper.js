@@ -130,6 +130,7 @@ export function prepareSource(seriesModel) {
 
     var data = seriesOption.data;
     var sourceFormat = SOURCE_FORMAT_ORIGINAL;
+    var fromDataset = false;
 
     var seriesLayoutBy = seriesOption.seriesLayoutBy;
     var sourceHeader = seriesOption.sourceHeader;
@@ -141,6 +142,7 @@ export function prepareSource(seriesModel) {
 
         data = datasetOption.source;
         sourceFormat = inner(datasetModel).sourceFormat;
+        fromDataset = true;
 
         // These settings from series has higher priority.
         seriesLayoutBy = seriesLayoutBy || datasetOption.seriesLayoutBy;
@@ -162,6 +164,7 @@ export function prepareSource(seriesModel) {
 
     inner(seriesModel).source = new Source({
         data: data,
+        fromDataset: fromDataset,
         seriesLayoutBy: seriesLayoutBy,
         sourceFormat: sourceFormat,
         dimensionsDefine: completeResult.dimensionsDefine,
@@ -290,6 +293,8 @@ function objectRowsCollectDimensions(data) {
     }
 }
 
+// ??? TODO merge to completedimensions, where also has
+// default encode making logic.
 function makeDefaultEncode(
     seriesModel, datasetModel, data, sourceFormat, seriesLayoutBy, completeResult
 ) {

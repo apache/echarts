@@ -9,16 +9,9 @@
     </head>
     <body>
         <style>
-            h1 {
-                padding: 20px;
+            .test-title {
                 background: rgb(0, 112, 6);
                 color: #fff;
-                font-weight: normal;
-                text-align: center;
-                font-size: 14px;
-            }
-            .chart {
-                height: 300px;
             }
         </style>
 
@@ -26,22 +19,9 @@
 
 
 
-        <h1>
-            [Default] seriesLayoutBy, enocde, name, head, legend
-        </h1>
-        <div class="chart" id="layout0"></div>
-
-        <h1>
-            seriesLayoutBy: 'row' and 'column'<br>
-            [Default] enocde, name, head, legend
-        </h1>
-        <div class="chart" id="layout1"></div>
-
-        <h1>
-            seriesLayoutBy: 'row' and 'column', setOption, pie<br>
-            [Default] enocde, name, head, legend
-        </h1>
-        <div class="chart" id="layout2"></div>
+        <!-- <div id="layout0"></div> -->
+        <div id="layout1"></div>
+        <!-- <div id="layout2"></div> -->
 
 
 
@@ -90,8 +70,11 @@
                     ]
                 };
 
-                testHelper.createDataTable('layout0', arrayRows0);
-                testHelper.createChart(echarts, 'layout0', option);
+                testHelper.create(echarts, 'layout0', {
+                    title: '[Default] seriesLayoutBy, enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows0
+                });
             });
         </script>
 
@@ -118,8 +101,8 @@
                         {gridIndex: 1}
                     ],
                     grid: [
-                        {top: '55%'},
-                        {bottom: '55%'}
+                        {bottom: '55%'},
+                        {top: '55%'}
                     ],
                     series: [
                         {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
@@ -132,8 +115,16 @@
                     ]
                 };
 
-                testHelper.createDataTable('layout1', arrayRows0);
-                testHelper.createChart(echarts, 'layout1', option, {height: 500});
+                testHelper.create(echarts, 'layout1', {
+                    title: 'seriesLayoutBy: "row" and "column" \n[Default] enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    height: 500,
+                    info: {
+                        grid: option.grid,
+                        series: option.series
+                    }
+                });
             });
         </script>
 
@@ -173,9 +164,14 @@
                     ]
                 };
 
-                testHelper.createDataTable('layout2', arrayRows1);
-                var chart = testHelper.createChart(echarts, 'layout2', option, {height: 500});
-                chart.on('click', function (event) {
+                var chart = testHelper.create(echarts, 'layout2', {
+                    title: 'seriesLayoutBy: row and column, setOption, pie \n [Default] enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows1,
+                    height: 500
+                });
+
+                chart && chart.on('click', function (event) {
                     if (event.componentType === 'series') {
                         var name = event.seriesName;
                         chart.setOption({

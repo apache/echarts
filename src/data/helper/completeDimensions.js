@@ -20,7 +20,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  * @param {Array.<string>} sysDims Necessary dimensions, like ['x', 'y'], which
  *      provides not only dim template, but also default order.
  *      `name` of each item provides default coord name.
- *      [{dimsDef: []}, ...] can be specified to give names.
+ *      [{dimsDef: [string...]}, ...] can be specified to give names.
  * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
  * @param {Object} [opt]
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
@@ -32,6 +32,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *                      If not specified, extra dim names will be:
  *                      extraPrefix, extraPrefix + 0, extraPrefix + 1 ...
  * @param {number} [opt.dimCount] If not specified, guess by the first data item.
+ * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
  * @return {Array.<Object>} [{
  *      name: string mandatory,
  *      coordDim: string mandatory,
@@ -126,6 +127,7 @@ function completeDimensions(sysDims, source, opt) {
                 availDimIdx < result.length && dataDims.push(availDimIdx++);
             }
         }
+
         // Apply templates.
         each(dataDims, function (resultDimIdx, coordDimIndex) {
             var resultItem = result[resultDimIdx];
@@ -133,6 +135,7 @@ function completeDimensions(sysDims, source, opt) {
             if (resultItem.name == null && sysDimItemDimsDef) {
                 resultItem.name = resultItem.tooltipName = sysDimItemDimsDef[coordDimIndex];
             }
+            // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}
             sysDimItemOtherDims && defaults(resultItem.otherDims, sysDimItemOtherDims);
         });
     });
