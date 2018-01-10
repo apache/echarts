@@ -141,26 +141,34 @@
                 var option = {
                     legend: {},
                     tooltip: {
-                        trigger: 'axis'
+                        trigger: 'axis',
+                        showContent: false
                     },
                     dataset: {
                         source: arrayRows1
                     },
-                    xAxis: [
-                        {type: 'category', gridIndex: 0}
-                    ],
-                    yAxis: [
-                        {gridIndex: 0},
-                    ],
-                    grid: [
-                        {top: '55%'}
-                    ],
+                    xAxis: {type: 'category'},
+                    yAxis: {gridIndex: 0},
+                    grid: {top: '55%'},
                     series: [
                         {type: 'line', smooth: true, seriesLayoutBy: 'row'},
                         {type: 'line', smooth: true, seriesLayoutBy: 'row'},
                         {type: 'line', smooth: true, seriesLayoutBy: 'row'},
                         {type: 'line', smooth: true, seriesLayoutBy: 'row'},
-                        {type: 'pie', id: 'pie', encode: {itemName: 'product', value: '2015'}}
+                        {
+                            type: 'pie',
+                            id: 'pie',
+                            radius: '30%',
+                            center: ['50%', '25%'],
+                            label: {
+                                formatter: '{b}: {@2012} ({d}%)'
+                            },
+                            encode: {
+                                itemName: 'product',
+                                value: '2012',
+                                tooltip: '2012'
+                            }
+                        }
                     ]
                 };
 
@@ -171,17 +179,23 @@
                     height: 500
                 });
 
-                chart && chart.on('click', function (event) {
-                    if (event.componentType === 'series') {
-                        var name = event.seriesName;
+                chart && chart.on('updateAxisPointer', function (event) {
+                    var xAxisInfo = event.axesInfo[0];
+                    if (xAxisInfo) {
+                        var dimension = xAxisInfo.value + 1;
                         chart.setOption({
                             series: {
-                                id: 'pie'
-                                // seriesLayoutBy: 'row'
+                                id: 'pie',
+                                label: {
+                                    formatter: '{b}: {@[' + dimension + ']} ({d}%)'
+                                },
+                                encode: {
+                                    value: dimension,
+                                    tooltip: dimension
+                                }
                             }
                         });
                     }
-                    console.log(event);
                 });
             });
         </script>

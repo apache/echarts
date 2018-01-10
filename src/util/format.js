@@ -69,8 +69,7 @@ export function formatTpl(tpl, paramsList, encode) {
     var $vars = paramsList[0].$vars || [];
     for (var i = 0; i < $vars.length; i++) {
         var alias = TPL_VAR_ALIAS[i];
-        var val = wrapVar(alias, 0);
-        tpl = tpl.replace(wrapVar(alias), encode ? encodeHTML(val) : val);
+        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
     }
     for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
         for (var k = 0; k < $vars.length; k++) {

@@ -319,19 +319,18 @@ function makeDefaultEncode(
                 var dataDim = datasetRecord.valueWayDim++;
                 encode[coordDim] = dataDim;
                 encode.tooltip.push(dataDim);
-                encode.itemName.push(dataDim);
                 encode.label.push(dataDim);
             }
             // In category way, category axis.
             else if (coordSysDefine.categoryAxisMap.get(coordDim)) {
                 encode[coordDim] = 0;
+                encode.itemName.push(0);
             }
             // In category way, non-category axis.
             else {
                 var dataDim = datasetRecord.categoryWayDim++;
                 encode[coordDim] = dataDim;
                 encode.tooltip.push(dataDim);
-                encode.itemName.push(dataDim);
                 encode.label.push(dataDim);
                 encode.seriesName.push(dataDim);
             }

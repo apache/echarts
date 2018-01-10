@@ -4,6 +4,8 @@ import * as formatUtil from './format';
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
 
+var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
+
 /**
  * name may be displayed on screen, so use '-'.
  * But we should make sure it is not duplicated
@@ -185,7 +187,20 @@ export var dataFormatMixin = {
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
-            return formatUtil.formatTpl(formatter, params);
+            var str = formatUtil.formatTpl(formatter, params);
+
+            // Support 'aaa{@[3]}bbb{@product}ccc'.
+            // Do not support '}' in dim name util have to.
+            return str.replace(DIMENSION_LABEL_REG, function (origin, dimName) {
+                var len = dimName.length;
+                if (dimName.charAt(0) === '[' && dimName.charAt(len - 1) === ']') {
+                    var dimIndex = +dimName.slice(1, len - 1); // Also: '[]' => 0
+                    if (!isNaN(dimIndex)) {
+                        dimName = data.dimensions[dimIndex];
+                    }
+                }
+                return dimName ? data.get(dimName, dataIndex, true) : origin;
+            });
         }
     },
 

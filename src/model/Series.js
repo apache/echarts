@@ -248,6 +248,7 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} [dataType]
      */
     formatTooltip: function (dataIndex, multipleSeries, dataType) {
+
         function formatArrayValue(value) {
             // ???
             // check: category-no-encode-has-axis-data in dataset.html
@@ -257,11 +258,10 @@ var SeriesModel = ComponentModel.extend({
             }, 0);
 
             var result = [];
-            var tooltipDims = data.mapDimension('tooltip', true);
 
             tooltipDims.length
-                ? zrUtil.each(tooltipDims, function (dimIdx) {
-                    setEachItem(data.get(dimIdx, dataIndex), dimIdx);
+                ? zrUtil.each(tooltipDims, function (dim) {
+                    setEachItem(data.get(dim, dataIndex), dim);
                 })
                 // By default, all dims is used on tooltip.
                 : zrUtil.each(value, setEachItem);
@@ -287,10 +287,22 @@ var SeriesModel = ComponentModel.extend({
         }
 
         var data = inner(this).data;
+        var tooltipDims = data.mapDimension('tooltip', true);
 
+        // FIXME fragile way?
+        // object raw value?
         var value = this.getRawValue(dataIndex);
-        var formattedValue = zrUtil.isArray(value)
-            ? formatArrayValue(value) : encodeHTML(addCommas(value));
+        var isValueArr = zrUtil.isArray(value);
+        // Complicated rule for pretty tooltip.
+        var formattedValue = (isValueArr && value.length > 1 && tooltipDims.length > 1)
+            ? formatArrayValue(value)
+            : encodeHTML(addCommas(
+                !isValueArr
+                ? value
+                : tooltipDims[0]
+                ? data.get(tooltipDims[0], dataIndex)
+                : value[0]
+            ));
         var name = data.getName(dataIndex);
 
         var color = data.getItemVisual(dataIndex, 'color');

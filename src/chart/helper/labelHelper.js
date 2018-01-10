@@ -22,3 +22,11 @@ export function getDefaultLabel(data, dataIndex) {
     var val = data.get(getLabelValueDim(data), dataIndex);
     return (val == null || isNaN(val)) ? '' : val;
 }
+
+export function getLabelFromName(data, dataIndex) {
+    var labelDim = data.mapDimension('label');
+    return labelDim
+        ? data.get(labelDim, dataIndex)
+        : data.getName(dataIndex);
+}
+
