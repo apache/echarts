@@ -34,7 +34,8 @@
             }
         },
 
-        // opt: {option, info, infoKey, dataTable, width, height, draggable}
+        // opt: {option, info, infoKey, dataTable, dataTables, width, height, draggable}
+        // dataTabel can be array.
         create: function (echarts, domOrId, opt) {
             var dom = getDom(domOrId);
 
@@ -76,8 +77,16 @@
             if (opt.option) {
                 chart = testHelper.createChart(echarts, chartContainer, opt.option, opt);
             }
-            if (opt.dataTable) {
-                dataTableContainer.innerHTML = createDataTableHTML(opt.dataTable);
+            var dataTables = opt.dataTables;
+            if (!dataTables && opt.dataTable) {
+                dataTables = [opt.dataTable];
+            }
+            if (dataTables) {
+                var tableHTML = [];
+                for (var i = 0; i < dataTables.length; i++) {
+                    tableHTML.push(createDataTableHTML(dataTables[i]));
+                }
+                dataTableContainer.innerHTML = tableHTML.join('');
             }
             if (opt.info) {
                 infoContainer.innerHTML = createObjectHTML(opt.info, opt.infoKey || 'option');
@@ -168,7 +177,7 @@
             return '';
         }
 
-        var html = ['<table class="test-data-table"><tbody>'];
+        var html = ['<table><tbody>'];
 
         if (sourceFormat === 'arrayRows') {
             for (var i = 0; i < data.length; i++) {

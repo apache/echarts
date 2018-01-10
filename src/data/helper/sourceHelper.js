@@ -146,7 +146,7 @@ export function prepareSource(seriesModel) {
 
         // These settings from series has higher priority.
         seriesLayoutBy = seriesLayoutBy || datasetOption.seriesLayoutBy;
-        sourceHeader = sourceHeader || datasetOption.sourceHeader;
+        sourceHeader == null && (sourceHeader = datasetOption.sourceHeader);
         dimensionsDefine = dimensionsDefine || datasetOption.dimensions;
     }
 
@@ -351,7 +351,7 @@ function makeDefaultEncode(
             }
         }
         if (firstNotOrdinal != null) {
-            encode.value = firstNotOrdinal;
+            encode.value = encode.tooltip = firstNotOrdinal;
             encode.itemName = completeResult.potentialNameDimIndex
                 || Math.max(firstNotOrdinal - 1, 0);
             // By default, label use itemName in charts.

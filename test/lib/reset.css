@@ -43,18 +43,25 @@ pre.test-print-object {
 .test-chart {
     height: 300px;
 }
-table.test-data-table  {
+
+.test-data-table {
+    position: relative;
+    text-align: center;
+}
+.test-data-table table {
+    display: inline-block;
+    vertical-align: top;
     border: 1px solid #ccc;
     border-spacing: 0;
-    margin: 30px auto 40px auto;
+    margin: 30px 15px;
 }
-table.test-data-table td {
+.test-data-table td {
     border: 1px solid #ccc;
     color: #777;
     padding: 3px 5px;
     font-size: 13px;
 }
-table.test-data-table-key td {
+.test-data-table-key td {
     font-size: 12px;
     color: rgb(69, 162, 238)
 }
