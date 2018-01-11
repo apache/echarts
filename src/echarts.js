@@ -751,6 +751,11 @@ echartsProto.getViewOfSeriesModel = function (seriesModel) {
 
 var updateMethods = {
 
+    prepareAndUpdate: function (payload) {
+        prepare(this);
+        updateMethods.update.call(this, payload);
+    },
+
     /**
      * @param {Object} payload
      * @private
