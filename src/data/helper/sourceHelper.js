@@ -129,7 +129,8 @@ export function prepareSource(seriesModel) {
     var seriesOption = seriesModel.option;
 
     var data = seriesOption.data;
-    var sourceFormat = SOURCE_FORMAT_ORIGINAL;
+    var sourceFormat = isTypedArray(data)
+        ? SOURCE_FORMAT_TYPED_ARRAY : SOURCE_FORMAT_ORIGINAL;
     var fromDataset = false;
 
     var seriesLayoutBy = seriesOption.seriesLayoutBy;
