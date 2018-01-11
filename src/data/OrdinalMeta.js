@@ -5,7 +5,7 @@ import {createHashMap, isObject, map} from 'zrender/src/core/util';
  * @param {Object} [opt]
  * @param {Object} [opt.categories=[]]
  * @param {Object} [opt.needCollect=false]
- * @param {Object} [opt.preventDeduplication=false]
+ * @param {Object} [opt.deduplication=false]
  */
 function OrdinalMeta(opt) {
 
@@ -25,7 +25,7 @@ function OrdinalMeta(opt) {
      * @private
      * @type {boolean}
      */
-    this._preventDeduplication = opt.preventDeduplication;
+    this._deduplication = opt.deduplication;
 
     /**
      * @private
@@ -46,7 +46,8 @@ OrdinalMeta.createByAxisModel = function (axisModel) {
     return new OrdinalMeta({
         categories: categories,
         needCollect: !categories,
-        preventDeduplication: option.dedplication === false
+        // deduplication is default in axis.
+        deduplication: option.dedplication !== false
     });
 };
 
@@ -76,7 +77,7 @@ proto.parseAndCollect = function (category) {
     // (set axis.deduplication = false), because echarts do not know whether
     // the values in the category dimension has duplication (consider the
     // parallel-aqi example)
-    if (needCollect && this._preventDeduplication) {
+    if (needCollect && !this._deduplication) {
         index = this.categories.length;
         this.categories[index] = category;
         return index;
@@ -99,7 +100,7 @@ proto.parseAndCollect = function (category) {
     return index;
 };
 
-// Do not create map until needed.
+// Consider big data, do not create map until needed.
 function getOrCreateMap(ordinalMeta) {
     return ordinalMeta._map || (
         ordinalMeta._map = createHashMap(ordinalMeta.categories)

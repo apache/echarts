@@ -294,7 +294,8 @@ function objectRowsCollectDimensions(data) {
 }
 
 // ??? TODO merge to completedimensions, where also has
-// default encode making logic.
+// default encode making logic. And the default rule
+// should depends on series? consider 'map'.
 function makeDefaultEncode(
     seriesModel, datasetModel, data, sourceFormat, seriesLayoutBy, completeResult
 ) {
@@ -306,17 +307,25 @@ function makeDefaultEncode(
     var encodeSeriesName = [];
     var seriesType = seriesModel.subType;
 
+    // ??? TODO refactor: provide by series itself.
+    // Consider the case: 'map' series is based on geo coordSys,
+    // 'graph', 'heatmap' can be based on cartesian. But can not
+    // give default rule simply here.
+    var nSeriesMap = createHashMap(['pie', 'map', 'funnel']);
+    var cSeriesMap = createHashMap([
+        'line', 'bar', 'pictorialBar', 'scatter', 'effectScatter', 'candlestick', 'boxplot'
+    ]);
+
     // Usually in this case series will use the first data
     // dimension as the "value" dimension, or other default
     // processes respectively.
-    if (coordSysDefine) {
+    if (coordSysDefine && cSeriesMap.get(seriesType) != null) {
         var ecModel = seriesModel.ecModel;
         var datasetMap = inner(ecModel).datasetMap;
         var key = datasetModel.uid + '_' + seriesLayoutBy;
         var datasetRecord = datasetMap.get(key)
             || datasetMap.set(key, {categoryWayDim: 1, valueWayDim: 0});
 
-        // ??? TODO refactor: provide by series itself.
         each(coordSysDefine.coordSysDims, function (coordDim) {
             // In value way.
             if (coordSysDefine.firstCategoryDimIndex == null) {
@@ -342,7 +351,7 @@ function makeDefaultEncode(
     }
     // ??? TODO refactor: provide by series itself.
     // [{name: ..., value: ...}, ...] like:
-    else if (seriesType === 'pie' || seriesType === 'map' || seriesType === 'funnel') {
+    else if (nSeriesMap.get(seriesType) != null) {
         // Find the first not ordinal. (5 is an experience value)
         var firstNotOrdinal;
         for (var i = 0; i < 5 && firstNotOrdinal == null; i++) {

@@ -66,7 +66,7 @@ var MapSeries = SeriesModel.extend({
         // Shallow clone
         // option = zrUtil.extend({}, option);
 
-        option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
+        // option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
 
         // return option;
     },

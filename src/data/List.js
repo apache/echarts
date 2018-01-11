@@ -10,6 +10,7 @@ import DataDiffer from './DataDiffer';
 import Source from './Source';
 import {defaultDimValueGetters, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions} from './helper/dimensionHelper';
+import OrdinalMeta from './OrdinalMeta';
 
 var isObject = zrUtil.isObject;
 
@@ -103,6 +104,7 @@ var List = function (dimensions, hostModel) {
                 dimensionInfo.coordDimIndex = 0;
             }
         }
+
         dimensionInfo.otherDims = dimensionInfo.otherDims || {};
         dimensionNames.push(dimensionName);
         dimensionInfos[dimensionName] = dimensionInfo;
@@ -522,9 +524,13 @@ listProto._getNameFromStore = function (rawIndex) {
         var chunkOffset = rawIndex % chunkSize;
         var dim = this.dimensions[nameDimIdx];
         var ordinalMeta = this._dimensionInfos[dim].ordinalMeta;
-        return ordinalMeta
-            ? ordinalMeta.categories[rawIndex]
-            : this._storage[dim][chunkIndex][chunkOffset];
+        if (ordinalMeta) {
+            return ordinalMeta.categories[rawIndex];
+        }
+        else {
+            var chunk = this._storage[dim][chunkIndex];
+            return chunk && chunk[chunkOffset];
+        }
     }
 };
 
