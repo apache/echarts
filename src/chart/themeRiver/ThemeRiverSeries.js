@@ -139,9 +139,10 @@ var ThemeRiverSeries = SeriesModel.extend({
         }
 
         var dimensionsInfo = createDimensions(data, {
-            sysDimensions: [
+            sysDimensions: ['single'],
+            dimensionsDefine: [
                 {
-                    name: 'single',
+                    name: 'time',
                     type: getDimensionTypeByAxis(axisType)
                 },
                 {
@@ -156,7 +157,7 @@ var ThemeRiverSeries = SeriesModel.extend({
             encodeDefine: {
                 single: 0,
                 value: 1,
-                name: 2
+                itemName: 2
             }
         });
 
@@ -194,12 +195,14 @@ var ThemeRiverSeries = SeriesModel.extend({
             };
         });
 
+        var timeDim = data.mapDimension('single');
+
         for (var j = 0; j < layerSeries.length; ++j) {
             layerSeries[j].indices.sort(comparer);
         }
 
         function comparer(index1, index2) {
-            return data.get('time', index1) - data.get('time', index2);
+            return data.get(timeDim, index1) - data.get(timeDim, index2);
         }
 
         return layerSeries;

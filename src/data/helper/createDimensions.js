@@ -11,13 +11,15 @@ import completeDimensions from './completeDimensions';
  * @param {number} [opt.dimensionsCount]
  * @param {string} [opt.extraPrefix]
  * @param {boolean} [opt.extraFromZero]
+ * @param {Array.<string|Object>} [opt.dimensionsDefine=source.dimensionsDefine] Overwrite source define.
+ * @param {Object|HashMap} [opt.encodeDefine=source.encodeDefine] Overwrite source define.
  * @return {Array.<Object>} dimensionsInfo
  */
 export default function (source, opt) {
     opt = opt || {};
     return completeDimensions(opt.sysDimensions || [], source, {
-        dimsDef: source.dimensionsDefine,
-        encodeDef: source.encodeDefine,
+        dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
+        encodeDef: opt.encodeDefine || source.encodeDefine,
         dimCount: opt.dimensionsCount,
         extraPrefix: opt.extraPrefix,
         extraFromZero: opt.extraFromZero
