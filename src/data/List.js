@@ -327,7 +327,7 @@ listProto.mapDimension = function (coordDim, idx) {
  */
 listProto.initData = function (data, nameList, dimValueGetter) {
 
-    var notProvider = data instanceof Source || zrUtil.isArrayLike(data);
+    var notProvider = Source.isInstance(data) || zrUtil.isArrayLike(data);
     if (notProvider) {
         data = new DefaultDataProvider(data, this.dimensions.length);
     }

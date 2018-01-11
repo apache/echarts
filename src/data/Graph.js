@@ -7,6 +7,7 @@
 
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
+import {enableClassCheck} from '../util/clazz';
 
 // id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey (id) {
@@ -138,10 +139,10 @@ graphProto.addEdge = function (n1, n2, dataIndex) {
         n2 = this.nodes[n2];
     }
 
-    if (!(n1 instanceof Node)) {
+    if (!Node.isInstance(n1)) {
         n1 = nodesMap[generateNodeKey(n1)];
     }
-    if (!(n2 instanceof Node)) {
+    if (!Node.isInstance(n2)) {
         n2 = nodesMap[generateNodeKey(n2)];
     }
     if (!n1 || !n2) {
@@ -188,10 +189,10 @@ graphProto.getEdgeByIndex = function (dataIndex) {
  * @return {module:echarts/data/Graph.Edge}
  */
 graphProto.getEdge = function (n1, n2) {
-    if (n1 instanceof Node) {
+    if (Node.isInstance(n1)) {
         n1 = n1.id;
     }
-    if (n2 instanceof Node) {
+    if (Node.isInstance(n2)) {
         n2 = n2.id;
     }
 
@@ -248,7 +249,7 @@ graphProto.eachEdge = function (cb, context) {
 graphProto.breadthFirstTraverse = function (
     cb, startNode, direction, context
 ) {
-    if (!(startNode instanceof Node)) {
+    if (!Node.isInstance(startNode)) {
         startNode = this._nodesMap[generateNodeKey(startNode)];
     }
     if (!startNode) {
@@ -515,5 +516,8 @@ zrUtil.mixin(Edge, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 
 Graph.Node = Node;
 Graph.Edge = Edge;
+
+enableClassCheck(Node);
+enableClassCheck(Edge);
 
 export default Graph;

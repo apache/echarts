@@ -19,7 +19,7 @@ import {
  * If typed array used, chunk size must be fixed.
  */
 export function DefaultDataProvider(source, dimSize) {
-    if (!(source instanceof Source)) {
+    if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
     }
     this._source = source;

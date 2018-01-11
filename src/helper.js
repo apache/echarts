@@ -48,7 +48,7 @@ export {createSymbol} from './util/symbol';
  */
 export function createScale(dataExtent, option) {
     var axisModel = option;
-    if (!(option instanceof Model)) {
+    if (!Model.isInstance(option)) {
         axisModel = new Model(option);
         zrUtil.mixin(axisModel, axisModelCommonMixin);
     }

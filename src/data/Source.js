@@ -1,4 +1,5 @@
 import {createHashMap, isTypedArray} from 'zrender/src/core/util';
+import {enableClassCheck} from '../util/clazz';
 import {
     SOURCE_FORMAT_ORIGINAL,
     SERIES_LAYOUT_BY_COLUMN,
@@ -123,5 +124,7 @@ Source.seriesDataToSource = function (data) {
         fromDataset: false
     });
 };
+
+enableClassCheck(Source);
 
 export default Source;

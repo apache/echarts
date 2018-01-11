@@ -52,7 +52,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  */
 function completeDimensions(sysDims, source, opt) {
     // ??? remove the compatible?
-    if (!(source instanceof Source)) {
+    if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
     }
 
