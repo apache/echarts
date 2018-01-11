@@ -103,16 +103,29 @@ export function formatTplSimple(tpl, param, encode) {
 }
 
 /**
- * @param {string} color
- * @param {string} [extraCssText]
+ * @param {Object|string} [opt] If string, means color.
+ * @param {string} [opt.color]
+ * @param {string} [opt.extraCssText]
+ * @param {string} [opt.type='item'] 'item' or 'subItem'
  * @return {string}
  */
-export function getTooltipMarker(color, extraCssText) {
-    return color
-        ? '<span style="display:inline-block;margin-right:5px;'
-            + 'border-radius:10px;width:9px;height:9px;background-color:'
+export function getTooltipMarker(opt, extraCssText) {
+    opt = zrUtil.isString(opt) ? {color: opt, extraCssText: extraCssText} : (opt || {});
+    var color = opt.color;
+    var type = opt.type;
+    var extraCssText = opt.extraCssText;
+
+    if (!color) {
+        return '';
+    }
+
+    return type === 'subItem'
+        ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
+            + 'border-radius:4px;width:4px;height:4px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
-        : '';
+        : '<span style="display:inline-block;margin-right:5px;'
+            + 'border-radius:10px;width:10px;height:10px;background-color:'
+            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
 }
 
 /**

@@ -274,14 +274,18 @@ var SeriesModel = ComponentModel.extend({
                     return;
                 }
                 var dimType = dimInfo.type;
-                var valStr = (vertially ? '- ' + (dimInfo.tooltipName || dimInfo.name) + ': ' : '')
-                    + (dimType === 'ordinal'
+                var dimHead = getTooltipMarker({color: color, type: 'subItem'});
+                var valStr = (vertially
+                        ? dimHead + encodeHTML(dimInfo.tooltipName || dimInfo.name) + ': '
+                        : ''
+                    )
+                    + encodeHTML(dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
                         ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
                         : addCommas(val)
                     );
-                valStr && result.push(encodeHTML(valStr));
+                valStr && result.push(valStr);
             }
 
             return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
@@ -297,6 +301,12 @@ var SeriesModel = ComponentModel.extend({
         var value = this.getRawValue(dataIndex);
         var isValueArr = zrUtil.isArray(value);
 
+        var color = data.getItemVisual(dataIndex, 'color');
+        if (zrUtil.isObject(color) && color.colorStops) {
+            color = (color.colorStops[0] || {}).color;
+        }
+        color = color || 'transparent';
+
         // Complicated rule for pretty tooltip.
         var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
             ? formatArrayValue(value)
@@ -304,15 +314,9 @@ var SeriesModel = ComponentModel.extend({
             ? formatSingleValue(data.get(tooltipDims[0], dataIndex, true))
             : formatSingleValue(isValueArr ? value[0] : value);
 
-        var name = data.getName(dataIndex);
-
-        var color = data.getItemVisual(dataIndex, 'color');
-        if (zrUtil.isObject(color) && color.colorStops) {
-            color = (color.colorStops[0] || {}).color;
-        }
-        color = color || 'transparent';
-
         var colorEl = getTooltipMarker(color);
+
+        var name = data.getName(dataIndex);
 
         var seriesName = this.name;
         if (seriesName === modelUtil.DEFAULT_COMPONENT_NAME) {
