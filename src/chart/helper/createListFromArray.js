@@ -2,7 +2,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
 import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
-import {getValueTypeByAxis} from '../../data/helper/dimensionHelper';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
@@ -25,7 +25,7 @@ function createListFromArray(source, seriesModel) {
             var axisModel = coordSysDefine.axisMap.get(dim);
             if (axisModel) {
                 var axisType = axisModel.get('type');
-                dimInfo.type = getValueTypeByAxis(axisType);
+                dimInfo.type = getDimensionTypeByAxis(axisType);
                 dimInfo.stackable = isStackable(axisType);
             }
             return dimInfo;

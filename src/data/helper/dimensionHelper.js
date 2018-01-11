@@ -7,8 +7,9 @@ export var OTHER_DIMENSIONS = createHashMap([
 
 export function summarizeDimensions(data) {
     var summary = {};
-
     var encode = summary.encode = {};
+    var defaultedLabel = [];
+
     each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
 
@@ -21,7 +22,11 @@ export function summarizeDimensions(data) {
             if (!encode.hasOwnProperty(coordDim)) {
                 coordDimArr = encode[coordDim] = [];
             }
-            coordDimArr[dimItem.coordDimIndex] = dimItem.name;
+            coordDimArr[dimItem.coordDimIndex] = dimName;
+
+            if (dimItem.isSysCoord && mayLabelDimType(dimItem.type)) {
+                defaultedLabel.push(dimName);
+            }
         }
 
         OTHER_DIMENSIONS.each(function (v, otherDim) {
@@ -37,17 +42,17 @@ export function summarizeDimensions(data) {
         });
     });
 
-    var labelEncode = summary.encode.label;
-    var briefLastValueType = findTheLastValueDimensions(data);
-    summary.brief = {
-        lastValueType: briefLastValueType,
-        noDefaultLabel: !(labelEncode && labelEncode[0]) && briefLastValueType == null
-    };
+    var encodeLabel = encode.label;
+    if (encodeLabel && encodeLabel.length) {
+        defaultedLabel = encode.label.slice();
+    }
+
+    encode.defaultedLabel = defaultedLabel;
 
     return summary;
 }
 
-export function getValueTypeByAxis(axisType) {
+export function getDimensionTypeByAxis(axisType) {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'
@@ -55,15 +60,21 @@ export function getValueTypeByAxis(axisType) {
         : 'float';
 }
 
-function findTheLastValueDimensions(data) {
-    // Get last value dim
-    var dimensions = data.dimensions.slice();
-    var valueType;
-    var valueDim;
-    while (dimensions.length && (
-        valueDim = dimensions.pop(),
-        valueType = data.getDimensionInfo(valueDim).type,
-        valueType === 'ordinal' || valueType === 'time'
-    )) {} // jshint ignore:line
-    return valueDim;
+function mayLabelDimType(dimType) {
+    // In most cases, ordinal and time do not suitable for label.
+    // Ordinal info can be displayed on axis. Time is too long.
+    return !(dimType === 'ordinal' || dimType === 'time');
 }
+
+// function findTheLastDimMayLabel(data) {
+//     // Get last value dim
+//     var dimensions = data.dimensions.slice();
+//     var valueType;
+//     var valueDim;
+//     while (dimensions.length && (
+//         valueDim = dimensions.pop(),
+//         valueType = data.getDimensionInfo(valueDim).type,
+//         valueType === 'ordinal' || valueType === 'time'
+//     )) {} // jshint ignore:line
+//     return valueDim;
+// }

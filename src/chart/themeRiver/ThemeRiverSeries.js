@@ -5,7 +5,7 @@
 
 import SeriesModel from '../../model/Series';
 import createDimensions from '../../data/helper/createDimensions';
-import {getValueTypeByAxis} from '../../data/helper/dimensionHelper';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
@@ -142,7 +142,7 @@ var ThemeRiverSeries = SeriesModel.extend({
             sysDimensions: [
                 {
                     name: 'single',
-                    type: getValueTypeByAxis(axisType)
+                    type: getDimensionTypeByAxis(axisType)
                 },
                 {
                     name: 'value',

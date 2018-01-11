@@ -1,6 +1,7 @@
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
+import {getDefaultLabel} from '../helper/labelHelper';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -133,7 +134,7 @@ funnelPieceProto._updateLabel = function (data, idx) {
         {
             labelFetcher: data.hostModel,
             labelDataIndex: idx,
-            defaultText: data.getName(idx),
+            defaultText: getDefaultLabel(data, idx, true),
             autoColor: visualColor,
             useInsideStyle: !!labelLayout.inside
         },

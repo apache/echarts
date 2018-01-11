@@ -164,7 +164,7 @@ export var dataFormatMixin = {
      * @param {string} [dataType]
      * @param {number} [dimIndex]
      * @param {string} [labelProp='label']
-     * @return {string}
+     * @return {string} If not formatter, return null/undefined
      */
     getFormattedLabel: function (dataIndex, status, dataType, dimIndex, labelProp) {
         status = status || 'normal';

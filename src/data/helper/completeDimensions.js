@@ -36,6 +36,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  * @return {Array.<Object>} [{
  *      name: string mandatory,
  *      coordDim: string mandatory,
+ *      isSysCoord: boolean True if the coord is from sys dimension.
  *      coordDimIndex: number mandatory,
  *      type: string optional,
  *      tooltipName: string optional,
@@ -135,6 +136,7 @@ function completeDimensions(sysDims, source, opt) {
             if (resultItem.name == null && sysDimItemDimsDef) {
                 resultItem.name = resultItem.tooltipName = sysDimItemDimsDef[coordDimIndex];
             }
+            resultItem.isSysCoord = true;
             // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}
             sysDimItemOtherDims && defaults(resultItem.otherDims, sysDimItemOtherDims);
         });

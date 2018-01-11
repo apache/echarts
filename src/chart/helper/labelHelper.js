@@ -1,32 +1,30 @@
-import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
-
-// Get concrete dim.
-function getLabelValueDim(data) {
-    var labelDim = data.mapDimension('label');
-
-    return labelDim
-        ? labelDim
-        // Only if the source is own to a series, we can use the last.
-        // If the source is from dataset, it probably be shared by
-        // different series.
-        : data.getProvider().getSource().sourceFormat === SOURCE_FORMAT_ORIGINAL
-        ? data.getDimensionBrief('lastValueType')
-        : null;
-}
-
 /**
  * @param {module:echarts/data/List} data
  * @param {number} dataIndex
+ * @return {string} label string. Not null/undefined
  */
-export function getDefaultLabel(data, dataIndex) {
-    var val = data.get(getLabelValueDim(data), dataIndex);
+export function getDefaultLabel(data, dataIndex, orName) {
+    var labelDims = data.mapDimension('defaultedLabel', true);
+    var len = labelDims.length;
+
+    // Simple optimization (in lots of cases, label dims length is 1)
+    if (len === 1) {
+        var val = data.get(labelDims[0], dataIndex, true);
+        return formatLabelValue(val);
+    }
+    else if (len) {
+        var vals = [];
+        for (var i = 0; i < labelDims.length; i++) {
+            var val = data.get(labelDims[i], dataIndex, true);
+            vals.push(formatLabelValue(val));
+        }
+        return vals.join(', ');
+    }
+    else if (orName) {
+        return data.getName(dataIndex);
+    }
+}
+
+function formatLabelValue(val) {
     return (val == null || isNaN(val)) ? '' : val;
 }
-
-export function getLabelFromName(data, dataIndex) {
-    var labelDim = data.mapDimension('label');
-    return labelDim
-        ? data.get(labelDim, dataIndex)
-        : data.getName(dataIndex);
-}
-

@@ -314,14 +314,6 @@ listProto.mapDimension = function (coordDim, idx) {
 };
 
 /**
- * @type {string} Specially, can also be 'lastValueType', 'noDefaultLabel'
- * @return {*}
- */
-listProto.getDimensionBrief = function (type) {
-    return this._dimensionsSummary.brief[type];
-};
-
-/**
  * Initialize from data
  * @param {Array.<Object|number|Array>} data source or data or data provider.
  * @param {Array.<string>} [nameLIst] The name of a datum is used on data diff and
