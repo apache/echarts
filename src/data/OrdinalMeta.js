@@ -62,12 +62,21 @@ proto.getOrdinal = function (category) {
 };
 
 /**
- * @param {string} category
+ * @param {string|number} category
  * @return {number} The ordinal. If not found, return NaN.
  */
 proto.parseAndCollect = function (category) {
     var index;
     var needCollect = this._needCollect;
+
+    // The value of category dim can be the index of the given category set.
+    // This feature is only supported when !needCollect, because we should
+    // consider a common case: a value is 2017, which is a number but is
+    // expected to be tread as a category. This case usually happen in dataset,
+    // where it happent to be no need of the index feature.
+    if (typeof category !== 'string' && !needCollect) {
+        return category;
+    }
 
     // Optimize for the scenario:
     // category is ['2012-01-01', '2012-01-02', ...], where the input

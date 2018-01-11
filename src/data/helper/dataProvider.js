@@ -233,9 +233,7 @@ function converDataValue(value, dimInfo) {
     if (dimType === 'ordinal') {
         // If given value is a category string
         var ordinalMeta = dimInfo && dimInfo.ordinalMeta;
-        return !ordinalMeta
-            ? value
-            : typeof value === 'string'
+        return ordinalMeta
             ? ordinalMeta.parseAndCollect(value)
             : value;
     }

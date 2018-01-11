@@ -10,7 +10,6 @@ import DataDiffer from './DataDiffer';
 import Source from './Source';
 import {defaultDimValueGetters, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions} from './helper/dimensionHelper';
-import OrdinalMeta from './OrdinalMeta';
 
 var isObject = zrUtil.isObject;
 

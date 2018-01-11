@@ -382,7 +382,8 @@ export function queryDataIndex(data, payload) {
  * @return {Function}
  */
 export function makeInner() {
-    var key = '__\0ec_inner_' + innerUniqueIndex++;
+    // Consider different scope by es module import.
+    var key = '__\0ec_inner_' + innerUniqueIndex++ + '_' + Math.random().toFixed(5);
     return function (hostObj) {
         return hostObj[key] || (hostObj[key] = {});
     };

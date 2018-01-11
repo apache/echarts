@@ -675,7 +675,7 @@ function buildTooltipModel(modelCascade) {
     while (modelCascade.length) {
         var tooltipOpt = modelCascade.pop();
         if (tooltipOpt) {
-            if (tooltipOpt instanceof Model) {
+            if (Model.isInstance(tooltipOpt)) {
                 tooltipOpt = tooltipOpt.get('tooltip', true);
             }
             // In each data item tooltip can be simply write:
