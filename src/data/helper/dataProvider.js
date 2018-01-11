@@ -191,7 +191,7 @@ export var defaultDimValueGetters = {
     arrayRows: getDimValueSimply,
 
     objectRows: function (dataItem, dimName, dataIndex, dimIndex) {
-        return dataItem[dimName];
+        return converDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
     },
 
     keyedColumns: getDimValueSimply,
@@ -237,7 +237,7 @@ function converDataValue(value, dimInfo) {
             ? value
             : typeof value === 'string'
             ? ordinalMeta.parseAndCollect(value)
-            : NaN;
+            : value;
     }
 
     if (dimType === 'time'
