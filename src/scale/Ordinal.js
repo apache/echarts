@@ -21,7 +21,9 @@ var OrdinalScale = Scale.extend({
      * @param {module:echarts/data/OrdianlMeta|Array.<string>} ordinalMeta
      */
     init: function (ordinalMeta, extent) {
-        if (!(ordinalMeta instanceof OrdinalMeta)) {
+        // Caution: Should not use instanceof, consider ec-extensions using
+        // import approach to get OrdinalMeta class.
+        if (!ordinalMeta || zrUtil.isArray(ordinalMeta)) {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
