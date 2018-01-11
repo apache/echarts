@@ -299,7 +299,11 @@ function makeDefaultEncode(
     seriesModel, datasetModel, data, sourceFormat, seriesLayoutBy, completeResult
 ) {
     var coordSysDefine = getCoordSysDefineBySeries(seriesModel);
-    var encode = {tooltip: [], itemName: [], label: [], seriesName: []};
+    var encode = {};
+    // var encodeTooltip = [];
+    // var encodeLabel = [];
+    var encodeItemName = [];
+    var encodeSeriesName = [];
     var seriesType = seriesModel.subType;
 
     // Usually in this case series will use the first data
@@ -318,21 +322,21 @@ function makeDefaultEncode(
             if (coordSysDefine.firstCategoryDimIndex == null) {
                 var dataDim = datasetRecord.valueWayDim++;
                 encode[coordDim] = dataDim;
-                encode.tooltip.push(dataDim);
-                encode.label.push(dataDim);
+                // encodeTooltip.push(dataDim);
+                // encodeLabel.push(dataDim);
             }
             // In category way, category axis.
             else if (coordSysDefine.categoryAxisMap.get(coordDim)) {
                 encode[coordDim] = 0;
-                encode.itemName.push(0);
+                encodeItemName.push(0);
             }
             // In category way, non-category axis.
             else {
                 var dataDim = datasetRecord.categoryWayDim++;
                 encode[coordDim] = dataDim;
-                encode.tooltip.push(dataDim);
-                encode.label.push(dataDim);
-                encode.seriesName.push(dataDim);
+                // encodeTooltip.push(dataDim);
+                // encodeLabel.push(dataDim);
+                encodeSeriesName.push(dataDim);
             }
         });
     }
@@ -350,14 +354,21 @@ function makeDefaultEncode(
             }
         }
         if (firstNotOrdinal != null) {
-            encode.value = encode.tooltip = firstNotOrdinal;
-            encode.itemName = completeResult.potentialNameDimIndex
+            encode.value = firstNotOrdinal;
+            var nameDimIndex = completeResult.potentialNameDimIndex
                 || Math.max(firstNotOrdinal - 1, 0);
             // By default, label use itemName in charts.
-            // So we dont set encode.label here.
-            encode.seriesName = encode.itemName;
+            // So we dont set encodeLabel here.
+            encodeSeriesName.push(nameDimIndex);
+            encodeItemName.push(nameDimIndex);
+            // encodeTooltip.push(firstNotOrdinal);
         }
     }
+
+    // encodeTooltip.length && (encode.tooltip = encodeTooltip);
+    // encodeLabel.length && (encode.label = encodeLabel);
+    encodeItemName.length && (encode.itemName = encodeItemName);
+    encodeSeriesName.length && (encode.seriesName = encodeSeriesName);
 
     return encode;
 }

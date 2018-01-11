@@ -44,10 +44,17 @@ export function summarizeDimensions(data) {
 
     var encodeLabel = encode.label;
     if (encodeLabel && encodeLabel.length) {
-        defaultedLabel = encode.label.slice();
+        defaultedLabel = encodeLabel.slice();
+    }
+
+    var defaultedTooltip = defaultedLabel.slice();
+    var encodeTooltip = encode.tooltip;
+    if (encodeTooltip && encodeTooltip.length) {
+        defaultedTooltip = encodeTooltip.slice();
     }
 
     encode.defaultedLabel = defaultedLabel;
+    encode.defaultedTooltip = defaultedTooltip;
 
     return summary;
 }

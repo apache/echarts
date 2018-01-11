@@ -251,7 +251,7 @@ var SeriesModel = ComponentModel.extend({
     formatTooltip: function (dataIndex, multipleSeries, dataType) {
 
         function formatArrayValue(value) {
-            // ???
+            // ??? TODO refactor these logic.
             // check: category-no-encode-has-axis-data in dataset.html
             var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
                 var dimItem = data.getDimensionInfo(idx);
@@ -262,7 +262,7 @@ var SeriesModel = ComponentModel.extend({
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dim) {
-                    setEachItem(data.get(dim, dataIndex), dim);
+                    setEachItem(data.get(dim, dataIndex, true), dim);
                 })
                 // By default, all dims is used on tooltip.
                 : zrUtil.each(value, setEachItem);
@@ -287,23 +287,23 @@ var SeriesModel = ComponentModel.extend({
             return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
         }
 
-        var data = inner(this).data;
-        var tooltipDims = data.mapDimension('tooltip', true);
+        function formatSingleValue(val) {
+            return encodeHTML(addCommas(val));
+        }
 
-        // FIXME fragile way?
-        // object raw value?
+        var data = inner(this).data;
+        var tooltipDims = data.mapDimension('defaultedTooltip', true);
+        var tooltipDimLen = tooltipDims.length;
         var value = this.getRawValue(dataIndex);
         var isValueArr = zrUtil.isArray(value);
+
         // Complicated rule for pretty tooltip.
-        var formattedValue = (isValueArr && value.length > 1 && tooltipDims.length > 1)
+        var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
             ? formatArrayValue(value)
-            : encodeHTML(addCommas(
-                !isValueArr
-                ? value
-                : tooltipDims[0]
-                ? data.get(tooltipDims[0], dataIndex)
-                : value[0]
-            ));
+            : tooltipDimLen
+            ? formatSingleValue(data.get(tooltipDims[0], dataIndex, true))
+            : formatSingleValue(isValueArr ? value[0] : value);
+
         var name = data.getName(dataIndex);
 
         var color = data.getItemVisual(dataIndex, 'color');
@@ -315,14 +315,14 @@ var SeriesModel = ComponentModel.extend({
         var colorEl = getTooltipMarker(color);
 
         var seriesName = this.name;
-        // FIXME
-        if (seriesName === '\0-') {
+        if (seriesName === modelUtil.DEFAULT_COMPONENT_NAME) {
             // Not show '-'
             seriesName = '';
         }
         seriesName = seriesName
             ? encodeHTML(seriesName) + (!multipleSeries ? '<br/>' : ': ')
             : '';
+
         return !multipleSeries
             ? seriesName + colorEl
                 + (name

@@ -41,7 +41,7 @@ pre.test-print-object {
     font-family: Menlo, Monaco, 'Courier New', monospace;
 }
 .test-chart {
-    height: 300px;
+    height: 400px;
 }
 
 .test-data-table {
@@ -61,7 +61,7 @@ pre.test-print-object {
     padding: 3px 5px;
     font-size: 13px;
 }
-.test-data-table-key td {
+td.test-data-table-key {
     font-size: 12px;
     color: rgb(69, 162, 238)
 }
