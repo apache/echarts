@@ -1,10 +1,7 @@
 import * as zrUtil from 'zrender/src/core/util';
-import * as formatUtil from './format';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
-
-var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 /**
  * name may be displayed on screen, so use '-'.
@@ -97,138 +94,6 @@ export function isDataItemOption(dataItem) {
         // // markLine data can be array
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 }
-
-// /**
-//  * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
-//  * @param {module:echarts/data/List} data
-//  * @param {Object} opt
-//  * @param {string} [opt.seriesIndex]
-//  * @param {Object} [opt.name]
-//  * @param {Object} [opt.mainType]
-//  * @param {Object} [opt.subType]
-//  */
-// export function createDataFormatModel(data, opt) {
-//     var model = new Model();
-//     zrUtil.mixin(model, dataFormatMixin);
-//     model.seriesIndex = opt.seriesIndex;
-//     model.name = opt.name || '';
-//     model.mainType = opt.mainType;
-//     model.subType = opt.subType;
-
-//     model.getData = function () {
-//         return data;
-//     };
-//     return model;
-// }
-
-// PENDING A little ugly
-export var dataFormatMixin = {
-    /**
-     * Get params for formatter
-     * @param {number} dataIndex
-     * @param {string} [dataType]
-     * @return {Object}
-     */
-    getDataParams: function (dataIndex, dataType) {
-        var data = this.getData(dataType);
-        var rawValue = this.getRawValue(dataIndex, dataType);
-        var rawDataIndex = data.getRawIndex(dataIndex);
-        var name = data.getName(dataIndex, true);
-        var itemOpt = data.getRawDataItem(dataIndex);
-        var color = data.getItemVisual(dataIndex, 'color');
-
-        return {
-            componentType: this.mainType,
-            componentSubType: this.subType,
-            seriesType: this.mainType === 'series' ? this.subType : null,
-            seriesIndex: this.seriesIndex,
-            seriesId: this.id,
-            seriesName: this.name,
-            name: name,
-            dataIndex: rawDataIndex,
-            data: itemOpt,
-            dataType: dataType,
-            value: rawValue,
-            color: color,
-            marker: formatUtil.getTooltipMarker(color),
-
-            // Param name list for mapping `a`, `b`, `c`, `d`, `e`
-            $vars: ['seriesName', 'name', 'value']
-        };
-    },
-
-    /**
-     * Format label
-     * @param {number} dataIndex
-     * @param {string} [status='normal'] 'normal' or 'emphasis'
-     * @param {string} [dataType]
-     * @param {number} [dimIndex]
-     * @param {string} [labelProp='label']
-     * @return {string} If not formatter, return null/undefined
-     */
-    getFormattedLabel: function (dataIndex, status, dataType, dimIndex, labelProp) {
-        status = status || 'normal';
-        var data = this.getData(dataType);
-        var itemModel = data.getItemModel(dataIndex);
-
-        var params = this.getDataParams(dataIndex, dataType);
-        if (dimIndex != null && (params.value instanceof Array)) {
-            params.value = params.value[dimIndex];
-        }
-
-        var formatter = itemModel.get(
-            status === 'normal'
-            ? [labelProp || 'label', 'formatter']
-            : [status, labelProp || 'label', 'formatter']
-        );
-
-        if (typeof formatter === 'function') {
-            params.status = status;
-            return formatter(params);
-        }
-        else if (typeof formatter === 'string') {
-            var str = formatUtil.formatTpl(formatter, params);
-
-            // Support 'aaa{@[3]}bbb{@product}ccc'.
-            // Do not support '}' in dim name util have to.
-            return str.replace(DIMENSION_LABEL_REG, function (origin, dimName) {
-                var len = dimName.length;
-                if (dimName.charAt(0) === '[' && dimName.charAt(len - 1) === ']') {
-                    var dimIndex = +dimName.slice(1, len - 1); // Also: '[]' => 0
-                    if (!isNaN(dimIndex)) {
-                        dimName = data.dimensions[dimIndex];
-                    }
-                }
-                return dimName ? data.get(dimName, dataIndex, true) : origin;
-            });
-        }
-    },
-
-    /**
-     * Get raw value in option
-     * @param {number} idx
-     * @param {string} [dataType]
-     * @return {Array|number|string}
-     */
-    getRawValue: function (idx, dataType) {
-        var data = this.getData(dataType);
-        var dataItem = data.getRawDataItem(idx);
-        // ??? check: source format.
-        if (dataItem != null) {
-            return (isObject(dataItem) && !(dataItem instanceof Array))
-                ? dataItem.value : dataItem;
-        }
-    },
-
-    /**
-     * Should be implemented.
-     * @param {number} dataIndex
-     * @param {boolean} [multipleSeries=false]
-     * @param {number} [dataType]
-     * @return {string} tooltip string
-     */
-    formatTooltip: zrUtil.noop
-};
 
 /**
  * Mapping to exists for merge.
@@ -516,18 +381,13 @@ export function queryDataIndex(data, payload) {
  *
  * @return {Function}
  */
-export var makeInner = (function () {
-    var index = 0;
-    return function () {
-        var key = '__\0zr_inner_' + index++;
-        return function (hostObj) {
-            return hostObj[key] || (hostObj[key] = {});
-        };
+export function makeInner() {
+    var key = '__\0ec_inner_' + innerUniqueIndex++;
+    return function (hostObj) {
+        return hostObj[key] || (hostObj[key] = {});
     };
-})();
-
-// ??? remove
-export var makeGetter = makeInner;
+}
+var innerUniqueIndex = 0;
 
 /**
  * @param {module:echarts/model/Global} ecModel

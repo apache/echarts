@@ -4,9 +4,9 @@ import * as graphic from '../../util/graphic';
 import * as axisPointerModelHelper from './modelHelper';
 import * as eventTool from 'zrender/src/core/event';
 import * as throttleUtil from '../../util/throttle';
-import * as modelUtil from '../../util/model';
+import {makeInner} from '../../util/model';
 
-var get = modelUtil.makeGetter();
+var inner = makeInner();
 var clone = zrUtil.clone;
 var bind = zrUtil.bind;
 
@@ -193,7 +193,7 @@ BaseAxisPointer.prototype = {
     createPointerEl: function (group, elOption, axisModel, axisPointerModel) {
         var pointerOption = elOption.pointer;
         if (pointerOption) {
-            var pointerEl = get(group).pointerEl = new graphic[pointerOption.type](
+            var pointerEl = inner(group).pointerEl = new graphic[pointerOption.type](
                 clone(elOption.pointer)
             );
             group.add(pointerEl);
@@ -205,7 +205,7 @@ BaseAxisPointer.prototype = {
      */
     createLabelEl: function (group, elOption, axisModel, axisPointerModel) {
         if (elOption.label) {
-            var labelEl = get(group).labelEl = new graphic.Rect(
+            var labelEl = inner(group).labelEl = new graphic.Rect(
                 clone(elOption.label)
             );
 
@@ -218,7 +218,7 @@ BaseAxisPointer.prototype = {
      * @protected
      */
     updatePointerEl: function (group, elOption, updateProps) {
-        var pointerEl = get(group).pointerEl;
+        var pointerEl = inner(group).pointerEl;
         if (pointerEl) {
             pointerEl.setStyle(elOption.pointer.style);
             updateProps(pointerEl, {shape: elOption.pointer.shape});
@@ -229,7 +229,7 @@ BaseAxisPointer.prototype = {
      * @protected
      */
     updateLabelEl: function (group, elOption, updateProps, axisPointerModel) {
-        var labelEl = get(group).labelEl;
+        var labelEl = inner(group).labelEl;
         if (labelEl) {
             labelEl.setStyle(elOption.label.style);
             updateProps(labelEl, {
@@ -345,7 +345,7 @@ BaseAxisPointer.prototype = {
 
         handle.stopAnimation();
         handle.attr(getHandleTransProps(trans));
-        get(handle).lastProp = null;
+        inner(handle).lastProp = null;
 
         this._doDispatchAxisPointer();
     },
@@ -467,8 +467,8 @@ BaseAxisPointer.prototype.constructor = BaseAxisPointer;
 
 function updateProps(animationModel, moveAnimation, el, props) {
     // Animation optimize.
-    if (!propsEqual(get(el).lastProp, props)) {
-        get(el).lastProp = props;
+    if (!propsEqual(inner(el).lastProp, props)) {
+        inner(el).lastProp = props;
         moveAnimation
             ? graphic.updateProps(el, props, animationModel)
             : (el.stopAnimation(), el.attr(props));

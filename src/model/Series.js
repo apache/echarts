@@ -10,6 +10,7 @@ import {
 import * as modelUtil from '../util/model';
 import ComponentModel from './Component';
 import colorPaletteMixin from './mixin/colorPalette';
+import dataFormatMixin from '../model/mixin/dataFormat';
 import {
     getLayoutParams,
     mergeLayoutParam
@@ -409,7 +410,7 @@ var SeriesModel = ComponentModel.extend({
 
 });
 
-zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
+zrUtil.mixin(SeriesModel, dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
 /**

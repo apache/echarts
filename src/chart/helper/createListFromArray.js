@@ -54,7 +54,7 @@ function createListFromArray(source, seriesModel) {
             if (firstCategoryDimIndex == null) {
                 firstCategoryDimIndex = dimIndex;
             }
-            dimInfo.ordinalMeta = categoryAxisModel.ordinalMeta;
+            dimInfo.ordinalMeta = categoryAxisModel.getOrdinalMeta();
         }
         if (dimInfo.otherDims.itemName != null) {
             hasNameEncode = true;

@@ -2,30 +2,30 @@ import {createHashMap, isObject, map} from 'zrender/src/core/util';
 
 /**
  * @constructor
- * @param {module:echart/model/Model} axisModel
+ * @param {Object} [opt]
+ * @param {Object} [opt.categories=[]]
+ * @param {Object} [opt.needCollect=false]
+ * @param {Object} [opt.preventDeduplication=false]
  */
-function OrdinalMeta(axisModel) {
-
-    var data = axisModel.option.data;
-    var categories = data && map(data, getName);
+function OrdinalMeta(opt) {
 
     /**
      * @readOnly
      * @type {Array.<string>}
      */
-    this.categories = categories || [];
+    this.categories = opt.categories || [];
 
     /**
      * @private
      * @type {boolean}
      */
-    this._needCollect = !categories;
+    this._needCollect = opt.needCollect;
 
     /**
      * @private
      * @type {boolean}
      */
-    this._preventDeduplication = axisModel.get('dedplication', true) === false;
+    this._preventDeduplication = opt.preventDeduplication;
 
     /**
      * @private
@@ -33,6 +33,22 @@ function OrdinalMeta(axisModel) {
      */
     this._map;
 }
+
+/**
+ * @param {module:echarts/model/Model} axisModel
+ * @return {module:echarts/data/OrdinalMeta}
+ */
+OrdinalMeta.createByAxisModel = function (axisModel) {
+    var option = axisModel.option;
+    var data = option.data;
+    var categories = data && map(data, getName);
+
+    return new OrdinalMeta({
+        categories: categories,
+        needCollect: !categories,
+        preventDeduplication: option.dedplication === false
+    });
+};
 
 var proto = OrdinalMeta.prototype;
 
