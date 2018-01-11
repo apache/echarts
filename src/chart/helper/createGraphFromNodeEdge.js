@@ -42,7 +42,7 @@ export default function (edges, nodes, seriesModel, directed, beforeLink) {
         var coordSysCtor = CoordinateSystem.get(coordSys);
         // FIXME
         var dimensionNames = createDimensions(nodes, {
-            sysDimensions: (
+            coordDimensions: (
                 (coordSysCtor && coordSysCtor.type !== 'view')
                     ? (coordSysCtor.dimensions || []) : []
             ).concat(['value'])

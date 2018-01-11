@@ -42,7 +42,7 @@ function createListFromArray(source, seriesModel) {
     }
 
     var dimInfoList = createDimensions(source, {
-        sysDimensions: coordSysDimDefs
+        coordDimensions: coordSysDimDefs
     });
 
     var firstCategoryDimIndex;

@@ -63,7 +63,7 @@ export var seriesModelMixin = {
         return createListSimply(
             this,
             {
-                sysDimensions: [{
+                coordDimensions: [{
                     name: baseAxisDim,
                     otherDims: {
                         tooltip: false

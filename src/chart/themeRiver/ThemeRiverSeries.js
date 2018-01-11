@@ -139,7 +139,7 @@ var ThemeRiverSeries = SeriesModel.extend({
         }
 
         var dimensionsInfo = createDimensions(data, {
-            sysDimensions: ['single'],
+            coordDimensions: ['single'],
             dimensionsDefine: [
                 {
                     name: 'time',

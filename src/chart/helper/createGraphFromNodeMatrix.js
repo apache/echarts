@@ -64,7 +64,7 @@ export default function (nodes, matrix, hostModel, directed) {
         var coordSysCtor = CoordinateSystem.get(coordSys);
         // FIXME
         var dimensionNames = createDimensions(nodes, {
-            sysDimensions: (
+            coordDimensions: (
                 (coordSysCtor && coordSysCtor.type !== 'view')
                 ? (coordSysCtor.dimensions || []) : []
             ).concat(['value'])

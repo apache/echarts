@@ -7,7 +7,7 @@ import completeDimensions from './completeDimensions';
 /**
  * @param {module:echarts/data/Source|module:echarts/data/List} source or data.
  * @param {Object|Array} [opt]
- * @param {Array.<string|Object>} [opt.sysDimensions=[]]
+ * @param {Array.<string|Object>} [opt.coordDimensions=[]]
  * @param {number} [opt.dimensionsCount]
  * @param {string} [opt.extraPrefix]
  * @param {boolean} [opt.extraFromZero]
@@ -17,7 +17,7 @@ import completeDimensions from './completeDimensions';
  */
 export default function (source, opt) {
     opt = opt || {};
-    return completeDimensions(opt.sysDimensions || [], source, {
+    return completeDimensions(opt.coordDimensions || [], source, {
         dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
         encodeDef: opt.encodeDefine || source.encodeDefine,
         dimCount: opt.dimensionsCount,
