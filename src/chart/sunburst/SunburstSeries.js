@@ -51,9 +51,7 @@ export default SeriesModel.extend({
     defaultOption: {
         zlevel: 0,
         z: 2,
-        legendHoverLink: true,
 
-        hoverAnimation: true,
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -83,11 +81,11 @@ export default SeriesModel.extend({
             rotate: 'radial',
             show: true,
             opacity: 1,
-            // could be 'inner', 'outside', 'left' or 'right'
             // 'left' is for inner side of inside, and 'right' is for outter
             // side for inside
-            position: 'inner',
-            padding: 5,
+            align: 'center',
+            position: 'inside',
+            distance: 5,
             silent: true,
             emphasis: {}
         },
@@ -100,14 +98,14 @@ export default SeriesModel.extend({
                 opacity: 1
             },
             downplay: {
-                opacity: 0.6
+                opacity: 0.9
             }
         },
 
         // Animation type canbe expansion, scale
         animationType: 'expansion',
         animationDuration: 1000,
-        animationUpdateDuration: 500,
+        animationDurationUpdate: 500,
         animationEasing: 'cubicOut',
 
         data: [],

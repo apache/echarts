@@ -64,10 +64,10 @@ echarts.registerAction(
 
         ecModel.eachComponent(
             {mainType: 'series', subType: 'sunburst', query: payload},
-            handleUnighlight
+            handleUnhighlight
         );
 
-        function handleUnighlight(model, index) {
+        function handleUnhighlight(model, index) {
             payload.unhighlight = true;
         }
     }

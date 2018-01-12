@@ -83,7 +83,7 @@ SunburstPieceProto.updateData = function (
     style = zrUtil.defaults(
         {
             lineJoin: 'bevel',
-            fill: visualColor
+            fill: style.fill || visualColor
         },
         style
     );
@@ -132,8 +132,11 @@ SunburstPieceProto.updateData = function (
 SunburstPieceProto.onEmphasis = function (highlightPolicy) {
     var that = this;
     this.node.hostTree.root.eachNode(function (n) {
-        if (that.node !== n && n.piece) {
-            if (isNodeHighlighted(n, that.node, highlightPolicy)) {
+        if (n.piece) {
+            if (that.node === n) {
+                n.piece.updateData(false, n, 'emphasis');
+            }
+            else if (isNodeHighlighted(n, that.node, highlightPolicy)) {
                 n.piece.childAt(0).trigger('highlight');
             }
             else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
@@ -192,16 +195,14 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
 
     var r;
     var labelPosition = labelModel.get('position');
-    var labelPadding = labelModel.get('padding') || 0;
+    var labelPadding = labelModel.get('distance') || 0;
     var textAlign = labelModel.get('align');
     if (labelPosition === 'outside') {
         r = layout.r + labelPadding;
-        if (!textAlign) {
-            textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
-        }
+        textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
     }
     else {
-        if (!textAlign) {
+        if (!textAlign || textAlign === 'center') {
             r = (layout.r + layout.r0) / 2;
             textAlign = 'center';
         }
@@ -246,6 +247,8 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         else if (rotate < -Math.PI / 2) {
             rotate += Math.PI;
         }
+    } else if (typeof rotateType === 'number') {
+        rotate = rotateType * Math.PI / 180;
     }
     label.attr('rotation', rotate);
 };
@@ -256,8 +259,6 @@ SunburstPieceProto._initEvents = function (
     seriesModel,
     highlightPolicy
 ) {
-    var itemModel = node.getModel();
-
     sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
     var that = this;
@@ -274,7 +275,7 @@ SunburstPieceProto._initEvents = function (
         that.onHighlight();
     };
 
-    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
+    if (seriesModel.isAnimationEnabled()) {
         sector
             .on('mouseover', onEmphasis)
             .on('mouseout', onNormal)
@@ -351,7 +352,7 @@ function isNodeHighlighted(node, activeNode, policy) {
         return node === activeNode;
     }
     else if (policy === NodeHighlightPolicy.ANCESTOR) {
-        return  node === activeNode || node.isAncestorOf(activeNode);
+        return node === activeNode || node.isAncestorOf(activeNode);
     }
     else {
         return node === activeNode || node.isDescendantOf(activeNode);
