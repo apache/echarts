@@ -97,7 +97,7 @@ var ComponentModel = Model.extend({
     $constructor: function (option, parentModel, ecModel, extraOpt) {
         Model.call(this, option, parentModel, ecModel, extraOpt);
 
-        this.uid = componentUtil.getUID('componentModel');
+        this.uid = componentUtil.getUID('ec_cpt_model');
     },
 
     init: function (option, parentModel, ecModel, extraOpt) {

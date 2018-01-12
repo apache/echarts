@@ -52,9 +52,9 @@ function linkList(opt) {
 
     // Only mainData trigger change, because struct.update may trigger
     // another changable methods, which may bring about dead lock.
-    // each(mainData.CHANGABLE_METHODS, function (methodName) {
-    //     mainData.wrapMethod(methodName, zrUtil.curry(changeInjection, opt));
-    // });
+    each(mainData.CHANGABLE_METHODS, function (methodName) {
+        mainData.wrapMethod(methodName, zrUtil.curry(changeInjection, opt));
+    });
 
     // Make sure datas contains mainData.
     zrUtil.assert(datas[mainData.dataType] === mainData);
@@ -74,10 +74,10 @@ function transferInjection(opt, res) {
     return res;
 }
 
-// function changeInjection(opt, res) {
-//     opt.struct && opt.struct.update(this);
-//     return res;
-// }
+function changeInjection(opt, res) {
+    opt.struct && opt.struct.update(this);
+    return res;
+}
 
 function cloneShallowInjection(opt, res) {
     // cloneShallow, which brings about some fragilities, may be inappropriate

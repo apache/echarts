@@ -11,7 +11,7 @@ var base = 0;
 export function getUID(type) {
     // Considering the case of crossing js context,
     // use Math.random to make id as unique as possible.
-    return [(type || ''), base++, Math.random()].join('_');
+    return [(type || ''), base++, Math.random().toFixed(5)].join('_');
 }
 
 /**

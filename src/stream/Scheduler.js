@@ -163,7 +163,9 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
             updatePayload(overallTask, payload);
             var performArgs = scheduler.getPerformArgs(overallTask, opt.block);
             // Execute stubs firstly, which may set the overall task dirty,
-            // then execute the overall task.
+            // then execute the overall task. And stub will call seriesModel.setData,
+            // which ensures that in the overallTask seriesModel.getData() will not
+            // return incorrect data.
             ecModel.eachRawSeries(function (seriesModel) {
                 var task = agentStubMap.get(seriesModel.uid);
                 task && task.perform(performArgs);

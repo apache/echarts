@@ -6,12 +6,17 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
+import Source from '../../data/Source';
 
 /**
- * @param {module:echarts/data/Source} source
+ * @param {module:echarts/data/Source|Array} source Or raw data.
  * @param {module:echarts/model/Series} seriesModel
  */
 function createListFromArray(source, seriesModel) {
+    if (!Source.isInstance(source)) {
+        source = Source.seriesDataToSource(source);
+    }
+
     var coordSysName = seriesModel.get('coordinateSystem');
     var registeredCoordSys = CoordinateSystem.get(coordSysName);
 

@@ -1651,6 +1651,6 @@ listProto.wrapMethod = function (methodName, injectFunction) {
 // Notice that those method should `RETURN` the new list.
 listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
 // Methods that change indices of this list should be listed here.
-// listProto.CHANGABLE_METHODS = ['filterSelf'];
+listProto.CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
 
 export default List;

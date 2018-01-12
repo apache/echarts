@@ -35,7 +35,7 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
     var coordSys = seriesModel.get('coordinateSystem');
     var nodeData;
     if (coordSys === 'cartesian2d' || coordSys === 'polar') {
-        nodeData = createListFromArray({data: nodes}, seriesModel);
+        nodeData = createListFromArray(nodes, seriesModel);
     }
     else {
         // FIXME
