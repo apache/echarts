@@ -45,10 +45,11 @@ export function summarizeDimensions(data) {
         });
     });
 
-    var dataDimsOnCoord = summary.dataDimsOnCoord = [];
-    coordDimMap.each(function (coordDim) {
+    var dataDimsOnCoord = [];
+    coordDimMap.each(function (v, coordDim) {
         dataDimsOnCoord = dataDimsOnCoord.concat(encode[coordDim]);
     });
+    summary.dataDimsOnCoord = dataDimsOnCoord;
 
     var encodeLabel = encode.label;
     if (encodeLabel && encodeLabel.length) {
