@@ -32,6 +32,8 @@ import seriesColor from './visual/seriesColor';
 import aria from './visual/aria';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
+import lightTheme from './theme/light';
+import darkTheme from './theme/dark';
 
 var assert = zrUtil.assert;
 var each = zrUtil.each;
@@ -2160,6 +2162,9 @@ registerAction({
     update: 'downplay'
 }, zrUtil.noop);
 
+// Default theme
+registerTheme('light', lightTheme);
+registerTheme('dark', darkTheme);
 
 // For backward compatibility, where the namespace `dataTool` will
 // be mounted on `echarts` is the extension `dataTool` is imported.
