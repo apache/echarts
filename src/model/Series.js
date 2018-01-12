@@ -357,12 +357,12 @@ var SeriesModel = ComponentModel.extend({
         this.dataTask.dirty();
     },
 
-    getColorFromPalette: function (name, scope) {
+    getColorFromPalette: function (name, scope, requestColorNum) {
         var ecModel = this.ecModel;
         // PENDING
-        var color = colorPaletteMixin.getColorFromPalette.call(this, name, scope);
+        var color = colorPaletteMixin.getColorFromPalette.call(this, name, scope, requestColorNum);
         if (!color) {
-            color = ecModel.getColorFromPalette(name, scope);
+            color = ecModel.getColorFromPalette(name, scope, requestColorNum);
         }
         return color;
     },

@@ -39,7 +39,8 @@ export default function (seriesType) {
                     var itemModel = dataAll.getItemModel(rawIdx);
                     var color = itemModel.get('itemStyle.color')
                         || seriesModel.getColorFromPalette(
-                            dataAll.getName(rawIdx), seriesModel.__paletteScope
+                            dataAll.getName(rawIdx), seriesModel.__paletteScope,
+                            dataAll.count()
                         );
                     // Legend may use the visual info in data before processed
                     dataAll.setItemVisual(rawIdx, 'color', color);
