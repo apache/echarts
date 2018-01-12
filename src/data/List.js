@@ -933,7 +933,9 @@ function normalizeDimensions(dimensions) {
 
 function validateDimensions(list, dims) {
     for (var i = 0; i < dims.length; i++) {
-        if (!list._storage[dims[i]]) {
+        // stroage may be empty when no data, so use
+        // dimensionInfos to check.
+        if (!list._dimensionInfos[dims[i]]) {
             console.error('Unkown dimension ' + dims[i]);
         }
     }
@@ -1239,10 +1241,12 @@ function cloneListForMapAndSample(original, excludeDimensions) {
     // Init storage
     for (var i = 0; i < allDimensions.length; i++) {
         var dim = allDimensions[i];
-        storage[dim] = zrUtil.indexOf(excludeDimensions, dim) >= 0
-            ? cloneDimStore(originalStorage[dim])
-            // Direct reference for other dimensions
-            : originalStorage[dim];
+        if (originalStorage[dim]) {
+            storage[dim] = zrUtil.indexOf(excludeDimensions, dim) >= 0
+                ? cloneDimStore(originalStorage[dim])
+                // Direct reference for other dimensions
+                : originalStorage[dim];
+        }
     }
     return list;
 }
