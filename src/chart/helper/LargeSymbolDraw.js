@@ -4,6 +4,8 @@ import * as graphic from '../../util/graphic';
 import {createSymbol} from '../../util/symbol';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
+var BOOST_SIZE_THRESHOLD = 4;
+
 var LargeSymbolPath = graphic.extendShape({
 
     shape: {
@@ -19,7 +21,8 @@ var LargeSymbolPath = graphic.extendShape({
         var symbolProxy = this.symbolProxy;
         var symbolProxyShape = symbolProxy.shape;
         var ctx = path.getContext ? path.getContext() : path;
-        var canBoost = ctx && size[0] < 4;
+        var canBoost = ctx && size[0] < BOOST_SIZE_THRESHOLD;
+
         // Do draw in afterBrush.
         if (canBoost) {
             return;
@@ -46,7 +49,8 @@ var LargeSymbolPath = graphic.extendShape({
         var shape = this.shape;
         var points = shape.points;
         var size = shape.size;
-        var canBoost = size[0] < 4;
+        var canBoost = size[0] < BOOST_SIZE_THRESHOLD;
+
         if (!canBoost) {
             return;
         }
@@ -66,6 +70,7 @@ var LargeSymbolPath = graphic.extendShape({
                 size[0], size[1]
             );
         }
+        console.log(i);
 
         this.restoreTransform(ctx);
     },
@@ -185,19 +190,20 @@ largeSymbolProto.incrementalUpdate = function (taskParams, data) {
 largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
     var hostModel = data.hostModel;
 
-    if (data.hasItemVisual.symbolSize) {
-        // TODO typed array?
-        symbolEl.setShape('sizes', data.mapArray(
-            function (idx) {
-                var size = data.getItemVisual(idx, 'symbolSize');
-                return (size instanceof Array) ? size : [size, size];
-            }
-        ));
-    }
-    else {
-        var size = data.getVisual('symbolSize');
-        symbolEl.setShape('size', (size instanceof Array) ? size : [size, size]);
-    }
+    // TODO
+    // if (data.hasItemVisual.symbolSize) {
+    //     // TODO typed array?
+    //     symbolEl.setShape('sizes', data.mapArray(
+    //         function (idx) {
+    //             var size = data.getItemVisual(idx, 'symbolSize');
+    //             return (size instanceof Array) ? size : [size, size];
+    //         }
+    //     ));
+    // }
+    // else {
+    var size = data.getVisual('symbolSize');
+    symbolEl.setShape('size', (size instanceof Array) ? size : [size, size]);
+    // }
 
     // Create symbolProxy to build path for each data
     symbolEl.symbolProxy = createSymbol(
@@ -206,8 +212,10 @@ largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
     // Use symbolProxy setColor method
     symbolEl.setColor = symbolEl.symbolProxy.setColor;
 
+    var extrudeShadow = symbolEl.shape.size[0] < BOOST_SIZE_THRESHOLD;
     symbolEl.useStyle(
-        hostModel.getModel('itemStyle').getItemStyle(['color'])
+        // Draw shadow when doing fillRect is extremely slow.
+        hostModel.getModel('itemStyle').getItemStyle(extrudeShadow ? ['color', 'shadowBlur', 'shadowColor'] : ['color'])
     );
 
     var visualColor = data.getVisual('color');
