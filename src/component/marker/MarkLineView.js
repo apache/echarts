@@ -177,31 +177,31 @@ export default MarkerView.extend({
 
     type: 'markLine',
 
-    updateLayout: function (markLineModel, ecModel, api) {
-        ecModel.eachSeries(function (seriesModel) {
-            var mlModel = seriesModel.markLineModel;
-            if (mlModel) {
-                var mlData = mlModel.getData();
-                var fromData = mlModel.__from;
-                var toData = mlModel.__to;
-                // Update visual and layout of from symbol and to symbol
-                fromData.each(function (idx) {
-                    updateSingleMarkerEndLayout(fromData, idx, true, seriesModel, api);
-                    updateSingleMarkerEndLayout(toData, idx, false, seriesModel, api);
-                });
-                // Update layout of line
-                mlData.each(function (idx) {
-                    mlData.setItemLayout(idx, [
-                        fromData.getItemLayout(idx),
-                        toData.getItemLayout(idx)
-                    ]);
-                });
+    // updateLayout: function (markLineModel, ecModel, api) {
+    //     ecModel.eachSeries(function (seriesModel) {
+    //         var mlModel = seriesModel.markLineModel;
+    //         if (mlModel) {
+    //             var mlData = mlModel.getData();
+    //             var fromData = mlModel.__from;
+    //             var toData = mlModel.__to;
+    //             // Update visual and layout of from symbol and to symbol
+    //             fromData.each(function (idx) {
+    //                 updateSingleMarkerEndLayout(fromData, idx, true, seriesModel, api);
+    //                 updateSingleMarkerEndLayout(toData, idx, false, seriesModel, api);
+    //             });
+    //             // Update layout of line
+    //             mlData.each(function (idx) {
+    //                 mlData.setItemLayout(idx, [
+    //                     fromData.getItemLayout(idx),
+    //                     toData.getItemLayout(idx)
+    //                 ]);
+    //             });
 
-                this.markerGroupMap.get(seriesModel.id).updateLayout();
+    //             this.markerGroupMap.get(seriesModel.id).updateLayout();
 
-            }
-        }, this);
-    },
+    //         }
+    //     }, this);
+    // },
 
     renderSeries: function (seriesModel, mlModel, ecModel, api) {
         var coordSys = seriesModel.coordinateSystem;

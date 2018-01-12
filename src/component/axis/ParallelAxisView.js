@@ -73,13 +73,13 @@ var AxisView = echarts.extendComponentView({
         graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
     },
 
-    /**
-     * @override
-     */
-    updateVisual: function (axisModel, ecModel, api, payload) {
-        this._brushController && this._brushController
-            .updateCovers(getCoverInfoList(axisModel));
-    },
+    // /**
+    //  * @override
+    //  */
+    // updateVisual: function (axisModel, ecModel, api, payload) {
+    //     this._brushController && this._brushController
+    //         .updateCovers(getCoverInfoList(axisModel));
+    // },
 
     _refreshBrushController: function (
         builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api

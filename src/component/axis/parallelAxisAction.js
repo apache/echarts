@@ -7,8 +7,8 @@ import * as echarts from '../../echarts';
  */
 var actionInfo = {
     type: 'axisAreaSelect',
-    event: 'axisAreaSelected',
-    update: 'updateVisual'
+    event: 'axisAreaSelected'
+    // update: 'updateVisual'
 };
 
 echarts.registerAction(actionInfo, function (payload, ecModel) {

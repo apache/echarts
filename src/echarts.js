@@ -934,23 +934,25 @@ var updateMethods = {
      * @private
      */
     updateVisual: function (payload) {
-        var ecModel = this._model;
+        updateMethods.update.call(this, payload);
 
-        // update before setOption
-        if (!ecModel) {
-            return;
-        }
+        // var ecModel = this._model;
 
-        ChartView.markUpdateMethod(payload, 'updateVisual');
+        // // update before setOption
+        // if (!ecModel) {
+        //     return;
+        // }
 
-        clearColorPalette(ecModel);
+        // ChartView.markUpdateMethod(payload, 'updateVisual');
 
-        // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
+        // clearColorPalette(ecModel);
 
-        render(this, this._model, this._api, payload);
+        // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
 
-        performPostUpdateFuncs(ecModel, this._api);
+        // render(this, this._model, this._api, payload);
+
+        // performPostUpdateFuncs(ecModel, this._api);
     },
 
     /**
@@ -958,22 +960,24 @@ var updateMethods = {
      * @private
      */
     updateLayout: function (payload) {
-        var ecModel = this._model;
+        updateMethods.update.call(this, payload);
 
-        // update before setOption
-        if (!ecModel) {
-            return;
-        }
+        // var ecModel = this._model;
 
-        ChartView.markUpdateMethod(payload, 'updateLayout');
+        // // update before setOption
+        // if (!ecModel) {
+        //     return;
+        // }
 
-        // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
-        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        // ChartView.markUpdateMethod(payload, 'updateLayout');
 
-        render(this, this._model, this._api, payload);
+        // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+        // // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
+        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
 
-        performPostUpdateFuncs(ecModel, this._api);
+        // render(this, this._model, this._api, payload);
+
+        // performPostUpdateFuncs(ecModel, this._api);
     }
 };
 

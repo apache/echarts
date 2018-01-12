@@ -210,11 +210,11 @@ export default echarts.extendComponentView({
         });
     },
 
-    updateLayout: function (toolboxModel, ecModel, api, payload) {
-        zrUtil.each(this._features, function (feature) {
-            feature.updateLayout && feature.updateLayout(feature.model, ecModel, api, payload);
-        });
-    },
+    // updateLayout: function (toolboxModel, ecModel, api, payload) {
+    //     zrUtil.each(this._features, function (feature) {
+    //         feature.updateLayout && feature.updateLayout(feature.model, ecModel, api, payload);
+    //     });
+    // },
 
     remove: function (ecModel, api) {
         zrUtil.each(this._features, function (feature) {

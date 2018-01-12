@@ -39,9 +39,9 @@ Brush.defaultOption = {
 
 var proto = Brush.prototype;
 
+// proto.updateLayout = function (featureModel, ecModel, api) {
 proto.render =
-proto.updateView =
-proto.updateLayout = function (featureModel, ecModel, api) {
+proto.updateView = function (featureModel, ecModel, api) {
     var brushType;
     var brushMode;
     var isBrushed;
