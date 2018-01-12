@@ -27,7 +27,7 @@ import * as modelUtil from '../util/model';
 import Model from './Model';
 import ComponentModel from './Component';
 import globalDefault from './globalDefault';
-import colorPaletteMinin from './mixin/colorPalette';
+import colorPaletteMixin from './mixin/colorPalette';
 import {resetSourceDefaulter} from '../data/helper/sourceHelper';
 
 var OPTION_INNER_KEY = '\0_ec_inner';
@@ -493,6 +493,13 @@ var GlobalModel = Model.extend({
     },
 
     /**
+     * @return {number}
+     */
+    getSeriesCount: function () {
+        return this._componentsMap.get('series').length;
+    },
+
+    /**
      * After filtering, series may be different
      * frome raw series.
      *
@@ -733,6 +740,6 @@ function assertSeriesInitialized(ecModel) {
     }
 }
 
-mixin(GlobalModel, colorPaletteMinin);
+mixin(GlobalModel, colorPaletteMixin);
 
 export default GlobalModel;
