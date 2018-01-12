@@ -107,7 +107,7 @@ var providerMethods = {
     'keyedColumns': {
         pure: true,
         count: function () {
-            var dimName = this._source.dimensionsDefine[0];
+            var dimName = this._source.dimensionsDefine[0].name;
             var col = this._data[dimName];
             return col ? col.length : 0;
         },
@@ -115,7 +115,7 @@ var providerMethods = {
             var item = [];
             var dims = this._source.dimensionsDefine;
             for (var i = 0; i < dims.length; i++) {
-                var col = this._data[dims[i]];
+                var col = this._data[dims[i].name];
                 item.push(col ? col[idx] : null);
             }
         },

@@ -4,11 +4,13 @@ import {getCoordSysDefineBySeries} from '../../model/referHelper';
 import {
     createHashMap,
     each,
+    map,
     isArray,
     isString,
     isObject,
     isTypedArray,
     isArrayLike,
+    extend,
     assert
 } from 'zrender/src/core/util';
 import {getDataItemValue} from '../../util/model';
@@ -178,7 +180,7 @@ export function prepareSource(seriesModel) {
 // return {startIndex, dimensionsDefine, dimensionsCount}
 function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine) {
     if (!data) {
-        return {dimensionsDefine: dimensionsDefine};
+        return {dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine)};
     }
 
     var dimensionsDetectCount;
@@ -211,7 +213,7 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
         if (!dimensionsDefine && startIndex === 1) {
             dimensionsDefine = [];
             arrayRowsTravelFirst(function (val, index) {
-                dimensionsDefine[index] = val + '';
+                dimensionsDefine[index] = val != null ? val : '';
             }, seriesLayoutBy, data);
         }
 
@@ -259,11 +261,49 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
 
     return {
         startIndex: startIndex,
-        dimensionsDefine: dimensionsDefine,
+        dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine),
         dimensionsDetectCount: dimensionsDetectCount,
         potentialNameDimIndex: potentialNameDimIndex
         // TODO: potentialIdDimIdx
     };
+}
+
+// Consider dimensions defined like ['A', 'price', 'B', 'price', 'C', 'price'],
+// which is reasonable. But dimension name is duplicated.
+// Returns undefined or an array contains only object without null/undefiend or string.
+function normalizeDimensionsDefine(dimensionsDefine) {
+    if (!dimensionsDefine) {
+        // The meaning of null/undefined is different from empty array.
+        return;
+    }
+    var nameMap = createHashMap();
+    return map(dimensionsDefine, function (item, index) {
+        item = extend({}, isObject(item) ? item : {name: item});
+
+        // User can set null in dimensions.
+        // We dont auto specify name, othewise a given name may
+        // cause it be refered unexpectedly.
+        if (item.name == null) {
+            return item;
+        }
+
+        // Also consider number form like 2012.
+        item.name += '';
+        // Use may also specify displayName.
+        if (item.displayName == null) {
+            item.displayName = item.name;
+        }
+
+        var exist = nameMap.get(item.name);
+        if (!exist) {
+            nameMap.set(item.name, {count: 1});
+        }
+        else {
+            item.name += '-' + exist.count++;
+        }
+
+        return item;
+    });
 }
 
 function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
@@ -439,7 +479,10 @@ function doGuessOrdinal(
             return;
         }
         dimName = dimensionsDefine[dimIndex];
-        isObject(dimName) && (dimName = dimName.name);
+        dimName = isObject(dimName) ? dimName.name : dimName;
+        if (dimName == null) {
+            return;
+        }
     }
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {

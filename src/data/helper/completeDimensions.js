@@ -3,7 +3,7 @@
  * Use `echarts/data/helper/createDimensions` instead.
  */
 
-import {createHashMap, each, isString, defaults, clone} from 'zrender/src/core/util';
+import {createHashMap, each, isString, defaults, extend, isObject, clone} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal} from './sourceHelper';
 import Source from '../Source';
@@ -19,6 +19,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *
  * @param {Array.<string>} sysDims Necessary dimensions, like ['x', 'y'], which
  *      provides not only dim template, but also default order.
+ *      properties: 'name', 'type', 'displayName'.
  *      `name` of each item provides default coord name.
  *      [{dimsDef: [string...]}, ...] can be specified to give names.
  * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
@@ -35,11 +36,12 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
  * @return {Array.<Object>} [{
  *      name: string mandatory,
+ *      displayName: string, the origin name in dimsDef, see source helper.
+ *                 If displayName given, the tooltip will displayed vertically.
  *      coordDim: string mandatory,
  *      isSysCoord: boolean True if the coord is from sys dimension.
  *      coordDimIndex: number mandatory,
  *      type: string optional,
- *      tooltipName: string optional,
  *      otherDims: { never null/undefined
  *          tooltip: number optional,
  *          label: number optional,
@@ -69,18 +71,21 @@ function completeDimensions(sysDims, source, opt) {
 
     // Apply user defined dims (`name` and `type`) and init result.
     for (var i = 0; i < dimCount; i++) {
-        var dimDefItem = isString(dimsDef[i]) ? {name: dimsDef[i]} : (dimsDef[i] || {});
+        var dimDefItem = dimsDef[i] = extend(
+            {}, isObject(dimsDef[i]) ? dimsDef[i] : {name: dimsDef[i]}
+        );
         var userDimName = dimDefItem.name;
         var resultItem = result[i] = {otherDims: {}};
         // Name will be applied later for avoiding duplication.
         if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
-            // Only if `series.dimensions` is defined in option, tooltipName
-            // will be set, and dimension will be diplayed vertically in
+            // Only if `series.dimensions` is defined in option
+            // displayName, will be set, and dimension will be diplayed vertically in
             // tooltip by default.
-            resultItem.name = resultItem.tooltipName = userDimName;
+            resultItem.name = resultItem.displayName = userDimName;
             dataDimNameMap.set(userDimName, i);
         }
         dimDefItem.type != null && (resultItem.type = dimDefItem.type);
+        dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
     }
 
     // Set `coordDim` and `coordDimIndex` by `encodeDef` and normalize `encodeDef`.
@@ -134,7 +139,7 @@ function completeDimensions(sysDims, source, opt) {
             var resultItem = result[resultDimIdx];
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
-                resultItem.name = resultItem.tooltipName = sysDimItemDimsDef[coordDimIndex];
+                resultItem.name = resultItem.displayName = sysDimItemDimsDef[coordDimIndex];
             }
             resultItem.isSysCoord = true;
             // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}

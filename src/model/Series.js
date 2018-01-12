@@ -255,7 +255,7 @@ var SeriesModel = ComponentModel.extend({
             // check: category-no-encode-has-axis-data in dataset.html
             var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
                 var dimItem = data.getDimensionInfo(idx);
-                return vertially |= dimItem && dimItem.tooltip !== false && dimItem.tooltipName != null;
+                return vertially |= dimItem && dimItem.tooltip !== false && dimItem.displayName != null;
             }, 0);
 
             var result = [];
@@ -276,7 +276,7 @@ var SeriesModel = ComponentModel.extend({
                 var dimType = dimInfo.type;
                 var dimHead = getTooltipMarker({color: color, type: 'subItem'});
                 var valStr = (vertially
-                        ? dimHead + encodeHTML(dimInfo.tooltipName || dimInfo.name) + ': '
+                        ? dimHead + encodeHTML(dimInfo.displayName || '-') + ': '
                         : ''
                     )
                     + encodeHTML(dimType === 'ordinal'
