@@ -376,6 +376,22 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
+     * Get progressive rendering count each step
+     * @return {number}
+     */
+    getProgressive: function () {
+        return this.get('progressive');
+    },
+
+    /**
+     * Get progressive rendering count each step
+     * @return {number}
+     */
+    getProgressiveThreshold: function () {
+        return this.get('progressiveThreshold');
+    },
+
+    /**
      * Get data indices for show tooltip content. See tooltip.
      * @abstract
      * @param {Array.<string>|string} dim

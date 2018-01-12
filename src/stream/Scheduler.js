@@ -80,12 +80,12 @@ proto.restorePipelines = function (ecModel) {
     var pipelineMap = scheduler._pipelineMap = createHashMap();
     ecModel.eachSeries(function (seriesModel) {
         var dataTask = seriesModel.dataTask;
-        var progressive = seriesModel.get('progressive');
+        var progressive = seriesModel.getProgressive();
 
         pipelineMap.set(seriesModel.uid, {
             head: dataTask,
             tail: dataTask,
-            threshold: seriesModel.get('progressiveThreshold'),
+            threshold: seriesModel.getProgressiveThreshold(),
             progressiveEnabled: progressive
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
             bockIndex: -1,
