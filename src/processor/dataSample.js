@@ -45,34 +45,36 @@ var indexSampler = function (frame, value) {
     return Math.round(frame.length / 2);
 };
 
-export default function (seriesType, ecModel, api) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-        var data = seriesModel.getData();
-        var sampling = seriesModel.get('sampling');
-        var coordSys = seriesModel.coordinateSystem;
-        // Only cartesian2d support down sampling
-        if (coordSys.type === 'cartesian2d' && sampling) {
-            var baseAxis = coordSys.getBaseAxis();
-            var valueAxis = coordSys.getOtherAxis(baseAxis);
-            var extent = baseAxis.getExtent();
-            // Coordinste system has been resized
-            var size = extent[1] - extent[0];
-            var rate = Math.round(data.count() / size);
-            if (rate > 1) {
-                var sampler;
-                if (typeof sampling === 'string') {
-                    sampler = samplers[sampling];
-                }
-                else if (typeof sampling === 'function') {
-                    sampler = sampling;
-                }
-                if (sampler) {
-                    data = data.downSample(
-                        valueAxis.dim, 1 / rate, sampler, indexSampler
-                    );
-                    seriesModel.setData(data);
+export default function (seriesType) {
+    return {
+        seriesType: seriesType,
+        reset: function (seriesModel, ecModel, api) {
+            var data = seriesModel.getData();
+            var sampling = seriesModel.get('sampling');
+            var coordSys = seriesModel.coordinateSystem;
+            // Only cartesian2d support down sampling
+            if (coordSys.type === 'cartesian2d' && sampling) {
+                var baseAxis = coordSys.getBaseAxis();
+                var valueAxis = coordSys.getOtherAxis(baseAxis);
+                var extent = baseAxis.getExtent();
+                // Coordinste system has been resized
+                var size = extent[1] - extent[0];
+                var rate = Math.round(data.count() / size);
+                if (rate > 1) {
+                    var sampler;
+                    if (typeof sampling === 'string') {
+                        sampler = samplers[sampling];
+                    }
+                    else if (typeof sampling === 'function') {
+                        sampler = sampling;
+                    }
+                    if (sampler) {
+                        api.setTaskOutputData(data.downSample(
+                            valueAxis.dim, 1 / rate, sampler, indexSampler
+                        ));
+                    }
                 }
             }
         }
-    }, this);
+    };
 }

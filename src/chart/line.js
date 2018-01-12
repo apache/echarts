@@ -14,6 +14,7 @@ echarts.registerVisual(visualSymbol('line', 'circle', 'line'));
 echarts.registerLayout(layoutPoints('line'));
 
 // Down sample after filter
-echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, zrUtil.curry(
-    dataSample, 'line'
-));
+echarts.registerProcessor(
+    echarts.PRIORITY.PROCESSOR.STATISTIC,
+    dataSample('line')
+);
