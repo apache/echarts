@@ -6,7 +6,7 @@ import createDimensions from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../CoordinateSystem';
 import createListFromArray from './createListFromArray';
 
-export default function (edges, nodes, seriesModel, directed, beforeLink) {
+export default function (nodes, edges, seriesModel, directed, beforeLink) {
     // ??? TODO
     // support dataset?
     var graph = new Graph(directed);
