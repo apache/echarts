@@ -10,6 +10,7 @@ import {
 import * as modelUtil from '../util/model';
 import ComponentModel from './Component';
 import colorPaletteMixin from './mixin/colorPalette';
+import dataFormatMixin from '../model/mixin/dataFormat';
 import {
     getLayoutParams,
     mergeLayoutParam
@@ -19,7 +20,6 @@ import {
     prepareSource,
     getSource
 } from '../data/helper/sourceHelper';
-import {otherDimToDataDim} from '../data/helper/dimensionHelper';
 
 var inner = modelUtil.makeInner();
 
@@ -99,7 +99,10 @@ var SeriesModel = ComponentModel.extend({
         // module:echarts/data/Graph or module:echarts/data/Tree.
         // See module:echarts/data/helper/linkList
 
-        // ??? should not restoreData here? but called by echart?
+        // Theoretically, it is unreasonable to call `seriesModel.getData()` in the model
+        // init or merge stage, because the data can be restored. So we do not `restoreData`
+        // and `setData` here, which forbids calling `seriesModel.getData()` in this stage.
+        // Call `seriesModel.getRawData()` instead.
         // this.restoreData();
 
         autoSeriesName(this);
@@ -227,32 +230,6 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
-     * Coord dimension to data dimension.
-     *
-     * By default the result is the same as dimensions of series data.
-     * But in some series data dimensions are different from coord dimensions (i.e.
-     * candlestick and boxplot). Override this method to handle those cases.
-     *
-     * Coord dimension to data dimension can be one-to-many
-     *
-     * @param {string} coordDim
-     * @return {Array.<string>} dimensions on the axis.
-     */
-    coordDimToDataDim: function (coordDim) {
-        return modelUtil.coordDimToDataDim(this.getData(), coordDim);
-    },
-
-    /**
-     * Convert data dimension to coord dimension.
-     *
-     * @param {string|number} dataDim
-     * @return {string}
-     */
-    dataDimToCoordDim: function (dataDim) {
-        return modelUtil.dataDimToCoordDim(this.getData(), dataDim);
-    },
-
-    /**
      * Get base axis if has coordinate system and has axis.
      * By default use coordSys.getBaseAxis();
      * Can be overrided for some chart.
@@ -272,8 +249,9 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} [dataType]
      */
     formatTooltip: function (dataIndex, multipleSeries, dataType) {
+
         function formatArrayValue(value) {
-            // ???
+            // ??? TODO refactor these logic.
             // check: category-no-encode-has-axis-data in dataset.html
             var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
                 var dimItem = data.getDimensionInfo(idx);
@@ -281,11 +259,10 @@ var SeriesModel = ComponentModel.extend({
             }, 0);
 
             var result = [];
-            var tooltipDims = otherDimToDataDim(data, 'tooltip');
 
             tooltipDims.length
-                ? zrUtil.each(tooltipDims, function (dimIdx) {
-                    setEachItem(data.get(dimIdx, dataIndex), dimIdx);
+                ? zrUtil.each(tooltipDims, function (dim) {
+                    setEachItem(data.get(dim, dataIndex, true), dim);
                 })
                 // By default, all dims is used on tooltip.
                 : zrUtil.each(value, setEachItem);
@@ -297,25 +274,32 @@ var SeriesModel = ComponentModel.extend({
                     return;
                 }
                 var dimType = dimInfo.type;
-                var valStr = (vertially ? '- ' + (dimInfo.tooltipName || dimInfo.name) + ': ' : '')
-                    + (dimType === 'ordinal'
+                var dimHead = getTooltipMarker({color: color, type: 'subItem'});
+                var valStr = (vertially
+                        ? dimHead + encodeHTML(dimInfo.tooltipName || dimInfo.name) + ': '
+                        : ''
+                    )
+                    + encodeHTML(dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
                         ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
                         : addCommas(val)
                     );
-                valStr && result.push(encodeHTML(valStr));
+                valStr && result.push(valStr);
             }
 
             return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
         }
 
-        var data = inner(this).data;
+        function formatSingleValue(val) {
+            return encodeHTML(addCommas(val));
+        }
 
+        var data = inner(this).data;
+        var tooltipDims = data.mapDimension('defaultedTooltip', true);
+        var tooltipDimLen = tooltipDims.length;
         var value = this.getRawValue(dataIndex);
-        var formattedValue = zrUtil.isArray(value)
-            ? formatArrayValue(value) : encodeHTML(addCommas(value));
-        var name = data.getName(dataIndex);
+        var isValueArr = zrUtil.isArray(value);
 
         var color = data.getItemVisual(dataIndex, 'color');
         if (zrUtil.isObject(color) && color.colorStops) {
@@ -323,17 +307,26 @@ var SeriesModel = ComponentModel.extend({
         }
         color = color || 'transparent';
 
+        // Complicated rule for pretty tooltip.
+        var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
+            ? formatArrayValue(value)
+            : tooltipDimLen
+            ? formatSingleValue(data.get(tooltipDims[0], dataIndex, true))
+            : formatSingleValue(isValueArr ? value[0] : value);
+
         var colorEl = getTooltipMarker(color);
 
+        var name = data.getName(dataIndex);
+
         var seriesName = this.name;
-        // FIXME
-        if (seriesName === '\0-') {
+        if (seriesName === modelUtil.DEFAULT_COMPONENT_NAME) {
             // Not show '-'
             seriesName = '';
         }
         seriesName = seriesName
             ? encodeHTML(seriesName) + (!multipleSeries ? '<br/>' : ': ')
             : '';
+
         return !multipleSeries
             ? seriesName + colorEl
                 + (name
@@ -375,6 +368,30 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
+     * Use `data.mapDimension(coordDim, true)` instead.
+     * @deprecated
+     */
+    coordDimToDataDim: function (coordDim) {
+        return this.getRawData().mapDimension(coordDim, true);
+    },
+
+    /**
+     * Get progressive rendering count each step
+     * @return {number}
+     */
+    getProgressive: function () {
+        return this.get('progressive');
+    },
+
+    /**
+     * Get progressive rendering count each step
+     * @return {number}
+     */
+    getProgressiveThreshold: function () {
+        return this.get('progressiveThreshold');
+    },
+
+    /**
      * Get data indices for show tooltip content. See tooltip.
      * @abstract
      * @param {Array.<string>|string} dim
@@ -413,7 +430,7 @@ var SeriesModel = ComponentModel.extend({
 
 });
 
-zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
+zrUtil.mixin(SeriesModel, dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
 /**
@@ -432,7 +449,7 @@ function autoSeriesName(seriesModel) {
 
 function getSeriesAutoName(seriesModel) {
     var data = seriesModel.getRawData();
-    var dataDims = otherDimToDataDim(data, 'seriesName');
+    var dataDims = data.mapDimension('seriesName', true);
     var nameArr = [];
     zrUtil.each(dataDims, function (dataDim) {
         var dimInfo = data.getDimensionInfo(dataDim);
@@ -452,7 +469,10 @@ function dataTaskReset(context) {
 }
 
 function dataTaskProgress(param, context) {
-    context.model.getRawData().cloneShallow(context.outputData);
+    // Avoid repead cloneShallow when data just created in reset.
+    if (param.end > context.outputData.count()) {
+        context.model.getRawData().cloneShallow(context.outputData);
+    }
 }
 
 export default SeriesModel;

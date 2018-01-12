@@ -1,35 +1,31 @@
 import {createHashMap, isObject, map} from 'zrender/src/core/util';
 
-var MULTIPLE_SOURCE = 'multiple_source';
-// Used to avoid null/undefined comparison.
-var NO_SOURCE = 'no_source';
-
 /**
  * @constructor
- * @param {module:echart/model/Model} axisModel
+ * @param {Object} [opt]
+ * @param {Object} [opt.categories=[]]
+ * @param {Object} [opt.needCollect=false]
+ * @param {Object} [opt.deduplication=false]
  */
-function OrdinalMeta(axisModel) {
-
-    var data = axisModel.option.data;
-    var categories = data && map(data, getName);
+function OrdinalMeta(opt) {
 
     /**
      * @readOnly
      * @type {Array.<string>}
      */
-    this.categories = categories || [];
+    this.categories = opt.categories || [];
 
     /**
      * @private
      * @type {boolean}
      */
-    this._needCollect = !categories;
+    this._needCollect = opt.needCollect;
 
     /**
      * @private
      * @type {boolean}
      */
-    this._preventDeduplication = axisModel.get('dedplication', true) === false;
+    this._deduplication = opt.deduplication;
 
     /**
      * @private
@@ -37,6 +33,23 @@ function OrdinalMeta(axisModel) {
      */
     this._map;
 }
+
+/**
+ * @param {module:echarts/model/Model} axisModel
+ * @return {module:echarts/data/OrdinalMeta}
+ */
+OrdinalMeta.createByAxisModel = function (axisModel) {
+    var option = axisModel.option;
+    var data = option.data;
+    var categories = data && map(data, getName);
+
+    return new OrdinalMeta({
+        categories: categories,
+        needCollect: !categories,
+        // deduplication is default in axis.
+        deduplication: option.dedplication !== false
+    });
+};
 
 var proto = OrdinalMeta.prototype;
 
@@ -49,12 +62,21 @@ proto.getOrdinal = function (category) {
 };
 
 /**
- * @param {string} category
+ * @param {string|number} category
  * @return {number} The ordinal. If not found, return NaN.
  */
 proto.parseAndCollect = function (category) {
     var index;
     var needCollect = this._needCollect;
+
+    // The value of category dim can be the index of the given category set.
+    // This feature is only supported when !needCollect, because we should
+    // consider a common case: a value is 2017, which is a number but is
+    // expected to be tread as a category. This case usually happen in dataset,
+    // where it happent to be no need of the index feature.
+    if (typeof category !== 'string' && !needCollect) {
+        return category;
+    }
 
     // Optimize for the scenario:
     // category is ['2012-01-01', '2012-01-02', ...], where the input
@@ -64,7 +86,7 @@ proto.parseAndCollect = function (category) {
     // (set axis.deduplication = false), because echarts do not know whether
     // the values in the category dimension has duplication (consider the
     // parallel-aqi example)
-    if (needCollect && this._preventDeduplication) {
+    if (needCollect && !this._deduplication) {
         index = this.categories.length;
         this.categories[index] = category;
         return index;
@@ -87,7 +109,7 @@ proto.parseAndCollect = function (category) {
     return index;
 };
 
-// Do not create map until needed.
+// Consider big data, do not create map until needed.
 function getOrCreateMap(ordinalMeta) {
     return ordinalMeta._map || (
         ordinalMeta._map = createHashMap(ordinalMeta.categories)

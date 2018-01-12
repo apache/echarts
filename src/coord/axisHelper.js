@@ -220,7 +220,10 @@ export function createScaleByModel(model, axisType) {
             // Buildin scale
             case 'category':
                 return new OrdinalScale(
-                    model.ordinalMeta, [Infinity, -Infinity]
+                    model.getOrdinalMeta
+                        ? model.getOrdinalMeta()
+                        : model.getCategories(),
+                    [Infinity, -Infinity]
                 );
             case 'value':
                 return new IntervalScale();

@@ -485,7 +485,7 @@ Tree.createTree = function (dataRoot, hostModel, treeOptions) {
     tree.root.updateDepthAndHeight(0);
 
     var dimensionsInfo = createDimensions(listData, {
-        sysDimensions: ['value'],
+        coordDimensions: ['value'],
         dimCount: dimMax
     });
 

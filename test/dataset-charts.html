@@ -1,0 +1,396 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: rgb(182, 120, 7);
+                color: #fff;
+            }
+            .test-chart {
+                height: 250px;
+            }
+        </style>
+
+
+
+
+
+        <!-- <div id="layout0"></div>
+        <div id="layout1"></div>
+        <div id="layout2"></div>
+        <div id="layout3"></div>
+        <div id="layout4"></div> -->
+        <div id="layout5"></div>
+
+
+
+
+
+
+
+        <script>
+            var arrayRows0 = [
+                ['product', '2015', '2016', '2017'],
+                ['Matcha Latte', 43.3, 85.8, 93.7],
+                ['Milk Tea', 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRows1 = [
+                ['product', '2012', '2013', '2014', '2015', '2016', '2017'],
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRowsNoColumnHeader = [
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRowsNoRowHeader = [
+                ['2012', '2013', '2014', '2015', '2016', '2017'],
+                [41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                [86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                [24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                [55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            // No 北京 上海 江苏
+            var nameValueGeo0 = [
+                {name: '天津', value: 514},
+                {name: '上海', value: 863},
+                {name: '重庆', value: 224},
+                {name: '河北', value: 671},
+                {name: '河南', value: 888},
+                {name: '云南', value: 992},
+                {name: '辽宁', value: 136},
+                {name: '黑龙江', value: 406},
+                {name: '湖南', value: 101},
+                {name: '安徽', value: 885},
+                {name: '新疆', value: 187},
+                {name: '浙江', value: 1},
+                {name: '江西', value: 138},
+                {name: '湖北', value: 337},
+                {name: '广西', value: 410},
+                {name: '甘肃', value: 22},
+                {name: '山西', value: 814},
+                {name: '内蒙古', value: 449},
+                {name: '陕西', value: 324},
+                {name: '吉林', value: 429},
+                {name: '福建', value: 377},
+                {name: '贵州', value: 811},
+                {name: '广东', value: 954},
+                {name: '青海', value: 653},
+                {name: '西藏', value: 297},
+                {name: '四川', value: 981},
+                {name: '宁夏', value: 66},
+                {name: '海南', value: 667},
+                {name: '台湾', value: 345},
+                {name: '香港', value: 970},
+                {name: '澳门', value: 683}
+            ];
+
+            var nameValueGeo1 = [
+                {name: '北京', value: 507},
+                {name: '天津', value: 263},
+                {name: '上海', value: 732},
+                {name: '重庆', value: 976},
+                {name: '河北', value: 299},
+                {name: '安徽', value: 465},
+                {name: '新疆', value: 259},
+                {name: '浙江', value: 822},
+                {name: '江西', value: 922},
+                {name: '山西', value: 379},
+                {name: '内蒙古', value: 544},
+                {name: '吉林', value: 190},
+                {name: '福建', value: 66},
+                {name: '广东', value: 842},
+                {name: '西藏', value: 827},
+                {name: '四川', value: 71},
+                {name: '宁夏', value: 428},
+                {name: '香港', value: 466},
+                {name: '澳门', value: 119}
+            ]
+
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie'}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout0', {
+                    title: 'pie, default encoding, legend',
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var encode = {
+                    value: '2016',
+                    itemName: 'product'
+                };
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie', encode: encode}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout1', {
+                    title: 'pie, give encoding, default legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    infoKey: 'encode',
+                    info: encode
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {
+                            type: 'pie',
+                            id: 'pie',
+                            seriesLayoutBy: 'row',
+                            encode: {
+                                value: 'Milk Tea',
+                                itemName: 'product',
+                                tooltip: 'Milk Tea'
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout2', {
+                    title: 'pie, give encoding, default legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    info: {
+                        legend: '<default>',
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: [{
+                        source: arrayRowsNoColumnHeader
+                    }, {
+                        source: arrayRowsNoRowHeader
+                    }],
+                    series: [{
+                        type: 'pie',
+                        radius: 50,
+                        center: ['25%', '25%'],
+                        sourceHeader: false
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['50%', '25%']
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['75%', '25%'],
+                        sourceHeader: true
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['25%', '75%'],
+                        seriesLayoutBy: 'row',
+                        sourceHeader: false,
+                        datasetIndex: 1
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['50%', '75%'],
+                        seriesLayoutBy: 'row',
+                        datasetIndex: 1
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['75%', '75%'],
+                        seriesLayoutBy: 'row',
+                        sourceHeader: true,
+                        datasetIndex: 1
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout3', {
+                    title: 'no sourceHeader',
+                    height: 400,
+                    option: option,
+                    dataTables: [
+                        arrayRowsNoColumnHeader,
+                        arrayRowsNoRowHeader
+                    ],
+                    info: {
+                        legend: '<default>',
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'map/js/china'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: [{
+                        source: nameValueGeo0
+                    }, {
+                        source: nameValueGeo1
+                    }],
+                    visualMap: {
+                        min: 0,
+                        max: 1500,
+                        calculable : true
+                    },
+                    series: [{
+                        name: 'A',
+                        type: 'map',
+                        mapType: 'china'
+                    }, {
+                        name: 'B',
+                        type: 'map',
+                        mapType: 'china',
+                        datasetIndex: 1
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout4', {
+                    option: option,
+                    height: 400,
+                    dataTables: [
+                        nameValueGeo0,
+                        nameValueGeo1
+                    ],
+                    info: {
+                        legend: option.legend,
+                        tooltip: option.tooltip,
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: [{
+                        source: arrayRowsNoColumnHeader
+                    }, {
+                        source: arrayRowsNoRowHeader
+                    }],
+                    series: [{
+                        type: 'scatter',
+                        radius: 50,
+                        center: ['25%', '25%'],
+                        sourceHeader: false
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout5', {
+                    title: 'no sourceHeader',
+                    height: 400,
+                    option: option,
+                    dataTables: [
+                        arrayRowsNoColumnHeader,
+                        arrayRowsNoRowHeader
+                    ],
+                    info: {
+                        legend: '<default>',
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+    </body>
+</html>

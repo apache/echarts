@@ -1,6 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import TimelineModel from './TimelineModel';
-import * as modelUtil from '../../util/model';
+import dataFormatMixin from '../../model/mixin/dataFormat';
 
 var SliderTimelineModel = TimelineModel.extend({
 
@@ -98,6 +98,6 @@ var SliderTimelineModel = TimelineModel.extend({
 
 });
 
-zrUtil.mixin(SliderTimelineModel, modelUtil.dataFormatMixin);
+zrUtil.mixin(SliderTimelineModel, dataFormatMixin);
 
 export default SliderTimelineModel;

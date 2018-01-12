@@ -5,7 +5,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import {makeInner} from '../util/model';
-import {enableClassExtend} from '../util/clazz';
+import {enableClassExtend, enableClassCheck} from '../util/clazz';
 
 import lineStyleMixin from './mixin/lineStyle';
 import areaStyleMixin from './mixin/areaStyle';
@@ -196,6 +196,7 @@ function getParent(model, path) {
 
 // Enable Model.extend.
 enableClassExtend(Model);
+enableClassCheck(Model);
 
 mixin(Model, lineStyleMixin);
 mixin(Model, areaStyleMixin);

@@ -9,16 +9,10 @@
     </head>
     <body>
         <style>
-            h1 {
-                line-height: 60px;
-                height: 60px;
+            .test-title {
                 background: rgb(97, 17, 97);
-                color: #fff;
-                text-align: center;
-                font-weight: normal;
-                font-size: 14px;
             }
-            .chart {
+            .test-chart {
                 height: 400px;
             }
         </style>
@@ -31,20 +25,15 @@
         <h1>parallel-with-category</h1>
         <div class="chart" id="parallel-with-category"></div> -->
 
-        <h1>category: no encode declared, two value axis</h1>
         <div class="chart" id="category-no-encode-two-value-axis"></div>
-        <h1>category: no axis.data, multi category</h1>
         <div class="chart" id="category-no-axis-data-multi"></div>
-        <h1>category: no encode declared, no axis.data, single category</h1>
         <div class="chart" id="category-no-encode-no-axis-data-single"></div>
-        <h1>category: no encode declared, axis.data given</h1>
         <div class="chart" id="category-no-encode-has-axis-data"></div>
-        <h1>category: encode declared</h1>
         <div class="chart" id="category"></div>
-        <h1>two value axes (A: {x: 2, y: 1}, B: {x: 4, y: 1})</h1>
         <div class="chart" id="two-value-axes"></div>
-        <h1>data and dataset undefined, only axis shown.</h1>
         <div class="chart" id="empty-data"></div>
+
+
 
 
 
@@ -54,11 +43,16 @@
             require([
                 'echarts'
             ], function (echarts) {
-
+                var source = [
+                    [21, 120, 220, 150, 320, 820],
+                    [21, 132, 182, 232, 332, 932],
+                    [21, 101, 191, 201, 301, 901],
+                    [21, 134, 234, 154, 334, 934],
+                    [21, 90, 290, 190, 309, 1290],
+                    [21, 230, 330, 330, 330, 1330],
+                    [21, 210, 310, 410, 320, 1320]
+                ];
                 var option = {
-                    title: {
-                        text: '堆叠区域图'
-                    },
                     legend: {
                         data: ['A', 'B', 'C']
                     },
@@ -72,15 +66,7 @@
                     xAxis: {},
                     yAxis: {},
                     dataset: [{
-                        source: [
-                            [21, 120, 220, 150, 320, 820],
-                            [21, 132, 182, 232, 332, 932],
-                            [21, 101, 191, 201, 301, 901],
-                            [21, 134, 234, 154, 334, 934],
-                            [21, 90, 290, 190, 309, 1290],
-                            [21, 230, 330, 330, 330, 1330],
-                            [21, 210, 310, 410, 320, 1320]
-                        ]
+                        source: source
                     }],
                     series: [
                         {
@@ -97,8 +83,11 @@
                         }
                     ]
                 };
-
-                testHelper.createChart(echarts, 'category-no-encode-two-value-axis', option);
+                testHelper.create(echarts, 'category-no-encode-two-value-axis', {
+                    title: 'category: no encode declared, two value axis',
+                    option: option,
+                    dataTable: source
+                });
             });
         </script>
 
@@ -110,11 +99,16 @@
             require([
                 'echarts'
             ], function (echarts) {
-
+                var source = [
+                    ['周一', 120, '苹果', 150, 320, 820],
+                    ['周二', 132, '狸猫', 232, 332, 932],
+                    ['周三', 101, '周一', 201, 301, 901],
+                    ['周四', 134, '周八', 154, 334, 934],
+                    ['周五', 90, '周六', 190, 309, 1290],
+                    ['周六', 230, '-', 330, 330, 1330],
+                    ['周日', 210, '周日', 410, 320, 1320]
+                ];
                 var option = {
-                    title: {
-                        text: '堆叠区域图'
-                    },
                     legend: {
                         data:[
                             '{x: 0, y: 1}',
@@ -141,15 +135,7 @@
                         type: 'category'
                     }],
                     dataset: [{
-                        source: [
-                            ['周一', 120, '苹果', 150, 320, 820],
-                            ['周二', 132, '狸猫', 232, 332, 932],
-                            ['周三', 101, '周一', 201, 301, 901],
-                            ['周四', 134, '周八', 154, 334, 934],
-                            ['周五', 90, '周六', 190, 309, 1290],
-                            ['周六', 230, '-', 330, 330, 1330],
-                            ['周日', 210, '周日', 410, 320, 1320]
-                        ]
+                        source: source
                     }, {
                         source: [
                             [122, '第二个 dataset', 44],
@@ -191,7 +177,11 @@
                     ]
                 };
 
-                testHelper.createChart(echarts, 'category-no-axis-data-multi', option);
+                testHelper.create(echarts, 'category-no-axis-data-multi', {
+                    title: 'category: no axis.data, multi category',
+                    dataTable: source,
+                    option: option
+                });
             });
         </script>
 
@@ -202,11 +192,16 @@
             require([
                 'echarts'
             ], function (echarts) {
-
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
                 var option = {
-                    title: {
-                        text: '堆叠区域图'
-                    },
                     legend: {
                         data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
                     },
@@ -229,15 +224,7 @@
                         }
                     ],
                     dataset: {
-                        source: [
-                            ['周一', 120, 220, 150, 320, 820],
-                            ['周二', 132, 182, 232, 332, 932],
-                            ['周三', 101, 191, 201, 301, 901],
-                            ['周四', 134, 234, 154, 334, 934],
-                            ['周五', 90, 290, 190, 309, 1290],
-                            ['周六', 230, 330, 330, 330, 1330],
-                            ['周日', 210, 310, 410, 320, 1320]
-                        ]
+                        source: source
                     },
                     series: [
                         {
@@ -274,7 +261,11 @@
                     ]
                 };
 
-                testHelper.createChart(echarts, 'category-no-encode-no-axis-data-single', option);
+                testHelper.create(echarts, 'category-no-encode-no-axis-data-single', {
+                    title: 'category: no encode declared, no axis.data, single category',
+                    dataTable: source,
+                    option: option
+                });
             });
         </script>
 
@@ -287,11 +278,16 @@
             require([
                 'echarts'
             ], function (echarts) {
-
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
                 var option = {
-                    title: {
-                        text: '堆叠区域图'
-                    },
                     legend: {
                         data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
                     },
@@ -315,15 +311,7 @@
                         }
                     ],
                     dataset: {
-                        source: [
-                            ['周一', 120, 220, 150, 320, 820],
-                            ['周二', 132, 182, 232, 332, 932],
-                            ['周三', 101, 191, 201, 301, 901],
-                            ['周四', 134, 234, 154, 334, 934],
-                            ['周五', 90, 290, 190, 309, 1290],
-                            ['周六', 230, 330, 330, 330, 1330],
-                            ['周日', 210, 310, 410, 320, 1320]
-                        ]
+                        source: source
                     },
                     series: [
                         {
@@ -359,8 +347,11 @@
                         }
                     ]
                 };
-
-                testHelper.createChart(echarts, 'category-no-encode-has-axis-data', option);
+                testHelper.create(echarts, 'category-no-encode-has-axis-data', {
+                    title: 'category: no encode declared, axis.data given',
+                    dataTable: source,
+                    option: option
+                });
             });
         </script>
 
@@ -371,11 +362,16 @@
             require([
                 'echarts'
             ], function (echarts) {
-
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
                 var option = {
-                    title: {
-                        text: '堆叠区域图'
-                    },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
@@ -411,15 +407,7 @@
                         }
                     ],
                     dataset: {
-                        source: [
-                            ['周一', 120, 220, 150, 320, 820],
-                            ['周二', 132, 182, 232, 332, 932],
-                            ['周三', 101, 191, 201, 301, 901],
-                            ['周四', 134, 234, 154, 334, 934],
-                            ['周五', 90, 290, 190, 309, 1290],
-                            ['周六', 230, 330, 330, 330, 1330],
-                            ['周日', 210, 310, 410, 320, 1320]
-                        ]
+                        source: source
                     },
                     series: [
                         {
@@ -465,8 +453,11 @@
                         }
                     ]
                 };
-
-                testHelper.createChart(echarts, 'category', option);
+                testHelper.create(echarts, 'category', {
+                    title: 'category: encode declared',
+                    dataTable: source,
+                    option: option
+                });
             });
         </script>
 
@@ -478,11 +469,16 @@
             require([
                 'echarts'
             ], function (echarts) {
-
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
                 var option = {
-                    title: {
-                        text: '堆叠区域图'
-                    },
                     tooltip: {
                     },
                     legend: {
@@ -523,15 +519,7 @@
                         type: 'slider'
                     }],
                     dataset: {
-                        source: [
-                            ['周一', 120, 220, 150, 320, 820],
-                            ['周二', 132, 182, 232, 332, 932],
-                            ['周三', 101, 191, 201, 301, 901],
-                            ['周四', 134, 234, 154, 334, 934],
-                            ['周五', 90, 290, 190, 309, 1290],
-                            ['周六', 230, 330, 330, 330, 1330],
-                            ['周日', 210, 310, 410, 320, 1320]
-                        ]
+                        source: source
                     },
                     series: [
                         {
@@ -548,8 +536,11 @@
                         }
                     ]
                 };
-
-                testHelper.createChart(echarts, 'two-value-axes', option);
+                testHelper.create(echarts, 'two-value-axes', {
+                    title: 'two value axes (A: {x: 2, y: 1}, B: {x: 4, y: 1})',
+                    dataTable: source,
+                    option: option
+                });
             });
         </script>
 
@@ -579,7 +570,10 @@
                     ]
                 };
 
-                testHelper.createChart(echarts, 'empty-data', option);
+                testHelper.create(echarts, 'empty-data', {
+                    title: 'data and dataset undefined, only axis shown.',
+                    option: option
+                });
             });
         </script>
 

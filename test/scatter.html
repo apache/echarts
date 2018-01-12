@@ -95,8 +95,8 @@
                     {
                         name: names[1],
                         type: 'scatter',
-                        label: {
-                            emphasis: {
+                        emphasis: {
+                            label: {
                                 show: true,
                                 position: 'top',
                                 formatter: function (params) {
@@ -108,10 +108,8 @@
                             return val[2] * 40;
                         },
                         itemStyle: {
-                            normal: {
-                                color: function (params) {
-                                    return 'rgba(30, 70, 50, ' + params.value[2] + ')';
-                                }
+                            color: function (params) {
+                                return 'rgba(30, 70, 50, ' + params.value[2] + ')';
                             }
                         },
                         data: data2
@@ -120,9 +118,7 @@
                         name: names[2],
                         type: 'scatter',
                         label: {
-                            normal: {
-                                show: true
-                            }
+                            show: true
                         },
                         symbolSize: function (val) {
                             return val[2] * 40;

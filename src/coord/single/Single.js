@@ -5,6 +5,7 @@
 import SingleAxis from './SingleAxis';
 import * as axisHelper from '../axisHelper';
 import {getLayoutRect} from '../../util/layout';
+import {each} from 'zrender/src/core/util';
 
 /**
  * Create a single coordinates system.
@@ -97,10 +98,9 @@ Single.prototype = {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.coordinateSystem === this) {
                 var data = seriesModel.getData();
-                var dim = this.dimension;
-                this._axis.scale.unionExtentFromData(
-                    data, seriesModel.coordDimToDataDim(dim)
-                );
+                each(data.mapDimension(this.dimension, true), function (dim) {
+                    this._axis.scale.unionExtentFromData(data, dim);
+                }, this);
                 axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);
             }
         }, this);

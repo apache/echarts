@@ -1,47 +1,65 @@
-import {each, createHashMap} from 'zrender/src/core/util';
+import {each, createHashMap, assert} from 'zrender/src/core/util';
+import { __DEV__ } from '../../config';
 
-export var SPECIAL_DIMENSIONS = createHashMap([
+export var OTHER_DIMENSIONS = createHashMap([
     'tooltip', 'label', 'itemName', 'seriesName'
 ]);
 
-/**
- * Summarize and cache for avoiding repeat calculation while travel data.
- * @return {Object}
- * {
- *     each of SPECIAL_DIMENSIONS in concrete dim. Array not null/undefined.
- *     lastValueDimension: a set of DIMENSION_TYPES in concrete dim. Array not null/undefined.
- * }
- */
 export function summarizeDimensions(data) {
     var summary = {};
-    SPECIAL_DIMENSIONS.each(function (v, dimType) {
-        summary[dimType] = otherDimToDataDim(data, dimType);
+    var encode = summary.encode = {};
+    var defaultedLabel = [];
+
+    each(data.dimensions, function (dimName) {
+        var dimItem = data.getDimensionInfo(dimName);
+
+        var coordDim = dimItem.coordDim;
+        if (coordDim) {
+            if (__DEV__) {
+                assert(OTHER_DIMENSIONS.get(coordDim) == null);
+            }
+            var coordDimArr = encode[coordDim];
+            if (!encode.hasOwnProperty(coordDim)) {
+                coordDimArr = encode[coordDim] = [];
+            }
+            coordDimArr[dimItem.coordDimIndex] = dimName;
+
+            if (dimItem.isSysCoord && mayLabelDimType(dimItem.type)) {
+                defaultedLabel.push(dimName);
+            }
+        }
+
+        OTHER_DIMENSIONS.each(function (v, otherDim) {
+            var otherDimArr = encode[otherDim];
+            if (!encode.hasOwnProperty(otherDim)) {
+                otherDimArr = encode[otherDim] = [];
+            }
+
+            var dimIndex = dimItem.otherDims[otherDim];
+            if (dimIndex != null && dimIndex !== false) {
+                otherDimArr[dimIndex] = dimItem.name;
+            }
+        });
     });
-    summary.lastValueDimension = findTheLastValueDimensions(data);
-    summary.noDefaultLabel = !(summary.label[0] || summary.lastValueDimension);
+
+    var encodeLabel = encode.label;
+    if (encodeLabel && encodeLabel.length) {
+        defaultedLabel = encodeLabel.slice();
+    }
+
+    var defaultedTooltip = defaultedLabel.slice();
+    var encodeTooltip = encode.tooltip;
+    if (encodeTooltip && encodeTooltip.length) {
+        defaultedTooltip = encodeTooltip.slice();
+    }
+
+    encode.defaultedLabel = defaultedLabel;
+    encode.defaultedTooltip = defaultedTooltip;
+
     return summary;
 }
 
-/**
- * @see {module:echarts/data/helper/createDimensions}
- * @param {module:echarts/data/List} data
- * @param {string} otherDim See OTHER_DIMS
- * @return {Array.<string>} data dimensions on the otherDim.
- */
-export function otherDimToDataDim(data, otherDim) {
-    var dataDim = [];
-    each(data.dimensions, function (dimName) {
-        var dimItem = data.getDimensionInfo(dimName);
-        var otherDims = dimItem.otherDims;
-        var dimIndex = otherDims[otherDim];
-        if (dimIndex != null && dimIndex !== false) {
-            dataDim[dimIndex] = dimItem.name;
-        }
-    });
-    return dataDim;
-}
-
-export function getValueTypeByAxis(axisType) {
+export function getDimensionTypeByAxis(axisType) {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'
@@ -49,15 +67,21 @@ export function getValueTypeByAxis(axisType) {
         : 'float';
 }
 
-function findTheLastValueDimensions(data) {
-    // Get last value dim
-    var dimensions = data.dimensions.slice();
-    var valueType;
-    var valueDim;
-    while (dimensions.length && (
-        valueDim = dimensions.pop(),
-        valueType = data.getDimensionInfo(valueDim).type,
-        valueType === 'ordinal' || valueType === 'time'
-    )) {} // jshint ignore:line
-    return valueDim;
+function mayLabelDimType(dimType) {
+    // In most cases, ordinal and time do not suitable for label.
+    // Ordinal info can be displayed on axis. Time is too long.
+    return !(dimType === 'ordinal' || dimType === 'time');
 }
+
+// function findTheLastDimMayLabel(data) {
+//     // Get last value dim
+//     var dimensions = data.dimensions.slice();
+//     var valueType;
+//     var valueDim;
+//     while (dimensions.length && (
+//         valueDim = dimensions.pop(),
+//         valueType = data.getDimensionInfo(valueDim).type,
+//         valueType === 'ordinal' || valueType === 'time'
+//     )) {} // jshint ignore:line
+//     return valueDim;
+// }

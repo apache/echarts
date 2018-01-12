@@ -60,10 +60,12 @@ function themeRiverLayout(data, seriesModel, height) {
     var layerSeries = seriesModel.getLayerSeries();
 
     // the points in each layer.
+    var timeDim = data.mapDimension('single');
+    var valueDim = data.mapDimension('value');
     var layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
         return zrUtil.map(singleLayer.indices, function (idx) {
-            var pt = coordSys.dataToPoint(data.get('time', idx));
-            pt[1] = data.get('value', idx);
+            var pt = coordSys.dataToPoint(data.get(timeDim, idx));
+            pt[1] = data.get(valueDim, idx);
             return pt;
         });
     });

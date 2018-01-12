@@ -366,19 +366,17 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         var opacity = data.getItemVisual(dataIndexInside, 'opacity');
         opacity != null && (itemStyle.opacity = opacity);
 
-        if (!data.dimensionsSummary.noDefaultLabel) {
-            graphicUtil.setTextStyle(itemStyle, currLabelNormalModel, null, {
-                autoColor: currVisualColor,
-                isRectText: true
-            });
+        graphicUtil.setTextStyle(itemStyle, currLabelNormalModel, null, {
+            autoColor: currVisualColor,
+            isRectText: true
+        });
 
-            itemStyle.text = currLabelNormalModel.getShallow('show')
-                ? zrUtil.retrieve2(
-                    customSeries.getFormattedLabel(dataIndexInside, 'normal'),
-                    getDefaultLabel(data, dataIndexInside)
-                )
-                : null;
-        }
+        itemStyle.text = currLabelNormalModel.getShallow('show')
+            ? zrUtil.retrieve2(
+                customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                getDefaultLabel(data, dataIndexInside)
+            )
+            : null;
 
         extra && zrUtil.extend(itemStyle, extra);
         return itemStyle;
@@ -395,19 +393,17 @@ function makeRenderItem(customSeries, data, ecModel, api) {
 
         var itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
 
-        if (currLabelValueDim != null) {
-            graphicUtil.setTextStyle(itemStyle, currLabelEmphasisModel, null, {
-                isRectText: true
-            }, true);
+        graphicUtil.setTextStyle(itemStyle, currLabelEmphasisModel, null, {
+            isRectText: true
+        }, true);
 
-            itemStyle.text = currLabelEmphasisModel.getShallow('show')
-                ? zrUtil.retrieve3(
-                    customSeries.getFormattedLabel(dataIndexInside, 'emphasis'),
-                    customSeries.getFormattedLabel(dataIndexInside, 'normal'),
-                    data.get(currLabelValueDim, dataIndexInside)
-                )
-                : null;
-        }
+        itemStyle.text = currLabelEmphasisModel.getShallow('show')
+            ? zrUtil.retrieve3(
+                customSeries.getFormattedLabel(dataIndexInside, 'emphasis'),
+                customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                getDefaultLabel(data, dataIndexInside)
+            )
+            : null;
 
         extra && zrUtil.extend(itemStyle, extra);
         return itemStyle;

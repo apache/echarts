@@ -1,4 +1,4 @@
-import {makeInner} from '../../util/model';
+import {makeInner, normalizeToArray} from '../../util/model';
 
 var inner = makeInner();
 
@@ -17,7 +17,7 @@ export default {
         if (colorNameMap.hasOwnProperty(name)) {
             return colorNameMap[name];
         }
-        var colorPalette = this.get('color', true) || [];
+        var colorPalette = normalizeToArray(this.get('color', true));
         if (!colorPalette.length) {
             return;
         }

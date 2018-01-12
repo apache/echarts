@@ -18,7 +18,7 @@ export default function (seriesType) {
             }
 
             var dims = map(coordSys.dimensions, function (dim) {
-                return data.getDimension(seriesModel.coordDimToDataDim(dim)[0]);
+                return data.getDimension(data.mapDimension(dim));
             }).slice(0, 2);
             var dimLen = dims.length;
 

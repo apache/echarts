@@ -1,18 +1,13 @@
 /**
  * @deprecated
  * Use `echarts/data/helper/createDimensions` instead.
- * Complete dimensions by data (guess dimension).
  */
 
-import * as zrUtil from 'zrender/src/core/util';
+import {createHashMap, each, isString, defaults, clone} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal} from './sourceHelper';
 import Source from '../Source';
-import {SPECIAL_DIMENSIONS} from './dimensionHelper';
-
-var each = zrUtil.each;
-var isString = zrUtil.isString;
-var defaults = zrUtil.defaults;
+import {OTHER_DIMENSIONS} from './dimensionHelper';
 
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
@@ -25,7 +20,7 @@ var defaults = zrUtil.defaults;
  * @param {Array.<string>} sysDims Necessary dimensions, like ['x', 'y'], which
  *      provides not only dim template, but also default order.
  *      `name` of each item provides default coord name.
- *      [{dimsDef: []}, ...] can be specified to give names.
+ *      [{dimsDef: [string...]}, ...] can be specified to give names.
  * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
  * @param {Object} [opt]
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
@@ -37,13 +32,15 @@ var defaults = zrUtil.defaults;
  *                      If not specified, extra dim names will be:
  *                      extraPrefix, extraPrefix + 0, extraPrefix + 1 ...
  * @param {number} [opt.dimCount] If not specified, guess by the first data item.
+ * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
  * @return {Array.<Object>} [{
  *      name: string mandatory,
  *      coordDim: string mandatory,
+ *      isSysCoord: boolean True if the coord is from sys dimension.
  *      coordDimIndex: number mandatory,
  *      type: string optional,
  *      tooltipName: string optional,
- *      otherDims: {
+ *      otherDims: { never null/undefined
  *          tooltip: number optional,
  *          label: number optional,
  *          itemName: number optional,
@@ -55,16 +52,16 @@ var defaults = zrUtil.defaults;
  */
 function completeDimensions(sysDims, source, opt) {
     // ??? remove the compatible?
-    if (!(source instanceof Source)) {
+    if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
     }
 
     opt = opt || {};
     sysDims = (sysDims || []).slice();
     var dimsDef = (opt.dimsDef || []).slice();
-    var encodeDef = zrUtil.createHashMap(opt.encodeDef);
-    var dataDimNameMap = zrUtil.createHashMap();
-    var coordDimNameMap = zrUtil.createHashMap();
+    var encodeDef = createHashMap(opt.encodeDef);
+    var dataDimNameMap = createHashMap();
+    var coordDimNameMap = createHashMap();
     // var valueCandidate;
     var result = [];
 
@@ -113,7 +110,7 @@ function completeDimensions(sysDims, source, opt) {
         }
         else {
             coordDim = sysDimItem.name;
-            sysDimItem = zrUtil.clone(sysDimItem);
+            sysDimItem = clone(sysDimItem);
             // `coordDimIndex` should not be set directly.
             sysDimItemDimsDef = sysDimItem.dimsDef;
             sysDimItemOtherDims = sysDimItem.otherDims;
@@ -131,6 +128,7 @@ function completeDimensions(sysDims, source, opt) {
                 availDimIdx < result.length && dataDims.push(availDimIdx++);
             }
         }
+
         // Apply templates.
         each(dataDims, function (resultDimIdx, coordDimIndex) {
             var resultItem = result[resultDimIdx];
@@ -138,12 +136,14 @@ function completeDimensions(sysDims, source, opt) {
             if (resultItem.name == null && sysDimItemDimsDef) {
                 resultItem.name = resultItem.tooltipName = sysDimItemDimsDef[coordDimIndex];
             }
+            resultItem.isSysCoord = true;
+            // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}
             sysDimItemOtherDims && defaults(resultItem.otherDims, sysDimItemOtherDims);
         });
     });
 
     function applyDim(resultItem, coordDim, coordDimIndex) {
-        if (SPECIAL_DIMENSIONS.get(coordDim) != null) {
+        if (OTHER_DIMENSIONS.get(coordDim) != null) {
             resultItem.otherDims[coordDim] = coordDimIndex;
         }
         else {

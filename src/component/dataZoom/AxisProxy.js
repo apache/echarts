@@ -302,7 +302,7 @@ AxisProxy.prototype = {
         // Process series data
         each(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
-            var dataDims = seriesModel.coordDimToDataDim(axisDim);
+            var dataDims = seriesData.mapDimension(axisDim, true);
 
             if (filterMode === 'weakFilter') {
                 seriesData.filterSelf(function (dataIndex) {
@@ -361,7 +361,7 @@ function calculateDataExtent(axisProxy, axisDim, seriesModels) {
     each(seriesModels, function (seriesModel) {
         var seriesData = seriesModel.getData();
         if (seriesData) {
-            each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
+            each(seriesData.mapDimension(axisDim, true), function (dim) {
                 var seriesExtent = seriesData.getApproximateExtent(dim);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);

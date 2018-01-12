@@ -241,8 +241,8 @@ export function layout(seriesType, ecModel, api) {
             : valueAxis.getGlobalExtent()[0];
 
         var coordDims = [
-            seriesModel.coordDimToDataDim('x')[0],
-            seriesModel.coordDimToDataDim('y')[0]
+            data.mapDimension('x'),
+            data.mapDimension('y')
         ];
         var coords = data.mapArray(coordDims, function (x, y) {
             return cartesian.dataToPoint([x, y]);
@@ -256,7 +256,7 @@ export function layout(seriesType, ecModel, api) {
             size: columnWidth
         });
 
-        data.each(seriesModel.coordDimToDataDim(valueAxis.dim)[0], function (value, idx) {
+        data.each(data.mapDimension(valueAxis.dim), function (value, idx) {
             if (isNaN(value)) {
                 return;
             }

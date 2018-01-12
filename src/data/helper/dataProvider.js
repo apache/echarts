@@ -3,18 +3,23 @@
 // merge with defaultDimValueGetter?
 
 import {__DEV__} from '../../config';
-import {isTypedArray, extend, assert, each} from 'zrender/src/core/util';
+import {isTypedArray, extend, assert, each, isObject, isArray} from 'zrender/src/core/util';
 import {getDataItemValue, isDataItemOption} from '../../util/model';
 import {parseDate} from '../../util/number';
 import Source from '../Source';
-import {SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ARRAY_ROWS} from './sourceHelper';
+import {
+    SOURCE_FORMAT_TYPED_ARRAY,
+    SOURCE_FORMAT_ARRAY_ROWS,
+    SOURCE_FORMAT_ORIGINAL,
+    SOURCE_FORMAT_OBJECT_ROWS
+} from './sourceHelper';
 
 /**
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
  */
 export function DefaultDataProvider(source, dimSize) {
-    if (!(source instanceof Source)) {
+    if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
     }
     this._source = source;
@@ -186,7 +191,7 @@ export var defaultDimValueGetters = {
     arrayRows: getDimValueSimply,
 
     objectRows: function (dataItem, dimName, dataIndex, dimIndex) {
-        return dataItem[dimName];
+        return converDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
     },
 
     keyedColumns: getDimValueSimply,
@@ -228,11 +233,9 @@ function converDataValue(value, dimInfo) {
     if (dimType === 'ordinal') {
         // If given value is a category string
         var ordinalMeta = dimInfo && dimInfo.ordinalMeta;
-        return !ordinalMeta
-            ? value
-            : typeof value === 'string'
+        return ordinalMeta
             ? ordinalMeta.parseAndCollect(value)
-            : NaN;
+            : value;
     }
 
     if (dimType === 'time'
@@ -249,4 +252,34 @@ function converDataValue(value, dimInfo) {
     // parse to NaN.
     return (value == null || value === '')
         ? NaN : +value; // If string (like '-'), using '+' parse to NaN
+}
+
+// ??? FIXME can these logic be more neat: getRawValue, getRawDataItem,
+// Consider persistent.
+/**
+ * @return {Array.<number>|number} can be null/undefined.
+ */
+export function getRawValueForModel(model, dataIndex, dataType) {
+    var data = model.getData(dataType);
+    // Consider data may be not persistent.
+    var dataItem = data.getRawDataItem(dataIndex);
+    var sourceFormat = data.getProvider().getSource().sourceFormat;
+    if (dataItem == null) {
+        return;
+    }
+    if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+        return (isObject(dataItem) && !isArray(dataItem))
+            ? dataItem.value : dataItem;
+    }
+    else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
+        var item = [];
+        var dims = data.dimensions;
+        for (var i = 0; i < dims.length; i++) {
+            item.push(dataItem[dims[i]]);
+        }
+        return item;
+    }
+    else {
+        return dataItem;
+    }
 }

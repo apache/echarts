@@ -260,17 +260,20 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 
     var useNameLabel = seriesScope && seriesScope.useNameLabel;
 
-    if (useNameLabel || !data.dimensionsSummary.noDefaultLabel) {
-        graphic.setLabelStyle(
-            elStyle, hoverItemStyle, labelModel, hoverLabelModel,
-            {
-                labelFetcher: seriesModel,
-                labelDataIndex: idx,
-                defaultText: useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx),
-                isRectText: true,
-                autoColor: color
-            }
-        );
+    graphic.setLabelStyle(
+        elStyle, hoverItemStyle, labelModel, hoverLabelModel,
+        {
+            labelFetcher: seriesModel,
+            labelDataIndex: idx,
+            defaultText: getLabelDefaultText,
+            isRectText: true,
+            autoColor: color
+        }
+    );
+
+    // Do not execute util needed.
+    function getLabelDefaultText(idx, opt) {
+        return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
     }
 
     symbolPath.off('mouseover')

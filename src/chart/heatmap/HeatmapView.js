@@ -105,6 +105,9 @@ export default echarts.extendChartView({
     _renderOnCartesianAndCalendar: function (seriesModel, api, start, end, incremental) {
 
         var coordSys = seriesModel.coordinateSystem;
+        var width;
+        var height;
+
         if (coordSys.type === 'cartesian2d') {
             var xAxis = coordSys.getAxis('x');
             var yAxis = coordSys.getAxis('y');
@@ -118,9 +121,8 @@ export default echarts.extendChartView({
                 }
             }
 
-            var width = xAxis.getBandWidth();
-            var height = yAxis.getBandWidth();
-
+            width = xAxis.getBandWidth();
+            height = yAxis.getBandWidth();
         }
 
         var group = this.group;
@@ -136,15 +138,16 @@ export default echarts.extendChartView({
         var hoverLabelModel = seriesModel.getModel(hoverLabelQuery);
         var coordSysType = coordSys.type;
 
+
         var dataDims = coordSysType === 'cartesian2d'
             ? [
-                seriesModel.coordDimToDataDim('x')[0],
-                seriesModel.coordDimToDataDim('y')[0],
-                seriesModel.coordDimToDataDim('value')[0]
+                data.mapDimension('x'),
+                data.mapDimension('y'),
+                data.mapDimension('value')
             ]
             : [
-                seriesModel.coordDimToDataDim('time')[0],
-                seriesModel.coordDimToDataDim('value')[0]
+                data.mapDimension('time'),
+                data.mapDimension('value')
             ];
 
         for (var idx = start; idx < end; idx++) {
@@ -257,7 +260,13 @@ export default echarts.extendChartView({
         var width = x2 - x;
         var height = y2 - y;
 
-        var points = data.mapArray(['lng', 'lat', 'value'], function (lng, lat, value) {
+        var dims = [
+            data.mapDimension('lng'),
+            data.mapDimension('lat'),
+            data.mapDimension('value')
+        ];
+
+        var points = data.mapArray(dims, function (lng, lat, value) {
             var pt = geo.dataToPoint([lng, lat]);
             pt[0] -= x;
             pt[1] -= y;

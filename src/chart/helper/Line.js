@@ -296,23 +296,21 @@ lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
 
     var label = this.childOfName('label');
     var defaultLabelColor;
-    var defaultText;
     var normalText;
     var emphasisText;
 
     if (showLabel || hoverShowLabel) {
-        var rawVal = seriesModel.getRawValue(idx);
-        defaultText = rawVal == null
-            ? defaultText = lineData.getName(idx)
-            : isFinite(rawVal)
-            ? round(rawVal)
-            : rawVal;
         defaultLabelColor = visualColor || '#000';
 
-        normalText = zrUtil.retrieve2(
-            seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
-            defaultText
-        );
+        normalText = seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType);
+        if (normalText == null) {
+            var rawVal = seriesModel.getRawValue(idx);
+            normalText = rawVal == null
+                ? lineData.getName(idx)
+                : isFinite(rawVal)
+                ? round(rawVal)
+                : rawVal;
+        }
         emphasisText = zrUtil.retrieve2(
             seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
             normalText

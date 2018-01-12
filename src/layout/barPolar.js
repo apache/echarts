@@ -64,8 +64,8 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var valueMin = valueAxis.model.get('min');
 
         var coordDims = [
-            seriesModel.coordDimToDataDim('radius')[0],
-            seriesModel.coordDimToDataDim('angle')[0]
+            data.mapDimension('radius'),
+            data.mapDimension('angle')
         ];
         var coords = data.mapArray(coordDims, function (radius, angle) {
             return polar.dataToPoint([radius, angle]);
@@ -74,7 +74,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
         lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
-        data.each(seriesModel.coordDimToDataDim(valueAxis.dim)[0], function (value, idx) {
+        data.each(data.mapDimension(valueAxis.dim), function (value, idx) {
             if (isNaN(value)) {
                 return;
             }

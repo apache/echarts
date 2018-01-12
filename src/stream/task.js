@@ -1,4 +1,4 @@
-import {assert, each} from 'zrender/src/core/util';
+import {assert} from 'zrender/src/core/util';
 import { __DEV__ } from '../config';
 
 /**
@@ -39,7 +39,6 @@ var taskProto = Task.prototype;
  * @param {number} [performArgs.skip] Skip customer perform call.
  */
 taskProto.perform = function (performArgs) {
-
     var planResult;
     if (this._plan) {
         planResult = this._plan(this.context, this._upstream && this._upstream.context);
@@ -133,14 +132,13 @@ taskProto.unfinished = function () {
  */
 taskProto.pipe = function (downTask) {
     if (__DEV__) {
-        assert(downTask && !downTask._disposed);
+        assert(downTask && !downTask._disposed && downTask !== this);
     }
 
     // If already downstream, do not dirty downTask.
     if (this._downstream !== downTask || this._dirty) {
         this._downstream = downTask;
         downTask._upstream = this;
-
         downTask.dirty();
     }
 };

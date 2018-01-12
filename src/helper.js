@@ -29,6 +29,8 @@ export {getLayoutRect};
  */
 export {default as completeDimensions} from './data/helper/completeDimensions';
 
+export {default as createDimensions} from './data/helper/createDimensions';
+
 /**
  * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
  * @see http://echarts.baidu.com/option.html#series-scatter.symbol
@@ -48,7 +50,7 @@ export {createSymbol} from './util/symbol';
  */
 export function createScale(dataExtent, option) {
     var axisModel = option;
-    if (!(option instanceof Model)) {
+    if (!Model.isInstance(option)) {
         axisModel = new Model(option);
         zrUtil.mixin(axisModel, axisModelCommonMixin);
     }

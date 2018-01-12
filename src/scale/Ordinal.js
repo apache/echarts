@@ -9,6 +9,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
+import OrdinalMeta from '../data/OrdinalMeta';
 
 var scaleProto = Scale.prototype;
 
@@ -16,7 +17,15 @@ var OrdinalScale = Scale.extend({
 
     type: 'ordinal',
 
+    /**
+     * @param {module:echarts/data/OrdianlMeta|Array.<string>} ordinalMeta
+     */
     init: function (ordinalMeta, extent) {
+        // Caution: Should not use instanceof, consider ec-extensions using
+        // import approach to get OrdinalMeta class.
+        if (!ordinalMeta || zrUtil.isArray(ordinalMeta)) {
+            ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
+        }
         this._ordinalMeta = ordinalMeta;
         this._extent = extent || [0, ordinalMeta.categories.length - 1];
     },

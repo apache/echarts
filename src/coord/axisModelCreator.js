@@ -29,11 +29,6 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
              */
             type: axisName + 'Axis.' + axisType,
 
-            /**
-             * @readOnly
-             */
-            ordinalMeta: null,
-
             mergeDefaultAndTheme: function (option, ecModel) {
                 var layoutMode = this.layoutMode;
                 var inputPositionParams = layoutMode
@@ -56,7 +51,7 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
             optionUpdated: function () {
                 var thisOption = this.option;
                 if (thisOption.type === 'category') {
-                    this.ordinalMeta = new OrdinalMeta(this);
+                    this.__ordinalMeta = OrdinalMeta.createByAxisModel(this);
                 }
             },
 
@@ -68,8 +63,12 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
                 // FIXME
                 // warning if called before all of 'getInitailData' finished.
                 if (this.option.type === 'category') {
-                    return this.ordinalMeta.categories;
+                    return this.__ordinalMeta.categories;
                 }
+            },
+
+            getOrdinalMeta: function () {
+                return this.__ordinalMeta;
             },
 
             defaultOption: zrUtil.mergeAll(

@@ -187,7 +187,7 @@ function dispatchAction(api, batch) {
  * Merge roamController settings when multiple dataZooms share one roamController.
  */
 function mergeControllerParams(dataZoomInfos) {
-    var controlType = 'none';
+    var controlType;
     var opt = {};
     // DO NOT use reserved word (true, false, undefined) as key literally. Even if encapsulated
     // as string, it is probably revert to reserved word by compress tool. See #7411.

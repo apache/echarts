@@ -3,8 +3,6 @@ import {parseClassType} from './clazz';
 
 var base = 0;
 
-var DELIMITER = '_';
-
 /**
  * @public
  * @param {string} type
@@ -13,7 +11,7 @@ var DELIMITER = '_';
 export function getUID(type) {
     // Considering the case of crossing js context,
     // use Math.random to make id as unique as possible.
-    return [(type || ''), base++, Math.random()].join(DELIMITER);
+    return [(type || ''), base++, Math.random()].join('_');
 }
 
 /**

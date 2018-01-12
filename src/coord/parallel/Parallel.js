@@ -143,7 +143,7 @@ Parallel.prototype = {
 
             each(this.dimensions, function (dim) {
                 var axis = this._axesMap.get(dim);
-                axis.scale.unionExtentFromData(data, dim);
+                axis.scale.unionExtentFromData(data, data.mapDimension(dim));
                 axisHelper.niceScaleExtent(axis.scale, axis.model);
             }, this);
         }, this);

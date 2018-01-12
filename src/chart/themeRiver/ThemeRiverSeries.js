@@ -4,7 +4,9 @@
  */
 
 import SeriesModel from '../../model/Series';
-import createListSimply from '../helper/createListSimply';
+import createDimensions from '../../data/helper/createDimensions';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
+import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import nest from '../../util/array/nest';
@@ -122,6 +124,7 @@ var ThemeRiverSeries = SeriesModel.extend({
             return dataItem[2] !== undefined;
         });
 
+        // ??? TODO design a stage to transfer data for themeRiver and lines?
         var data = this.fixData(filterData || []);
         var nameList = [];
         var nameMap = this.nameMap = zrUtil.createHashMap();
@@ -135,37 +138,33 @@ var ThemeRiverSeries = SeriesModel.extend({
             }
         }
 
-        var sysDimensions = [
-            {
-                name: 'time',
-                // FIXME common?
-                type: axisType === 'category'
-                    ? 'ordinal'
-                    : axisType === 'time'
-                    ? 'time'
-                    : 'float'
-            },
-            {
-                name: 'value',
-                type: 'float'
-            },
-            {
-                name: 'name',
-                type: 'ordinal'
+        var dimensionsInfo = createDimensions(data, {
+            coordDimensions: ['single'],
+            dimensionsDefine: [
+                {
+                    name: 'time',
+                    type: getDimensionTypeByAxis(axisType)
+                },
+                {
+                    name: 'value',
+                    type: 'float'
+                },
+                {
+                    name: 'name',
+                    type: 'ordinal'
+                }
+            ],
+            encodeDefine: {
+                single: 0,
+                value: 1,
+                itemName: 2
             }
-        ];
+        });
 
-        return createListSimply(this, sysDimensions);
-    },
+        var list = new List(dimensionsInfo, this);
+        list.initData(data);
 
-    /**
-     * Used by single coordinate
-     *
-     * @param {string} axisDim  the dimension for single coordinate
-     * @return {Array.<string> } specified dimensions on the axis.
-     */
-    coordDimToDataDim: function (axisDim) {
-        return ['time'];
+        return list;
     },
 
     /**
@@ -196,12 +195,14 @@ var ThemeRiverSeries = SeriesModel.extend({
             };
         });
 
+        var timeDim = data.mapDimension('single');
+
         for (var j = 0; j < layerSeries.length; ++j) {
             layerSeries[j].indices.sort(comparer);
         }
 
         function comparer(index1, index2) {
-            return data.get('time', index1) - data.get('time', index2);
+            return data.get(timeDim, index1) - data.get(timeDim, index2);
         }
 
         return layerSeries;
@@ -252,8 +253,8 @@ var ThemeRiverSeries = SeriesModel.extend({
      */
     formatTooltip: function (dataIndex) {
         var data = this.getData();
-        var htmlName = data.get('name', dataIndex);
-        var htmlValue = data.get('value', dataIndex);
+        var htmlName = data.getName(dataIndex);
+        var htmlValue = data.get(data.mapDimension('value'), dataIndex);
         if (isNaN(htmlValue) || htmlValue == null) {
             htmlValue = '-';
         }

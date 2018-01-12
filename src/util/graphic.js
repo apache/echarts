@@ -457,7 +457,7 @@ export function setHoverStyle(el, hoverStyle, opt) {
  * @param {module:echarts/model/Model} normalModel
  * @param {module:echarts/model/Model} emphasisModel
  * @param {Object} opt Check `opt` of `setTextStyleCommon` to find other props.
- * @param {Object} [opt.defaultText]
+ * @param {string|Function} [opt.defaultText]
  * @param {module:echarts/model/Model} [opt.labelFetcher] Fetch text by
  *      `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
  * @param {module:echarts/model/Model} [opt.labelDataIndex] Fetch text by
@@ -487,14 +487,15 @@ export function setLabelStyle(
     // Consider performance, only fetch label when necessary.
     // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
     // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
-    var baseText = (showNormal || showEmphasis)
-        ? zrUtil.retrieve2(
-            labelFetcher
-                ? labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex)
-                : null,
-            opt.defaultText
-        )
-        : null;
+    var baseText;
+    if (showNormal || showEmphasis) {
+        if (labelFetcher) {
+            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
+        }
+        if (baseText == null) {
+            baseText = zrUtil.isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+        }
+    }
     var normalStyleText = showNormal ? baseText : null;
     var emphasisStyleText = showEmphasis
         ? zrUtil.retrieve2(

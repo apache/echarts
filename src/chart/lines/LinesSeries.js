@@ -30,11 +30,14 @@ var LinesSeries = SeriesModel.extend({
     },
 
     mergeOption: function (option) {
-        var result = this._processFlatCoordsArray(option.data);
-        this._flatCoords = result.flatCoords;
-        this._flatCoordsOffset = result.flatCoordsOffset;
-        if (result.flatCoords) {
-            option.data = new Float32Array(result.count);
+        if (option.data) {
+            // Only update when have option data to merge.
+            var result = this._processFlatCoordsArray(option.data);
+            this._flatCoords = result.flatCoords;
+            this._flatCoordsOffset = result.flatCoordsOffset;
+            if (result.flatCoords) {
+                option.data = new Float32Array(result.count);
+            }
         }
 
         LinesSeries.superApply(this, 'mergeOption', arguments);
@@ -197,6 +200,22 @@ var LinesSeries = SeriesModel.extend({
 
     preventIncremental: function () {
         return !!this.get('effect.show');
+    },
+
+    getProgressive: function () {
+        var progressive = this.option.progressive;
+        if (progressive == null) {
+            return this.option.large ? 1e4 : this.get('progressive');
+        }
+        return progressive;
+    },
+
+    getProgressiveThreshold: function () {
+        var progressiveThreshold = this.option.progressiveThreshold;
+        if (progressiveThreshold == null) {
+            return this.option.large ? 2e4 : this.get('progressiveThreshold');
+        }
+        return progressiveThreshold;
     },
 
     defaultOption: {

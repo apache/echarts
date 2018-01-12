@@ -69,8 +69,7 @@ export function formatTpl(tpl, paramsList, encode) {
     var $vars = paramsList[0].$vars || [];
     for (var i = 0; i < $vars.length; i++) {
         var alias = TPL_VAR_ALIAS[i];
-        var val = wrapVar(alias, 0);
-        tpl = tpl.replace(wrapVar(alias), encode ? encodeHTML(val) : val);
+        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
     }
     for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
         for (var k = 0; k < $vars.length; k++) {
@@ -104,16 +103,29 @@ export function formatTplSimple(tpl, param, encode) {
 }
 
 /**
- * @param {string} color
- * @param {string} [extraCssText]
+ * @param {Object|string} [opt] If string, means color.
+ * @param {string} [opt.color]
+ * @param {string} [opt.extraCssText]
+ * @param {string} [opt.type='item'] 'item' or 'subItem'
  * @return {string}
  */
-export function getTooltipMarker(color, extraCssText) {
-    return color
-        ? '<span style="display:inline-block;margin-right:5px;'
-            + 'border-radius:10px;width:9px;height:9px;background-color:'
+export function getTooltipMarker(opt, extraCssText) {
+    opt = zrUtil.isString(opt) ? {color: opt, extraCssText: extraCssText} : (opt || {});
+    var color = opt.color;
+    var type = opt.type;
+    var extraCssText = opt.extraCssText;
+
+    if (!color) {
+        return '';
+    }
+
+    return type === 'subItem'
+        ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
+            + 'border-radius:4px;width:4px;height:4px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
-        : '';
+        : '<span style="display:inline-block;margin-right:5px;'
+            + 'border-radius:10px;width:10px;height:10px;background-color:'
+            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
 }
 
 /**

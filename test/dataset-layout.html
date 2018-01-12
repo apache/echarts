@@ -9,29 +9,22 @@
     </head>
     <body>
         <style>
-            h1 {
-                padding: 20px;
+            .test-title {
                 background: rgb(0, 112, 6);
                 color: #fff;
-                font-weight: normal;
-                text-align: center;
-                font-size: 14px;
-            }
-            .chart {
-                height: 300px;
             }
         </style>
 
 
-        <h1>
-            [Default] seriesLayoutBy, enocde, name, head, legend
-        </h1>
-        <!-- <div class="chart" id="layout0"></div> -->
-        <h1>
-            seriesLayoutBy: 'row' and 'column'<br>
-            [Default] enocde, name, head, legend
-        </h1>
-        <div class="chart" id="layout1"></div>
+
+
+
+        <div id="layout0"></div>
+        <div id="layout1"></div>
+        <div id="layout2"></div>
+
+
+
 
 
 
@@ -44,6 +37,14 @@
                 ['Milk Tea', 83.1, 73.4, 55.1],
                 ['Cheese Cocoa', 86.4, 65.2, 82.5],
                 ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRows1 = [
+                ['product', '2012', '2013', '2014', '2015', '2016', '2017'],
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
             ];
         </script>
 
@@ -69,8 +70,11 @@
                     ]
                 };
 
-                testHelper.createDataTable('layout0', arrayRows0);
-                testHelper.createChart(echarts, 'layout0', option);
+                testHelper.create(echarts, 'layout0', {
+                    title: '[Default] seriesLayoutBy, enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows0
+                });
             });
         </script>
 
@@ -97,8 +101,8 @@
                         {gridIndex: 1}
                     ],
                     grid: [
-                        {top: '55%'},
-                        {bottom: '55%'}
+                        {bottom: '55%'},
+                        {top: '55%'}
                     ],
                     series: [
                         {type: 'bar', xAxisIndex: 0, yAxisIndex: 0, label: {show: true, position: 'top'}},
@@ -111,10 +115,91 @@
                     ]
                 };
 
-                testHelper.createDataTable('layout1', arrayRows0);
-                testHelper.createChart(echarts, 'layout1', option, {height: 500});
+                testHelper.create(echarts, 'layout1', {
+                    title: 'seriesLayoutBy: "row" and "column" \n[Default] enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    height: 500,
+                    info: {
+                        grid: option.grid,
+                        series: option.series
+                    }
+                });
             });
         </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {
+                        trigger: 'axis',
+                        showContent: false
+                    },
+                    dataset: {
+                        source: arrayRows1
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {gridIndex: 0},
+                    grid: {top: '55%'},
+                    series: [
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {type: 'line', smooth: true, seriesLayoutBy: 'row'},
+                        {
+                            type: 'pie',
+                            id: 'pie',
+                            radius: '30%',
+                            center: ['50%', '25%'],
+                            label: {
+                                formatter: '{b}: {@2012} ({d}%)'
+                            },
+                            encode: {
+                                itemName: 'product',
+                                value: '2012',
+                                tooltip: '2012'
+                            }
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'layout2', {
+                    title: 'seriesLayoutBy: row and column, setOption, pie \n [Default] enocde, name, head, legend',
+                    option: option,
+                    dataTable: arrayRows1,
+                    height: 500
+                });
+
+                chart && chart.on('updateAxisPointer', function (event) {
+                    var xAxisInfo = event.axesInfo[0];
+                    if (xAxisInfo) {
+                        var dimension = xAxisInfo.value + 1;
+                        chart.setOption({
+                            series: {
+                                id: 'pie',
+                                label: {
+                                    formatter: '{b}: {@[' + dimension + ']} ({d}%)'
+                                },
+                                encode: {
+                                    value: dimension,
+                                    tooltip: dimension
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        </script>
+
 
 
 

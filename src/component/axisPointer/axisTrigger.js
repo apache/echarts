@@ -1,11 +1,11 @@
 import * as zrUtil from 'zrender/src/core/util';
-import * as modelUtil from '../../util/model';
+import {makeInner} from '../../util/model';
 import * as modelHelper from './modelHelper';
 import findPointFromSeries from './findPointFromSeries';
 
 var each = zrUtil.each;
 var curry = zrUtil.curry;
-var get = modelUtil.makeGetter();
+var inner = makeInner();
 
 /**
  * Basic logic: check all axis, if they do not demand show/highlight,
@@ -172,7 +172,7 @@ function buildPayloadsBySeries(value, axisInfo) {
     var minDiff = -1;
 
     each(axisInfo.seriesModels, function (series, idx) {
-        var dataDim = series.coordDimToDataDim(dim);
+        var dataDim = series.getData().mapDimension(dim, true);
         var seriesNestestValue;
         var dataIndices;
 
@@ -337,8 +337,8 @@ function dispatchHighDownActually(axesInfo, dispatchAction, api) {
 
     var zr = api.getZr();
     var highDownKey = 'axisPointerLastHighlights';
-    var lastHighlights = get(zr)[highDownKey] || {};
-    var newHighlights = get(zr)[highDownKey] = {};
+    var lastHighlights = inner(zr)[highDownKey] || {};
+    var newHighlights = inner(zr)[highDownKey] = {};
 
     // Update highlight/downplay status according to axisPointer model.
     // Build hash map and remove duplicate incidentally.

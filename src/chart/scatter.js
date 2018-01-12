@@ -1,5 +1,5 @@
 import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+// import * as zrUtil from 'zrender/src/core/util';
 
 import './scatter/ScatterSeries';
 import './scatter/ScatterView';
@@ -24,7 +24,7 @@ echarts.registerLayout(layoutPoints('scatter'));
 //         var endPt = coordSys.pointToData([api.getWidth(), api.getHeight()]);
 
 //         var dims = zrUtil.map(coordSys.dimensions, function (dim) {
-//             return seriesModel.coordDimToDataDim(dim)[0];
+//             return data.mapDimension(dim);
 //         });
 //         var range = {};
 //         range[dims[0]] = [Math.min(startPt[0], endPt[0]), Math.max(startPt[0], endPt[0])];

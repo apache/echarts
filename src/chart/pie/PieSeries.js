@@ -19,7 +19,7 @@ var PieSeries = echarts.extendSeriesModel({
             return this.getRawData();
         };
 
-        this.updateSelectedMap(option.data);
+        this.updateSelectedMap(this.getRawData());
 
         this._defaultLabelLine(option);
     },
@@ -27,7 +27,8 @@ var PieSeries = echarts.extendSeriesModel({
     // Overwrite
     mergeOption: function (newOption) {
         PieSeries.superCall(this, 'mergeOption', newOption);
-        this.updateSelectedMap(this.option.data);
+
+        this.updateSelectedMap(this.getRawData());
     },
 
     getInitialData: function (option, ecModel) {
@@ -41,7 +42,7 @@ var PieSeries = echarts.extendSeriesModel({
         // FIXME toFixed?
 
         var valueList = [];
-        data.each('value', function (value) {
+        data.each(data.mapDimension('value'), function (value) {
             valueList.push(value);
         });
 
@@ -132,9 +133,7 @@ var PieSeries = echarts.extendSeriesModel({
         // Animation type canbe expansion, scale
         animationType: 'expansion',
 
-        animationEasing: 'cubicOut',
-
-        data: []
+        animationEasing: 'cubicOut'
     }
 });
 

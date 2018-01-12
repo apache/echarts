@@ -13,6 +13,22 @@ export default SeriesModel.extend({
 
     brushSelector: 'point',
 
+    getProgressive: function () {
+        var progressive = this.option.progressive;
+        if (progressive == null) {
+            return this.option.large ? 1e4 : this.get('progressive');
+        }
+        return progressive;
+    },
+
+    getProgressiveThreshold: function () {
+        var progressiveThreshold = this.option.progressiveThreshold;
+        if (progressiveThreshold == null) {
+            return this.option.large ? 2e4 : this.get('progressiveThreshold');
+        }
+        return progressiveThreshold;
+    },
+
     defaultOption: {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,

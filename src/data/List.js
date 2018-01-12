@@ -42,7 +42,8 @@ function cloneChunk(originalChunk) {
 
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList',
-    '_rawData', '_rawExtent', '_chunkSize', '_chunkCount', '_dimValueGetter', '_count'
+    '_rawData', '_rawExtent', '_chunkSize', '_chunkCount',
+    '_dimValueGetter', '_count', '_nameDimIdx'
 ];
 
 function transferProperties(a, b) {
@@ -102,6 +103,7 @@ var List = function (dimensions, hostModel) {
                 dimensionInfo.coordDimIndex = 0;
             }
         }
+
         dimensionInfo.otherDims = dimensionInfo.otherDims || {};
         dimensionNames.push(dimensionName);
         dimensionInfos[dimensionName] = dimensionInfo;
@@ -254,10 +256,10 @@ var List = function (dimensions, hostModel) {
 
     /**
      * Cache summary info for fast visit. See "dimensionHelper".
-     * @readOnly
      * @type {Object}
+     * @private
      */
-    this.dimensionsSummary = summarizeDimensions(this);
+    this._dimensionsSummary = summarizeDimensions(this);
 };
 
 var listProto = List.prototype;
@@ -285,14 +287,6 @@ listProto.getDimension = function (dim) {
 };
 
 /**
- * @param {Array.<string|number>} dims
- * @return {Array.<string>}
- */
-listProto.parseDimensions = function (dims) {
-    return zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
-};
-
-/**
  * Get type and stackable info of particular dimension
  * @param {string|number} dim
  *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
@@ -304,18 +298,35 @@ listProto.getDimensionInfo = function (dim) {
 };
 
 /**
+ * @param {string} coordDim
+ * @param {number|Array} [idx=0] A coordDim may map to more than one data dim.
+ *        If idx is `true`, return a array of all mapped dims.
+ * @return {string|Array.<string>} concrete data dim.
+ *        If idx is number, and not found, return null/undefined.
+ *        If idx is `true`, and not found, return empty array.
+ */
+listProto.mapDimension = function (coordDim, idx) {
+    var dims = this._dimensionsSummary.encode[coordDim];
+    return idx === true
+        ? (dims && dims.slice() || [])
+        : dims
+        ? dims[idx || 0]
+        : null;
+};
+
+/**
  * Initialize from data
  * @param {Array.<Object|number|Array>} data source or data or data provider.
- * @param {number|Array.<string>} [defaultNameDimIndex] The name of a datum is used on data diff and
- *        defualt label/tooltip. It can be specified in raw data, or by nameList provided outside
- *        (usually provided categroy axis).
- *        If it is a number, the default name is fetched from the dim.
- *        If it is an array, it is nameList (this approach has been deprecated).
+ * @param {Array.<string>} [nameLIst] The name of a datum is used on data diff and
+ *        defualt label/tooltip.
+ *        A name can be specified in encode.itemName,
+ *        or dataItem.name (only for series option data),
+ *        or provided in nameList from outside.
  * @param {Function} [dimValueGetter] (dataItem, dimName, dataIndex, dimIndex) => number
  */
-listProto.initData = function (data, defaultNameDimIndex, dimValueGetter) {
+listProto.initData = function (data, nameList, dimValueGetter) {
 
-    var notProvider = data instanceof Source || zrUtil.isArrayLike(data);
+    var notProvider = Source.isInstance(data) || zrUtil.isArrayLike(data);
     if (notProvider) {
         data = new DefaultDataProvider(data, this.dimensions.length);
     }
@@ -332,13 +343,7 @@ listProto.initData = function (data, defaultNameDimIndex, dimValueGetter) {
     this._storage = {};
     this._indices = null;
 
-    this._nameList = [];
-    // @deprecated
-    if (zrUtil.isArray(defaultNameDimIndex)) {
-        this._nameList = defaultNameDimIndex;
-        defaultNameDimIndex = null;
-    }
-    this._defaultNameDimIndex = defaultNameDimIndex;
+    this._nameList = nameList || [];
 
     this._idList = [];
 
@@ -397,7 +402,6 @@ listProto._initDataFromProvider = function (start, end) {
     var dimensions = this.dimensions;
     var dimensionInfoMap = this._dimensionInfos;
     var nameList = this._nameList;
-    var defaultNameDimIndex = this._defaultNameDimIndex;
     var idList = this._idList;
     var rawExtent = this._rawExtent;
     var nameRepeatCount = this._nameRepeatCount = {};
@@ -413,7 +417,7 @@ listProto._initDataFromProvider = function (start, end) {
 
         var dimInfo = dimensionInfoMap[dim];
         if (dimInfo.otherDims.itemName === 0) {
-            nameDimIdx = i;
+            nameDimIdx = this._nameDimIdx = i;
         }
         var DataCtor = dataCtors[dimInfo.type];
 
@@ -466,38 +470,24 @@ listProto._initDataFromProvider = function (start, end) {
             }
         }
 
-        // ??? TODO
-        // If category dim exists, and pure, also calculate name?
-        // Use the name in option and create id
+        // ??? FIXME not check by pure but sourceFormat?
+        // TODO refactor these logic.
         if (!rawData.pure) {
-            var name = null;
+            var name = nameList[idx];
 
-            if (dataItem) {
-                if (dataItem.name != null) {
-                    name = dataItem.name;
+            if (dataItem && !name) {
+                if (nameDimIdx != null) {
+                    name = this._getNameFromStore(idx);
                 }
-                else if (nameDimIdx != null) {
-                    name = storage[dimensions[nameDimIdx]][chunkIndex][chunkOffset];
+                else if (dataItem.name != null) {
+                    // There is no other place to persistent dataItem.name,
+                    // so save it to nameList.
+                    nameList[idx] = name = dataItem.name;
                 }
             }
-
-            if (name == null) {
-                if (defaultNameDimIndex != null) {
-                    var dimInfo = dimensionInfoMap[dimensions[defaultNameDimIndex]];
-                    var ordinalMeta = dimInfo.ordinalMeta;
-                    if (ordinalMeta) {
-                        name = ordinalMeta.categories[idx];
-                    }
-                }
-                else {
-                    // If nameList is given.
-                    name = nameList[idx];
-                }
-            }
-
-            nameList[idx] = name;
 
             // Try using the id in option
+            // id or name is used on dynamical data, mapping old and new items.
             var id = dataItem == null ? null : dataItem.id;
 
             if (id == null && name != null) {
@@ -522,6 +512,25 @@ listProto._initDataFromProvider = function (start, end) {
 
     // Reset data extent
     this._extent = {};
+};
+
+// TODO refactor
+listProto._getNameFromStore = function (rawIndex) {
+    var nameDimIdx = this._nameDimIdx;
+    if (nameDimIdx != null) {
+        var chunkSize = this._chunkSize;
+        var chunkIndex = Math.floor(rawIndex / chunkSize);
+        var chunkOffset = rawIndex % chunkSize;
+        var dim = this.dimensions[nameDimIdx];
+        var ordinalMeta = this._dimensionInfos[dim].ordinalMeta;
+        if (ordinalMeta) {
+            return ordinalMeta.categories[rawIndex];
+        }
+        else {
+            var chunk = this._storage[dim][chunkIndex];
+            return chunk && chunk[chunkOffset];
+        }
+    }
 };
 
 /**
@@ -766,10 +775,8 @@ listProto.indexOf = function (dim, value) {
  * @return {number}
  */
 listProto.indexOfName = function (name) {
-    var nameList = this._nameList;
-
     for (var i = 0, len = this.count(); i < len; i++) {
-        if (nameList[this.getRawIndex(i)] === name) {
+        if (this.getName(i) === name) {
             return i;
         }
     }
@@ -898,7 +905,10 @@ listProto.getRawDataItem = function (idx) {
  * @return {string}
  */
 listProto.getName = function (idx) {
-    return this._nameList[this.getRawIndex(idx)] || '';
+    var rawIndex = this.getRawIndex(idx);
+    return this._nameList[rawIndex]
+        || this._getNameFromStore(rawIndex)
+        || '';
 };
 
 /**

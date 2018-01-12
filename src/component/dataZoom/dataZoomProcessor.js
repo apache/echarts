@@ -1,16 +1,23 @@
 import * as echarts from '../../echarts';
+import {createHashMap, each} from 'zrender/src/core/util';
 
 echarts.registerProcessor({
+
     getTargetSeries: function (ecModel) {
-        var seriesModels = [];
+        var seriesModelMap = createHashMap();
+
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
                 var axisProxy = dataZoomModel.getAxisProxy(dimNames.name, axisIndex);
-                seriesModels = seriesModels.concat(axisProxy.getTargetSeriesModels());
+                each(axisProxy.getTargetSeriesModels(), function (seriesModel) {
+                    seriesModelMap.set(seriesModel.uid, seriesModel);
+                });
             });
         });
-        return seriesModels;
+
+        return seriesModelMap;
     },
+
     // Consider appendData, where filter should be performed. Because data process is
     // in block mode currently, it is not need to worry about that the overallProgress
     // execute every frame.

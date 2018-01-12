@@ -55,13 +55,21 @@ var LegendModel = echarts.extendComponentModel({
     },
 
     _updateData: function (ecModel) {
-        var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
-            return series.name;
+        var potentialData = [];
+        var availableNames = [];
+        zrUtil.each(ecModel.getSeries(), function (seriesModel) {
+            var seriesName = seriesModel.name;
+            availableNames.push(seriesName);
+            if (seriesName !== DEFAULT_COMPONENT_NAME && !seriesModel.legendDataProvider) {
+                potentialData.push(seriesName);
+            }
         });
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.legendDataProvider) {
                 var data = seriesModel.legendDataProvider();
-                availableNames = availableNames.concat(data.mapArray(data.getName));
+                var names = data.mapArray(data.getName);
+                availableNames = availableNames.concat(names);
+                potentialData = potentialData.concat(names);
             }
         });
 
@@ -73,9 +81,7 @@ var LegendModel = echarts.extendComponentModel({
 
         // If legend.data not specified in option, use availableNames as data,
         // which is convinient for user preparing option.
-        var rawData = this.get('data') || zrUtil.filter(availableNames, function (name) {
-            return name !== DEFAULT_COMPONENT_NAME;
-        });
+        var rawData = this.get('data') || potentialData;
 
         var legendData = zrUtil.map(rawData, function (dataItem) {
             // Can be string or number

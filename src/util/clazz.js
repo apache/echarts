@@ -69,6 +69,26 @@ export function enableClassExtend(RootClass, mandatoryMethods) {
     };
 }
 
+var classBase = 0;
+
+/**
+ * Can not use instanceof, consider different scope by
+ * cross domain or es module import in ec extensions.
+ * Mount a method "isInstance()" to Clz.
+ */
+export function enableClassCheck(Clz) {
+    var classAttr = ['__\0is_clz', classBase++, Math.random().toFixed(3)].join('_');
+    Clz.prototype[classAttr] = true;
+
+    if (__DEV__) {
+        zrUtil.assert(!Clz.isInstance, 'The method "is" can not be defined.');
+    }
+
+    Clz.isInstance = function (obj) {
+        return !!(obj && obj[classAttr]);
+    };
+}
+
 // superCall should have class info, which can not be fetch from 'this'.
 // Consider this case:
 // class A has method f,
