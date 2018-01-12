@@ -80,7 +80,7 @@ proto.restorePipelines = function (ecModel) {
     var pipelineMap = scheduler._pipelineMap = createHashMap();
     ecModel.eachSeries(function (seriesModel) {
         var dataTask = seriesModel.dataTask;
-        var progressive = seriesModel.get('progressive');
+        var progressive = seriesModel.getProgressive();
 
         pipelineMap.set(seriesModel.uid, {
             head: dataTask,
