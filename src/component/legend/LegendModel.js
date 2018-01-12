@@ -57,19 +57,33 @@ var LegendModel = echarts.extendComponentModel({
     _updateData: function (ecModel) {
         var potentialData = [];
         var availableNames = [];
-        zrUtil.each(ecModel.getSeries(), function (seriesModel) {
+
+        ecModel.eachRawSeries(function (seriesModel) {
             var seriesName = seriesModel.name;
             availableNames.push(seriesName);
-            if (seriesName !== DEFAULT_COMPONENT_NAME && !seriesModel.legendDataProvider) {
-                potentialData.push(seriesName);
-            }
-        });
-        ecModel.eachSeries(function (seriesModel) {
+            var potentialSeriesName;
+
             if (seriesModel.legendDataProvider) {
                 var data = seriesModel.legendDataProvider();
                 var names = data.mapArray(data.getName);
-                availableNames = availableNames.concat(names);
-                potentialData = potentialData.concat(names);
+
+                if (!ecModel.isSeriesFiltered(seriesModel)) {
+                    availableNames = availableNames.concat(names);
+                }
+
+                if (names.length) {
+                    potentialData = potentialData.concat(names);
+                }
+                else {
+                    potentialSeriesName = seriesName;
+                }
+            }
+            else {
+                potentialSeriesName = seriesName;
+            }
+
+            if (potentialSeriesName && potentialSeriesName !== DEFAULT_COMPONENT_NAME) {
+                potentialData.push(potentialSeriesName);
             }
         });
 
