@@ -63,6 +63,12 @@ var AxisProxy = function (dimName, axisIndex, dataZoomModel, ecModel) {
      * @type {module: echarts/component/dataZoom/DataZoomModel}
      */
     this._dataZoomModel = dataZoomModel;
+
+    /**
+     * @readOnly
+     * @private
+     */
+    this.hasSeriesStacked;
 };
 
 AxisProxy.prototype = {
@@ -238,10 +244,18 @@ AxisProxy.prototype = {
             return;
         }
 
+        var targetSeries = this.getTargetSeriesModels();
         // Culculate data window and data extent, and record them.
-        this._dataExtent = calculateDataExtent(
-            this, this._dimName, this.getTargetSeriesModels()
-        );
+        this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
+
+        this.hasSeriesStacked = false;
+        each(targetSeries, function (series) {
+            var data = series.getData();
+            var dataDim = data.mapDimension(this._dimName);
+            if (data.isStacked(dataDim)) {
+                this.hasSeriesStacked = true;
+            }
+        }, this);
 
         var dataWindow = this.calculateDataWindow(dataZoomModel.option);
 
@@ -294,10 +308,13 @@ AxisProxy.prototype = {
         var otherAxisModel = this.getOtherAxisModel();
         if (dataZoomModel.get('$fromToolbox')
             && otherAxisModel
-            && otherAxisModel.get('type') === 'category'
+            && otherAxisModel.hasSeriesStacked
         ) {
             filterMode = 'empty';
         }
+
+        // TODO
+        // filterMode 'weakFilter' and 'empty' is not optimized for huge data yet.
 
         // Process series data
         each(seriesModels, function (seriesModel) {

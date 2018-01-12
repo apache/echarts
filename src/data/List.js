@@ -664,7 +664,7 @@ listProto.getDataExtent = function (dim, stack) {
     var dimData = this._storage[dim];
     var initialExtent = [Infinity, -Infinity];
 
-    stack = (stack || false) && isStacked(this, dim);
+    stack = (stack || false) && this.isStacked(dim);
 
     if (!dimData) {
         return initialExtent;
@@ -721,10 +721,10 @@ listProto.setApproximateExtent = function (extent, dim, stack) {
     this._approximateExtent[dim] = extent.slice();
 };
 
-function isStacked(list, concreteDim) {
-    var dimensionInfo = list._dimensionInfos[concreteDim];
-    return dimensionInfo && dimensionInfo.stackable && list.stackedOn;
-}
+listProto.isStacked = function (concreteDim) {
+    var dimensionInfo = this._dimensionInfos[concreteDim];
+    return dimensionInfo && dimensionInfo.stackable && this.stackedOn;
+};
 
 /**
  * Get sum of data in one dimension
@@ -1157,7 +1157,7 @@ listProto.selectRange = function (range, stack) {
     }
     if (!quickFinished) {
         if (dimSize === 1) {
-            stack = stack || isStacked(this, dim0);
+            stack = stack || this.isStacked(dim0);
             for (var i = 0; i < originalCount; i++) {
                 var rawIndex = this.getRawIndex(i);
                 var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
@@ -1283,17 +1283,28 @@ listProto.map = function (dimensions, cb, stack, context) {
 
     var tmpRetValue = [];
     var chunkSize = this._chunkSize;
-    this.each(dimensions, function () {
-        var idx = arguments[arguments.length - 1];
-        var retValue = cb && cb.apply(this, arguments);
+    var dimSize = dimensions.length;
+    var dataCount = this.count();
+    var values = [];
+
+    for (var dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+        for (var dimIndex = 0; dimIndex < dimSize; dimIndex++) {
+            values[dimIndex] = this.get(dimensions[dimIndex], dataIndex, stack);
+        }
+        values[dimSize] = dataIndex;
+
+        var retValue = cb && cb.apply(context, values);
         if (retValue != null) {
-            // a number
-            if (typeof retValue === 'number') {
+            // a number or string (in oridinal dimension)?
+            if (typeof retValue !== 'object') {
                 tmpRetValue[0] = retValue;
                 retValue = tmpRetValue;
             }
-            var chunkIndex = Math.floor(idx / chunkSize);
-            var chunkOffset = idx % chunkSize;
+
+            var rawIndex = this.getRawIndex(dataIndex);
+            var chunkIndex = Math.floor(rawIndex / chunkSize);
+            var chunkOffset = rawIndex % chunkSize;
+
             for (var i = 0; i < retValue.length; i++) {
                 var dim = dimensions[i];
                 var dimStore = storage[dim];
@@ -1302,7 +1313,7 @@ listProto.map = function (dimensions, cb, stack, context) {
                 }
             }
         }
-    }, stack, context);
+    }
 
     return list;
 };

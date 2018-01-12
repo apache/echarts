@@ -22,11 +22,11 @@
 
 
 
-        <!-- <div id="layout0"></div>
+        <div id="layout0"></div>
         <div id="layout1"></div>
         <div id="layout2"></div>
         <div id="layout3"></div>
-        <div id="layout4"></div> -->
+        <div id="layout4"></div>
         <div id="layout5"></div>
 
 
@@ -65,6 +65,14 @@
                 [86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
                 [24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
                 [55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRowsPairValueColumns = [
+                ['2012', null, '2013', null, '2014', 'amount'],
+                [41.1, 2585, 30.4, 2473, 65.1, 3418],
+                [86.5, 2316, 92.1, 3255, 85.7, 2485],
+                [24.1, 1532, 67.2, 1452, 79.5, 4689],
+                [55.2, 5312, 67.1, 3266, 69.2, 1354]
             ];
 
             // No 北京 上海 江苏
@@ -354,26 +362,26 @@
                 var option = {
                     legend: {},
                     tooltip: {},
+                    xAxis: {},
+                    yAxis: {},
                     dataset: [{
-                        source: arrayRowsNoColumnHeader
-                    }, {
-                        source: arrayRowsNoRowHeader
+                        source: arrayRowsPairValueColumns
                     }],
                     series: [{
-                        type: 'scatter',
-                        radius: 50,
-                        center: ['25%', '25%'],
-                        sourceHeader: false
+                        type: 'scatter'
+                    }, {
+                        type: 'scatter'
+                    }, {
+                        type: 'scatter'
                     }]
                 };
 
                 testHelper.create(echarts, 'layout5', {
-                    title: 'no sourceHeader',
+                    title: 'column (dimension name duplicated)',
                     height: 400,
                     option: option,
                     dataTables: [
-                        arrayRowsNoColumnHeader,
-                        arrayRowsNoRowHeader
+                        arrayRowsPairValueColumns
                     ],
                     info: {
                         legend: '<default>',
