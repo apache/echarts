@@ -69,7 +69,7 @@ export default function (seriesType) {
                         sampler = sampling;
                     }
                     if (sampler) {
-                        api.setTaskOutputData(data.downSample(
+                        seriesModel.setData(data.downSample(
                             valueAxis.dim, 1 / rate, sampler, indexSampler
                         ));
                     }

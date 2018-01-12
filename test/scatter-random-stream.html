@@ -169,7 +169,7 @@
                     });
 
                     chart.on('finished', function () {
-                        console.log('Render finished');
+                        // console.log('Render finished');
                         var url = chart.getDataURL();
                         var snapshotEl = document.getElementById('snapshot');
                         snapshotEl.src = url;
@@ -183,7 +183,7 @@
                         if (chunkCount++ < chunkMax) {
                             var newData = genData1(100000, chunkCount);
                             chart.appendData({seriesIndex: 0, data: newData});
-                            console.log('Data loaded');
+                            // console.log('Data loaded');
                             setTimeout(next, 3000);
                         }
                     }

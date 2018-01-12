@@ -39,11 +39,11 @@ var proto = Scheduler.prototype;
 // If seriesModel provided, incremental threshold is check by series data.
 proto.getPerformArgs = function (task, isBlock) {
     // For overall task
-    if (!task.__pipelineId) {
+    if (!task.__pipeline) {
         return;
     }
 
-    var pipeline = this._pipelineMap.get(task.__pipelineId);
+    var pipeline = this._pipelineMap.get(task.__pipeline.id);
     var pCtx = pipeline.context;
     var incremental = !isBlock
         && pipeline.progressiveEnabled
@@ -51,6 +51,10 @@ proto.getPerformArgs = function (task, isBlock) {
         && task.__idxInPipeline > pipeline.bockIndex;
 
     return {step: incremental ? pipeline.step : null};
+};
+
+proto.getPipeline = function (pipelineId) {
+    return this._pipelineMap.get(pipelineId);
 };
 
 /**
@@ -79,12 +83,13 @@ proto.restorePipelines = function (ecModel) {
     var scheduler = this;
     var pipelineMap = scheduler._pipelineMap = createHashMap();
     ecModel.eachSeries(function (seriesModel) {
-        var dataTask = seriesModel.dataTask;
         var progressive = seriesModel.getProgressive();
+        var pipelineId = seriesModel.uid;
 
-        pipelineMap.set(seriesModel.uid, {
-            head: dataTask,
-            tail: dataTask,
+        pipelineMap.set(pipelineId, {
+            id: pipelineId,
+            head: null,
+            tail: null,
             threshold: seriesModel.getProgressiveThreshold(),
             progressiveEnabled: progressive
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
@@ -93,8 +98,7 @@ proto.restorePipelines = function (ecModel) {
             count: 1
         });
 
-        dataTask.__pipelineId = seriesModel.uid;
-        dataTask.__idxInPipeline = 0;
+        pipe(scheduler, seriesModel, seriesModel.dataTask);
     });
 };
 
@@ -194,7 +198,7 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
     });
 
     function needSetDirty(opt, task) {
-        return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipelineId));
+        return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipeline.id));
     }
 
     scheduler.unfinished |= unfinished;
@@ -257,7 +261,6 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
         if (!task) {
             task = createTask({
                 reset: seriesTaskReset,
-                plan: seriesTaskPlan,
                 count: seriesTaskCount
             }, {
                 model: seriesModel,
@@ -346,57 +349,12 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
 }
 
 function overallTaskReset(context) {
-    mountTaskMethods(this);
     context.overallReset(
         context.ecModel, context.api, context.payload
     );
-    unmountTaskMethods(this);
-}
-
-function mountTaskMethods(task) {
-    var context = task.context;
-    var api = context.api;
-    api.setTaskOutputData = setTaskOutputData;
-    api.setTaskOutputEnd = setTaskOutputEnd;
-    api.__task = task;
-}
-
-function unmountTaskMethods(task) {
-    var api = task.context.api;
-    api.setTaskOutputData = api.setTaskOutputEnd = null;
-}
-
-function setTaskOutputData(data, seriesModel) {
-    var task = this.__task;
-    var context = task.context;
-    if (__DEV__) {
-        assert(!task.agentStubMap || seriesModel);
-    }
-    if (!task.agentStubMap) {
-        context.model.setData(context.outputData = data);
-    }
-    else {
-        var stub = task.agentStubMap.get(seriesModel.uid);
-        seriesModel.setData(stub.context.outputData = data);
-    }
-}
-
-function setTaskOutputEnd(end, seriesModel) {
-    var task = this.__task;
-    if (__DEV__) {
-        assert(!task.agentStubMap || seriesModel);
-    }
-    if (!task.agentStubMap) {
-        task.setOutputEnd(end);
-    }
-    else {
-        var stub = task.agentStubMap.get(seriesModel.uid);
-        stub.setOutputEnd(end);
-    }
 }
 
 function stubReset(context, upstreamContext) {
-    pullData(context, upstreamContext);
     return context.overallProgress && stubProgress;
 }
 
@@ -409,15 +367,6 @@ function stubOnDirty() {
     this.agent && this.agent.dirty();
 }
 
-function seriesTaskPlan(context, upstreamContext) {
-    // ???! setData can be called in plan, progress, overalltask, how to deal with that
-    prepareData(context, upstreamContext);
-
-    return context.plan && context.plan(
-        context.model, context.ecModel, context.api, context.payload
-    );
-}
-
 function prepareData(context, upstreamContext) {
     // Consider some method like `filter`, `map` need make new data,
     // We should make sure that `seriesModel.getData()` get correct
@@ -426,23 +375,13 @@ function prepareData(context, upstreamContext) {
     context.model.setData(context.data);
 }
 
-function pullData(context, upstreamContext) {
-    context.model.setData(
-        context.data = context.outputData = upstreamContext.outputData
-    );
-}
-
 function seriesTaskReset(context, upstreamContext) {
-    pullData(context, upstreamContext);
-
     if (context.useClearVisual) {
         context.data.clearAllVisual();
     }
-    mountTaskMethods(this);
     var resetDefines = context.resetDefines = normalizeToArray(context.reset(
         context.model, context.ecModel, context.api, context.payload
     ));
-    unmountTaskMethods(this);
     if (resetDefines.length) {
         return seriesTaskProgress;
     }
@@ -452,7 +391,6 @@ function seriesTaskProgress(params, context) {
     var data = context.data;
     var resetDefines = context.resetDefines;
 
-    mountTaskMethods(this);
     for (var k = 0; k < resetDefines.length; k++) {
         var resetDefine = resetDefines[k];
         if (resetDefine && resetDefine.dataEach) {
@@ -464,7 +402,6 @@ function seriesTaskProgress(params, context) {
             resetDefine.progress(params, data);
         }
     }
-    unmountTaskMethods(this);
 }
 
 function seriesTaskCount(context) {
@@ -474,10 +411,11 @@ function seriesTaskCount(context) {
 function pipe(scheduler, seriesModel, task) {
     var pipelineId = seriesModel.uid;
     var pipeline = scheduler._pipelineMap.get(pipelineId);
-    pipeline.tail.pipe(task);
+    !pipeline.head && (pipeline.head = task);
+    pipeline.tail && pipeline.tail.pipe(task);
     pipeline.tail = task;
     task.__idxInPipeline = pipeline.count++;
-    task.__pipelineId = pipelineId;
+    task.__pipeline = pipeline;
 }
 
 Scheduler.wrapStageHandler = function (stageHandler, visualType) {
@@ -493,6 +431,8 @@ Scheduler.wrapStageHandler = function (stageHandler, visualType) {
 
     return stageHandler;
 };
+
+
 
 /**
  * Only some legacy stage handlers (usually in echarts extensions) are pure function.

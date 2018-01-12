@@ -39,9 +39,23 @@ var taskProto = Task.prototype;
  * @param {number} [performArgs.skip] Skip customer perform call.
  */
 taskProto.perform = function (performArgs) {
+
+    var upTask = this._upstream;
+
+    // TODO some refactor.
+    // Pull data.
+    if (this._dirty && upTask) {
+        var context = this.context;
+        context.data = context.outputData = upTask.context.outputData;
+    }
+
+    if (this.__pipeline) {
+        this.__pipeline.currentTask = this;
+    }
+
     var planResult;
     if (this._plan) {
-        planResult = this._plan(this.context, this._upstream && this._upstream.context);
+        planResult = this._plan(this.context);
     }
 
     if (this._dirty || planResult === 'reset') {
@@ -51,7 +65,6 @@ taskProto.perform = function (performArgs) {
 
     var step = performArgs && performArgs.step;
 
-    var upTask = this._upstream;
     if (upTask) {
         if (__DEV__) {
             assert(upTask._outputDueEnd != null);

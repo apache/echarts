@@ -345,11 +345,10 @@ AxisProxy.prototype = {
             else {
                 each(dataDims, function (dim) {
                     if (filterMode === 'empty') {
-                        api.setTaskOutputData(
+                        seriesModel.setData(
                             seriesData.map(dim, function (value) {
                                 return !isInWindow(value) ? NaN : value;
-                            }),
-                            seriesModel
+                            })
                         );
                     }
                     else {
@@ -362,8 +361,6 @@ AxisProxy.prototype = {
                     seriesData.setApproximateExtent(valueWindow, dim);
                 });
             }
-
-            api.setTaskOutputEnd(seriesData.count(), seriesModel);
         });
 
         function isInWindow(value) {

@@ -69,6 +69,7 @@
                         },
                         geo: {
                             map: 'china',
+                            roam: true,
                             label: {
                                 emphasis: {
                                     show: false
@@ -98,39 +99,40 @@
                                 }
                             },
                             data: weiboData[0]
-                        // }, {
-                        //     name: '中',
-                        //     type: 'scatter',
-                        //     coordinateSystem: 'geo',
-                        //     symbolSize: 1,
-                        //     large: true,
-                        //     itemStyle: {
-                        //         normal: {
-                        //             shadowBlur: 2,
-                        //             shadowColor: 'rgba(14, 241, 242, 0.8)',
-                        //             color: 'rgba(14, 241, 242, 0.8)'
-                        //         }
-                        //     },
-                        //     data: weiboData[1]
-                        // }, {
-                        //     name: '强',
-                        //     type: 'scatter',
-                        //     coordinateSystem: 'geo',
-                        //     symbolSize: 1,
-                        //     large: true,
-                        //     itemStyle: {
-                        //         normal: {
-                        //             shadowBlur: 2,
-                        //             shadowColor: 'rgba(255, 255, 255, 0.8)',
-                        //             color: 'rgba(255, 255, 255, 0.8)'
-                        //         }
-                        //     },
-                        //     data: weiboData[2]
+                        }, {
+                            name: '中',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            symbolSize: 1,
+                            large: true,
+                            itemStyle: {
+                                normal: {
+                                    shadowBlur: 2,
+                                    shadowColor: 'rgba(14, 241, 242, 0.8)',
+                                    color: 'rgba(14, 241, 242, 0.8)'
+                                }
+                            },
+                            data: weiboData[1]
+                        }, {
+                            name: '强',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            symbolSize: 1,
+                            large: true,
+                            itemStyle: {
+                                normal: {
+                                    shadowBlur: 2,
+                                    shadowColor: 'rgba(255, 255, 255, 0.8)',
+                                    color: 'rgba(255, 255, 255, 0.8)'
+                                }
+                            },
+                            data: weiboData[2]
                         }]
                     };
 
                     testHelper.create(echarts, 'main0', {
-                        option: option
+                        option: option,
+                        height: 500
                     });
                 });
             });

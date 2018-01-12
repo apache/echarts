@@ -198,19 +198,34 @@ var SeriesModel = ComponentModel.extend({
     },
 
     /**
+     * Consider some method like `filter`, `map` need make new data,
+     * We should make sure that `seriesModel.getData()` get correct
+     * data in the stream procedure. So we fetch data from upstream
+     * each time `task.perform` called.
      * @param {string} [dataType]
      * @return {module:echarts/data/List}
      */
     getData: function (dataType) {
-        var data = inner(this).data;
-        return dataType == null ? data : data.getLinkedData(dataType);
+        var task = getCurrentTask(this);
+        if (task) {
+            var data = task.context.data;
+            return dataType == null ? data : data.getLinkedData(dataType);
+        }
     },
 
     /**
      * @param {module:echarts/data/List} data
      */
     setData: function (data) {
-        inner(this).data = data;
+        var task = getCurrentTask(this);
+        if (task) {
+            var context = task.context;
+            // Consider case: filter, data sample.
+            if (context.data !== data) {
+                task.setOutputEnd(data.count());
+            }
+            task.context.outputData = data;
+        }
     },
 
     /**
@@ -295,7 +310,7 @@ var SeriesModel = ComponentModel.extend({
             return encodeHTML(addCommas(val));
         }
 
-        var data = inner(this).data;
+        var data = this.getData();
         var tooltipDims = data.mapDimension('defaultedTooltip', true);
         var tooltipDimLen = tooltipDims.length;
         var value = this.getRawValue(dataIndex);
@@ -430,6 +445,7 @@ var SeriesModel = ComponentModel.extend({
 
 });
 
+
 zrUtil.mixin(SeriesModel, dataFormatMixin);
 zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
@@ -472,6 +488,24 @@ function dataTaskProgress(param, context) {
     // Avoid repead cloneShallow when data just created in reset.
     if (param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
+    }
+}
+
+function getCurrentTask(seriesModel) {
+    var scheduler = (seriesModel.ecModel || {}).scheduler;
+    var pipeline = scheduler && scheduler.getPipeline(seriesModel.uid);
+
+    if (pipeline) {
+        // When pipline finished, the currrentTask keep the last
+        // task (renderTask).
+        var task = pipeline.currentTask;
+        if (task) {
+            var agentStubMap = task.agentStubMap;
+            if (agentStubMap) {
+                task = agentStubMap.get(seriesModel.uid);
+            }
+        }
+        return task;
     }
 }
 
