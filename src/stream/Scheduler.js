@@ -85,7 +85,7 @@ proto.restorePipelines = function (ecModel) {
         pipelineMap.set(seriesModel.uid, {
             head: dataTask,
             tail: dataTask,
-            threshold: seriesModel.get('progressiveThreshold'),
+            threshold: seriesModel.getProgressiveThreshold(),
             progressiveEnabled: progressive
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
             bockIndex: -1,
