@@ -1,7 +1,6 @@
 import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import LargeSymbolDraw from '../helper/LargeSymbolDraw';
-import * as matrix from 'zrender/src/core/matrix';
 
 import pointsLayout from '../../layout/points';
 
