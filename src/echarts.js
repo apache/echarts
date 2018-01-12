@@ -1996,7 +1996,7 @@ export function registerVisual(priority, visualTask) {
 }
 
 /**
- * @param {Object|Function} fn: {seriesType, processRawSeries, reset}
+ * @param {Object|Function} fn: {seriesType, createOnAllSeries, performRawSeries, reset}
  */
 function normalizeRegister(targetList, priority, fn, defaultPriority, visualType) {
     if (isFunction(priority) || isObject(priority)) {

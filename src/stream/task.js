@@ -41,6 +41,7 @@ var taskProto = Task.prototype;
 taskProto.perform = function (performArgs) {
 
     var upTask = this._upstream;
+    var skip = performArgs && performArgs.skip;
 
     // TODO some refactor.
     // Pull data.
@@ -54,13 +55,13 @@ taskProto.perform = function (performArgs) {
     }
 
     var planResult;
-    if (this._plan) {
+    if (this._plan && !skip) {
         planResult = this._plan(this.context);
     }
 
     if (this._dirty || planResult === 'reset') {
         this._dirty = false;
-        reset(this);
+        reset(this, skip);
     }
 
     var step = performArgs && performArgs.step;
@@ -88,7 +89,7 @@ taskProto.perform = function (performArgs) {
         );
 
         var outputDueEnd;
-        !(performArgs && performArgs.skip) && start < end && (
+        !skip && start < end && (
             outputDueEnd = this._progress({start: start, end: end}, this.context)
         );
 
@@ -120,10 +121,10 @@ taskProto.dirty = function () {
 /**
  * @param {Object} [params]
  */
-function reset(taskIns) {
+function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
 
-    taskIns._progress = taskIns._reset && taskIns._reset(
+    taskIns._progress = !skip && taskIns._reset && taskIns._reset(
         taskIns.context,
         taskIns._upstream && taskIns._upstream.context
     );

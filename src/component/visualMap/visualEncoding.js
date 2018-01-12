@@ -6,7 +6,7 @@ import VisualMapping from '../../visual/VisualMapping';
 var VISUAL_PRIORITY = echarts.PRIORITY.VISUAL.COMPONENT;
 
 echarts.registerVisual(VISUAL_PRIORITY, {
-    allSeries: true,
+    createOnAllSeries: true,
     reset: function (seriesModel, ecModel) {
         var resetDefines = [];
         ecModel.eachComponent('visualMap', function (visualMapModel) {
@@ -31,7 +31,7 @@ echarts.registerVisual(VISUAL_PRIORITY, {
 
 // Only support color.
 echarts.registerVisual(VISUAL_PRIORITY, {
-    allSeries: true,
+    createOnAllSeries: true,
     reset: function (seriesModel, ecModel) {
         var data = seriesModel.getData();
         var visualMetaList = [];

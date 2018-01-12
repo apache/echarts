@@ -1,8 +1,8 @@
 import Gradient from 'zrender/src/graphic/Gradient';
 
 export default {
-    allSeries: true,
-    processRawSeries: true,
+    createOnAllSeries: true,
+    performRawSeries: true,
     reset: function (seriesModel, ecModel) {
         var data = seriesModel.getData();
         var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.color').split('.');

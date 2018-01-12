@@ -2,13 +2,12 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, assert, isFunction, createHashMap, noop} from 'zrender/src/core/util';
+import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {normalizeToArray} from '../util/model';
-import { __DEV__ } from '../config';
 
 /**
  * @constructor
@@ -170,27 +169,19 @@ function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
             // then execute the overall task. And stub will call seriesModel.setData,
             // which ensures that in the overallTask seriesModel.getData() will not
             // return incorrect data.
-            ecModel.eachRawSeries(function (seriesModel) {
-                var task = agentStubMap.get(seriesModel.uid);
-                task && task.perform(performArgs);
+            agentStubMap.each(function (stub) {
+                stub.perform(performArgs);
             });
             unfinished |= overallTask.perform(performArgs);
         }
         else if (seriesTaskMap) {
-            ecModel.eachRawSeries(function (seriesModel) {
-                var pipelineId = seriesModel.uid;
-                var task = seriesTaskMap.get(pipelineId);
-
-                if (!task) {
-                    return;
-                }
-
+            seriesTaskMap.each(function (task, pipelineId) {
                 if (needSetDirty(opt, task)) {
                     task.dirty();
                 }
                 var performArgs = scheduler.getPerformArgs(task, opt.block);
-                // ??? chck skip necessary.
-                performArgs.skip = !stageHandler.processRawSeries && ecModel.isSeriesFiltered(seriesModel);
+                performArgs.skip = !stageHandler.performRawSeries
+                    && ecModel.isSeriesFiltered(task.context.model);
                 updatePayload(task, payload);
                 unfinished |= task.perform(performArgs);
             });
@@ -235,14 +226,15 @@ var updatePayload = proto.updatePayload = function (task, payload) {
 };
 
 function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
-    var seriesTaskMap = stageHandlerRecord.seriesTaskMap || (stageHandlerRecord.seriesTaskMap = createHashMap());
+    var seriesTaskMap = stageHandlerRecord.seriesTaskMap
+        || (stageHandlerRecord.seriesTaskMap = createHashMap());
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
 
-    // If a stageHandler should cover all series, `allSeries` should be declared mandatorily,
+    // If a stageHandler should cover all series, `createOnAllSeries` should be declared mandatorily,
     // to avoid some typo or abuse. Otherwise if an extension do not specify a `seriesType`,
     // it works but it may cause other irrelevant charts blocked.
-    if (stageHandler.allSeries) {
+    if (stageHandler.createOnAllSeries) {
         ecModel.eachRawSeries(create);
     }
     else if (seriesType) {

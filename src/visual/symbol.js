@@ -3,7 +3,7 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
     // Encoding visual for all series include which is filtered for legend drawing
     return {
         seriesType: seriesType,
-        processRawSeries: true,
+        performRawSeries: true,
         reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
