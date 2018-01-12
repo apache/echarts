@@ -475,14 +475,8 @@ function doGuessOrdinal(
     // always exists in source.
     var dimName;
     if (dimensionsDefine) {
-        if (dimIndex >= dimensionsDefine.length) {
-            return;
-        }
         dimName = dimensionsDefine[dimIndex];
         dimName = isObject(dimName) ? dimName.name : dimName;
-        if (dimName == null) {
-            return;
-        }
     }
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
@@ -504,8 +498,8 @@ function doGuessOrdinal(
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
-        if (__DEV__) {
-            assert(dimName != null);
+        if (!dimName) {
+            return;
         }
         for (var i = 0; i < data.length && i < maxLoop; i++) {
             var item = data[i];
@@ -515,8 +509,8 @@ function doGuessOrdinal(
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
-        if (__DEV__) {
-            assert(dimName != null);
+        if (!dimName) {
+            return;
         }
         var sample = data[dimName];
         if (!sample || isTypedArray(sample)) {

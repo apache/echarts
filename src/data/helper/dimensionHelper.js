@@ -8,6 +8,7 @@ export var OTHER_DIMENSIONS = createHashMap([
 export function summarizeDimensions(data) {
     var summary = {};
     var encode = summary.encode = {};
+    var coordDimMap = summary.coordDimMap = createHashMap();
     var defaultedLabel = [];
 
     each(data.dimensions, function (dimName) {
@@ -27,6 +28,8 @@ export function summarizeDimensions(data) {
             if (dimItem.isSysCoord && mayLabelDimType(dimItem.type)) {
                 defaultedLabel.push(dimName);
             }
+
+            coordDimMap.set(coordDim, 1);
         }
 
         OTHER_DIMENSIONS.each(function (v, otherDim) {
@@ -40,6 +43,11 @@ export function summarizeDimensions(data) {
                 otherDimArr[dimIndex] = dimItem.name;
             }
         });
+    });
+
+    var dataDimsOnCoord = summary.dataDimsOnCoord = [];
+    coordDimMap.each(function (coordDim) {
+        dataDimsOnCoord = dataDimsOnCoord.concat(encode[coordDim]);
     });
 
     var encodeLabel = encode.label;

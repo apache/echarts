@@ -634,18 +634,20 @@ listProto.getValues = function (dimensions, idx, stack) {
 
 /**
  * If value is NaN. Inlcuding '-'
+ * Only check the coord dimensions.
  * @param {string} dim
  * @param {number} idx
  * @return {number}
  */
 listProto.hasValue = function (idx) {
-    var dimensions = this.dimensions;
+    var dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
     var dimensionInfos = this._dimensionInfos;
-    for (var i = 0, len = dimensions.length; i < len; i++) {
+    for (var i = 0, len = dataDimsOnCoord.length; i < len; i++) {
         if (
             // Ordinal type can be string or number
-            dimensionInfos[dimensions[i]].type !== 'ordinal'
-            && isNaN(this.get(dimensions[i], idx))
+            dimensionInfos[dataDimsOnCoord[i]].type !== 'ordinal'
+            // FIXME check ordinal when using index?
+            && isNaN(this.get(dataDimsOnCoord[i], idx))
         ) {
             return false;
         }
