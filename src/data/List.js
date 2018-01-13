@@ -31,12 +31,13 @@ var dataCtors = {
     'time': Array
 };
 
-function getIndicesCtor(count) {
+function getIndicesCtor(list) {
     var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
     var CtorUint16Array = typeof globalObj.Uint16Array === UNDEFINED ? Array : globalObj.Uint16Array;
 
-    return count > 65535 ? CtorUint32Array : CtorUint16Array;
-}
+    // The possible max value in this._indicies is always this._rawCount despite of filtering.
+    return list._rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
+};
 
 function cloneChunk(originalChunk) {
     var Ctor = originalChunk.constructor;
@@ -47,7 +48,7 @@ function cloneChunk(originalChunk) {
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList',
     '_rawData', '_rawExtent', '_chunkSize', '_chunkCount',
-    '_dimValueGetter', '_count', '_nameDimIdx', '_idDimIdx'
+    '_dimValueGetter', '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'
 ];
 
 function transferProperties(a, b) {
@@ -146,6 +147,7 @@ var List = function (dimensions, hostModel) {
     this._indices = null;
 
     this._count = 0;
+    this._rawCount = 0;
 
     /**
      * Data storage
@@ -386,6 +388,10 @@ listProto.getProvider = function () {
 };
 
 listProto.appendData = function (data) {
+    if (__DEV__) {
+        zrUtil.assert(!this._indices, 'appendData can only be called on raw data.');
+    }
+
     var rawData = this._rawData;
     var start = this.count();
     rawData.appendData(data);
@@ -517,7 +523,7 @@ listProto._initDataFromProvider = function (start, end) {
         rawData.clean();
     }
 
-    this._count = end;
+    this._rawCount = this._count = end;
 
     // Reset data extent
     this._extent = {};
@@ -574,7 +580,7 @@ listProto.getIndices = function () {
         return new Ctor(this._indices.buffer, 0, this._count);
     }
 
-    var Ctor = getIndicesCtor(this.count());
+    var Ctor = getIndicesCtor(this);
     var arr = new Ctor(this.count());
     for (var i = 0; i < arr.length; i++) {
         arr[i] = i;
@@ -1074,7 +1080,7 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
 
 
     var count = this.count();
-    var Ctor = getIndicesCtor(count);
+    var Ctor = getIndicesCtor(this);
     var newIndices = new Ctor(count);
     var value = [];
     var dimSize = dimensions.length;
@@ -1148,7 +1154,7 @@ listProto.selectRange = function (range, stack) {
     }
 
     var originalCount = this.count();
-    var Ctor = getIndicesCtor(originalCount);
+    var Ctor = getIndicesCtor(this);
     var newIndices = new Ctor(originalCount);
 
     var offset = 0;
@@ -1380,7 +1386,7 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var len = this.count();
     var chunkSize = this._chunkSize;
 
-    var newIndices = new (getIndicesCtor(len))(len);
+    var newIndices = new (getIndicesCtor(this))(len);
 
     var offset = 0;
     for (var i = 0; i < len; i += frameSize) {

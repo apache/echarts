@@ -354,13 +354,17 @@ AxisProxy.prototype = {
                     else {
                         var range = {};
                         range[dim] = valueWindow;
+
                         // console.time('select');
                         seriesData.selectRange(range);
                         // console.timeEnd('select');
                     }
-                    seriesData.setApproximateExtent(valueWindow, dim);
                 });
             }
+
+            each(dataDims, function (dim) {
+                seriesData.setApproximateExtent(valueWindow, dim);
+            });
         });
 
         function isInWindow(value) {
