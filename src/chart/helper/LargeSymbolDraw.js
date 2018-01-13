@@ -234,7 +234,7 @@ largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
             var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
             if (dataIndex >= 0) {
                 // Provide dataIndex for tooltip
-                symbolEl.dataIndex = dataIndex + symbolEl.startIndex;
+                symbolEl.dataIndex = dataIndex + (symbolEl.startIndex || 0);
             }
         });
     }
