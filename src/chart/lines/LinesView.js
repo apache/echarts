@@ -7,6 +7,7 @@ import Polyline from '../helper/Polyline';
 import EffectPolyline from '../helper/EffectPolyline';
 import LargeLineDraw from '../helper/LargeLineDraw';
 import * as matrix from 'zrender/src/core/matrix';
+import linesLayout from './linesLayout';
 
 export default echarts.extendChartView({
 
@@ -79,6 +80,20 @@ export default echarts.extendChartView({
     },
 
     updateTransform: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+
+        if (seriesModel.get('effect.show')) {
+            // Manually update layout
+            var res = linesLayout.reset(seriesModel);
+            if (res.progress) {
+                res.progress({ start: 0, end: data.count() }, data);
+            }
+            this._lineDraw.updateLayout();
+            this._clearLayer(api);
+
+            return;
+        }
+
         var coordSys = seriesModel.coordinateSystem;
         var update = true;
         // Must mark group dirty and make sure the incremental layer will be cleared

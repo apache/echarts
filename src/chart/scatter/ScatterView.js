@@ -46,7 +46,7 @@ echarts.extendChartView({
         else {
             var res = pointsLayout().reset(seriesModel);
             if (res.progress) {
-                res.progress({ start: 0, end: data.count() }, seriesModel);
+                res.progress({ start: 0, end: data.count() }, data);
             }
 
             this._symbolDraw.updateLayout(data);
