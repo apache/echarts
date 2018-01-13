@@ -864,7 +864,7 @@ var updateMethods = {
             return;
         }
 
-        ChartView.markUpdateMethod(payload, 'updateTransform');
+        // ChartView.markUpdateMethod(payload, 'updateTransform');
 
         var componentDirtyList = [];
         ecModel.eachComponent(function (componentType, componentModel) {
