@@ -107,6 +107,8 @@ var List = function (dimensions, hostModel) {
         dimensionInfo.otherDims = dimensionInfo.otherDims || {};
         dimensionNames.push(dimensionName);
         dimensionInfos[dimensionName] = dimensionInfo;
+
+        dimensionInfo.index = i;
     }
 
     /**

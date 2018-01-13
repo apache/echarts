@@ -20,6 +20,7 @@ import {
     prepareSource,
     getSource
 } from '../data/helper/sourceHelper';
+import {retrieveRawValue} from '../data/helper/dataProvider';
 
 var inner = modelUtil.makeInner();
 
@@ -280,13 +281,13 @@ var SeriesModel = ComponentModel.extend({
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dim) {
-                    setEachItem(data.get(dim, dataIndex, true), dim);
+                    setEachItem(retrieveRawValue(data, dataIndex, dim), dim);
                 })
                 // By default, all dims is used on tooltip.
                 : zrUtil.each(value, setEachItem);
 
-            function setEachItem(val, dimIdx) {
-                var dimInfo = data.getDimensionInfo(dimIdx);
+            function setEachItem(val, dim) {
+                var dimInfo = data.getDimensionInfo(dim);
                 // If `dimInfo.tooltip` is not set, show tooltip.
                 if (!dimInfo || dimInfo.otherDims.tooltip === false) {
                     return;
@@ -329,7 +330,7 @@ var SeriesModel = ComponentModel.extend({
         var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
             ? formatArrayValue(value)
             : tooltipDimLen
-            ? formatSingleValue(data.get(tooltipDims[0], dataIndex, true))
+            ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
 
         var colorEl = getTooltipMarker(color);

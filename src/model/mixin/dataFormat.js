@@ -1,4 +1,4 @@
-import {getRawValueFromModel} from '../../data/helper/dataProvider';
+import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl} from '../../util/format';
 
 var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
@@ -73,29 +73,24 @@ export default {
 
             // Support 'aaa{@[3]}bbb{@product}ccc'.
             // Do not support '}' in dim name util have to.
-            return str.replace(DIMENSION_LABEL_REG, function (origin, dimName) {
-                var len = dimName.length;
-                if (dimName.charAt(0) === '[' && dimName.charAt(len - 1) === ']') {
-                    var dimIndex = +dimName.slice(1, len - 1); // Also: '[]' => 0
-                    if (!isNaN(dimIndex)) {
-                        dimName = data.dimensions[dimIndex];
-                    }
+            return str.replace(DIMENSION_LABEL_REG, function (origin, dim) {
+                var len = dim.length;
+                if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
+                    dim = +dim.slice(1, len - 1); // Also: '[]' => 0
                 }
-                return dimName ? data.get(dimName, dataIndex, true) : origin;
+                return retrieveRawValue(data, dataIndex, dim);
             });
         }
     },
 
     /**
-     * ??? TODO remove?
-     * @deprecated
      * Get raw value in option
      * @param {number} idx
      * @param {string} [dataType]
      * @return {Array|number|string}
      */
     getRawValue: function (idx, dataType) {
-        return getRawValueFromModel(this, idx, dataType);
+        return retrieveRawValue(this.getData(dataType), idx);
     },
 
     /**

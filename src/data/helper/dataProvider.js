@@ -3,15 +3,13 @@
 // merge with defaultDimValueGetter?
 
 import {__DEV__} from '../../config';
-import {isTypedArray, extend, assert, each, isObject, isArray} from 'zrender/src/core/util';
+import {isTypedArray, extend, assert, each} from 'zrender/src/core/util';
 import {getDataItemValue, isDataItemOption} from '../../util/model';
 import {parseDate} from '../../util/number';
 import Source from '../Source';
 import {
     SOURCE_FORMAT_TYPED_ARRAY,
-    SOURCE_FORMAT_ARRAY_ROWS,
-    SOURCE_FORMAT_ORIGINAL,
-    SOURCE_FORMAT_OBJECT_ROWS
+    SOURCE_FORMAT_ARRAY_ROWS
 } from './sourceHelper';
 
 /**
@@ -185,6 +183,30 @@ function appendDataSimply(newData) {
 
 
 
+var rawValueGetters = {
+
+    arrayRows: getRawValueSimply,
+
+    objectRows: function (dataItem, dataIndex, dimIndex, dimName) {
+        return dimIndex != null ? dataItem[dimName] : dataItem;
+    },
+
+    keyedColumns: getRawValueSimply,
+
+    original: function (dataItem, dataIndex, dimIndex, dimName) {
+        var value = getDataItemValue(dataItem);
+        return (dimIndex == null || !(value instanceof Array))
+            ? value
+            : value[dimIndex];
+    },
+
+    typedArray: getRawValueSimply
+};
+
+function getRawValueSimply(dataItem, dataIndex, dimIndex, dimName) {
+    return dimIndex != null ? dataItem[dimIndex] : dataItem;
+}
+
 
 export var defaultDimValueGetters = {
 
@@ -257,29 +279,32 @@ function converDataValue(value, dimInfo) {
 // ??? FIXME can these logic be more neat: getRawValue, getRawDataItem,
 // Consider persistent.
 /**
- * @return {Array.<number>|number} can be null/undefined.
+ * @param {module:echarts/data/List} data
+ * @param {number} dataIndex
+ * @param {string|number} [dim] dimName or dimIndex
+ * @return {Array.<number>|string|number} can be null/undefined.
  */
-export function getRawValueFromModel(model, dataIndex, dataType) {
-    var data = model.getData(dataType);
+export function retrieveRawValue(data, dataIndex, dim) {
+    if (!data) {
+        return;
+    }
+
     // Consider data may be not persistent.
     var dataItem = data.getRawDataItem(dataIndex);
-    var sourceFormat = data.getProvider().getSource().sourceFormat;
+
     if (dataItem == null) {
         return;
     }
-    if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        return (isObject(dataItem) && !isArray(dataItem))
-            ? dataItem.value : dataItem;
+
+    var sourceFormat = data.getProvider().getSource().sourceFormat;
+    var dimName;
+    var dimIndex;
+
+    var dimInfo = data.getDimensionInfo(dim);
+    if (dimInfo) {
+        dimName = dimInfo.name;
+        dimIndex = dimInfo.index;
     }
-    else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
-        var item = [];
-        var dims = data.dimensions;
-        for (var i = 0; i < dims.length; i++) {
-            item.push(dataItem[dims[i]]);
-        }
-        return item;
-    }
-    else {
-        return dataItem;
-    }
+
+    return rawValueGetters[sourceFormat](dataItem, dataIndex, dimIndex, dimName);
 }
