@@ -94,7 +94,7 @@ proto.restorePipelines = function (ecModel) {
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
             bockIndex: -1,
             step: progressive || 700, // ??? Temporarily number
-            count: 1
+            count: 0
         });
 
         pipe(scheduler, seriesModel, seriesModel.dataTask);

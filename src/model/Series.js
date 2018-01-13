@@ -81,6 +81,7 @@ var SeriesModel = ComponentModel.extend({
 
 
         var data = this.getInitialData(option, ecModel);
+        this.dataTask.context.data = data;
 
         if (__DEV__) {
             zrUtil.assert(data, 'getInitialData returned invalid data.');
@@ -157,6 +158,7 @@ var SeriesModel = ComponentModel.extend({
         var data = this.getInitialData(newSeriesOption, ecModel);
         // ??? set dirty on ecModel, becusue it will call mergeOption({})?
         this.dataTask.dirty();
+        this.dataTask.context.data = data;
 
         inner(this).dataBeforeProcessed = data;
 
@@ -479,7 +481,7 @@ function dataTaskCount(context) {
 
 function dataTaskReset(context) {
     var seriesModel = context.model;
-    seriesModel.setData(context.outputData = seriesModel.getRawData().cloneShallow());
+    seriesModel.setData(seriesModel.getRawData().cloneShallow());
     return dataTaskProgress;
 }
 
