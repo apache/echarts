@@ -281,9 +281,9 @@ function createList(coordSys, seriesModel, maModel) {
             var data = seriesModel.getData();
             var info = data.getDimensionInfo(
                 data.mapDimension(coordDim)
-            ) || {}; // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            info.name = coordDim;
-            return info;
+            ) || {};
+            // In map series data don't have lng and lat dimension. Fallback to same with coordSys
+            return zrUtil.defaults({name: coordDim}, info);
         });
         areaData = new List(zrUtil.map(dims, function (dim, idx) {
             return {
