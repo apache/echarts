@@ -138,9 +138,12 @@ largeSymbolProto.updateLayout = function (data) {
 
     var points = data.getLayout('symbolPoints');
     this.group.eachChild(function (child) {
-        var len = (child.endIndex - child.startIndex) * 2;
-        var byteOffset = child.startIndex * 4 * 2;
-        child.setShape('points', new Float32Array(points.buffer, byteOffset, len));
+        if (child.startIndex != null) {
+            var len = (child.endIndex - child.startIndex) * 2;
+            var byteOffset = child.startIndex * 4 * 2;
+            points = new Float32Array(points.buffer, byteOffset, len);
+        }
+        child.setShape('points', points);
     });
 };
 
