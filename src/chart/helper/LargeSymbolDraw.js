@@ -70,7 +70,6 @@ var LargeSymbolPath = graphic.extendShape({
                 size[0], size[1]
             );
         }
-        console.log(i);
 
         this.restoreTransform(ctx);
     },

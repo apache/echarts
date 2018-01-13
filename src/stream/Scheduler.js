@@ -251,6 +251,7 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
         // Reuse original task instance.
         var task = seriesTaskMap.get(pipelineId)
             || seriesTaskMap.set(pipelineId, createTask({
+                plan: seriesTaskPlan,
                 reset: seriesTaskReset,
                 count: seriesTaskCount
             }));
@@ -316,7 +317,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     function createStub(seriesModel) {
         var pipelineId = seriesModel.uid;
         var stub = agentStubMap.get(pipelineId) || agentStubMap.set(pipelineId, createTask(
-            {plan: prepareData, reset: stubReset, onDirty: stubOnDirty}
+            {reset: stubReset, onDirty: stubOnDirty}
         ));
         stub.context = {model: seriesModel, overallProgress: overallProgress};
         stub.agent = overallTask;
@@ -354,15 +355,13 @@ function stubOnDirty() {
     this.agent && this.agent.dirty();
 }
 
-function prepareData(context, upstreamContext) {
-    // Consider some method like `filter`, `map` need make new data,
-    // We should make sure that `seriesModel.getData()` get correct
-    // data in the stream procedure. So we fetch data from upstream
-    // each time `task.perform` called.
-    context.model.setData(context.data);
+function seriesTaskPlan(context) {
+    return context.plan && context.plan(
+        context.model, context.ecModel, context.api, context.payload
+    );
 }
 
-function seriesTaskReset(context, upstreamContext) {
+function seriesTaskReset(context) {
     if (context.useClearVisual) {
         context.data.clearAllVisual();
     }

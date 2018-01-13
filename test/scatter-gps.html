@@ -49,6 +49,7 @@
                     return;
                 }
                 var dataURL = `../../echarts-gl/test/data/gps/gps_${idx}.bin`;
+                // var dataURL = `../../data-online/gps/gps_${idx}.bin`;
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', dataURL, true);
                 xhr.responseType = 'arraybuffer';
