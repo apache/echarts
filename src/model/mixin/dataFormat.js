@@ -1,4 +1,4 @@
-import {getRawValueForModel} from '../../data/helper/dataProvider';
+import {getRawValueFromModel} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl} from '../../util/format';
 
 var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
@@ -95,7 +95,7 @@ export default {
      * @return {Array|number|string}
      */
     getRawValue: function (idx, dataType) {
-        return getRawValueForModel(this, idx, dataType);
+        return getRawValueFromModel(this, idx, dataType);
     },
 
     /**

@@ -1242,7 +1242,6 @@ function doDispatchAction(payload, silent) {
             this[OPTION_UPDATED] = false;
         }
         else {
-console.log(updateMethod, 'uaaaaaaaaaaa');
             updateMethods[updateMethod].call(this, payload);
         }
     }

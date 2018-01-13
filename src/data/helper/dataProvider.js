@@ -259,7 +259,7 @@ function converDataValue(value, dimInfo) {
 /**
  * @return {Array.<number>|number} can be null/undefined.
  */
-export function getRawValueForModel(model, dataIndex, dataType) {
+export function getRawValueFromModel(model, dataIndex, dataType) {
     var data = model.getData(dataType);
     // Consider data may be not persistent.
     var dataItem = data.getRawDataItem(dataIndex);

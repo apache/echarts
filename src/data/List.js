@@ -1385,7 +1385,6 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
 // FIXME Model proxy ?
 listProto.getItemModel = function (idx) {
     var hostModel = this.hostModel;
-    idx = this.getRawIndex(idx);
     return new Model(this.getRawDataItem(idx), hostModel, hostModel && hostModel.ecModel);
 };
 
