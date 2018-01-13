@@ -899,7 +899,8 @@ var updateMethods = {
             visualFuncs, ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
         );
 
-        renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
+        // Currently, not call render of components. Geo render cost a lot.
+        // renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
         renderSeries(ecIns, ecModel, api, payload, seriesDirtyMap);
 
         performPostUpdateFuncs(ecModel, this._api);
