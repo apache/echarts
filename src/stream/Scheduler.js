@@ -249,22 +249,20 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
 
         // Init tasks for each seriesModel only once.
         // Reuse original task instance.
-        var task = seriesTaskMap.get(pipelineId);
-        if (!task) {
-            task = createTask({
+        var task = seriesTaskMap.get(pipelineId)
+            || seriesTaskMap.set(pipelineId, createTask({
                 reset: seriesTaskReset,
                 count: seriesTaskCount
-            }, {
-                model: seriesModel,
-                ecModel: ecModel,
-                api: api,
-                useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
-                plan: stageHandler.plan,
-                reset: stageHandler.reset,
-                scheduler: scheduler
-            });
-            seriesTaskMap.set(pipelineId, task);
-        }
+            }));
+        task.context = {
+            model: seriesModel,
+            ecModel: ecModel,
+            api: api,
+            useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
+            plan: stageHandler.plan,
+            reset: stageHandler.reset,
+            scheduler: scheduler
+        };
         pipe(scheduler, seriesModel, task);
     }
 
@@ -280,18 +278,15 @@ function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecMo
 
 function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
     var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
-        || createTask(
-            // For overall task, the function only be called on reset stage.
-            {
-                reset: overallTaskReset
-            },
-            {
-                ecModel: ecModel,
-                api: api,
-                overallReset: stageHandler.overallReset,
-                scheduler: scheduler
-            }
-        );
+        // For overall task, the function only be called on reset stage.
+        || createTask({reset: overallTaskReset});
+
+    overallTask.context = {
+        ecModel: ecModel,
+        api: api,
+        overallReset: stageHandler.overallReset,
+        scheduler: scheduler
+    };
 
     // Reuse orignal stubs.
     var agentStubMap = overallTask.agentStubMap = overallTask.agentStubMap || createHashMap();
@@ -321,9 +316,9 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     function createStub(seriesModel) {
         var pipelineId = seriesModel.uid;
         var stub = agentStubMap.get(pipelineId) || agentStubMap.set(pipelineId, createTask(
-            {plan: prepareData, reset: stubReset, onDirty: stubOnDirty},
-            {model: seriesModel, overallProgress: overallProgress}
+            {plan: prepareData, reset: stubReset, onDirty: stubOnDirty}
         ));
+        stub.context = {model: seriesModel, overallProgress: overallProgress};
         stub.agent = overallTask;
         stub.__block = overallProgress;
 

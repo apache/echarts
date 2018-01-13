@@ -5,8 +5,8 @@ import { __DEV__ } from '../config';
  * @param {Object} define
  * @return See the return of `createTask`.
  */
-export function createTask(define, context) {
-    return new Task(define, context);
+export function createTask(define) {
+    return new Task(define);
 }
 
 /**
@@ -16,9 +16,8 @@ export function createTask(define, context) {
  * @param {Function} [define.plan] Returns 'reset' indicate reset immediately.
  * @param {Function} [define.count] count is used to determin data task.
  * @param {Function} [define.onDirty] count is used to determin data task.
- * @param {Object} [context]
  */
-function Task(define, context) {
+function Task(define) {
     define = define || {};
 
     this._reset = define.reset;
@@ -28,7 +27,9 @@ function Task(define, context) {
 
     this._dirty = true;
 
-    this.context = context || {};
+    // Context must be specified implicitly, to
+    // avoid miss update context when model changed.
+    this.context;
 }
 
 var taskProto = Task.prototype;
@@ -125,8 +126,7 @@ function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
 
     taskIns._progress = !skip && taskIns._reset && taskIns._reset(
-        taskIns.context,
-        taskIns._upstream && taskIns._upstream.context
+        taskIns.context
     );
 
     var downstream = taskIns._downstream;

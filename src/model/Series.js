@@ -69,12 +69,11 @@ var SeriesModel = ComponentModel.extend({
          */
         this.seriesIndex = this.componentIndex;
 
-        // this.settingTask = createTask();
-
         this.dataTask = createTask({
             count: dataTaskCount,
             reset: dataTaskReset
-        }, {model: this});
+        });
+        this.dataTask.context = {model: this};
 
         this.mergeDefaultAndTheme(option, ecModel);
 

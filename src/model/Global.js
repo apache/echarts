@@ -58,8 +58,6 @@ var GlobalModel = Model.extend({
          * @type {module:echarts/model/OptionManager}
          */
         this._optionManager = optionManager;
-
-        // this.settingTask = createTask();
     },
 
     setOption: function (option, optionPreprocessorFuncs) {

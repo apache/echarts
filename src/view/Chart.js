@@ -26,7 +26,8 @@ function Chart() {
     this.renderTask = createTask({
         plan: renderTaskPlan,
         reset: renderTaskReset
-    }, {view: this});
+    });
+    this.renderTask.context = {view: this};
 }
 
 Chart.prototype = {
