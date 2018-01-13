@@ -24,6 +24,10 @@
 
         <script>
 
+            var chart;
+            var myChart;
+            var option;
+
             require([
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
@@ -31,7 +35,7 @@
                 // $.getJSON('./data/nutrients.json', function (data) {
                 // });
 
-                testHelper.create(echarts, 'main0', {
+                chart = myChart = testHelper.create(echarts, 'main0', {
                     option: option
                 });
             });

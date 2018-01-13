@@ -172,13 +172,16 @@ function processSeries(seriesOpt) {
     }
     else if (seriesOpt.type === 'treemap') {
         convertNormalEmphasis(seriesOpt.breadcrumb, 'itemStyle');
-    }
-    else if (seriesOpt.levels || seriesOpt.categories) {
-        zrUtil.each(seriesOpt.levels || seriesOpt.categories, function (opt) {
+        zrUtil.each(seriesOpt.levels, function (opt) {
             removeEC3NormalStatus(opt);
         });
     }
-
+    else if (seriesOpt.type === 'graph') {
+        zrUtil.each(seriesOpt.categories, function (opt) {
+            removeEC3NormalStatus(opt);
+        });
+    }
+    // sunburst starts from ec4, so it does not need to compat levels.
 }
 
 function toArr(o) {
@@ -216,6 +219,7 @@ export default function (option, isTheme) {
     });
 
     each(toArr(option.calendar), function (calendarOpt) {
+        convertNormalEmphasis(calendarOpt, 'itemStyle');
         compatTextStyle(calendarOpt, 'dayLabel');
         compatTextStyle(calendarOpt, 'monthLabel');
         compatTextStyle(calendarOpt, 'yearLabel');
@@ -237,10 +241,19 @@ export default function (option, isTheme) {
 
     each(toArr(option.timeline), function (timelineOpt) {
         compatEC3CommonStyles(timelineOpt);
+        convertNormalEmphasis(timelineOpt, 'label');
+        convertNormalEmphasis(timelineOpt, 'itemStyle');
         convertNormalEmphasis(timelineOpt, 'controlStyle');
         convertNormalEmphasis(timelineOpt, 'checkpointStyle');
-    });
 
+        var data = timelineOpt.data;
+        zrUtil.isArray(data) && zrUtil.each(data, function (item) {
+            if (zrUtil.isObject(item)) {
+                convertNormalEmphasis(item, 'label');
+                convertNormalEmphasis(item, 'itemStyle');
+            }
+        });
+    });
 
     each(toArr(option.toolbox), function (toolboxOpt) {
         convertNormalEmphasis(toolboxOpt, 'iconStyle');
