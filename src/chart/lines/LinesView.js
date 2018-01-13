@@ -18,8 +18,6 @@ export default echarts.extendChartView({
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
 
-        this._updateGroupTransform(seriesModel);
-
         var lineDraw = this._updateLineDraw(data, seriesModel);
 
         var zlevel = seriesModel.get('zlevel');
@@ -61,28 +59,39 @@ export default echarts.extendChartView({
         lineDraw.updateData(data);
 
         this._lastZlevel = zlevel;
+
+        this._finished = true;
     },
 
     incrementalPrepareRender: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-
-        this._updateGroupTransform(seriesModel);
 
         var lineDraw = this._updateLineDraw(data, seriesModel);
 
         lineDraw.incrementalPrepareUpdate(data);
 
         this._clearLayer(api);
+
+        this._finished = false;
     },
 
     incrementalRender: function (taskParams, seriesModel, ecModel) {
         this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData());
+
+        this._finished = taskParams.end === seriesModel.getData().count();
     },
 
     updateTransform: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
 
-        if (seriesModel.get('effect.show')) {
+        if (!this._finished || seriesModel.pipelineContext.large) {
+            // TODO Don't have to do update in large mode. Only do it when there are millions of data.
+            return {
+                update: true
+            };
+        }
+        else {
+            // TODO Use same logic with ScatterView.
             // Manually update layout
             var res = linesLayout.reset(seriesModel);
             if (res.progress) {
@@ -90,32 +99,6 @@ export default echarts.extendChartView({
             }
             this._lineDraw.updateLayout();
             this._clearLayer(api);
-
-            return;
-        }
-
-        var coordSys = seriesModel.coordinateSystem;
-        var update = true;
-        // Must mark group dirty and make sure the incremental layer will be cleared
-        // PENDING
-        this.group.dirty();
-        if (coordSys.getRoamTransform) {
-            update = false;
-            this._updateGroupTransform(seriesModel);
-        }
-
-        if (update || !this._finished || !this._lineDraw.isPersistent()) {
-            return {
-                update: true
-            };
-        }
-    },
-
-    _updateGroupTransform: function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys && coordSys.getRoamTransform) {
-            this.group.transform = matrix.clone(coordSys.getRoamTransform());
-            this.group.decomposeTransform();
         }
     },
 
