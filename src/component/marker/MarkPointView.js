@@ -55,6 +55,16 @@ export default MarkerView.extend({
     //     }, this);
     // },
 
+    updateTransform: function (markPointModel, ecModel, api) {
+        ecModel.eachSeries(function (seriesModel) {
+            var mpModel = seriesModel.markPointModel;
+            if (mpModel) {
+                updateMarkerLayout(mpModel.getData(), seriesModel, api);
+                this.markerGroupMap.get(seriesModel.id).updateLayout(mpModel);
+            }
+        }, this);
+    },
+
     renderSeries: function (seriesModel, mpModel, ecModel, api) {
         var coordSys = seriesModel.coordinateSystem;
         var seriesId = seriesModel.id;

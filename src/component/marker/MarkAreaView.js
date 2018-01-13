@@ -151,6 +151,24 @@ MarkerView.extend({
     //     }, this);
     // },
 
+    updateTransform: function (markAreaModel, ecModel, api) {
+        ecModel.eachSeries(function (seriesModel) {
+            var maModel = seriesModel.markAreaModel;
+            if (maModel) {
+                var areaData = maModel.getData();
+                areaData.each(function (idx) {
+                    var points = zrUtil.map(dimPermutations, function (dim) {
+                        return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
+                    });
+                    // Layout
+                    areaData.setItemLayout(idx, points);
+                    var el = areaData.getItemGraphicEl(idx);
+                    el.setShape('points', points);
+                });
+            }
+        }, this);
+    },
+
     renderSeries: function (seriesModel, maModel, ecModel, api) {
         var coordSys = seriesModel.coordinateSystem;
         var seriesName = seriesModel.name;
