@@ -81,6 +81,7 @@ var SeriesModel = ComponentModel.extend({
 
 
         var data = this.getInitialData(option, ecModel);
+        wrapData(data, this);
         this.dataTask.context.data = data;
 
         if (__DEV__) {
@@ -156,6 +157,7 @@ var SeriesModel = ComponentModel.extend({
         prepareSource(this);
 
         var data = this.getInitialData(newSeriesOption, ecModel);
+        wrapData(data, this);
         // ??? set dirty on ecModel, becusue it will call mergeOption({})?
         this.dataTask.dirty();
         this.dataTask.context.data = data;
@@ -489,6 +491,21 @@ function dataTaskProgress(param, context) {
     // Avoid repead cloneShallow when data just created in reset.
     if (param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
+    }
+}
+
+// TODO refactor
+function wrapData(data, seriesModel) {
+    zrUtil.each(data.CHANGABLE_METHODS, function (methodName) {
+        data.wrapMethod(methodName, zrUtil.curry(onDataSelfChange, seriesModel));
+    });
+}
+
+function onDataSelfChange(seriesModel) {
+    var task = getCurrentTask(seriesModel);
+    if (task) {
+        // Consider case: filter, selectRange
+        task.setOutputEnd(this.count());
     }
 }
 
