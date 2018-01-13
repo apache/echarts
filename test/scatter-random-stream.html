@@ -96,6 +96,12 @@
 
                     chart.setOption({
                         tooltip: {},
+                        toolbox: {
+                            left: 'center',
+                            feature: {
+                                dataZoom: {}
+                            }
+                        },
                         legend: {
                             orient: 'vertical',
                             left: 'left',
@@ -127,24 +133,29 @@
                         series : [{
                             name: 'pm2.5',
                             type: 'scatter',
-                            large: true,
-                            data: genData1(5e6),
+                            data: genData1(5e5),
                             dimensions: ['x', 'y'],
-                            encode: {
-                                x: 0,
-                                y: 1
-                            },
-                            xAxisIndex: 0,
-                            yAxisIndex: 0,
-                            symbolSize: 1,
+                            // symbol: 'rect',
+                            symbolSize: 3,
                             // symbol: 'rect',
                             itemStyle: {
-                                normal: {
-                                    color: '#128de3',
-                                    opacity: 0.2
-                                }
+                                color: '#128de3',
+                                opacity: 0.4
                             },
-                            progressive: 3000
+                            large: true,
+                            // large: {
+                            //     symbolSize: 2
+                            // },
+                            // large: function (params) {
+                            //     if (params.dataCount > 30000) {
+                            //         return {symbolSize: 1};
+                            //     }
+                            //     else if (params.dataCount > 3000) {
+                            //         return {symbolSize: 5};
+                            //     }
+                            // },
+                            largeThreshold: 500,
+                            progressive: 500
                         // }, {
                         //     name: 'pm10',
                         //     type: 'scatter',
