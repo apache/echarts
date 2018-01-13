@@ -16,6 +16,10 @@ var isObject = zrUtil.isObject;
 var UNDEFINED = 'undefined';
 var globalObj = typeof window === UNDEFINED ? global : window;
 
+// Use prefix to avoid index to be the same as otherIdList[idx],
+// which will cause weird udpate animation.
+var ID_PREFIX = 'e\0\0';
+
 var dataCtors = {
     'float': typeof globalObj.Float64Array === UNDEFINED
         ? Array : globalObj.Float64Array,
@@ -43,7 +47,7 @@ function cloneChunk(originalChunk) {
 var TRANSFERABLE_PROPERTIES = [
     'stackedOn', 'hasItemOption', '_nameList', '_idList',
     '_rawData', '_rawExtent', '_chunkSize', '_chunkCount',
-    '_dimValueGetter', '_count', '_nameDimIdx'
+    '_dimValueGetter', '_count', '_nameDimIdx', '_idDimIdx'
 ];
 
 function transferProperties(a, b) {
@@ -421,6 +425,9 @@ listProto._initDataFromProvider = function (start, end) {
         if (dimInfo.otherDims.itemName === 0) {
             nameDimIdx = this._nameDimIdx = i;
         }
+        if (dimInfo.otherDims.itemId === 0) {
+            this._idDimIdx = i;
+        }
         var DataCtor = dataCtors[dimInfo.type];
 
         if (!storage[dim]) {
@@ -524,6 +531,25 @@ listProto._getNameFromStore = function (rawIndex) {
         var chunkIndex = Math.floor(rawIndex / chunkSize);
         var chunkOffset = rawIndex % chunkSize;
         var dim = this.dimensions[nameDimIdx];
+        var ordinalMeta = this._dimensionInfos[dim].ordinalMeta;
+        if (ordinalMeta) {
+            return ordinalMeta.categories[rawIndex];
+        }
+        else {
+            var chunk = this._storage[dim][chunkIndex];
+            return chunk && chunk[chunkOffset];
+        }
+    }
+};
+
+// TODO refactor
+listProto._getIdFromStore = function (rawIndex) {
+    var idDimIdx = this._idDimIdx;
+    if (idDimIdx != null) {
+        var chunkSize = this._chunkSize;
+        var chunkIndex = Math.floor(rawIndex / chunkSize);
+        var chunkOffset = rawIndex % chunkSize;
+        var dim = this.dimensions[idDimIdx];
         var ordinalMeta = this._dimensionInfos[dim].ordinalMeta;
         if (ordinalMeta) {
             return ordinalMeta.categories[rawIndex];
@@ -921,10 +947,20 @@ listProto.getName = function (idx) {
  * @return {string}
  */
 listProto.getId = function (idx) {
-    var rawIndex = this.getRawIndex(idx);
-    return this._idList[rawIndex] || (rawIndex + '');
+    return getId(this, this.getRawIndex(idx));
 };
 
+function getId(list, rawIndex) {
+    var id = list._idList[rawIndex];
+    if (id == null) {
+        id = list._getIdFromStore(rawIndex);
+    }
+    if (id == null) {
+        // FIXME Check the usage in graph, should not use prefix.
+        id = ID_PREFIX + rawIndex;
+    }
+    return id;
+}
 
 function normalizeDimensions(dimensions) {
     if (!zrUtil.isArray(dimensions)) {
@@ -1396,21 +1432,16 @@ listProto.getItemModel = function (idx) {
  * @return {module:echarts/data/DataDiffer}
  */
 listProto.diff = function (otherList) {
-    var idList = this._idList;
-    var otherIdList = otherList && otherList._idList;
-    var val;
-    // Use prefix to avoid index to be the same as otherIdList[idx],
-    // which will cause weird udpate animation.
-    var prefix = 'e\0\0';
+    var thisList = this;
 
     return new DataDiffer(
         otherList ? otherList.getIndices() : [],
         this.getIndices(),
         function (idx) {
-            return (val = otherIdList[idx]) != null ? val : prefix + idx;
+            return getId(otherList, idx);
         },
         function (idx) {
-            return (val = idList[idx]) != null ? val : prefix + idx;
+            return getId(thisList, idx);
         }
     );
 };

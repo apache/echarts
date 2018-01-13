@@ -62,7 +62,7 @@ export function detectSourceFormat(datasetModel) {
     }
     else if (isObject(data)) {
         for (var key in data) {
-            if (data.hasOwnProtytpe(key) && isArrayLike(data[key])) {
+            if (data.hasOwnProperty(key) && isArrayLike(data[key])) {
                 sourceFormat = SOURCE_FORMAT_KEYED_COLUMNS;
                 break;
             }
@@ -367,6 +367,8 @@ function makeDefaultEncode(
         var datasetRecord = datasetMap.get(key)
             || datasetMap.set(key, {categoryWayDim: 1, valueWayDim: 0});
 
+        // TODO
+        // Auto detect first time axis and do arrangement.
         each(coordSysDefine.coordSysDims, function (coordDim) {
             // In value way.
             if (coordSysDefine.firstCategoryDimIndex == null) {

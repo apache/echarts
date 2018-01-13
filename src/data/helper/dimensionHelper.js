@@ -2,7 +2,7 @@ import {each, createHashMap, assert} from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
 
 export var OTHER_DIMENSIONS = createHashMap([
-    'tooltip', 'label', 'itemName', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
 ]);
 
 export function summarizeDimensions(data) {

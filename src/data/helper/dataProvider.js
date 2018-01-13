@@ -116,6 +116,7 @@ var providerMethods = {
                 var col = this._data[dims[i].name];
                 item.push(col ? col[idx] : null);
             }
+            return item;
         },
         appendData: function (newData) {
             var data = this._data;

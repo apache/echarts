@@ -22,17 +22,67 @@
         <!-- <h1>dynamic category</h1>
         <div class="chart" id="dynamic-category"></div>
         <h1>category appendData</h1>
-        <div class="chart" id="category-appendData"></div>
-        <h1>parallel-with-category</h1>
         <div class="chart" id="parallel-with-category"></div> -->
 
-        <div class="chart" id="category-no-encode-two-value-axis"></div>
-        <div class="chart" id="category-no-axis-data-multi"></div>
-        <div class="chart" id="category-no-encode-no-axis-data-single"></div>
-        <div class="chart" id="category-no-encode-has-axis-data"></div>
-        <div class="chart" id="category"></div>
-        <div class="chart" id="two-value-axes"></div>
-        <div class="chart" id="empty-data"></div>
+        <div id="key-columns"></div>
+        <div id="category-no-encode-two-value-axis"></div>
+        <div id="category-no-axis-data-multi"></div>
+        <div id="category-no-encode-no-axis-data-single"></div>
+        <div id="category-no-encode-has-axis-data"></div>
+        <div id="category"></div>
+        <div id="two-value-axes"></div>
+        <div id="empty-data"></div>
+        <div id="dynamic-category"></div>
+        <div id="dynamic-time"></div>
+
+
+
+        <script>
+            var keyColumnsDrink = {
+                'product': ['2012', '2013', '2014', '2015', '2016', '2017'],
+                'Matcha Latte': [41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                'Milk Tea': [86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                'Cheese Cocoa': [24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                'Walnut Brownie': [55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            };
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    grid: {},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    dataset: [{
+                        source: keyColumnsDrink
+                    }],
+                    series: [
+                        {type:'line'},
+                        {type:'line'},
+                        {type:'line'}
+                    ]
+                };
+                testHelper.create(echarts, 'key-columns', {
+                    title: 'category: no encode declared, two value axis',
+                    dataTable: keyColumnsDrink,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
 
 
 
@@ -577,6 +627,148 @@
                 });
             });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type:'line', encode: {x: 'date', y: 'Matcha Latte', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Milk Tea', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Cheese Cocoa', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Walnut Brownie', itemId: 'date'}}
+                    ]
+                };
+
+                var baseSource = [
+                    ['date', 'Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
+                    ['2012-03-01', 11.1, 40.4, 65.1, 13.3],
+                    ['2012-03-02', 36.5, 52.1, 85.7, 23.1],
+                    ['2012-03-03', 64.1, 17.2, 99.5, 16.4],
+                    ['2012-03-04', 15.2, 77.1, 29.2, 62.4],
+                    ['2012-03-05', 55.4, 73.1, 49.2, 22.9],
+                    ['2012-03-06', 35.2, 27.1, 24.6, 92.7],
+                    ['2012-03-07', 51.7, 57.1, 89.1, 69.2]
+                ];
+                var lastDate = +echarts.number.parseDate('2012-03-07');
+
+                var chart = testHelper.create(echarts, 'dynamic-category', {
+                    title: 'dynamic-category',
+                    dataTable: keyColumnsDrink,
+                    option: option,
+                    info: baseSource
+                });
+
+                if (chart) {
+                    setInterval(function () {
+                        lastDate += 3600 * 24 * 1000;
+
+                        baseSource.push([
+                            echarts.format.formatTime('yyyy-MM-dd', lastDate),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1)
+                        ]);
+
+                        baseSource.splice(1, 1);
+
+                        chart.setOption({
+                            dataset: {
+                                source: baseSource
+                            }
+                        });
+                    }, 1000);
+                }
+
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'time'},
+                    yAxis: {},
+                    series: [
+                        {type:'line', encode: {x: 'date', y: 'Matcha Latte', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Milk Tea', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Cheese Cocoa', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Walnut Brownie', itemId: 'date'}}
+                    ]
+                };
+
+                var baseSource = [
+                    ['date', 'Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
+                    ['2012-03-01', 11.1, 40.4, 65.1, 13.3],
+                    ['2012-03-02', 36.5, 52.1, 85.7, 23.1],
+                    ['2012-03-03', 64.1, 17.2, 99.5, 16.4],
+                    ['2012-03-04', 15.2, 77.1, 29.2, 62.4],
+                    ['2012-03-05', 55.4, 73.1, 49.2, 22.9],
+                    ['2012-03-06', 35.2, 27.1, 24.6, 92.7],
+                    ['2012-03-07', 51.7, 57.1, 89.1, 69.2]
+                ];
+                var lastDate = +echarts.number.parseDate('2012-03-07');
+
+                var chart = testHelper.create(echarts, 'dynamic-time', {
+                    title: 'dynamic-time',
+                    dataTable: keyColumnsDrink,
+                    option: option,
+                    info: baseSource
+                });
+
+                if (chart) {
+                    setInterval(function () {
+                        lastDate += 3600 * 24 * 1000;
+
+                        baseSource.push([
+                            echarts.format.formatTime('yyyy-MM-dd', lastDate),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1)
+                        ]);
+
+                        baseSource.splice(1, 1);
+
+                        chart.setOption({
+                            dataset: {
+                                source: baseSource
+                            }
+                        });
+                    }, 1000);
+                }
+
+            });
+        </script>
+
 
 
 

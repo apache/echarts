@@ -308,7 +308,8 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     }
     // Otherwise, (usually it is legancy case), the overall task will only be
     // executed when upstream dirty. Otherwise the progressive rendering of all
-    // pipelines will be disabled unexpectedly.
+    // pipelines will be disabled unexpectedly. But it still needs stubs to receive
+    // dirty info from upsteam.
     else {
         overallProgress = false;
         each(ecModel.getSeries(), createStub);
