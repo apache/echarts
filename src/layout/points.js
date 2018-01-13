@@ -22,7 +22,7 @@ export default function (seriesType) {
             }).slice(0, 2);
             var dimLen = dims.length;
 
-            function progress(params, seriesModel) {
+            function progress(params, data) {
                 var segCount = params.end - params.start;
                 var points = isLargeRender && new Float32Array(segCount * dimLen);
 
