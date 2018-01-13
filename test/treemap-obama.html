@@ -213,19 +213,15 @@
                             : null,
                         colorMappingBy: 'id',
                         itemStyle: {
-                            normal: {
-                                borderWidth: 3,
-                                gapWidth: 3
-                            }
+                            borderWidth: 3,
+                            gapWidth: 3
                         }
                     },
                     {
                         colorAlpha: mode === 2
                             ? [0.5, 1] : null,
                         itemStyle: {
-                            normal: {
-                                gapWidth: 1
-                            }
+                            gapWidth: 1
                         }
                     }
                 ];
@@ -299,16 +295,10 @@
                             label: {
                                 show: true,
                                 formatter: "{b}",
-                                normal: {
-                                    textStyle: {
-                                        ellipsis: true
-                                    }
-                                }
+                                ellipsis: true
                             },
                             itemStyle: {
-                                normal: {
-                                    borderColor: 'black'
-                                }
+                                borderColor: 'black'
                             },
                             levels: getLevelOption(0),
                             data: buildData('2012 Amount', window.obama_budget_2012)

@@ -126,6 +126,10 @@ function processSeries(seriesOpt) {
     }
 
     var data = seriesOpt.data;
+
+    // Break with ec3: if `setOption` again, there may be no `type` in option,
+    // then the backward compat based on option type will not be performed.
+
     if (seriesOpt.type === 'graph') {
         data = data || seriesOpt.nodes;
         var edgeData = seriesOpt.links || seriesOpt.edges;
@@ -134,7 +138,11 @@ function processSeries(seriesOpt) {
                 compatEC3CommonStyles(edgeData[i]);
             }
         }
+        zrUtil.each(seriesOpt.categories, function (opt) {
+            removeEC3NormalStatus(opt);
+        });
     }
+
     if (data && !zrUtil.isTypedArray(data)) {
         for (var i = 0; i < data.length; i++) {
             compatEC3CommonStyles(data[i]);
@@ -173,11 +181,6 @@ function processSeries(seriesOpt) {
     else if (seriesOpt.type === 'treemap') {
         convertNormalEmphasis(seriesOpt.breadcrumb, 'itemStyle');
         zrUtil.each(seriesOpt.levels, function (opt) {
-            removeEC3NormalStatus(opt);
-        });
-    }
-    else if (seriesOpt.type === 'graph') {
-        zrUtil.each(seriesOpt.categories, function (opt) {
             removeEC3NormalStatus(opt);
         });
     }
