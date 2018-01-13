@@ -38,7 +38,7 @@ echarts.extendChartView({
         // PENDING
         this.group.dirty();
 
-        if (!this._finished || data.count() > 2e5 || !this._symbolDraw.isPersistent()) {
+        if (!this._finished || data.count() > 1e4 || !this._symbolDraw.isPersistent()) {
             return {
                 update: true
             };
