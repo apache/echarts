@@ -1242,6 +1242,7 @@ function doDispatchAction(payload, silent) {
             this[OPTION_UPDATED] = false;
         }
         else {
+console.log(updateMethod, 'uaaaaaaaaaaa');
             updateMethods[updateMethod].call(this, payload);
         }
     }
@@ -1358,7 +1359,7 @@ function prepareView(ecIns, type, ecModel, scheduler) {
     for (var i = 0; i < viewList.length;) {
         var view = viewList[i];
         if (!view.__alive) {
-            view.renderTask.dispose();
+            !isComponent && view.renderTask.dispose();
             zr.remove(view.group);
             view.dispose(ecModel, api);
             viewList.splice(i, 1);

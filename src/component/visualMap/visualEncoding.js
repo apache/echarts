@@ -14,14 +14,11 @@ echarts.registerVisual(VISUAL_PRIORITY, {
                 return;
             }
 
-            var data = seriesModel.getData();
-
             resetDefines.push(visualSolution.incrementalApplyVisual(
-                data,
                 visualMapModel.stateList,
                 visualMapModel.targetVisuals,
                 zrUtil.bind(visualMapModel.getValueState, visualMapModel),
-                visualMapModel.getDataDimension(data)
+                visualMapModel.getDataDimension(seriesModel.getData())
             ));
         });
 
