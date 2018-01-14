@@ -2,6 +2,7 @@ import * as zrUtil from 'zrender/src/core/util';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
+var isArray = zrUtil.isArray;
 
 /**
  * name may be displayed on screen, so use '-'.
@@ -73,14 +74,15 @@ export var TEXT_STYLE_OPTIONS = [
 // ]);
 
 /**
+ * The method do not ensure performance.
  * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
  * This helper method retieves value from data.
  * @param {string|number|Date|Array|Object} dataItem
  * @return {number|string|Date|Array.<number|string|Date>}
  */
 export function getDataItemValue(dataItem) {
-    // Performance sensitive.
-    return dataItem && (dataItem.value == null ? dataItem : dataItem.value);
+    return (isObject(dataItem) && !isArray(dataItem) && !(dataItem instanceof Date))
+        ? dataItem.value : dataItem;
 }
 
 /**

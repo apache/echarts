@@ -62,7 +62,7 @@ proto.getOrdinal = function (category) {
 };
 
 /**
- * @param {string|number} category
+ * @param {*} category
  * @return {number} The ordinal. If not found, return NaN.
  */
 proto.parseAndCollect = function (category) {

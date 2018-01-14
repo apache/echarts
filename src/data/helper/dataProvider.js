@@ -220,7 +220,12 @@ export var defaultDimValueGetters = {
     keyedColumns: getDimValueSimply,
 
     original: function (dataItem, dimName, dataIndex, dimIndex) {
-        var value = getDataItemValue(dataItem);
+        // Performance sensitive, do not use modelUtil.getDataItemValue.
+        // If dataItem is an plain object with no value field, the var `value`
+        // will be assigned with the object, but it will be tread correctly
+        // in the `convertDataValue`.
+        var value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
+
         // If any dataItem is like { value: 10 }
         if (!this._rawData.pure && isDataItemOption(dataItem)) {
             this.hasItemOption = true;
@@ -274,7 +279,10 @@ function converDataValue(value, dimInfo) {
     // If dimType is not ordinal and value is null or undefined or NaN or '-',
     // parse to NaN.
     return (value == null || value === '')
-        ? NaN : +value; // If string (like '-'), using '+' parse to NaN
+        ? NaN
+        // If string (like '-'), using '+' parse to NaN
+        // If object, also parse to NaN
+        : +value;
 }
 
 // ??? FIXME can these logic be more neat: getRawValue, getRawDataItem,
