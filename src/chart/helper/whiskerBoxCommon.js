@@ -2,6 +2,7 @@
 import createListSimply from '../helper/createListSimply';
 import WhiskerBoxDraw from '../helper/WhiskerBoxDraw';
 import * as zrUtil from 'zrender/src/core/util';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 
 export var seriesModelMixin = {
 
@@ -19,7 +20,7 @@ export var seriesModelMixin = {
         // needed to be specified by user. Otherwise, layout can be
         // judged by which axis is category.
 
-        var categories;
+        var ordinalMeta;
 
         var xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex'));
         var yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex'));
@@ -32,12 +33,12 @@ export var seriesModelMixin = {
 
         if (xAxisType === 'category') {
             option.layout = 'horizontal';
-            categories = xAxisModel.getCategories();
+            ordinalMeta = xAxisModel.getOrdinalMeta();
             addOrdinal = true;
         }
         else if (yAxisType  === 'category') {
             option.layout = 'vertical';
-            categories = yAxisModel.getCategories();
+            ordinalMeta = yAxisModel.getOrdinalMeta();
             addOrdinal = true;
         }
         else {
@@ -48,8 +49,12 @@ export var seriesModelMixin = {
         var baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
         var baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
         var otherAxisDim = coordDims[1 - baseAxisDimIndex];
+        var axisModels = [xAxisModel, yAxisModel];
+        var baseAxisType = axisModels[baseAxisDimIndex].get('type');
+        var otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
         var data = option.data;
 
+        // ??? FIXME make a stage to perform data transfrom.
         addOrdinal && zrUtil.each(data, function (item, index) {
             if (item.value && zrUtil.isArray(item.value)) {
                 item.value.unshift(index);
@@ -65,17 +70,20 @@ export var seriesModelMixin = {
             {
                 coordDimensions: [{
                     name: baseAxisDim,
+                    type: getDimensionTypeByAxis(baseAxisType),
+                    ordinalMeta: ordinalMeta,
                     otherDims: {
-                        tooltip: false
+                        tooltip: false,
+                        itemName: 0
                     },
                     dimsDef: ['base']
                 }, {
                     name: otherAxisDim,
+                    type: getDimensionTypeByAxis(otherAxisType),
                     dimsDef: defaultValueDimensions.slice()
                 }],
                 dimensionsCount: defaultValueDimensions.length + 1
-            },
-            categories && categories.slice()
+            }
         );
     },
 

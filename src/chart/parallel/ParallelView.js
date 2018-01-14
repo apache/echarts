@@ -164,7 +164,7 @@ function createLinePoints(data, dataIndex, dimensions, coordSys) {
     var points = [];
     for (var i = 0; i < dimensions.length; i++) {
         var dimName = dimensions[i];
-        var value = data.get(dimName, dataIndex);
+        var value = data.get(data.mapDimension(dimName), dataIndex);
         if (!isEmptyValue(value, coordSys.getAxis(dimName).type)) {
             points.push(coordSys.dataToPoint(value, dimName));
         }

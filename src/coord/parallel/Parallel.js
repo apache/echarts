@@ -339,11 +339,14 @@ Parallel.prototype = {
      */
     eachActiveState: function (data, callback, context) {
         var dimensions = this.dimensions;
+        var dataDimensions = zrUtil.map(dimensions, function (axisDim) {
+            return data.mapDimension(axisDim);
+        });
         var axesMap = this._axesMap;
         var hasActiveSet = this.hasAxisBrushed();
 
         for (var i = 0, len = data.count(); i < len; i++) {
-            var values = data.getValues(dimensions, i);
+            var values = data.getValues(dataDimensions, i);
             var activeState;
 
             if (!hasActiveSet) {

@@ -22,6 +22,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *      properties: 'name', 'type', 'displayName'.
  *      `name` of each item provides default coord name.
  *      [{dimsDef: [string...]}, ...] can be specified to give names.
+ *      [{ordinalMeta}] can be specified.
  * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
  * @param {Object} [opt]
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
@@ -115,7 +116,10 @@ function completeDimensions(sysDims, source, opt) {
         }
         else {
             coordDim = sysDimItem.name;
+            var ordinalMeta = sysDimItem.ordinalMeta;
+            sysDimItem.ordinalMeta = null;
             sysDimItem = clone(sysDimItem);
+            sysDimItem.ordinalMeta = ordinalMeta;
             // `coordDimIndex` should not be set directly.
             sysDimItemDimsDef = sysDimItem.dimsDef;
             sysDimItemOtherDims = sysDimItem.otherDims;

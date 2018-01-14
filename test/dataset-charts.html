@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
         <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css" />
@@ -29,6 +30,10 @@
         <div id="layout3"></div>
         <div id="layout4"></div>
         <div id="layout5"></div>
+        <div id="layout6"></div>
+        <div id="layout7"></div>
+        <div id="layout8"></div>
+        <div id="layout9"></div>
 
 
 
@@ -74,6 +79,27 @@
                 [86.5, 2316, 92.1, 3255, 85.7, 2485],
                 [24.1, 1532, 67.2, 1452, 79.5, 4689],
                 [55.2, 5312, 67.1, 3266, 69.2, 1354]
+            ];
+
+            var errorData = [
+                ['name', 'Price', 'Prime cost', 'Prime cost min', 'Prime cost max', 'Price min', 'Price max'],
+                ['Blouse "Blue Viola"', 101.88, 99.75, 76.75, 116.75, 69.88, 119.88],
+                ['Dress "Daisy"', 155.8, 144.03, 126.03, 156.03, 129.8, 188.8],
+                ['Trousers "Cutesy Classic"', 203.25, 173.56, 151.56, 187.56, 183.25, 249.25],
+                ['Dress "Morning Dew"', 256, 120.5, 98.5, 136.5, 236, 279],
+                ['Turtleneck "Dark Chocolate"', 408.89, 294.75, 276.75, 316.75, 385.89, 427.89],
+                ['Jumper "Early Spring"', 427.36, 430.24, 407.24, 452.24, 399.36, 461.36],
+                ['Breeches "Summer Mood"', 356, 135.5, 123.5, 151.5, 333, 387],
+                ['Dress "Mauve Chamomile"', 406, 95.5, 73.5, 111.5, 366, 429],
+                ['Dress "Flying Tits"', 527.36, 503.24, 488.24, 525.24, 485.36, 551.36],
+                ['Dress "Singing Nightingales"', 587.36, 543.24, 518.24, 555.24, 559.36, 624.36],
+                ['Sundress "Cloudy weather"', 603.36, 407.24, 392.24, 419.24, 581.36, 627.36],
+                ['Sundress "East motives"', 633.36, 477.24, 445.24, 487.24, 594.36, 652.36],
+                ['Sweater "Cold morning"', 517.36, 437.24, 416.24, 454.24, 488.36, 565.36],
+                ['Trousers "Lavender Fields"', 443.36, 387.24, 370.24, 413.24, 412.36, 484.36],
+                ['Jumper "Coffee with Milk"', 543.36, 307.24, 288.24, 317.24, 509.36, 574.36],
+                ['Blouse "Blooming Cactus"', 790.36, 277.24, 254.24, 295.24, 764.36, 818.36],
+                ['Sweater "Fluffy Comfort"', 790.34, 678.34, 660.34, 690.34, 762.34, 824.34]
             ];
 
             // No 北京 上海 江苏
@@ -394,6 +420,288 @@
 
 
 
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+
+
+                function renderItem(params, api) {
+                    var children = [];
+                    var coordDims = ['x', 'y'];
+
+                    for (var baseDimIdx = 0; baseDimIdx < 2; baseDimIdx++) {
+                        var otherDimIdx = 1 - baseDimIdx;
+                        var encode = params.encode;
+                        var baseValue = api.value(encode[coordDims[baseDimIdx]][0]);
+                        var param = [];
+                        param[baseDimIdx] = baseValue;
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][1]);
+                        var highPoint = api.coord(param);
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][2]);
+                        var lowPoint = api.coord(param);
+                        var halfWidth = 5;
+
+                        var style = api.style({
+                            stroke: api.visual('color'),
+                            fill: null
+                        });
+
+                        children.push({
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx] - halfWidth, highPoint[otherDimIdx],
+                                highPoint[baseDimIdx] + halfWidth, highPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx], highPoint[otherDimIdx],
+                                lowPoint[baseDimIdx], lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                lowPoint[baseDimIdx] - halfWidth, lowPoint[otherDimIdx],
+                                lowPoint[baseDimIdx] + halfWidth, lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        });
+                    }
+
+                    function makeShape(baseDimIdx, base1, value1, base2, value2) {
+                        var shape = {};
+                        shape[coordDims[baseDimIdx] + '1'] = base1;
+                        shape[coordDims[1 - baseDimIdx] + '1'] = value1;
+                        shape[coordDims[baseDimIdx] + '2'] = base2;
+                        shape[coordDims[1 - baseDimIdx] + '2'] = value2;
+                        return shape;
+                    }
+
+                    return {
+                        type: 'group',
+                        children: children
+                    };
+                }
+
+                var option = {
+                    dataset: {
+                        source: errorData
+                    },
+                    tooltip: {
+                    },
+                    legend: {
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    visualMap: {
+                        min: 0,
+                        max: 1000,
+                        dimension: 1,
+                        calculable: true
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        name: 'error',
+                        encode: {
+                            x: 2,
+                            y: 1,
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            itemName: 0
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        }
+                    }, {
+                        type: 'custom',
+                        name: 'error',
+                        renderItem: renderItem,
+                        encode: {
+                            x: [2, 3, 4],
+                            y: [1, 5, 6],
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            itemName: 0
+                        },
+                        z: 100
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout6', {
+                    title: 'error data (custom)',
+                    height: 400,
+                    dataTables: [
+                        errorData
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'data/stock-DJI.json'], function (echarts, source) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    dataset: [{
+                        source: source
+                    }],
+                    dataZoom: [{}, {type: 'inside'}],
+                    animation: false,
+                    series: [{
+                        type: 'candlestick',
+                        encode: {
+                            x: 0,
+                            y: [1, 2, 3, 4]
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout7', {
+                    height: 400,
+                    option: option,
+                    dataTables: [source],
+                    info: {
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'data/stock-DJI.json'], function (echarts, source) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'time'},
+                    yAxis: {},
+                    dataset: [{
+                        source: source
+                    }],
+                    dataZoom: [{}, {type: 'inside'}],
+                    animation: false,
+                    series: [{
+                        type: 'candlestick',
+                        encode: {
+                            x: 0,
+                            y: [1, 2, 3, 4]
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout8', {
+                    title: 'time axis',
+                    height: 400,
+                    option: option,
+                    dataTables: [source],
+                    info: {
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts, source) {
+                var option = {
+                    legend: {},
+                    dataset: [{
+                        source: arrayRows1
+                    }],
+                    parallelAxis: [
+                        {dim: 0, type: 'category'},
+                        {dim: 1},
+                        {dim: 2},
+                        {dim: 3}
+                    ],
+                    parallel: {
+                        axisExpandable: true,
+                        axisExpandCenter: 15,
+                        axisExpandCount: 10,
+                        axisExpandWidth: 60,
+                        axisExpandTriggerOn: 'mousemove',
+
+                        parallelAxisDefault: {
+                            type: 'value',
+                            nameLocation: 'end',
+                            nameGap: 20,
+                            tooltip: {
+                                show: true
+                            },
+                            nameTextStyle: {
+                                fontSize: 14
+                            },
+                            splitLine: {
+                                show: false
+                            }
+                        }
+                    },
+                    series: [{
+                        type: 'parallel'
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout9', {
+                    height: 400,
+                    option: option,
+                    dataTables: [arrayRows1]
+                });
+            });
+        </script>
 
 
 
