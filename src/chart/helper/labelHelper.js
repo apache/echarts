@@ -3,7 +3,7 @@
  * @param {number} dataIndex
  * @return {string} label string. Not null/undefined
  */
-export function getDefaultLabel(data, dataIndex, orName) {
+export function getDefaultLabel(data, dataIndex) {
     var labelDims = data.mapDimension('defaultedLabel', true);
     var len = labelDims.length;
 
@@ -19,9 +19,6 @@ export function getDefaultLabel(data, dataIndex, orName) {
             vals.push(formatLabelValue(val));
         }
         return vals.join(', ');
-    }
-    else if (orName) {
-        return data.getName(dataIndex);
     }
 }
 

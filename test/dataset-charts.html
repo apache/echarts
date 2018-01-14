@@ -34,6 +34,7 @@
         <div id="layout7"></div>
         <div id="layout8"></div>
         <div id="layout9"></div>
+        <div id="layout10"></div>
 
 
 
@@ -703,6 +704,35 @@
             });
         </script>
 
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {
+                            label: {
+                                formatter: '{@product} {@[1]}'
+                            },
+                            type: 'funnel',
+                            id: 'pie'
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout10', {
+                    option: option,
+                    dataTable: arrayRows0
+                });
+            });
+        </script>
 
 
 

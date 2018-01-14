@@ -298,6 +298,7 @@ var SeriesModel = ComponentModel.extend({
                         ? dimHead + encodeHTML(dimInfo.displayName || '-') + ': '
                         : ''
                     )
+                    // FIXME should not format time for raw data?
                     + encodeHTML(dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
