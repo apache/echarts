@@ -1,5 +1,4 @@
 import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
 
 import './line/LineSeries';
 import './line/LineView';
