@@ -473,7 +473,7 @@ function getSeriesAutoName(seriesModel) {
     var nameArr = [];
     zrUtil.each(dataDims, function (dataDim) {
         var dimInfo = data.getDimensionInfo(dataDim);
-        dimInfo.name && nameArr.push(dimInfo.name);
+        dimInfo.displayName && nameArr.push(dimInfo.displayName);
     });
     return nameArr.join(' ');
 }
