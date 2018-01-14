@@ -306,6 +306,13 @@ listProto.getDimensionInfo = function (dim) {
 };
 
 /**
+ * @return {Array.<string>} concrete dimension name list on coord.
+ */
+listProto.getDimensionsOnCoord = function () {
+    return this._dimensionsSummary.dataDimsOnCoord.slice();
+};
+
+/**
  * @param {string} coordDim
  * @param {number|Array} [idx=0] A coordDim may map to more than one data dim.
  *        If idx is `true`, return a array of all mapped dims.
