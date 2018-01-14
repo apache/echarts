@@ -24,6 +24,7 @@
         <h1>category appendData</h1>
         <div class="chart" id="parallel-with-category"></div> -->
 
+        <div id="specify-dimensions"></div>
         <div id="key-columns"></div>
         <div id="category-no-encode-two-value-axis"></div>
         <div id="category-no-axis-data-multi"></div>
@@ -46,6 +47,56 @@
                 'Walnut Brownie': [55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
             };
         </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    [21, 120, 220, 150, 320, 820],
+                    [21, 132, 182, 232, 332, 932],
+                    [21, 101, 191, 201, 301, 901],
+                    [21, 134, 234, 154, 334, 934],
+                    [21, 90, 290, 190, 309, 1290],
+                    [21, 230, 330, 330, 330, 1330],
+                    [21, 210, 310, 410, 320, 1320]
+                ];
+
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    grid: {},
+                    xAxis: {},
+                    yAxis: {},
+                    dataset: [{
+                        dimensions: ['G', 'H', 'I', 'Q', 'R'],
+                        source: source
+                    }],
+                    series: [
+                        {type:'scatter'},
+                        {type:'scatter'},
+                        {type:'scatter'},
+                        {type:'scatter'},
+                        {type:'scatter'}
+                    ]
+                };
+                testHelper.create(echarts, 'specify-dimensions', {
+                    title: 'speify dimensions',
+                    dataTable: source,
+                    option: option,
+                    info: {
+                        dimensions: option.dataset[0].dimensions
+                    }
+                });
+            });
+        </script>
+
 
 
 
