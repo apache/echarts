@@ -1,3 +1,5 @@
+import {retrieveRawValue} from '../../data/helper/dataProvider';
+
 /**
  * @param {module:echarts/data/List} data
  * @param {number} dataIndex
@@ -9,19 +11,14 @@ export function getDefaultLabel(data, dataIndex) {
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
-        var val = data.get(labelDims[0], dataIndex, true);
-        return formatLabelValue(val);
+        return retrieveRawValue(data, dataIndex, labelDims[0]);
     }
     else if (len) {
         var vals = [];
         for (var i = 0; i < labelDims.length; i++) {
-            var val = data.get(labelDims[i], dataIndex, true);
-            vals.push(formatLabelValue(val));
+            var val = retrieveRawValue(data, dataIndex, labelDims[0]);
+            vals.push(val);
         }
         return vals.join(', ');
     }
-}
-
-function formatLabelValue(val) {
-    return (val == null || isNaN(val)) ? '' : val;
 }

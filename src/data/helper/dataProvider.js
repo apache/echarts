@@ -287,6 +287,11 @@ function converDataValue(value, dimInfo) {
 
 // ??? FIXME can these logic be more neat: getRawValue, getRawDataItem,
 // Consider persistent.
+// Caution: why use raw value to display on label or tooltip?
+// A reason is to avoid format. For example time value we do not know
+// how to format is expected. More over, if stack is used, calculated
+// value may be 0.91000000001, which have brings trouble to display.
+// TODO: consider how to treat null/undefined/NaN when display?
 /**
  * @param {module:echarts/data/List} data
  * @param {number} dataIndex
