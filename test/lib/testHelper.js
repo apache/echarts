@@ -323,7 +323,7 @@
                     str = preStr + quotationMark + obj + quotationMark;
                     break;
                 default:
-                    throw new Error('Illegal type "' + objType + '" at "' + obj + quotationMark);
+                    str = preStr + obj + '';
             }
 
             return {

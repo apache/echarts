@@ -374,6 +374,15 @@ function makeDefaultEncode(
             if (coordSysDefine.firstCategoryDimIndex == null) {
                 var dataDim = datasetRecord.valueWayDim++;
                 encode[coordDim] = dataDim;
+
+                // ??? TODO give a better default series name rule?
+                // especially when encode x y specified.
+                // consider: when mutiple series share one dimension
+                // category axis, series name should better use
+                // the other dimsion name. On the other hand, use
+                // both dimensions name.
+
+                encodeSeriesName.push(dataDim);
                 // encodeTooltip.push(dataDim);
                 // encodeLabel.push(dataDim);
             }

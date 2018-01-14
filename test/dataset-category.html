@@ -19,13 +19,8 @@
         </style>
 
 
-        <!-- <h1>dynamic category</h1>
-        <div class="chart" id="dynamic-category"></div>
-        <h1>category appendData</h1>
-        <div class="chart" id="parallel-with-category"></div> -->
-
         <div id="specify-dimensions"></div>
-        <div id="key-columns"></div>
+        <!-- <div id="key-columns"></div>
         <div id="category-no-encode-two-value-axis"></div>
         <div id="category-no-axis-data-multi"></div>
         <div id="category-no-encode-no-axis-data-single"></div>
@@ -34,7 +29,7 @@
         <div id="two-value-axes"></div>
         <div id="empty-data"></div>
         <div id="dynamic-category"></div>
-        <div id="dynamic-time"></div>
+        <div id="dynamic-time"></div> -->
 
 
 
@@ -60,12 +55,12 @@
             ], function (echarts) {
                 var source = [
                     [21, 120, 220, 150, 320, 820],
-                    [21, 132, 182, 232, 332, 932],
-                    [21, 101, 191, 201, 301, 901],
-                    [21, 134, 234, 154, 334, 934],
-                    [21, 90, 290, 190, 309, 1290],
-                    [21, 230, 330, 330, 330, 1330],
-                    [21, 210, 310, 410, 320, 1320]
+                    [31, 132, 182, 232, 332, 932],
+                    [41, 101, 191, 201, 301, 901],
+                    [51, 134, 234, 154, 334, 934],
+                    [61, 90, 290, 190, 309, 1290],
+                    [71, 230, 330, 330, 330, 1330],
+                    [81, 210, 310, 410, 320, 1320]
                 ];
 
                 var option = {
@@ -74,16 +69,16 @@
                     grid: {},
                     xAxis: {},
                     yAxis: {},
+                    dataZoom: [{}, {type: 'inside'}],
                     dataset: [{
                         dimensions: ['G', 'H', 'I', 'Q', 'R'],
+                        // sourceHeader: true,
                         source: source
                     }],
                     series: [
-                        {type:'scatter'},
-                        {type:'scatter'},
-                        {type:'scatter'},
-                        {type:'scatter'},
-                        {type:'scatter'}
+                        {type:'scatter', label: {show: true, position: 'top', textBorderWidth: 2, textBorderColor: '#fff'}, dimensions: ['cccccccccc', 'ddddddddddd']},
+                        {type:'scatter', label: {show: true, position: 'top', textBorderWidth: 2, textBorderColor: '#fff'}},
+                        {type:'scatter', label: {show: true, position: 'top', textBorderWidth: 2, textBorderColor: '#fff'}, sourceHeader: true}
                     ]
                 };
                 testHelper.create(echarts, 'specify-dimensions', {
@@ -91,7 +86,8 @@
                     dataTable: source,
                     option: option,
                     info: {
-                        dimensions: option.dataset[0].dimensions
+                        dimensions: option.dataset[0].dimensions,
+                        serise: option.series
                     }
                 });
             });
