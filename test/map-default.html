@@ -1,0 +1,127 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="../dist/echarts.js"></script>
+        <script src="../map/js/china.js"></script>
+
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <button onclick="setOption()">setOption()</button>
+        <div class="chart" id="main0"></div>
+
+
+
+
+        <script>
+            var chart;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                require(['map/js/china'], function () {
+
+                    option = {
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: '{b}'
+                        },
+                        legend: {
+                            top: 0,
+                            left: 'center',
+                            data: ['中国A', '中国B']
+                        },
+                        series: [
+                            {
+                                name: '中国A',
+                                type: 'map',
+                                mapType: 'china',
+                                selectedMode : 'multiple',
+                                label: {
+                                    normal: {
+                                        show: true
+                                    },
+                                    emphasis: {
+                                        show: true
+                                    }
+                                },
+                                roam: true,
+                                nameMap: {
+                                    '广东': 'guangdong',
+                                    '广西': 'guangxi'
+                                },
+                                data:[
+                                    {name:'广东', selected:true}
+                                ]
+                            },
+                            {
+                                name: '中国B',
+                                type: 'map',
+                                mapType: 'china',
+                                selectedMode : 'multiple',
+                                label: {
+                                    normal: {
+                                        show: true
+                                    },
+                                    emphasis: {
+                                        show: true
+                                    }
+                                },
+                                roam: true,
+                                // nameMap: {
+                                //     '广东': 'guangdong',
+                                //     '广西': 'guangxi'
+                                // },
+                                data:[
+                                    {name:'广东', selected: true},
+                                    {name:'山东', selected: true}
+                                ]
+                            }
+                        ]
+                    };
+
+                    chart = testHelper.createChart(echarts, 'main0', option);
+
+                });
+
+            });
+
+            function setOption() {
+                chart.setOption({
+                    series: {
+                        label: {
+                            normal: {
+                                color: 'red'
+                            }
+                        }
+                    }
+                });
+            }
+
+        </script>
+    </body>
+</html>

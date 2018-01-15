@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            require([
+                'echarts', 'map/js/china'
+            ], function (echarts) {
+
+                var locations = [{
+                    name: '上海',
+                    coord: [121.472644, 31.231706]
+                }, {
+                    name: '北京',
+                    coord: [116.405285, 39.904989]
+                }, {
+                    name: '广东',
+                    coord: [113.280637, 23.839463714285714]
+                }];
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}'
+                    },
+                    series: [
+                        {
+                            name: '中国',
+                            type: 'map',
+                            mapType: 'china',
+                            selectedMode : 'multiple',
+                            label: {
+                                normal: {
+                                    show: true
+                                },
+                                emphasis: {
+                                    show: true
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                var myChart = testHelper.create(echarts, 'main0', {
+                    title: 'Original series data is empty and no dataset',
+                    option: option
+                });
+
+                var currentLoc = 0;
+                setInterval(function () {
+                    myChart.setOption({
+                        series: [{
+                            center: locations[currentLoc].coord,
+                            zoom: 4,
+                            data:[
+                                {name: locations[currentLoc].name, selected: true}
+                            ],
+                            animationDurationUpdate: 1000,
+                            animationEasingUpdate: 'cubicInOut'
+                        }]
+                    });
+                    currentLoc = (currentLoc + 1) % locations.length;
+                }, 2000);
+
+            });
+
+        </script>
+    </body>
+</html>
