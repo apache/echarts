@@ -56,7 +56,12 @@
 
                 chart.setOption({
                     aria: {
-                        show: true
+                        show: true,
+                        series: {
+                            multiple: {
+                                prefix: '{seriesCount}个图表系列组成了该图表。'
+                            }
+                        }
                     },
                     tooltip : {
                         trigger: 'axis',
