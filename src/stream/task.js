@@ -45,7 +45,8 @@ taskProto.perform = function (performArgs) {
     var skip = performArgs && performArgs.skip;
 
     // TODO some refactor.
-    // Pull data.
+    // Pull data. Must pull data each time, because context.data
+    // may be updated by Series.setData.
     if (this._dirty && upTask) {
         var context = this.context;
         context.data = context.outputData = upTask.context.outputData;

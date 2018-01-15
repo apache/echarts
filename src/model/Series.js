@@ -234,7 +234,15 @@ var SeriesModel = ComponentModel.extend({
             if (context.data !== data) {
                 task.setOutputEnd(data.count());
             }
-            task.context.outputData = data;
+            // Caution: setData should update context.data,
+            // Because getData may be called multiply in a
+            // single stage and expect to get the data just
+            // set. (For example, AxisProxy, x y both call
+            // getData and setDate sequentially).
+            // So the context.data should be fetched from
+            // upstream each time when a stage starts to be
+            // performed.
+            context.data = context.outputData = data;
         }
         inner(this).data = data;
     },
