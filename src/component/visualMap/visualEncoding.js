@@ -38,8 +38,14 @@ echarts.registerVisual(VISUAL_PRIORITY, {
                 var visualMeta = visualMapModel.getVisualMeta(
                     zrUtil.bind(getColorVisual, null, seriesModel, visualMapModel)
                 ) || {stops: [], outerColors: []};
-                visualMeta.dimension = visualMapModel.getDataDimension(data);
-                visualMetaList.push(visualMeta);
+
+                var concreteDim = visualMapModel.getDataDimension(data);
+                var dimInfo = data.getDimensionInfo(concreteDim);
+                if (dimInfo != null) {
+                    // visualMeta.dimension should be dimension index, but not concrete dimension.
+                    visualMeta.dimension = dimInfo.index;
+                    visualMetaList.push(visualMeta);
+                }
             }
         });
 

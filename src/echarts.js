@@ -47,7 +47,6 @@ export var dependencies = {
     zrender: '3.7.4'
 };
 
-// ??? frame remain time in UI thread: 20ms? 16ms?
 var TEST_FRAME_REMAIN_TIME = 1;
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
@@ -1058,16 +1057,6 @@ echartsProto.resize = function (opts) {
 
     var optionChanged = ecModel.resetOption('media');
 
-    optionChanged && ecModel.settingTask.dirty();
-
-    // ???
-    // can not visual???
-
-    ecModel.eachComponent(function (model, componentType) {
-        optionChanged && model.settingTask.dirty();
-        model.dataInitTask && model.dataInitTask.dirty();
-    });
-
     refresh(this, optionChanged, opts && opts.silent);
 };
 
@@ -1605,8 +1594,6 @@ function updateHoverLayerStatus(zr, ecModel) {
  * @param {module:echarts/view/Component|module:echarts/view/Chart} view
  */
 function updateBlend(seriesModel, chartView) {
-    // Blend configration
-    // ???
     var blendMode = seriesModel.get('blendMode') || null;
     if (__DEV__) {
         if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {

@@ -445,7 +445,6 @@ featureManager.register('dataView', DataView);
 echarts.registerAction({
     type: 'changeDataView',
     event: 'dataViewChanged',
-    // ???
     update: 'prepareAndUpdate'
 }, function (payload, ecModel) {
     var newSeriesOptList = [];

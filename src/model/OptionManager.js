@@ -139,11 +139,10 @@ OptionManager.prototype = {
      * @return {Object} Init option
      */
     setOption: function (rawOption, optionPreprocessorFuncs) {
-        // ??? not a good way?
         if (rawOption) {
-            // axis.data?
+            // That set dat primitive is dangerous if user reuse the data when setOption again.
             zrUtil.each(modelUtil.normalizeToArray(rawOption.series), function (series) {
-                series && series.data && zrUtil.setAsPrimitive(series.data);
+                series && series.data && zrUtil.isTypedArray(series.data) && zrUtil.setAsPrimitive(series.data);
             });
         }
 

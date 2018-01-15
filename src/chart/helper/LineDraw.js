@@ -79,7 +79,6 @@ function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScop
     lineDraw.group.add(itemEl);
 }
 
-// ???
 lineDrawProto.updateLayout = function () {
     var lineData = this._lineData;
     lineData.eachItemGraphicEl(function (el, idx) {

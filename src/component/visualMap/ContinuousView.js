@@ -713,8 +713,7 @@ var ContinuousView = VisualMapView.extend({
         }
 
         var data = dataModel.getData(el.dataType);
-        var dim = data.getDimension(visualMapModel.getDataDimension(data));
-        var value = data.get(dim, el.dataIndex, true);
+        var value = data.get(visualMapModel.getDataDimension(data), el.dataIndex, true);
 
         if (!isNaN(value)) {
             this._showIndicator(value, value);
