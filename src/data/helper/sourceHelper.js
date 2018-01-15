@@ -405,6 +405,7 @@ function makeDefaultEncode(
             }
         });
     }
+    // Do not make a complex rule! Hard to code maintain and not necessary.
     // ??? TODO refactor: provide by series itself.
     // [{name: ..., value: ...}, ...] like:
     else if (nSeriesMap.get(seriesType) != null) {

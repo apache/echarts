@@ -32,6 +32,8 @@ lineDrawProto.updateData = function (lineData) {
     var oldLineData = lineDraw._lineData;
     lineDraw._lineData = lineData;
 
+    // There is no oldLineData only when first rendering or switching from
+    // stream mode to normal mode, where previous elements should be removed.
     if (!oldLineData) {
         group.removeAll();
     }

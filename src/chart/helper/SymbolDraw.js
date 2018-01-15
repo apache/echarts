@@ -36,6 +36,8 @@ symbolDrawProto.updateData = function (data, isIgnore) {
 
     var seriesScope = makeSeriesScope(data);
 
+    // There is no oldLineData only when first rendering or switching from
+    // stream mode to normal mode, where previous elements should be removed.
     if (!oldData) {
         group.removeAll();
     }
