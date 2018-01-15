@@ -195,6 +195,9 @@ var rawValueGetters = {
     keyedColumns: getRawValueSimply,
 
     original: function (dataItem, dataIndex, dimIndex, dimName) {
+        // FIXME
+        // In some case (markpoint in geo (geo-map.html)), dataItem
+        // is {coord: [...]}
         var value = getDataItemValue(dataItem);
         return (dimIndex == null || !(value instanceof Array))
             ? value
