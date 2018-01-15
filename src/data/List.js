@@ -838,17 +838,21 @@ listProto.indexOfRawIndex = function (rawIndex) {
         return rawIndex;
     }
 
+    if (rawIndex >= this._rawCount || rawIndex < 0) {
+        return -1;
+    }
+
     // Indices are ascending
     var indices = this._indices;
 
     // If rawIndex === dataIndex
     var rawDataIndex = indices[rawIndex];
-    if (rawDataIndex != null && rawDataIndex === rawIndex) {
+    if (rawDataIndex != null && rawDataIndex < this._count && rawDataIndex === rawIndex) {
         return rawIndex;
     }
 
     var left = 0;
-    var right = indices.length - 1;
+    var right = this._count - 1;
     while (left <= right) {
         var mid = (left + right) / 2 | 0;
         if (indices[mid] < rawIndex) {

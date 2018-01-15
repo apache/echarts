@@ -18,7 +18,7 @@ export default function (finder, ecModel) {
 
     var data = seriesModel.getData();
     var dataIndex = modelUtil.queryDataIndex(data, finder);
-    if (dataIndex == null || zrUtil.isArray(dataIndex)) {
+    if (dataIndex == null || dataIndex < 0 || zrUtil.isArray(dataIndex)) {
         return {point: []};
     }
 

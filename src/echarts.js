@@ -1006,6 +1006,9 @@ function updateDirectly(ecIns, method, payload, mainType, subType) {
 
     // broadcast
     if (!mainType) {
+        // FIXME
+        // Chart will not be update directly here, except set dirty.
+        // But there is no such scenario now.
         each(ecIns._componentsViews.concat(ecIns._chartsViews), callView);
         return;
     }
