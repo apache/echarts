@@ -25,7 +25,10 @@ export default function (coordSys) {
             height: rect.height
         },
         api: {
-            coord: zrUtil.bind(coordSys.dataToPoint, coordSys),
+            coord: function (data) {
+                // do not provide "out" param
+                return coordSys.dataToPoint(data);
+            },
             size: zrUtil.bind(dataToCoordSize, coordSys)
         }
     };

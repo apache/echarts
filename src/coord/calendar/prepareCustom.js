@@ -1,5 +1,3 @@
-import * as zrUtil from 'zrender/src/core/util';
-
 export default function (coordSys) {
     var rect = coordSys.getRect();
     var rangeInfo = coordSys.getRangeInfo();
@@ -21,7 +19,9 @@ export default function (coordSys) {
             }
         },
         api: {
-            coord: zrUtil.bind(coordSys.dataToPoint, coordSys)
+            coord: function (data, clamp) {
+                return coordSys.dataToPoint(data, clamp);
+            },
         }
     };
 }
