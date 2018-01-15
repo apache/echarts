@@ -173,7 +173,7 @@ export function prepareSource(seriesModel) {
         dimensionsDefine: completeResult.dimensionsDefine,
         startIndex: completeResult.startIndex,
         dimensionsDetectCount: completeResult.dimensionsDetectCount,
-        encodeDefine: encodeDefine,
+        encodeDefine: encodeDefine
     });
 }
 

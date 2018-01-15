@@ -26,7 +26,10 @@ export function summarizeDimensions(data) {
             coordDimArr[dimItem.coordDimIndex] = dimName;
 
             if (dimItem.isSysCoord && mayLabelDimType(dimItem.type)) {
-                defaultedLabel.push(dimName);
+                // Use the last coord dim (and label friendly) as default label,
+                // because both show x, y on label is not look good, and usually
+                // y axis is more focusd conventionally.
+                defaultedLabel[0] = dimName;
             }
 
             coordDimMap.set(coordDim, 1);
@@ -52,6 +55,8 @@ export function summarizeDimensions(data) {
     summary.dataDimsOnCoord = dataDimsOnCoord;
 
     var encodeLabel = encode.label;
+    // FIXME `encode.label` is not recommanded, because formatter can not be set
+    // in this way. Use label.formatter instead. May be remove this approach someday.
     if (encodeLabel && encodeLabel.length) {
         defaultedLabel = encodeLabel.slice();
     }

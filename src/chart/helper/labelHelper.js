@@ -16,9 +16,9 @@ export function getDefaultLabel(data, dataIndex) {
     else if (len) {
         var vals = [];
         for (var i = 0; i < labelDims.length; i++) {
-            var val = retrieveRawValue(data, dataIndex, labelDims[0]);
+            var val = retrieveRawValue(data, dataIndex, labelDims[i]);
             vals.push(val);
         }
-        return vals.join(', ');
+        return vals.join(' ');
     }
 }
