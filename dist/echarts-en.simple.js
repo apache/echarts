@@ -21136,6 +21136,7 @@ taskProto.setOutputEnd = function (end) {
     // that the stub of dataZoom perform again and earse the
     // setted end by upstream.
     this._outputDueEnd = this._settedOutputEnd = end;
+    // this._outputDueEnd = end;
 };
 
 var inner$4 = makeInner();
@@ -21347,7 +21348,7 @@ var SeriesModel = ComponentModel.extend({
         if (task) {
             var context = task.context;
             // Consider case: filter, data sample.
-            if (context.data !== data) {
+            if (context.data !== data && task.isOverallFilter) {
                 task.setOutputEnd(data.count());
             }
             context.outputData = data;
@@ -22648,6 +22649,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
     var overallProgress = true;
+    var isOverallFilter = stageHandler.isOverallFilter;
 
     // An overall task with seriesType detected or has `getTargetSeries`, we add
     // stub in each pipelines, it will set the overall task dirty when the pipeline
@@ -22673,7 +22675,11 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
         var stub = agentStubMap.get(pipelineId) || agentStubMap.set(pipelineId, createTask(
             {reset: stubReset, onDirty: stubOnDirty}
         ));
-        stub.context = {model: seriesModel, overallProgress: overallProgress};
+        stub.context = {
+            model: seriesModel,
+            overallProgress: overallProgress,
+            isOverallFilter: isOverallFilter
+        };
         stub.agent = overallTask;
         stub.__block = overallProgress;
 
