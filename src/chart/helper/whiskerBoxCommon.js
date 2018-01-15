@@ -55,13 +55,26 @@ export var seriesModelMixin = {
         var data = option.data;
 
         // ??? FIXME make a stage to perform data transfrom.
-        addOrdinal && zrUtil.each(data, function (item, index) {
-            if (item.value && zrUtil.isArray(item.value)) {
-                item.value.unshift(index);
-            } else {
-                zrUtil.isArray(item) && item.unshift(index);
-            }
-        });
+        // MUST create a new data, consider setOption({}) again.
+        if (data && addOrdinal) {
+            var newOptionData = [];
+            zrUtil.each(data, function (item, index) {
+                var newItem;
+                if (item.value && zrUtil.isArray(item.value)) {
+                    newItem = item.value.slice();
+                    item.value.unshift(index);
+                }
+                else if (zrUtil.isArray(item)) {
+                    newItem = item.slice();
+                    item.unshift(index);
+                }
+                else {
+                    newItem = item;
+                }
+                newOptionData.push(newItem);
+            });
+            option.data = newOptionData;
+        }
 
         var defaultValueDimensions = this.defaultValueDimensions;
 
