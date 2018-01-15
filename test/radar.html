@@ -24,6 +24,9 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
+                    aria: {
+                        show: true
+                    },
                     tooltip: {},
                     legend: {
                         data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）']
