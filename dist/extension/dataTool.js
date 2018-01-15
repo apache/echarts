@@ -215,6 +215,13 @@ function map(obj, cb, context) {
 
 
 /**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
  * Whether is exactly NaN. Notice isNaN('a') returns true.
  * @param {*} value
  * @return {boolean}
@@ -257,6 +264,13 @@ function map(obj, cb, context) {
  * @memberOf module:zrender/core/util
  * @param {boolean} condition
  * @param {string} message
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {string} str string to be trimed
+ * @return {string} trimed string
  */
 
 

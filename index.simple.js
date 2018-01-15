@@ -7,6 +7,8 @@ var _echarts = require("./lib/echarts");
   }
 })();
 
+require("./lib/component/dataset");
+
 require("./lib/chart/line");
 
 require("./lib/chart/bar");
