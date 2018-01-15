@@ -231,7 +231,7 @@ var SeriesModel = ComponentModel.extend({
         if (task) {
             var context = task.context;
             // Consider case: filter, data sample.
-            if (context.data !== data) {
+            if (context.data !== data && task.isOverallFilter) {
                 task.setOutputEnd(data.count());
             }
             context.outputData = data;

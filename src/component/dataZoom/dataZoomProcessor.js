@@ -18,6 +18,8 @@ echarts.registerProcessor({
         return seriesModelMap;
     },
 
+    isOverallFilter: true,
+
     // Consider appendData, where filter should be performed. Because data process is
     // in block mode currently, it is not need to worry about that the overallProgress
     // execute every frame.

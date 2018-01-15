@@ -194,4 +194,5 @@ taskProto.setOutputEnd = function (end) {
     // that the stub of dataZoom perform again and earse the
     // setted end by upstream.
     this._outputDueEnd = this._settedOutputEnd = end;
+    // this._outputDueEnd = end;
 };
