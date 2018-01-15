@@ -10,7 +10,7 @@ import Source from '../Source';
 import {
     SOURCE_FORMAT_TYPED_ARRAY,
     SOURCE_FORMAT_ARRAY_ROWS
-} from './sourceHelper';
+} from './sourceType';
 
 /**
  * If normal array used, mutable chunk size is supported.

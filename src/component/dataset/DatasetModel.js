@@ -1,8 +1,6 @@
 import * as echarts from '../../echarts';
-import {
-    SERIES_LAYOUT_BY_COLUMN,
-    detectSourceFormat
-} from '../../data/helper/sourceHelper';
+import {detectSourceFormat} from '../../data/helper/sourceHelper';
+import {SERIES_LAYOUT_BY_COLUMN} from '../../data/helper/sourceType';
 
 var DatasetModel = echarts.extendComponentModel({
 

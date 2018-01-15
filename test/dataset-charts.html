@@ -35,6 +35,7 @@
         <div id="layout8"></div>
         <div id="layout9"></div>
         <div id="layout10"></div>
+        <div id="layout11"></div>
 
 
 
@@ -736,8 +737,42 @@
 
 
 
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    dataset: {
+                        source: [
+                            [12, 323, 11.2],
+                            [23, 167, 8.3],
+                            [81, 284, 12],
+                            [91, 413, 4.1],
+                            [13, 287, 13.5]
+                        ]
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    visualMap: {
+                        show: false,
+                        dimension: 2,
+                        min: 2,
+                        max: 15,
+                        inRange: {
+                            symbolSize: [5, 60]
+                        }
+                    },
+                    series: {
+                        type: 'scatter'
+                    }
+                };
 
+                testHelper.create(echarts, 'layout11', {
+                    option: option,
+                    dataTable: arrayRows0
+                });
+            });
+        </script>
 
+</script>
 
     </body>
 </html>

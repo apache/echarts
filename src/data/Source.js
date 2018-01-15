@@ -6,7 +6,7 @@ import {
     SOURCE_FORMAT_UNKNOWN,
     SOURCE_FORMAT_TYPED_ARRAY,
     SOURCE_FORMAT_KEYED_COLUMNS
-} from './helper/sourceHelper';
+} from './helper/sourceType';
 
 /**
  * [sourceFormat]

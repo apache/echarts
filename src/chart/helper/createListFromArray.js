@@ -1,7 +1,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
-import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceHelper';
+import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceType';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
