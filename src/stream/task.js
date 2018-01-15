@@ -69,12 +69,15 @@ taskProto.perform = function (performArgs) {
     var step = performArgs && performArgs.step;
 
     if (upTask) {
+
         if (__DEV__) {
             assert(upTask._outputDueEnd != null);
         }
         // ??? FIXME move to schedueler?
-        this._dueEnd = Math.max(upTask._outputDueEnd, this._dueEnd);
+        // this._dueEnd = Math.max(upTask._outputDueEnd, this._dueEnd);
+        this._dueEnd = upTask._outputDueEnd;
     }
+    // DataTask or overallTask
     else {
         if (__DEV__) {
             assert(!this._progress || this._count);
@@ -82,6 +85,7 @@ taskProto.perform = function (performArgs) {
         this._dueEnd = this._count ? this._count(this.context) : Infinity;
     }
 
+    // Note: Stubs, that its host overall task let it has progress, has progress.
     // If no progress, pass index from upstream to downstream each time plan called.
     if (this._progress) {
         var start = this._dueIndex;
@@ -90,26 +94,29 @@ taskProto.perform = function (performArgs) {
             this._dueEnd
         );
 
-        var outputDueEnd;
         !skip && start < end && (
-            outputDueEnd = this._progress({start: start, end: end}, this.context)
+            this._progress({start: start, end: end}, this.context)
         );
 
         this._dueIndex = end;
         // If no `outputDueEnd`, assume that output data and
         // input data is the same, so use `dueIndex` as `outputDueEnd`.
-        if (outputDueEnd == null) {
-            outputDueEnd = end;
-        }
+        var outputDueEnd = this._settedOutputEnd != null
+            ? this._settedOutputEnd : end;
+
         if (__DEV__) {
             // ??? Can not rollback.
             assert(outputDueEnd >= this._outputDueEnd);
         }
+
         this._outputDueEnd = outputDueEnd;
     }
     else {
+        // (1) Some overall task has no progress.
+        // (2) Stubs, that its host overall task do not let it has progress, has no progress.
         // This should always be performed so it can be passed to downstream.
-        this._dueIndex = this._outputDueEnd = this._dueEnd;
+        this._dueIndex = this._outputDueEnd = this._settedOutputEnd != null
+            ? this._settedOutputEnd : this._dueEnd;
     }
 
     return this.unfinished();
@@ -125,6 +132,7 @@ taskProto.dirty = function () {
  */
 function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
+    taskIns._settedOutputEnd = null;
 
     taskIns._progress = !skip && taskIns._reset && taskIns._reset(
         taskIns.context
@@ -179,5 +187,11 @@ taskProto.getDownstream = function () {
 };
 
 taskProto.setOutputEnd = function (end) {
-    this._outputDueEnd = end;
+    // ??? FIXME: check
+    // This only happend in dataTask, dataZoom, map, currently.
+    // where dataZoom do not set end each time, but only set
+    // when reset. So we should record the setted end, in case
+    // that the stub of dataZoom perform again and earse the
+    // setted end by upstream.
+    this._outputDueEnd = this._settedOutputEnd = end;
 };

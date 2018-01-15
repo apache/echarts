@@ -234,6 +234,7 @@ var SeriesModel = ComponentModel.extend({
             if (context.data !== data) {
                 task.setOutputEnd(data.count());
             }
+            context.outputData = data;
             // Caution: setData should update context.data,
             // Because getData may be called multiply in a
             // single stage and expect to get the data just
@@ -242,7 +243,9 @@ var SeriesModel = ComponentModel.extend({
             // So the context.data should be fetched from
             // upstream each time when a stage starts to be
             // performed.
-            context.data = context.outputData = data;
+            if (task !== this.dataTask) {
+                context.data = data;
+            }
         }
         inner(this).data = data;
     },
