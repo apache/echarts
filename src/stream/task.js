@@ -179,4 +179,4 @@ taskProto.getDownstream = function () {
 
 taskProto.setOutputEnd = function (end) {
     this._outputDueEnd = end;
-}
+};

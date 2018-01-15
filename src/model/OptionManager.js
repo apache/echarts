@@ -147,6 +147,9 @@ OptionManager.prototype = {
             });
         }
 
+        // Caution: some series modify option data, if do not clone,
+        // it should ensure that the repeat modify correctly
+        // (create a new object when modify itself).
         rawOption = clone(rawOption, true);
 
         // FIXME

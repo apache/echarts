@@ -25,7 +25,7 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
 
     addBundleVersion && plugins.push({
         outro: function () {
-            return 'exports.bundleVersion = "' + (+new Date()) + '";';
+            return 'exports.bundleVersion = \'' + (+new Date()) + '\';';
         }
     });
 

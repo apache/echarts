@@ -215,6 +215,13 @@ var SeriesModel = ComponentModel.extend({
             var data = task.context.data;
             return dataType == null ? data : data.getLinkedData(dataType);
         }
+        else {
+            // When series is not alive (that may happen when click toolbox
+            // restore or setOption with not merge mode), series data may
+            // be still need to judge animation or something when graphic
+            // elements want to know whether fade out.
+            return inner(this).data;
+        }
     },
 
     /**
@@ -230,6 +237,7 @@ var SeriesModel = ComponentModel.extend({
             }
             task.context.outputData = data;
         }
+        inner(this).data = data;
     },
 
     /**
@@ -298,6 +306,7 @@ var SeriesModel = ComponentModel.extend({
                         ? dimHead + encodeHTML(dimInfo.displayName || '-') + ': '
                         : ''
                     )
+                    // FIXME should not format time for raw data?
                     + encodeHTML(dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
@@ -473,7 +482,7 @@ function getSeriesAutoName(seriesModel) {
     var nameArr = [];
     zrUtil.each(dataDims, function (dataDim) {
         var dimInfo = data.getDimensionInfo(dataDim);
-        dimInfo.name && nameArr.push(dimInfo.name);
+        dimInfo.displayName && nameArr.push(dimInfo.displayName);
     });
     return nameArr.join(' ');
 }

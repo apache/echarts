@@ -3,7 +3,7 @@ import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 import {encodeHTML, addCommas} from '../../util/format';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
-import geoCreator from '../../coord/geo/geoCreator';
+// import geoCreator from '../../coord/geo/geoCreator';
 
 var MapSeries = SeriesModel.extend({
 

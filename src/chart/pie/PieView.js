@@ -1,7 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
-import {getDefaultLabel} from '../helper/labelHelper';
 
 /**
  * @param {module:echarts/model/Series} seriesModel
@@ -235,7 +234,7 @@ piePieceProto._updateLabel = function (data, idx) {
         {
             labelFetcher: data.hostModel,
             labelDataIndex: idx,
-            defaultText: getDefaultLabel(data, idx, true),
+            defaultText: data.getName(idx),
             autoColor: visualColor,
             useInsideStyle: !!labelLayout.inside
         },

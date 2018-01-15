@@ -37,7 +37,7 @@ function getIndicesCtor(list) {
 
     // The possible max value in this._indicies is always this._rawCount despite of filtering.
     return list._rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
-};
+}
 
 function cloneChunk(originalChunk) {
     var Ctor = originalChunk.constructor;

@@ -1,7 +1,7 @@
 import {__DEV__} from '../../config';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
-import { concatArray } from 'zrender/src/core/util';
+import { concatArray, mergeAll, map } from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import CoordinateSystem from '../../CoordinateSystem';
 
@@ -9,6 +9,31 @@ var globalObj = typeof window === 'undefined' ? global : window;
 
 var Uint32Arr = globalObj.Uint32Array || Array;
 var Float64Arr = globalObj.Float64Array || Array;
+
+function compatEc2(seriesOpt) {
+    var data = seriesOpt.data;
+    if (data && data[0] && data[0][0] && data[0][0].coord) {
+        if (__DEV__) {
+            console.warn('Lines data configuration has been changed to'
+                + ' { coords:[[1,2],[2,3]] }');
+        }
+        seriesOpt.data = map(data, function (itemOpt) {
+            var coords = [
+                itemOpt[0].coord, itemOpt[1].coord
+            ];
+            var target = {
+                coords: coords
+            };
+            if (itemOpt[0].name) {
+                target.fromName = itemOpt[0].name;
+            }
+            if (itemOpt[1].name) {
+                target.toName = itemOpt[1].name;
+            }
+            return mergeAll([target, itemOpt[0], itemOpt[1]]);
+        });
+    }
+}
 
 var LinesSeries = SeriesModel.extend({
 
@@ -19,6 +44,9 @@ var LinesSeries = SeriesModel.extend({
     visualColorAccessPath: 'lineStyle.color',
 
     init: function (option) {
+        // Not using preprocessor because mergeOption may not have series.type
+        compatEc2(option);
+
         var result = this._processFlatCoordsArray(option.data);
         this._flatCoords = result.flatCoords;
         this._flatCoordsOffset = result.flatCoordsOffset;
@@ -30,6 +58,8 @@ var LinesSeries = SeriesModel.extend({
     },
 
     mergeOption: function (option) {
+        compatEc2(option);
+
         if (option.data) {
             // Only update when have option data to merge.
             var result = this._processFlatCoordsArray(option.data);

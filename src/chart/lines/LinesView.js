@@ -6,7 +6,6 @@ import Line from '../helper/Line';
 import Polyline from '../helper/Polyline';
 import EffectPolyline from '../helper/EffectPolyline';
 import LargeLineDraw from '../helper/LargeLineDraw';
-import * as matrix from 'zrender/src/core/matrix';
 import linesLayout from './linesLayout';
 
 export default echarts.extendChartView({

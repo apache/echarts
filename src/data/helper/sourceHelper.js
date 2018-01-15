@@ -173,7 +173,7 @@ export function prepareSource(seriesModel) {
         dimensionsDefine: completeResult.dimensionsDefine,
         startIndex: completeResult.startIndex,
         dimensionsDetectCount: completeResult.dimensionsDetectCount,
-        encodeDefine: encodeDefine,
+        encodeDefine: encodeDefine
     });
 }
 
@@ -289,7 +289,11 @@ function normalizeDimensionsDefine(dimensionsDefine) {
 
         // Also consider number form like 2012.
         item.name += '';
-        // Use may also specify displayName.
+        // User may also specify displayName.
+        // displayName will always exists except user not
+        // specified or dim name is not specified or detected.
+        // (A auto generated dim name will not be used as
+        // displayName).
         if (item.displayName == null) {
             item.displayName = item.name;
         }
