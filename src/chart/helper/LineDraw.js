@@ -32,6 +32,10 @@ lineDrawProto.updateData = function (lineData) {
     var oldLineData = lineDraw._lineData;
     lineDraw._lineData = lineData;
 
+    if (!oldLineData) {
+        group.removeAll();
+    }
+
     var seriesScope = makeSeriesScope(lineData);
 
     lineData.diff(oldLineData)

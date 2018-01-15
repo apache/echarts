@@ -36,6 +36,10 @@ symbolDrawProto.updateData = function (data, isIgnore) {
 
     var seriesScope = makeSeriesScope(data);
 
+    if (!oldData) {
+        group.removeAll();
+    }
+
     data.diff(oldData)
         .add(function (newIdx) {
             var point = data.getItemLayout(newIdx);
