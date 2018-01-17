@@ -68,16 +68,16 @@ SunburstPieceProto.updateData = function (
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
-    var itemStyleModel = itemModel.getModel('itemStyle');
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
-    var normalStyle = itemStyleModel.getItemStyle();
+    var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
     var style;
     if (state === 'normal') {
         style = normalStyle;
     }
     else {
-        var stateStyle = itemStyleModel.getModel(state).getItemStyle();
+        var stateStyle = itemModel.getModel(state + '.itemStyle')
+            .getItemStyle();
         style = zrUtil.merge(stateStyle, normalStyle);
     }
     style = zrUtil.defaults(
@@ -111,7 +111,8 @@ SunburstPieceProto.updateData = function (
     }
 
     if (state === 'normal') {
-        sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+        sector.hoverStyle = itemModel.getModel('emphasis.itemStyle')
+            .getItemStyle();
         graphic.setHoverStyle(this);
     }
 
