@@ -3,13 +3,15 @@
 // merge with defaultDimValueGetter?
 
 import {__DEV__} from '../../config';
-import {isTypedArray, extend, assert, each} from 'zrender/src/core/util';
+import {isTypedArray, extend, assert, each, isObject} from 'zrender/src/core/util';
 import {getDataItemValue, isDataItemOption} from '../../util/model';
 import {parseDate} from '../../util/number';
 import Source from '../Source';
 import {
     SOURCE_FORMAT_TYPED_ARRAY,
-    SOURCE_FORMAT_ARRAY_ROWS
+    SOURCE_FORMAT_ARRAY_ROWS,
+    SOURCE_FORMAT_ORIGINAL,
+    SOURCE_FORMAT_OBJECT_ROWS
 } from './sourceType';
 
 /**
@@ -324,4 +326,38 @@ export function retrieveRawValue(data, dataIndex, dim) {
     }
 
     return rawValueGetters[sourceFormat](dataItem, dataIndex, dimIndex, dimName);
+}
+
+/**
+ * Compatible with some cases (in pie, map) like:
+ * data: [{name: 'xx', value: 5, selected: true}, ...]
+ * where only sourceFormat is 'original' and 'objectRows' supported.
+ *
+ * ??? TODO
+ * Supported detail options in data item when using 'arrayRows'.
+ *
+ * @param {module:echarts/data/List} data
+ * @param {number} dataIndex
+ * @param {string} attr like 'selected'
+ */
+export function retrieveRawAttr(data, dataIndex, attr) {
+    if (!data) {
+        return;
+    }
+
+    var sourceFormat = data.getProvider().getSource().sourceFormat;
+
+    if (sourceFormat !== SOURCE_FORMAT_ORIGINAL
+        && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS
+    ) {
+        return;
+    }
+
+    var dataItem = data.getRawDataItem(dataIndex);
+    if (sourceFormat === SOURCE_FORMAT_ORIGINAL && !isObject(dataItem)) {
+        dataItem = null;
+    }
+    if (dataItem) {
+        return dataItem[attr];
+    }
 }
