@@ -23038,7 +23038,7 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.0.0';
+var version = '4.0.1';
 
 var dependencies = {
     zrender: '4.0.0'

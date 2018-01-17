@@ -23616,7 +23616,7 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.0.0';
+var version = '4.0.1';
 
 var dependencies = {
     zrender: '4.0.0'
@@ -59235,16 +59235,16 @@ SunburstPieceProto.updateData = function (
     var sectorShape = extend({}, layout);
     sectorShape.label = null;
 
-    var itemStyleModel = itemModel.getModel('itemStyle');
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
-    var normalStyle = itemStyleModel.getItemStyle();
+    var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
     var style;
     if (state === 'normal') {
         style = normalStyle;
     }
     else {
-        var stateStyle = itemStyleModel.getModel(state).getItemStyle();
+        var stateStyle = itemModel.getModel(state + '.itemStyle')
+            .getItemStyle();
         style = merge(stateStyle, normalStyle);
     }
     style = defaults(
@@ -59278,7 +59278,8 @@ SunburstPieceProto.updateData = function (
     }
 
     if (state === 'normal') {
-        sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+        sector.hoverStyle = itemModel.getModel('emphasis.itemStyle')
+            .getItemStyle();
         setHoverStyle(this);
     }
 
