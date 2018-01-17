@@ -71,14 +71,20 @@ SunburstPieceProto.updateData = function (
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
     var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
+    var normalLabelStyle = itemModel.getModel('label').getItemStyle();
     var style;
+    var labelStyle;
     if (state === 'normal') {
         style = normalStyle;
+        labelStyle = normalLabelStyle;
     }
     else {
         var stateStyle = itemModel.getModel(state + '.itemStyle')
             .getItemStyle();
         style = zrUtil.merge(stateStyle, normalStyle);
+
+        var stateLabelStyle = itemModel.getModel(state + '.label');
+        labelStyle = zrUtil.merge(stateLabelStyle, normalLabelStyle);
     }
     style = zrUtil.defaults(
         {
@@ -116,7 +122,7 @@ SunburstPieceProto.updateData = function (
         graphic.setHoverStyle(this);
     }
 
-    this._updateLabel(seriesModel, ecModel, visualColor);
+    this._updateLabel(seriesModel, visualColor, state);
 
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
@@ -163,10 +169,13 @@ SunburstPieceProto.onDownplay = function () {
     this.updateData(false, this.node, 'downplay');
 };
 
-SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
+SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
     var itemModel = this.node.getModel();
-    var labelModel = itemModel.getModel('label');
-    var labelHoverModel = itemModel.getModel('label.emphasis');
+    var normalModel = itemModel.getModel('label');
+    var labelModel = state === 'normal'
+        ? normalModel
+        : itemModel.getModel(state + '.label');
+    var labelHoverModel = itemModel.getModel('emphasis.label');
 
     var text = zrUtil.retrieve(
         seriesModel.getFormattedLabel(
@@ -174,14 +183,14 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         ),
         this.node.name
     );
-    if (!labelModel.get('show')) {
+    if (getLabelAttr('show') === false) {
         text = '';
     }
 
     var label = this.childAt(1);
 
     graphic.setLabelStyle(
-        label.style, label.hoverStyle = {}, labelModel, labelHoverModel,
+        label.style, label.hoverStyle || {}, labelModel, labelHoverModel,
         {
             defaultText: labelModel.getShallow('show') ? text : null,
             autoColor: visualColor,
@@ -195,9 +204,9 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
     var dy = Math.sin(midAngle);
 
     var r;
-    var labelPosition = labelModel.get('position');
-    var labelPadding = labelModel.get('distance') || 0;
-    var textAlign = labelModel.get('align');
+    var labelPosition = getLabelAttr('position');
+    var labelPadding = getLabelAttr('distance') || 0;
+    var textAlign = getLabelAttr('align');
     if (labelPosition === 'outside') {
         r = layout.r + labelPadding;
         textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
@@ -224,15 +233,15 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
     label.attr('style', {
         text: text,
         textAlign: textAlign,
-        textVerticalAlign: labelModel.get('verticalAlign') || 'middle',
-        opacity: labelModel.get('opacity')
+        textVerticalAlign: getLabelAttr('verticalAlign') || 'middle',
+        opacity: getLabelAttr('opacity')
     });
 
     var textX = r * dx + layout.cx;
     var textY = r * dy + layout.cy;
     label.attr('position', [textX, textY]);
 
-    var rotateType = labelModel.getShallow('rotate');
+    var rotateType = getLabelAttr('rotate');
     var rotate = 0;
     if (rotateType === 'radial') {
         rotate = -midAngle;
@@ -252,6 +261,16 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         rotate = rotateType * Math.PI / 180;
     }
     label.attr('rotation', rotate);
+
+    function getLabelAttr(name) {
+        var stateAttr = labelModel.get(name);
+        if (stateAttr == null) {
+            return normalModel.get(name);
+        }
+        else {
+            return stateAttr;
+        }
+    }
 };
 
 SunburstPieceProto._initEvents = function (
