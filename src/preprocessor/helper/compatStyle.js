@@ -254,7 +254,6 @@ export default function (option, isTheme) {
         convertNormalEmphasis(timelineOpt, 'label');
         convertNormalEmphasis(timelineOpt, 'itemStyle');
         convertNormalEmphasis(timelineOpt, 'controlStyle', true);
-        convertNormalEmphasis(timelineOpt, 'checkpointStyle');
 
         var data = timelineOpt.data;
         zrUtil.isArray(data) && zrUtil.each(data, function (item) {
