@@ -147,7 +147,7 @@ export default TimelineView.extend({
         var mainLength = orient === 'vertical' ? viewRect.height : viewRect.width;
 
         var controlModel = timelineModel.getModel('controlStyle');
-        var showControl = controlModel.get('show');
+        var showControl = controlModel.get('show', true);
         var controlSize = showControl ? controlModel.get('itemSize') : 0;
         var controlGap = showControl ? controlModel.get('itemGap') : 0;
         var sizePlusGap = controlSize + controlGap;
@@ -161,7 +161,6 @@ export default TimelineView.extend({
         var nextBtnPosition;
         var axisExtent;
         var controlPosition = controlModel.get('position', true);
-        var showControl = controlModel.get('show', true);
         var showPlayBtn = showControl && controlModel.get('showPlayBtn', true);
         var showPrevBtn = showControl && controlModel.get('showPrevBtn', true);
         var showNextBtn = showControl && controlModel.get('showNextBtn', true);

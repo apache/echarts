@@ -5,17 +5,17 @@
         <script src="lib/config.js"></script>
         <script src="data/pie-texture.js"></script>
         <script src="lib/dat.gui.min.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <script src="lib/testHelper.js"></script>
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                /* background-image: url(old_mathematics.png); */
-                /* background-repeat: repeat; */
-            }
         </style>
+
         <div id="main"></div>
+        <div id="main2"></div>
+
+
         <script>
             var chart;
             require([
@@ -51,7 +51,7 @@
                 };
                 chart.setOption({
                     legend: {
-                        data: ['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
+                        data: ['直接访问（初始就被选中）','邮件营销','联盟广告','视频广告','搜索引擎']
                         // data: []
                     },
                     toolbox: {
@@ -89,7 +89,12 @@
                         //     }
                         // },
                         data:[
-                            {value:235, name:'直接访问', cursor: 'move'},
+                            {
+                                value:235,
+                                name:'直接访问（初始就被选中）',
+                                cursor: 'move',
+                                selected: true
+                            },
                             {value: 163, name: '标签在内部',
                                 label: {
                                     normal: {
@@ -291,5 +296,44 @@
             })
 
         </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    dataset: {
+                        source: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 456},
+                            {name: 'should be selected', value: 789, selected: true}
+                        ]
+                    },
+                    series: {
+                        type: 'pie',
+                        selectedMode: 'multiply'
+                    }
+                };
+
+                testHelper.create(echarts, 'main2', {
+                    option: option,
+                    info: option
+                })
+
+            });
+        </script>
+
+
+
+
+
     </body>
 </html>

@@ -5,6 +5,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
+import {retrieveRawAttr} from '../../data/helper/dataProvider';
 
 export default {
 
@@ -22,7 +23,11 @@ export default {
             var valueDim = ecList.mapDimension('value');
             var targetList = this._targetList = [];
             for (var i = 0, len = ecList.count(); i < len; i++) {
-                targetList.push({name: ecList.getName(i), value: ecList.get(valueDim, i)});
+                targetList.push({
+                    name: ecList.getName(i),
+                    value: ecList.get(valueDim, i),
+                    selected: retrieveRawAttr(ecList, i, 'selected')
+                });
             }
         }
         this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {

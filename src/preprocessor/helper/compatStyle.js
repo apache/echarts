@@ -41,13 +41,20 @@ function compatEC2ItemStyle(opt) {
     }
 }
 
-function convertNormalEmphasis(opt, optType) {
+function convertNormalEmphasis(opt, optType, useExtend) {
     if (opt && opt[optType] && (opt[optType].normal || opt[optType].emphasis)) {
         var normalOpt = opt[optType].normal;
         var emphasisOpt = opt[optType].emphasis;
 
         if (normalOpt) {
-            opt[optType] = normalOpt;
+            // Timeline controlStyle has other properties besides normal and emphasis
+            if (useExtend) {
+                opt[optType].normal = opt[optType].emphasis = null;
+                zrUtil.defaults(opt[optType], normalOpt);
+            }
+            else {
+                opt[optType] = normalOpt;
+            }
         }
         if (emphasisOpt) {
             opt.emphasis = opt.emphasis || {};
@@ -246,8 +253,7 @@ export default function (option, isTheme) {
         compatEC3CommonStyles(timelineOpt);
         convertNormalEmphasis(timelineOpt, 'label');
         convertNormalEmphasis(timelineOpt, 'itemStyle');
-        convertNormalEmphasis(timelineOpt, 'controlStyle');
-        convertNormalEmphasis(timelineOpt, 'checkpointStyle');
+        convertNormalEmphasis(timelineOpt, 'controlStyle', true);
 
         var data = timelineOpt.data;
         zrUtil.isArray(data) && zrUtil.each(data, function (item) {
