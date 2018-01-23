@@ -320,7 +320,7 @@ function getNodeColor(node, seriesModel, ecModel) {
     // Color from visualMap
     var visualColor = node.getVisual('color');
     var visualMetaList = node.getVisual('visualMeta');
-    if (visualMetaList.length === 0) {
+    if (!visualMetaList || visualMetaList.length === 0) {
         // Use first-generation color if has no visualMap
         visualColor = null;
     }
