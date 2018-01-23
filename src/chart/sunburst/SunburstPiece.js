@@ -71,20 +71,14 @@ SunburstPieceProto.updateData = function (
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
     var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
-    var normalLabelStyle = itemModel.getModel('label').getItemStyle();
     var style;
-    var labelStyle;
     if (state === 'normal') {
         style = normalStyle;
-        labelStyle = normalLabelStyle;
     }
     else {
         var stateStyle = itemModel.getModel(state + '.itemStyle')
             .getItemStyle();
         style = zrUtil.merge(stateStyle, normalStyle);
-
-        var stateLabelStyle = itemModel.getModel(state + '.label');
-        labelStyle = zrUtil.merge(stateLabelStyle, normalLabelStyle);
     }
     style = zrUtil.defaults(
         {
@@ -124,12 +118,6 @@ SunburstPieceProto.updateData = function (
             shape: sectorShape,
             style: style
         }, seriesModel);
-    }
-
-    if (state === 'normal') {
-        sector.hoverStyle = itemModel.getModel('emphasis.itemStyle')
-            .getItemStyle();
-        graphic.setHoverStyle(this);
     }
 
     this._updateLabel(seriesModel, visualColor, state);
@@ -182,7 +170,7 @@ SunburstPieceProto.onDownplay = function () {
 SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
     var itemModel = this.node.getModel();
     var normalModel = itemModel.getModel('label');
-    var labelModel = state === 'normal'
+    var labelModel = state === 'normal' || state === 'emphasis'
         ? normalModel
         : itemModel.getModel(state + '.label');
     var labelHoverModel = itemModel.getModel('emphasis.label');
@@ -200,7 +188,7 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
     var label = this.childAt(1);
 
     graphic.setLabelStyle(
-        label.style, label.hoverStyle || {}, labelModel, labelHoverModel,
+        label.style, label.hoverStyle || {}, normalModel, labelHoverModel,
         {
             defaultText: labelModel.getShallow('show') ? text : null,
             autoColor: visualColor,
