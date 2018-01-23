@@ -164,23 +164,19 @@ var SunburstView = ChartView.extend({
         var that = this;
 
         var event = function (e) {
-            var nodeClick = that.seriesModel.get('nodeClick', true);
-            if (!nodeClick) {
-                return;
-            }
-
             var targetFound = false;
             var viewRoot = that.seriesModel.getViewRoot();
             viewRoot.eachNode(function (node) {
                 if (!targetFound
                     && node.piece && node.piece.childAt(0) === e.target
                 ) {
+                    var nodeClick = node.getModel().get('nodeClick');
                     if (nodeClick === 'rootToNode') {
                         that._rootToNode(node);
                     }
                     else if (nodeClick === 'link') {
                         var itemModel = node.getModel();
-                        var link = itemModel.get('link', true);
+                        var link = itemModel.get('link');
                         if (link) {
                             var linkTarget = itemModel.get('target', true)
                                 || '_blank';
