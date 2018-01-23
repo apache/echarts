@@ -109,6 +109,16 @@ SunburstPieceProto.updateData = function (
         );
         sector.useStyle(style);
     }
+    else if (typeof style.fill === 'object' && style.fill.type
+        || typeof sector.style.fill === 'object' && sector.style.fill.type
+    ) {
+        // Disable animation for gradient since no interpolation method
+        // is supported for gradient
+        graphic.updateProps(sector, {
+            shape: sectorShape
+        }, seriesModel);
+        sector.useStyle(style);
+    }
     else {
         graphic.updateProps(sector, {
             shape: sectorShape,
