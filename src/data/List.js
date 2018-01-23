@@ -100,6 +100,7 @@ var List = function (dimensions, hostModel) {
             };
         }
         else {
+            // Use the original dimensions[i], where other flag props may exists.
             dimensionInfo = dimensions[i];
             dimensionName = dimensionInfo.name;
             dimensionInfo.type = dimensionInfo.type || 'float';

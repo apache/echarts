@@ -130,14 +130,13 @@ function createList(coordSys, seriesModel, mpModel) {
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return zrUtil.defaults({name: coordDim, isSysCoord: true}, info);
+            return zrUtil.defaults({name: coordDim}, info);
         });
     }
     else {
         coordDimsInfos =[{
             name: 'value',
-            type: 'float',
-            isSysCoord: true
+            type: 'float'
         }];
     }
 
