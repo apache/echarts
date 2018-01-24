@@ -10,7 +10,8 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 ## Get ECharts
 
-+ Download from [echarts.baidu.com](http://echarts.baidu.com/download.html)
++ Download [中文](http://echarts.baidu.com/download.html)
++ Download [English](https://ecomfe.github.io/echarts-doc/public/en/download.html)
 
 + `npm install echarts --save`
 
@@ -45,9 +46,9 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ### Extensions
 
-+ [水球图 liquidfill](https://github.com/ecomfe/echarts-liquidfill)
++ [水球图 Liquidfill](https://github.com/ecomfe/echarts-liquidfill)
 
-+ [字符云 wordcloud](https://github.com/ecomfe/echarts-wordcloud)
++ [字符云 Wordcloud](https://github.com/ecomfe/echarts-wordcloud)
 
 + [Graph Modularity](https://github.com/ecomfe/echarts-graph-modularity) Graph modularity extension for community detection
 
