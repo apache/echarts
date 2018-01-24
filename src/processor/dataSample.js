@@ -1,51 +1,54 @@
-define(function () {
-    var samplers = {
-        average: function (frame) {
-            var sum = 0;
-            var count = 0;
-            for (var i = 0; i < frame.length; i++) {
-                if (!isNaN(frame[i])) {
-                    sum += frame[i];
-                    count++;
-                }
-            }
-            // Return NaN if count is 0
-            return count === 0 ? NaN : sum / count;
-        },
-        sum: function (frame) {
-            var sum = 0;
-            for (var i = 0; i < frame.length; i++) {
-                // Ignore NaN
-                sum += frame[i] || 0;
-            }
-            return sum;
-        },
-        max: function (frame) {
-            var max = -Infinity;
-            for (var i = 0; i < frame.length; i++) {
-                frame[i] > max && (max = frame[i]);
-            }
-            return max;
-        },
-        min: function (frame) {
-            var min = Infinity;
-            for (var i = 0; i < frame.length; i++) {
-                frame[i] < min && (min = frame[i]);
-            }
-            return min;
-        },
-        // TODO
-        // Median
-        nearest: function (frame) {
-            return frame[0];
-        }
-    };
 
-    var indexSampler = function (frame, value) {
-        return Math.round(frame.length / 2);
-    };
-    return function (seriesType, ecModel, api) {
-        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+var samplers = {
+    average: function (frame) {
+        var sum = 0;
+        var count = 0;
+        for (var i = 0; i < frame.length; i++) {
+            if (!isNaN(frame[i])) {
+                sum += frame[i];
+                count++;
+            }
+        }
+        // Return NaN if count is 0
+        return count === 0 ? NaN : sum / count;
+    },
+    sum: function (frame) {
+        var sum = 0;
+        for (var i = 0; i < frame.length; i++) {
+            // Ignore NaN
+            sum += frame[i] || 0;
+        }
+        return sum;
+    },
+    max: function (frame) {
+        var max = -Infinity;
+        for (var i = 0; i < frame.length; i++) {
+            frame[i] > max && (max = frame[i]);
+        }
+        return max;
+    },
+    min: function (frame) {
+        var min = Infinity;
+        for (var i = 0; i < frame.length; i++) {
+            frame[i] < min && (min = frame[i]);
+        }
+        return min;
+    },
+    // TODO
+    // Median
+    nearest: function (frame) {
+        return frame[0];
+    }
+};
+
+var indexSampler = function (frame, value) {
+    return Math.round(frame.length / 2);
+};
+
+export default function (seriesType) {
+    return {
+        seriesType: seriesType,
+        reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
             var sampling = seriesModel.get('sampling');
             var coordSys = seriesModel.coordinateSystem;
@@ -66,13 +69,12 @@ define(function () {
                         sampler = sampling;
                     }
                     if (sampler) {
-                        data = data.downSample(
+                        seriesModel.setData(data.downSample(
                             valueAxis.dim, 1 / rate, sampler, indexSampler
-                        );
-                        seriesModel.setData(data);
+                        ));
                     }
                 }
             }
-        }, this);
+        }
     };
-});
+}

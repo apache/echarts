@@ -1,44 +1,81 @@
-define(function (require) {
+import * as echarts from '../../echarts';
+import SymbolDraw from '../helper/SymbolDraw';
+import LargeSymbolDraw from '../helper/LargeSymbolDraw';
 
-    var SymbolDraw = require('../helper/SymbolDraw');
-    var LargeSymbolDraw = require('../helper/LargeSymbolDraw');
+import pointsLayout from '../../layout/points';
 
-    require('../../echarts').extendChartView({
+echarts.extendChartView({
 
-        type: 'scatter',
+    type: 'scatter',
 
-        init: function () {
-            this._normalSymbolDraw = new SymbolDraw();
-            this._largeSymbolDraw = new LargeSymbolDraw();
-        },
+    render: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
 
-        render: function (seriesModel, ecModel, api) {
-            var data = seriesModel.getData();
-            var largeSymbolDraw = this._largeSymbolDraw;
-            var normalSymbolDraw = this._normalSymbolDraw;
-            var group = this.group;
+        var symbolDraw = this._updateSymbolDraw(data, seriesModel);
+        symbolDraw.updateData(data);
 
-            var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
-                ? largeSymbolDraw : normalSymbolDraw;
+        this._finished = true;
+    },
 
-            this._symbolDraw = symbolDraw;
-            symbolDraw.updateData(data);
-            group.add(symbolDraw.group);
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        var symbolDraw = this._updateSymbolDraw(data, seriesModel);
 
-            group.remove(
-                symbolDraw === largeSymbolDraw
-                ? normalSymbolDraw.group : largeSymbolDraw.group
-            );
-        },
+        symbolDraw.incrementalPrepareUpdate(data);
 
-        updateLayout: function (seriesModel) {
-            this._symbolDraw.updateLayout(seriesModel);
-        },
+        this._finished = false;
+    },
 
-        remove: function (ecModel, api) {
-            this._symbolDraw && this._symbolDraw.remove(api, true);
-        },
+    incrementalRender: function (taskParams, seriesModel, ecModel) {
+        this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData());
 
-        dispose: function () {}
-    });
+        this._finished = taskParams.end === seriesModel.getData().count();
+    },
+
+    updateTransform: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        // Must mark group dirty and make sure the incremental layer will be cleared
+        // PENDING
+        this.group.dirty();
+
+        if (!this._finished || data.count() > 1e4 || !this._symbolDraw.isPersistent()) {
+            return {
+                update: true
+            };
+        }
+        else {
+            var res = pointsLayout().reset(seriesModel);
+            if (res.progress) {
+                res.progress({ start: 0, end: data.count() }, data);
+            }
+
+            this._symbolDraw.updateLayout(data);
+        }
+    },
+
+    _updateSymbolDraw: function (data, seriesModel) {
+        var symbolDraw = this._symbolDraw;
+        var pipelineContext = seriesModel.pipelineContext;
+        var isLargeDraw = pipelineContext.large;
+
+        if (!symbolDraw || isLargeDraw !== this._isLargeDraw) {
+            symbolDraw && symbolDraw.remove();
+            symbolDraw = this._symbolDraw = isLargeDraw
+                ? new LargeSymbolDraw()
+                : new SymbolDraw();
+            this._isLargeDraw = isLargeDraw;
+            this.group.removeAll();
+        }
+
+        this.group.add(symbolDraw.group);
+
+        return symbolDraw;
+    },
+
+    remove: function (ecModel, api) {
+        this._symbolDraw && this._symbolDraw.remove(true);
+        this._symbolDraw = null;
+    },
+
+    dispose: function () {}
 });

@@ -1,11 +1,11 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
         <script src="lib/testHelper.js"></script>
         <script src="tooltipTestHelper.js"></script>
     </head>
@@ -46,14 +46,14 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -101,12 +101,12 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -158,12 +158,12 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -238,11 +238,11 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/themeRiver',
-                'echarts/component/legend',
-                'echarts/component/singleAxis',
-                'echarts/component/tooltip',
+                'echarts'
+                // 'echarts/chart/themeRiver',
+                // 'echarts/component/legend',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/tooltip',
                 ], function (echarts) {
 
                     var chart = echarts.init(document.getElementById('themeRiver'));
@@ -350,14 +350,14 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'echarts/component/toolbox',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'echarts/component/toolbox',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var base = +new Date(1968, 9, 3);

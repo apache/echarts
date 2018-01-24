@@ -1,0 +1,36 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <h1>Necessary cases for quick test.</h1>
+        <div id="cases" style="margin: 20px">
+        </div>
+
+        <script type="text/javascript">
+            var cases = [
+                ['pie', './pie.html'],
+                ['line', './line.html'],
+                ['gauge', './gauge.html'],
+                ['treemap', './treemap.html'],
+                ['axis', './axis.html'],
+            ];
+
+
+            var el = document.getElementById('cases');
+            var html = [];
+
+            for (var i = 0; i < cases.length; i++) {
+                html.push(
+                    cases[i][0] + '&nbsp;&nbsp;&nbsp;<a target="_blank" href="' + cases[i][1] + '">' + cases[i][1] + '</div>'
+                );
+            }
+
+            el.innerHTML = html.join('<br>');
+
+        </script>
+    </body>
+</html>

@@ -1,10 +1,9 @@
-define(function (require) {
+import * as echarts from '../echarts';
 
-    require('./marker/MarkAreaModel');
-    require('./marker/MarkAreaView');
+import './marker/MarkAreaModel';
+import './marker/MarkAreaView';
 
-    require('../echarts').registerPreprocessor(function (opt) {
-        // Make sure markArea component is enabled
-        opt.markArea = opt.markArea || {};
-    });
+echarts.registerPreprocessor(function (opt) {
+    // Make sure markArea component is enabled
+    opt.markArea = opt.markArea || {};
 });

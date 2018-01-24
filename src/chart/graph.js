@@ -1,27 +1,29 @@
-define(function (require) {
+import * as echarts from '../echarts';
 
-    var echarts = require('../echarts');
-    var zrUtil = require('zrender/core/util');
+import './graph/GraphSeries';
+import './graph/GraphView';
+import './graph/graphAction';
 
-    require('./graph/GraphSeries');
-    require('./graph/GraphView');
+import categoryFilter from './graph/categoryFilter';
+import visualSymbol from '../visual/symbol';
+import categoryVisual from './graph/categoryVisual';
+import edgeVisual from './graph/edgeVisual';
+import simpleLayout from './graph/simpleLayout';
+import circularLayout from './graph/circularLayout';
+import forceLayout from './graph/forceLayout';
+import createView from './graph/createView';
 
-    require('./graph/graphAction');
+echarts.registerProcessor(categoryFilter);
 
-    echarts.registerProcessor(require('./graph/categoryFilter'));
+echarts.registerVisual(visualSymbol('graph', 'circle', null));
+echarts.registerVisual(categoryVisual);
+echarts.registerVisual(edgeVisual);
 
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'graph', 'circle', null
-    ));
-    echarts.registerVisual(require('./graph/categoryVisual'));
-    echarts.registerVisual(require('./graph/edgeVisual'));
+echarts.registerLayout(simpleLayout);
+echarts.registerLayout(circularLayout);
+echarts.registerLayout(forceLayout);
 
-    echarts.registerLayout(require('./graph/simpleLayout'));
-    echarts.registerLayout(require('./graph/circularLayout'));
-    echarts.registerLayout(require('./graph/forceLayout'));
-
-    // Graph view coordinate system
-    echarts.registerCoordinateSystem('graphView', {
-        create: require('./graph/createView')
-    });
+// Graph view coordinate system
+echarts.registerCoordinateSystem('graphView', {
+    create: createView
 });

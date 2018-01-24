@@ -26,19 +26,18 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-define(function (require) {
 
-    /**
-     * @see <https://github.com/mbostock/d3/blob/master/src/arrays/quantile.js>
-     * @see <http://en.wikipedia.org/wiki/Quantile>
-     * @param {Array.<number>} ascArr
-     */
-    return function(ascArr, p) {
-        var H = (ascArr.length - 1) * p + 1,
-            h = Math.floor(H),
-            v = +ascArr[h - 1],
-            e = H - h;
-        return e ? v + e * (ascArr[h] - v) : v;
-    };
+/**
+ * @see <https://github.com/mbostock/d3/blob/master/src/arrays/quantile.js>
+ * @see <http://en.wikipedia.org/wiki/Quantile>
+ * @param {Array.<number>} ascArr
+ */
+function _default(ascArr, p) {
+  var H = (ascArr.length - 1) * p + 1,
+      h = Math.floor(H),
+      v = +ascArr[h - 1],
+      e = H - h;
+  return e ? v + e * (ascArr[h] - v) : v;
+}
 
-});
+module.exports = _default;

@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
@@ -17,11 +17,11 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/tooltip',
-                'echarts/component/legend',
-                'echarts/component/grid'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid'
             ], function (echarts) {
 
                 function randomData() {
@@ -29,7 +29,7 @@
                 }
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
 

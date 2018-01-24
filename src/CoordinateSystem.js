@@ -1,49 +1,43 @@
-define(function(require) {
+import * as zrUtil from 'zrender/src/core/util';
 
-    'use strict';
+var coordinateSystemCreators = {};
 
-    var zrUtil = require('zrender/core/util');
+function CoordinateSystemManager() {
 
-    var coordinateSystemCreators = {};
+    this._coordinateSystems = [];
+}
 
-    function CoordinateSystemManager() {
+CoordinateSystemManager.prototype = {
 
-        this._coordinateSystems = [];
+    constructor: CoordinateSystemManager,
+
+    create: function (ecModel, api) {
+        var coordinateSystems = [];
+        zrUtil.each(coordinateSystemCreators, function (creater, type) {
+            var list = creater.create(ecModel, api);
+            coordinateSystems = coordinateSystems.concat(list || []);
+        });
+
+        this._coordinateSystems = coordinateSystems;
+    },
+
+    update: function (ecModel, api) {
+        zrUtil.each(this._coordinateSystems, function (coordSys) {
+            coordSys.update && coordSys.update(ecModel, api);
+        });
+    },
+
+    getCoordinateSystems: function () {
+        return this._coordinateSystems.slice();
     }
+};
 
-    CoordinateSystemManager.prototype = {
+CoordinateSystemManager.register = function (type, coordinateSystemCreator) {
+    coordinateSystemCreators[type] = coordinateSystemCreator;
+};
 
-        constructor: CoordinateSystemManager,
+CoordinateSystemManager.get = function (type) {
+    return coordinateSystemCreators[type];
+};
 
-        create: function (ecModel, api) {
-            var coordinateSystems = [];
-            zrUtil.each(coordinateSystemCreators, function (creater, type) {
-                var list = creater.create(ecModel, api);
-                coordinateSystems = coordinateSystems.concat(list || []);
-            });
-
-            this._coordinateSystems = coordinateSystems;
-        },
-
-        update: function (ecModel, api) {
-            zrUtil.each(this._coordinateSystems, function (coordSys) {
-                // FIXME MUST have
-                coordSys.update && coordSys.update(ecModel, api);
-            });
-        },
-
-        getCoordinateSystems: function () {
-            return this._coordinateSystems.slice();
-        }
-    };
-
-    CoordinateSystemManager.register = function (type, coordinateSystemCreator) {
-        coordinateSystemCreators[type] = coordinateSystemCreator;
-    };
-
-    CoordinateSystemManager.get = function (type) {
-        return coordinateSystemCreators[type];
-    };
-
-    return CoordinateSystemManager;
-});
+export default CoordinateSystemManager;

@@ -32,14 +32,16 @@
  *  + axisPointerEnabled {boolean}
  *
  *  + dataToPoint {Function}: mandatory
- *      @param {Array.<*>} data
- *      @param {boolean} [clamp=false]
+ *      @param {*|Array.<*>} data
+ *      @param {*} Defined by the coordinate system itself
+ *      @param {Array.<*>} out
  *      @return {Array.<number>} point Point in global pixel coordinate system.
  *
  *  + pointToData {Function}: mandatory
  *      @param {Array.<number>} point Point in global pixel coordinate system.
- *      @param {boolean} [clamp=false]
- *      @return {Array.<*>} data
+ *      @param {*} Defined by the coordinate system itself
+ *      @param {Array.<*>} out
+ *      @return {*|Array.<*>} data
  *
  *  + containPoint {Function}: mandatory
  *      @param {Array.<number>} point Point in global pixel coordinate system.

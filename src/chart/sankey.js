@@ -1,9 +1,10 @@
-define(function (require) {
+import * as echarts from '../echarts';
 
-    var echarts = require('../echarts');
+import './sankey/SankeySeries';
+import './sankey/SankeyView';
 
-    require('./sankey/SankeySeries');
-    require('./sankey/SankeyView');
-    echarts.registerLayout(require('./sankey/sankeyLayout'));
-    echarts.registerVisual(require('./sankey/sankeyVisual'));
-});
+import sankeyLayout from './sankey/sankeyLayout';
+import sankeyVisual from './sankey/sankeyVisual';
+
+echarts.registerLayout(sankeyLayout);
+echarts.registerVisual(sankeyVisual);

@@ -2,8 +2,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
     <body>
@@ -19,17 +19,18 @@
 
             require([
                 'echarts',
-                'echarts/chart/line',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoomInside',
-                'zrender/svg/svg'
+                'theme/infographic'
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+                var chart = echarts.init(document.getElementById('main'), 'infographic', {
+
                     // renderer: 'svg'
                 });
 
@@ -122,6 +123,10 @@
                         },
                         splitLine: {
                             show: false
+                        },
+                        axisLabel: {
+                            showMaxLabel: true,
+                            showMinLabel: true
                         }
                     },
                     grid: {
@@ -163,6 +168,12 @@
                         },
                         step: 'end'
                     }, {
+                        label: {
+                            normal: {
+                                show: true,
+                                position: 'outside'
+                            }
+                        },
                         name: 'line2',
                         type: 'line',
                         stack: 'all',
@@ -182,6 +193,8 @@
                         step: 'end'
                     }]
                 });
+
+                window.onresize = chart.resize;
             })
 
         </script>

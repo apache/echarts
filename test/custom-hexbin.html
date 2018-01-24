@@ -1,12 +1,12 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
@@ -93,16 +93,16 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/title',
-                'echarts/component/geo',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/title',
+                // 'echarts/component/geo',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 // 2006-2007 Regular Season
@@ -210,6 +210,9 @@
 
                         var option = {
                             backgroundColor: backgroundColor,
+                            aria: {
+                                show: true
+                            },
                             tooltip: {
                                 backgroundColor: 'rgba(255,255,255,0.9)',
                                 textStyle: {
@@ -254,6 +257,7 @@
                                 align: 'bottom',
                                 text: [null, 'FG:   '],
                                 dimension: 3,
+                                seriesIndex: 0,
                                 calculable: true,
                                 textStyle: {
                                     color: '#eee'

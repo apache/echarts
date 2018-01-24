@@ -1,341 +1,550 @@
-define(function(require) {
+import {__DEV__} from '../config';
+import * as zrUtil from 'zrender/src/core/util';
+import env from 'zrender/src/core/env';
+import {
+    formatTime,
+    encodeHTML,
+    addCommas,
+    getTooltipMarker
+} from '../util/format';
+import * as modelUtil from '../util/model';
+import ComponentModel from './Component';
+import colorPaletteMixin from './mixin/colorPalette';
+import dataFormatMixin from '../model/mixin/dataFormat';
+import {
+    getLayoutParams,
+    mergeLayoutParam
+} from '../util/layout';
+import {createTask} from '../stream/task';
+import {
+    prepareSource,
+    getSource
+} from '../data/helper/sourceHelper';
+import {retrieveRawValue} from '../data/helper/dataProvider';
 
-    'use strict';
+var inner = modelUtil.makeInner();
 
-    var zrUtil = require('zrender/core/util');
-    var formatUtil = require('../util/format');
-    var classUtil = require('../util/clazz');
-    var modelUtil = require('../util/model');
-    var ComponentModel = require('./Component');
-    var colorPaletteMixin = require('./mixin/colorPalette');
-    var env = require('zrender/core/env');
-    var layout = require('../util/layout');
+var SeriesModel = ComponentModel.extend({
 
-    var set = classUtil.set;
-    var get = classUtil.get;
-    var encodeHTML = formatUtil.encodeHTML;
-    var addCommas = formatUtil.addCommas;
+    type: 'series.__base__',
 
-    var SeriesModel = ComponentModel.extend({
+    /**
+     * @readOnly
+     */
+    seriesIndex: 0,
 
-        type: 'series.__base__',
+    // coodinateSystem will be injected in the echarts/CoordinateSystem
+    coordinateSystem: null,
+
+    /**
+     * @type {Object}
+     * @protected
+     */
+    defaultOption: null,
+
+    /**
+     * Data provided for legend
+     * @type {Function}
+     */
+    // PENDING
+    legendDataProvider: null,
+
+    /**
+     * Access path of color for visual
+     */
+    visualColorAccessPath: 'itemStyle.color',
+
+    /**
+     * Support merge layout params.
+     * Only support 'box' now (left/right/top/bottom/width/height).
+     * @type {string|Object} Object can be {ignoreSize: true}
+     * @readOnly
+     */
+    layoutMode: null,
+
+    init: function (option, parentModel, ecModel, extraOpt) {
 
         /**
+         * @type {number}
          * @readOnly
          */
-        seriesIndex: 0,
+        this.seriesIndex = this.componentIndex;
 
-        // coodinateSystem will be injected in the echarts/CoordinateSystem
-        coordinateSystem: null,
+        this.dataTask = createTask({
+            count: dataTaskCount,
+            reset: dataTaskReset
+        });
+        this.dataTask.context = {model: this};
 
-        /**
-         * @type {Object}
-         * @protected
-         */
-        defaultOption: null,
+        this.mergeDefaultAndTheme(option, ecModel);
 
-        /**
-         * Data provided for legend
-         * @type {Function}
-         */
-        // PENDING
-        legendDataProvider: null,
+        prepareSource(this);
 
-        /**
-         * Access path of color for visual
-         */
-        visualColorAccessPath: 'itemStyle.normal.color',
+
+        var data = this.getInitialData(option, ecModel);
+        wrapData(data, this);
+        this.dataTask.context.data = data;
+
+        if (__DEV__) {
+            zrUtil.assert(data, 'getInitialData returned invalid data.');
+        }
 
         /**
-         * Support merge layout params.
-         * Only support 'box' now (left/right/top/bottom/width/height).
-         * @type {string|Object} Object can be {ignoreSize: true}
-         * @readOnly
+         * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
+         * @private
          */
-        layoutMode: null,
+        inner(this).dataBeforeProcessed = data;
 
-        init: function (option, parentModel, ecModel, extraOpt) {
+        // If we reverse the order (make data firstly, and then make
+        // dataBeforeProcessed by cloneShallow), cloneShallow will
+        // cause data.graph.data !== data when using
+        // module:echarts/data/Graph or module:echarts/data/Tree.
+        // See module:echarts/data/helper/linkList
 
-            /**
-             * @type {number}
-             * @readOnly
-             */
-            this.seriesIndex = this.componentIndex;
+        // Theoretically, it is unreasonable to call `seriesModel.getData()` in the model
+        // init or merge stage, because the data can be restored. So we do not `restoreData`
+        // and `setData` here, which forbids calling `seriesModel.getData()` in this stage.
+        // Call `seriesModel.getRawData()` instead.
+        // this.restoreData();
 
-            this.mergeDefaultAndTheme(option, ecModel);
+        autoSeriesName(this);
+    },
 
-            var data = this.getInitialData(option, ecModel);
-            if (__DEV__) {
-                zrUtil.assert(data, 'getInitialData returned invalid data.');
-            }
-            /**
-             * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
-             * @private
-             */
-            set(this, 'dataBeforeProcessed', data);
+    /**
+     * Util for merge default and theme to option
+     * @param  {Object} option
+     * @param  {module:echarts/model/Global} ecModel
+     */
+    mergeDefaultAndTheme: function (option, ecModel) {
+        var layoutMode = this.layoutMode;
+        var inputPositionParams = layoutMode
+            ? getLayoutParams(option) : {};
 
-            // If we reverse the order (make data firstly, and then make
-            // dataBeforeProcessed by cloneShallow), cloneShallow will
-            // cause data.graph.data !== data when using
-            // module:echarts/data/Graph or module:echarts/data/Tree.
-            // See module:echarts/data/helper/linkList
-            this.restoreData();
-        },
+        // Backward compat: using subType on theme.
+        // But if name duplicate between series subType
+        // (for example: parallel) add component mainType,
+        // add suffix 'Series'.
+        var themeSubType = this.subType;
+        if (ComponentModel.hasClass(themeSubType)) {
+            themeSubType += 'Series';
+        }
+        zrUtil.merge(
+            option,
+            ecModel.getTheme().get(this.subType)
+        );
+        zrUtil.merge(option, this.getDefaultOption());
 
-        /**
-         * Util for merge default and theme to option
-         * @param  {Object} option
-         * @param  {module:echarts/model/Global} ecModel
-         */
-        mergeDefaultAndTheme: function (option, ecModel) {
-            var layoutMode = this.layoutMode;
-            var inputPositionParams = layoutMode
-                ? layout.getLayoutParams(option) : {};
+        // Default label emphasis `show`
+        modelUtil.defaultEmphasis(option, 'label', ['show']);
 
-            zrUtil.merge(
-                option,
-                ecModel.getTheme().get(this.subType)
-            );
-            zrUtil.merge(option, this.getDefaultOption());
+        this.fillDataTextStyle(option.data);
 
-            // Default label emphasis `show`
-            modelUtil.defaultEmphasis(option.label, ['show']);
+        if (layoutMode) {
+            mergeLayoutParam(option, inputPositionParams, layoutMode);
+        }
+    },
 
-            this.fillDataTextStyle(option.data);
+    mergeOption: function (newSeriesOption, ecModel) {
+        // this.settingTask.dirty();
 
-            if (layoutMode) {
-                layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
-            }
-        },
+        newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
+        this.fillDataTextStyle(newSeriesOption.data);
 
-        mergeOption: function (newSeriesOption, ecModel) {
-            newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
-            this.fillDataTextStyle(newSeriesOption.data);
+        var layoutMode = this.layoutMode;
+        if (layoutMode) {
+            mergeLayoutParam(this.option, newSeriesOption, layoutMode);
+        }
 
-            var layoutMode = this.layoutMode;
-            if (layoutMode) {
-                layout.mergeLayoutParam(this.option, newSeriesOption, layoutMode);
-            }
+        prepareSource(this);
 
-            var data = this.getInitialData(newSeriesOption, ecModel);
-            // TODO Merge data?
-            if (data) {
-                set(this, 'data', data);
-                set(this, 'dataBeforeProcessed', data.cloneShallow());
-            }
-        },
+        var data = this.getInitialData(newSeriesOption, ecModel);
+        wrapData(data, this);
+        this.dataTask.dirty();
+        this.dataTask.context.data = data;
 
-        fillDataTextStyle: function (data) {
-            // Default data label emphasis `show`
-            // FIXME Tree structure data ?
-            // FIXME Performance ?
-            if (data) {
-                var props = ['show'];
-                for (var i = 0; i < data.length; i++) {
-                    if (data[i] && data[i].label) {
-                        modelUtil.defaultEmphasis(data[i].label, props);
-                    }
+        inner(this).dataBeforeProcessed = data;
+
+        autoSeriesName(this);
+    },
+
+    fillDataTextStyle: function (data) {
+        // Default data label emphasis `show`
+        // FIXME Tree structure data ?
+        // FIXME Performance ?
+        if (data) {
+            var props = ['show'];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i] && data[i].label) {
+                    modelUtil.defaultEmphasis(data[i], 'label', props);
                 }
             }
-        },
+        }
+    },
 
-        /**
-         * Init a data structure from data related option in series
-         * Must be overwritten
-         */
-        getInitialData: function () {},
+    /**
+     * Init a data structure from data related option in series
+     * Must be overwritten
+     */
+    getInitialData: function () {},
 
-        /**
-         * @param {string} [dataType]
-         * @return {module:echarts/data/List}
-         */
-        getData: function (dataType) {
-            var data = get(this, 'data');
+    /**
+     * Append data to list
+     * @param {Object} params
+     * @param {Array|TypedArray} params.data
+     */
+    appendData: function (params) {
+        // FIXME ???
+        // (1) If data from dataset, forbidden append.
+        // (2) support append data of dataset.
+        var data = this.getRawData();
+        data.appendData(params.data);
+    },
+
+    /**
+     * Consider some method like `filter`, `map` need make new data,
+     * We should make sure that `seriesModel.getData()` get correct
+     * data in the stream procedure. So we fetch data from upstream
+     * each time `task.perform` called.
+     * @param {string} [dataType]
+     * @return {module:echarts/data/List}
+     */
+    getData: function (dataType) {
+        var task = getCurrentTask(this);
+        if (task) {
+            var data = task.context.data;
             return dataType == null ? data : data.getLinkedData(dataType);
-        },
+        }
+        else {
+            // When series is not alive (that may happen when click toolbox
+            // restore or setOption with not merge mode), series data may
+            // be still need to judge animation or something when graphic
+            // elements want to know whether fade out.
+            return inner(this).data;
+        }
+    },
 
-        /**
-         * @param {module:echarts/data/List} data
-         */
-        setData: function (data) {
-            set(this, 'data', data);
-        },
+    /**
+     * @param {module:echarts/data/List} data
+     */
+    setData: function (data) {
+        var task = getCurrentTask(this);
+        if (task) {
+            var context = task.context;
+            // Consider case: filter, data sample.
+            if (context.data !== data && task.isOverallFilter) {
+                task.setOutputEnd(data.count());
+            }
+            context.outputData = data;
+            // Caution: setData should update context.data,
+            // Because getData may be called multiply in a
+            // single stage and expect to get the data just
+            // set. (For example, AxisProxy, x y both call
+            // getData and setDate sequentially).
+            // So the context.data should be fetched from
+            // upstream each time when a stage starts to be
+            // performed.
+            if (task !== this.dataTask) {
+                context.data = data;
+            }
+        }
+        inner(this).data = data;
+    },
 
-        /**
-         * Get data before processed
-         * @return {module:echarts/data/List}
-         */
-        getRawData: function () {
-            return get(this, 'dataBeforeProcessed');
-        },
+    /**
+     * @see {module:echarts/data/helper/sourceHelper#getSource}
+     * @return {module:echarts/data/Source} source
+     */
+    getSource: function () {
+        return getSource(this);
+    },
 
-        /**
-         * Coord dimension to data dimension.
-         *
-         * By default the result is the same as dimensions of series data.
-         * But in some series data dimensions are different from coord dimensions (i.e.
-         * candlestick and boxplot). Override this method to handle those cases.
-         *
-         * Coord dimension to data dimension can be one-to-many
-         *
-         * @param {string} coordDim
-         * @return {Array.<string>} dimensions on the axis.
-         */
-        coordDimToDataDim: function (coordDim) {
-            return modelUtil.coordDimToDataDim(this.getData(), coordDim);
-        },
+    /**
+     * Get data before processed
+     * @return {module:echarts/data/List}
+     */
+    getRawData: function () {
+        return inner(this).dataBeforeProcessed;
+    },
 
-        /**
-         * Convert data dimension to coord dimension.
-         *
-         * @param {string|number} dataDim
-         * @return {string}
-         */
-        dataDimToCoordDim: function (dataDim) {
-            return modelUtil.dataDimToCoordDim(this.getData(), dataDim);
-        },
+    /**
+     * Get base axis if has coordinate system and has axis.
+     * By default use coordSys.getBaseAxis();
+     * Can be overrided for some chart.
+     * @return {type} description
+     */
+    getBaseAxis: function () {
+        var coordSys = this.coordinateSystem;
+        return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
+    },
 
-        /**
-         * Get base axis if has coordinate system and has axis.
-         * By default use coordSys.getBaseAxis();
-         * Can be overrided for some chart.
-         * @return {type} description
-         */
-        getBaseAxis: function () {
-            var coordSys = this.coordinateSystem;
-            return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
-        },
+    // FIXME
+    /**
+     * Default tooltip formatter
+     *
+     * @param {number} dataIndex
+     * @param {boolean} [multipleSeries=false]
+     * @param {number} [dataType]
+     */
+    formatTooltip: function (dataIndex, multipleSeries, dataType) {
 
-        // FIXME
-        /**
-         * Default tooltip formatter
-         *
-         * @param {number} dataIndex
-         * @param {boolean} [multipleSeries=false]
-         * @param {number} [dataType]
-         */
-        formatTooltip: function (dataIndex, multipleSeries, dataType) {
-            function formatArrayValue(value) {
-                var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
-                    var dimItem = data.getDimensionInfo(idx);
-                    return vertially |= dimItem && dimItem.tooltip !== false && dimItem.tooltipName != null;
-                }, 0);
+        function formatArrayValue(value) {
+            // ??? TODO refactor these logic.
+            // check: category-no-encode-has-axis-data in dataset.html
+            var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
+                var dimItem = data.getDimensionInfo(idx);
+                return vertially |= dimItem && dimItem.tooltip !== false && dimItem.displayName != null;
+            }, 0);
 
-                var result = [];
-                var tooltipDims = modelUtil.otherDimToDataDim(data, 'tooltip');
+            var result = [];
 
-                tooltipDims.length
-                    ? zrUtil.each(tooltipDims, function (dimIdx) {
-                        setEachItem(data.get(dimIdx, dataIndex), dimIdx);
-                    })
-                    // By default, all dims is used on tooltip.
-                    : zrUtil.each(value, setEachItem);
+            tooltipDims.length
+                ? zrUtil.each(tooltipDims, function (dim) {
+                    setEachItem(retrieveRawValue(data, dataIndex, dim), dim);
+                })
+                // By default, all dims is used on tooltip.
+                : zrUtil.each(value, setEachItem);
 
-                function setEachItem(val, dimIdx) {
-                    var dimInfo = data.getDimensionInfo(dimIdx);
-                    // If `dimInfo.tooltip` is not set, show tooltip.
-                    if (!dimInfo || dimInfo.otherDims.tooltip === false) {
-                        return;
-                    }
-                    var dimType = dimInfo.type;
-                    var valStr = (vertially ? '- ' + (dimInfo.tooltipName || dimInfo.name) + ': ' : '')
-                        + (dimType === 'ordinal'
-                            ? val + ''
-                            : dimType === 'time'
-                            ? (multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val))
-                            : addCommas(val)
-                        );
-                    valStr && result.push(encodeHTML(valStr));
+            function setEachItem(val, dim) {
+                var dimInfo = data.getDimensionInfo(dim);
+                // If `dimInfo.tooltip` is not set, show tooltip.
+                if (!dimInfo || dimInfo.otherDims.tooltip === false) {
+                    return;
                 }
-
-                return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
-            }
-
-            var data = get(this, 'data');
-
-            var value = this.getRawValue(dataIndex);
-            var formattedValue = zrUtil.isArray(value)
-                ? formatArrayValue(value) : encodeHTML(addCommas(value));
-            var name = data.getName(dataIndex);
-
-            var color = data.getItemVisual(dataIndex, 'color');
-            if (zrUtil.isObject(color) && color.colorStops) {
-                color = (color.colorStops[0] || {}).color;
-            }
-            color = color || 'transparent';
-
-            var colorEl = formatUtil.getTooltipMarker(color);
-
-            var seriesName = this.name;
-            // FIXME
-            if (seriesName === '\0-') {
-                // Not show '-'
-                seriesName = '';
-            }
-            seriesName = seriesName
-                ? encodeHTML(seriesName) + (!multipleSeries ? '<br/>' : ': ')
-                : '';
-            return !multipleSeries
-                ? seriesName + colorEl
-                    + (name
-                        ? encodeHTML(name) + ': ' + formattedValue
-                        : formattedValue
+                var dimType = dimInfo.type;
+                var dimHead = getTooltipMarker({color: color, type: 'subItem'});
+                var valStr = (vertially
+                        ? dimHead + encodeHTML(dimInfo.displayName || '-') + ': '
+                        : ''
                     )
-                : colorEl + seriesName + formattedValue;
-        },
-
-        /**
-         * @return {boolean}
-         */
-        isAnimationEnabled: function () {
-            if (env.node) {
-                return false;
+                    // FIXME should not format time for raw data?
+                    + encodeHTML(dimType === 'ordinal'
+                        ? val + ''
+                        : dimType === 'time'
+                        ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
+                        : addCommas(val)
+                    );
+                valStr && result.push(valStr);
             }
 
-            var animationEnabled = this.getShallow('animation');
-            if (animationEnabled) {
-                if (this.getData().count() > this.getShallow('animationThreshold')) {
-                    animationEnabled = false;
-                }
+            return (vertially ? '<br/>' : '') + result.join(vertially ? '<br/>' : ', ');
+        }
+
+        function formatSingleValue(val) {
+            return encodeHTML(addCommas(val));
+        }
+
+        var data = this.getData();
+        var tooltipDims = data.mapDimension('defaultedTooltip', true);
+        var tooltipDimLen = tooltipDims.length;
+        var value = this.getRawValue(dataIndex);
+        var isValueArr = zrUtil.isArray(value);
+
+        var color = data.getItemVisual(dataIndex, 'color');
+        if (zrUtil.isObject(color) && color.colorStops) {
+            color = (color.colorStops[0] || {}).color;
+        }
+        color = color || 'transparent';
+
+        // Complicated rule for pretty tooltip.
+        var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
+            ? formatArrayValue(value)
+            : tooltipDimLen
+            ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
+            : formatSingleValue(isValueArr ? value[0] : value);
+
+        var colorEl = getTooltipMarker(color);
+
+        var name = data.getName(dataIndex);
+
+        var seriesName = this.name;
+        if (seriesName === modelUtil.DEFAULT_COMPONENT_NAME) {
+            // Not show '-'
+            seriesName = '';
+        }
+        seriesName = seriesName
+            ? encodeHTML(seriesName) + (!multipleSeries ? '<br/>' : ': ')
+            : '';
+
+        return !multipleSeries
+            ? seriesName + colorEl
+                + (name
+                    ? encodeHTML(name) + ': ' + formattedValue
+                    : formattedValue
+                )
+            : colorEl + seriesName + formattedValue;
+    },
+
+    /**
+     * @return {boolean}
+     */
+    isAnimationEnabled: function () {
+        if (env.node) {
+            return false;
+        }
+
+        var animationEnabled = this.getShallow('animation');
+        if (animationEnabled) {
+            if (this.getData().count() > this.getShallow('animationThreshold')) {
+                animationEnabled = false;
             }
-            return animationEnabled;
-        },
+        }
+        return animationEnabled;
+    },
 
-        restoreData: function () {
-            set(this, 'data', get(this, 'dataBeforeProcessed').cloneShallow());
-        },
+    restoreData: function () {
+        this.dataTask.dirty();
+    },
 
-        getColorFromPalette: function (name, scope) {
-            var ecModel = this.ecModel;
-            // PENDING
-            var color = colorPaletteMixin.getColorFromPalette.call(this, name, scope);
-            if (!color) {
-                color = ecModel.getColorFromPalette(name, scope);
-            }
-            return color;
-        },
+    getColorFromPalette: function (name, scope, requestColorNum) {
+        var ecModel = this.ecModel;
+        // PENDING
+        var color = colorPaletteMixin.getColorFromPalette.call(this, name, scope, requestColorNum);
+        if (!color) {
+            color = ecModel.getColorFromPalette(name, scope, requestColorNum);
+        }
+        return color;
+    },
 
-        /**
-         * Get data indices for show tooltip content. See tooltip.
-         * @abstract
-         * @param {Array.<string>|string} dim
-         * @param {Array.<number>} value
-         * @param {module:echarts/coord/single/SingleAxis} baseAxis
-         * @return {Object} {dataIndices, nestestValue}.
-         */
-        getAxisTooltipData: null,
+    /**
+     * Use `data.mapDimension(coordDim, true)` instead.
+     * @deprecated
+     */
+    coordDimToDataDim: function (coordDim) {
+        return this.getRawData().mapDimension(coordDim, true);
+    },
 
-        /**
-         * See tooltip.
-         * @abstract
-         * @param {number} dataIndex
-         * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
-         */
-        getTooltipPosition: null
-    });
+    /**
+     * Get progressive rendering count each step
+     * @return {number}
+     */
+    getProgressive: function () {
+        return this.get('progressive');
+    },
 
-    zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
-    zrUtil.mixin(SeriesModel, colorPaletteMixin);
+    /**
+     * Get progressive rendering count each step
+     * @return {number}
+     */
+    getProgressiveThreshold: function () {
+        return this.get('progressiveThreshold');
+    },
 
-    return SeriesModel;
+    /**
+     * Get data indices for show tooltip content. See tooltip.
+     * @abstract
+     * @param {Array.<string>|string} dim
+     * @param {Array.<number>} value
+     * @param {module:echarts/coord/single/SingleAxis} baseAxis
+     * @return {Object} {dataIndices, nestestValue}.
+     */
+    getAxisTooltipData: null,
+
+    /**
+     * See tooltip.
+     * @abstract
+     * @param {number} dataIndex
+     * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
+     */
+    getTooltipPosition: null,
+
+    /**
+     * @see {module:echarts/stream/Scheduler}
+     */
+    pipeTask: null,
+
+    /**
+     * Convinient for override in extended class.
+     * @protected
+     * @type {Function}
+     */
+    preventIncremental: null,
+
+    /**
+     * @public
+     * @readOnly
+     * @type {Object}
+     */
+    pipelineContext: null
+
 });
+
+
+zrUtil.mixin(SeriesModel, dataFormatMixin);
+zrUtil.mixin(SeriesModel, colorPaletteMixin);
+
+/**
+ * MUST be called after `prepareSource` called
+ * Here we need to make auto series, especially for auto legend. But we
+ * do not modify series.name in option to avoid side effects.
+ */
+function autoSeriesName(seriesModel) {
+    // User specified name has higher priority, otherwise it may cause
+    // series can not be queried unexpectedly.
+    var name = seriesModel.name;
+    if (modelUtil.DEFAULT_COMPONENT_NAME === name) {
+        seriesModel.name = getSeriesAutoName(seriesModel) || name;
+    }
+}
+
+function getSeriesAutoName(seriesModel) {
+    var data = seriesModel.getRawData();
+    var dataDims = data.mapDimension('seriesName', true);
+    var nameArr = [];
+    zrUtil.each(dataDims, function (dataDim) {
+        var dimInfo = data.getDimensionInfo(dataDim);
+        dimInfo.displayName && nameArr.push(dimInfo.displayName);
+    });
+    return nameArr.join(' ');
+}
+
+function dataTaskCount(context) {
+    return context.model.getRawData().count();
+}
+
+function dataTaskReset(context) {
+    var seriesModel = context.model;
+    seriesModel.setData(seriesModel.getRawData().cloneShallow());
+    return dataTaskProgress;
+}
+
+function dataTaskProgress(param, context) {
+    // Avoid repead cloneShallow when data just created in reset.
+    if (param.end > context.outputData.count()) {
+        context.model.getRawData().cloneShallow(context.outputData);
+    }
+}
+
+// TODO refactor
+function wrapData(data, seriesModel) {
+    zrUtil.each(data.CHANGABLE_METHODS, function (methodName) {
+        data.wrapMethod(methodName, zrUtil.curry(onDataSelfChange, seriesModel));
+    });
+}
+
+function onDataSelfChange(seriesModel) {
+    var task = getCurrentTask(seriesModel);
+    if (task) {
+        // Consider case: filter, selectRange
+        task.setOutputEnd(this.count());
+    }
+}
+
+function getCurrentTask(seriesModel) {
+    var scheduler = (seriesModel.ecModel || {}).scheduler;
+    var pipeline = scheduler && scheduler.getPipeline(seriesModel.uid);
+
+    if (pipeline) {
+        // When pipline finished, the currrentTask keep the last
+        // task (renderTask).
+        var task = pipeline.currentTask;
+        if (task) {
+            var agentStubMap = task.agentStubMap;
+            if (agentStubMap) {
+                task = agentStubMap.get(seriesModel.uid);
+            }
+        }
+        return task;
+    }
+}
+
+export default SeriesModel;

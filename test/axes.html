@@ -1,9 +1,9 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
@@ -54,19 +54,19 @@
 
 
             require([
-                'echarts',
-                'zrender/core/util',
-                'echarts/chart/line',
-                'echarts/chart/bar',
-                'echarts/chart/parallel',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/polar',
-                'echarts/component/parallel',
-                'echarts/component/tooltip'
-            ], function (ec, zu) {
+                'echarts'
+                // 'zrender/core/util',
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/parallel',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/parallel',
+                // 'echarts/component/tooltip'
+            ], function (ec) {
                 echarts = ec;
-                zrUtil = zu;
+                zrUtil = ec.util;
 
 
 
@@ -430,7 +430,7 @@
                 el.innerHTML = '<div class="ec"></div><label>' + encodeHTML(label) + '</label>';
                 containerEl.appendChild(el);
 
-                var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                var chart = echarts.init(el.firstChild, null, { });
                 chart.setOption(zrUtil.merge(opt, getOption()));
             }
 

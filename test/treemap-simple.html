@@ -1,21 +1,21 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
-        <link rel="stylesheet" href="reset.css" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <div id="main"></div>
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/treemap',
+                'echarts'
+                // 'echarts/chart/treemap',
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({

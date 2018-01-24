@@ -1,49 +1,29 @@
-define(function (require) {
+import * as graphic from '../../util/graphic';
+import {getDefaultLabel} from '../helper/labelHelper';
 
-    var zrUtil = require('zrender/core/util');
-    var graphic = require('../../util/graphic');
+export function setLabel(
+    normalStyle, hoverStyle, itemModel, color, seriesModel, dataIndex, labelPositionOutside
+) {
+    var labelModel = itemModel.getModel('label');
+    var hoverLabelModel = itemModel.getModel('emphasis.label');
 
-    var helper = {};
-
-    helper.setLabel = function (
-        normalStyle, hoverStyle, itemModel, color, seriesModel, dataIndex, labelPositionOutside
-    ) {
-        var labelModel = itemModel.getModel('label.normal');
-        var hoverLabelModel = itemModel.getModel('label.emphasis');
-
-        if (labelModel.get('show')) {
-            setLabel(
-                normalStyle, labelModel, color,
-                zrUtil.retrieve2(
-                    seriesModel.getFormattedLabel(dataIndex, 'normal'),
-                    seriesModel.getRawValue(dataIndex)
-                ),
-                labelPositionOutside
-            );
+    graphic.setLabelStyle(
+        normalStyle, hoverStyle, labelModel, hoverLabelModel,
+        {
+            labelFetcher: seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+            isRectText: true,
+            autoColor: color
         }
-        else {
-            normalStyle.text = null;
-        }
+    );
 
-        if (hoverLabelModel.get('show')) {
-            setLabel(
-                hoverStyle, hoverLabelModel, false,
-                seriesModel.getFormattedLabel(dataIndex, 'emphasis'),
-                labelPositionOutside
-            );
-        }
-        else {
-            hoverStyle.text = null;
-        }
-    };
+    fixPosition(normalStyle);
+    fixPosition(hoverStyle);
+}
 
-    function setLabel(style, model, defaultColor, labelText, labelPositionOutside) {
-        graphic.setText(style, model, defaultColor);
-        style.text = labelText;
-        if (style.textPosition === 'outside') {
-            style.textPosition = labelPositionOutside;
-        }
+function fixPosition(style, labelPositionOutside) {
+    if (style.textPosition === 'outside') {
+        style.textPosition = labelPositionOutside;
     }
-
-    return helper;
-});
+}

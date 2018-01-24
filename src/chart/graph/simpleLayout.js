@@ -1,42 +1,41 @@
-define(function (require) {
+import {each} from 'zrender/src/core/util';
+import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
 
-    var simpleLayoutHelper = require('./simpleLayoutHelper');
-    var simpleLayoutEdge = require('./simpleLayoutEdge');
+export default function (ecModel, api) {
+    ecModel.eachSeriesByType('graph', function (seriesModel) {
+        var layout = seriesModel.get('layout');
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys && coordSys.type !== 'view') {
+            var data = seriesModel.getData();
 
-    return function (ecModel, api) {
-        ecModel.eachSeriesByType('graph', function (seriesModel) {
-            var layout = seriesModel.get('layout');
-            var coordSys = seriesModel.coordinateSystem;
-            if (coordSys && coordSys.type !== 'view') {
-                var data = seriesModel.getData();
-                var dimensions = coordSys.dimensions;
+            var dimensions = [];
+            each(coordSys.dimensions, function (coordDim) {
+                dimensions = dimensions.concat(data.mapDimension(coordDim, true));
+            });
 
-                data.each(dimensions, function () {
-                    var hasValue;
-                    var args = arguments;
-                    var value = [];
-                    for (var i = 0; i < dimensions.length; i++) {
-                        if (!isNaN(args[i])) {
-                            hasValue = true;
-                        }
-                        value.push(args[i]);
+            for (var dataIndex = 0; dataIndex < data.count(); dataIndex++) {
+                var value = [];
+                var hasValue = false;
+                for (var i = 0; i < dimensions.length; i++) {
+                    var val = data.get(dimensions[i], dataIndex);
+                    if (!isNaN(val)) {
+                        hasValue = true;
                     }
-                    var idx = args[args.length - 1];
-
-                    if (hasValue) {
-                        data.setItemLayout(idx, coordSys.dataToPoint(value));
-                    }
-                    else {
-                        // Also {Array.<number>}, not undefined to avoid if...else... statement
-                        data.setItemLayout(idx, [NaN, NaN]);
-                    }
-                });
-
-                simpleLayoutEdge(data.graph);
+                    value.push(val);
+                }
+                if (hasValue) {
+                    data.setItemLayout(dataIndex, coordSys.dataToPoint(value));
+                }
+                else {
+                    // Also {Array.<number>}, not undefined to avoid if...else... statement
+                    data.setItemLayout(dataIndex, [NaN, NaN]);
+                }
             }
-            else if (!layout || layout === 'none') {
-                simpleLayoutHelper(seriesModel);
-            }
-        });
-    };
-});
+
+            simpleLayoutEdge(data.graph);
+        }
+        else if (!layout || layout === 'none') {
+            simpleLayout(seriesModel);
+        }
+    });
+}

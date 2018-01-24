@@ -1,43 +1,75 @@
-define(function (require) {
+import createRenderPlanner from '../helper/createRenderPlanner';
 
-    return function (ecModel) {
-        ecModel.eachSeriesByType('lines', function (seriesModel) {
-            var coordSys = seriesModel.coordinateSystem;
-            var lineData = seriesModel.getData();
+export default {
+    seriesType: 'lines',
 
-            // FIXME Use data dimensions ?
-            lineData.each(function (idx) {
-                var itemModel = lineData.getItemModel(idx);
+    plan: createRenderPlanner(),
 
-                var coords = (itemModel.option instanceof Array) ?
-                    itemModel.option : itemModel.get('coords');
+    reset: function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        var isPolyline = seriesModel.get('polyline');
+        var isLarge = seriesModel.pipelineContext.large;
 
-                if (__DEV__) {
-                    if (!(coords instanceof Array && coords.length > 0 && coords[0] instanceof Array)) {
-                        throw new Error('Invalid coords ' + JSON.stringify(coords) + '. Lines must have 2d coords array in data item.');
+        function progress(params, lineData) {
+            var lineCoords = [];
+            if (isLarge) {
+                var points;
+                var segCount = params.end - params.start;
+                if (isPolyline) {
+                    var totalCoordsCount = 0;
+                    for (var i = params.start; i < params.end; i++) {
+                        totalCoordsCount += seriesModel.getLineCoordsCount(i);
                     }
-                }
-                var pts = [];
-
-                if (seriesModel.get('polyline')) {
-                    for (var i = 0; i < coords.length; i++) {
-                        pts.push(coordSys.dataToPoint(coords[i]));
-                    }
+                    points = new Float32Array(segCount + totalCoordsCount * 2);
                 }
                 else {
-                    pts[0] = coordSys.dataToPoint(coords[0]);
-                    pts[1] = coordSys.dataToPoint(coords[1]);
+                    points = new Float32Array(segCount * 2);
+                }
 
-                    var curveness = itemModel.get('lineStyle.normal.curveness');
-                    if (+curveness) {
-                        pts[2] = [
-                            (pts[0][0] + pts[1][0]) / 2 - (pts[0][1] - pts[1][1]) * curveness,
-                            (pts[0][1] + pts[1][1]) / 2 - (pts[1][0] - pts[0][0]) * curveness
-                        ];
+                var offset = 0;
+                var pt = [];
+                for (var i = params.start; i < params.end; i++) {
+                    var len = seriesModel.getLineCoords(i, lineCoords);
+                    if (isPolyline) {
+                        points[offset++] = len;
+                    }
+                    for (var k = 0; k < len; k++) {
+                        pt = coordSys.dataToPoint(lineCoords[k], false, pt);
+                        points[offset++] = pt[0];
+                        points[offset++] = pt[1];
                     }
                 }
-                lineData.setItemLayout(idx, pts);
-            });
-        });
-    };
-});
+
+                lineData.setLayout('linesPoints', points);
+            }
+            else {
+                for (var i = params.start; i < params.end; i++) {
+                    var itemModel = lineData.getItemModel(i);
+                    var len = seriesModel.getLineCoords(i, lineCoords);
+
+                    var pts = [];
+                    if (isPolyline) {
+                        for (var j = 0; j < len; j++) {
+                            pts.push(coordSys.dataToPoint(lineCoords[j]));
+                        }
+                    }
+                    else {
+                        pts[0] = coordSys.dataToPoint(lineCoords[0]);
+                        pts[1] = coordSys.dataToPoint(lineCoords[1]);
+
+                        var curveness = itemModel.get('lineStyle.curveness');
+                        if (+curveness) {
+                            pts[2] = [
+                                (pts[0][0] + pts[1][0]) / 2 - (pts[0][1] - pts[1][1]) * curveness,
+                                (pts[0][1] + pts[1][1]) / 2 - (pts[1][0] - pts[0][0]) * curveness
+                            ];
+                        }
+                    }
+                    lineData.setItemLayout(i, pts);
+                }
+            }
+        }
+
+        return { progress: progress };
+    }
+};

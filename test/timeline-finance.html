@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -42,18 +42,18 @@
 // }
 
             require([
-                'echarts',
-                'echarts/chart/bar',
-                'echarts/chart/pie',
-                'echarts/component/title',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/timeline'
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/chart/pie',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/timeline'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
 var option = {
@@ -66,12 +66,19 @@ var option = {
             autoPlay: true,
             // currentIndex: 2,
             playInterval: 1000,
-            // controlStyle: {
-            //     position: 'left'
-            // },
+            controlStyle: {
+                showNextBtn: false,
+                showPrevBtn: false,
+                position: 'left'
+            },
             data: [
                 '2002-01-01','2003-01-01','2004-01-01',
                 {
+                    itemStyle: {
+                        normal: {
+                            color: 'green'
+                        }
+                    },
                     value: '2005-01-01',
                     tooltip: {
                         formatter: '{b} GDP达到一个高度'

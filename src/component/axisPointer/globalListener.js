@@ -1,125 +1,119 @@
-define(function(require) {
+import * as zrUtil from 'zrender/src/core/util';
+import env from 'zrender/src/core/env';
+import {makeInner} from '../../util/model';
 
-    var env = require('zrender/core/env');
-    var zrUtil = require('zrender/core/util');
-    var get = require('../../util/model').makeGetter();
+var inner = makeInner();
+var each = zrUtil.each;
 
-    var each = zrUtil.each;
+/**
+ * @param {string} key
+ * @param {module:echarts/ExtensionAPI} api
+ * @param {Function} handler
+ *      param: {string} currTrigger
+ *      param: {Array.<number>} point
+ */
+export function register(key, api, handler) {
+    if (env.node) {
+        return;
+    }
 
-    var globalListener = {};
+    var zr = api.getZr();
+    inner(zr).records || (inner(zr).records = {});
 
-    /**
-     * @param {string} key
-     * @param {module:echarts/ExtensionAPI} api
-     * @param {Function} handler
-     *      param: {string} currTrigger
-     *      param: {Array.<number>} point
-     */
-    globalListener.register = function (key, api, handler) {
-        if (env.node) {
-            return;
-        }
+    initGlobalListeners(zr, api);
 
-        var zr = api.getZr();
-        get(zr).records || (get(zr).records = {});
+    var record = inner(zr).records[key] || (inner(zr).records[key] = {});
+    record.handler = handler;
+}
 
-        initGlobalListeners(zr, api);
+function initGlobalListeners(zr, api) {
+    if (inner(zr).initialized) {
+        return;
+    }
 
-        var record = get(zr).records[key] || (get(zr).records[key] = {});
-        record.handler = handler;
-    };
+    inner(zr).initialized = true;
 
-    function initGlobalListeners(zr, api) {
-        if (get(zr).initialized) {
-            return;
-        }
+    useHandler('click', zrUtil.curry(doEnter, 'click'));
+    useHandler('mousemove', zrUtil.curry(doEnter, 'mousemove'));
+    // useHandler('mouseout', onLeave);
+    useHandler('globalout', onLeave);
 
-        get(zr).initialized = true;
+    function useHandler(eventType, cb) {
+        zr.on(eventType, function (e) {
+            var dis = makeDispatchAction(api);
 
-        useHandler('click', zrUtil.curry(doEnter, 'click'));
-        useHandler('mousemove', zrUtil.curry(doEnter, 'mousemove'));
-        // useHandler('mouseout', onLeave);
-        useHandler('globalout', onLeave);
-
-        function useHandler(eventType, cb) {
-            zr.on(eventType, function (e) {
-                var dis = makeDispatchAction(api);
-
-                each(get(zr).records, function (record) {
-                    record && cb(record, e, dis.dispatchAction);
-                });
-
-                dispatchTooltipFinally(dis.pendings, api);
+            each(inner(zr).records, function (record) {
+                record && cb(record, e, dis.dispatchAction);
             });
-        }
+
+            dispatchTooltipFinally(dis.pendings, api);
+        });
     }
+}
 
-    function dispatchTooltipFinally(pendings, api) {
-        var showLen = pendings.showTip.length;
-        var hideLen = pendings.hideTip.length;
+function dispatchTooltipFinally(pendings, api) {
+    var showLen = pendings.showTip.length;
+    var hideLen = pendings.hideTip.length;
 
-        var actuallyPayload;
-        if (showLen) {
-            actuallyPayload = pendings.showTip[showLen - 1];
-        }
-        else if (hideLen) {
-            actuallyPayload = pendings.hideTip[hideLen - 1];
-        }
-        if (actuallyPayload) {
-            actuallyPayload.dispatchAction = null;
-            api.dispatchAction(actuallyPayload);
-        }
+    var actuallyPayload;
+    if (showLen) {
+        actuallyPayload = pendings.showTip[showLen - 1];
     }
-
-    function onLeave(record, e, dispatchAction) {
-        record.handler('leave', null, dispatchAction);
+    else if (hideLen) {
+        actuallyPayload = pendings.hideTip[hideLen - 1];
     }
-
-    function doEnter(currTrigger, record, e, dispatchAction) {
-        record.handler(currTrigger, e, dispatchAction);
+    if (actuallyPayload) {
+        actuallyPayload.dispatchAction = null;
+        api.dispatchAction(actuallyPayload);
     }
+}
 
-    function makeDispatchAction(api) {
-        var pendings = {
-            showTip: [],
-            hideTip: []
-        };
-        // FIXME
-        // better approach?
-        // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
-        // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
-        // So we have to add "final stage" to merge those dispatched actions.
-        var dispatchAction = function (payload) {
-            var pendingList = pendings[payload.type];
-            if (pendingList) {
-                pendingList.push(payload);
-            }
-            else {
-                payload.dispatchAction = dispatchAction;
-                api.dispatchAction(payload);
-            }
-        };
+function onLeave(record, e, dispatchAction) {
+    record.handler('leave', null, dispatchAction);
+}
 
-        return {
-            dispatchAction: dispatchAction,
-            pendings: pendings
-        };
-    }
+function doEnter(currTrigger, record, e, dispatchAction) {
+    record.handler(currTrigger, e, dispatchAction);
+}
 
-    /**
-     * @param {string} key
-     * @param {module:echarts/ExtensionAPI} api
-     */
-    globalListener.unregister = function (key, api) {
-        if (env.node) {
-            return;
+function makeDispatchAction(api) {
+    var pendings = {
+        showTip: [],
+        hideTip: []
+    };
+    // FIXME
+    // better approach?
+    // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
+    // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
+    // So we have to add "final stage" to merge those dispatched actions.
+    var dispatchAction = function (payload) {
+        var pendingList = pendings[payload.type];
+        if (pendingList) {
+            pendingList.push(payload);
         }
-        var zr = api.getZr();
-        var record = (get(zr).records || {})[key];
-        if (record) {
-            get(zr).records[key] = null;
+        else {
+            payload.dispatchAction = dispatchAction;
+            api.dispatchAction(payload);
         }
     };
 
-    return globalListener;
-});
+    return {
+        dispatchAction: dispatchAction,
+        pendings: pendings
+    };
+}
+
+/**
+ * @param {string} key
+ * @param {module:echarts/ExtensionAPI} api
+ */
+export function unregister(key, api) {
+    if (env.node) {
+        return;
+    }
+    var zr = api.getZr();
+    var record = (inner(zr).records || {})[key];
+    if (record) {
+        inner(zr).records[key] = null;
+    }
+}

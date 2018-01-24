@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/dat.gui.min.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
@@ -17,17 +17,20 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/gauge',
-                'echarts/component/legend',
-                'echarts/component/tooltip'
+                'echarts'
+                // 'echarts/chart/gauge',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 var option ={
+                    aria: {
+                        show: true
+                    },
                     tooltip : {
                         formatter: '{a} <br/>{c} {b}'
                     },

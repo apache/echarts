@@ -1,0 +1,116 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <div class="chart" id="main"></div>
+
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/pie',
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/map',
+                // 'echarts/chart/parallel',
+                // 'echarts/chart/radar',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/geo',
+                // 'echarts/component/singleAxis',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom'
+            ], function (ec) {
+                echarts = ec;
+
+                $.getJSON('./data/czech_geo.json', function (geoJSON) {
+
+                    echarts.registerMap('nestedMap', geoJSON);
+
+                    var option = {
+                        tooltip: {},
+                        // visualMap: {
+                        //     min: 0,
+                        //     max: 1500,
+                        //     left: 'left',
+                        //     top: 'bottom',
+                        //     text: ['High','Low'],
+                        //     seriesIndex: [1, 2, 3],
+                        //     inRange: {
+                        //         color: ['#006edd', '#e0ffff']
+                        //     },
+                        //     calculable : true
+                        // },
+                        tooltip: {},
+                        series: [
+                            {
+                                name: 'categoryA',
+                                type: 'map',
+                                map: 'nestedMap',
+                                geoIndex: 0,
+                                itemStyle: {
+                                    normal: {
+                                        // areaColor: 'red'
+                                        borderColor: 'red',
+                                        borderWidth: 2
+                                    },
+                                    emphasis: {
+                                        borderColor: 'blue',
+                                        borderWidth: 2
+                                    }
+                                },
+                                data:[
+                                    {name: 'Praha', value: 123},
+                                    {name: 'Plzeňský kraj', value: 321},
+                                    {name: 'Středočeský kraj', value: 521}
+                                ]
+                            }
+                        ]
+                    };
+
+                    testHelper.createChart(echarts, 'main', option);
+                });
+
+            });
+
+        </script>
+    </body>
+</html>

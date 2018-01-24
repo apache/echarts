@@ -1,9 +1,10 @@
-define(function (require) {
 
-    return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
-
-        // Encoding visual for all series include which is filtered for legend drawing
-        ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
+export default function (seriesType, defaultSymbolType, legendSymbol) {
+    // Encoding visual for all series include which is filtered for legend drawing
+    return {
+        seriesType: seriesType,
+        performRawSeries: true,
+        reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
             var symbolType = seriesModel.get('symbol') || defaultSymbolType;
@@ -16,16 +17,21 @@ define(function (require) {
             });
 
             // Only visible series has each data be visual encoded
-            if (!ecModel.isSeriesFiltered(seriesModel)) {
+            if (ecModel.isSeriesFiltered(seriesModel)) {
+                return;
+            }
+
+            var hasCallback = typeof symbolSize === 'function';
+
+            function dataEach(data, idx) {
                 if (typeof symbolSize === 'function') {
-                    data.each(function (idx) {
-                        var rawValue = seriesModel.getRawValue(idx);
-                        // FIXME
-                        var params = seriesModel.getDataParams(idx);
-                        data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
-                    });
+                    var rawValue = seriesModel.getRawValue(idx);
+                    // FIXME
+                    var params = seriesModel.getDataParams(idx);
+                    data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
                 }
-                data.each(function (idx) {
+
+                if (data.hasItemOption) {
                     var itemModel = data.getItemModel(idx);
                     var itemSymbolType = itemModel.getShallow('symbol', true);
                     var itemSymbolSize = itemModel.getShallow('symbolSize', true);
@@ -37,8 +43,10 @@ define(function (require) {
                         // PENDING Transform symbolSize ?
                         data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
                     }
-                });
+                }
             }
-        });
+
+            return { dataEach: (data.hasItemOption || hasCallback) ? dataEach : null };
+        }
     };
-});
+}

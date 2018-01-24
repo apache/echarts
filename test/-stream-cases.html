@@ -1,0 +1,39 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <h1>Necessary cases for quick test.</h1>
+        <div id="cases" style="margin: 20px">
+        </div>
+
+        <script type="text/javascript">
+            var cases = [
+                './lines-ny-appendData.html',
+                './scatter-random-stream.html',
+                './scatter-random-stream-fix-axis.html',
+                './scatter-gps.html',
+                './scatter-weibo.html',
+                './lines-flight.html',
+                './stream-filter.html',
+                './scatter-stream-visual.html'
+            ];
+
+
+            var el = document.getElementById('cases');
+            var html = [];
+
+            for (var i = 0; i < cases.length; i++) {
+                html.push(
+                    '<a target="_blank" href="' + cases[i] + '">' + cases[i] + '</div>'
+                );
+            }
+
+            el.innerHTML = html.join('<br>');
+
+        </script>
+    </body>
+</html>

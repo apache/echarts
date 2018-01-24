@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>Option View</title>
-    <script src="esl.js"></script>
-    <script src="config.js"></script>
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -26,14 +26,14 @@
         var chart;
 
         require([
-            'echarts',
-            'echarts/util/format',
-            'echarts/component/tooltip',
-            'echarts/component/legend',
-            'echarts/chart/treemap'
-        ], function (ec, format) {
+            'echarts'
+            // 'echarts/util/format',
+            // 'echarts/component/tooltip',
+            // 'echarts/component/legend',
+            // 'echarts/chart/treemap'
+        ], function (ec) {
             echarts = ec;
-            formatUtil = format;
+            formatUtil = echarts.format;
 
             chart = echarts.init($('#option-view-chart')[0]);
             chart.showLoading();
@@ -126,8 +126,8 @@
                 }]
             });
 
-            chart.on('click', function (params) {
-                console.log(params);
+            chart.getZr().on('mousedown', function (params) {
+                console.log(arguments);
             });
         }
 

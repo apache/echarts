@@ -1,43 +1,39 @@
-define(function(require) {
-    'use strict';
+import * as zrUtil from 'zrender/src/core/util';
+import Axis from '../Axis';
 
-    var zrUtil = require('zrender/core/util');
-    var Axis = require('../Axis');
+function AngleAxis(scale, angleExtent) {
 
-    function AngleAxis(scale, angleExtent) {
+    angleExtent = angleExtent || [0, 360];
 
-        angleExtent = angleExtent || [0, 360];
+    Axis.call(this, 'angle', scale, angleExtent);
 
-        Axis.call(this, 'angle', scale, angleExtent);
+    /**
+     * Axis type
+     *  - 'category'
+     *  - 'value'
+     *  - 'time'
+     *  - 'log'
+     * @type {string}
+     */
+    this.type = 'category';
+}
 
-        /**
-         * Axis type
-         *  - 'category'
-         *  - 'value'
-         *  - 'time'
-         *  - 'log'
-         * @type {string}
-         */
-        this.type = 'category';
-    }
+AngleAxis.prototype = {
 
-    AngleAxis.prototype = {
+    constructor: AngleAxis,
 
-        constructor: AngleAxis,
+    /**
+     * @override
+     */
+    pointToData: function (point, clamp) {
+        return this.polar.pointToData(point, clamp)[this.dim === 'radius' ? 0 : 1];
+    },
 
-        /**
-         * @override
-         */
-        pointToData: function (point, clamp) {
-            return this.polar.pointToData(point, clamp)[this.dim === 'radius' ? 0 : 1];
-        },
+    dataToAngle: Axis.prototype.dataToCoord,
 
-        dataToAngle: Axis.prototype.dataToCoord,
+    angleToData: Axis.prototype.coordToData
+};
 
-        angleToData: Axis.prototype.coordToData
-    };
+zrUtil.inherits(AngleAxis, Axis);
 
-    zrUtil.inherits(AngleAxis, Axis);
-
-    return AngleAxis;
-});
+export default AngleAxis;

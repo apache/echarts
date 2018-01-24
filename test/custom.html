@@ -1,11 +1,11 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
@@ -54,14 +54,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var data = [];
@@ -216,14 +216,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 // See https://github.com/ecomfe/echarts-stat
@@ -304,17 +304,18 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
-                var data = [[10, 16, 3], [16, 18, 15], [18, 26, 12], [26, 32, 22], [32, 56, 7], [56, 62, 17]];
+                // var data = [[10, 16, 3], [16, 18, 15], [18, 26, 12], [26, 32, 22], [32, 56, 7], [56, 62, 17]];
+                var data = [[10, 16, 3, 'A'], [16, 18, 15, 'B'], [18, 26, 12, 'C'], [26, 32, 22, 'D'], [32, 56, 7, 'E'], [56, 62, 17, 'F']];
                 var colorList = ['#4f81bd', '#c0504d', '#9bbb59', '#604a7b', '#948a54', '#e46c0b'];
                 data = echarts.util.map(data, function (item, index) {
                     return {
@@ -390,14 +391,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var categoryData = [];
@@ -515,13 +516,13 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
                 // Prime Costs and Prices for ACME Fashion\nCollection "Spring-Summer, 2016"
                 // Data from https://playground.anychart.com/gallery/7.12.0/Error_Charts/Marker_Chart
@@ -670,14 +671,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var yearCount = 7;
@@ -807,14 +808,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var data = [];
@@ -894,15 +895,15 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/heatmap',
-                'echarts/chart/custom',
-                'echarts/component/legend',
-                'echarts/component/calendar',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/heatmap',
+                // 'echarts/chart/custom',
+                // 'echarts/component/legend',
+                // 'echarts/component/calendar',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var layouts = [
@@ -1049,14 +1050,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var textData = [];
@@ -1177,14 +1178,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/component/polar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/component/polar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 function renderItem(params, api) {
@@ -1288,14 +1289,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/custom',
-                'echarts/component/polar',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/custom',
+                // 'echarts/component/polar',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var data = [

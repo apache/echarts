@@ -1,40 +1,37 @@
-define(function (require) {
+import MarkerModel from './MarkerModel';
 
-    return require('./MarkerModel').extend({
+export default MarkerModel.extend({
 
-        type: 'markLine',
+    type: 'markLine',
 
-        defaultOption: {
-            zlevel: 0,
-            z: 5,
+    defaultOption: {
+        zlevel: 0,
+        z: 5,
 
-            symbol: ['circle', 'arrow'],
-            symbolSize: [8, 16],
+        symbol: ['circle', 'arrow'],
+        symbolSize: [8, 16],
 
-            //symbolRotate: 0,
+        //symbolRotate: 0,
 
-            precision: 2,
-            tooltip: {
-                trigger: 'item'
-            },
+        precision: 2,
+        tooltip: {
+            trigger: 'item'
+        },
+        label: {
+            show: true,
+            position: 'end'
+        },
+        lineStyle: {
+            type: 'dashed'
+        },
+        emphasis: {
             label: {
-                normal: {
-                    show: true,
-                    position: 'end'
-                },
-                emphasis: {
-                    show: true
-                }
+                show: true
             },
             lineStyle: {
-                normal: {
-                    type: 'dashed'
-                },
-                emphasis: {
-                    width: 3
-                }
-            },
-            animationEasing: 'linear'
-        }
-    });
+                width: 3
+            }
+        },
+        animationEasing: 'linear'
+    }
 });

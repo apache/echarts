@@ -1,0 +1,68 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+            require([
+                'echarts'
+                // 'echarts/chart/tree',
+                // 'echarts/component/tooltip'
+                ], function (echarts) {
+                    var chart = echarts.init(document.getElementById('main'), null, {
+
+                    });
+
+                    window.onresize = function () {
+                        chart.resize();
+                    };
+
+                    $.getJSON('./data/flare.json')
+                    .done(function (data) {
+                        chart.setOption({
+
+                            tooltip: {
+                                trigger: 'item',
+                                triggerOn: 'mousemove'
+                            },
+
+                            series:[
+                                {
+                                    type: 'tree',
+
+                                    data: [data],
+
+                                    top: '18%',
+                                    bottom: '14%',
+
+                                    layout: 'radial',
+
+                                    symbol: 'emptyCircle',
+
+                                    symbolSize: 7,
+
+                                    initialTreeDepth: 3,
+
+                                    animationDurationUpdate: 750
+
+                                }
+                            ]
+                        });
+                    });
+                });
+        </script>
+    </body>
+</html>

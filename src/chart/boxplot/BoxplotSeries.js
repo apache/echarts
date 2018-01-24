@@ -1,72 +1,67 @@
-define(function(require) {
+import * as zrUtil from 'zrender/src/core/util';
+import SeriesModel from '../../model/Series';
+import {seriesModelMixin} from '../helper/whiskerBoxCommon';
 
-    'use strict';
+var BoxplotSeries = SeriesModel.extend({
 
-    var zrUtil = require('zrender/core/util');
-    var SeriesModel = require('../../model/Series');
-    var whiskerBoxCommon = require('../helper/whiskerBoxCommon');
+    type: 'series.boxplot',
 
-    var BoxplotSeries = SeriesModel.extend({
+    dependencies: ['xAxis', 'yAxis', 'grid'],
 
-        type: 'series.boxplot',
+    // TODO
+    // box width represents group size, so dimension should have 'size'.
 
-        dependencies: ['xAxis', 'yAxis', 'grid'],
+    /**
+     * @see <https://en.wikipedia.org/wiki/Box_plot>
+     * The meanings of 'min' and 'max' depend on user,
+     * and echarts do not need to know it.
+     * @readOnly
+     */
+    defaultValueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
 
-        // TODO
-        // box width represents group size, so dimension should have 'size'.
+    /**
+     * @type {Array.<string>}
+     * @readOnly
+     */
+    dimensions: null,
 
-        /**
-         * @see <https://en.wikipedia.org/wiki/Box_plot>
-         * The meanings of 'min' and 'max' depend on user,
-         * and echarts do not need to know it.
-         * @readOnly
-         */
-        defaultValueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
+    /**
+     * @override
+     */
+    defaultOption: {
+        zlevel: 0,                  // 一级层叠
+        z: 2,                       // 二级层叠
+        coordinateSystem: 'cartesian2d',
+        legendHoverLink: true,
 
-        /**
-         * @type {Array.<string>}
-         * @readOnly
-         */
-        dimensions: null,
+        hoverAnimation: true,
 
-        /**
-         * @override
-         */
-        defaultOption: {
-            zlevel: 0,                  // 一级层叠
-            z: 2,                       // 二级层叠
-            coordinateSystem: 'cartesian2d',
-            legendHoverLink: true,
+        // xAxisIndex: 0,
+        // yAxisIndex: 0,
 
-            hoverAnimation: true,
+        layout: null,               // 'horizontal' or 'vertical'
+        boxWidth: [7, 50],       // [min, max] can be percent of band width.
 
-            // xAxisIndex: 0,
-            // yAxisIndex: 0,
+        itemStyle: {
+            color: '#fff',
+            borderWidth: 1
+        },
 
-            layout: null,               // 'horizontal' or 'vertical'
-            boxWidth: [7, 50],       // [min, max] can be percent of band width.
-
+        emphasis: {
             itemStyle: {
-                normal: {
-                    color: '#fff',
-                    borderWidth: 1
-                },
-                emphasis: {
-                    borderWidth: 2,
-                    shadowBlur: 5,
-                    shadowOffsetX: 2,
-                    shadowOffsetY: 2,
-                    shadowColor: 'rgba(0,0,0,0.4)'
-                }
-            },
+                borderWidth: 2,
+                shadowBlur: 5,
+                shadowOffsetX: 2,
+                shadowOffsetY: 2,
+                shadowColor: 'rgba(0,0,0,0.4)'
+            }
+        },
 
-            animationEasing: 'elasticOut',
-            animationDuration: 800
-        }
-    });
-
-    zrUtil.mixin(BoxplotSeries, whiskerBoxCommon.seriesModelMixin, true);
-
-    return BoxplotSeries;
-
+        animationEasing: 'elasticOut',
+        animationDuration: 800
+    }
 });
+
+zrUtil.mixin(BoxplotSeries, seriesModelMixin, true);
+
+export default BoxplotSeries;

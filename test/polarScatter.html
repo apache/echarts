@@ -1,8 +1,8 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
     </head>
     <body>
         <style>
@@ -15,14 +15,14 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/polar'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 var data1 = [];

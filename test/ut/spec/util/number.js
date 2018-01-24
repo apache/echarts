@@ -2,7 +2,7 @@ describe('util/number', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/util/number']);
+    var testCase = utHelper.prepare(['echarts/src/util/number']);
 
     describe('linearMap', function () {
 

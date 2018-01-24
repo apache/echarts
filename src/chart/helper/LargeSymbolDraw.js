@@ -1,151 +1,256 @@
 // TODO Batch by color
 
-define(function (require) {
+import * as graphic from '../../util/graphic';
+import {createSymbol} from '../../util/symbol';
+import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
-    var graphic = require('../../util/graphic');
-    var symbolUtil = require('../../util/symbol');
+var BOOST_SIZE_THRESHOLD = 4;
 
-    var LargeSymbolPath = graphic.extendShape({
+var LargeSymbolPath = graphic.extendShape({
 
-        shape: {
-            points: null,
-            sizes: null
-        },
+    shape: {
+        points: null
+    },
 
-        symbolProxy: null,
+    symbolProxy: null,
 
-        buildPath: function (path, shape) {
-            var points = shape.points;
-            var sizes = shape.sizes;
+    buildPath: function (path, shape) {
+        var points = shape.points;
+        var size = shape.size;
 
-            var symbolProxy = this.symbolProxy;
-            var symbolProxyShape = symbolProxy.shape;
-            for (var i = 0; i < points.length; i++) {
-                var pt = points[i];
+        var symbolProxy = this.symbolProxy;
+        var symbolProxyShape = symbolProxy.shape;
+        var ctx = path.getContext ? path.getContext() : path;
+        var canBoost = ctx && size[0] < BOOST_SIZE_THRESHOLD;
 
-                if (isNaN(pt[0]) || isNaN(pt[1])) {
-                    continue;
-                }
-
-                var size = sizes[i];
-                if (size[0] < 4) {
-                    // Optimize for small symbol
-                    path.rect(
-                        pt[0] - size[0] / 2, pt[1] - size[1] / 2,
-                        size[0], size[1]
-                    );
-                }
-                else {
-                    symbolProxyShape.x = pt[0] - size[0] / 2;
-                    symbolProxyShape.y = pt[1] - size[1] / 2;
-                    symbolProxyShape.width = size[0];
-                    symbolProxyShape.height = size[1];
-
-                    symbolProxy.buildPath(path, symbolProxyShape, true);
-                }
-            }
-        },
-
-        findDataIndex: function (x, y) {
-            var shape = this.shape;
-            var points = shape.points;
-            var sizes = shape.sizes;
-
-            // Not consider transform
-            // Treat each element as a rect
-            // top down traverse
-            for (var i = points.length - 1; i >= 0; i--) {
-                var pt = points[i];
-                var size = sizes[i];
-                var x0 = pt[0] - size[0] / 2;
-                var y0 = pt[1] - size[1] / 2;
-                if (x >= x0 && y >= y0 && x <= x0 + size[0] && y <= y0 + size[1]) {
-                    // i is dataIndex
-                    return i;
-                }
-            }
-
-            return -1;
+        // Do draw in afterBrush.
+        if (canBoost) {
+            return;
         }
+
+        for (var i = 0; i < points.length;) {
+            var x = points[i++];
+            var y = points[i++];
+
+            if (isNaN(x) || isNaN(y)) {
+                continue;
+            }
+
+            symbolProxyShape.x = x - size[0] / 2;
+            symbolProxyShape.y = y - size[1] / 2;
+            symbolProxyShape.width = size[0];
+            symbolProxyShape.height = size[1];
+
+            symbolProxy.buildPath(path, symbolProxyShape, true);
+        }
+    },
+
+    afterBrush: function (ctx) {
+        var shape = this.shape;
+        var points = shape.points;
+        var size = shape.size;
+        var canBoost = size[0] < BOOST_SIZE_THRESHOLD;
+
+        if (!canBoost) {
+            return;
+        }
+
+        this.setTransform(ctx);
+        // PENDING If style or other canvas status changed?
+        for (var i = 0; i < points.length;) {
+            var x = points[i++];
+            var y = points[i++];
+            if (isNaN(x) || isNaN(y)) {
+                continue;
+            }
+            // fillRect is faster than building a rect path and draw.
+            // And it support light globalCompositeOperation.
+            ctx.fillRect(
+                x - size[0] / 2, y - size[1] / 2,
+                size[0], size[1]
+            );
+        }
+
+        this.restoreTransform(ctx);
+    },
+
+    findDataIndex: function (x, y) {
+        // TODO ???
+        // Consider transform
+
+        var shape = this.shape;
+        var points = shape.points;
+        var size = shape.size;
+
+        var w = Math.max(size[0], 4);
+        var h = Math.max(size[1], 4);
+
+        // Not consider transform
+        // Treat each element as a rect
+        // top down traverse
+        for (var idx = points.length / 2 - 1; idx >= 0; idx--) {
+            var i = idx * 2;
+            var x0 = points[i] - w / 2;
+            var y0 = points[i + 1] - h / 2;
+            if (x >= x0 && y >= y0 && x <= x0 + w && y <= y0 + h) {
+                return idx;
+            }
+        }
+
+        return -1;
+    }
+});
+
+function LargeSymbolDraw() {
+    this.group = new graphic.Group();
+}
+
+var largeSymbolProto = LargeSymbolDraw.prototype;
+
+largeSymbolProto.isPersistent = function () {
+    return !this._incremental;
+};
+
+/**
+ * Update symbols draw by new data
+ * @param {module:echarts/data/List} data
+ */
+largeSymbolProto.updateData = function (data) {
+    this.group.removeAll();
+    var symbolEl = new LargeSymbolPath({
+        rectHover: true,
+        cursor: 'default'
     });
 
-    function LargeSymbolDraw() {
-        this.group = new graphic.Group();
+    symbolEl.setShape({
+        points: data.getLayout('symbolPoints')
+    });
+    this._setCommon(symbolEl, data);
+    this.group.add(symbolEl);
 
-        this._symbolEl = new LargeSymbolPath({
-            // rectHover: true,
-            // cursor: 'default'
-        });
+    this._incremental = null;
+};
+
+largeSymbolProto.updateLayout = function (data) {
+    if (this._incremental) {
+        return;
     }
 
-    var largeSymbolProto = LargeSymbolDraw.prototype;
-
-    /**
-     * Update symbols draw by new data
-     * @param {module:echarts/data/List} data
-     */
-    largeSymbolProto.updateData = function (data) {
-        this.group.removeAll();
-
-        var symbolEl = this._symbolEl;
-
-        var seriesModel = data.hostModel;
-
-        symbolEl.setShape({
-            points: data.mapArray(data.getItemLayout),
-            sizes: data.mapArray(
-                function (idx) {
-                    var size = data.getItemVisual(idx, 'symbolSize');
-                    if (!(size instanceof Array)) {
-                        size = [size, size];
-                    }
-                    return size;
-                }
-            )
-        });
-
-        // Create symbolProxy to build path for each data
-        symbolEl.symbolProxy = symbolUtil.createSymbol(
-            data.getVisual('symbol'), 0, 0, 0, 0
-        );
-        // Use symbolProxy setColor method
-        symbolEl.setColor = symbolEl.symbolProxy.setColor;
-
-        symbolEl.useStyle(
-            seriesModel.getModel('itemStyle.normal').getItemStyle(['color'])
-        );
-
-        var visualColor = data.getVisual('color');
-        if (visualColor) {
-            symbolEl.setColor(visualColor);
+    var points = data.getLayout('symbolPoints');
+    this.group.eachChild(function (child) {
+        if (child.startIndex != null) {
+            var len = (child.endIndex - child.startIndex) * 2;
+            var byteOffset = child.startIndex * 4 * 2;
+            points = new Float32Array(points.buffer, byteOffset, len);
         }
+        child.setShape('points', points);
+    });
+};
 
+largeSymbolProto.incrementalPrepareUpdate = function (data) {
+    this.group.removeAll();
+
+    this._clearIncremental();
+    // Only use incremental displayables when data amount is larger than 2 million.
+    // PENDING Incremental data?
+    if (data.count() > 2e6) {
+        if (!this._incremental) {
+            this._incremental = new IncrementalDisplayable({
+                silent: true
+            });
+        }
+        this.group.add(this._incremental);
+    }
+    else {
+        this._incremental = null;
+    }
+};
+
+largeSymbolProto.incrementalUpdate = function (taskParams, data) {
+    var symbolEl;
+    if (this._incremental) {
+        symbolEl = new LargeSymbolPath();
+        this._incremental.addDisplayable(symbolEl, true);
+    }
+    else {
+        symbolEl = new LargeSymbolPath({
+            rectHover: true,
+            cursor: 'default',
+            startIndex: taskParams.start,
+            endIndex: taskParams.end
+        });
+        symbolEl.incremental = true;
+        this.group.add(symbolEl);
+    }
+
+    symbolEl.setShape({
+        points: data.getLayout('symbolPoints')
+    });
+    this._setCommon(symbolEl, data, !!this._incremental);
+};
+
+largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
+    var hostModel = data.hostModel;
+
+    // TODO
+    // if (data.hasItemVisual.symbolSize) {
+    //     // TODO typed array?
+    //     symbolEl.setShape('sizes', data.mapArray(
+    //         function (idx) {
+    //             var size = data.getItemVisual(idx, 'symbolSize');
+    //             return (size instanceof Array) ? size : [size, size];
+    //         }
+    //     ));
+    // }
+    // else {
+    var size = data.getVisual('symbolSize');
+    symbolEl.setShape('size', (size instanceof Array) ? size : [size, size]);
+    // }
+
+    // Create symbolProxy to build path for each data
+    symbolEl.symbolProxy = createSymbol(
+        data.getVisual('symbol'), 0, 0, 0, 0
+    );
+    // Use symbolProxy setColor method
+    symbolEl.setColor = symbolEl.symbolProxy.setColor;
+
+    var extrudeShadow = symbolEl.shape.size[0] < BOOST_SIZE_THRESHOLD;
+    symbolEl.useStyle(
+        // Draw shadow when doing fillRect is extremely slow.
+        hostModel.getModel('itemStyle').getItemStyle(extrudeShadow ? ['color', 'shadowBlur', 'shadowColor'] : ['color'])
+    );
+
+    var visualColor = data.getVisual('color');
+    if (visualColor) {
+        symbolEl.setColor(visualColor);
+    }
+
+    if (!isIncremental) {
         // Enable tooltip
         // PENDING May have performance issue when path is extremely large
-        symbolEl.seriesIndex = seriesModel.seriesIndex;
+        symbolEl.seriesIndex = hostModel.seriesIndex;
         symbolEl.on('mousemove', function (e) {
             symbolEl.dataIndex = null;
             var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
             if (dataIndex >= 0) {
                 // Provide dataIndex for tooltip
-                symbolEl.dataIndex = dataIndex;
+                symbolEl.dataIndex = dataIndex + (symbolEl.startIndex || 0);
             }
         });
+    }
+};
 
-        // Add back
-        this.group.add(symbolEl);
-    };
+largeSymbolProto.remove = function () {
+    this._clearIncremental();
+    this._incremental = null;
+    this.group.removeAll();
+};
 
-    largeSymbolProto.updateLayout = function (seriesModel) {
-        var data = seriesModel.getData();
-        this._symbolEl.setShape({
-            points: data.mapArray(data.getItemLayout)
-        });
-    };
+largeSymbolProto._clearIncremental = function () {
+    var incremental = this._incremental;
+    if (incremental) {
+        incremental.clearDisplaybles();
+    }
+};
 
-    largeSymbolProto.remove = function () {
-        this.group.removeAll();
-    };
-
-    return LargeSymbolDraw;
-});
+export default LargeSymbolDraw;

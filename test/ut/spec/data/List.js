@@ -2,7 +2,7 @@ describe('List', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/data/List']);
+    var testCase = utHelper.prepare(['echarts/src/data/List']);
 
     describe('Data Manipulation', function () {
 

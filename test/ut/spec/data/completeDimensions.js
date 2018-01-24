@@ -2,7 +2,7 @@ describe('completeDimensions', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/data/helper/completeDimensions']);
+    var testCase = utHelper.prepare(['echarts/src/data/helper/completeDimensions']);
 
 
 
