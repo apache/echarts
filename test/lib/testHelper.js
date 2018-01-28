@@ -19,7 +19,7 @@
 
 
     /**
-     * opt: {option, info, infoKey, dataTable, dataTables, width, height, draggable, dataTableLimit}
+     * opt: {lazyUpdate, title, option, info, infoKey, dataTable, dataTables, width, height, draggable, dataTableLimit}
      * dataTabel can be array.
      */
     testHelper.create = function (echarts, domOrId, opt) {
@@ -82,7 +82,7 @@
     };
 
     /**
-     * opt: {number}: height, {Object}: {width, height, draggable}
+     * opt: {boolean}: lazyUpdate, {number}: height, {Object}: {width, height, draggable}
      */
     testHelper.createChart = function (echarts, domOrId, option, opt) {
         if (typeof opt === 'number') {
@@ -108,7 +108,7 @@
                 window.draggable.init(dom, chart, {throttle: 70, addPlaceholder: true});
             }
 
-            option && chart.setOption(option);
+            option && chart.setOption(option, {lazyUpdate: opt.lazyUpdate});
             testHelper.resizable(chart);
 
             return chart;
@@ -423,7 +423,7 @@
         ].join('');
     }
 
-    function getDom(domOrId) {
+    var getDom = testHelper.getDom = function (domOrId) {
         return getType(domOrId) === 'string' ? document.getElementById(domOrId) : domOrId;
     }
 
