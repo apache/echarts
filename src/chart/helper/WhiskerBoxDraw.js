@@ -159,6 +159,12 @@ whiskerBoxDrawProto.updateData = function (data) {
     var oldData = this._data;
     var styleUpdater = this.styleUpdater;
 
+    // There is no old data only when first rendering or switching from
+    // stream mode to normal mode, where previous elements should be removed.
+    if (!this._data) {
+        group.removeAll();
+    }
+
     data.diff(oldData)
         .add(function (newIdx) {
             if (data.hasValue(newIdx)) {
@@ -195,6 +201,20 @@ whiskerBoxDrawProto.updateData = function (data) {
         .execute();
 
     this._data = data;
+};
+
+whiskerBoxDrawProto.incrementalPrepareUpdate = function (seriesModel, ecModel, api) {
+    this.group.removeAll();
+    this._data = null;
+};
+
+whiskerBoxDrawProto.incrementalUpdate = function (params, seriesModel, ecModel, api) {
+    var data = seriesModel.getData();
+    for (var idx = params.start; idx < params.end; idx++) {
+        var symbolEl = new WhiskerBox(data, idx, this.styleUpdater, true);
+        symbolEl.incremental = true;
+        this.group.add(symbolEl);
+    }
 };
 
 /**

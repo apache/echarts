@@ -129,6 +129,14 @@ export var viewMixin = {
         this._whiskerBoxDraw.updateData(seriesModel.getData());
     },
 
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this._whiskerBoxDraw.incrementalPrepareUpdate(seriesModel, ecModel, api);
+    },
+
+    incrementalRender: function (params, seriesModel, ecModel, api) {
+        this._whiskerBoxDraw.incrementalUpdate(params, seriesModel, ecModel, api);
+    },
+
     remove: function (ecModel) {
         this._whiskerBoxDraw.remove();
     }
