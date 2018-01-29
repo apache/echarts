@@ -21,7 +21,7 @@ Make sure `../dist/echarts.js` is the built based on current source files by:
 ```bash
 cd ../build
 npm install
-bash build.sh
+node build.js
 ```
 
 By default, we compare current version with last release version. To run the test, you should first download last release using:
