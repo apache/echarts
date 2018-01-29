@@ -49,6 +49,8 @@ export function summarizeDimensions(data) {
     });
 
     var dataDimsOnCoord = [];
+    // ??? FIXME extra coord should not be set in dataDimsOnCoord.
+    // Fix the case that radar axes.
     coordDimMap.each(function (v, coordDim) {
         dataDimsOnCoord = dataDimsOnCoord.concat(encode[coordDim]);
     });
