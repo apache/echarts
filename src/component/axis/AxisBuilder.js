@@ -169,6 +169,11 @@ var builders = {
         var arrows = axisModel.get('axisLine.symbol');
         var arrowSize = axisModel.get('axisLine.symbolSize');
 
+        var arrowOffset = axisModel.get('axisLine.symbolOffset') || 0;
+        if (typeof arrowOffset === 'number') {
+            arrowOffset = [arrowOffset, arrowOffset];
+        }
+
         if (arrows != null) {
             if (typeof arrows === 'string') {
                 // Use the same arrow for start and end point
@@ -198,9 +203,29 @@ var builders = {
                         lineStyle.stroke,
                         true
                     );
+
+                    // Calculate arrow position with offset
+                    var pos;
+                    if (index === 0) {
+                        if (opt.rotation === 0) {
+                            pos = [item[1][0] + arrowOffset[0], item[1][1]];
+                        }
+                        else {
+                            pos = [item[1][0], item[1][1] + arrowOffset[0]];
+                        }
+                    }
+                    else {
+                        if (opt.rotation === 0) {
+                            pos = [item[1][0] + arrowOffset[1], item[1][1]];
+                        }
+                        else {
+                            pos = [item[1][0], item[1][1] + arrowOffset[1]];
+                        }
+                    }
+
                     symbol.attr({
                         rotation: item[0],
-                        position: item[1],
+                        position: pos,
                         silent: true
                     });
                     this.group.add(symbol);

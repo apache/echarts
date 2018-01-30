@@ -45,13 +45,15 @@
                             symbol: ['none', 'arrow'],
                             lineStyle: {
                                 color: 'green'
-                            }
+                            },
+                            symbolOffset: 10
                         }
                     },
                     yAxis: {
                         axisLine: {
                             symbol: 'arrow',
-                            symbolSize: [30, 20]
+                            symbolSize: [30, 20],
+                            symbolOffset: [-10, 10]
                         }
                     },
                     series: [{
@@ -70,7 +72,8 @@
                     },
                     yAxis: {
                         axisLine: {
-                            symbol: ['none', 'arrow']
+                            symbol: ['none', 'arrow'],
+                            symbolOffset: [10, -10]
                         },
                         inversed: true
                     },
