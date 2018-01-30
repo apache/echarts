@@ -162,7 +162,9 @@ export function adjustScaleForOverflow(min, max, model) {
     zrUtil.each(barsOnCurrentAxis, function (item) {
         maxOverflow = Math.max(item.offset + item.width, maxOverflow);
     });
-    var totalOverFlow = Math.abs(minOverflow) + maxOverflow;
+    minOverflow = Math.abs(minOverflow);
+    maxOverflow = Math.abs(maxOverflow);
+    var totalOverFlow = minOverflow + maxOverflow;
 
     // Calulate required buffer based on old range and overflow
     var oldRange = max - min;
