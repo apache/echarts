@@ -180,7 +180,7 @@ var SunburstView = ChartView.extend({
                         if (link) {
                             var linkTarget = itemModel.get('target', true)
                                 || '_blank';
-                            link && window.open(link, linkTarget);
+                            window.open(link, linkTarget);
                         }
                     }
                     targetFound = true;
