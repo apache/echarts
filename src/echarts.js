@@ -21,6 +21,8 @@ import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from './model/OptionManager';
 import backwardCompat from './preprocessor/backwardCompat';
+// -STACK-
+// import dataStack from './processor/dataStack';
 import ComponentModel from './model/Component';
 import SeriesModel from './model/Series';
 import ComponentView from './view/Component';
@@ -233,6 +235,8 @@ function ECharts(dom, theme, opts) {
 
     zr.animation.on('frame', this._onframe, this);
 
+    bindRenderedEvent(zr, this);
+
     // ECharts instance can be used as value.
     zrUtil.setAsPrimitive(this);
 }
@@ -295,15 +299,14 @@ echartsProto._onframe = function () {
         }
         while (remainTime > 0 && scheduler.unfinished);
 
+        // Call flush explicitly for trigger finished event.
         if (!scheduler.unfinished) {
-            this._zr && this._zr.flush();
-            this.trigger('finished');
+            this._zr.flush();
         }
         // Else, zr flushing be ensue within the same frame,
         // because zr flushing is after onframe event.
     }
 };
-
 
 /**
  * @return {HTMLElement}
@@ -435,11 +438,12 @@ echartsProto.getRenderedCanvas = function (opts) {
     opts.backgroundColor = opts.backgroundColor
         || this._model.get('backgroundColor');
     var zr = this._zr;
-    var list = zr.storage.getDisplayList();
+    // var list = zr.storage.getDisplayList();
     // Stop animations
-    zrUtil.each(list, function (el) {
-        el.stopAnimation(true);
-    });
+    // Never works before in init animation, so remove it.
+    // zrUtil.each(list, function (el) {
+    //     el.stopAnimation(true);
+    // });
     return zr.painter.getRenderedCanvas(opts);
 };
 
@@ -794,6 +798,7 @@ var updateMethods = {
         // deteming whether use progressive rendering.
         updateStreamModes(this, ecModel);
 
+        // -STACK-
         stackSeriesData(ecModel);
 
         coordSysMgr.update(ecModel, api);
@@ -1060,21 +1065,19 @@ echartsProto.resize = function (opts) {
 
     var optionChanged = ecModel.resetOption('media');
 
-    refresh(this, optionChanged, opts && opts.silent);
+    var silent = opts && opts.silent;
+
+    this[IN_MAIN_PROCESS] = true;
+
+    optionChanged && prepare(this);
+    updateMethods.update.call(this);
+
+    this[IN_MAIN_PROCESS] = false;
+
+    flushPendingActions.call(this, silent);
+
+    triggerUpdatedEvent.call(this, silent);
 };
-
-function refresh(ecIns, needPrepare, silent) {
-    ecIns[IN_MAIN_PROCESS] = true;
-
-    needPrepare && prepare(ecIns);
-    updateMethods.update.call(ecIns);
-
-    ecIns[IN_MAIN_PROCESS] = false;
-
-    flushPendingActions.call(ecIns, silent);
-
-    triggerUpdatedEvent.call(ecIns, silent);
-}
 
 function updateStreamModes(ecIns, ecModel) {
     var chartsMap = ecIns._chartsMap;
@@ -1269,6 +1272,41 @@ function triggerUpdatedEvent(silent) {
 }
 
 /**
+ * Event `rendered` is triggered when zr
+ * rendered. It is useful for realtime
+ * snapshot (reflect animation).
+ *
+ * Event `finished` is triggered when:
+ * (1) zrender rendering finished.
+ * (2) initial animation finished.
+ * (3) progressive rendering finished.
+ * (4) no pending action.
+ * (5) no delayed setOption needs to be processed.
+ */
+function bindRenderedEvent(zr, ecIns) {
+    zr.on('rendered', function () {
+
+        ecIns.trigger('rendered');
+
+        // The `finished` event should not be triggered repeatly,
+        // so it should only be triggered when rendering indeed happend
+        // in zrender. (Consider the case that dipatchAction is keep
+        // triggering when mouse move).
+        if (
+            // Although zr is dirty if initial animation is not finished
+            // and this checking is called on frame, we also check
+            // animation finished for robustness.
+            zr.animation.isFinished()
+            && !ecIns[OPTION_UPDATED]
+            && !ecIns._scheduler.unfinished
+            && !ecIns._pendingActions.length
+        ) {
+            ecIns.trigger('finished');
+        }
+    });
+}
+
+/**
  * @param {Object} params
  * @param {number} params.seriesIndex
  * @param {Array|TypedArray} params.data
@@ -1365,6 +1403,7 @@ function prepareView(ecIns, type, ecModel, scheduler) {
 }
 
 /**
+ * -STACK-
  * @private
  */
 function stackSeriesData(ecModel) {
@@ -2141,6 +2180,8 @@ export function getMap(mapName) {
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);
+// -STACK-
+// registerProcessor(PRIORITY_PROCESSOR_STATISTIC, dataStack);
 registerLoading('default', loadingDefault);
 
 // Default actions

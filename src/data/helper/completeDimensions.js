@@ -40,7 +40,6 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *      displayName: string, the origin name in dimsDef, see source helper.
  *                 If displayName given, the tooltip will displayed vertically.
  *      coordDim: string mandatory,
- *      isSysCoord: boolean True if the coord is from sys dimension.
  *      coordDimIndex: number mandatory,
  *      type: string optional,
  *      otherDims: { never null/undefined
@@ -49,7 +48,8 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *          itemName: number optional,
  *          seriesName: number optional,
  *      },
- *      isExtraCoord: boolean true or undefined.
+ *      isExtraCoord: boolean true if coord is generated
+ *          (not specified in encode and not series specified)
  *      other props ...
  * }]
  */
@@ -144,7 +144,6 @@ function completeDimensions(sysDims, source, opt) {
             if (resultItem.name == null && sysDimItemDimsDef) {
                 resultItem.name = resultItem.displayName = sysDimItemDimsDef[coordDimIndex];
             }
-            resultItem.isSysCoord = true;
             // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}
             sysDimItemOtherDims && defaults(resultItem.otherDims, sysDimItemOtherDims);
         });
@@ -169,13 +168,13 @@ function completeDimensions(sysDims, source, opt) {
         var resultItem = result[resultDimIdx] = result[resultDimIdx] || {};
         var coordDim = resultItem.coordDim;
 
-        coordDim == null && (
+        if (coordDim == null) {
             resultItem.coordDim = genName(
                 extra, coordDimNameMap, opt.extraFromZero
-            ),
-            resultItem.coordDimIndex = 0,
-            resultItem.isExtraCoord = true
-        );
+            );
+            resultItem.coordDimIndex = 0;
+            resultItem.isExtraCoord = true;
+        }
 
         resultItem.name == null && (resultItem.name = genName(
             resultItem.coordDim,

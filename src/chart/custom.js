@@ -103,17 +103,15 @@ echarts.extendChartView({
 
         data.diff(oldData)
             .add(function (newIdx) {
-                data.hasValue(newIdx) && createOrUpdate(
+                createOrUpdate(
                     null, newIdx, renderItem(newIdx), customSeries, group, data
                 );
             })
             .update(function (newIdx, oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
-                data.hasValue(newIdx)
-                    ? createOrUpdate(
-                        el, newIdx, renderItem(newIdx), customSeries, group, data
-                    )
-                    : (el && group.remove(el));
+                createOrUpdate(
+                    el, newIdx, renderItem(newIdx), customSeries, group, data
+                );
             })
             .remove(function (oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);

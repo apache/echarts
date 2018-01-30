@@ -25,7 +25,7 @@ export function summarizeDimensions(data) {
             }
             coordDimArr[dimItem.coordDimIndex] = dimName;
 
-            if (dimItem.isSysCoord && mayLabelDimType(dimItem.type)) {
+            if (!dimItem.isExtraCoord && mayLabelDimType(dimItem.type)) {
                 // Use the last coord dim (and label friendly) as default label,
                 // because both show x, y on label is not look good, and usually
                 // y axis is more focusd conventionally.
@@ -49,6 +49,8 @@ export function summarizeDimensions(data) {
     });
 
     var dataDimsOnCoord = [];
+    // ??? FIXME extra coord should not be set in dataDimsOnCoord.
+    // Fix the case that radar axes.
     coordDimMap.each(function (v, coordDim) {
         dataDimsOnCoord = dataDimsOnCoord.concat(encode[coordDim]);
     });
