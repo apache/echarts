@@ -53,9 +53,14 @@
                     polar: {},
                     angleAxis: {
                         // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
-                        data: xAxisData
+                        data: xAxisData,
+                        startAngle: 30
                     },
                     radiusAxis: {
+                        axisLine: {
+                            symbol: 'arrow',
+                            symbolOffset: [20, -20]
+                        }
                     },
                     series: [{
                         coordinateSystem: 'polar',

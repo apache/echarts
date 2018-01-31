@@ -189,10 +189,16 @@ var builders = {
             var symbolWidth = arrowSize[0];
             var symbolHeight = arrowSize[1];
 
-            each([
-                [opt.rotation + Math.PI / 2, pt1],
-                [opt.rotation - Math.PI / 2, pt2]
-            ], function (item, index) {
+            each([{
+                rotate: opt.rotation + Math.PI / 2,
+                offset: arrowOffset[0],
+                r: 0
+            }, {
+                rotate: opt.rotation - Math.PI / 2,
+                offset: arrowOffset[1],
+                r: Math.sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0])
+                    + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
+            }], function (point, index) {
                 if (arrows[index] !== 'none' && arrows[index] != null) {
                     var symbol = createSymbol(
                         arrows[index],
@@ -205,26 +211,14 @@ var builders = {
                     );
 
                     // Calculate arrow position with offset
-                    var pos;
-                    if (index === 0) {
-                        if (opt.rotation === 0) {
-                            pos = [item[1][0] + arrowOffset[0], item[1][1]];
-                        }
-                        else {
-                            pos = [item[1][0], item[1][1] + arrowOffset[0]];
-                        }
-                    }
-                    else {
-                        if (opt.rotation === 0) {
-                            pos = [item[1][0] + arrowOffset[1], item[1][1]];
-                        }
-                        else {
-                            pos = [item[1][0], item[1][1] + arrowOffset[1]];
-                        }
-                    }
+                    var r = point.r + point.offset;
+                    var pos = [
+                        pt1[0] + r * Math.cos(opt.rotation),
+                        pt1[1] - r * Math.sin(opt.rotation)
+                    ];
 
                     symbol.attr({
-                        rotation: item[0],
+                        rotation: point.rotate,
                         position: pos,
                         silent: true
                     });
