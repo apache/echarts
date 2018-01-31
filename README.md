@@ -44,7 +44,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 [https://github.com/ecomfe/awesome-echarts](https://github.com/ecomfe/awesome-echarts)
 
-### Extensions
+### Official Extensions
 
 + [水球图 Liquidfill](https://github.com/ecomfe/echarts-liquidfill)
 
@@ -52,9 +52,16 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 + [Graph Modularity](https://github.com/ecomfe/echarts-graph-modularity) Graph modularity extension for community detection
 
-#### GIS
-
 + [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
+
++ [vue-echarts](https://github.com/ecomfe/vue-echarts) ECharts component for Vue.js
+
++ [echarts-stat](https://github.com/ecomfe/echarts-stat) Statistics tool for ECharts
+
+
+### Developers Contributions
+
+#### GIS
 
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
@@ -72,7 +79,6 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 #### Vue Component
 
-+ [vue-echarts](https://github.com/Justineo/vue-echarts) by Justineo
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
 + [vue-echarts-v3](https://github.com/xlsdg/vue-echarts-v3) by xlsdg
 

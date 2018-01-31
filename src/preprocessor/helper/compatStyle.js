@@ -74,13 +74,15 @@ function removeEC3NormalStatus(opt) {
     convertNormalEmphasis(opt, 'edgeLabel');
 }
 
-function compatTextStyle(labelOpt) {
-    var textStyle = isObject(labelOpt) && labelOpt.textStyle;
+function compatTextStyle(opt, propName) {
+    // Check whether is not object (string\null\undefined ...)
+    var labelOptSingle = isObject(opt) && opt[propName];
+    var textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
     if (textStyle) {
         for (var i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
             var propName = modelUtil.TEXT_STYLE_OPTIONS[i];
             if (textStyle.hasOwnProperty(propName)) {
-                labelOpt[propName] = textStyle[propName];
+                labelOptSingle[propName] = textStyle[propName];
             }
         }
     }
@@ -89,8 +91,8 @@ function compatTextStyle(labelOpt) {
 function compatEC3CommonStyles(opt) {
     if (opt) {
         removeEC3NormalStatus(opt);
-        compatTextStyle(opt.label);
-        opt.emphasis && compatTextStyle(opt.emphasis.label);
+        compatTextStyle(opt, 'label');
+        opt.emphasis && compatTextStyle(opt.emphasis, 'label');
     }
 }
 
@@ -102,17 +104,17 @@ function processSeries(seriesOpt) {
     compatEC2ItemStyle(seriesOpt);
     removeEC3NormalStatus(seriesOpt);
 
-    compatTextStyle(seriesOpt.label);
+    compatTextStyle(seriesOpt, 'label');
     // treemap
-    compatTextStyle(seriesOpt.upperLabel);
+    compatTextStyle(seriesOpt, 'upperLabel');
     // graph
-    compatTextStyle(seriesOpt.edgeLabel);
+    compatTextStyle(seriesOpt, 'edgeLabel');
     if (seriesOpt.emphasis) {
-        compatTextStyle(seriesOpt.emphasis.label);
+        compatTextStyle(seriesOpt.emphasis, 'label');
         // treemap
-        compatTextStyle(seriesOpt.emphasis.upperLabel);
+        compatTextStyle(seriesOpt.emphasis, 'upperLabel');
         // graph
-        compatTextStyle(seriesOpt.emphasis.edgeLabel);
+        compatTextStyle(seriesOpt.emphasis, 'edgeLabel');
     }
 
     var markPoint = seriesOpt.markPoint;

@@ -29,10 +29,7 @@
                 // 'zrender/svg/svg'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), 'infographic', {
-
-                    // renderer: 'svg'
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var xAxisData = [];
                 var data1 = [];
@@ -134,6 +131,11 @@
                         right: '10%'
                     },
                     yAxis: {
+                        axisLabel: {
+                            textStyle: {
+                                color: 'red'
+                            }
+                        },
                         splitArea: {
                             show: true
                         }
