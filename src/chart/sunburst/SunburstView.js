@@ -19,7 +19,8 @@ var SunburstView = ChartView.extend({
         this.api = api;
         this.ecModel = ecModel;
 
-        var virtualRoot = seriesModel.getData().tree.root;
+        var data = seriesModel.getData();
+        var virtualRoot = data.tree.root;
 
         var newRoot = seriesModel.getViewRoot();
 
@@ -90,6 +91,9 @@ var SunburstView = ChartView.extend({
                         // Update
                         oldNode.piece.updateData(
                             false, newNode, 'normal', seriesModel, ecModel);
+
+                        // For tooltip
+                        data.setItemGraphicEl(newNode.dataIndex, oldNode.piece);
                     }
                     else {
                         // Remove
@@ -104,6 +108,9 @@ var SunburstView = ChartView.extend({
                         ecModel
                     );
                     group.add(piece);
+
+                    // For tooltip
+                    data.setItemGraphicEl(newNode.dataIndex, piece);
                 }
             }
         }
