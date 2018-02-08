@@ -186,7 +186,7 @@ var CartesianAxisView = AxisView.extend({
             if (ifIgnoreOnTick(
                 axis, i, areaInterval, ticksCoords.length,
                 showMinLabel, showMaxLabel
-            )) {
+            ) && (i < ticksCoords.length - 1)) {
                 continue;
             }
 
