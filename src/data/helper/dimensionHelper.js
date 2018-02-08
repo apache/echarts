@@ -1,4 +1,4 @@
-import {each, createHashMap, assert} from 'zrender/src/core/util';
+import {each, filter, createHashMap, assert} from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
 
 export var OTHER_DIMENSIONS = createHashMap([
@@ -71,6 +71,18 @@ export function summarizeDimensions(data) {
 
     encode.defaultedLabel = defaultedLabel;
     encode.defaultedTooltip = defaultedTooltip;
+
+    var encodeFirstDimNotExtra = summary.encodeFirstDimNotExtra = {};
+    each(encode, function (coordDimArr, coordDim) {
+        for (var i = 0; i < (coordDimArr || []).length; i++) {
+            var dim = coordDimArr[i];
+            var dimInfo = data.getDimensionInfo(dim);
+            if (dimInfo && !dimInfo.isExtraCoord) {
+                encodeFirstDimNotExtra[coordDim] = dim;
+                break;
+            }
+        }
+    });
 
     return summary;
 }

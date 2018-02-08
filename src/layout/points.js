@@ -1,5 +1,6 @@
 import {map} from 'zrender/src/core/util';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
+import {isDimensionStacked} from '../data/helper/dataStackHelper';
 
 export default function (seriesType) {
     return {
@@ -18,9 +19,16 @@ export default function (seriesType) {
             }
 
             var dims = map(coordSys.dimensions, function (dim) {
-                return data.getDimension(data.mapDimension(dim));
+                return data.mapDimension(dim);
             }).slice(0, 2);
             var dimLen = dims.length;
+
+            if (isDimensionStacked(data, dims[0], dims[1])) {
+                dims[0] = data.getCalculationInfo('stackResultDimension');
+            }
+            if (isDimensionStacked(data, dims[1], dims[0])) {
+                dims[1] = data.getCalculationInfo('stackResultDimension');
+            }
 
             function progress(params, data) {
                 var segCount = params.end - params.start;

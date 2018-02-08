@@ -9,6 +9,7 @@ import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
 import {Polyline, Polygon} from './poly';
 import ChartView from '../../view/Chart';
+import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 
 function isPointsSame(points1, points2) {
     if (points1.length !== points2.length) {
@@ -40,68 +41,23 @@ function getAxisExtentWithGap(axis) {
     return extent;
 }
 
-function sign(val) {
-    return val >= 0 ? 1 : -1;
-}
-
 /**
  * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
  * @param {module:echarts/data/List} data
+ * @param {Object} dataCoordInfo
  * @param {Array.<Array.<number>>} points
- * @param {string} origin origin of areaStyle. Valid values: 'auto', 'start',
- *                        'end'.
- *                        auto: from axisLine to data
- *                        start: from min to data
- *                        end: from data to max
- * @private
  */
-function getStackedOnPoints(seriesModel, coordSys, data, origin) {
-    var baseAxis = coordSys.getBaseAxis();
-    var valueAxis = coordSys.getOtherAxis(baseAxis);
-
-    var valueStart = 0;
-    var extent = valueAxis.scale.getExtent();
-    if (origin === 'start') {
-        valueStart = extent[0];
-    }
-    else if (origin === 'end') {
-        valueStart = extent[1];
-    }
-    else {
-        // auto
-        var extent = valueAxis.scale.getExtent();
-        if (extent[0] > 0) {
-            // Both positive
-            valueStart = extent[0];
-        }
-        else if (extent[1] < 0) {
-            // Both negative
-            valueStart = extent[1];
-        }
-        // If is one positive, and one negative, onZero shall be true
+function getStackedOnPoints(coordSys, data, dataCoordInfo) {
+    if (!dataCoordInfo.valueDim) {
+        return [];
     }
 
-    var valueCoordDim = valueAxis.dim;
-    var baseDataOffset = valueCoordDim === 'x' || valueCoordDim === 'radius' ? 1 : 0;
-    var valueDim = data.mapDimension(valueCoordDim);
-
-    return data.mapArray(valueDim ? [valueDim] : [], function (val, idx) {
-        var stackedOnSameSign;
-        var stackedOn = data.stackedOn;
-        // Find first stacked value with same sign
-        while (stackedOn &&
-            sign(stackedOn.get(valueDim, idx)) === sign(val)
-        ) {
-            stackedOnSameSign = stackedOn;
-            break;
-        }
-        var stackedData = [];
-        stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
-        stackedData[1 - baseDataOffset] = stackedOnSameSign
-            ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
-
-        return coordSys.dataToPoint(stackedData);
-    }, true);
+    var points = [];
+    for (var idx = 0, len = data.count(); idx < len; idx++) {
+        points.push(getStackedOnPoint(dataCoordInfo, coordSys, data, idx));
+    }
+console.log(JSON.stringify(points));
+    return points;
 }
 
 function createGridClipShape(cartesian, hasAnimation, seriesModel) {
@@ -328,7 +284,7 @@ export default ChartView.extend({
         var lineStyleModel = seriesModel.getModel('lineStyle');
         var areaStyleModel = seriesModel.getModel('areaStyle');
 
-        var points = data.mapArray(data.getItemLayout, true);
+        var points = data.mapArray(data.getItemLayout);
 
         var isCoordSysPolar = coordSys.type === 'polar';
         var prevCoordSys = this._coordSys;
@@ -342,8 +298,11 @@ export default ChartView.extend({
         var hasAnimation = seriesModel.get('animation');
 
         var isAreaChart = !areaStyleModel.isEmpty();
-        var origin = areaStyleModel.get('origin');
-        var stackedOnPoints = getStackedOnPoints(seriesModel, coordSys, data, origin);
+
+        var valueOrigin = areaStyleModel.get('origin');
+        var dataCoordInfo = prepareDataCoordInfo(coordSys, data, valueOrigin);
+
+        var stackedOnPoints = getStackedOnPoints(coordSys, data, dataCoordInfo);
 
         var showSymbol = seriesModel.get('showSymbol');
 
@@ -423,7 +382,7 @@ export default ChartView.extend({
             ) {
                 if (hasAnimation) {
                     this._updateAnimation(
-                        data, stackedOnPoints, coordSys, api, step
+                        data, stackedOnPoints, coordSys, api, step, valueOrigin
                     );
                 }
                 else {
@@ -466,7 +425,7 @@ export default ChartView.extend({
         });
 
         if (polygon) {
-            var stackedOn = data.stackedOn;
+            var stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
             var stackedOnSmooth = 0;
 
             polygon.useStyle(zrUtil.defaults(
@@ -478,8 +437,7 @@ export default ChartView.extend({
                 }
             ));
 
-            if (stackedOn) {
-                var stackedOnSeries = stackedOn.hostModel;
+            if (stackedOnSeries) {
                 stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
             }
 
@@ -497,6 +455,7 @@ export default ChartView.extend({
         this._stackedOnPoints = stackedOnPoints;
         this._points = points;
         this._step = step;
+        this._valueOrigin = valueOrigin;
     },
 
     dispose: function () {},
@@ -632,7 +591,7 @@ export default ChartView.extend({
      * @private
      */
     // FIXME Two value axis
-    _updateAnimation: function (data, stackedOnPoints, coordSys, api, step) {
+    _updateAnimation: function (data, stackedOnPoints, coordSys, api, step, valueOrigin) {
         var polyline = this._polyline;
         var polygon = this._polygon;
         var seriesModel = data.hostModel;
@@ -640,7 +599,8 @@ export default ChartView.extend({
         var diff = lineAnimationDiff(
             this._data, data,
             this._stackedOnPoints, stackedOnPoints,
-            this._coordSys, coordSys
+            this._coordSys, coordSys,
+            this._valueOrigin, valueOrigin
         );
 
         var current = diff.current;

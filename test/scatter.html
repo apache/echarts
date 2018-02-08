@@ -112,7 +112,7 @@
                         },
                         itemStyle: {
                             color: function (params) {
-                                return 'rgba(30, 70, 50, ' + params.value[2] + ')';
+                                return 'rgba(30, 70, 50, ' + (params.value ? params.value[2] : 0) + ')';
                             }
                         },
                         data: data2
