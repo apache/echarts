@@ -30,6 +30,10 @@
         <div id="empty-data"></div>
         <div id="dynamic-category"></div>
         <div id="dynamic-time"></div>
+        <div id="dimension-but-no-column1"></div>
+        <div id="dimension-but-no-column2"></div>
+        <div id="dimension-but-no-column3"></div>
+
 
 
 
@@ -753,8 +757,6 @@
 
 
 
-
-
         <script>
             require([
                 'echarts'
@@ -816,6 +818,133 @@
             });
         </script>
 
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        dimensions: ['product', '2015', '2016', '2017'],
+                        source: [
+                            {product: 'Matcha Latte', '2015': 43.3, '2016': 85.8},
+                            {product: 'Milk Tea', '2015': 83.1, '2016': 73.4},
+                            {product: 'Cheese Cocoa', '2015': 86.4, '2016': 65.2},
+                            {product: 'Walnut Brownie', '2015': 72.4, '2016': 53.9}
+                        ]
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'dimension-but-no-column1', {
+                    title: '[obejct array] No 2017, but chart should be rendered',
+                    dataTable: option.dataset.source,
+                    option: option,
+                    info: option.dataset.dimensions,
+                    infoKey: 'dimensions'
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        dimensions: ['product', '2015', '2016', '2017'],
+                        source: [
+                            ['Matcha Latte', 43.3, 85.8],
+                            ['Milk Tea', 83.1, 73.4],
+                            ['Cheese Cocoa', 86.4, 65.2],
+                            ['Walnut Brownie', 72.4, 53.9]
+                        ]
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'dimension-but-no-column2', {
+                    title: '[2d-array] No 2017, but chart should be rendered',
+                    dataTable: option.dataset.source,
+                    option: option,
+                    info: option.dataset.dimensions,
+                    infoKey: 'dimensions'
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        dimensions: ['product', '2015', '2016', '2017'],
+                        source: {
+                            'product': ['Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
+                            '2015': [43.3, 83.1, 86.4, 72.4],
+                            '2016': [85.8, 73.4, 65.2, 53.9]
+                        }
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'dimension-but-no-column3', {
+                    title: '[key columns] No 2017, but chart should be rendered',
+                    dataTable: option.dataset.source,
+                    option: option,
+                    info: option.dataset.dimensions,
+                    infoKey: 'dimensions'
+                });
+            });
+        </script>
 
 
 

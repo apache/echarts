@@ -56,7 +56,7 @@ function getStackedOnPoints(coordSys, data, dataCoordInfo) {
     for (var idx = 0, len = data.count(); idx < len; idx++) {
         points.push(getStackedOnPoint(dataCoordInfo, coordSys, data, idx));
     }
-console.log(JSON.stringify(points));
+
     return points;
 }
 

@@ -8,7 +8,7 @@ export var OTHER_DIMENSIONS = createHashMap([
 export function summarizeDimensions(data) {
     var summary = {};
     var encode = summary.encode = {};
-    var coordDimMap = summary.coordDimMap = createHashMap();
+    var notExtraCoordDimMap = createHashMap();
     var defaultedLabel = [];
 
     each(data.dimensions, function (dimName) {
@@ -25,14 +25,16 @@ export function summarizeDimensions(data) {
             }
             coordDimArr[dimItem.coordDimIndex] = dimName;
 
-            if (!dimItem.isExtraCoord && mayLabelDimType(dimItem.type)) {
-                // Use the last coord dim (and label friendly) as default label,
-                // because both show x, y on label is not look good, and usually
-                // y axis is more focusd conventionally.
-                defaultedLabel[0] = dimName;
-            }
+            if (!dimItem.isExtraCoord) {
+                notExtraCoordDimMap.set(coordDim, 1);
 
-            coordDimMap.set(coordDim, 1);
+                if (mayLabelDimType(dimItem.type)) {
+                    // Use the last coord dim (and label friendly) as default label,
+                    // because both show x, y on label is not look good, and usually
+                    // y axis is more focusd conventionally.
+                    defaultedLabel[0] = dimName;
+                }
+            }
         }
 
         OTHER_DIMENSIONS.each(function (v, otherDim) {
@@ -49,12 +51,21 @@ export function summarizeDimensions(data) {
     });
 
     var dataDimsOnCoord = [];
-    // ??? FIXME extra coord should not be set in dataDimsOnCoord.
-    // Fix the case that radar axes.
-    coordDimMap.each(function (v, coordDim) {
-        dataDimsOnCoord = dataDimsOnCoord.concat(encode[coordDim]);
+    var encodeFirstDimNotExtra = {};
+
+    notExtraCoordDimMap.each(function (v, coordDim) {
+        var dimArr = encode[coordDim];
+        // ??? FIXME extra coord should not be set in dataDimsOnCoord.
+        // But should fix the case that radar axes: simplify the logic
+        // of `completeDimension`, remove `extraPrefix`.
+        encodeFirstDimNotExtra[coordDim] = dimArr[0];
+        // Not necessary to remove duplicate, because a data
+        // dim canot on more than one coordDim.
+        dataDimsOnCoord = dataDimsOnCoord.concat(dimArr);
     });
+
     summary.dataDimsOnCoord = dataDimsOnCoord;
+    summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
 
     var encodeLabel = encode.label;
     // FIXME `encode.label` is not recommanded, because formatter can not be set
@@ -71,18 +82,6 @@ export function summarizeDimensions(data) {
 
     encode.defaultedLabel = defaultedLabel;
     encode.defaultedTooltip = defaultedTooltip;
-
-    var encodeFirstDimNotExtra = summary.encodeFirstDimNotExtra = {};
-    each(encode, function (coordDimArr, coordDim) {
-        for (var i = 0; i < (coordDimArr || []).length; i++) {
-            var dim = coordDimArr[i];
-            var dimInfo = data.getDimensionInfo(dim);
-            if (dimInfo && !dimInfo.isExtraCoord) {
-                encodeFirstDimNotExtra[coordDim] = dim;
-                break;
-            }
-        }
-    });
 
     return summary;
 }
