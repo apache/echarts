@@ -75,7 +75,6 @@ function transferProperties(a, b) {
  *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
  *      Spetial fields: {
  *          ordinalMeta: <module:echarts/data/OrdinalMeta>
- *          stackable: <boolean>
  *          createInvertedIndices: <boolean>
  *      }
  * @param {module:echarts/model/Model} hostModel
@@ -844,7 +843,6 @@ listProto.setCalculationInfo = function (key, value) {
 /**
  * Get sum of data in one dimension
  * @param {string} dim
- * @param {boolean} stack
  */
 listProto.getSum = function (dim /*, stack */) {
     var dimData = this._storage[dim];
@@ -967,11 +965,10 @@ listProto.indexOfRawIndex = function (rawIndex) {
  * Retreive the index of nearest value
  * @param {string} dim
  * @param {number} value
- * @param {boolean} stack If given value is after stacked
  * @param {number} [maxDistance=Infinity]
  * @return {Array.<number>} Considere multiple points has the same value.
  */
-listProto.indicesOfNearest = function (dim, value, /*, stack, */ maxDistance) {
+listProto.indicesOfNearest = function (dim, value, maxDistance) {
     var storage = this._storage;
     var dimData = storage[dim];
     var nearestIndices = [];
@@ -1102,8 +1099,7 @@ function validateDimensions(list, dims) {
  *  list.each(['x', 'y'], function (x, y, idx) {});
  *  list.each(function (idx) {})
  */
-// FIXME ???? remove stack
-listProto.each = function (dims, cb, stack, context) {
+listProto.each = function (dims, cb, context, contextCompat) {
     'use strict';
 
     if (!this._count) {
@@ -1111,11 +1107,14 @@ listProto.each = function (dims, cb, stack, context) {
     }
 
     if (typeof dims === 'function') {
-        context = stack;
-        stack = cb;
+        contextCompat = context;
+        context = cb;
         cb = dims;
         dims = [];
     }
+
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
 
     dims = zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
 
@@ -1125,8 +1124,6 @@ listProto.each = function (dims, cb, stack, context) {
 
     var dimSize = dims.length;
 
-    context = context || this;
-
     for (var i = 0; i < this.count(); i++) {
         // Simple optimization
         switch (dimSize) {
@@ -1134,16 +1131,16 @@ listProto.each = function (dims, cb, stack, context) {
                 cb.call(context, i);
                 break;
             case 1:
-                cb.call(context, this.get(dims[0], i /*, stack */), i);
+                cb.call(context, this.get(dims[0], i), i);
                 break;
             case 2:
-                cb.call(context, this.get(dims[0], i /*, stack */), this.get(dims[1], i /*, stack */), i);
+                cb.call(context, this.get(dims[0], i), this.get(dims[1], i), i);
                 break;
             default:
                 var k = 0;
                 var value = [];
                 for (; k < dimSize; k++) {
-                    value[k] = this.get(dims[k], i /*, stack */);
+                    value[k] = this.get(dims[k], i);
                 }
                 // Index
                 value[k] = i;
@@ -1156,11 +1153,9 @@ listProto.each = function (dims, cb, stack, context) {
  * Data filter
  * @param {string|Array.<string>}
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  */
-// ???? REMOVE STACK
-listProto.filterSelf = function (dimensions, cb, stack, context) {
+listProto.filterSelf = function (dimensions, cb, context, contextCompat) {
     'use strict';
 
     if (!this._count) {
@@ -1168,14 +1163,14 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
     }
 
     if (typeof dimensions === 'function') {
-        context = stack;
-        stack = cb;
+        contextCompat = context;
+        context = cb;
         cb = dimensions;
         dimensions = [];
     }
-    stack = stack || false;
 
-    context = context || this;
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
 
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this
@@ -1203,13 +1198,11 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
             keep = cb.call(context, i);
         }
         else if (dimSize === 1) {
-            // var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIdx);
             var val = this._getFast(dim0, rawIdx);
             keep = cb.call(context, val, i);
         }
         else {
             for (var k = 0; k < dimSize; k++) {
-                // value[k] = stack ? this.get(dimensions[k], i, true) : this._getFast(dim0, rawIdx);
                 value[k] = this._getFast(dim0, rawIdx);
             }
             value[k] = i;
@@ -1360,25 +1353,26 @@ listProto.selectRange = function (range /*, stack */) {
  * Data mapping to a plain array
  * @param {string|Array.<string>} [dimensions]
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  * @return {Array}
  */
-// ??? REMOVE STACK
-listProto.mapArray = function (dimensions, cb, stack, context) {
+listProto.mapArray = function (dimensions, cb, context, contextCompat) {
     'use strict';
 
     if (typeof dimensions === 'function') {
-        context = stack;
-        stack = cb;
+        contextCompat = context;
+        context = cb;
         cb = dimensions;
         dimensions = [];
     }
 
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
+
     var result = [];
     this.each(dimensions, function () {
         result.push(cb && cb.apply(this, arguments));
-    }, stack, context);
+    }, context);
     return result;
 };
 
@@ -1429,13 +1423,14 @@ function getInitialExtent() {
  * Data mapping to a new List with given dimensions
  * @param {string|Array.<string>} dimensions
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  * @return {Array}
  */
-// ???? REMOVE STACK
-listProto.map = function (dimensions, cb, stack, context) {
+listProto.map = function (dimensions, cb, context, contextCompat) {
     'use strict';
+
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
 
     dimensions = zrUtil.map(
         normalizeDimensions(dimensions), this.getDimension, this

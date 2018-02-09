@@ -209,7 +209,7 @@ export function numCalculate(data, valueDataDim, type) {
                 sum += val;
                 count++;
             }
-        }, true);
+        });
         return sum / count;
     }
     else {

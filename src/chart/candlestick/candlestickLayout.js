@@ -146,7 +146,7 @@ export default function (ecModel) {
                 return point;
             }
 
-        }, true);
+        });
     });
 }
 

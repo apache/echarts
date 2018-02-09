@@ -115,10 +115,10 @@ export function applyVisual(stateList, visualMappings, data, getValueState, scop
     }
 
     if (dimension == null) {
-        data.each(eachItem, true);
+        data.each(eachItem);
     }
     else {
-        data.each([dimension], eachItem, true);
+        data.each([dimension], eachItem);
     }
 
     function eachItem(valueOrIndex, index) {
