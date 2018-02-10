@@ -25,7 +25,10 @@ body > .main {
     overflow: hidden;
 }
 .test-chart-block-has-right .test-chart-block-right {
-    float: right;
+    position: absolute;
+    right: 10px;
+    background: #fff;
+    z-index: 99;
     width: 300px;
 }
 .test-chart-block-has-right .test-chart-block-left {
@@ -33,6 +36,7 @@ body > .main {
 }
 .test-info {
     border-left: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
     padding-left: 10px;
     overflow: auto;
 }

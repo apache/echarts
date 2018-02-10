@@ -1,8 +1,13 @@
+
 describe('completeDimensions', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/src/data/helper/completeDimensions']);
+    var testCase = utHelper.prepare([
+        'echarts/src/data/helper/completeDimensions',
+        'echarts/src/data/Source',
+        'echarts/src/data/sourceType',
+    ]);
 
 
 
@@ -18,6 +23,110 @@ describe('completeDimensions', function () {
         }
         return result;
     }
+
+    testCase('namesMoreThanDimCount', function (completeDimensions, Source, sourceType) {
+        var sysDims = [
+            {
+                'name': 'x',
+                'type': 'ordinal',
+                'otherDims': {
+                    'tooltip': false,
+                    'itemName': 0
+                },
+                'dimsDef': [
+                    'base'
+                ]
+            },
+            {
+                'name': 'y',
+                'type': 'float',
+                'dimsDef': [
+                    'open',
+                    'close',
+                    'lowest',
+                    'highest'
+                ]
+            }
+        ];
+
+        var source = new Source({
+            data: [],
+            fromDataset: true,
+            sourceFormat: sourceType.SOURCE_FORMAT_ARRAY_ROWS,
+            dimensionsDetectCount: 11
+        });
+
+        var opt = {
+            'dimsDef': [
+                {
+                    'name': 'date',
+                    'displayName': 'date'
+                },
+                {
+                    'name': 'open',
+                    'displayName': 'open'
+                },
+                {
+                    'name': 'high',
+                    'displayName': 'high'
+                },
+                {
+                    'name': 'low',
+                    'displayName': 'low'
+                },
+                {
+                    'name': 'close',
+                    'displayName': 'close'
+                },
+                {
+                    'name': 'volume',
+                    'displayName': 'volume'
+                },
+                {
+                    'name': 'haOpen',
+                    'displayName': 'haOpen'
+                },
+                {
+                    'name': 'haHigh',
+                    'displayName': 'haHigh'
+                },
+                {
+                    'name': 'haLow',
+                    'displayName': 'haLow'
+                },
+                {
+                    'name': 'haClose',
+                    'displayName': 'haClose'
+                },
+                {
+                    'name': 'sma9',
+                    'displayName': 'sma9'
+                }
+            ],
+            'encodeDef': {
+                'x': 'date',
+                'y': [
+                    'haOpen',
+                    'haClose',
+                    'haLow',
+                    'haHigh'
+                ],
+                'tooltip': [
+                    'open',
+                    'high',
+                    'low',
+                    'close'
+                ]
+            },
+            'dimCount': 5
+        };
+
+        var result = [
+
+        ];
+
+        expect(doCompleteDimensions(completeDimensions, sysDims, source, opt)).toEqual(result);
+    });
 
 
     testCase('differentData', function (completeDimensions) {
