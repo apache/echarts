@@ -20,12 +20,6 @@
 
             require([
                 'echarts'
-                // 'echarts/chart/map',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/markPoint',
-                // 'echarts/component/tooltip'
             ], function (echarts) {
 
                 require(['map/js/china'], function () {
@@ -47,7 +41,7 @@
                     chart.setOption({
                         tooltip: {},
                         title : {
-                            text: 'iphone销量',
+                            text: '内蒙古和青海没数据也要能被选中',
                             subtext: '纯属虚构',
                             left: 'center'
                         },
@@ -127,13 +121,13 @@
                                     {name: '广西',value: Math.round(Math.random()*1000)},
                                     {name: '甘肃',value: Math.round(Math.random()*1000)},
                                     {name: '山西',value: Math.round(Math.random()*1000)},
-                                    {name: '内蒙古',value: Math.round(Math.random()*1000)},
+                                    // {name: '内蒙古',value: Math.round(Math.random()*1000)},
                                     {name: '陕西',value: Math.round(Math.random()*1000)},
                                     {name: '吉林',value: Math.round(Math.random()*1000)},
                                     {name: '福建',value: Math.round(Math.random()*1000)},
                                     {name: '贵州',value: Math.round(Math.random()*1000)},
                                     {name: '广东',value: Math.round(Math.random()*1000)},
-                                    {name: '青海',value: Math.round(Math.random()*1000)},
+                                    // {name: '青海',value: Math.round(Math.random()*1000)},
                                     {name: '西藏',value: Math.round(Math.random()*1000)},
                                     {name: '四川',value: Math.round(Math.random()*1000)},
                                     {name: '宁夏',value: Math.round(Math.random()*1000)},

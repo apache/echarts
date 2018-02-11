@@ -5,31 +5,17 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {retrieveRawAttr} from '../../data/helper/dataProvider';
 
 export default {
 
     /**
-     * @param {Array.<Object>|module:echars/data/List} targetList
+     * @param {Array.<Object>} targetList [{name, value, selected}, ...]
      *        If targetList is an array, it should like [{name: ..., value: ...}, ...].
      *        If targetList is a "List", it must have coordDim: 'value' dimension and name.
      */
     updateSelectedMap: function (targetList) {
-        if (zrUtil.isArray(targetList)) {
-            this._targetList = targetList.slice();
-        }
-        else {
-            var ecList = targetList;
-            var valueDim = ecList.mapDimension('value');
-            var targetList = this._targetList = [];
-            for (var i = 0, len = ecList.count(); i < len; i++) {
-                targetList.push({
-                    name: ecList.getName(i),
-                    value: ecList.get(valueDim, i),
-                    selected: retrieveRawAttr(ecList, i, 'selected')
-                });
-            }
-        }
+        this._targetList = zrUtil.isArray(targetList) ? targetList.slice() : [];
+
         this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
             targetMap.set(target.name, target);
             return targetMap;
