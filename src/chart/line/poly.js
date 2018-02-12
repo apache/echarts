@@ -44,6 +44,17 @@ function drawSegment(
     }
 }
 
+/**
+ * Check if points is in monotone.
+ *
+ * @param {number[][]} points         Array of points which is in [x, y] form
+ * @param {string}     smoothMonotone 'x', 'y', or 'none', stating for which
+ *                                    dimension that is checking.
+ *                                    If is 'none', `drawNonMono` should be
+ *                                    called.
+ *                                    If is undefined, either being monotone
+ *                                    in 'x' or 'y' will call `drawMono`.
+ */
 function isMono(points, smoothMonotone) {
     if (points.length <= 1) {
         return true;
@@ -68,6 +79,11 @@ function isMono(points, smoothMonotone) {
     return true;
 }
 
+/**
+ * Draw smoothed line in monotone, in which only vertical or horizontal bezier
+ * control points will be used. This should be used when points are monotone
+ * either in x or y dimension.
+ */
 function drawMono(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
@@ -122,6 +138,11 @@ function drawMono(
     return k;
 }
 
+/**
+ * Draw smoothed line in non-monotone, in may cause undesired curve in extreme
+ * situations. This should be used when points are non-monotone neither in x or
+ * y dimension.
+ */
 function drawNonMono(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
