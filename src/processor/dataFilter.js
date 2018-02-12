@@ -18,7 +18,7 @@ export default function (seriesType) {
                     }
                 }
                 return true;
-            }, this);
+            });
         }
     };
 }

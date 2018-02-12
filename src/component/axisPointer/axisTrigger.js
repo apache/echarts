@@ -187,7 +187,8 @@ function buildPayloadsBySeries(value, axisInfo) {
                 value,
                 // Add a threshold to avoid find the wrong dataIndex
                 // when data length is not same.
-                false, axis.type === 'category' ? 0.5 : null
+                // false,
+                axis.type === 'category' ? 0.5 : null
             );
             if (!dataIndices.length) {
                 return;

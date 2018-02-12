@@ -7,6 +7,7 @@ import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
 import Source from '../../data/Source';
+import {enableDataStack} from '../../data/helper/dataStackHelper';
 
 /**
  * @param {module:echarts/data/Source|Array} source Or raw data.
@@ -31,7 +32,7 @@ function createListFromArray(source, seriesModel) {
             if (axisModel) {
                 var axisType = axisModel.get('type');
                 dimInfo.type = getDimensionTypeByAxis(axisType);
-                dimInfo.stackable = isStackable(axisType);
+                // dimInfo.stackable = isStackable(axisType);
             }
             return dimInfo;
         });
@@ -69,7 +70,11 @@ function createListFromArray(source, seriesModel) {
         dimInfoList[firstCategoryDimIndex].otherDims.itemName = 0;
     }
 
+    var stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
+
     var list = new List(dimInfoList, seriesModel);
+
+    list.setCalculationInfo(stackCalculationInfo);
 
     var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
         ? function (itemOpt, dimName, dataIndex, dimIndex) {
@@ -84,10 +89,6 @@ function createListFromArray(source, seriesModel) {
     list.initData(source, null, dimValueGetter);
 
     return list;
-}
-
-function isStackable(axisType) {
-    return axisType !== 'category' && axisType !== 'time';
 }
 
 function isNeedCompleteOrdinalData(source) {

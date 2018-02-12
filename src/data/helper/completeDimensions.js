@@ -21,7 +21,8 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *      provides not only dim template, but also default order.
  *      properties: 'name', 'type', 'displayName'.
  *      `name` of each item provides default coord name.
- *      [{dimsDef: [string...]}, ...] can be specified to give names.
+ *      [{dimsDef: [string...]}, ...] dimsDef of sysDim item provides default dim name, and
+ *                                    provide dims count that the sysDim required.
  *      [{ordinalMeta}] can be specified.
  * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
  * @param {Object} [opt]
@@ -198,18 +199,20 @@ function completeDimensions(sysDims, source, opt) {
 // may be visited.
 // (2) sometimes user need to calcualte bubble size or use visualMap
 // on other dimensions besides coordSys needed.
-function getDimCount(source, sysDims, dimsDef, dimCount) {
-    if (dimCount == null) {
-        dimCount = Math.max(
-            source.dimensionsDetectCount || 1,
-            sysDims.length,
-            dimsDef.length
-        );
-        each(sysDims, function (sysDimItem) {
-            var sysDimItemDimsDef = sysDimItem.dimsDef;
-            sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
-        });
-    }
+// So, dims that is not used by system, should be shared in storage?
+function getDimCount(source, sysDims, dimsDef, optDimCount) {
+    // Note that the result dimCount should not small than columns count
+    // of data, otherwise `dataDimNameMap` checking will be incorrect.
+    var dimCount = Math.max(
+        source.dimensionsDetectCount || 1,
+        sysDims.length,
+        dimsDef.length,
+        optDimCount || 0
+    );
+    each(sysDims, function (sysDimItem) {
+        var sysDimItemDimsDef = sysDimItem.dimsDef;
+        sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
+    });
     return dimCount;
 }
 

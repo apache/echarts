@@ -1,5 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
+import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 
 var indexOf = zrUtil.indexOf;
 
@@ -11,32 +12,48 @@ function hasXAndY(item) {
     return !isNaN(parseFloat(item.x)) && !isNaN(parseFloat(item.y));
 }
 
-function getPrecision(data, valueAxisDim, dataIndex) {
-    var precision = -1;
-    do {
-        precision = Math.max(
-            numberUtil.getPrecision(data.get(
-                valueAxisDim, dataIndex
-            )),
-            precision
-        );
-        data = data.stackedOn;
-    } while (data);
+// Make it simple, do not visit all stacked value to count precision.
+// function getPrecision(data, valueAxisDim, dataIndex) {
+//     var precision = -1;
+//     var stackedDim = data.mapDimension(valueAxisDim);
+//     do {
+//         precision = Math.max(
+//             numberUtil.getPrecision(data.get(stackedDim, dataIndex)),
+//             precision
+//         );
+//         var stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
+//         if (stackedOnSeries) {
+//             var byValue = data.get(data.getCalculationInfo('stackedByDimension'), dataIndex);
+//             data = stackedOnSeries.getData();
+//             dataIndex = data.indexOf(data.getCalculationInfo('stackedByDimension'), byValue);
+//             stackedDim = data.getCalculationInfo('stackedDimension');
+//         }
+//         else {
+//             data = null;
+//         }
+//     } while (data);
 
-    return precision;
-}
+//     return precision;
+// }
 
 function markerTypeCalculatorWithExtent(
     mlType, data, otherDataDim, targetDataDim, otherCoordIndex, targetCoordIndex
 ) {
     var coordArr = [];
-    var value = numCalculate(data, targetDataDim, mlType);
 
-    var dataIndex = data.indicesOfNearest(targetDataDim, value, true)[0];
-    coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex, true);
-    coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex, true);
+    var stacked = isDimensionStacked(data, targetDataDim, otherDataDim);
+    var calcDataDim = stacked
+        ? data.getCalculationInfo('stackResultDimension')
+        : targetDataDim;
 
-    var precision = getPrecision(data, targetDataDim, dataIndex);
+    var value = numCalculate(data, calcDataDim, mlType);
+
+    var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
+    coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
+    coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex);
+
+    // Make it simple, do not visit all stacked value to count precision.
+    var precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
     if (precision >= 0) {
         coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
@@ -192,7 +209,7 @@ export function numCalculate(data, valueDataDim, type) {
                 sum += val;
                 count++;
             }
-        }, true);
+        });
         return sum / count;
     }
     else {

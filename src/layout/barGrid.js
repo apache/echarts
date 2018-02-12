@@ -1,5 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../util/number';
+import {isDimensionStacked} from '../data/helper/dataStackHelper';
 
 var STACK_PREFIX = '__ec_stack_';
 
@@ -236,18 +237,6 @@ export function layout(seriesType, ecModel, api) {
 
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
 
-        var valueAxisStart = baseAxis.onZero
-            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
-            : valueAxis.getGlobalExtent()[0];
-
-        var coordDims = [
-            data.mapDimension('x'),
-            data.mapDimension('y')
-        ];
-        var coords = data.mapArray(coordDims, function (x, y) {
-            return cartesian.dataToPoint([x, y]);
-        }, true);
-
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
         lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
@@ -256,54 +245,69 @@ export function layout(seriesType, ecModel, api) {
             size: columnWidth
         });
 
-        data.each(data.mapDimension(valueAxis.dim), function (value, idx) {
+        var valueDim = data.mapDimension(valueAxis.dim);
+        var baseDim = data.mapDimension(baseAxis.dim);
+        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var isValueAxisH = valueAxis.isHorizontal();
+
+        var valueAxisStart = (baseAxis.onZero || stacked)
+            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
+            : valueAxis.getGlobalExtent()[0];
+
+        for (var idx = 0, len = data.count(); idx < len; idx++) {
+            var value = data.get(valueDim, idx);
+            var baseValue = data.get(baseDim, idx);
+
             if (isNaN(value)) {
-                return;
+                continue;
             }
 
-            if (!lastStackCoords[stackId][idx]) {
-                lastStackCoords[stackId][idx] = {
-                    p: valueAxisStart, // Positive stack
-                    n: valueAxisStart  // Negative stack
-                };
-                lastStackCoordsOrigin[stackId][idx] = {
-                    p: valueAxisStart, // Positive stack
-                    n: valueAxisStart  // Negative stack
-                };
-            }
             var sign = value >= 0 ? 'p' : 'n';
-            var coord = coords[idx];
-            var lastCoord = lastStackCoords[stackId][idx][sign];
-            var lastCoordOrigin = lastStackCoordsOrigin[stackId][idx][sign];
+            var baseCoord = valueAxisStart;
+
+            // Because of the barMinHeight, we can not use the value in
+            // stackResultDimension directly.
+            if (stacked) {
+                // Only ordinal axis can be stacked.
+                if (!lastStackCoords[stackId][baseValue]) {
+                    lastStackCoords[stackId][baseValue] = {
+                        p: valueAxisStart, // Positive stack
+                        n: valueAxisStart  // Negative stack
+                    };
+                }
+                // Should also consider #4243
+                baseCoord = lastStackCoords[stackId][baseValue][sign];
+            }
+
             var x;
             var y;
             var width;
             var height;
 
-            if (valueAxis.isHorizontal()) {
-                x = lastCoord;
+            if (isValueAxisH) {
+                var coord = cartesian.dataToPoint([value, baseValue]);
+                x = baseCoord;
                 y = coord[1] + columnOffset;
-                width = coord[0] - lastCoordOrigin;
+                width = coord[0] - valueAxisStart;
                 height = columnWidth;
 
-                lastStackCoordsOrigin[stackId][idx][sign] += width;
                 if (Math.abs(width) < barMinHeight) {
                     width = (width < 0 ? -1 : 1) * barMinHeight;
                 }
-                lastStackCoords[stackId][idx][sign] += width;
+                stacked && (lastStackCoords[stackId][baseValue][sign] += width);
             }
             else {
+                var coord = cartesian.dataToPoint([baseValue, value]);
                 x = coord[0] + columnOffset;
-                y = lastCoord;
+                y = baseCoord;
                 width = columnWidth;
-                height = coord[1] - lastCoordOrigin;
+                height = coord[1] - valueAxisStart;
 
-                lastStackCoordsOrigin[stackId][idx][sign] += height;
                 if (Math.abs(height) < barMinHeight) {
                     // Include zero to has a positive bar
                     height = (height <= 0 ? -1 : 1) * barMinHeight;
                 }
-                lastStackCoords[stackId][idx][sign] += height;
+                stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
 
             data.setItemLayout(idx, {
@@ -312,7 +316,7 @@ export function layout(seriesType, ecModel, api) {
                 width: width,
                 height: height
             });
-        }, true);
+        }
 
     }, this);
 }

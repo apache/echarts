@@ -265,7 +265,7 @@ var PiecewiseModel = VisualMapModel.extend({
                 // Should always base on model pieceList, because it is order sensitive.
                 var pIdx = VisualMapping.findPieceIndex(value, this._pieceList);
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
-            }, true, this);
+            }, this);
 
             result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
         }, this);

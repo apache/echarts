@@ -22,6 +22,7 @@
         <div id="layout0"></div>
         <div id="layout1"></div>
         <div id="layout2"></div>
+        <div id="layout3"></div>
 
 
 
@@ -135,6 +136,8 @@
 
 
 
+
+
         <script>
             require(['echarts'], function (echarts) {
 
@@ -196,6 +199,55 @@
                             }
                         });
                     }
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                // Thanks to: https://github.com/lzp4ever
+                var option = {
+                    legend: {},
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    toolbox: {
+                        top: 25,
+                        // right: 20,
+                        feature: {
+                            magicType: {
+                                type: ['stack', 'tiled']
+                            }
+                        }
+                    },
+                    dataset: {
+                        source: [
+                            ['series', '1', '2', '3', '4', '5', '6'],
+                            ['a', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                            ['b', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                            ['c', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                            ['d', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1],
+                        ],
+                    },
+                    xAxis: { type: 'category' },
+                    yAxis: { gridIndex: 0 },
+                    series: [
+                        { type: 'line', stack: 'sameStack', smooth: true, seriesLayoutBy: 'row', areaStyle: {}, label: {show: true} },
+                        { type: 'line', stack: 'sameStack', smooth: true, seriesLayoutBy: 'row', areaStyle: {}, label: {show: true} },
+                        { type: 'line', stack: 'sameStack', smooth: true, seriesLayoutBy: 'row', areaStyle: {}, label: {show: true} },
+                        { type: 'line', stack: 'sameStack', smooth: true, seriesLayoutBy: 'row', areaStyle: {}, label: {show: true} },
+
+                    ],
+                };
+
+                var chart = testHelper.create(echarts, 'layout3', {
+                    title: 'stack',
+                    option: option,
+                    dataTable: option.dataset.source
                 });
             });
         </script>

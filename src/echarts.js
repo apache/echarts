@@ -21,8 +21,7 @@ import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from './model/OptionManager';
 import backwardCompat from './preprocessor/backwardCompat';
-// -STACK-
-// import dataStack from './processor/dataStack';
+import dataStack from './processor/dataStack';
 import ComponentModel from './model/Component';
 import SeriesModel from './model/Series';
 import ComponentView from './view/Component';
@@ -798,8 +797,7 @@ var updateMethods = {
         // deteming whether use progressive rendering.
         updateStreamModes(this, ecModel);
 
-        // -STACK-
-        stackSeriesData(ecModel);
+        // stackSeriesData(ecModel);
 
         coordSysMgr.update(ecModel, api);
 
@@ -1400,26 +1398,6 @@ function prepareView(ecIns, type, ecModel, scheduler) {
             i++;
         }
     }
-}
-
-/**
- * -STACK-
- * @private
- */
-function stackSeriesData(ecModel) {
-    var stackedDataMap = {};
-    ecModel.eachSeries(function (series) {
-        var stack = series.get('stack');
-        var data = series.getData();
-        if (stack && data.type === 'list') {
-            var previousStack = stackedDataMap[stack];
-            // Avoid conflict with Object.prototype
-            if (stackedDataMap.hasOwnProperty(stack) && previousStack) {
-                data.stackedOn = previousStack;
-            }
-            stackedDataMap[stack] = data;
-        }
-    });
 }
 
 // /**
@@ -2180,8 +2158,7 @@ export function getMap(mapName) {
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);
-// -STACK-
-// registerProcessor(PRIORITY_PROCESSOR_STATISTIC, dataStack);
+registerProcessor(PRIORITY_PROCESSOR_STATISTIC, dataStack);
 registerLoading('default', loadingDefault);
 
 // Default actions

@@ -108,7 +108,7 @@ export default function (seriesType, ecModel, api, payload) {
             });
 
             currentAngle = endAngle;
-        }, true);
+        });
 
         // Some sector is constrained by minAngle
         // Rest sectors needs recalculate angle

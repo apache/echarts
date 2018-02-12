@@ -1,38 +1,8 @@
+import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 
 // var arrayDiff = require('zrender/src/core/arrayDiff');
 // 'zrender/src/core/arrayDiff' has been used before, but it did
 // not do well in performance when roam with fixed dataZoom window.
-
-function sign(val) {
-    return val >= 0 ? 1 : -1;
-}
-
-function getStackedOnPoint(coordSys, data, idx) {
-    var baseAxis = coordSys.getBaseAxis();
-    var valueAxis = coordSys.getOtherAxis(baseAxis);
-    var valueStart = baseAxis.onZero
-        ? 0 : valueAxis.scale.getExtent()[0];
-
-    var valueDim = valueAxis.dim;
-    var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
-
-    var stackedOnSameSign;
-    var stackedOn = data.stackedOn;
-    var val = data.get(valueDim, idx);
-    // Find first stacked value with same sign
-    while (stackedOn &&
-        sign(stackedOn.get(valueDim, idx)) === sign(val)
-    ) {
-        stackedOnSameSign = stackedOn;
-        break;
-    }
-    var stackedData = [];
-    stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
-    stackedData[1 - baseDataOffset] = stackedOnSameSign
-        ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
-
-    return coordSys.dataToPoint(stackedData);
-}
 
 // function convertToIntId(newIdList, oldIdList) {
 //     // Generate int id instead of string id.
@@ -78,7 +48,8 @@ function diffData(oldData, newData) {
 export default function (
     oldData, newData,
     oldStackedOnPoints, newStackedOnPoints,
-    oldCoordSys, newCoordSys
+    oldCoordSys, newCoordSys,
+    oldValueOrigin, newValueOrigin
 ) {
     var diff = diffData(oldData, newData);
 
@@ -99,7 +70,10 @@ export default function (
     var status = [];
     var sortedIndices = [];
     var rawIndices = [];
-    var dims = newCoordSys.dimensions;
+
+    var newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
+    var oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
+
     for (var i = 0; i < diff.length; i++) {
         var diffItem = diff[i];
         var pointAdded = true;
@@ -126,14 +100,15 @@ export default function (
                 var idx = diffItem.idx;
                 currPoints.push(
                     oldCoordSys.dataToPoint([
-                        newData.get(dims[0], idx, true), newData.get(dims[1], idx, true)
+                        newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idx),
+                        newData.get(newDataOldCoordInfo.dataDimsForPoint[1], idx)
                     ])
                 );
 
                 nextPoints.push(newData.getItemLayout(idx).slice());
 
                 currStackedPoints.push(
-                    getStackedOnPoint(oldCoordSys, newData, idx)
+                    getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idx)
                 );
                 nextStackedPoints.push(newStackedOnPoints[idx]);
 
@@ -147,14 +122,13 @@ export default function (
                 if (rawIndex !== idx) {
                     currPoints.push(oldData.getItemLayout(idx));
                     nextPoints.push(newCoordSys.dataToPoint([
-                        oldData.get(dims[0], idx, true), oldData.get(dims[1], idx, true)
+                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idx),
+                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idx)
                     ]));
 
                     currStackedPoints.push(oldStackedOnPoints[idx]);
                     nextStackedPoints.push(
-                        getStackedOnPoint(
-                            newCoordSys, oldData, idx
-                        )
+                        getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, idx)
                     );
 
                     rawIndices.push(rawIndex);
