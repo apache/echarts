@@ -23,6 +23,130 @@ function drawSegment(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
 ) {
+    if (smoothMonotone == null) {
+        if (isMono(points, 'x')) {
+            return drawMono(ctx, points, start, segLen, allLen,
+                dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
+        }
+        else if (isMono(points, 'y')) {
+            return drawMono(ctx, points, start, segLen, allLen,
+                dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
+        }
+        else {
+            return drawNonMono.apply(this, arguments);
+        }
+    }
+    else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
+        return drawMono.apply(this, arguments);
+    }
+    else {
+        return drawNonMono.apply(this, arguments);
+    }
+}
+
+/**
+ * Check if points is in monotone.
+ *
+ * @param {number[][]} points         Array of points which is in [x, y] form
+ * @param {string}     smoothMonotone 'x', 'y', or 'none', stating for which
+ *                                    dimension that is checking.
+ *                                    If is 'none', `drawNonMono` should be
+ *                                    called.
+ *                                    If is undefined, either being monotone
+ *                                    in 'x' or 'y' will call `drawMono`.
+ */
+function isMono(points, smoothMonotone) {
+    if (points.length <= 1) {
+        return true;
+    }
+
+    var dim = smoothMonotone === 'x' ? 0 : 1;
+    var last = points[0][dim];
+    var lastDiff = 0;
+    for (var i = 1; i < points.length; ++i) {
+        var diff = points[i][dim] - last;
+        if (!isNaN(diff) && !isNaN(lastDiff)
+            && diff !== 0 && lastDiff !== 0
+            && ((diff >= 0) !== (lastDiff >= 0))
+        ) {
+            return false;
+        }
+        if (!isNaN(diff) && diff !== 0) {
+            lastDiff = diff;
+            last = points[i][dim];
+        }
+    }
+    return true;
+}
+
+/**
+ * Draw smoothed line in monotone, in which only vertical or horizontal bezier
+ * control points will be used. This should be used when points are monotone
+ * either in x or y dimension.
+ */
+function drawMono(
+    ctx, points, start, segLen, allLen,
+    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+) {
+    var prevIdx = 0;
+    var idx = start;
+    for (var k = 0; k < segLen; k++) {
+        var p = points[idx];
+        if (idx >= allLen || idx < 0) {
+            break;
+        }
+        if (isPointNull(p)) {
+            if (connectNulls) {
+                idx += dir;
+                continue;
+            }
+            break;
+        }
+
+        if (idx === start) {
+            ctx[dir > 0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
+        }
+        else {
+            if (smooth > 0) {
+                var prevP = points[prevIdx];
+                var dim = smoothMonotone === 'y' ? 1 : 0;
+
+                // Length of control point to p, either in x or y, but not both
+                var ctrlLen = (p[dim] - prevP[dim]) * smooth;
+
+                v2Copy(cp0, prevP);
+                cp0[dim] = prevP[dim] + ctrlLen;
+
+                v2Copy(cp1, p);
+                cp1[dim] = p[dim] - ctrlLen;
+
+                ctx.bezierCurveTo(
+                    cp0[0], cp0[1],
+                    cp1[0], cp1[1],
+                    p[0], p[1]
+                );
+            }
+            else {
+                ctx.lineTo(p[0], p[1]);
+            }
+        }
+
+        prevIdx = idx;
+        idx += dir;
+    }
+
+    return k;
+}
+
+/**
+ * Draw smoothed line in non-monotone, in may cause undesired curve in extreme
+ * situations. This should be used when points are non-monotone neither in x or
+ * y dimension.
+ */
+function drawNonMono(
+    ctx, points, start, segLen, allLen,
+    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+) {
     var prevIdx = 0;
     var idx = start;
     for (var k = 0; k < segLen; k++) {

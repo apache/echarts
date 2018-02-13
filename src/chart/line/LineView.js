@@ -26,7 +26,7 @@ function isPointsSame(points1, points2) {
 }
 
 function getSmooth(smooth) {
-    return typeof (smooth) === 'number' ? smooth : (smooth ? 0.3 : 0);
+    return typeof (smooth) === 'number' ? smooth : (smooth ? 0.5 : 0);
 }
 
 function getAxisExtentWithGap(axis) {
