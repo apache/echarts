@@ -28,38 +28,28 @@
                     // renderer: 'svg'
                 });
 
-                var data = [];
-                for (var i = 0; i < 8; ++i) {
-                    data.push([
-                        i,
-                        Math.floor(Math.random() * 100)
-                    ])
-                }
+                var data = [
+                    [0, 0]
+                    [1, 1],
+                    [2, 4],
+                    [3, 3],
+                    [4, 3],
+                    [5, 3],
+                    [6, 7],
+                    [7, 7]
+                ];
 
                 option = {
+                    color: ['#4ea397', '#d0648a', '#f5b841'],
                     animation: false,
                     title: {
                         text: '光滑曲线新老算法对比',
                         left: '50%',
                         textAlign: 'center'
                     },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            lineStyle: {
-                                color: '#ddd'
-                            }
-                        },
-                        backgroundColor: 'rgba(255,255,255,1)',
-                        padding: [5, 10],
-                        textStyle: {
-                            color: '#7588E4',
-                        },
-                        extraCssText: 'box-shadow: 0 0 5px rgba(0,0,0,0.3)'
-                    },
                     legend: {
-                        left: 20,
-                        data: ['非单调光滑（老算法）','非单调光滑（新算法）', '不光滑']
+                        top: 30,
+                        data: ['非单调光滑（老算法）','单调光滑（新算法）', '不光滑']
                     },
                     xAxis: {
                         type: 'value'
@@ -81,9 +71,12 @@
                         data: data,
                         lineStyle: {
                             width: 1
+                        },
+                        areaStyle: {
+                            opacity: 0.4
                         }
                     }, {
-                        name: '非单调光滑（新算法）',
+                        name: '单调光滑（新算法）',
                         type: 'line',
                         smooth: true,
                         showSymbol: false,
@@ -91,6 +84,9 @@
                         data: data,
                         lineStyle: {
                             width: 1
+                        },
+                        areaStyle: {
+                            opacity: 0.4
                         }
                     }, {
                         name: '不光滑',
@@ -101,7 +97,8 @@
                         connectNulls: true,
                         data: data,
                         lineStyle: {
-                            width: 1
+                            width: 3,
+                            type: 'dashed'
                         }
                     }]
                 };
