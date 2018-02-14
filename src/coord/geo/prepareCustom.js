@@ -25,9 +25,11 @@ export default function (coordSys) {
             height: rect.height
         },
         api: {
-            coord: function (data, noRoam) {
-                // do not provide "out" param
-                return coordSys.dataToPoint(data, noRoam);
+            coord: function (data) {
+                // do not provide "out" and noRoam param,
+                // Compatible with this usage:
+                // echarts.util.map(item.points, api.coord)
+                return coordSys.dataToPoint(data);
             },
             size: zrUtil.bind(dataToCoordSize, coordSys)
         }
