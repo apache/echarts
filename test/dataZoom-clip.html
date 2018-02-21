@@ -1,0 +1,98 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="../dist/echarts.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+        <div id="main0"></div>
+
+
+
+
+        <script>
+
+
+            function makeSpecialTrendData() {
+                var data = {data1: []};
+                var base = -100;
+                for (var i = 0; i < 50; i++) {
+                    if (i < 10) {
+                        data.data1.push([i * 10, base += 197 + random(3)]);
+                    }
+                    else if (i < 20) {
+                        data.data1.push([i * 10, base -= 17 + random(3)]);
+                    }
+                    else if (i < 30) {
+                        data.data1.push([i * 10, base += 3 + random(3)]);
+                    }
+                    else if (i < 40) {
+                        data.data1.push([i * 10, base -= 5 + random(3)]);
+                    }
+                    else {
+                        data.data1.push([i * 10, base += 157 + random(3)]);
+                    }
+                }
+                return data;
+            }
+
+            function random(max) {
+                return +(Math.random() * max).toFixed(3);
+            }
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: [{
+                    type: 'time',
+                    boundaryGap: false
+                }],
+                yAxis: [{
+                    type: 'value',
+                    name: 'Github Star'
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    filterMode: 'none',
+                    start: 5,
+                    end: 40
+                }, {
+                    type: 'slider',
+                    filterMode: 'none',
+                    start: 5,
+                    end: 40
+                }],
+                series: [{
+                    type: 'line',
+                    name: 'Star',
+                    hoverAnimation: false,
+                    symbolSize: 25,
+                    sampling: 'average',
+                    // smooth: true,
+                    // symbol: 'none',
+                    data: makeSpecialTrendData().data1
+                }]
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main0', {
+                title: 'Clips line and symbols (dataZoom.filterMode: "none")',
+                option: option
+            });
+
+
+        </script>
+    </body>
+</html>
