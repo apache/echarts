@@ -202,10 +202,17 @@ function ECharts(dom, theme, opts) {
      */
     var api = this._api = createExtensionAPI(this);
 
+    // Sort on demand
+    function prioritySortFunc(a, b) {
+        return a.__prio - b.__prio;
+    }
+    timsort(visualFuncs, prioritySortFunc);
+    timsort(dataProcessorFuncs, prioritySortFunc);
+
     /**
      * @type {module:echarts/stream/Scheduler}
      */
-    this._scheduler = new Scheduler(this, api);
+    this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
 
     Eventful.call(this);
 
@@ -215,8 +222,6 @@ function ECharts(dom, theme, opts) {
      */
     this._messageCenter = new MessageCenter();
 
-    // this._scheduler = new Scheduler();
-
     // Init mouse events
     this._initEvents();
 
@@ -225,12 +230,6 @@ function ECharts(dom, theme, opts) {
 
     // Can't dispatch action during rendering procedure
     this._pendingActions = [];
-    // Sort on demand
-    function prioritySortFunc(a, b) {
-        return a.__prio - b.__prio;
-    }
-    timsort(visualFuncs, prioritySortFunc);
-    timsort(dataProcessorFuncs, prioritySortFunc);
 
     zr.animation.on('frame', this._onframe, this);
 
@@ -279,7 +278,7 @@ echartsProto._onframe = function () {
             scheduler.performSeriesTasks(ecModel);
 
             // Currently dataProcessorFuncs do not check threshold.
-            scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
+            scheduler.performDataProcessorTasks(ecModel);
 
             updateStreamModes(this, ecModel);
 
@@ -290,7 +289,7 @@ echartsProto._onframe = function () {
             // this._coordSysMgr.update(ecModel, api);
 
             // console.log('--- ec frame visual ---', remainTime);
-            scheduler.performVisualTasks(visualFuncs, ecModel);
+            scheduler.performVisualTasks(ecModel);
 
             renderSeries(this, this._model, api, 'remain');
 
@@ -790,7 +789,7 @@ var updateMethods = {
         // In LineView may save the old coordinate system and use it to get the orignal point
         coordSysMgr.create(ecModel, api);
 
-        scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel, payload);
+        scheduler.performDataProcessorTasks(ecModel, payload);
 
         // Current stream render is not supported in data process. So we can update
         // stream modes after data processing, where the filtered data is used to
@@ -802,7 +801,7 @@ var updateMethods = {
         coordSysMgr.update(ecModel, api);
 
         clearColorPalette(ecModel);
-        scheduler.performVisualTasks(visualFuncs, ecModel, payload);
+        scheduler.performVisualTasks(ecModel, payload);
 
         render(this, ecModel, api, payload);
 
@@ -896,9 +895,9 @@ var updateMethods = {
 
         clearColorPalette(ecModel);
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
+        // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
         this._scheduler.performVisualTasks(
-            visualFuncs, ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
+            ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
         );
 
         // Currently, not call render of components. Geo render cost a lot.
@@ -925,7 +924,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
 
         render(this, this._model, this._api, payload);
 
@@ -951,7 +950,7 @@ var updateMethods = {
         // clearColorPalette(ecModel);
 
         // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
+        // this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
 
         // render(this, this._model, this._api, payload);
 
@@ -975,8 +974,8 @@ var updateMethods = {
         // ChartView.markUpdateMethod(payload, 'updateLayout');
 
         // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        // // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
+        // this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
 
         // render(this, this._model, this._api, payload);
 
@@ -990,9 +989,7 @@ function prepare(ecIns) {
 
     scheduler.restorePipelines(ecModel);
 
-    scheduler.prepareStageTasks(dataProcessorFuncs);
-
-    scheduler.prepareStageTasks(visualFuncs);
+    scheduler.prepareStageTasks();
 
     prepareView(ecIns, 'component', ecModel, scheduler);
 
