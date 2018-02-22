@@ -11,11 +11,11 @@ export default function () {
         var pipelineContext = seriesModel.pipelineContext;
 
         var originalLarge = fields.large;
-        var originalIncremental = fields.incrementalRender;
+        var originalProgressive = fields.canProgressiveRender;
 
         var large = fields.large = pipelineContext.large;
-        var incremental = fields.incrementalRender = pipelineContext.incrementalRender;
+        var progressive = fields.canProgressiveRender = pipelineContext.canProgressiveRender;
 
-        return ((originalLarge ^ large) || (originalIncremental ^ incremental)) && 'reset';
+        return ((originalLarge ^ large) || (originalProgressive ^ progressive)) && 'reset';
     };
 }

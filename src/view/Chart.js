@@ -189,26 +189,34 @@ function renderTaskReset(context) {
     var api = context.api;
     var payload = context.payload;
     // ???! remove updateView updateVisual
-    var incremental = seriesModel.pipelineContext.incrementalRender;
+    var canProgressiveRender = seriesModel.pipelineContext.canProgressiveRender;
     var view = context.view;
 
     var updateMethod = payload && inner(payload).updateMethod;
-    var methodName = (incremental && view.incrementalPrepareRender)
+    var methodName = canProgressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
-        ? updateMethod
+        ? 'updateMethod'
+        // `appendData` is also supported when data amount
+        // is less than progressive threshold.
         : 'render';
 
     view[methodName](seriesModel, ecModel, api, payload);
 
-    return incremental ? renderTaskProgress : null;
+    return progressMethodMap[methodName];
 }
 
-function renderTaskProgress(params, context) {
-    context.view.incrementalRender(
-        params, context.model, context.ecModel, context.api, context.payload
-    );
-}
-
+var progressMethodMap = {
+    incrementalPrepareRender: function (params, context) {
+        context.view.incrementalRender(
+            params, context.model, context.ecModel, context.api, context.payload
+        );
+    },
+    render: function (params, context) {
+        context.view.render(
+            context.model, context.ecModel, context.api, context.payload
+        );
+    }
+};
 
 export default Chart;

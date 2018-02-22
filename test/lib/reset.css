@@ -18,6 +18,15 @@ body > .main {
     text-align: center;
     font-size: 14px;
 }
+.test-title-inner {
+    display: inline-block;
+    *display: inline;
+    zoom: 1;
+    text-align: left;
+}
+.test-buttons button {
+    margin: 10px 5px;
+}
 .test-chart-block {
     position: relative;
 }
@@ -30,13 +39,13 @@ body > .main {
     background: #fff;
     z-index: 99;
     width: 300px;
+    border-left: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
 }
 .test-chart-block-has-right .test-chart-block-left {
     margin-right: 320px;
 }
 .test-info {
-    border-left: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
     padding-left: 10px;
     overflow: auto;
 }

@@ -53,7 +53,7 @@ proto.getPerformArgs = function (task, isBlock) {
     var pCtx = pipeline.context;
     var incremental = !isBlock
         && pipeline.progressiveEnabled
-        && (!pCtx || pCtx.incrementalRender)
+        && (!pCtx || pCtx.canProgressiveRender)
         && task.__idxInPipeline > pipeline.bockIndex;
 
     return {step: incremental ? pipeline.step : null};
@@ -74,13 +74,20 @@ proto.updateStreamModes = function (seriesModel, view) {
     var pipeline = this._pipelineMap.get(seriesModel.uid);
     var data = seriesModel.getData();
     var dataLen = data.count();
-    var incrementalRender = pipeline.progressiveEnabled
+
+    // `canProgressiveRender` means that can render progressively in each
+    // animation frame. Note that some types of series do not provide
+    // `view.incrementalPrepareRender` but support `chart.appendData`. We
+    // use the term `incremental` but not `progressive` to describe the
+    // case that `chart.appendData`.
+    var canProgressiveRender = pipeline.progressiveEnabled
         && view.incrementalPrepareRender
         && dataLen >= pipeline.threshold;
+
     var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
 
     seriesModel.pipelineContext = pipeline.context = {
-        incrementalRender: incrementalRender,
+        canProgressiveRender: canProgressiveRender,
         large: large
     };
 };

@@ -19,8 +19,20 @@
 
 
     /**
-     * opt: {lazyUpdate, title, option, info, infoKey, dataTable, dataTables, width, height, draggable, dataTableLimit}
-     * dataTabel can be array.
+     * @param {Object} opt
+     * @param {string|Array.<string>} [opt.title] If array, each item is on a single line.
+     * @param {Option} opt.option
+     * @param {Object} [opt.info] info object to display.
+     * @param {string} [opt.infoKey='option']
+     * @param {Object|Array} [opt.dataTable]
+     * @param {Array.<Object|Array>} [opt.dataTables] Multiple dataTables.
+     * @param {number} [opt.dataTableLimit=DEFAULT_DATA_TABLE_LIMIT]
+     * @param {number} [opt.width]
+     * @param {number} [opt.height]
+     * @param {boolean} [opt.draggable]
+     * @param {boolean} [opt.lazyUpdate]
+     * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
+     * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      */
     testHelper.create = function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
@@ -29,19 +41,20 @@
             return;
         }
 
-        var title = document.createElement('h1');
+        var title = document.createElement('div');
         var left = document.createElement('div');
         var chartContainer = document.createElement('div');
+        var buttonsContainer = document.createElement('div');
         var dataTableContainer = document.createElement('div');
         var infoContainer = document.createElement('div');
 
         title.setAttribute('title', dom.getAttribute('id'));
 
         title.className = 'test-title';
-
         dom.className = 'test-chart-block';
         left.className = 'test-chart-block-left';
         chartContainer.className = 'test-chart';
+        buttonsContainer.className = 'test-buttons';
         dataTableContainer.className = 'test-data-table';
         infoContainer.className = 'test-info';
 
@@ -50,6 +63,7 @@
             infoContainer.className += ' test-chart-block-right';
         }
 
+        left.appendChild(buttonsContainer);
         left.appendChild(dataTableContainer);
         left.appendChild(chartContainer);
         dom.appendChild(infoContainer);
@@ -57,12 +71,21 @@
         dom.parentNode.insertBefore(title, dom);
 
         var chart;
-        if (opt.title) {
-            title.innerHTML = testHelper.encodeHTML(opt.title).replace('\n', '<br>');
+
+        var optTitle = opt.title;
+        if (optTitle) {
+            if (optTitle instanceof Array) {
+                optTitle = optTitle.join('\n');
+            }
+            title.innerHTML = '<div class="test-title-inner">'
+                + testHelper.encodeHTML(optTitle).replace('\n', '<br>')
+                + '</div>';
         }
+
         if (opt.option) {
             chart = testHelper.createChart(echarts, chartContainer, opt.option, opt);
         }
+
         var dataTables = opt.dataTables;
         if (!dataTables && opt.dataTable) {
             dataTables = [opt.dataTable];
@@ -74,6 +97,23 @@
             }
             dataTableContainer.innerHTML = tableHTML.join('');
         }
+
+        var buttons = opt.buttons || opt.button;
+        if (!(buttons instanceof Array)) {
+            buttons = buttons ? [buttons] : [];
+        }
+        if (buttons.length) {
+            for (var i = 0; i < buttons.length; i++) {
+                var btnDefine = buttons[i];
+                if (btnDefine) {
+                    var btn = document.createElement('button');
+                    btn.innerHTML = testHelper.encodeHTML(btnDefine.name || btnDefine.text || 'button');
+                    btn.addEventListener('click', btnDefine.onClick || btnDefine.onclick);
+                    buttonsContainer.appendChild(btn);
+                }
+            }
+        }
+
         if (opt.info) {
             infoContainer.innerHTML = createObjectHTML(opt.info, opt.infoKey || 'option');
         }

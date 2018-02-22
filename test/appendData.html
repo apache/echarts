@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <!-- <div id="main1"></div> -->
+
+
+        <script>
+            function addButton(name, cb) {
+
+            }
+        </script>
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                // Thanks to <https://github.com/Truantboy>, see: #7718.
+                option = {
+                    animation: true,
+                    tooltip: {},
+                    xAxis: {},
+                    yAxis: {},
+                    legend: {},
+                    series: [{
+                        type: 'scatter',
+                        name: 'data',
+                        data: [[0, 0], [2005, 2005]],
+                        progressiveThreshold: 2000,
+                        symbolSize: function (val) {
+                            return Math.random() * 30 + 10;
+                        }
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        '(1) AppendData less than limit, should render thousands of points normally.',
+                        '(2) Test click lengend, should be normal.'
+                    ],
+                    option: option,
+                    button: {
+                        text: 'Click to appendData',
+                        onClick: function () {
+                            var tp = []
+                            var appendCount = 1997;
+
+                            for(var i = 1; i < appendCount; i++) {
+                                tp[i] = [i, 1];
+                            }
+
+                            myChart.appendData({
+                                seriesIndex: 0,
+                                data: tp
+                            });
+                        }
+                    }
+                });
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                option = {
+                    animation: true,
+                    tooltip: {},
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        data: [[0, 0], [2005, 2005]],
+                        progressiveThreshold: 2000,
+                        symbolSize: function (val) {
+                            return Math.random() * 30 + 10;
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Click to appendData, color should be the same.'
+                    ].join('\n'),
+                    option: option,
+                    button: {
+                        text: 'Click to appendData',
+                        onClick: function () {
+                            var tp = []
+                            var appendCount = 1998;
+
+                            for(var i = 1; i < appendCount; i++) {
+                                tp[i] = [i, 1];
+                            }
+
+                            chart.appendData({
+                                seriesIndex: 0,
+                                data: tp
+                            });
+                        }
+                    }
+                });
+
+            });
+
+        </script>
+
+
+
+
+
+    </body>
+</html>
