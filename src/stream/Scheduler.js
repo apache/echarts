@@ -22,7 +22,7 @@ function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
     // Fix current processors in case that in some rear cases that
     // processors might be registered after echarts instance created.
     // Register processors incrementally for a echarts instance is
-    // not supported by this stream architecture. See #7695.
+    // not supported by this stream architecture.
     this._dataProcessorHandlers = dataProcessorHandlers.slice();
     this._visualHandlers = visualHandlers.slice();
 
