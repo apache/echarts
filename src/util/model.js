@@ -5,11 +5,11 @@ var isObject = zrUtil.isObject;
 var isArray = zrUtil.isArray;
 
 /**
- * name may be displayed on screen, so use '-'.
- * But we should make sure it is not duplicated
- * with user specified name, so use '\0';
+ * Make the name displayable. But we should
+ * make sure it is not duplicated with user
+ * specified name, so use '\0';
  */
-export var DEFAULT_COMPONENT_NAME = '\0-';
+var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
 
 /**
  * If value is not array, then translate it to array.
@@ -248,7 +248,9 @@ export function makeIdAndName(mapResult) {
             ? opt.name + ''
             : existCpt
             ? existCpt.name
-            : DEFAULT_COMPONENT_NAME;
+            // Avoid diffferent series has the same name,
+            // because name may be used like in color pallet.
+            : DUMMY_COMPONENT_NAME_PREFIX + index;
 
         if (existCpt) {
             keyInfo.id = existCpt.id;
@@ -271,6 +273,12 @@ export function makeIdAndName(mapResult) {
 
         idMap.set(keyInfo.id, item);
     });
+}
+
+export function isNameSpecified(componentModel) {
+    var name = componentModel.name;
+    // Is specified when `indexOf` get -1 or > 0.
+    return !!(name && name.indexOf(DUMMY_COMPONENT_NAME_PREFIX));
 }
 
 /**

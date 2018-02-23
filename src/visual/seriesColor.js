@@ -9,7 +9,7 @@ export default {
         var color = seriesModel.get(colorAccessPath) // Set in itemStyle
             || seriesModel.getColorFromPalette(
                 // TODO series count changed.
-                seriesModel.get('name'), null, ecModel.getSeriesCount()
+                seriesModel.name, null, ecModel.getSeriesCount()
             );  // Default color
 
         // FIXME Set color function or use the platte color

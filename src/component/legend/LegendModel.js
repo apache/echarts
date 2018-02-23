@@ -1,7 +1,7 @@
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
-import {DEFAULT_COMPONENT_NAME} from '../../util/model';
+import {isNameSpecified} from '../../util/model';
 
 var LegendModel = echarts.extendComponentModel({
 
@@ -61,7 +61,7 @@ var LegendModel = echarts.extendComponentModel({
         ecModel.eachRawSeries(function (seriesModel) {
             var seriesName = seriesModel.name;
             availableNames.push(seriesName);
-            var potentialSeriesName;
+            var isPotential;
 
             if (seriesModel.legendDataProvider) {
                 var data = seriesModel.legendDataProvider();
@@ -75,15 +75,15 @@ var LegendModel = echarts.extendComponentModel({
                     potentialData = potentialData.concat(names);
                 }
                 else {
-                    potentialSeriesName = seriesName;
+                    isPotential = true;
                 }
             }
             else {
-                potentialSeriesName = seriesName;
+                isPotential = true;
             }
 
-            if (potentialSeriesName && potentialSeriesName !== DEFAULT_COMPONENT_NAME) {
-                potentialData.push(potentialSeriesName);
+            if (isPotential && isNameSpecified(seriesModel)) {
+                potentialData.push(seriesModel.name);
             }
         });
 

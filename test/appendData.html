@@ -20,7 +20,8 @@
 
 
         <div id="main0"></div>
-        <!-- <div id="main1"></div> -->
+        <div id="main1"></div>
+        <div id="main2"></div>
 
 
         <script>
@@ -31,54 +32,59 @@
 
 
 
-        <script>
 
-            var chart;
-            var myChart;
-            var option;
+
+
+
+        <script>
 
             require([
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
 
                 // Thanks to <https://github.com/Truantboy>, see: #7718.
-                option = {
+                var option = {
                     animation: true,
                     tooltip: {},
                     xAxis: {},
                     yAxis: {},
-                    legend: {},
                     series: [{
                         type: 'scatter',
-                        name: 'data',
-                        data: [[0, 0], [2005, 2005]],
-                        progressiveThreshold: 2000,
-                        symbolSize: function (val) {
-                            return Math.random() * 30 + 10;
-                        }
+                        // name: 'data',
+                        data: [[0, 0], [3005, 3005]],
+                        progressiveThreshold: 3000,
+                        symbol: 'triangle',
+                        symbolSize: 20
                     }]
                 };
 
-                chart = myChart = testHelper.create(echarts, 'main0', {
+                var yBase = 500;
+                var appendCount = 2990;
+
+                var myChart = testHelper.create(echarts, 'main0', {
                     title: [
-                        '(1) AppendData less than limit, should render thousands of points normally.',
-                        '(2) Test click lengend, should be normal.'
+                        'Click btn to appendData less than limit, should render thousands of points normally.',
+                        'Click again, should appendData normally.',
+                        'Check hover (emphasis), should scale normally.'
                     ],
                     option: option,
+                    info: option.series,
+                    infoKey: 'series',
                     button: {
-                        text: 'Click to appendData',
+                        text: 'Click to appendData ' + appendCount + ' points',
                         onClick: function () {
                             var tp = []
-                            var appendCount = 1997;
 
                             for(var i = 1; i < appendCount; i++) {
-                                tp[i] = [i, 1];
+                                tp[i] = [i, yBase];
                             }
 
                             myChart.appendData({
                                 seriesIndex: 0,
                                 data: tp
                             });
+
+                            yBase += 1000;
                         }
                     }
                 });
@@ -94,17 +100,77 @@
 
 
 
+
         <script>
 
-            var chart;
-            var myChart;
-            var option;
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                // Thanks to <https://github.com/Truantboy>, see: #7718.
+                var option = {
+                    animation: true,
+                    tooltip: {},
+                    xAxis: {},
+                    yAxis: {},
+                    legend: {},
+                    series: [{
+                        type: 'scatter',
+                        name: 'data',
+                        data: [[0, 0], [3005, 3005]],
+                        progressiveThreshold: 3000,
+                        symbol: 'triangle',
+                        symbolSize: 20
+                    }]
+                };
+
+                var yBase = 500;
+                var appendCount = 4000;
+
+                var myChart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        '(1) Click btn to appendData over limit, should render successfully.',
+                        '(2) Then test click lengend, should be normal.',
+                        '(3) Check that grid intent should be correct.'
+                    ],
+                    option: option,
+                    info: option.series,
+                    infoKey: 'series',
+                    button: {
+                        text: 'Click to appendData ' + appendCount + ' points',
+                        onClick: function () {
+                            var tp = []
+
+                            for(var i = 1; i < appendCount; i++) {
+                                tp[i] = [i, yBase];
+                            }
+
+                            myChart.appendData({
+                                seriesIndex: 0,
+                                data: tp
+                            });
+
+                            yBase += 1000;
+                        }
+                    }
+                });
+
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
 
             require([
                 'echarts'
             ], function (echarts) {
 
-                option = {
+                var option = {
                     animation: true,
                     tooltip: {},
                     xAxis: {},
@@ -113,22 +179,27 @@
                         type: 'scatter',
                         data: [[0, 0], [2005, 2005]],
                         progressiveThreshold: 2000,
-                        symbolSize: function (val) {
-                            return Math.random() * 30 + 10;
-                        }
+                        symbolSize: 20
+                    }, {
+                        type: 'scatter',
+                        data: [[100, 1000], [300, 1005]]
                     }]
                 };
 
-                var chart = testHelper.create(echarts, 'main1', {
+                var appendCount = 1998;
+
+                var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        'Click to appendData, color should be the same.'
+                        'Click to appendData over limit, color should be the same.',
+                        'Check hover (emphasis), should scale normally.'
                     ].join('\n'),
                     option: option,
+                    info: option.series,
+                    infoKey: 'series',
                     button: {
-                        text: 'Click to appendData',
+                        text: 'Click to appendData ' + appendCount + ' points',
                         onClick: function () {
                             var tp = []
-                            var appendCount = 1998;
 
                             for(var i = 1; i < appendCount; i++) {
                                 tp[i] = [i, 1];

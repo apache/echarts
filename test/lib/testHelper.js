@@ -78,7 +78,7 @@
                 optTitle = optTitle.join('\n');
             }
             title.innerHTML = '<div class="test-title-inner">'
-                + testHelper.encodeHTML(optTitle).replace('\n', '<br>')
+                + testHelper.encodeHTML(optTitle).replace(/\n/g, '<br>')
                 + '</div>';
         }
 
