@@ -185,6 +185,18 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
         text = '';
     }
 
+    var layout = this.node.getLayout();
+    var labelMinAngle = labelModel.get('minAngle');
+    if (labelMinAngle == null) {
+        labelMinAngle = normalModel.get('minAngle');
+    }
+    labelMinAngle = labelMinAngle / 180 * Math.PI;
+    var angle = layout.endAngle - layout.startAngle;
+    if (labelMinAngle != null && Math.abs(angle) < labelMinAngle) {
+        // Not displaying text when angle is too small
+        text = '';
+    }
+
     var label = this.childAt(1);
 
     graphic.setLabelStyle(
@@ -196,7 +208,6 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
         }
     );
 
-    var layout = this.node.getLayout();
     var midAngle = (layout.startAngle + layout.endAngle) / 2;
     var dx = Math.cos(midAngle);
     var dy = Math.sin(midAngle);
