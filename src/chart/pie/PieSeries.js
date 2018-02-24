@@ -4,6 +4,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
+import {retrieveRawAttr} from '../../data/helper/dataProvider';
+
 
 var PieSeries = echarts.extendSeriesModel({
 
@@ -19,7 +21,7 @@ var PieSeries = echarts.extendSeriesModel({
             return this.getRawData();
         };
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
 
         this._defaultLabelLine(option);
     },
@@ -28,11 +30,25 @@ var PieSeries = echarts.extendSeriesModel({
     mergeOption: function (newOption) {
         PieSeries.superCall(this, 'mergeOption', newOption);
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
     },
 
     getInitialData: function (option, ecModel) {
         return createListSimply(this, ['value']);
+    },
+
+    _createSelectableList: function () {
+        var data = this.getRawData();
+        var valueDim = data.mapDimension('value');
+        var targetList = [];
+        for (var i = 0, len = data.count(); i < len; i++) {
+            targetList.push({
+                name: data.getName(i),
+                value: data.get(valueDim, i),
+                selected: retrieveRawAttr(data, i, 'selected')
+            });
+        }
+        return targetList;
     },
 
     // Overwrite

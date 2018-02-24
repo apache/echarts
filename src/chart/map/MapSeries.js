@@ -3,7 +3,8 @@ import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 import {encodeHTML, addCommas} from '../../util/format';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
-// import geoCreator from '../../coord/geo/geoCreator';
+import {retrieveRawAttr} from '../../data/helper/dataProvider';
+import geoCreator from '../../coord/geo/geoCreator';
 
 var MapSeries = SeriesModel.extend({
 
@@ -27,12 +28,12 @@ var MapSeries = SeriesModel.extend({
 
     init: function (option) {
 
-        this._fillOption(option, this.getMapType());
+        // this._fillOption(option, this.getMapType());
         // this.option = option;
 
         MapSeries.superApply(this, 'init', arguments);
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
     },
 
     getInitialData: function (option) {
@@ -40,11 +41,28 @@ var MapSeries = SeriesModel.extend({
     },
 
     mergeOption: function (newOption) {
-        this._fillOption(newOption, this.getMapType());
+        // this._fillOption(newOption, this.getMapType());
 
         MapSeries.superApply(this, 'mergeOption', arguments);
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
+    },
+
+    _createSelectableList: function () {
+        var data = this.getRawData();
+        var valueDim = data.mapDimension('value');
+        var targetList = [];
+        for (var i = 0, len = data.count(); i < len; i++) {
+            targetList.push({
+                name: data.getName(i),
+                value: data.get(valueDim, i),
+                selected: retrieveRawAttr(data, i, 'selected')
+            });
+        }
+
+        targetList = geoCreator.getFilledRegions(targetList, this.getMapType(), this.option.nameMap);
+
+        return targetList;
     },
 
     /**

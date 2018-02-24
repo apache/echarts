@@ -331,7 +331,10 @@ export default ChartView.extend({
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
-            showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
+            showSymbol && symbolDraw.updateData(data, {
+                isIgnore: isSymbolIgnore,
+                clipShape: createClipShape(coordSys, false, seriesModel)
+            });
 
             if (step) {
                 // TODO If stacked series is not step
@@ -362,12 +365,17 @@ export default ChartView.extend({
                 polygon = this._polygon = null;
             }
 
+            var coordSysClipShape = createClipShape(coordSys, false, seriesModel);
+
             // Update clipPath
-            lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
+            lineGroup.setClipPath(coordSysClipShape);
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed
-            showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
+            showSymbol && symbolDraw.updateData(data, {
+                isIgnore: isSymbolIgnore,
+                clipShape: coordSysClipShape
+            });
 
             // Stop symbol animation and sync with line points
             // FIXME performance?
