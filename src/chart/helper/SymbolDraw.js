@@ -152,17 +152,16 @@ function normalizeUpdateOpt(opt) {
 symbolDrawProto.remove = function (enableAnimation) {
     var group = this.group;
     var data = this._data;
-    if (data) {
-        if (enableAnimation) {
-            data.eachItemGraphicEl(function (el) {
-                el.fadeOut(function () {
-                    group.remove(el);
-                });
+    // Incremental model do not have this._data.
+    if (data && enableAnimation) {
+        data.eachItemGraphicEl(function (el) {
+            el.fadeOut(function () {
+                group.remove(el);
             });
-        }
-        else {
-            group.removeAll();
-        }
+        });
+    }
+    else {
+        group.removeAll();
     }
 };
 

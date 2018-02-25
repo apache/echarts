@@ -29,7 +29,6 @@ function getScale(symbolSize) {
  */
 function SymbolClz(data, idx, seriesScope) {
     graphic.Group.call(this);
-
     this.updateData(data, idx, seriesScope);
 }
 
@@ -291,6 +290,11 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 
     if (hoverAnimation && seriesModel.isAnimationEnabled()) {
         var onEmphasis = function() {
+            // Do not support this hover animation util some scenario required.
+            // Animation can only be supported in hover layer when using `el.incremetal`.
+            if (this.incremental) {
+                return;
+            }
             var ratio = scale[1] / scale[0];
             this.animateTo({
                 scale: [
@@ -300,6 +304,9 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
             }, 400, 'elasticOut');
         };
         var onNormal = function() {
+            if (this.incremental) {
+                return;
+            }
             this.animateTo({
                 scale: scale
             }, 400, 'elasticOut');

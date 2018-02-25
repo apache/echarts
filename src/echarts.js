@@ -1317,6 +1317,14 @@ echartsProto.appendData = function (params) {
 
     seriesModel.appendData(params);
 
+    // Note: `appendData` does not support that update extent of coordinate
+    // system, util some scenario require that. In the expected usage of
+    // `appendData`, the initial extent of coordinate system should better
+    // be fixed by axis `min`/`max` setting or initial data, otherwise if
+    // the extent changed while `appendData`, the location of the painted
+    // graphic elements have to be changed, which make the usage of
+    // `appendData` meaningless.
+
     this._scheduler.unfinished = true;
 };
 

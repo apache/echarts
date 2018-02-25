@@ -18,17 +18,13 @@
             }
         </style>
 
+        <!-- Thanks to <https://github.com/Truantboy>, see: #7718. -->
+
 
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
-
-
-        <script>
-            function addButton(name, cb) {
-
-            }
-        </script>
+        <div id="main4"></div>
 
 
 
@@ -42,7 +38,6 @@
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
 
-                // Thanks to <https://github.com/Truantboy>, see: #7718.
                 var option = {
                     animation: true,
                     tooltip: {},
@@ -63,9 +58,9 @@
 
                 var myChart = testHelper.create(echarts, 'main0', {
                     title: [
-                        'Click btn to appendData less than limit, should render thousands of points normally.',
-                        'Click again, should appendData normally.',
-                        'Check hover (emphasis), should scale normally.'
+                        '(1) Click btn to appendData less than limit, should render thousands of points normally.',
+                        '(2) Click again, should appendData normally.',
+                        '(3) Check hover (emphasis), should no scale but highlighted.'
                     ],
                     option: option,
                     info: option.series,
@@ -75,7 +70,7 @@
                         onClick: function () {
                             var tp = []
 
-                            for(var i = 1; i < appendCount; i++) {
+                            for(var i = 0; i < appendCount; i++) {
                                 tp[i] = [i, yBase];
                             }
 
@@ -107,7 +102,6 @@
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
 
-                // Thanks to <https://github.com/Truantboy>, see: #7718.
                 var option = {
                     animation: true,
                     tooltip: {},
@@ -130,8 +124,8 @@
                 var myChart = testHelper.create(echarts, 'main1', {
                     title: [
                         '(1) Click btn to appendData over limit, should render successfully.',
-                        '(2) Then test click lengend, should be normal.',
-                        '(3) Check that grid intent should be correct.'
+                        '(2) Grid extent will not be modified, even if point overflow the extent.',
+                        '(3) Then test click lengend, should be normal.'
                     ],
                     option: option,
                     info: option.series,
@@ -141,7 +135,7 @@
                         onClick: function () {
                             var tp = []
 
-                            for(var i = 1; i < appendCount; i++) {
+                            for(var i = 0; i < appendCount; i++) {
                                 tp[i] = [i, yBase];
                             }
 
@@ -179,6 +173,7 @@
                         type: 'scatter',
                         data: [[0, 0], [2005, 2005]],
                         progressiveThreshold: 2000,
+                        largeThreshold: 3000,
                         symbolSize: 20
                     }, {
                         type: 'scatter',
@@ -186,12 +181,11 @@
                     }]
                 };
 
-                var appendCount = 1998;
+                var appendCount = 2000;
 
                 var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        'Click to appendData over limit, color should be the same.',
-                        'Check hover (emphasis), should scale normally.'
+                        'Click to appendData over limit, color should be the same.'
                     ].join('\n'),
                     option: option,
                     info: option.series,
@@ -201,7 +195,7 @@
                         onClick: function () {
                             var tp = []
 
-                            for(var i = 1; i < appendCount; i++) {
+                            for(var i = 0; i < appendCount; i++) {
                                 tp[i] = [i, 1];
                             }
 
@@ -217,6 +211,82 @@
 
         </script>
 
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    animation: true,
+                    tooltip: {},
+                    xAxis: {
+                        // axisLine: {show: false},
+                        // axisLabel: {show: false},
+                        // axisTick: {show: false},
+                        // splitLine: {show: false}
+                    },
+                    yAxis: {
+                        // axisLine: {show: false},
+                        // axisLabel: {show: false},
+                        // axisTick: {show: false},
+                        // splitLine: {show: false}
+                    },
+                    legend: {
+                    },
+                    // hoverLayerThreshold: 1,
+                    series: [{
+                        type: 'scatter',
+                        name: 'data',
+                        data: [[3005, 3005]],
+                        progressiveThreshold: 1,
+                        symbol: 'triangle',
+                        symbolSize: 20
+                    }]
+                };
+
+                var yBase = 500;
+                var appendCount = 1;
+
+                var myChart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        '(1) Points over limit, test click lengend, should be normal.',
+                        '(2) Click btn to appendData, test click lengend, should be normal.'
+                    ],
+                    option: option,
+                    info: option.series,
+                    infoKey: 'series',
+                    button: {
+                        text: 'Click to appendData ' + appendCount + ' points',
+                        onClick: function () {
+                            var tp = []
+
+                            for(var i = 0; i < appendCount; i++) {
+                                tp[i] = [i, yBase];
+                            }
+
+                            myChart.appendData({
+                                seriesIndex: 0,
+                                data: tp
+                            });
+
+                            yBase += 1000;
+                        }
+                    }
+                });
+
+            });
+
+        </script>
 
 
 
