@@ -14,19 +14,29 @@ export default function (ecModel) {
             var stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
             var data = seriesModel.getData();
 
-            stackInfoList.length && data.setCalculationInfo(
-                'stackedOnSeries', stackInfoList[stackInfoList.length - 1].seriesModel
-            );
-
-            stackInfoList.push({
+            var stackInfo = {
                 // Used for calculate axis extent automatically.
                 stackResultDimension: data.getCalculationInfo('stackResultDimension'),
                 stackedOverDimension: data.getCalculationInfo('stackedOverDimension'),
                 stackedDimension: data.getCalculationInfo('stackedDimension'),
                 stackedByDimension: data.getCalculationInfo('stackedByDimension'),
+                isStackedByIndex: data.getCalculationInfo('isStackedByIndex'),
                 data: data,
                 seriesModel: seriesModel
-            });
+            };
+
+            // If stacked on axis that do not support data stack.
+            if (!stackInfo.stackedDimension
+                || !(stackInfo.isStackedByIndex || stackInfo.stackedByDimension)
+            ) {
+                return;
+            }
+
+            stackInfoList.length && data.setCalculationInfo(
+                'stackedOnSeries', stackInfoList[stackInfoList.length - 1].seriesModel
+            );
+
+            stackInfoList.push(stackInfo);
         }
     });
 
@@ -39,6 +49,7 @@ function calculateStack(stackInfoList) {
         var resultNaN = [NaN, NaN];
         var dims = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
         var targetData = targetStackInfo.data;
+        var isStackedByIndex = targetStackInfo.isStackedByIndex;
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
@@ -51,14 +62,26 @@ function calculateStack(stackInfoList) {
                 return resultNaN;
             }
 
-            var byValue = targetData.get(targetStackInfo.stackedByDimension, dataIndex);
+            var byValue;
+            var stackedDataRawIndex;
+
+            if (isStackedByIndex) {
+                stackedDataRawIndex = targetData.getRawIndex(dataIndex);
+            }
+            else {
+                byValue = targetData.get(targetStackInfo.stackedByDimension, dataIndex);
+            }
+
             var stackedOver = 0;
 
             for (var j = idxInStack - 1; j >= 0; j--) {
                 var stackInfo = stackInfoList[j];
 
                 // Has been optimized by inverted indices on `stackedByDimension`.
-                var stackedDataRawIndex = stackInfo.data.rawIndexOf(stackInfo.stackedByDimension, byValue);
+                if (!isStackedByIndex) {
+                    stackedDataRawIndex = stackInfo.data.rawIndexOf(stackInfo.stackedByDimension, byValue);
+                }
+
                 if (stackedDataRawIndex >= 0) {
                     var val = stackInfo.data.getByRawIndex(stackInfo.stackResultDimension, stackedDataRawIndex);
 
