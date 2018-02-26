@@ -21,7 +21,7 @@ export default function (coordSys) {
         api: {
             coord: function (data, clamp) {
                 return coordSys.dataToPoint(data, clamp);
-            },
+            }
         }
     };
 }
