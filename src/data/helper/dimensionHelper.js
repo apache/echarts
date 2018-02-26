@@ -1,4 +1,4 @@
-import {each, filter, createHashMap, assert} from 'zrender/src/core/util';
+import {each, createHashMap, assert} from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
 
 export var OTHER_DIMENSIONS = createHashMap([
@@ -30,8 +30,8 @@ export function summarizeDimensions(data) {
 
                 if (mayLabelDimType(dimItem.type)) {
                     // Use the last coord dim (and label friendly) as default label,
-                    // because both show x, y on label is not look good, and usually
-                    // y axis is more focusd conventionally.
+                    // because both show x, y on label is not look good, and
+                    // conventionally y axis is focused more.
                     defaultedLabel[0] = dimName;
                 }
             }

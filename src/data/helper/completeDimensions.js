@@ -29,11 +29,13 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
  *      For example: ['asdf', {name, type}, ...].
  * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
- * @param {string} [opt.generateCoord] Generate coord dim with the given prefix.
- *                 The generated dim names will be:
- *                 generateCoord + 0, generateCoord + 1, ...
+ * @param {string} [opt.generateCoord] Generate coord dim with the given name.
  *                 If not specified, extra dim names will be:
  *                 'value', 'value0', 'value1', ...
+ * @param {number} [opt.generateCoordCount] By default, the generated dim name is `generateCoord`.
+ *                 If `generateCoordCount` specified, the generated dim names will be:
+ *                 `generateCoord` + 0, `generateCoord` + 1, ...
+ *                 can be Infinity, indicate that use all of the remain columns.
  * @param {number} [opt.dimCount] If not specified, guess by the first data item.
  * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
  * @return {Array.<Object>} [{
@@ -162,8 +164,11 @@ function completeDimensions(sysDims, source, opt) {
     }
 
     // Make sure the first extra dim is 'value'.
-    var doesGenerateCoord = !!opt.generateCoord;
-    var extra = opt.generateCoord || 'value';
+    var generateCoord = opt.generateCoord;
+    var generateCoordCount = opt.generateCoordCount;
+    var fromZero = generateCoordCount != null;
+    generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
+    var extra = generateCoord || 'value';
 
     // Set dim `name` and other `coordDim` and other props.
     for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
@@ -172,10 +177,13 @@ function completeDimensions(sysDims, source, opt) {
 
         if (coordDim == null) {
             resultItem.coordDim = genName(
-                extra, coordDimNameMap, doesGenerateCoord
+                extra, coordDimNameMap, fromZero
             );
             resultItem.coordDimIndex = 0;
-            resultItem.isExtraCoord = !doesGenerateCoord;
+            if (!generateCoord || generateCoordCount <= 0) {
+                resultItem.isExtraCoord = true;
+            }
+            generateCoordCount--;
         }
 
         resultItem.name == null && (resultItem.name = genName(

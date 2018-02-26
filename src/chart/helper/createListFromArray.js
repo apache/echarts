@@ -12,8 +12,12 @@ import {enableDataStack} from '../../data/helper/dataStackHelper';
 /**
  * @param {module:echarts/data/Source|Array} source Or raw data.
  * @param {module:echarts/model/Series} seriesModel
+ * @param {Object} [opt]
+ * @param {string} [opt.generateCoord]
  */
-function createListFromArray(source, seriesModel) {
+function createListFromArray(source, seriesModel, opt) {
+    opt = opt || {};
+
     if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
     }
@@ -48,7 +52,8 @@ function createListFromArray(source, seriesModel) {
     }
 
     var dimInfoList = createDimensions(source, {
-        coordDimensions: coordSysDimDefs
+        coordDimensions: coordSysDimDefs,
+        generateCoord: opt.generateCoord
     });
 
     var firstCategoryDimIndex;
