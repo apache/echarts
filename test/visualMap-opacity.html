@@ -386,7 +386,7 @@
                     data1.push([
                         Math.random() * 5,
                         Math.random() * 4,
-                        Math.random() * 20,
+                        +(Math.random() * 20).toFixed(2),
                         Math.round(Math.random() * (symbolCount - 1))
                     ]);
                 }
@@ -448,10 +448,8 @@
                             label: {
                                 normal: {
                                     show: true,
-                                    position: 'inside',
-                                    textStyle: {
-                                        color: '#fff'
-                                    }
+                                    formatter: '{@[2]}',
+                                    position: 'inside'
                                 }
                             },
                             data: data1

@@ -28,10 +28,11 @@ export function summarizeDimensions(data) {
             if (!dimItem.isExtraCoord) {
                 notExtraCoordDimMap.set(coordDim, 1);
 
+                // Use the last coord dim (and label friendly) as default label,
+                // because when dataset is used, it is hard to guess which dimension
+                // can be value dimension. If both show x, y on label is not look good,
+                // and conventionally y axis is focused more.
                 if (mayLabelDimType(dimItem.type)) {
-                    // Use the last coord dim (and label friendly) as default label,
-                    // because both show x, y on label is not look good, and
-                    // conventionally y axis is focused more.
                     defaultedLabel[0] = dimName;
                 }
             }
