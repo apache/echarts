@@ -81,7 +81,8 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
             coordDim: stackedDimCoordDim,
             coordDimIndex: stackedDimCoordIndex,
             type: stackedDimType,
-            isExtraCoord: true
+            isExtraCoord: true,
+            isCalculationCoord: true
         });
 
         stackedDimCoordIndex++;
@@ -91,7 +92,8 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
             coordDim: stackedDimCoordDim,
             coordDimIndex: stackedDimCoordIndex,
             type: stackedDimType,
-            isExtraCoord: true
+            isExtraCoord: true,
+            isCalculationCoord: true
         });
     }
 

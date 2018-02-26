@@ -189,15 +189,29 @@ function getVisualGradient(data, coordSys) {
         return;
     }
 
+    if (coordSys.type !== 'cartesian2d') {
+        if (__DEV__) {
+            console.warn('Visual map on line style is only supported on cartesian2d.');
+        }
+        return;
+    }
+
+    var coordDim;
     var visualMeta;
+
     for (var i = visualMetaList.length - 1; i >= 0; i--) {
+        var dimIndex = visualMetaList[i].dimension;
+        var dimName = data.dimensions[dimIndex];
+        var dimInfo = data.getDimensionInfo(dimName);
+        coordDim = dimInfo && dimInfo.coordDim;
         // Can only be x or y
-        if (visualMetaList[i].dimension < 2) {
+        if (coordDim === 'x' || coordDim === 'y') {
             visualMeta = visualMetaList[i];
             break;
         }
     }
-    if (!visualMeta || coordSys.type !== 'cartesian2d') {
+
+    if (!visualMeta) {
         if (__DEV__) {
             console.warn('Visual map on line style only support x or y dimension.');
         }
@@ -211,9 +225,7 @@ function getVisualGradient(data, coordSys) {
     // LinearGradient. So we can only infinitesimally extend area defined in
     // LinearGradient to render `outerColors`.
 
-    var dimension = visualMeta.dimension;
-    var dimName = data.dimensions[dimension];
-    var axis = coordSys.getAxis(dimName);
+    var axis = coordSys.getAxis(coordDim);
 
     // dataToCoor mapping may not be linear, but must be monotonic.
     var colorStops = zrUtil.map(visualMeta.stops, function (stop) {
@@ -257,8 +269,8 @@ function getVisualGradient(data, coordSys) {
     // });
 
     var gradient = new graphic.LinearGradient(0, 0, 0, 0, colorStops, true);
-    gradient[dimName] = minCoord;
-    gradient[dimName + '2'] = maxCoord;
+    gradient[coordDim] = minCoord;
+    gradient[coordDim + '2'] = maxCoord;
 
     return gradient;
 }

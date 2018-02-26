@@ -314,9 +314,18 @@ var VisualMapModel = echarts.extendComponentModel({
             return;
         }
 
-        return list.getDimension(
-            optDim != null ? optDim : listDimensions.length - 1
-        );
+        if (optDim != null) {
+            return list.getDimension(optDim);
+        }
+
+        var dimNames = list.dimensions;
+        for (var i = dimNames.length - 1; i >= 0; i--) {
+            var dimName = dimNames[i];
+            var dimInfo = list.getDimensionInfo(dimName);
+            if (!dimInfo.isCalculationCoord) {
+                return dimName;
+            }
+        }
     },
 
     /**
