@@ -29,11 +29,11 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
  *      For example: ['asdf', {name, type}, ...].
  * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
- * @param {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
- * @param {string} [opt.extraFromZero] If specified, extra dim names will be:
- *                      extraPrefix + 0, extraPrefix + extraBaseIndex + 1 ...
- *                      If not specified, extra dim names will be:
- *                      extraPrefix, extraPrefix + 0, extraPrefix + 1 ...
+ * @param {string} [opt.generateCoord] Generate coord dim with the given prefix.
+ *                 The generated dim names will be:
+ *                 generateCoord + 0, generateCoord + 1, ...
+ *                 If not specified, extra dim names will be:
+ *                 'value', 'value0', 'value1', ...
  * @param {number} [opt.dimCount] If not specified, guess by the first data item.
  * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
  * @return {Array.<Object>} [{
@@ -162,7 +162,8 @@ function completeDimensions(sysDims, source, opt) {
     }
 
     // Make sure the first extra dim is 'value'.
-    var extra = opt.extraPrefix || 'value';
+    var doesGenerateCoord = !!opt.generateCoord;
+    var extra = opt.generateCoord || 'value';
 
     // Set dim `name` and other `coordDim` and other props.
     for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
@@ -171,10 +172,10 @@ function completeDimensions(sysDims, source, opt) {
 
         if (coordDim == null) {
             resultItem.coordDim = genName(
-                extra, coordDimNameMap, opt.extraFromZero
+                extra, coordDimNameMap, doesGenerateCoord
             );
             resultItem.coordDimIndex = 0;
-            resultItem.isExtraCoord = true;
+            resultItem.isExtraCoord = !doesGenerateCoord;
         }
 
         resultItem.name == null && (resultItem.name = genName(

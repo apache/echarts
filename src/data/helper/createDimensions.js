@@ -9,8 +9,7 @@ import completeDimensions from './completeDimensions';
  * @param {Object|Array} [opt]
  * @param {Array.<string|Object>} [opt.coordDimensions=[]]
  * @param {number} [opt.dimensionsCount]
- * @param {string} [opt.extraPrefix]
- * @param {boolean} [opt.extraFromZero]
+ * @param {string} [opt.generateCoord]
  * @param {Array.<string|Object>} [opt.dimensionsDefine=source.dimensionsDefine] Overwrite source define.
  * @param {Object|HashMap} [opt.encodeDefine=source.encodeDefine] Overwrite source define.
  * @return {Array.<Object>} dimensionsInfo
@@ -21,7 +20,6 @@ export default function (source, opt) {
         dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
         encodeDef: opt.encodeDefine || source.encodeDefine,
         dimCount: opt.dimensionsCount,
-        extraPrefix: opt.extraPrefix,
-        extraFromZero: opt.extraFromZero
+        generateCoord: opt.generateCoord
     });
 }
