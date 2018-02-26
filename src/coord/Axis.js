@@ -113,7 +113,7 @@ Axis.prototype = {
     },
 
     /**
-     * Convert data to coord. Data is the rank if it has a ordinal scale
+     * Convert data to coord. Data is the rank if it has an ordinal scale
      * @param {number} data
      * @param  {boolean} clamp
      * @return {number}
@@ -132,7 +132,7 @@ Axis.prototype = {
     },
 
     /**
-     * Convert coord to data. Data is the rank if it has a ordinal scale
+     * Convert coord to data. Data is the rank if it has an ordinal scale
      * @param {number} coord
      * @param  {boolean} clamp
      * @return {number}

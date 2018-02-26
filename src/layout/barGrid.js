@@ -204,26 +204,21 @@ function doCalBarWidthAndOffset(seriesInfoList, api) {
  */
 export function layout(seriesType, ecModel, api) {
 
-    var barWidthAndOffset = calBarWidthAndOffset(
-        zrUtil.filter(
-            ecModel.getSeriesByType(seriesType),
-            function (seriesModel) {
-                return !ecModel.isSeriesFiltered(seriesModel)
-                    && seriesModel.coordinateSystem
-                    && seriesModel.coordinateSystem.type === 'cartesian2d';
-            }
-        )
+    var seriesModels = zrUtil.filter(
+        ecModel.getSeriesByType(seriesType),
+        function (seriesModel) {
+            // Check series coordinate, do layout for cartesian2d only
+            return seriesModel.coordinateSystem
+                && seriesModel.coordinateSystem.type === 'cartesian2d';
+        }
     );
+
+    var barWidthAndOffset = calBarWidthAndOffset(seriesModels);
 
     var lastStackCoords = {};
     var lastStackCoordsOrigin = {};
 
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-
-        // Check series coordinate, do layout for cartesian2d only
-        if (seriesModel.coordinateSystem.type !== 'cartesian2d') {
-            return;
-        }
+    zrUtil.each(seriesModels, function (seriesModel) {
 
         var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
