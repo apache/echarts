@@ -60,9 +60,10 @@ taskProto.perform = function (performArgs) {
         planResult = this._plan(this.context);
     }
 
+    var forceFirstProgress;
     if (this._dirty || planResult === 'reset') {
         this._dirty = false;
-        reset(this, skip);
+        forceFirstProgress = reset(this, skip);
     }
 
     var step = performArgs && performArgs.step;
@@ -93,7 +94,7 @@ taskProto.perform = function (performArgs) {
             this._dueEnd
         );
 
-        !skip && start < end && (
+        !skip && (forceFirstProgress || start < end) && (
             this._progress({start: start, end: end}, this.context)
         );
 
@@ -133,12 +134,23 @@ function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
     taskIns._settedOutputEnd = null;
 
-    taskIns._progress = !skip && taskIns._reset && taskIns._reset(
-        taskIns.context
-    );
+    var progress;
+    var forceFirstProgress;
+
+    if (!skip && taskIns._reset) {
+        progress = taskIns._reset(taskIns.context);
+        if (progress && progress.progress) {
+            forceFirstProgress = progress.forceFirstProgress;
+            progress = progress.progress;
+        }
+    }
+
+    taskIns._progress = progress;
 
     var downstream = taskIns._downstream;
     downstream && downstream.dirty();
+
+    return forceFirstProgress;
 }
 
 /**

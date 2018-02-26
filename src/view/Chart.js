@@ -201,21 +201,32 @@ function renderTaskReset(context) {
         // is less than progressive threshold.
         : 'render';
 
-    view[methodName](seriesModel, ecModel, api, payload);
+    if (methodName !== 'render') {
+        view[methodName](seriesModel, ecModel, api, payload);
+    }
 
     return progressMethodMap[methodName];
 }
 
 var progressMethodMap = {
-    incrementalPrepareRender: function (params, context) {
-        context.view.incrementalRender(
-            params, context.model, context.ecModel, context.api, context.payload
-        );
+    incrementalPrepareRender: {
+        progress: function (params, context) {
+            context.view.incrementalRender(
+                params, context.model, context.ecModel, context.api, context.payload
+            );
+        }
     },
-    render: function (params, context) {
-        context.view.render(
-            context.model, context.ecModel, context.api, context.payload
-        );
+    render: {
+        // Put view.render in `progress` to support appendData. But in this case
+        // view.render should not be called in reset, otherwise it will be called
+        // twise. Use `forceFirstProgress` to make sure that view.render is called
+        // in any cases.
+        forceFirstProgress: true,
+        progress: function (params, context) {
+            context.view.render(
+                context.model, context.ecModel, context.api, context.payload
+            );
+        }
     }
 };
 

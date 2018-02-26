@@ -16,6 +16,6 @@ export default function () {
         var large = fields.large = pipelineContext.large;
         var progressive = fields.canProgressiveRender = pipelineContext.canProgressiveRender;
 
-        return ((originalLarge ^ large) || (originalProgressive ^ progressive)) && 'reset';
+        return !!((originalLarge ^ large) || (originalProgressive ^ progressive)) && 'reset';
     };
 }
