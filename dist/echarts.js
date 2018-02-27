@@ -190,8 +190,25 @@ function detect(ua) {
             // Although IE 10 supports pointer event, it use old style and is different from the
             // standard. So we exclude that. (IE 10 is hardly used on touch device)
             && (browser.edge || (browser.ie && browser.version >= 11))
+        // passiveSupported: detectPassiveSupport()
     };
 }
+
+// See https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md#feature-detection
+// function detectPassiveSupport() {
+//     // Test via a getter in the options object to see if the passive property is accessed
+//     var supportsPassive = false;
+//     try {
+//         var opts = Object.defineProperty({}, 'passive', {
+//             get: function() {
+//                 supportsPassive = true;
+//             }
+//         });
+//         window.addEventListener('testPassive', function() {}, opts);
+//     } catch (e) {
+//     }
+//     return supportsPassive;
+// }
 
 /**
  * @module zrender/core/util
@@ -1515,6 +1532,78 @@ Eventful.prototype = {
         return this;
     }
 };
+
+// 对象可以通过 onxxxx 绑定事件
+/**
+ * @event module:zrender/mixin/Eventful#onclick
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseover
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseout
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousemove
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousewheel
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmousedown
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#onmouseup
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondrag
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragstart
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragend
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragenter
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragleave
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondragover
+ * @type {Function}
+ * @default null
+ */
+/**
+ * @event module:zrender/mixin/Eventful#ondrop
+ * @type {Function}
+ * @default null
+ */
 
 var SILENT = 'silent';
 
@@ -4177,10 +4266,6 @@ else if (debugMode > 1) {
 
 var zrLog = log;
 
-/**
- * @alias modue:zrender/mixin/Animatable
- * @constructor
- */
 var Animatable = function () {
 
     /**
@@ -4436,13 +4521,6 @@ Animatable.prototype = {
     }
 };
 
-/**
- * @alias module:zrender/Element
- * @constructor
- * @extends {module:zrender/mixin/Animatable}
- * @extends {module:zrender/mixin/Transformable}
- * @extends {module:zrender/mixin/Eventful}
- */
 var Element = function (opts) { // jshint ignore:line
 
     Transformable.call(this, opts);
@@ -4903,12 +4981,6 @@ BoundingRect.create = function (rect) {
  *     zr.add(g);
  */
 
-/**
- * @alias module:zrender/graphic/Group
- * @constructor
- * @extends module:zrender/mixin/Transformable
- * @extends module:zrender/mixin/Eventful
- */
 var Group = function (opts) {
 
     opts = opts || {};
@@ -5854,8 +5926,6 @@ function sort(array, compare, lo, hi) {
     ts.forceMergeRuns();
 }
 
-// Use timsort because in most case elements are partially sorted
-// https://jsfiddle.net/pissang/jr4x7mdm/8/
 function shapeCompareFunc(a, b) {
     if (a.zlevel === b.zlevel) {
         if (a.z === b.z) {
@@ -6129,6 +6199,12 @@ function createLinearGradient(ctx, obj, rect) {
         y = y * rect.height + rect.y;
         y2 = y2 * rect.height + rect.y;
     }
+
+    // Fix NaN when rect is Infinity
+    x = isNaN(x) ? 0 : x;
+    x2 = isNaN(x2) ? 1 : x2;
+    y = isNaN(y) ? 0 : y;
+    y2 = isNaN(y2) ? 0 : y2;
 
     var canvasGradient = ctx.createLinearGradient(x, y, x2, y2);
 
@@ -7663,22 +7739,15 @@ function buildPath(ctx, shape) {
     }
     ctx.moveTo(x + r1, y);
     ctx.lineTo(x + width - r2, y);
-    r2 !== 0 && ctx.quadraticCurveTo(
-        x + width, y, x + width, y + r2
-    );
+    r2 !== 0 && ctx.arc(x + width - r2, y + r2, r2, -Math.PI / 2, 0);
     ctx.lineTo(x + width, y + height - r3);
-    r3 !== 0 && ctx.quadraticCurveTo(
-        x + width, y + height, x + width - r3, y + height
-    );
+    r3 !== 0 && ctx.arc(x + width - r3, y + height - r3, r3, 0, Math.PI / 2);
     ctx.lineTo(x + r4, y + height);
-    r4 !== 0 && ctx.quadraticCurveTo(
-        x, y + height, x, y + height - r4
-    );
+    r4 !== 0 && ctx.arc(x + r4, y + height - r4, r4, Math.PI / 2, Math.PI);
     ctx.lineTo(x, y + r1);
-    r1 !== 0 && ctx.quadraticCurveTo(x, y, x + r1, y);
+    r1 !== 0 && ctx.arc(x + r1, y + r1, r1, Math.PI, Math.PI * 1.5);
 }
 
-// TODO: Have not support 'start', 'end' yet.
 var VALID_TEXT_ALIGN = {left: 1, right: 1, center: 1};
 var VALID_TEXT_VERTICAL_ALIGN = {top: 1, bottom: 1, middle: 1};
 
@@ -8205,11 +8274,6 @@ RectText.prototype = {
  */
 
 
-/**
- * @alias module:zrender/graphic/Displayable
- * @extends module:zrender/Element
- * @extends module:zrender/graphic/mixin/RectText
- */
 function Displayable(opts) {
 
     opts = opts || {};
@@ -8461,13 +8525,8 @@ Displayable.prototype = {
 inherits(Displayable, Element);
 
 mixin(Displayable, RectText);
+// zrUtil.mixin(Displayable, Stateful);
 
-/**
- * @alias zrender/graphic/Image
- * @extends module:zrender/graphic/Displayable
- * @constructor
- * @param {Object} opts
- */
 function ZImage(opts) {
     Displayable.call(this, opts);
 }
@@ -9694,8 +9753,34 @@ function normalizeEvent(el, e, calculate) {
     return e;
 }
 
+/**
+ * @param {HTMLElement} el
+ * @param {string} name
+ * @param {Function} handler
+ */
 function addEventListener(el, name, handler) {
     if (isDomLevel2) {
+        // Reproduct the console warning:
+        // [Violation] Added non-passive event listener to a scroll-blocking <some> event.
+        // Consider marking event handler as 'passive' to make the page more responsive.
+        // Just set console log level: verbose in chrome dev tool.
+        // then the warning log will be printed when addEventListener called.
+        // See https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
+        // We have not yet found a neat way to using passive. Because in zrender the dom event
+        // listener delegate all of the upper events of element. Some of those events need
+        // to prevent default. For example, the feature `preventDefaultMouseMove` of echarts.
+        // Before passive can be adopted, these issues should be considered:
+        // (1) Whether and how a zrender user specifies an event listener passive. And by default,
+        // passive or not.
+        // (2) How to tread that some zrender event listener is passive, and some is not. If
+        // we use other way but not preventDefault of mousewheel and touchmove, browser
+        // compatibility should be handled.
+
+        // var opts = (env.passiveSupported && name === 'mousewheel')
+        //     ? {passive: true}
+        //     // By default, the third param of el.addEventListener is `capture: false`.
+        //     : void 0;
+        // el.addEventListener(name, handler /* , opts */);
         el.addEventListener(name, handler);
     }
     else {
@@ -9737,6 +9822,8 @@ function notLeftMouse(e) {
     return e.which > 1;
 }
 
+// 做向上兼容
+
 /**
  * 动画主类, 调度和管理所有动画控制器
  *
@@ -9747,34 +9834,6 @@ function notLeftMouse(e) {
 // http://iosoteric.com/additive-animations-animatewithduration-in-ios-8/
 // https://developer.apple.com/videos/wwdc2014/#236
 
-/**
- * @typedef {Object} IZRenderStage
- * @property {Function} update
- */
-
-/**
- * @alias module:zrender/animation/Animation
- * @constructor
- * @param {Object} [options]
- * @param {Function} [options.onframe]
- * @param {IZRenderStage} [options.stage]
- * @example
- *     var animation = new Animation();
- *     var obj = {
- *         x: 100,
- *         y: 100
- *     };
- *     animation.animate(node.position)
- *         .when(1000, {
- *             x: 500,
- *             y: 500
- *         })
- *         .when(2000, {
- *             x: 100,
- *             y: 100
- *         })
- *         .start('spline');
- */
 var Animation = function (options) {
 
     options = options || {};
@@ -9844,7 +9903,6 @@ Animation.prototype = {
     },
 
     _update: function() {
-
         var time = new Date().getTime() - this._pausedTime;
         var delta = time - this._time;
         var clips = this._clips;
@@ -9884,8 +9942,9 @@ Animation.prototype = {
 
         this.onframe(delta);
 
-        // Frame should before stage update. Upper application
-        // depends on the sequence (e.g., echarts-stream)
+        // 'frame' should be triggered before stage, because upper application
+        // depends on the sequence (e.g., echarts-stream and finish
+        // event judge)
         this.trigger('frame', delta);
 
         if (this.stage.update) {
@@ -9911,7 +9970,7 @@ Animation.prototype = {
     },
 
     /**
-     * 开始运行动画
+     * Start animation.
      */
     start: function () {
 
@@ -9920,15 +9979,16 @@ Animation.prototype = {
 
         this._startLoop();
     },
+
     /**
-     * 停止运行动画
+     * Stop animation.
      */
     stop: function () {
         this._running = false;
     },
 
     /**
-     * Pause
+     * Pause animation.
      */
     pause: function () {
         if (!this._paused) {
@@ -9938,7 +9998,7 @@ Animation.prototype = {
     },
 
     /**
-     * Resume
+     * Resume animation.
      */
     resume: function () {
         if (this._paused) {
@@ -9948,20 +10008,27 @@ Animation.prototype = {
     },
 
     /**
-     * 清除所有动画片段
+     * Clear animation.
      */
     clear: function () {
         this._clips = [];
     },
+
     /**
-     * 对一个目标创建一个animator对象，可以指定目标中的属性使用动画
+     * Whether animation finished.
+     */
+    isFinished: function () {
+        return !this._clips.length;
+    },
+
+    /**
+     * Creat animator for a target, whose props can be animated.
+     *
      * @param  {Object} target
      * @param  {Object} options
-     * @param  {boolean} [options.loop=false] 是否循环播放动画
-     * @param  {Function} [options.getter=null]
-     *         如果指定getter函数，会通过getter函数取属性值
-     * @param  {Function} [options.setter=null]
-     *         如果指定setter函数，会通过setter函数设置属性值
+     * @param  {boolean} [options.loop=false] Whether loop animation.
+     * @param  {Function} [options.getter=null] Get value from target.
+     * @param  {Function} [options.setter=null] Set value to target.
      * @return {module:zrender/animation/Animation~Animator}
      */
     // TODO Gap
@@ -10483,7 +10550,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.0.1';
+var version$1 = '4.0.2';
 
 /**
  * Initializing a zrender instance
@@ -10696,12 +10763,18 @@ ZRender.prototype = {
      * Perform all refresh
      */
     flush: function () {
+        var triggerRendered;
+
         if (this._needsRefresh) {
+            triggerRendered = true;
             this.refreshImmediately();
         }
         if (this._needsRefreshHover) {
+            triggerRendered = true;
             this.refreshHoverImmediately();
         }
+
+        triggerRendered && this.trigger('rendered');
     },
 
     /**
@@ -10902,11 +10975,11 @@ var isObject$2 = isObject$1;
 var isArray$1 = isArray;
 
 /**
- * name may be displayed on screen, so use '-'.
- * But we should make sure it is not duplicated
- * with user specified name, so use '\0';
+ * Make the name displayable. But we should
+ * make sure it is not duplicated with user
+ * specified name, so use '\0';
  */
-var DEFAULT_COMPONENT_NAME = '\0-';
+var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
 
 /**
  * If value is not array, then translate it to array.
@@ -11145,7 +11218,9 @@ function makeIdAndName(mapResult) {
             ? opt.name + ''
             : existCpt
             ? existCpt.name
-            : DEFAULT_COMPONENT_NAME;
+            // Avoid diffferent series has the same name,
+            // because name may be used like in color pallet.
+            : DUMMY_COMPONENT_NAME_PREFIX + index;
 
         if (existCpt) {
             keyInfo.id = existCpt.id;
@@ -11168,6 +11243,12 @@ function makeIdAndName(mapResult) {
 
         idMap.set(keyInfo.id, item);
     });
+}
+
+function isNameSpecified(componentModel) {
+    var name = componentModel.name;
+    // Is specified when `indexOf` get -1 or > 0.
+    return !!(name && name.indexOf(DUMMY_COMPONENT_NAME_PREFIX));
 }
 
 /**
@@ -13254,21 +13335,6 @@ function containStroke$1(x0, y0, x1, y1, lineWidth, x, y) {
     return _s <= _l / 2 * _l / 2;
 }
 
-/**
- * 三次贝塞尔曲线描边包含判断
- * @param  {number}  x0
- * @param  {number}  y0
- * @param  {number}  x1
- * @param  {number}  y1
- * @param  {number}  x2
- * @param  {number}  y2
- * @param  {number}  x3
- * @param  {number}  y3
- * @param  {number}  lineWidth
- * @param  {number}  x
- * @param  {number}  y
- * @return {boolean}
- */
 function containStroke$2(x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, x, y) {
     if (lineWidth === 0) {
         return false;
@@ -13290,19 +13356,6 @@ function containStroke$2(x0, y0, x1, y1, x2, y2, x3, y3, lineWidth, x, y) {
     return d <= _l / 2;
 }
 
-/**
- * 二次贝塞尔曲线描边包含判断
- * @param  {number}  x0
- * @param  {number}  y0
- * @param  {number}  x1
- * @param  {number}  y1
- * @param  {number}  x2
- * @param  {number}  y2
- * @param  {number}  lineWidth
- * @param  {number}  x
- * @param  {number}  y
- * @return {boolean}
- */
 function containStroke$3(x0, y0, x1, y1, x2, y2, lineWidth, x, y) {
     if (lineWidth === 0) {
         return false;
@@ -14245,7 +14298,6 @@ var transformPath = function (path, m) {
     }
 };
 
-// command chars
 var cc = [
     'm', 'M', 'l', 'L', 'v', 'V', 'h', 'H', 'z', 'Z',
     'c', 'C', 'q', 'Q', 't', 'T', 's', 'S', 'a', 'A'
@@ -14645,12 +14697,6 @@ function mergePath$1(pathEls, opts) {
     return pathBundle;
 }
 
-/**
- * @alias zrender/graphic/Text
- * @extends module:zrender/graphic/Displayable
- * @constructor
- * @param {Object} opts
- */
 var Text = function (opts) { // jshint ignore:line
     Displayable.call(this, opts);
 };
@@ -14760,21 +14806,6 @@ var Circle = Path.extend({
         ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2, true);
     }
 });
-
-// Fix weird bug in some version of IE11 (like 11.0.9600.178**),
-// where exception "unexpected call to method or property access"
-// might be thrown when calling ctx.fill or ctx.stroke after a path
-// whose area size is zero is drawn and ctx.clip() is called and
-// shadowBlur is set. See #4572, #3112, #5777.
-// (e.g.,
-//  ctx.moveTo(10, 10);
-//  ctx.lineTo(20, 10);
-//  ctx.closePath();
-//  ctx.clip();
-//  ctx.shadowBlur = 10;
-//  ...
-//  ctx.fill();
-// )
 
 var shadowTemp = [
     ['shadowBlur', 0],
@@ -14922,9 +14953,6 @@ var Ring = Path.extend({
  *         errorrik (errorrik@gmail.com)
  */
 
-/**
- * @inner
- */
 function interpolate(p0, p1, p2, p3, t, t2, t3) {
     var v0 = (p2 - p0) * 0.5;
     var v1 = (p3 - p1) * 0.5;
@@ -14990,17 +15018,6 @@ var smoothSpline = function (points, isLoop) {
  *         errorrik (errorrik@gmail.com)
  */
 
-/**
- * 贝塞尔平滑曲线
- * @alias module:zrender/shape/util/smoothBezier
- * @param {Array} points 线段顶点数组
- * @param {number} smooth 平滑等级, 0-1
- * @param {boolean} isLoop
- * @param {Array} constraint 将计算出来的控制点约束在一个包围盒内
- *                           比如 [[0, 0], [100, 100]], 这个包围盒会与
- *                           整个折线的包围盒做一个并集用来约束控制点。
- * @param {Array} 计算出来的控制点数组
- */
 var smoothBezier = function (points, smooth, isLoop, constraint) {
     var cps = [];
 
@@ -15509,15 +15526,6 @@ Gradient.prototype = {
 
 };
 
-/**
- * x, y, x2, y2 are all percent from 0 to 1
- * @param {number} [x=0]
- * @param {number} [y=0]
- * @param {number} [x2=1]
- * @param {number} [y2=0]
- * @param {Array.<Object>} colorStops
- * @param {boolean} [globalCoord=false]
- */
 var LinearGradient = function (x, y, x2, y2, colorStops, globalCoord) {
     // Should do nothing more in this constructor. Because gradient can be
     // declard by `color: {type: 'linear', colorStops: ...}`, where
@@ -15547,14 +15555,6 @@ LinearGradient.prototype = {
 
 inherits(LinearGradient, Gradient);
 
-/**
- * x, y, r are all percent from 0 to 1
- * @param {number} [x=0.5]
- * @param {number} [y=0.5]
- * @param {number} [r=0.5]
- * @param {Array.<Object>} [colorStops]
- * @param {boolean} [globalCoord=false]
- */
 var RadialGradient = function (x, y, r, colorStops, globalCoord) {
     // Should do nothing more in this constructor. Because gradient can be
     // declard by `color: {type: 'radial', colorStops: ...}`, where
@@ -15589,7 +15589,6 @@ inherits(RadialGradient, Gradient);
  *
  * It use a not clearFlag to tell the painter don't clear the layer if it's the first element.
  */
-// TODO Style override ?
 function IncrementalDisplayble(opts) {
 
     Displayable.call(this, opts);
@@ -17710,11 +17709,6 @@ var number = (Object.freeze || Object)({
 	isNumeric: isNumeric
 });
 
-/**
- * 每三位默认加,格式化
- * @param {string|number} x
- * @return {string}
- */
 function addCommas(x) {
     if (isNaN(x)) {
         return '-';
@@ -17836,14 +17830,11 @@ function getTooltipMarker(opt, extraCssText) {
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
 }
 
-/**
- * @param {string} str
- * @return {string}
- * @inner
- */
-var s2d = function (str) {
-    return str < 10 ? ('0' + str) : str;
-};
+function pad(str, len) {
+    str += '';
+    return '0000'.substr(0, len - str.length) + str;
+}
+
 
 /**
  * ISO Date format
@@ -17872,19 +17863,21 @@ function formatTime(tpl, value, isUTC) {
     var h = date['get' + utc + 'Hours']();
     var m = date['get' + utc + 'Minutes']();
     var s = date['get' + utc + 'Seconds']();
+    var S = date['get' + utc + 'Milliseconds']();
 
-    tpl = tpl.replace('MM', s2d(M))
+    tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)
         .replace('yyyy', y)
         .replace('yy', y % 100)
-        .replace('dd', s2d(d))
+        .replace('dd', pad(d, 2))
         .replace('d', d)
-        .replace('hh', s2d(h))
+        .replace('hh', pad(h, 2))
         .replace('h', h)
-        .replace('mm', s2d(m))
+        .replace('mm', pad(m, 2))
         .replace('m', m)
-        .replace('ss', s2d(s))
-        .replace('s', s);
+        .replace('ss', pad(s, 2))
+        .replace('s', s)
+        .replace('SSS', pad(S, 3));
 
     return tpl;
 }
@@ -18619,22 +18612,21 @@ if (typeof navigator !== 'undefined') {
 }
 
 var globalDefault = {
-    // 全图默认背景
     // backgroundColor: 'rgba(0,0,0,0)',
 
     // https://dribbble.com/shots/1065960-Infographic-Pie-chart-visualization
     // color: ['#5793f3', '#d14a61', '#fd9c35', '#675bba', '#fec42c', '#dd4444', '#d4df5a', '#cd4870'],
-    // 浅色
+    // Light colors:
     // color: ['#bcd3bb', '#e88f70', '#edc1a5', '#9dc5c8', '#e1e8c8', '#7b7c68', '#e5b5b5', '#f0b489', '#928ea8', '#bda29a'],
     // color: ['#cc5664', '#9bd6ec', '#ea946e', '#8acaaa', '#f1ec64', '#ee8686', '#a48dc1', '#5da6bc', '#b9dcae'],
-    // 深色
+    // Dark colors:
     color: ['#c23531','#2f4554', '#61a0a8', '#d48265', '#91c7ae','#749f83',  '#ca8622', '#bda29a','#6e7074', '#546570', '#c4ccd3'],
 
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
 
-    // 默认需要 Grid 配置项
+    // If xAxis and yAxis declared, grid is created by default.
     // grid: {},
-    // 主题，主题
+
     textStyle: {
         // color: '#000',
         // decoration: 'none',
@@ -18692,6 +18684,13 @@ var colorPaletteMixin = {
         inner$2(this).colorNameMap = {};
     },
 
+    /**
+     * @param {string} name MUST NOT be null/undefined. Otherwise call this function
+     *                 twise with the same parameters will get different result.
+     * @param {Object} [scope=this]
+     * @param {Object} [requestColorNum]
+     * @return {string} color string.
+     */
     getColorFromPalette: function (name, scope, requestColorNum) {
         scope = scope || this;
         var scopeFields = inner$2(scope);
@@ -18732,24 +18731,6 @@ var colorPaletteMixin = {
 // merge relevant logic to this file?
 // check: "modelHelper" of tooltip and "BrushTargetManager".
 
-/**
- * @return {Object} For example:
- * {
- *     coordSysName: 'cartesian2d',
- *     coordSysDims: ['x', 'y', ...],
- *     axisMap: HashMap({
- *         x: xAxisModel,
- *         y: yAxisModel
- *     }),
- *     categoryAxisMap: HashMap({
- *         x: xAxisModel,
- *         y: undefined
- *     }),
- *     // It also indicate that whether there is category axis.
- *     firstCategoryDimIndex: 1,
- *     // To replace user specified encode.
- * }
- */
 function getCoordSysDefineBySeries(seriesModel) {
     var coordSysName = seriesModel.get('coordinateSystem');
     var result = {
@@ -18888,54 +18869,6 @@ var SOURCE_FORMAT_TYPED_ARRAY = 'typedArray';
 var SERIES_LAYOUT_BY_COLUMN = 'column';
 var SERIES_LAYOUT_BY_ROW = 'row';
 
-/**
- * [sourceFormat]
- *
- * + "original":
- * This format is only used in series.data, where
- * itemStyle can be specified in data item.
- *
- * + "arrayRows":
- * [
- *     ['product', 'score', 'amount'],
- *     ['Matcha Latte', 89.3, 95.8],
- *     ['Milk Tea', 92.1, 89.4],
- *     ['Cheese Cocoa', 94.4, 91.2],
- *     ['Walnut Brownie', 85.4, 76.9]
- * ]
- *
- * + "objectRows":
- * [
- *     {product: 'Matcha Latte', score: 89.3, amount: 95.8},
- *     {product: 'Milk Tea', score: 92.1, amount: 89.4},
- *     {product: 'Cheese Cocoa', score: 94.4, amount: 91.2},
- *     {product: 'Walnut Brownie', score: 85.4, amount: 76.9}
- * ]
- *
- * + "keyedColumns":
- * {
- *     'product': ['Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
- *     'count': [823, 235, 1042, 988],
- *     'score': [95.8, 81.4, 91.2, 76.9]
- * }
- *
- * + "typedArray"
- *
- * + "unknown"
- */
-
-/**
- * @constructor
- * @param {Object} fields
- * @param {string} fields.sourceFormat
- * @param {Array|Object} fields.fromDataset
- * @param {Array|Object} [fields.data]
- * @param {string} [seriesLayoutBy='column']
- * @param {Array.<Object|string>} [dimensionsDefine]
- * @param {Objet|HashMap} [encodeDefine]
- * @param {number} [startIndex=0]
- * @param {number} [dimensionsDetectCount]
- */
 function Source(fields) {
 
     /**
@@ -20151,7 +20084,14 @@ function isNotTargetSeries(seriesModel, payload) {
  * @inner
  */
 function mergeTheme(option, theme) {
+    // PENDING
+    // NOT use `colorLayer` in theme if option has `color`
+    var notMergeColorLayer = option.color && !option.colorLayer;
+
     each$1(theme, function (themeItem, name) {
+        if (name === 'colorLayer' && notMergeColorLayer) {
+            return;
+        }
         // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
         if (!ComponentModel.hasClass(name)) {
             if (typeof themeItem === 'object') {
@@ -20839,13 +20779,15 @@ function removeEC3NormalStatus(opt) {
     convertNormalEmphasis(opt, 'edgeLabel');
 }
 
-function compatTextStyle(labelOpt) {
-    var textStyle = isObject$3(labelOpt) && labelOpt.textStyle;
+function compatTextStyle(opt, propName) {
+    // Check whether is not object (string\null\undefined ...)
+    var labelOptSingle = isObject$3(opt) && opt[propName];
+    var textStyle = isObject$3(labelOptSingle) && labelOptSingle.textStyle;
     if (textStyle) {
         for (var i = 0, len = TEXT_STYLE_OPTIONS.length; i < len; i++) {
             var propName = TEXT_STYLE_OPTIONS[i];
             if (textStyle.hasOwnProperty(propName)) {
-                labelOpt[propName] = textStyle[propName];
+                labelOptSingle[propName] = textStyle[propName];
             }
         }
     }
@@ -20854,8 +20796,8 @@ function compatTextStyle(labelOpt) {
 function compatEC3CommonStyles(opt) {
     if (opt) {
         removeEC3NormalStatus(opt);
-        compatTextStyle(opt.label);
-        opt.emphasis && compatTextStyle(opt.emphasis.label);
+        compatTextStyle(opt, 'label');
+        opt.emphasis && compatTextStyle(opt.emphasis, 'label');
     }
 }
 
@@ -20867,17 +20809,17 @@ function processSeries(seriesOpt) {
     compatEC2ItemStyle(seriesOpt);
     removeEC3NormalStatus(seriesOpt);
 
-    compatTextStyle(seriesOpt.label);
+    compatTextStyle(seriesOpt, 'label');
     // treemap
-    compatTextStyle(seriesOpt.upperLabel);
+    compatTextStyle(seriesOpt, 'upperLabel');
     // graph
-    compatTextStyle(seriesOpt.edgeLabel);
+    compatTextStyle(seriesOpt, 'edgeLabel');
     if (seriesOpt.emphasis) {
-        compatTextStyle(seriesOpt.emphasis.label);
+        compatTextStyle(seriesOpt.emphasis, 'label');
         // treemap
-        compatTextStyle(seriesOpt.emphasis.upperLabel);
+        compatTextStyle(seriesOpt.emphasis, 'upperLabel');
         // graph
-        compatTextStyle(seriesOpt.emphasis.edgeLabel);
+        compatTextStyle(seriesOpt.emphasis, 'edgeLabel');
     }
 
     var markPoint = seriesOpt.markPoint;
@@ -21019,7 +20961,6 @@ var compatStyle = function (option, isTheme) {
         convertNormalEmphasis(timelineOpt, 'label');
         convertNormalEmphasis(timelineOpt, 'itemStyle');
         convertNormalEmphasis(timelineOpt, 'controlStyle', true);
-        convertNormalEmphasis(timelineOpt, 'checkpointStyle');
 
         var data = timelineOpt.data;
         isArray(data) && each$1(data, function (item) {
@@ -21132,14 +21073,114 @@ var backwardCompat = function (option, isTheme) {
     });
 };
 
+var dataStack = function (ecModel) {
+    var stackInfoMap = createHashMap();
+    ecModel.eachSeries(function (seriesModel) {
+        var stack = seriesModel.get('stack');
+        // Compatibal: when `stack` is set as '', do not stack.
+        if (stack) {
+            var stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
+            var data = seriesModel.getData();
+
+            var stackInfo = {
+                // Used for calculate axis extent automatically.
+                stackResultDimension: data.getCalculationInfo('stackResultDimension'),
+                stackedOverDimension: data.getCalculationInfo('stackedOverDimension'),
+                stackedDimension: data.getCalculationInfo('stackedDimension'),
+                stackedByDimension: data.getCalculationInfo('stackedByDimension'),
+                isStackedByIndex: data.getCalculationInfo('isStackedByIndex'),
+                data: data,
+                seriesModel: seriesModel
+            };
+
+            // If stacked on axis that do not support data stack.
+            if (!stackInfo.stackedDimension
+                || !(stackInfo.isStackedByIndex || stackInfo.stackedByDimension)
+            ) {
+                return;
+            }
+
+            stackInfoList.length && data.setCalculationInfo(
+                'stackedOnSeries', stackInfoList[stackInfoList.length - 1].seriesModel
+            );
+
+            stackInfoList.push(stackInfo);
+        }
+    });
+
+    stackInfoMap.each(calculateStack);
+};
+
+function calculateStack(stackInfoList) {
+    each$1(stackInfoList, function (targetStackInfo, idxInStack) {
+        var resultVal = [];
+        var resultNaN = [NaN, NaN];
+        var dims = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
+        var targetData = targetStackInfo.data;
+        var isStackedByIndex = targetStackInfo.isStackedByIndex;
+
+        // Should not write on raw data, because stack series model list changes
+        // depending on legend selection.
+        var newData = targetData.map(dims, function (v0, v1, dataIndex) {
+            var sum = targetData.get(targetStackInfo.stackedDimension, dataIndex);
+
+            // Consider `connectNulls` of line area, if value is NaN, stackedOver
+            // should also be NaN, to draw a appropriate belt area.
+            if (isNaN(sum)) {
+                return resultNaN;
+            }
+
+            var byValue;
+            var stackedDataRawIndex;
+
+            if (isStackedByIndex) {
+                stackedDataRawIndex = targetData.getRawIndex(dataIndex);
+            }
+            else {
+                byValue = targetData.get(targetStackInfo.stackedByDimension, dataIndex);
+            }
+
+            // If stackOver is NaN, chart view will render point on value start.
+            var stackedOver = NaN;
+
+            for (var j = idxInStack - 1; j >= 0; j--) {
+                var stackInfo = stackInfoList[j];
+
+                // Has been optimized by inverted indices on `stackedByDimension`.
+                if (!isStackedByIndex) {
+                    stackedDataRawIndex = stackInfo.data.rawIndexOf(stackInfo.stackedByDimension, byValue);
+                }
+
+                if (stackedDataRawIndex >= 0) {
+                    var val = stackInfo.data.getByRawIndex(stackInfo.stackResultDimension, stackedDataRawIndex);
+
+                    // Considering positive stack, negative stack and empty data
+                    if ((sum >= 0 && val > 0) // Positive stack
+                        || (sum <= 0 && val < 0) // Negative stack
+                    ) {
+                        sum += val;
+                        stackedOver = val;
+                        break;
+                    }
+                }
+            }
+
+            resultVal[0] = sum;
+            resultVal[1] = stackedOver;
+
+            return resultVal;
+        });
+
+        targetData.hostModel.setData(newData);
+        // Update for consequent calculation
+        targetStackInfo.data = newData;
+    });
+}
+
 // TODO
 // ??? refactor? check the outer usage of data provider.
 // merge with defaultDimValueGetter?
 
-/**
- * If normal array used, mutable chunk size is supported.
- * If typed array used, chunk size must be fixed.
- */
 function DefaultDataProvider(source, dimSize) {
     if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
@@ -21588,10 +21629,6 @@ var dataFormatMixin = {
     }
 };
 
-/**
- * @param {Object} define
- * @return See the return of `createTask`.
- */
 function createTask(define) {
     return new Task(define);
 }
@@ -21627,7 +21664,6 @@ var taskProto = Task.prototype;
  * @param {number} [performArgs.skip] Skip customer perform call.
  */
 taskProto.perform = function (performArgs) {
-
     var upTask = this._upstream;
     var skip = performArgs && performArgs.skip;
 
@@ -21648,9 +21684,10 @@ taskProto.perform = function (performArgs) {
         planResult = this._plan(this.context);
     }
 
+    var forceFirstProgress;
     if (this._dirty || planResult === 'reset') {
         this._dirty = false;
-        reset(this, skip);
+        forceFirstProgress = reset(this, skip);
     }
 
     var step = performArgs && performArgs.step;
@@ -21681,7 +21718,7 @@ taskProto.perform = function (performArgs) {
             this._dueEnd
         );
 
-        !skip && start < end && (
+        !skip && (forceFirstProgress || start < end) && (
             this._progress({start: start, end: end}, this.context)
         );
 
@@ -21721,12 +21758,23 @@ function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
     taskIns._settedOutputEnd = null;
 
-    taskIns._progress = !skip && taskIns._reset && taskIns._reset(
-        taskIns.context
-    );
+    var progress;
+    var forceFirstProgress;
+
+    if (!skip && taskIns._reset) {
+        progress = taskIns._reset(taskIns.context);
+        if (progress && progress.progress) {
+            forceFirstProgress = progress.forceFirstProgress;
+            progress = progress.progress;
+        }
+    }
+
+    taskIns._progress = progress;
 
     var downstream = taskIns._downstream;
     downstream && downstream.dirty();
+
+    return forceFirstProgress;
 }
 
 /**
@@ -21783,6 +21831,51 @@ taskProto.setOutputEnd = function (end) {
     this._outputDueEnd = this._settedOutputEnd = end;
     // this._outputDueEnd = end;
 };
+
+
+///////////////////////////////////////////////////////////
+// For stream debug (Should be commented out after used!)
+// Usage: printTask(this, 'begin');
+// Usage: printTask(this, null, {someExtraProp});
+// function printTask(task, prefix, extra) {
+//     window.ecTaskUID == null && (window.ecTaskUID = 0);
+//     task.uidDebug == null && (task.uidDebug = `task_${window.ecTaskUID++}`);
+//     task.agent && task.agent.uidDebug == null && (task.agent.uidDebug = `task_${window.ecTaskUID++}`);
+//     var props = [];
+//     if (task.__pipeline) {
+//         var val = `${task.__idxInPipeline}/${task.__pipeline.tail.__idxInPipeline} ${task.agent ? '(stub)' : ''}`;
+//         props.push({text: 'idx', value: val});
+//     } else {
+//         var stubCount = 0;
+//         task.agentStubMap.each(() => stubCount++);
+//         props.push({text: 'idx', value: `overall (stubs: ${stubCount})`});
+//     }
+//     props.push({text: 'uid', value: task.uidDebug});
+//     if (task.__pipeline) {
+//         props.push({text: 'pid', value: task.__pipeline.id});
+//         task.agent && props.push(
+//             {text: 'stubFor', value: task.agent.uidDebug}
+//         );
+//     }
+//     props.push(
+//         {text: 'dirty', value: task._dirty},
+//         {text: 'dueIndex', value: task._dueIndex},
+//         {text: 'dueEnd', value: task._dueEnd},
+//         {text: 'outputDueEnd', value: task._outputDueEnd}
+//     );
+//     if (extra) {
+//         Object.keys(extra).forEach(key => {
+//             props.push({text: key, value: extra[key]});
+//         });
+//     }
+//     var args = ['color: blue'];
+//     var msg = `%c[${prefix || 'T'}] %c` + props.map(item => (
+//         args.push('color: black', 'color: red'),
+//         `${item.text}: %c${item.value}`
+//     )).join('%c, ');
+//     console.log.apply(console, [msg].concat(args));
+//     // console.log(this);
+// }
 
 var inner$4 = makeInner();
 
@@ -22119,8 +22212,7 @@ var SeriesModel = ComponentModel.extend({
         var name = data.getName(dataIndex);
 
         var seriesName = this.name;
-        if (seriesName === DEFAULT_COMPONENT_NAME) {
-            // Not show '-'
+        if (!isNameSpecified(this)) {
             seriesName = '';
         }
         seriesName = seriesName
@@ -22243,7 +22335,7 @@ function autoSeriesName(seriesModel) {
     // User specified name has higher priority, otherwise it may cause
     // series can not be queried unexpectedly.
     var name = seriesModel.name;
-    if (DEFAULT_COMPONENT_NAME === name) {
+    if (!isNameSpecified(seriesModel)) {
         seriesModel.name = getSeriesAutoName(seriesModel) || name;
     }
 }
@@ -22348,9 +22440,6 @@ enableClassExtend(Component);
 // Enable capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
 enableClassManagement(Component, {registerWhenExtend: true});
 
-/**
- * @return {string} If large mode changed, return string 'reset';
- */
 var createRenderPlanner = function () {
     var inner = makeInner();
 
@@ -22359,12 +22448,12 @@ var createRenderPlanner = function () {
         var pipelineContext = seriesModel.pipelineContext;
 
         var originalLarge = fields.large;
-        var originalIncremental = fields.incrementalRender;
+        var originalProgressive = fields.canProgressiveRender;
 
         var large = fields.large = pipelineContext.large;
-        var incremental = fields.incrementalRender = pipelineContext.incrementalRender;
+        var progressive = fields.canProgressiveRender = pipelineContext.canProgressiveRender;
 
-        return ((originalLarge ^ large) || (originalIncremental ^ incremental)) && 'reset';
+        return !!((originalLarge ^ large) || (originalProgressive ^ progressive)) && 'reset';
     };
 };
 
@@ -22551,26 +22640,46 @@ function renderTaskReset(context) {
     var api = context.api;
     var payload = context.payload;
     // ???! remove updateView updateVisual
-    var incremental = seriesModel.pipelineContext.incrementalRender;
+    var canProgressiveRender = seriesModel.pipelineContext.canProgressiveRender;
     var view = context.view;
 
     var updateMethod = payload && inner$5(payload).updateMethod;
-    var methodName = (incremental && view.incrementalPrepareRender)
+    var methodName = canProgressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod
+        // `appendData` is also supported when data amount
+        // is less than progressive threshold.
         : 'render';
 
-    view[methodName](seriesModel, ecModel, api, payload);
+    if (methodName !== 'render') {
+        view[methodName](seriesModel, ecModel, api, payload);
+    }
 
-    return incremental ? renderTaskProgress : null;
+    return progressMethodMap[methodName];
 }
 
-function renderTaskProgress(params, context) {
-    context.view.incrementalRender(
-        params, context.model, context.ecModel, context.api, context.payload
-    );
-}
+var progressMethodMap = {
+    incrementalPrepareRender: {
+        progress: function (params, context) {
+            context.view.incrementalRender(
+                params, context.model, context.ecModel, context.api, context.payload
+            );
+        }
+    },
+    render: {
+        // Put view.render in `progress` to support appendData. But in this case
+        // view.render should not be called in reset, otherwise it will be called
+        // twise. Use `forceFirstProgress` to make sure that view.render is called
+        // in any cases.
+        forceFirstProgress: true,
+        progress: function (params, context) {
+            context.view.render(
+                context.model, context.ecModel, context.api, context.payload
+            );
+        }
+    }
+};
 
 var ORIGIN_METHOD = '\0__throttleOriginMethod';
 var RATE = '\0__throttleRate';
@@ -22728,7 +22837,7 @@ var seriesColor = {
         var color = seriesModel.get(colorAccessPath) // Set in itemStyle
             || seriesModel.getColorFromPalette(
                 // TODO series count changed.
-                seriesModel.get('name'), null, ecModel.getSeriesCount()
+                seriesModel.name, null, ecModel.getSeriesCount()
             );  // Default color
 
         // FIXME Set color function or use the platte color
@@ -23101,15 +23210,19 @@ var loadingDefault = function (api, opts) {
  * @module echarts/stream/Scheduler
  */
 
-/**
- * @constructor
- */
-function Scheduler(ecInstance, api) {
+function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
     // this._pipelineMap = createHashMap();
 
     this.ecInstance = ecInstance;
     this.api = api;
     this.unfinished;
+
+    // Fix current processors in case that in some rear cases that
+    // processors might be registered after echarts instance created.
+    // Register processors incrementally for a echarts instance is
+    // not supported by this stream architecture.
+    this._dataProcessorHandlers = dataProcessorHandlers.slice();
+    this._visualHandlers = visualHandlers.slice();
 
     /**
      * @private
@@ -23138,7 +23251,7 @@ proto.getPerformArgs = function (task, isBlock) {
     var pCtx = pipeline.context;
     var incremental = !isBlock
         && pipeline.progressiveEnabled
-        && (!pCtx || pCtx.incrementalRender)
+        && (!pCtx || pCtx.canProgressiveRender)
         && task.__idxInPipeline > pipeline.bockIndex;
 
     return {step: incremental ? pipeline.step : null};
@@ -23159,13 +23272,20 @@ proto.updateStreamModes = function (seriesModel, view) {
     var pipeline = this._pipelineMap.get(seriesModel.uid);
     var data = seriesModel.getData();
     var dataLen = data.count();
-    var incrementalRender = pipeline.progressiveEnabled
+
+    // `canProgressiveRender` means that can render progressively in each
+    // animation frame. Note that some types of series do not provide
+    // `view.incrementalPrepareRender` but support `chart.appendData`. We
+    // use the term `incremental` but not `progressive` to describe the
+    // case that `chart.appendData`.
+    var canProgressiveRender = pipeline.progressiveEnabled
         && view.incrementalPrepareRender
         && dataLen >= pipeline.threshold;
+
     var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
 
     seriesModel.pipelineContext = pipeline.context = {
-        incrementalRender: incrementalRender,
+        canProgressiveRender: canProgressiveRender,
         large: large
     };
 };
@@ -23193,16 +23313,18 @@ proto.restorePipelines = function (ecModel) {
     });
 };
 
-proto.prepareStageTasks = function (stageHandlers, useClearVisual) {
+proto.prepareStageTasks = function () {
     var stageTaskMap = this._stageTaskMap;
     var ecModel = this.ecInstance.getModel();
     var api = this.api;
 
-    each$1(stageHandlers, function (handler) {
-        var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, []);
+    each$1([this._dataProcessorHandlers, this._visualHandlers], function (stageHandlers) {
+        each$1(stageHandlers, function (handler) {
+            var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, []);
 
-        handler.reset && createSeriesStageTask(this, handler, record, ecModel, api);
-        handler.overallReset && createOverallStageTask(this, handler, record, ecModel, api);
+            handler.reset && createSeriesStageTask(this, handler, record, ecModel, api);
+            handler.overallReset && createOverallStageTask(this, handler, record, ecModel, api);
+        }, this);
     }, this);
 };
 
@@ -23220,16 +23342,16 @@ proto.prepareView = function (view, model, ecModel, api) {
 };
 
 
-proto.performDataProcessorTasks = function (stageHandlers, ecModel, payload) {
+proto.performDataProcessorTasks = function (ecModel, payload) {
     // If we do not use `block` here, it should be considered when to update modes.
-    performStageTasks(this, stageHandlers, ecModel, payload, {block: true});
+    performStageTasks(this, this._dataProcessorHandlers, ecModel, payload, {block: true});
 };
 
 // opt
 // opt.visualType: 'visual' or 'layout'
 // opt.setDirty
-proto.performVisualTasks = function (stageHandlers, ecModel, payload, opt) {
-    performStageTasks(this, stageHandlers, ecModel, payload, opt);
+proto.performVisualTasks = function (ecModel, payload, opt) {
+    performStageTasks(this, this._visualHandlers, ecModel, payload, opt);
 };
 
 function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
@@ -23718,10 +23840,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.0.2';
+var version = '4.0.3';
 
 var dependencies = {
-    zrender: '4.0.1'
+    zrender: '4.0.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -23878,10 +24000,17 @@ function ECharts(dom, theme$$1, opts) {
      */
     var api = this._api = createExtensionAPI(this);
 
+    // Sort on demand
+    function prioritySortFunc(a, b) {
+        return a.__prio - b.__prio;
+    }
+    sort(visualFuncs, prioritySortFunc);
+    sort(dataProcessorFuncs, prioritySortFunc);
+
     /**
      * @type {module:echarts/stream/Scheduler}
      */
-    this._scheduler = new Scheduler(this, api);
+    this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
 
     Eventful.call(this);
 
@@ -23891,8 +24020,6 @@ function ECharts(dom, theme$$1, opts) {
      */
     this._messageCenter = new MessageCenter();
 
-    // this._scheduler = new Scheduler();
-
     // Init mouse events
     this._initEvents();
 
@@ -23901,14 +24028,10 @@ function ECharts(dom, theme$$1, opts) {
 
     // Can't dispatch action during rendering procedure
     this._pendingActions = [];
-    // Sort on demand
-    function prioritySortFunc(a, b) {
-        return a.__prio - b.__prio;
-    }
-    sort(visualFuncs, prioritySortFunc);
-    sort(dataProcessorFuncs, prioritySortFunc);
 
     zr.animation.on('frame', this._onframe, this);
+
+    bindRenderedEvent(zr, this);
 
     // ECharts instance can be used as value.
     setAsPrimitive(this);
@@ -23953,7 +24076,7 @@ echartsProto._onframe = function () {
             scheduler.performSeriesTasks(ecModel);
 
             // Currently dataProcessorFuncs do not check threshold.
-            scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel);
+            scheduler.performDataProcessorTasks(ecModel);
 
             updateStreamModes(this, ecModel);
 
@@ -23964,7 +24087,7 @@ echartsProto._onframe = function () {
             // this._coordSysMgr.update(ecModel, api);
 
             // console.log('--- ec frame visual ---', remainTime);
-            scheduler.performVisualTasks(visualFuncs, ecModel);
+            scheduler.performVisualTasks(ecModel);
 
             renderSeries(this, this._model, api, 'remain');
 
@@ -23972,15 +24095,14 @@ echartsProto._onframe = function () {
         }
         while (remainTime > 0 && scheduler.unfinished);
 
+        // Call flush explicitly for trigger finished event.
         if (!scheduler.unfinished) {
-            this._zr && this._zr.flush();
-            this.trigger('finished');
+            this._zr.flush();
         }
         // Else, zr flushing be ensue within the same frame,
         // because zr flushing is after onframe event.
     }
 };
-
 
 /**
  * @return {HTMLElement}
@@ -24112,11 +24234,12 @@ echartsProto.getRenderedCanvas = function (opts) {
     opts.backgroundColor = opts.backgroundColor
         || this._model.get('backgroundColor');
     var zr = this._zr;
-    var list = zr.storage.getDisplayList();
+    // var list = zr.storage.getDisplayList();
     // Stop animations
-    each$1(list, function (el) {
-        el.stopAnimation(true);
-    });
+    // Never works before in init animation, so remove it.
+    // zrUtil.each(list, function (el) {
+    //     el.stopAnimation(true);
+    // });
     return zr.painter.getRenderedCanvas(opts);
 };
 
@@ -24464,19 +24587,19 @@ var updateMethods = {
         // In LineView may save the old coordinate system and use it to get the orignal point
         coordSysMgr.create(ecModel, api);
 
-        scheduler.performDataProcessorTasks(dataProcessorFuncs, ecModel, payload);
+        scheduler.performDataProcessorTasks(ecModel, payload);
 
         // Current stream render is not supported in data process. So we can update
         // stream modes after data processing, where the filtered data is used to
         // deteming whether use progressive rendering.
         updateStreamModes(this, ecModel);
 
-        stackSeriesData(ecModel);
+        // stackSeriesData(ecModel);
 
         coordSysMgr.update(ecModel, api);
 
         clearColorPalette(ecModel);
-        scheduler.performVisualTasks(visualFuncs, ecModel, payload);
+        scheduler.performVisualTasks(ecModel, payload);
 
         render(this, ecModel, api, payload);
 
@@ -24570,9 +24693,9 @@ var updateMethods = {
 
         clearColorPalette(ecModel);
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
+        // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
         this._scheduler.performVisualTasks(
-            visualFuncs, ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
+            ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
         );
 
         // Currently, not call render of components. Geo render cost a lot.
@@ -24599,7 +24722,7 @@ var updateMethods = {
         clearColorPalette(ecModel);
 
         // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
 
         render(this, this._model, this._api, payload);
 
@@ -24625,7 +24748,7 @@ var updateMethods = {
         // clearColorPalette(ecModel);
 
         // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {visualType: 'visual', setDirty: true});
+        // this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
 
         // render(this, this._model, this._api, payload);
 
@@ -24649,8 +24772,8 @@ var updateMethods = {
         // ChartView.markUpdateMethod(payload, 'updateLayout');
 
         // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-        // // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, 'layout', true);
-        // this._scheduler.performVisualTasks(visualFuncs, ecModel, payload, {setDirty: true});
+        // // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
+        // this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
 
         // render(this, this._model, this._api, payload);
 
@@ -24664,9 +24787,7 @@ function prepare(ecIns) {
 
     scheduler.restorePipelines(ecModel);
 
-    scheduler.prepareStageTasks(dataProcessorFuncs);
-
-    scheduler.prepareStageTasks(visualFuncs);
+    scheduler.prepareStageTasks();
 
     prepareView(ecIns, 'component', ecModel, scheduler);
 
@@ -24737,21 +24858,19 @@ echartsProto.resize = function (opts) {
 
     var optionChanged = ecModel.resetOption('media');
 
-    refresh(this, optionChanged, opts && opts.silent);
+    var silent = opts && opts.silent;
+
+    this[IN_MAIN_PROCESS] = true;
+
+    optionChanged && prepare(this);
+    updateMethods.update.call(this);
+
+    this[IN_MAIN_PROCESS] = false;
+
+    flushPendingActions.call(this, silent);
+
+    triggerUpdatedEvent.call(this, silent);
 };
-
-function refresh(ecIns, needPrepare, silent) {
-    ecIns[IN_MAIN_PROCESS] = true;
-
-    needPrepare && prepare(ecIns);
-    updateMethods.update.call(ecIns);
-
-    ecIns[IN_MAIN_PROCESS] = false;
-
-    flushPendingActions.call(ecIns, silent);
-
-    triggerUpdatedEvent.call(ecIns, silent);
-}
 
 function updateStreamModes(ecIns, ecModel) {
     var chartsMap = ecIns._chartsMap;
@@ -24946,6 +25065,41 @@ function triggerUpdatedEvent(silent) {
 }
 
 /**
+ * Event `rendered` is triggered when zr
+ * rendered. It is useful for realtime
+ * snapshot (reflect animation).
+ *
+ * Event `finished` is triggered when:
+ * (1) zrender rendering finished.
+ * (2) initial animation finished.
+ * (3) progressive rendering finished.
+ * (4) no pending action.
+ * (5) no delayed setOption needs to be processed.
+ */
+function bindRenderedEvent(zr, ecIns) {
+    zr.on('rendered', function () {
+
+        ecIns.trigger('rendered');
+
+        // The `finished` event should not be triggered repeatly,
+        // so it should only be triggered when rendering indeed happend
+        // in zrender. (Consider the case that dipatchAction is keep
+        // triggering when mouse move).
+        if (
+            // Although zr is dirty if initial animation is not finished
+            // and this checking is called on frame, we also check
+            // animation finished for robustness.
+            zr.animation.isFinished()
+            && !ecIns[OPTION_UPDATED]
+            && !ecIns._scheduler.unfinished
+            && !ecIns._pendingActions.length
+        ) {
+            ecIns.trigger('finished');
+        }
+    });
+}
+
+/**
  * @param {Object} params
  * @param {number} params.seriesIndex
  * @param {Array|TypedArray} params.data
@@ -24960,6 +25114,14 @@ echartsProto.appendData = function (params) {
     }
 
     seriesModel.appendData(params);
+
+    // Note: `appendData` does not support that update extent of coordinate
+    // system, util some scenario require that. In the expected usage of
+    // `appendData`, the initial extent of coordinate system should better
+    // be fixed by axis `min`/`max` setting or initial data, otherwise if
+    // the extent changed while `appendData`, the location of the painted
+    // graphic elements have to be changed, which make the usage of
+    // `appendData` meaningless.
 
     this._scheduler.unfinished = true;
 };
@@ -25039,25 +25201,6 @@ function prepareView(ecIns, type, ecModel, scheduler) {
             i++;
         }
     }
-}
-
-/**
- * @private
- */
-function stackSeriesData(ecModel) {
-    var stackedDataMap = {};
-    ecModel.eachSeries(function (series) {
-        var stack = series.get('stack');
-        var data = series.getData();
-        if (stack && data.type === 'list') {
-            var previousStack = stackedDataMap[stack];
-            // Avoid conflict with Object.prototype
-            if (stackedDataMap.hasOwnProperty(stack) && previousStack) {
-                data.stackedOn = previousStack;
-            }
-            stackedDataMap[stack] = data;
-        }
-    });
 }
 
 // /**
@@ -25818,6 +25961,7 @@ function getMap(mapName) {
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);
+registerProcessor(PRIORITY_PROCESSOR_STATISTIC, dataStack);
 registerLoading('default', loadingDefault);
 
 // Default actions
@@ -25976,7 +26120,7 @@ var OTHER_DIMENSIONS = createHashMap([
 function summarizeDimensions(data) {
     var summary = {};
     var encode = summary.encode = {};
-    var coordDimMap = summary.coordDimMap = createHashMap();
+    var notExtraCoordDimMap = createHashMap();
     var defaultedLabel = [];
 
     each$1(data.dimensions, function (dimName) {
@@ -25993,14 +26137,17 @@ function summarizeDimensions(data) {
             }
             coordDimArr[dimItem.coordDimIndex] = dimName;
 
-            if (dimItem.isSysCoord && mayLabelDimType(dimItem.type)) {
-                // Use the last coord dim (and label friendly) as default label,
-                // because both show x, y on label is not look good, and usually
-                // y axis is more focusd conventionally.
-                defaultedLabel[0] = dimName;
-            }
+            if (!dimItem.isExtraCoord) {
+                notExtraCoordDimMap.set(coordDim, 1);
 
-            coordDimMap.set(coordDim, 1);
+                // Use the last coord dim (and label friendly) as default label,
+                // because when dataset is used, it is hard to guess which dimension
+                // can be value dimension. If both show x, y on label is not look good,
+                // and conventionally y axis is focused more.
+                if (mayLabelDimType(dimItem.type)) {
+                    defaultedLabel[0] = dimName;
+                }
+            }
         }
 
         OTHER_DIMENSIONS.each(function (v, otherDim) {
@@ -26017,10 +26164,21 @@ function summarizeDimensions(data) {
     });
 
     var dataDimsOnCoord = [];
-    coordDimMap.each(function (v, coordDim) {
-        dataDimsOnCoord = dataDimsOnCoord.concat(encode[coordDim]);
+    var encodeFirstDimNotExtra = {};
+
+    notExtraCoordDimMap.each(function (v, coordDim) {
+        var dimArr = encode[coordDim];
+        // ??? FIXME extra coord should not be set in dataDimsOnCoord.
+        // But should fix the case that radar axes: simplify the logic
+        // of `completeDimension`, remove `extraPrefix`.
+        encodeFirstDimNotExtra[coordDim] = dimArr[0];
+        // Not necessary to remove duplicate, because a data
+        // dim canot on more than one coordDim.
+        dataDimsOnCoord = dataDimsOnCoord.concat(dimArr);
     });
+
     summary.dataDimsOnCoord = dataDimsOnCoord;
+    summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
 
     var encodeLabel = encode.label;
     // FIXME `encode.label` is not recommanded, because formatter can not be set
@@ -26093,10 +26251,10 @@ var dataCtors = {
     'time': Array
 };
 
-function getIndicesCtor(list) {
-    var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
-    var CtorUint16Array = typeof globalObj.Uint16Array === UNDEFINED ? Array : globalObj.Uint16Array;
+var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
+var CtorUint16Array = typeof globalObj.Uint16Array === UNDEFINED ? Array : globalObj.Uint16Array;
 
+function getIndicesCtor(list) {
     // The possible max value in this._indicies is always this._rawCount despite of filtering.
     return list._rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
 }
@@ -26108,7 +26266,7 @@ function cloneChunk(originalChunk) {
 }
 
 var TRANSFERABLE_PROPERTIES = [
-    'stackedOn', 'hasItemOption', '_nameList', '_idList',
+    'hasItemOption', '_nameList', '_idList', '_calculationInfo', '_invertedIndicesMap',
     '_rawData', '_rawExtent', '_chunkSize', '_chunkCount',
     '_dimValueGetter', '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'
 ];
@@ -26137,6 +26295,7 @@ function transferProperties(a, b) {
  *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
  *      Spetial fields: {
  *          ordinalMeta: <module:echarts/data/OrdinalMeta>
+ *          createInvertedIndices: <boolean>
  *      }
  * @param {module:echarts/model/Model} hostModel
  */
@@ -26146,29 +26305,21 @@ var List = function (dimensions, hostModel) {
 
     var dimensionInfos = {};
     var dimensionNames = [];
+    var invertedIndicesMap = {};
+
     for (var i = 0; i < dimensions.length; i++) {
-        var dimensionName;
-        var dimensionInfo = {};
-        if (typeof dimensions[i] === 'string') {
-            dimensionName = dimensions[i];
-            dimensionInfo = {
-                name: dimensionName,
-                coordDim: dimensionName,
-                coordDimIndex: 0,
-                stackable: false,
-                // Type can be 'float', 'int', 'number'
-                // Default is float64
-                type: 'float'
-            };
+        // Use the original dimensions[i], where other flag props may exists.
+        var dimensionInfo = dimensions[i];
+
+        if (isString(dimensionInfo)) {
+            dimensionInfo = {name: dimensionInfo};
         }
-        else {
-            dimensionInfo = dimensions[i];
-            dimensionName = dimensionInfo.name;
-            dimensionInfo.type = dimensionInfo.type || 'float';
-            if (!dimensionInfo.coordDim) {
-                dimensionInfo.coordDim = dimensionName;
-                dimensionInfo.coordDimIndex = 0;
-            }
+
+        var dimensionName = dimensionInfo.name;
+        dimensionInfo.type = dimensionInfo.type || 'float';
+        if (!dimensionInfo.coordDim) {
+            dimensionInfo.coordDim = dimensionName;
+            dimensionInfo.coordDimIndex = 0;
         }
 
         dimensionInfo.otherDims = dimensionInfo.otherDims || {};
@@ -26176,6 +26327,10 @@ var List = function (dimensions, hostModel) {
         dimensionInfos[dimensionName] = dimensionInfo;
 
         dimensionInfo.index = i;
+
+        if (dimensionInfo.createInvertedIndices) {
+            invertedIndicesMap[dimensionName] = [];
+        }
     }
 
     /**
@@ -26233,11 +26388,6 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._optionModels = [];
-
-    /**
-     * @param {module:echarts/data/List}
-     */
-    this.stackedOn = null;
 
     /**
      * Global visual properties after visual coding
@@ -26330,6 +26480,18 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._dimensionsSummary = summarizeDimensions(this);
+
+    /**
+     * @type {Object.<Array|TypedArray>}
+     * @private
+     */
+    this._invertedIndicesMap = invertedIndicesMap;
+
+    /**
+     * @type {Object}
+     * @private
+     */
+    this._calculationInfo = {};
 };
 
 var listProto = List.prototype;
@@ -26357,7 +26519,7 @@ listProto.getDimension = function (dim) {
 };
 
 /**
- * Get type and stackable info of particular dimension
+ * Get type and calculation info of particular dimension
  * @param {string|number} dim
  *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
  *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
@@ -26376,19 +26538,22 @@ listProto.getDimensionsOnCoord = function () {
 
 /**
  * @param {string} coordDim
- * @param {number|Array} [idx=0] A coordDim may map to more than one data dim.
+ * @param {number} [idx] A coordDim may map to more than one data dim.
  *        If idx is `true`, return a array of all mapped dims.
+ *        If idx is not specified, return the first dim not extra.
  * @return {string|Array.<string>} concrete data dim.
  *        If idx is number, and not found, return null/undefined.
  *        If idx is `true`, and not found, return empty array.
  */
 listProto.mapDimension = function (coordDim, idx) {
-    var dims = this._dimensionsSummary.encode[coordDim];
-    return idx === true
-        ? (dims && dims.slice() || [])
-        : dims
-        ? dims[idx || 0]
-        : null;
+    var dimensionsSummary = this._dimensionsSummary;
+
+    if (idx == null) {
+        return dimensionsSummary.encodeFirstDimNotExtra[coordDim];
+    }
+
+    var dims = dimensionsSummary.encode[coordDim];
+    return dims && (idx === true ? dims.slice() : dims[idx]);
 };
 
 /**
@@ -26493,7 +26658,7 @@ listProto._initDataFromProvider = function (start, end) {
     for (var i = 0; i < dimensions.length; i++) {
         var dim = dimensions[i];
         if (!rawExtent[dim]) {
-            rawExtent[dim] = [Infinity, -Infinity];
+            rawExtent[dim] = getInitialExtent();
         }
 
         var dimInfo = dimensionInfoMap[dim];
@@ -26596,7 +26761,33 @@ listProto._initDataFromProvider = function (start, end) {
 
     // Reset data extent
     this._extent = {};
+
+    prepareInvertedIndex(this);
 };
+
+function prepareInvertedIndex(list) {
+    var invertedIndicesMap = list._invertedIndicesMap;
+    each$1(invertedIndicesMap, function (invertedIndices, dim) {
+        var dimInfo = list._dimensionInfos[dim];
+
+        // Currently, only dimensions that has ordinalMeta can create inverted indices.
+        var ordinalMeta = dimInfo.ordinalMeta;
+        if (ordinalMeta) {
+            invertedIndices = invertedIndicesMap[dim] = new CtorUint32Array(
+                ordinalMeta.categories.length
+            );
+            // The default value of TypedArray is 0. To avoid miss
+            // mapping to 0, we should set it as NaN.
+            for (var i = 0; i < invertedIndices.length; i++) {
+                invertedIndices[i] = NaN;
+            }
+            for (var i = 0; i < list._count; i++) {
+                // Only support the case that all values are distinct.
+                invertedIndices[list.get(dim, i)] = i;
+            }
+        }
+    });
+}
 
 // TODO refactor
 listProto._getNameFromStore = function (rawIndex) {
@@ -26664,7 +26855,7 @@ listProto.getIndices = function () {
  * @param {boolean} stack
  * @return {number}
  */
-listProto.get = function (dim, idx, stack) {
+listProto.get = function (dim, idx /*, stack */) {
     if (!(idx >= 0 && idx < this._count)) {
         return NaN;
     }
@@ -26682,29 +26873,53 @@ listProto.get = function (dim, idx, stack) {
     var chunkStore = storage[dim][chunkIndex];
     var value = chunkStore[chunkOffset];
     // FIXME ordinal data type is not stackable
-    if (stack) {
-        var dimensionInfo = this._dimensionInfos[dim];
-        if (dimensionInfo && dimensionInfo.stackable) {
-            var stackedOn = this.stackedOn;
-            while (stackedOn) {
-                // Get no stacked data of stacked on
-                var stackedValue = stackedOn.get(dim, idx);
-                // Considering positive stack, negative stack and empty data
-                if ((value >= 0 && stackedValue > 0)  // Positive stack
-                    || (value <= 0 && stackedValue < 0) // Negative stack
-                ) {
-                    value += stackedValue;
-                }
-                stackedOn = stackedOn.stackedOn;
-            }
-        }
-    }
+    // if (stack) {
+    //     var dimensionInfo = this._dimensionInfos[dim];
+    //     if (dimensionInfo && dimensionInfo.stackable) {
+    //         var stackedOn = this.stackedOn;
+    //         while (stackedOn) {
+    //             // Get no stacked data of stacked on
+    //             var stackedValue = stackedOn.get(dim, idx);
+    //             // Considering positive stack, negative stack and empty data
+    //             if ((value >= 0 && stackedValue > 0)  // Positive stack
+    //                 || (value <= 0 && stackedValue < 0) // Negative stack
+    //             ) {
+    //                 value += stackedValue;
+    //             }
+    //             stackedOn = stackedOn.stackedOn;
+    //         }
+    //     }
+    // }
 
     return value;
 };
 
-// FIXME Use `get` on chrome maybe slow(in filterSelf and selectRange).
-// Hack a much simpler _getFast
+/**
+ * @param {string} dim concrete dim
+ * @param {number} rawIndex
+ * @return {number|string}
+ */
+listProto.getByRawIndex = function (dim, rawIdx) {
+    if (!(rawIdx >= 0 && rawIdx < this._rawCount)) {
+        return NaN;
+    }
+    var dimStore = this._storage[dim];
+    if (!dimStore) {
+        // TODO Warn ?
+        return NaN;
+    }
+
+    var chunkIndex = Math.floor(rawIdx / this._chunkSize);
+    var chunkOffset = rawIdx % this._chunkSize;
+    var chunkStore = dimStore[chunkIndex];
+    return chunkStore[chunkOffset];
+};
+
+/**
+ * FIXME Use `get` on chrome maybe slow(in filterSelf and selectRange).
+ * Hack a much simpler _getFast
+ * @private
+ */
 listProto._getFast = function (dim, rawIdx) {
     var chunkIndex = Math.floor(rawIdx / this._chunkSize);
     var chunkOffset = rawIdx % this._chunkSize;
@@ -26716,20 +26931,19 @@ listProto._getFast = function (dim, rawIdx) {
  * Get value for multi dimensions.
  * @param {Array.<string>} [dimensions] If ignored, using all dimensions.
  * @param {number} idx
- * @param {boolean} stack
  * @return {number}
  */
-listProto.getValues = function (dimensions, idx, stack) {
+listProto.getValues = function (dimensions, idx /*, stack */) {
     var values = [];
 
     if (!isArray(dimensions)) {
-        stack = idx;
+        // stack = idx;
         idx = dimensions;
         dimensions = this.dimensions;
     }
 
     for (var i = 0, len = dimensions.length; i < len; i++) {
-        values.push(this.get(dimensions[i], idx, stack));
+        values.push(this.get(dimensions[i], idx /*, stack */));
     }
 
     return values;
@@ -26763,13 +26977,13 @@ listProto.hasValue = function (idx) {
  * @param {string} dim
  * @param {boolean} stack
  */
-listProto.getDataExtent = function (dim, stack) {
+listProto.getDataExtent = function (dim /*, stack */) {
     // Make sure use concrete dim as cache name.
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
-    var initialExtent = [Infinity, -Infinity];
+    var initialExtent = getInitialExtent();
 
-    stack = (stack || false) && this.isStacked(dim);
+    // stack = !!((stack || false) && this.getCalculationInfo(dim));
 
     if (!dimData) {
         return initialExtent;
@@ -26777,18 +26991,19 @@ listProto.getDataExtent = function (dim, stack) {
 
     // Make more strict checkings to ensure hitting cache.
     var currEnd = this.count();
-    var cacheName = [dim, !!stack].join('_');
+    // var cacheName = [dim, !!stack].join('_');
+    // var cacheName = dim;
 
     // Consider the most cases when using data zoom, `getDataExtent`
     // happened before filtering. We cache raw extent, which is not
     // necessary to be cleared and recalculated when restore data.
-    var useRaw = !this._indices && !stack;
+    var useRaw = !this._indices; // && !stack;
     var dimExtent;
 
     if (useRaw) {
         return this._rawExtent[dim].slice();
     }
-    dimExtent = this._extent[cacheName];
+    dimExtent = this._extent[dim];
     if (dimExtent) {
         return dimExtent.slice();
     }
@@ -26798,14 +27013,15 @@ listProto.getDataExtent = function (dim, stack) {
     var max = dimExtent[1];
 
     for (var i = 0; i < currEnd; i++) {
-        var value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
+        // var value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
+        var value = this._getFast(dim, this.getRawIndex(i));
         value < min && (min = value);
         value > max && (max = value);
     }
 
     dimExtent = [min, max];
 
-    this._extent[cacheName] = dimExtent;
+    this._extent[dim] = dimExtent;
 
     return dimExtent;
 };
@@ -26816,32 +27032,44 @@ listProto.getDataExtent = function (dim, stack) {
  * extent calculation will cost more than 10ms and the cache will
  * be erased because of the filtering.
  */
-listProto.getApproximateExtent = function (dim, stack) {
+listProto.getApproximateExtent = function (dim /*, stack */) {
     dim = this.getDimension(dim);
-    return this._approximateExtent[dim] || this.getDataExtent(dim, stack);
+    return this._approximateExtent[dim] || this.getDataExtent(dim /*, stack */);
 };
 
-listProto.setApproximateExtent = function (extent, dim, stack) {
+listProto.setApproximateExtent = function (extent, dim /*, stack */) {
     dim = this.getDimension(dim);
     this._approximateExtent[dim] = extent.slice();
 };
 
-listProto.isStacked = function (concreteDim) {
-    var dimensionInfo = this._dimensionInfos[concreteDim];
-    return dimensionInfo && dimensionInfo.stackable && this.stackedOn;
+/**
+ * @param {string} key
+ * @return {*}
+ */
+listProto.getCalculationInfo = function (key) {
+    return this._calculationInfo[key];
+};
+
+/**
+ * @param {string|Object} key or k-v object
+ * @param {*} [value]
+ */
+listProto.setCalculationInfo = function (key, value) {
+    isObject$4(key)
+        ? extend(this._calculationInfo, key)
+        : (this._calculationInfo[key] = value);
 };
 
 /**
  * Get sum of data in one dimension
  * @param {string} dim
- * @param {boolean} stack
  */
-listProto.getSum = function (dim, stack) {
+listProto.getSum = function (dim /*, stack */) {
     var dimData = this._storage[dim];
     var sum = 0;
     if (dimData) {
         for (var i = 0, len = this.count(); i < len; i++) {
-            var value = this.get(dim, i, stack);
+            var value = this.get(dim, i /*, stack */);
             if (!isNaN(value)) {
                 sum += value;
             }
@@ -26850,27 +27078,50 @@ listProto.getSum = function (dim, stack) {
     return sum;
 };
 
-/**
- * Retreive the index with given value
- * @param {number} idx
- * @param {number} value
- * @return {number}
- */
+// /**
+//  * Retreive the index with given value
+//  * @param {string} dim Concrete dimension.
+//  * @param {number} value
+//  * @return {number}
+//  */
+// Currently incorrect: should return dataIndex but not rawIndex.
+// Do not fix it until this method is to be used somewhere.
 // FIXME Precision of float value
-listProto.indexOf = function (dim, value) {
-    var storage = this._storage;
-    var dimData = storage[dim];
-    var chunkSize = this._chunkSize;
-    if (dimData) {
-        for (var i = 0, len = this.count(); i < len; i++) {
-            var chunkIndex = Math.floor(i / chunkSize);
-            var chunkOffset = i % chunkSize;
-            if (dimData[chunkIndex][chunkOffset] === value) {
-                return i;
-            }
+// listProto.indexOf = function (dim, value) {
+//     var storage = this._storage;
+//     var dimData = storage[dim];
+//     var chunkSize = this._chunkSize;
+//     if (dimData) {
+//         for (var i = 0, len = this.count(); i < len; i++) {
+//             var chunkIndex = Math.floor(i / chunkSize);
+//             var chunkOffset = i % chunkSize;
+//             if (dimData[chunkIndex][chunkOffset] === value) {
+//                 return i;
+//             }
+//         }
+//     }
+//     return -1;
+// };
+
+/**
+ * Only support the dimension which inverted index created.
+ * Do not support other cases until required.
+ * @param {string} concrete dim
+ * @param {number|string} value
+ * @return {number} rawIndex
+ */
+listProto.rawIndexOf = function (dim, value) {
+    var invertedIndices = dim && this._invertedIndicesMap[dim];
+    if (__DEV__) {
+        if (!invertedIndices) {
+            throw new Error('Do not supported yet');
         }
     }
-    return -1;
+    var rawIndex = invertedIndices[value];
+    if (rawIndex == null || isNaN(rawIndex)) {
+        return -1;
+    }
+    return rawIndex;
 };
 
 /**
@@ -26934,11 +27185,10 @@ listProto.indexOfRawIndex = function (rawIndex) {
  * Retreive the index of nearest value
  * @param {string} dim
  * @param {number} value
- * @param {boolean} stack If given value is after stacked
  * @param {number} [maxDistance=Infinity]
  * @return {Array.<number>} Considere multiple points has the same value.
  */
-listProto.indicesOfNearest = function (dim, value, stack, maxDistance) {
+listProto.indicesOfNearest = function (dim, value, maxDistance) {
     var storage = this._storage;
     var dimData = storage[dim];
     var nearestIndices = [];
@@ -26954,7 +27204,7 @@ listProto.indicesOfNearest = function (dim, value, stack, maxDistance) {
     var minDist = Number.MAX_VALUE;
     var minDiff = -1;
     for (var i = 0, len = this.count(); i < len; i++) {
-        var diff = value - this.get(dim, i, stack);
+        var diff = value - this.get(dim, i /*, stack */);
         var dist = Math.abs(diff);
         if (diff <= maxDistance && dist <= minDist) {
             // For the case of two data are same on xAxis, which has sequence data.
@@ -27062,7 +27312,6 @@ function validateDimensions(list, dims) {
  * Data iteration
  * @param {string|Array.<string>}
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  *
  * @example
@@ -27070,7 +27319,7 @@ function validateDimensions(list, dims) {
  *  list.each(['x', 'y'], function (x, y, idx) {});
  *  list.each(function (idx) {})
  */
-listProto.each = function (dims, cb, stack, context) {
+listProto.each = function (dims, cb, context, contextCompat) {
     'use strict';
 
     if (!this._count) {
@@ -27078,11 +27327,14 @@ listProto.each = function (dims, cb, stack, context) {
     }
 
     if (typeof dims === 'function') {
-        context = stack;
-        stack = cb;
+        contextCompat = context;
+        context = cb;
         cb = dims;
         dims = [];
     }
+
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
 
     dims = map(normalizeDimensions(dims), this.getDimension, this);
 
@@ -27092,8 +27344,6 @@ listProto.each = function (dims, cb, stack, context) {
 
     var dimSize = dims.length;
 
-    context = context || this;
-
     for (var i = 0; i < this.count(); i++) {
         // Simple optimization
         switch (dimSize) {
@@ -27101,16 +27351,16 @@ listProto.each = function (dims, cb, stack, context) {
                 cb.call(context, i);
                 break;
             case 1:
-                cb.call(context, this.get(dims[0], i, stack), i);
+                cb.call(context, this.get(dims[0], i), i);
                 break;
             case 2:
-                cb.call(context, this.get(dims[0], i, stack), this.get(dims[1], i, stack), i);
+                cb.call(context, this.get(dims[0], i), this.get(dims[1], i), i);
                 break;
             default:
                 var k = 0;
                 var value = [];
                 for (; k < dimSize; k++) {
-                    value[k] = this.get(dims[k], i, stack);
+                    value[k] = this.get(dims[k], i);
                 }
                 // Index
                 value[k] = i;
@@ -27123,10 +27373,9 @@ listProto.each = function (dims, cb, stack, context) {
  * Data filter
  * @param {string|Array.<string>}
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  */
-listProto.filterSelf = function (dimensions, cb, stack, context) {
+listProto.filterSelf = function (dimensions, cb, context, contextCompat) {
     'use strict';
 
     if (!this._count) {
@@ -27134,14 +27383,14 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
     }
 
     if (typeof dimensions === 'function') {
-        context = stack;
-        stack = cb;
+        contextCompat = context;
+        context = cb;
         cb = dimensions;
         dimensions = [];
     }
-    stack = stack || false;
 
-    context = context || this;
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
 
     dimensions = map(
         normalizeDimensions(dimensions), this.getDimension, this
@@ -27169,12 +27418,12 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
             keep = cb.call(context, i);
         }
         else if (dimSize === 1) {
-            var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIdx);
+            var val = this._getFast(dim0, rawIdx);
             keep = cb.call(context, val, i);
         }
         else {
             for (var k = 0; k < dimSize; k++) {
-                value[k] = stack ? this.get(dimensions[k], i, true) : this._getFast(dim0, rawIdx);
+                value[k] = this._getFast(dim0, rawIdx);
             }
             value[k] = i;
             keep = cb.apply(context, value);
@@ -27201,14 +27450,14 @@ listProto.filterSelf = function (dimensions, cb, stack, context) {
  * Select data in range. (For optimization of filter)
  * (Manually inline code, support 5 million data filtering in data zoom.)
  */
-listProto.selectRange = function (range, stack) {
+listProto.selectRange = function (range /*, stack */) {
     'use strict';
 
     if (!this._count) {
         return;
     }
 
-    stack = stack || false;
+    // stack = stack || false;
 
     var dimensions = [];
     for (var dim in range) {
@@ -27237,7 +27486,7 @@ listProto.selectRange = function (range, stack) {
     var max = range[dim0][1];
 
     var quickFinished = false;
-    if (!this._indices && !stack) {
+    if (!this._indices /* && !stack */) {
         // Extreme optimization for common case. About 2x faster in chrome.
         var idx = 0;
         if (dimSize === 1) {
@@ -27278,10 +27527,11 @@ listProto.selectRange = function (range, stack) {
     }
     if (!quickFinished) {
         if (dimSize === 1) {
-            stack = stack || this.isStacked(dim0);
+            // stack = stack || !!this.getCalculationInfo(dim0);
             for (var i = 0; i < originalCount; i++) {
                 var rawIndex = this.getRawIndex(i);
-                var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
+                // var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
+                var val = this._getFast(dim0, rawIndex);
                 if (val >= min && val <= max) {
                     newIndices[offset++] = rawIndex;
                 }
@@ -27293,7 +27543,8 @@ listProto.selectRange = function (range, stack) {
                 var rawIndex = this.getRawIndex(i);
                 for (var k = 0; k < dimSize; k++) {
                     var dimk = dimensions[k];
-                    var val = stack ? this.get(dimk, i, true) : this._getFast(dim, rawIndex);
+                    // var val = stack ? this.get(dimk, i, true) : this._getFast(dim, rawIndex);
+                    var val = this._getFast(dim, rawIndex);
                     if (val < range[dimk][0] || val > range[dimk][1]) {
                         keep = false;
                     }
@@ -27322,24 +27573,26 @@ listProto.selectRange = function (range, stack) {
  * Data mapping to a plain array
  * @param {string|Array.<string>} [dimensions]
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  * @return {Array}
  */
-listProto.mapArray = function (dimensions, cb, stack, context) {
+listProto.mapArray = function (dimensions, cb, context, contextCompat) {
     'use strict';
 
     if (typeof dimensions === 'function') {
-        context = stack;
-        stack = cb;
+        contextCompat = context;
+        context = cb;
         cb = dimensions;
         dimensions = [];
     }
 
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
+
     var result = [];
     this.each(dimensions, function () {
         result.push(cb && cb.apply(this, arguments));
-    }, stack, context);
+    }, context);
     return result;
 };
 
@@ -27355,14 +27608,20 @@ function cloneListForMapAndSample(original, excludeDimensions) {
 
     var storage = list._storage = {};
     var originalStorage = original._storage;
+    var rawExtent = extend({}, original._rawExtent);
+
     // Init storage
     for (var i = 0; i < allDimensions.length; i++) {
         var dim = allDimensions[i];
         if (originalStorage[dim]) {
-            storage[dim] = indexOf(excludeDimensions, dim) >= 0
-                ? cloneDimStore(originalStorage[dim])
+            if (indexOf(excludeDimensions, dim) >= 0) {
+                storage[dim] = cloneDimStore(originalStorage[dim]);
+                rawExtent[dim] = getInitialExtent();
+            }
+            else {
                 // Direct reference for other dimensions
-                : originalStorage[dim];
+                storage[dim] = originalStorage[dim];
+            }
         }
     }
     return list;
@@ -27376,16 +27635,22 @@ function cloneDimStore(originalDimStore) {
     return newDimStore;
 }
 
+function getInitialExtent() {
+    return [Infinity, -Infinity];
+}
+
 /**
  * Data mapping to a new List with given dimensions
  * @param {string|Array.<string>} dimensions
  * @param {Function} cb
- * @param {boolean} [stack=false]
  * @param {*} [context=this]
  * @return {Array}
  */
-listProto.map = function (dimensions, cb, stack, context) {
+listProto.map = function (dimensions, cb, context, contextCompat) {
     'use strict';
+
+    // contextCompat just for compat echarts3
+    context = context || contextCompat || this;
 
     dimensions = map(
         normalizeDimensions(dimensions), this.getDimension, this
@@ -27409,10 +27674,11 @@ listProto.map = function (dimensions, cb, stack, context) {
     var dimSize = dimensions.length;
     var dataCount = this.count();
     var values = [];
+    var rawExtent = list._rawExtent;
 
     for (var dataIndex = 0; dataIndex < dataCount; dataIndex++) {
         for (var dimIndex = 0; dimIndex < dimSize; dimIndex++) {
-            values[dimIndex] = this.get(dimensions[dimIndex], dataIndex, stack);
+            values[dimIndex] = this.get(dimensions[dimIndex], dataIndex /*, stack */);
         }
         values[dimSize] = dataIndex;
 
@@ -27430,9 +27696,19 @@ listProto.map = function (dimensions, cb, stack, context) {
 
             for (var i = 0; i < retValue.length; i++) {
                 var dim = dimensions[i];
+                var val = retValue[i];
+                var rawExtentOnDim = rawExtent[dim];
+
                 var dimStore = storage[dim];
                 if (dimStore) {
-                    dimStore[chunkIndex][chunkOffset] = retValue[i];
+                    dimStore[chunkIndex][chunkOffset] = val;
+                }
+
+                if (val < rawExtentOnDim[0]) {
+                    rawExtentOnDim[0] = val;
+                }
+                if (val > rawExtentOnDim[1]) {
+                    rawExtentOnDim[1] = val;
                 }
             }
         }
@@ -27458,6 +27734,7 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
     var dimStore = targetStorage[dimension];
     var len = this.count();
     var chunkSize = this._chunkSize;
+    var rawExtentOnDim = list._rawExtent[dimension];
 
     var newIndices = new (getIndicesCtor(this))(len);
 
@@ -27482,6 +27759,13 @@ listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
         var sampleChunkOffset = sampleFrameIdx % chunkSize;
         // Only write value on the filtered data
         dimStore[sampleChunkIndex][sampleChunkOffset] = value;
+
+        if (value < rawExtentOnDim[0]) {
+            rawExtentOnDim[0] = value;
+        }
+        if (value > rawExtentOnDim[1]) {
+            rawExtentOnDim[1] = value;
+        }
 
         newIndices[offset++] = sampleFrameIdx;
     }
@@ -27773,50 +28057,6 @@ listProto.CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
  * Use `echarts/data/helper/createDimensions` instead.
  */
 
-/**
- * @see {module:echarts/test/ut/spec/data/completeDimensions}
- *
- * Complete the dimensions array, by user defined `dimension` and `encode`,
- * and guessing from the data structure.
- * If no 'value' dimension specified, the first no-named dimension will be
- * named as 'value'.
- *
- * @param {Array.<string>} sysDims Necessary dimensions, like ['x', 'y'], which
- *      provides not only dim template, but also default order.
- *      properties: 'name', 'type', 'displayName'.
- *      `name` of each item provides default coord name.
- *      [{dimsDef: [string...]}, ...] can be specified to give names.
- *      [{ordinalMeta}] can be specified.
- * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
- * @param {Object} [opt]
- * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
- *      For example: ['asdf', {name, type}, ...].
- * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
- * @param {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
- * @param {string} [opt.extraFromZero] If specified, extra dim names will be:
- *                      extraPrefix + 0, extraPrefix + extraBaseIndex + 1 ...
- *                      If not specified, extra dim names will be:
- *                      extraPrefix, extraPrefix + 0, extraPrefix + 1 ...
- * @param {number} [opt.dimCount] If not specified, guess by the first data item.
- * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
- * @return {Array.<Object>} [{
- *      name: string mandatory,
- *      displayName: string, the origin name in dimsDef, see source helper.
- *                 If displayName given, the tooltip will displayed vertically.
- *      coordDim: string mandatory,
- *      isSysCoord: boolean True if the coord is from sys dimension.
- *      coordDimIndex: number mandatory,
- *      type: string optional,
- *      otherDims: { never null/undefined
- *          tooltip: number optional,
- *          label: number optional,
- *          itemName: number optional,
- *          seriesName: number optional,
- *      },
- *      isExtraCoord: boolean true or undefined.
- *      other props ...
- * }]
- */
 function completeDimensions(sysDims, source, opt) {
     if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
@@ -27908,7 +28148,6 @@ function completeDimensions(sysDims, source, opt) {
             if (resultItem.name == null && sysDimItemDimsDef) {
                 resultItem.name = resultItem.displayName = sysDimItemDimsDef[coordDimIndex];
             }
-            resultItem.isSysCoord = true;
             // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}
             sysDimItemOtherDims && defaults(resultItem.otherDims, sysDimItemOtherDims);
         });
@@ -27926,20 +28165,27 @@ function completeDimensions(sysDims, source, opt) {
     }
 
     // Make sure the first extra dim is 'value'.
-    var extra = opt.extraPrefix || 'value';
+    var generateCoord = opt.generateCoord;
+    var generateCoordCount = opt.generateCoordCount;
+    var fromZero = generateCoordCount != null;
+    generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
+    var extra = generateCoord || 'value';
 
     // Set dim `name` and other `coordDim` and other props.
     for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
         var resultItem = result[resultDimIdx] = result[resultDimIdx] || {};
         var coordDim = resultItem.coordDim;
 
-        coordDim == null && (
+        if (coordDim == null) {
             resultItem.coordDim = genName(
-                extra, coordDimNameMap, opt.extraFromZero
-            ),
-            resultItem.coordDimIndex = 0,
-            resultItem.isExtraCoord = true
-        );
+                extra, coordDimNameMap, fromZero
+            );
+            resultItem.coordDimIndex = 0;
+            if (!generateCoord || generateCoordCount <= 0) {
+                resultItem.isExtraCoord = true;
+            }
+            generateCoordCount--;
+        }
 
         resultItem.name == null && (resultItem.name = genName(
             resultItem.coordDim,
@@ -27963,18 +28209,20 @@ function completeDimensions(sysDims, source, opt) {
 // may be visited.
 // (2) sometimes user need to calcualte bubble size or use visualMap
 // on other dimensions besides coordSys needed.
-function getDimCount(source, sysDims, dimsDef, dimCount) {
-    if (dimCount == null) {
-        dimCount = Math.max(
-            source.dimensionsDetectCount || 1,
-            sysDims.length,
-            dimsDef.length
-        );
-        each$1(sysDims, function (sysDimItem) {
-            var sysDimItemDimsDef = sysDimItem.dimsDef;
-            sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
-        });
-    }
+// So, dims that is not used by system, should be shared in storage?
+function getDimCount(source, sysDims, dimsDef, optDimCount) {
+    // Note that the result dimCount should not small than columns count
+    // of data, otherwise `dataDimNameMap` checking will be incorrect.
+    var dimCount = Math.max(
+        source.dimensionsDetectCount || 1,
+        sysDims.length,
+        dimsDef.length,
+        optDimCount || 0
+    );
+    each$1(sysDims, function (sysDimItem) {
+        var sysDimItemDimsDef = sysDimItem.dimsDef;
+        sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
+    });
     return dimCount;
 }
 
@@ -27994,33 +28242,124 @@ function genName(name, map$$1, fromZero) {
  * Substitute `completeDimensions`.
  * `completeDimensions` is to be deprecated.
  */
-/**
- * @param {module:echarts/data/Source|module:echarts/data/List} source or data.
- * @param {Object|Array} [opt]
- * @param {Array.<string|Object>} [opt.coordDimensions=[]]
- * @param {number} [opt.dimensionsCount]
- * @param {string} [opt.extraPrefix]
- * @param {boolean} [opt.extraFromZero]
- * @param {Array.<string|Object>} [opt.dimensionsDefine=source.dimensionsDefine] Overwrite source define.
- * @param {Object|HashMap} [opt.encodeDefine=source.encodeDefine] Overwrite source define.
- * @return {Array.<Object>} dimensionsInfo
- */
 var createDimensions = function (source, opt) {
     opt = opt || {};
     return completeDimensions(opt.coordDimensions || [], source, {
         dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
         encodeDef: opt.encodeDefine || source.encodeDefine,
         dimCount: opt.dimensionsCount,
-        extraPrefix: opt.extraPrefix,
-        extraFromZero: opt.extraFromZero
+        generateCoord: opt.generateCoord,
+        generateCoordCount: opt.generateCoordCount
     });
 };
 
+function enableDataStack(seriesModel, dimensionInfoList, opt) {
+    opt = opt || {};
+    var byIndex = opt.byIndex;
+    var stackedCoordDimension = opt.stackedCoordDimension;
+
+    // Compatibal: when `stack` is set as '', do not stack.
+    var mayStack = !!(seriesModel && seriesModel.get('stack'));
+    var stackedByDimInfo;
+    var stackedDimInfo;
+    var stackResultDimension;
+    var stackedOverDimension;
+
+    each$1(dimensionInfoList, function (dimensionInfo, index) {
+        if (isString(dimensionInfo)) {
+            dimensionInfoList[index] = dimensionInfo = {name: dimensionInfo};
+        }
+
+        if (mayStack && !dimensionInfo.isExtraCoord) {
+            // Find the first ordinal dimension as the stackedByDimInfo.
+            if (!byIndex && !stackedByDimInfo && dimensionInfo.ordinalMeta) {
+                stackedByDimInfo = dimensionInfo;
+            }
+            // Find the first stackable dimension as the stackedDimInfo.
+            if (!stackedDimInfo
+                && dimensionInfo.type !== 'ordinal'
+                && dimensionInfo.type !== 'time'
+                && (!stackedCoordDimension || stackedCoordDimension === dimensionInfo.coordDim)
+            ) {
+                stackedDimInfo = dimensionInfo;
+            }
+        }
+    });
+
+    // Add stack dimension, they can be both calculated by coordinate system in `unionExtent`.
+    // That put stack logic in List is for using conveniently in echarts extensions, but it
+    // might not be a good way.
+    if (stackedDimInfo && (byIndex || stackedByDimInfo)) {
+        // Use a weird name that not duplicated with other names.
+        stackResultDimension = '__\0ecstackresult';
+        stackedOverDimension = '__\0ecstackedover';
+
+        // Create inverted index to fast query index by value.
+        if (stackedByDimInfo) {
+            stackedByDimInfo.createInvertedIndices = true;
+        }
+
+        var stackedDimCoordDim = stackedDimInfo.coordDim;
+        var stackedDimType = stackedDimInfo.type;
+        var stackedDimCoordIndex = 0;
+
+        each$1(dimensionInfoList, function (dimensionInfo) {
+            if (dimensionInfo.coordDim === stackedDimCoordDim) {
+                stackedDimCoordIndex++;
+            }
+        });
+
+        dimensionInfoList.push({
+            name: stackResultDimension,
+            coordDim: stackedDimCoordDim,
+            coordDimIndex: stackedDimCoordIndex,
+            type: stackedDimType,
+            isExtraCoord: true,
+            isCalculationCoord: true
+        });
+
+        stackedDimCoordIndex++;
+
+        dimensionInfoList.push({
+            name: stackedOverDimension,
+            // This dimension contains stack base (generally, 0), so do not set it as
+            // `stackedDimCoordDim` to avoid extent calculation, consider log scale.
+            coordDim: stackedOverDimension,
+            coordDimIndex: stackedDimCoordIndex,
+            type: stackedDimType,
+            isExtraCoord: true,
+            isCalculationCoord: true
+        });
+    }
+
+    return {
+        stackedDimension: stackedDimInfo && stackedDimInfo.name,
+        stackedByDimension: stackedByDimInfo && stackedByDimInfo.name,
+        isStackedByIndex: byIndex,
+        stackedOverDimension: stackedOverDimension,
+        stackResultDimension: stackResultDimension
+    };
+}
+
 /**
- * @param {module:echarts/data/Source|Array} source Or raw data.
- * @param {module:echarts/model/Series} seriesModel
+ * @param {module:echarts/data/List} data
+ * @param {string} stackedDim
+ * @param {string} [stackedByDim] If not input this parameter, check whether
+ *                                stacked by index.
  */
-function createListFromArray(source, seriesModel) {
+function isDimensionStacked(data, stackedDim, stackedByDim) {
+    return stackedDim
+        && stackedDim === data.getCalculationInfo('stackedDimension')
+        && (
+            stackedByDim != null
+                ? stackedByDim === data.getCalculationInfo('stackedByDimension')
+                : data.getCalculationInfo('isStackedByIndex')
+        );
+}
+
+function createListFromArray(source, seriesModel, opt) {
+    opt = opt || {};
+
     if (!Source.isInstance(source)) {
         source = Source.seriesDataToSource(source);
     }
@@ -28039,7 +28378,7 @@ function createListFromArray(source, seriesModel) {
             if (axisModel) {
                 var axisType = axisModel.get('type');
                 dimInfo.type = getDimensionTypeByAxis(axisType);
-                dimInfo.stackable = isStackable(axisType);
+                // dimInfo.stackable = isStackable(axisType);
             }
             return dimInfo;
         });
@@ -28055,7 +28394,8 @@ function createListFromArray(source, seriesModel) {
     }
 
     var dimInfoList = createDimensions(source, {
-        coordDimensions: coordSysDimDefs
+        coordDimensions: coordSysDimDefs,
+        generateCoord: opt.generateCoord
     });
 
     var firstCategoryDimIndex;
@@ -28077,7 +28417,11 @@ function createListFromArray(source, seriesModel) {
         dimInfoList[firstCategoryDimIndex].otherDims.itemName = 0;
     }
 
+    var stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
+
     var list = new List(dimInfoList, seriesModel);
+
+    list.setCalculationInfo(stackCalculationInfo);
 
     var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
         ? function (itemOpt, dimName, dataIndex, dimIndex) {
@@ -28092,10 +28436,6 @@ function createListFromArray(source, seriesModel) {
     list.initData(source, null, dimValueGetter);
 
     return list;
-}
-
-function isStackable(axisType) {
-    return axisType !== 'category' && axisType !== 'time';
 }
 
 function isNeedCompleteOrdinalData(source) {
@@ -28119,9 +28459,6 @@ function firstDataNotNull(data) {
  * @module echarts/scale/Scale
  */
 
-/**
- * @param {Object} [setting]
- */
 function Scale(setting) {
     this._setting = setting || {};
 
@@ -28205,7 +28542,7 @@ Scale.prototype.unionExtent = function (other) {
  * @param {string} dim
  */
 Scale.prototype.unionExtentFromData = function (data, dim) {
-    this.unionExtent(data.getApproximateExtent(dim, true));
+    this.unionExtent(data.getApproximateExtent(dim));
 };
 
 /**
@@ -28265,13 +28602,6 @@ enableClassManagement(Scale, {
     registerWhenExtend: true
 });
 
-/**
- * @constructor
- * @param {Object} [opt]
- * @param {Object} [opt.categories=[]]
- * @param {Object} [opt.needCollect=false]
- * @param {Object} [opt.deduplication=false]
- */
 function OrdinalMeta(opt) {
 
     /**
@@ -28480,7 +28810,7 @@ var OrdinalScale = Scale.extend({
      * @override
      */
     unionExtentFromData: function (data, dim) {
-        this.unionExtent(data.getApproximateExtent(dim, false));
+        this.unionExtent(data.getApproximateExtent(dim));
     },
 
     niceTicks: noop,
@@ -28995,26 +29325,19 @@ function doCalBarWidthAndOffset(seriesInfoList, api) {
  */
 function layout(seriesType, ecModel, api) {
 
-    var barWidthAndOffset = calBarWidthAndOffset(
-        filter(
-            ecModel.getSeriesByType(seriesType),
-            function (seriesModel) {
-                return !ecModel.isSeriesFiltered(seriesModel)
-                    && seriesModel.coordinateSystem
-                    && seriesModel.coordinateSystem.type === 'cartesian2d';
-            }
-        )
+    var seriesModels = filter(
+        ecModel.getSeriesByType(seriesType),
+        function (seriesModel) {
+            // Check series coordinate, do layout for cartesian2d only
+            return seriesModel.coordinateSystem
+                && seriesModel.coordinateSystem.type === 'cartesian2d';
+        }
     );
 
+    var barWidthAndOffset = calBarWidthAndOffset(seriesModels);
+
     var lastStackCoords = {};
-    var lastStackCoordsOrigin = {};
-
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-
-        // Check series coordinate, do layout for cartesian2d only
-        if (seriesModel.coordinateSystem.type !== 'cartesian2d') {
-            return;
-        }
+    each$1(seriesModels, function (seriesModel) {
 
         var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
@@ -29028,74 +29351,75 @@ function layout(seriesType, ecModel, api) {
 
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
 
-        var valueAxisStart = baseAxis.onZero
-            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
-            : valueAxis.getGlobalExtent()[0];
-
-        var coordDims = [
-            data.mapDimension('x'),
-            data.mapDimension('y')
-        ];
-        var coords = data.mapArray(coordDims, function (x, y) {
-            return cartesian.dataToPoint([x, y]);
-        }, true);
-
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-        lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
-
         data.setLayout({
             offset: columnOffset,
             size: columnWidth
         });
 
-        data.each(data.mapDimension(valueAxis.dim), function (value, idx) {
+        var valueDim = data.mapDimension(valueAxis.dim);
+        var baseDim = data.mapDimension(baseAxis.dim);
+        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var isValueAxisH = valueAxis.isHorizontal();
+
+        var valueAxisStart = (baseAxis.onZero || stacked)
+            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
+            : valueAxis.getGlobalExtent()[0];
+
+        for (var idx = 0, len = data.count(); idx < len; idx++) {
+            var value = data.get(valueDim, idx);
+            var baseValue = data.get(baseDim, idx);
+
             if (isNaN(value)) {
-                return;
+                continue;
             }
 
-            if (!lastStackCoords[stackId][idx]) {
-                lastStackCoords[stackId][idx] = {
-                    p: valueAxisStart, // Positive stack
-                    n: valueAxisStart  // Negative stack
-                };
-                lastStackCoordsOrigin[stackId][idx] = {
-                    p: valueAxisStart, // Positive stack
-                    n: valueAxisStart  // Negative stack
-                };
-            }
             var sign = value >= 0 ? 'p' : 'n';
-            var coord = coords[idx];
-            var lastCoord = lastStackCoords[stackId][idx][sign];
-            var lastCoordOrigin = lastStackCoordsOrigin[stackId][idx][sign];
+            var baseCoord = valueAxisStart;
+
+            // Because of the barMinHeight, we can not use the value in
+            // stackResultDimension directly.
+            if (stacked) {
+                // Only ordinal axis can be stacked.
+                if (!lastStackCoords[stackId][baseValue]) {
+                    lastStackCoords[stackId][baseValue] = {
+                        p: valueAxisStart, // Positive stack
+                        n: valueAxisStart  // Negative stack
+                    };
+                }
+                // Should also consider #4243
+                baseCoord = lastStackCoords[stackId][baseValue][sign];
+            }
+
             var x;
             var y;
             var width;
             var height;
 
-            if (valueAxis.isHorizontal()) {
-                x = lastCoord;
+            if (isValueAxisH) {
+                var coord = cartesian.dataToPoint([value, baseValue]);
+                x = baseCoord;
                 y = coord[1] + columnOffset;
-                width = coord[0] - lastCoordOrigin;
+                width = coord[0] - valueAxisStart;
                 height = columnWidth;
 
-                lastStackCoordsOrigin[stackId][idx][sign] += width;
                 if (Math.abs(width) < barMinHeight) {
                     width = (width < 0 ? -1 : 1) * barMinHeight;
                 }
-                lastStackCoords[stackId][idx][sign] += width;
+                stacked && (lastStackCoords[stackId][baseValue][sign] += width);
             }
             else {
+                var coord = cartesian.dataToPoint([baseValue, value]);
                 x = coord[0] + columnOffset;
-                y = lastCoord;
+                y = baseCoord;
                 width = columnWidth;
-                height = coord[1] - lastCoordOrigin;
+                height = coord[1] - valueAxisStart;
 
-                lastStackCoordsOrigin[stackId][idx][sign] += height;
                 if (Math.abs(height) < barMinHeight) {
                     // Include zero to has a positive bar
                     height = (height <= 0 ? -1 : 1) * barMinHeight;
                 }
-                lastStackCoords[stackId][idx][sign] += height;
+                stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
 
             data.setItemLayout(idx, {
@@ -29104,7 +29428,7 @@ function layout(seriesType, ecModel, api) {
                 width: width,
                 height: height
             });
-        }, true);
+        }
 
     }, this);
 }
@@ -29304,7 +29628,6 @@ TimeScale.create = function (model) {
  * @module echarts/scale/Log
  */
 
-// Use some method of IntervalScale
 var scaleProto$1 = Scale.prototype;
 var intervalScaleProto$1 = IntervalScale.prototype;
 
@@ -29411,9 +29734,9 @@ var LogScale = Scale.extend({
      * @override
      */
     unionExtentFromData: function (data, dim) {
-        this.unionExtent(data.getApproximateExtent(dim, true, function (val) {
-            return val > 0;
-        }));
+        // TODO
+        // filter value that <= 0
+        this.unionExtent(data.getApproximateExtent(dim));
     },
 
     /**
@@ -29479,10 +29802,6 @@ function fixRoundingError(val, originalVal) {
     return roundingErrorFix(val, getPrecisionSafe$1(originalVal));
 }
 
-/**
- * Get axis scale extent before niced.
- * Item of returned array can only be number (including Infinity and NaN).
- */
 function getScaleExtent(scale, model) {
     var scaleType = scale.type;
 
@@ -29583,14 +29902,28 @@ function getScaleExtent(scale, model) {
 
     // If bars are placed on a base axis of type time or interval account for axis boundary overflow and current axis
     // is base axis
+    // FIXME
+    // (1) Consider support value axis, where below zero and axis `onZero` should be handled properly.
+    // (2) Refactor the logic with `barGrid`. Is it not need to `calBarWidthAndOffset` twice with different extent?
+    //     Should not depend on series type `bar`?
+    // (3) Fix that might overlap when using dataZoom.
+    // (4) Consider other chart types using `barGrid`?
+    // See #6728, #4862, `test/bar-overflow-time-plot.html`
     var ecModel = model.ecModel;
-    if (ecModel) {
-        var isBaseAxisAndHasBarSeries = filter(ecModel.getSeriesByType('bar'), function (seriesModel) {
-            return seriesModel.getBaseAxis() === model.axis;
-        }).length > 0;
-        if ((scaleType === 'time' || scaleType === 'interval') && isBaseAxisAndHasBarSeries) {
+    if (ecModel && (scaleType === 'time' /*|| scaleType === 'interval' */)) {
+        var barSeriesModels = [];
+        var isBaseAxisAndHasBarSeries;
+
+        each$1(ecModel.getSeriesByType('bar'), function (seriesModel) {
+            if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
+                barSeriesModels.push(seriesModel);
+                isBaseAxisAndHasBarSeries |= seriesModel.getBaseAxis() === model.axis;
+            }
+        });
+
+        if (isBaseAxisAndHasBarSeries) {
             // Adjust axis min and max to account for overflow
-            var adjustedScale = adjustScaleForOverflow(min, max, model);
+            var adjustedScale = adjustScaleForOverflow(min, max, model, barSeriesModels);
             min = adjustedScale.min;
             max = adjustedScale.max;
         }
@@ -29599,22 +29932,14 @@ function getScaleExtent(scale, model) {
     return [min, max];
 }
 
-function adjustScaleForOverflow(min, max, model) {
+function adjustScaleForOverflow(min, max, model, barSeriesModels) {
 
-    var ecModel = model.ecModel;
     // Get Axis Length
     var axisExtent = model.axis.getExtent();
     var axisLength = axisExtent[1] - axisExtent[0];
 
     // Calculate placement of bars on axis
-    var barWidthAndOffset = calBarWidthAndOffset(filter(
-        ecModel.getSeriesByType('bar'),
-        function (seriesModel) {
-            return !ecModel.isSeriesFiltered(seriesModel)
-                && seriesModel.coordinateSystem
-                && seriesModel.coordinateSystem.type === 'cartesian2d';
-        }
-    ));
+    var barWidthAndOffset = calBarWidthAndOffset(barSeriesModels);
 
     // Get bars on current base axis and calculate min and max overflow
     var baseAxisKey = model.axis.dim + model.axis.index;
@@ -29631,7 +29956,9 @@ function adjustScaleForOverflow(min, max, model) {
     each$1(barsOnCurrentAxis, function (item) {
         maxOverflow = Math.max(item.offset + item.width, maxOverflow);
     });
-    var totalOverFlow = Math.abs(minOverflow) + maxOverflow;
+    minOverflow = Math.abs(minOverflow);
+    maxOverflow = Math.abs(maxOverflow);
+    var totalOverFlow = minOverflow + maxOverflow;
 
     // Calulate required buffer based on old range and overflow
     var oldRange = max - min;
@@ -29894,10 +30221,6 @@ var axisModelCommonMixin = {
 
 // Symbol factory
 
-/**
- * Triangle shape
- * @inner
- */
 var Triangle = extendShape({
     type: 'triangle',
     shape: {
@@ -30245,20 +30568,30 @@ function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
     return symbolPath;
 }
 
-// import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
-/**
- * Create a muti dimension List structure from seriesModel.
- * @param  {module:echarts/model/Model} seriesModel
- * @return {module:echarts/data/List} list
- */
 function createList(seriesModel) {
     return createListFromArray(seriesModel.getSource(), seriesModel);
 }
 
+// export function createGraph(seriesModel) {
+//     var nodes = seriesModel.get('data');
+//     var links = seriesModel.get('links');
+//     return createGraphFromNodeEdge(nodes, links, seriesModel);
+// }
+
+var dataStack$1 = {
+    isDimensionStacked: isDimensionStacked,
+    enableDataStack: enableDataStack
+};
+
 /**
- * Create scale
- * @param {Array.<number>} dataExtent
- * @param {Object|module:echarts/Model} option
+ * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+ * @see http://echarts.baidu.com/option.html#series-scatter.symbol
+ * @param {string} symbolDesc
+ * @param {number} x
+ * @param {number} y
+ * @param {number} w
+ * @param {number} h
+ * @param {string} color
  */
 function createScale(dataExtent, option) {
     var axisModel = option;
@@ -30293,6 +30626,7 @@ function mixinAxisModelCommonMethods(Model$$1) {
 var helper = (Object.freeze || Object)({
 	createList: createList,
 	getLayoutRect: getLayoutRect,
+	dataStack: dataStack$1,
 	createScale: createScale,
 	mixinAxisModelCommonMethods: mixinAxisModelCommonMethods,
 	completeDimensions: completeDimensions,
@@ -30333,11 +30667,6 @@ function contain$1(points, x, y) {
  * @module echarts/coord/geo/Region
  */
 
-/**
- * @param {string} name
- * @param {Array} geometries
- * @param {Array.<number>} cp
- */
 function Region(name, geometries, cp) {
 
     /**
@@ -30713,7 +31042,7 @@ Axis.prototype = {
     },
 
     /**
-     * Convert data to coord. Data is the rank if it has a ordinal scale
+     * Convert data to coord. Data is the rank if it has an ordinal scale
      * @param {number} data
      * @param  {boolean} clamp
      * @return {number}
@@ -30732,7 +31061,7 @@ Axis.prototype = {
     },
 
     /**
-     * Convert coord to data. Data is the rank if it has a ordinal scale
+     * Convert coord to data. Data is the rank if it has an ordinal scale
      * @param {number} coord
      * @param  {boolean} clamp
      * @return {number}
@@ -30968,7 +31297,13 @@ SeriesModel.extend({
             width: 2,
             type: 'solid'
         },
-        // areaStyle: {origin: 'auto'},
+        // areaStyle: {
+            // origin of areaStyle. Valid values:
+            // `'auto'/null/undefined`: from axisLine to data
+            // `'start'`: from min to data
+            // `'end'`: from data to max
+            // origin: 'auto'
+        // },
         // false, 'start', 'end', 'middle'
         step: false,
 
@@ -31001,11 +31336,6 @@ SeriesModel.extend({
     }
 });
 
-/**
- * @param {module:echarts/data/List} data
- * @param {number} dataIndex
- * @return {string} label string. Not null/undefined
- */
 function getDefaultLabel(data, dataIndex) {
     var labelDims = data.mapDimension('defaultedLabel', true);
     var len = labelDims.length;
@@ -31048,7 +31378,6 @@ function getScale(symbolSize) {
  */
 function SymbolClz$1(data, idx, seriesScope) {
     Group.call(this);
-
     this.updateData(data, idx, seriesScope);
 }
 
@@ -31310,6 +31639,11 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 
     if (hoverAnimation && seriesModel.isAnimationEnabled()) {
         var onEmphasis = function() {
+            // Do not support this hover animation util some scenario required.
+            // Animation can only be supported in hover layer when using `el.incremetal`.
+            if (this.incremental) {
+                return;
+            }
             var ratio = scale[1] / scale[0];
             this.animateTo({
                 scale: [
@@ -31319,6 +31653,9 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
             }, 400, 'elasticOut');
         };
         var onNormal = function() {
+            if (this.incremental) {
+                return;
+            }
             this.animateTo({
                 scale: scale
             }, 400, 'elasticOut');
@@ -31360,11 +31697,6 @@ inherits(SymbolClz$1, Group);
  * @module echarts/chart/helper/SymbolDraw
  */
 
-/**
- * @constructor
- * @alias module:echarts/chart/helper/SymbolDraw
- * @param {module:zrender/graphic/Group} [symbolCtor]
- */
 function SymbolDraw(symbolCtor) {
     this.group = new Group();
 
@@ -31373,17 +31705,24 @@ function SymbolDraw(symbolCtor) {
 
 var symbolDrawProto = SymbolDraw.prototype;
 
-function symbolNeedsDraw(data, point, idx, isIgnore) {
+function symbolNeedsDraw(data, point, idx, opt) {
     return point && !isNaN(point[0]) && !isNaN(point[1])
-        && !(isIgnore && isIgnore(idx))
+        && !(opt.isIgnore && opt.isIgnore(idx))
+        // We do not set clipShape on group, because it will
+        // cut part of the symbol element shape.
+        && !(opt.clipShape && !opt.clipShape.contain(point[0], point[1]))
         && data.getItemVisual(idx, 'symbol') !== 'none';
 }
 /**
  * Update symbols draw by new data
  * @param {module:echarts/data/List} data
- * @param {Array.<boolean>} [isIgnore]
+ * @param {Object} [opt] Or isIgnore
+ * @param {Function} [opt.isIgnore]
+ * @param {Object} [opt.clipShape]
  */
-symbolDrawProto.updateData = function (data, isIgnore) {
+symbolDrawProto.updateData = function (data, opt) {
+    opt = normalizeUpdateOpt(opt);
+
     var group = this.group;
     var seriesModel = data.hostModel;
     var oldData = this._data;
@@ -31400,7 +31739,7 @@ symbolDrawProto.updateData = function (data, isIgnore) {
     data.diff(oldData)
         .add(function (newIdx) {
             var point = data.getItemLayout(newIdx);
-            if (symbolNeedsDraw(data, point, newIdx, isIgnore)) {
+            if (symbolNeedsDraw(data, point, newIdx, opt)) {
                 var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                 symbolEl.attr('position', point);
                 data.setItemGraphicEl(newIdx, symbolEl);
@@ -31410,7 +31749,7 @@ symbolDrawProto.updateData = function (data, isIgnore) {
         .update(function (newIdx, oldIdx) {
             var symbolEl = oldData.getItemGraphicEl(oldIdx);
             var point = data.getItemLayout(newIdx);
-            if (!symbolNeedsDraw(data, point, newIdx, isIgnore)) {
+            if (!symbolNeedsDraw(data, point, newIdx, opt)) {
                 group.remove(symbolEl);
                 return;
             }
@@ -31462,7 +31801,15 @@ symbolDrawProto.incrementalPrepareUpdate = function (data) {
     this.group.removeAll();
 };
 
-symbolDrawProto.incrementalUpdate = function (taskParams, data, isIgnore) {
+/**
+ * Update symbols draw by new data
+ * @param {module:echarts/data/List} data
+ * @param {Object} [opt] Or isIgnore
+ * @param {Function} [opt.isIgnore]
+ * @param {Object} [opt.clipShape]
+ */
+symbolDrawProto.incrementalUpdate = function (taskParams, data, opt) {
+    opt = normalizeUpdateOpt(opt);
 
     function updateIncrementalAndHover(el) {
         if (!el.isGroup) {
@@ -31471,7 +31818,7 @@ symbolDrawProto.incrementalUpdate = function (taskParams, data, isIgnore) {
     }
     for (var idx = taskParams.start; idx < taskParams.end; idx++) {
         var point = data.getItemLayout(idx);
-        if (symbolNeedsDraw(data, point, idx, isIgnore)) {
+        if (symbolNeedsDraw(data, point, idx, opt)) {
             var el = new this._symbolCtor(data, idx, this._seriesScope);
             el.traverse(updateIncrementalAndHover);
             el.attr('position', point);
@@ -31481,20 +31828,26 @@ symbolDrawProto.incrementalUpdate = function (taskParams, data, isIgnore) {
     }
 };
 
+function normalizeUpdateOpt(opt) {
+    if (opt != null && !isObject$1(opt)) {
+        opt = {isIgnore: opt};
+    }
+    return opt || {};
+}
+
 symbolDrawProto.remove = function (enableAnimation) {
     var group = this.group;
     var data = this._data;
-    if (data) {
-        if (enableAnimation) {
-            data.eachItemGraphicEl(function (el) {
-                el.fadeOut(function () {
-                    group.remove(el);
-                });
+    // Incremental model do not have this._data.
+    if (data && enableAnimation) {
+        data.eachItemGraphicEl(function (el) {
+            el.fadeOut(function () {
+                group.remove(el);
             });
-        }
-        else {
-            group.removeAll();
-        }
+        });
+    }
+    else {
+        group.removeAll();
     }
 };
 
@@ -31512,63 +31865,78 @@ function makeSeriesScope(data) {
     };
 }
 
-// var arrayDiff = require('zrender/src/core/arrayDiff');
-// 'zrender/src/core/arrayDiff' has been used before, but it did
-// not do well in performance when roam with fixed dataZoom window.
-
-function sign$1(val) {
-    return val >= 0 ? 1 : -1;
-}
-
-function getStackedOnPoint(coordSys, data, idx) {
+function prepareDataCoordInfo(coordSys, data, valueOrigin) {
     var baseAxis = coordSys.getBaseAxis();
     var valueAxis = coordSys.getOtherAxis(baseAxis);
-    var valueStart = baseAxis.onZero
-        ? 0 : valueAxis.scale.getExtent()[0];
+    var valueStart = getValueStart(valueAxis, valueOrigin);
 
-    var valueDim = valueAxis.dim;
-    var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
+    var baseAxisDim = baseAxis.dim;
+    var valueAxisDim = valueAxis.dim;
+    var valueDim = data.mapDimension(valueAxisDim);
+    var baseDim = data.mapDimension(baseAxisDim);
+    var baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
 
-    var stackedOnSameSign;
-    var stackedOn = data.stackedOn;
-    var val = data.get(valueDim, idx);
-    // Find first stacked value with same sign
-    while (stackedOn &&
-        sign$1(stackedOn.get(valueDim, idx)) === sign$1(val)
-    ) {
-        stackedOnSameSign = stackedOn;
-        break;
+    var stacked = isDimensionStacked(data, valueDim, baseDim);
+
+    var dataDimsForPoint = map(coordSys.dimensions, function (coordDim) {
+        return data.mapDimension(coordDim);
+    });
+
+    return {
+        dataDimsForPoint: dataDimsForPoint,
+        valueStart: valueStart,
+        valueAxisDim: valueAxisDim,
+        baseAxisDim: baseAxisDim,
+        stacked: stacked,
+        valueDim: valueDim,
+        baseDim: baseDim,
+        baseDataOffset: baseDataOffset,
+        stackedOverDimension: data.getCalculationInfo('stackedOverDimension')
+    };
+}
+
+function getValueStart(valueAxis, valueOrigin) {
+    var valueStart = 0;
+    var extent = valueAxis.scale.getExtent();
+
+    if (valueOrigin === 'start') {
+        valueStart = extent[0];
     }
+    else if (valueOrigin === 'end') {
+        valueStart = extent[1];
+    }
+    // auto
+    else {
+        // Both positive
+        if (extent[0] > 0) {
+            valueStart = extent[0];
+        }
+        // Both negative
+        else if (extent[1] < 0) {
+            valueStart = extent[1];
+        }
+        // If is one positive, and one negative, onZero shall be true
+    }
+
+    return valueStart;
+}
+
+function getStackedOnPoint(dataCoordInfo, coordSys, data, idx) {
+    var value = NaN;
+    if (dataCoordInfo.stacked) {
+        value = data.get(data.getCalculationInfo('stackedOverDimension'), idx);
+    }
+    if (isNaN(value)) {
+        value = dataCoordInfo.valueStart;
+    }
+
+    var baseDataOffset = dataCoordInfo.baseDataOffset;
     var stackedData = [];
-    stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
-    stackedData[1 - baseDataOffset] = stackedOnSameSign
-        ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
+    stackedData[baseDataOffset] = data.get(dataCoordInfo.baseDim, idx);
+    stackedData[1 - baseDataOffset] = value;
 
     return coordSys.dataToPoint(stackedData);
 }
-
-// function convertToIntId(newIdList, oldIdList) {
-//     // Generate int id instead of string id.
-//     // Compare string maybe slow in score function of arrDiff
-
-//     // Assume id in idList are all unique
-//     var idIndicesMap = {};
-//     var idx = 0;
-//     for (var i = 0; i < newIdList.length; i++) {
-//         idIndicesMap[newIdList[i]] = idx;
-//         newIdList[i] = idx++;
-//     }
-//     for (var i = 0; i < oldIdList.length; i++) {
-//         var oldId = oldIdList[i];
-//         // Same with newIdList
-//         if (idIndicesMap[oldId]) {
-//             oldIdList[i] = idIndicesMap[oldId];
-//         }
-//         else {
-//             oldIdList[i] = idx++;
-//         }
-//     }
-// }
 
 function diffData(oldData, newData) {
     var diffResult = [];
@@ -31591,7 +31959,8 @@ function diffData(oldData, newData) {
 var lineAnimationDiff = function (
     oldData, newData,
     oldStackedOnPoints, newStackedOnPoints,
-    oldCoordSys, newCoordSys
+    oldCoordSys, newCoordSys,
+    oldValueOrigin, newValueOrigin
 ) {
     var diff = diffData(oldData, newData);
 
@@ -31612,7 +31981,10 @@ var lineAnimationDiff = function (
     var status = [];
     var sortedIndices = [];
     var rawIndices = [];
-    var dims = newCoordSys.dimensions;
+
+    var newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
+    var oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
+
     for (var i = 0; i < diff.length; i++) {
         var diffItem = diff[i];
         var pointAdded = true;
@@ -31639,14 +32011,15 @@ var lineAnimationDiff = function (
                 var idx = diffItem.idx;
                 currPoints.push(
                     oldCoordSys.dataToPoint([
-                        newData.get(dims[0], idx, true), newData.get(dims[1], idx, true)
+                        newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idx),
+                        newData.get(newDataOldCoordInfo.dataDimsForPoint[1], idx)
                     ])
                 );
 
                 nextPoints.push(newData.getItemLayout(idx).slice());
 
                 currStackedPoints.push(
-                    getStackedOnPoint(oldCoordSys, newData, idx)
+                    getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idx)
                 );
                 nextStackedPoints.push(newStackedOnPoints[idx]);
 
@@ -31660,14 +32033,13 @@ var lineAnimationDiff = function (
                 if (rawIndex !== idx) {
                     currPoints.push(oldData.getItemLayout(idx));
                     nextPoints.push(newCoordSys.dataToPoint([
-                        oldData.get(dims[0], idx, true), oldData.get(dims[1], idx, true)
+                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idx),
+                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idx)
                     ]));
 
                     currStackedPoints.push(oldStackedOnPoints[idx]);
                     nextStackedPoints.push(
-                        getStackedOnPoint(
-                            newCoordSys, oldData, idx
-                        )
+                        getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, idx)
                     );
 
                     rawIndices.push(rawIndex);
@@ -31737,6 +32109,130 @@ function isPointNull(p) {
 }
 
 function drawSegment(
+    ctx, points, start, segLen, allLen,
+    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+) {
+    if (smoothMonotone == null) {
+        if (isMono(points, 'x')) {
+            return drawMono(ctx, points, start, segLen, allLen,
+                dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
+        }
+        else if (isMono(points, 'y')) {
+            return drawMono(ctx, points, start, segLen, allLen,
+                dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
+        }
+        else {
+            return drawNonMono.apply(this, arguments);
+        }
+    }
+    else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
+        return drawMono.apply(this, arguments);
+    }
+    else {
+        return drawNonMono.apply(this, arguments);
+    }
+}
+
+/**
+ * Check if points is in monotone.
+ *
+ * @param {number[][]} points         Array of points which is in [x, y] form
+ * @param {string}     smoothMonotone 'x', 'y', or 'none', stating for which
+ *                                    dimension that is checking.
+ *                                    If is 'none', `drawNonMono` should be
+ *                                    called.
+ *                                    If is undefined, either being monotone
+ *                                    in 'x' or 'y' will call `drawMono`.
+ */
+function isMono(points, smoothMonotone) {
+    if (points.length <= 1) {
+        return true;
+    }
+
+    var dim = smoothMonotone === 'x' ? 0 : 1;
+    var last = points[0][dim];
+    var lastDiff = 0;
+    for (var i = 1; i < points.length; ++i) {
+        var diff = points[i][dim] - last;
+        if (!isNaN(diff) && !isNaN(lastDiff)
+            && diff !== 0 && lastDiff !== 0
+            && ((diff >= 0) !== (lastDiff >= 0))
+        ) {
+            return false;
+        }
+        if (!isNaN(diff) && diff !== 0) {
+            lastDiff = diff;
+            last = points[i][dim];
+        }
+    }
+    return true;
+}
+
+/**
+ * Draw smoothed line in monotone, in which only vertical or horizontal bezier
+ * control points will be used. This should be used when points are monotone
+ * either in x or y dimension.
+ */
+function drawMono(
+    ctx, points, start, segLen, allLen,
+    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+) {
+    var prevIdx = 0;
+    var idx = start;
+    for (var k = 0; k < segLen; k++) {
+        var p = points[idx];
+        if (idx >= allLen || idx < 0) {
+            break;
+        }
+        if (isPointNull(p)) {
+            if (connectNulls) {
+                idx += dir;
+                continue;
+            }
+            break;
+        }
+
+        if (idx === start) {
+            ctx[dir > 0 ? 'moveTo' : 'lineTo'](p[0], p[1]);
+        }
+        else {
+            if (smooth > 0) {
+                var prevP = points[prevIdx];
+                var dim = smoothMonotone === 'y' ? 1 : 0;
+
+                // Length of control point to p, either in x or y, but not both
+                var ctrlLen = (p[dim] - prevP[dim]) * smooth;
+
+                v2Copy(cp0, prevP);
+                cp0[dim] = prevP[dim] + ctrlLen;
+
+                v2Copy(cp1, p);
+                cp1[dim] = p[dim] - ctrlLen;
+
+                ctx.bezierCurveTo(
+                    cp0[0], cp0[1],
+                    cp1[0], cp1[1],
+                    p[0], p[1]
+                );
+            }
+            else {
+                ctx.lineTo(p[0], p[1]);
+            }
+        }
+
+        prevIdx = idx;
+        idx += dir;
+    }
+
+    return k;
+}
+
+/**
+ * Draw smoothed line in non-monotone, in may cause undesired curve in extreme
+ * situations. This should be used when points are non-monotone neither in x or
+ * y dimension.
+ */
+function drawNonMono(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
 ) {
@@ -31983,7 +32479,7 @@ function isPointsSame(points1, points2) {
 }
 
 function getSmooth(smooth) {
-    return typeof (smooth) === 'number' ? smooth : (smooth ? 0.3 : 0);
+    return typeof (smooth) === 'number' ? smooth : (smooth ? 0.5 : 0);
 }
 
 function getAxisExtentWithGap(axis) {
@@ -31998,68 +32494,23 @@ function getAxisExtentWithGap(axis) {
     return extent;
 }
 
-function sign(val) {
-    return val >= 0 ? 1 : -1;
-}
-
 /**
  * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
  * @param {module:echarts/data/List} data
+ * @param {Object} dataCoordInfo
  * @param {Array.<Array.<number>>} points
- * @param {string} origin origin of areaStyle. Valid values: 'auto', 'start',
- *                        'end'.
- *                        auto: from axisLine to data
- *                        start: from min to data
- *                        end: from data to max
- * @private
  */
-function getStackedOnPoints(seriesModel, coordSys, data, origin) {
-    var baseAxis = coordSys.getBaseAxis();
-    var valueAxis = coordSys.getOtherAxis(baseAxis);
-
-    var valueStart = 0;
-    var extent = valueAxis.scale.getExtent();
-    if (origin === 'start') {
-        valueStart = extent[0];
-    }
-    else if (origin === 'end') {
-        valueStart = extent[1];
-    }
-    else {
-        // auto
-        var extent = valueAxis.scale.getExtent();
-        if (extent[0] > 0) {
-            // Both positive
-            valueStart = extent[0];
-        }
-        else if (extent[1] < 0) {
-            // Both negative
-            valueStart = extent[1];
-        }
-        // If is one positive, and one negative, onZero shall be true
+function getStackedOnPoints(coordSys, data, dataCoordInfo) {
+    if (!dataCoordInfo.valueDim) {
+        return [];
     }
 
-    var valueCoordDim = valueAxis.dim;
-    var baseDataOffset = valueCoordDim === 'x' || valueCoordDim === 'radius' ? 1 : 0;
-    var valueDim = data.mapDimension(valueCoordDim);
+    var points = [];
+    for (var idx = 0, len = data.count(); idx < len; idx++) {
+        points.push(getStackedOnPoint(dataCoordInfo, coordSys, data, idx));
+    }
 
-    return data.mapArray(valueDim ? [valueDim] : [], function (val, idx) {
-        var stackedOnSameSign;
-        var stackedOn = data.stackedOn;
-        // Find first stacked value with same sign
-        while (stackedOn &&
-            sign(stackedOn.get(valueDim, idx)) === sign(val)
-        ) {
-            stackedOnSameSign = stackedOn;
-            break;
-        }
-        var stackedData = [];
-        stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
-        stackedData[1 - baseDataOffset] = stackedOnSameSign
-            ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
-
-        return coordSys.dataToPoint(stackedData);
-    }, true);
+    return points;
 }
 
 function createGridClipShape(cartesian, hasAnimation, seriesModel) {
@@ -32191,15 +32642,29 @@ function getVisualGradient(data, coordSys) {
         return;
     }
 
+    if (coordSys.type !== 'cartesian2d') {
+        if (__DEV__) {
+            console.warn('Visual map on line style is only supported on cartesian2d.');
+        }
+        return;
+    }
+
+    var coordDim;
     var visualMeta;
+
     for (var i = visualMetaList.length - 1; i >= 0; i--) {
+        var dimIndex = visualMetaList[i].dimension;
+        var dimName = data.dimensions[dimIndex];
+        var dimInfo = data.getDimensionInfo(dimName);
+        coordDim = dimInfo && dimInfo.coordDim;
         // Can only be x or y
-        if (visualMetaList[i].dimension < 2) {
+        if (coordDim === 'x' || coordDim === 'y') {
             visualMeta = visualMetaList[i];
             break;
         }
     }
-    if (!visualMeta || coordSys.type !== 'cartesian2d') {
+
+    if (!visualMeta) {
         if (__DEV__) {
             console.warn('Visual map on line style only support x or y dimension.');
         }
@@ -32213,9 +32678,7 @@ function getVisualGradient(data, coordSys) {
     // LinearGradient. So we can only infinitesimally extend area defined in
     // LinearGradient to render `outerColors`.
 
-    var dimension = visualMeta.dimension;
-    var dimName = data.dimensions[dimension];
-    var axis = coordSys.getAxis(dimName);
+    var axis = coordSys.getAxis(coordDim);
 
     // dataToCoor mapping may not be linear, but must be monotonic.
     var colorStops = map(visualMeta.stops, function (stop) {
@@ -32259,8 +32722,8 @@ function getVisualGradient(data, coordSys) {
     // });
 
     var gradient = new LinearGradient(0, 0, 0, 0, colorStops, true);
-    gradient[dimName] = minCoord;
-    gradient[dimName + '2'] = maxCoord;
+    gradient[coordDim] = minCoord;
+    gradient[coordDim + '2'] = maxCoord;
 
     return gradient;
 }
@@ -32286,7 +32749,7 @@ Chart.extend({
         var lineStyleModel = seriesModel.getModel('lineStyle');
         var areaStyleModel = seriesModel.getModel('areaStyle');
 
-        var points = data.mapArray(data.getItemLayout, true);
+        var points = data.mapArray(data.getItemLayout);
 
         var isCoordSysPolar = coordSys.type === 'polar';
         var prevCoordSys = this._coordSys;
@@ -32300,8 +32763,11 @@ Chart.extend({
         var hasAnimation = seriesModel.get('animation');
 
         var isAreaChart = !areaStyleModel.isEmpty();
-        var origin = areaStyleModel.get('origin');
-        var stackedOnPoints = getStackedOnPoints(seriesModel, coordSys, data, origin);
+
+        var valueOrigin = areaStyleModel.get('origin');
+        var dataCoordInfo = prepareDataCoordInfo(coordSys, data, valueOrigin);
+
+        var stackedOnPoints = getStackedOnPoints(coordSys, data, dataCoordInfo);
 
         var showSymbol = seriesModel.get('showSymbol');
 
@@ -32330,7 +32796,10 @@ Chart.extend({
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
-            showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
+            showSymbol && symbolDraw.updateData(data, {
+                isIgnore: isSymbolIgnore,
+                clipShape: createClipShape(coordSys, false, seriesModel)
+            });
 
             if (step) {
                 // TODO If stacked series is not step
@@ -32361,12 +32830,17 @@ Chart.extend({
                 polygon = this._polygon = null;
             }
 
+            var coordSysClipShape = createClipShape(coordSys, false, seriesModel);
+
             // Update clipPath
-            lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
+            lineGroup.setClipPath(coordSysClipShape);
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed
-            showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
+            showSymbol && symbolDraw.updateData(data, {
+                isIgnore: isSymbolIgnore,
+                clipShape: coordSysClipShape
+            });
 
             // Stop symbol animation and sync with line points
             // FIXME performance?
@@ -32381,7 +32855,7 @@ Chart.extend({
             ) {
                 if (hasAnimation) {
                     this._updateAnimation(
-                        data, stackedOnPoints, coordSys, api, step
+                        data, stackedOnPoints, coordSys, api, step, valueOrigin
                     );
                 }
                 else {
@@ -32424,7 +32898,7 @@ Chart.extend({
         });
 
         if (polygon) {
-            var stackedOn = data.stackedOn;
+            var stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
             var stackedOnSmooth = 0;
 
             polygon.useStyle(defaults(
@@ -32436,8 +32910,7 @@ Chart.extend({
                 }
             ));
 
-            if (stackedOn) {
-                var stackedOnSeries = stackedOn.hostModel;
+            if (stackedOnSeries) {
                 stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
             }
 
@@ -32455,6 +32928,7 @@ Chart.extend({
         this._stackedOnPoints = stackedOnPoints;
         this._points = points;
         this._step = step;
+        this._valueOrigin = valueOrigin;
     },
 
     dispose: function () {},
@@ -32590,7 +33064,7 @@ Chart.extend({
      * @private
      */
     // FIXME Two value axis
-    _updateAnimation: function (data, stackedOnPoints, coordSys, api, step) {
+    _updateAnimation: function (data, stackedOnPoints, coordSys, api, step, valueOrigin) {
         var polyline = this._polyline;
         var polygon = this._polygon;
         var seriesModel = data.hostModel;
@@ -32598,7 +33072,8 @@ Chart.extend({
         var diff = lineAnimationDiff(
             this._data, data,
             this._stackedOnPoints, stackedOnPoints,
-            this._coordSys, coordSys
+            this._coordSys, coordSys,
+            this._valueOrigin, valueOrigin
         );
 
         var current = diff.current;
@@ -32754,9 +33229,16 @@ var pointsLayout = function (seriesType) {
             }
 
             var dims = map(coordSys.dimensions, function (dim) {
-                return data.getDimension(data.mapDimension(dim));
+                return data.mapDimension(dim);
             }).slice(0, 2);
             var dimLen = dims.length;
+
+            if (isDimensionStacked(data, dims[0], dims[1])) {
+                dims[0] = data.getCalculationInfo('stackResultDimension');
+            }
+            if (isDimensionStacked(data, dims[1], dims[0])) {
+                dims[1] = data.getCalculationInfo('stackResultDimension');
+            }
 
             function progress(params, data) {
                 var segCount = params.end - params.start;
@@ -33091,16 +33573,6 @@ Cartesian2D.prototype = {
 
 inherits(Cartesian2D, Cartesian);
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var Axis2D = function (dim, scale, coordExtent, axisType, position) {
     Axis.call(this, dim, scale, coordExtent);
     /**
@@ -33373,7 +33845,6 @@ axisDefault.logAxis = defaults({
     logBase: 10
 }, axisDefault.valueAxis);
 
-// FIXME axisType is fixed ?
 var AXIS_TYPES = ['value', 'category', 'time', 'log'];
 
 /**
@@ -33558,7 +34029,6 @@ ComponentModel.extend({
  * TODO Default cartesian
  */
 
-// Depends on GridModel, AxisModel, which performs preprocess.
 var each$6 = each$1;
 var ifAxisCrossZero$1 = ifAxisCrossZero;
 var niceScaleExtent$1 = niceScaleExtent;
@@ -34344,6 +34814,11 @@ var builders = {
         var arrows = axisModel.get('axisLine.symbol');
         var arrowSize = axisModel.get('axisLine.symbolSize');
 
+        var arrowOffset = axisModel.get('axisLine.symbolOffset') || 0;
+        if (typeof arrowOffset === 'number') {
+            arrowOffset = [arrowOffset, arrowOffset];
+        }
+
         if (arrows != null) {
             if (typeof arrows === 'string') {
                 // Use the same arrow for start and end point
@@ -34359,10 +34834,16 @@ var builders = {
             var symbolWidth = arrowSize[0];
             var symbolHeight = arrowSize[1];
 
-            each$1([
-                [opt.rotation + Math.PI / 2, pt1],
-                [opt.rotation - Math.PI / 2, pt2]
-            ], function (item, index) {
+            each$1([{
+                rotate: opt.rotation + Math.PI / 2,
+                offset: arrowOffset[0],
+                r: 0
+            }, {
+                rotate: opt.rotation - Math.PI / 2,
+                offset: arrowOffset[1],
+                r: Math.sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0])
+                    + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
+            }], function (point, index) {
                 if (arrows[index] !== 'none' && arrows[index] != null) {
                     var symbol = createSymbol(
                         arrows[index],
@@ -34373,9 +34854,17 @@ var builders = {
                         lineStyle.stroke,
                         true
                     );
+
+                    // Calculate arrow position with offset
+                    var r = point.r + point.offset;
+                    var pos = [
+                        pt1[0] + r * Math.cos(opt.rotation),
+                        pt1[1] - r * Math.sin(opt.rotation)
+                    ];
+
                     symbol.attr({
-                        rotation: item[0],
-                        position: item[1],
+                        rotation: point.rotate,
+                        position: pos,
                         silent: true
                     });
                     this.group.add(symbol);
@@ -35093,7 +35582,8 @@ function makeAxisPointerModel(
 
     if (fromTooltip === 'cross') {
         // When 'cross', both axes show labels.
-        labelOption.show = true;
+        var tooltipAxisPointerLabelShow = tooltipAxisPointerModel.get('label.show');
+        labelOption.show = tooltipAxisPointerLabelShow != null ? tooltipAxisPointerLabelShow : true;
         // If triggerTooltip, this is a base axis, which should better not use cross style
         // (cross style is dashed by default)
         if (!triggerTooltip) {
@@ -35241,9 +35731,6 @@ function makeKey(model) {
     return model.type + '||' + model.id;
 }
 
-/**
- * Base class of AxisView.
- */
 var AxisView = extendComponentView({
 
     type: 'axis',
@@ -35339,13 +35826,6 @@ AxisView.getAxisPointerClass = function (type) {
     return type && axisPointerClazz[type];
 };
 
-/**
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, labelInterval, z2
- * }
- */
 function layout$1(gridModel, axisModel, opt) {
     opt = opt || {};
     var grid = gridModel.coordinateSystem;
@@ -35588,7 +36068,7 @@ var CartesianAxisView = AxisView.extend({
             if (ifIgnoreOnTick(
                 axis, i, areaInterval, ticksCoords.length,
                 showMinLabel, showMaxLabel
-            )) {
+            ) && (i < ticksCoords.length - 1)) {
                 continue;
             }
 
@@ -35640,7 +36120,6 @@ CartesianAxisView.extend({
     type: 'yAxis'
 });
 
-// Grid view
 extendComponentView({
 
     type: 'grid',
@@ -35668,7 +36147,6 @@ registerPreprocessor(function (option) {
     }
 });
 
-// In case developer forget to include grid component
 registerVisual(visualSymbol('line', 'circle', 'line'));
 registerLayout(pointsLayout('line'));
 
@@ -35951,7 +36429,14 @@ var elementCreator = {
         data, dataIndex, itemModel, layout, isRadial,
         animationModel, isUpdate
     ) {
-        var sector = new Sector({shape: extend({}, layout)});
+        // Keep the same logic with bar in catesion: use end value to control
+        // direction. Notice that if clockwise is true (by default), the sector
+        // will always draw clockwisely, no matter whether endAngle is greater
+        // or less than startAngle.
+        var clockwise = layout.startAngle < layout.endAngle;
+        var sector = new Sector({
+            shape: defaults({clockwise: clockwise}, layout)
+        });
 
         // Animation
         if (animationModel) {
@@ -36065,7 +36550,6 @@ function getLineWidth(itemModel, rawLayout) {
     return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
 }
 
-// In case developer forget to include grid component
 registerLayout(curry(layout, 'bar'));
 
 // Visual coding for legend
@@ -36076,22 +36560,6 @@ registerVisual(function (ecModel) {
     });
 });
 
-/**
- * [Usage]:
- * (1)
- * createListSimply(seriesModel, ['value']);
- * (2)
- * createListSimply(seriesModel, {
- *     coordDimensions: ['value'],
- *     dimensionsCount: 5
- * });
- *
- * @param {module:echarts/model/Series} seriesModel
- * @param {Object|Array.<string|Object>} opt opt or coordDimensions
- *        The options in opt, see `echarts/data/helper/createDimensions`
- * @param {Array.<string>} [nameList]
- * @return {module:echarts/data/List}
- */
 var createListSimply = function (seriesModel, opt, nameList) {
     opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
 
@@ -36114,26 +36582,13 @@ var createListSimply = function (seriesModel, opt, nameList) {
 var selectableMixin = {
 
     /**
-     * @param {Array.<Object>|module:echars/data/List} targetList
+     * @param {Array.<Object>} targetList [{name, value, selected}, ...]
      *        If targetList is an array, it should like [{name: ..., value: ...}, ...].
      *        If targetList is a "List", it must have coordDim: 'value' dimension and name.
      */
     updateSelectedMap: function (targetList) {
-        if (isArray(targetList)) {
-            this._targetList = targetList.slice();
-        }
-        else {
-            var ecList = targetList;
-            var valueDim = ecList.mapDimension('value');
-            var targetList = this._targetList = [];
-            for (var i = 0, len = ecList.count(); i < len; i++) {
-                targetList.push({
-                    name: ecList.getName(i),
-                    value: ecList.get(valueDim, i),
-                    selected: retrieveRawAttr(ecList, i, 'selected')
-                });
-            }
-        }
+        this._targetList = isArray(targetList) ? targetList.slice() : [];
+
         this._selectTargetMap = reduce(targetList || [], function (targetMap, target) {
             targetMap.set(target.name, target);
             return targetMap;
@@ -36223,7 +36678,7 @@ var PieSeries = extendSeriesModel({
             return this.getRawData();
         };
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
 
         this._defaultLabelLine(option);
     },
@@ -36232,11 +36687,25 @@ var PieSeries = extendSeriesModel({
     mergeOption: function (newOption) {
         PieSeries.superCall(this, 'mergeOption', newOption);
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
     },
 
     getInitialData: function (option, ecModel) {
         return createListSimply(this, ['value']);
+    },
+
+    _createSelectableList: function () {
+        var data = this.getRawData();
+        var valueDim = data.mapDimension('value');
+        var targetList = [];
+        for (var i = 0, len = data.count(); i < len; i++) {
+            targetList.push({
+                name: data.getName(i),
+                value: data.get(valueDim, i),
+                selected: retrieveRawAttr(data, i, 'selected')
+            });
+        }
+        return targetList;
     },
 
     // Overwrite
@@ -36343,11 +36812,6 @@ var PieSeries = extendSeriesModel({
 
 mixin(PieSeries, selectableMixin);
 
-/**
- * @param {module:echarts/model/Series} seriesModel
- * @param {boolean} hasAnimation
- * @inner
- */
 function updateDataSelected(uid, seriesModel, hasAnimation, api) {
     var data = seriesModel.getData();
     var dataIndex = this.dataIndex;
@@ -36806,9 +37270,10 @@ var dataColor = function (seriesType) {
                 if (!singleDataColor) {
                     // FIXME Performance
                     var itemModel = dataAll.getItemModel(rawIdx);
+
                     var color = itemModel.get('itemStyle.color')
                         || seriesModel.getColorFromPalette(
-                            dataAll.getName(rawIdx), seriesModel.__paletteScope,
+                            dataAll.getName(rawIdx) || (rawIdx + ''), seriesModel.__paletteScope,
                             dataAll.count()
                         );
                     // Legend may use the visual info in data before processed
@@ -37155,7 +37620,7 @@ var pieLayout = function (seriesType, ecModel, api, payload) {
             });
 
             currentAngle = endAngle;
-        }, true);
+        });
 
         // Some sector is constrained by minAngle
         // Rest sectors needs recalculate angle
@@ -37213,7 +37678,7 @@ var dataFilter = function (seriesType) {
                     }
                 }
                 return true;
-            }, this);
+            });
         }
     };
 };
@@ -37637,9 +38102,6 @@ extendChartView({
     dispose: function () {}
 });
 
-// import * as zrUtil from 'zrender/src/core/util';
-
-// In case developer forget to include grid component
 registerVisual(visualSymbol('scatter', 'circle'));
 registerLayout(pointsLayout('scatter'));
 
@@ -38239,8 +38701,8 @@ var RadarSeries = SeriesModel.extend({
 
     getInitialData: function (option, ecModel) {
         return createListSimply(this, {
-            extraPrefix: 'indicator_',
-            extraFromZero: true
+            generateCoord: 'indicator_',
+            generateCoordCount: Infinity
         });
     },
 
@@ -38549,14 +39011,875 @@ var backwardCompat$1 = function (option) {
     });
 };
 
-// Must use radar component
 registerVisual(dataColor('radar'));
 registerVisual(visualSymbol('radar', 'circle'));
 registerLayout(radarLayout);
 registerProcessor(dataFilter('radar'));
 registerPreprocessor(backwardCompat$1);
 
-// import geoCreator from '../../coord/geo/geoCreator';
+/**
+ * Simple view coordinate system
+ * Mapping given x, y to transformd view x, y
+ */
+
+var v2ApplyTransform$1 = applyTransform;
+
+// Dummy transform node
+function TransformDummy() {
+    Transformable.call(this);
+}
+mixin(TransformDummy, Transformable);
+
+function View(name) {
+    /**
+     * @type {string}
+     */
+    this.name = name;
+
+    /**
+     * @type {Object}
+     */
+    this.zoomLimit;
+
+    Transformable.call(this);
+
+    this._roamTransformable = new TransformDummy();
+
+    this._rawTransformable = new TransformDummy();
+
+    this._center;
+    this._zoom;
+}
+
+View.prototype = {
+
+    constructor: View,
+
+    type: 'view',
+
+    /**
+     * @param {Array.<string>}
+     * @readOnly
+     */
+    dimensions: ['x', 'y'],
+
+    /**
+     * Set bounding rect
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+
+    // PENDING to getRect
+    setBoundingRect: function (x, y, width, height) {
+        this._rect = new BoundingRect(x, y, width, height);
+        return this._rect;
+    },
+
+    /**
+     * @return {module:zrender/core/BoundingRect}
+     */
+    // PENDING to getRect
+    getBoundingRect: function () {
+        return this._rect;
+    },
+
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    setViewRect: function (x, y, width, height) {
+        this.transformTo(x, y, width, height);
+        this._viewRect = new BoundingRect(x, y, width, height);
+    },
+
+    /**
+     * Transformed to particular position and size
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    transformTo: function (x, y, width, height) {
+        var rect = this.getBoundingRect();
+        var rawTransform = this._rawTransformable;
+
+        rawTransform.transform = rect.calculateTransform(
+            new BoundingRect(x, y, width, height)
+        );
+
+        rawTransform.decomposeTransform();
+
+        this._updateTransform();
+    },
+
+    /**
+     * Set center of view
+     * @param {Array.<number>} [centerCoord]
+     */
+    setCenter: function (centerCoord) {
+        if (!centerCoord) {
+            return;
+        }
+        this._center = centerCoord;
+
+        this._updateCenterAndZoom();
+    },
+
+    /**
+     * @param {number} zoom
+     */
+    setZoom: function (zoom) {
+        zoom = zoom || 1;
+
+        var zoomLimit = this.zoomLimit;
+        if (zoomLimit) {
+            if (zoomLimit.max != null) {
+                zoom = Math.min(zoomLimit.max, zoom);
+            }
+            if (zoomLimit.min != null) {
+                zoom = Math.max(zoomLimit.min, zoom);
+            }
+        }
+        this._zoom = zoom;
+
+        this._updateCenterAndZoom();
+    },
+
+    /**
+     * Get default center without roam
+     */
+    getDefaultCenter: function () {
+        // Rect before any transform
+        var rawRect = this.getBoundingRect();
+        var cx = rawRect.x + rawRect.width / 2;
+        var cy = rawRect.y + rawRect.height / 2;
+
+        return [cx, cy];
+    },
+
+    getCenter: function () {
+        return this._center || this.getDefaultCenter();
+    },
+
+    getZoom: function () {
+        return this._zoom || 1;
+    },
+
+    /**
+     * @return {Array.<number}
+     */
+    getRoamTransform: function () {
+        return this._roamTransformable.getLocalTransform();
+    },
+
+    /**
+     * Remove roam
+     */
+
+    _updateCenterAndZoom: function () {
+        // Must update after view transform updated
+        var rawTransformMatrix = this._rawTransformable.getLocalTransform();
+        var roamTransform = this._roamTransformable;
+        var defaultCenter = this.getDefaultCenter();
+        var center = this.getCenter();
+        var zoom = this.getZoom();
+
+        center = applyTransform([], center, rawTransformMatrix);
+        defaultCenter = applyTransform([], defaultCenter, rawTransformMatrix);
+
+        roamTransform.origin = center;
+        roamTransform.position = [
+            defaultCenter[0] - center[0],
+            defaultCenter[1] - center[1]
+        ];
+        roamTransform.scale = [zoom, zoom];
+
+        this._updateTransform();
+    },
+
+    /**
+     * Update transform from roam and mapLocation
+     * @private
+     */
+    _updateTransform: function () {
+        var roamTransformable = this._roamTransformable;
+        var rawTransformable = this._rawTransformable;
+
+        rawTransformable.parent = roamTransformable;
+        roamTransformable.updateTransform();
+        rawTransformable.updateTransform();
+
+        copy$1(this.transform || (this.transform = []), rawTransformable.transform || create$1());
+
+        this._rawTransform = rawTransformable.getLocalTransform();
+
+        this.invTransform = this.invTransform || [];
+        invert(this.invTransform, this.transform);
+
+        this.decomposeTransform();
+    },
+
+    /**
+     * @return {module:zrender/core/BoundingRect}
+     */
+    getViewRect: function () {
+        return this._viewRect;
+    },
+
+    /**
+     * Get view rect after roam transform
+     * @return {module:zrender/core/BoundingRect}
+     */
+    getViewRectAfterRoam: function () {
+        var rect = this.getBoundingRect().clone();
+        rect.applyTransform(this.transform);
+        return rect;
+    },
+
+    /**
+     * Convert a single (lon, lat) data item to (x, y) point.
+     * @param {Array.<number>} data
+     * @param {boolean} noRoam
+     * @param {Array.<number>} [out]
+     * @return {Array.<number>}
+     */
+    dataToPoint: function (data, noRoam, out) {
+        var transform = noRoam ? this._rawTransform : this.transform;
+        out = out || [];
+        return transform
+            ? v2ApplyTransform$1(out, data, transform)
+            : copy(out, data);
+    },
+
+    /**
+     * Convert a (x, y) point to (lon, lat) data
+     * @param {Array.<number>} point
+     * @return {Array.<number>}
+     */
+    pointToData: function (point) {
+        var invTransform = this.invTransform;
+        return invTransform
+            ? v2ApplyTransform$1([], point, invTransform)
+            : [point[0], point[1]];
+    },
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    convertToPixel: curry(doConvert$1, 'dataToPoint'),
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    convertFromPixel: curry(doConvert$1, 'pointToData'),
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    containPoint: function (point) {
+        return this.getViewRectAfterRoam().contain(point[0], point[1]);
+    }
+
+    /**
+     * @return {number}
+     */
+    // getScalarScale: function () {
+    //     // Use determinant square root of transform to mutiply scalar
+    //     var m = this.transform;
+    //     var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
+    //     return det;
+    // }
+};
+
+mixin(View, Transformable);
+
+function doConvert$1(methodName, ecModel, finder, value) {
+    var seriesModel = finder.seriesModel;
+    var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
+    return coordSys === this ? coordSys[methodName](value) : null;
+}
+
+// Fix for 南海诸岛
+
+var geoCoord = [126, 25];
+
+var points$1 = [
+    [[0,3.5],[7,11.2],[15,11.9],[30,7],[42,0.7],[52,0.7],
+        [56,7.7],[59,0.7],[64,0.7],[64,0],[5,0],[0,3.5]],
+    [[13,16.1],[19,14.7],[16,21.7],[11,23.1],[13,16.1]],
+    [[12,32.2],[14,38.5],[15,38.5],[13,32.2],[12,32.2]],
+    [[16,47.6],[12,53.2],[13,53.2],[18,47.6],[16,47.6]],
+    [[6,64.4],[8,70],[9,70],[8,64.4],[6,64.4]],
+    [[23,82.6],[29,79.8],[30,79.8],[25,82.6],[23,82.6]],
+    [[37,70.7],[43,62.3],[44,62.3],[39,70.7],[37,70.7]],
+    [[48,51.1],[51,45.5],[53,45.5],[50,51.1],[48,51.1]],
+    [[51,35],[51,28.7],[53,28.7],[53,35],[51,35]],
+    [[52,22.4],[55,17.5],[56,17.5],[53,22.4],[52,22.4]],
+    [[58,12.6],[62,7],[63,7],[60,12.6],[58,12.6]],
+    [[0,3.5],[0,93.1],[64,93.1],[64,0],[63,0],[63,92.4],
+        [1,92.4],[1,3.5],[0,3.5]]
+];
+
+for (var i$1 = 0; i$1 < points$1.length; i$1++) {
+    for (var k = 0; k < points$1[i$1].length; k++) {
+        points$1[i$1][k][0] /= 10.5;
+        points$1[i$1][k][1] /= -10.5 / 0.75;
+
+        points$1[i$1][k][0] += geoCoord[0];
+        points$1[i$1][k][1] += geoCoord[1];
+    }
+}
+
+var fixNanhai = function (geo) {
+    if (geo.map === 'china') {
+        geo.regions.push(new Region(
+            '南海诸岛',
+            map(points$1, function (exterior) {
+                return {
+                    type: 'polygon',
+                    exterior: exterior
+                };
+            }), geoCoord
+        ));
+    }
+};
+
+var coordsOffsetMap = {
+    '南海诸岛' : [32, 80],
+    // 全国
+    '广东': [0, -10],
+    '香港': [10, 5],
+    '澳门': [-10, 10],
+    //'北京': [-10, 0],
+    '天津': [5, 5]
+};
+
+var fixTextCoord = function (geo) {
+    each$1(geo.regions, function (region) {
+        var coordFix = coordsOffsetMap[region.name];
+        if (coordFix) {
+            var cp = region.center;
+            cp[0] += coordFix[0] / 10.5;
+            cp[1] += -coordFix[1] / (10.5 / 0.75);
+        }
+    });
+};
+
+var geoCoordMap = {
+    'Russia': [100, 60],
+    'United States': [-99, 38],
+    'United States of America': [-99, 38]
+};
+
+var fixGeoCoord = function (geo) {
+    each$1(geo.regions, function (region) {
+        var geoCoord = geoCoordMap[region.name];
+        if (geoCoord) {
+            var cp = region.center;
+            cp[0] = geoCoord[0];
+            cp[1] = geoCoord[1];
+        }
+    });
+};
+
+// Fix for 钓鱼岛
+
+// var Region = require('../Region');
+// var zrUtil = require('zrender/src/core/util');
+
+// var geoCoord = [126, 25];
+
+var points$2 = [
+    [
+        [123.45165252685547, 25.73527164402261],
+        [123.49731445312499, 25.73527164402261],
+        [123.49731445312499, 25.750734064600884],
+        [123.45165252685547, 25.750734064600884],
+        [123.45165252685547, 25.73527164402261]
+    ]
+];
+
+var fixDiaoyuIsland = function (geo) {
+    if (geo.map === 'china') {
+        for (var i = 0, len = geo.regions.length; i < len; ++i) {
+            if (geo.regions[i].name === '台湾') {
+                geo.regions[i].geometries.push({
+                    type: 'polygon',
+                    exterior: points$2[0]
+                });
+            }
+        }
+    }
+};
+
+var geoFixFuncs = [
+    fixNanhai,
+    fixTextCoord,
+    fixGeoCoord,
+    fixDiaoyuIsland
+];
+
+/**
+ * [Geo description]
+ * @param {string} name Geo name
+ * @param {string} map Map type
+ * @param {Object} geoJson
+ * @param {Object} [specialAreas]
+ *        Specify the positioned areas by left, top, width, height
+ * @param {Object.<string, string>} [nameMap]
+ *        Specify name alias
+ */
+function Geo(name, map$$1, geoJson, specialAreas, nameMap) {
+
+    View.call(this, name);
+
+    /**
+     * Map type
+     * @type {string}
+     */
+    this.map = map$$1;
+
+    this._nameCoordMap = createHashMap();
+
+    this.loadGeoJson(geoJson, specialAreas, nameMap);
+}
+
+Geo.prototype = {
+
+    constructor: Geo,
+
+    type: 'geo',
+
+    /**
+     * @param {Array.<string>}
+     * @readOnly
+     */
+    dimensions: ['lng', 'lat'],
+
+    /**
+     * If contain given lng,lat coord
+     * @param {Array.<number>}
+     * @readOnly
+     */
+    containCoord: function (coord) {
+        var regions = this.regions;
+        for (var i = 0; i < regions.length; i++) {
+            if (regions[i].contain(coord)) {
+                return true;
+            }
+        }
+        return false;
+    },
+    /**
+     * @param {Object} geoJson
+     * @param {Object} [specialAreas]
+     *        Specify the positioned areas by left, top, width, height
+     * @param {Object.<string, string>} [nameMap]
+     *        Specify name alias
+     */
+    loadGeoJson: function (geoJson, specialAreas, nameMap) {
+        // https://jsperf.com/try-catch-performance-overhead
+        try {
+            this.regions = geoJson ? parseGeoJson$1(geoJson) : [];
+        }
+        catch (e) {
+            throw 'Invalid geoJson format\n' + e.message;
+        }
+        specialAreas = specialAreas || {};
+        nameMap = nameMap || {};
+        var regions = this.regions;
+        var regionsMap = createHashMap();
+        for (var i = 0; i < regions.length; i++) {
+            var regionName = regions[i].name;
+            // Try use the alias in nameMap
+            regionName = nameMap.hasOwnProperty(regionName) ? nameMap[regionName] : regionName;
+            regions[i].name = regionName;
+
+            regionsMap.set(regionName, regions[i]);
+            // Add geoJson
+            this.addGeoCoord(regionName, regions[i].center);
+
+            // Some area like Alaska in USA map needs to be tansformed
+            // to look better
+            var specialArea = specialAreas[regionName];
+            if (specialArea) {
+                regions[i].transformTo(
+                    specialArea.left, specialArea.top, specialArea.width, specialArea.height
+                );
+            }
+        }
+
+        this._regionsMap = regionsMap;
+
+        this._rect = null;
+
+        each$1(geoFixFuncs, function (fixFunc) {
+            fixFunc(this);
+        }, this);
+    },
+
+    // Overwrite
+    transformTo: function (x, y, width, height) {
+        var rect = this.getBoundingRect();
+
+        rect = rect.clone();
+        // Longitute is inverted
+        rect.y = -rect.y - rect.height;
+
+        var rawTransformable = this._rawTransformable;
+
+        rawTransformable.transform = rect.calculateTransform(
+            new BoundingRect(x, y, width, height)
+        );
+
+        rawTransformable.decomposeTransform();
+
+        var scale = rawTransformable.scale;
+        scale[1] = -scale[1];
+
+        rawTransformable.updateTransform();
+
+        this._updateTransform();
+    },
+
+    /**
+     * @param {string} name
+     * @return {module:echarts/coord/geo/Region}
+     */
+    getRegion: function (name) {
+        return this._regionsMap.get(name);
+    },
+
+    getRegionByCoord: function (coord) {
+        var regions = this.regions;
+        for (var i = 0; i < regions.length; i++) {
+            if (regions[i].contain(coord)) {
+                return regions[i];
+            }
+        }
+    },
+
+    /**
+     * Add geoCoord for indexing by name
+     * @param {string} name
+     * @param {Array.<number>} geoCoord
+     */
+    addGeoCoord: function (name, geoCoord) {
+        this._nameCoordMap.set(name, geoCoord);
+    },
+
+    /**
+     * Get geoCoord by name
+     * @param {string} name
+     * @return {Array.<number>}
+     */
+    getGeoCoord: function (name) {
+        return this._nameCoordMap.get(name);
+    },
+
+    // Overwrite
+    getBoundingRect: function () {
+        if (this._rect) {
+            return this._rect;
+        }
+        var rect;
+
+        var regions = this.regions;
+        for (var i = 0; i < regions.length; i++) {
+            var regionRect = regions[i].getBoundingRect();
+            rect = rect || regionRect.clone();
+            rect.union(regionRect);
+        }
+        // FIXME Always return new ?
+        return (this._rect = rect || new BoundingRect(0, 0, 0, 0));
+    },
+
+    /**
+     * @param {string|Array.<number>} data
+     * @param {boolean} noRoam
+     * @param {Array.<number>} [out]
+     * @return {Array.<number>}
+     */
+    dataToPoint: function (data, noRoam, out) {
+        if (typeof data === 'string') {
+            // Map area name to geoCoord
+            data = this.getGeoCoord(data);
+        }
+        if (data) {
+            return View.prototype.dataToPoint.call(this, data, noRoam, out);
+        }
+    },
+
+    /**
+     * @inheritDoc
+     */
+    convertToPixel: curry(doConvert, 'dataToPoint'),
+
+    /**
+     * @inheritDoc
+     */
+    convertFromPixel: curry(doConvert, 'pointToData')
+
+};
+
+mixin(Geo, View);
+
+function doConvert(methodName, ecModel, finder, value) {
+    var geoModel = finder.geoModel;
+    var seriesModel = finder.seriesModel;
+
+    var coordSys = geoModel
+        ? geoModel.coordinateSystem
+        : seriesModel
+        ? (
+            seriesModel.coordinateSystem // For map.
+            || (seriesModel.getReferringComponents('geo')[0] || {}).coordinateSystem
+        )
+        : null;
+
+    return coordSys === this ? coordSys[methodName](value) : null;
+}
+
+function resizeGeo(geoModel, api) {
+
+    var boundingCoords = geoModel.get('boundingCoords');
+    if (boundingCoords != null) {
+        var leftTop = boundingCoords[0];
+        var rightBottom = boundingCoords[1];
+        if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
+            if (__DEV__) {
+                console.error('Invalid boundingCoords');
+            }
+        }
+        else {
+            this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
+        }
+    }
+
+    var rect = this.getBoundingRect();
+
+    var boxLayoutOption;
+
+    var center = geoModel.get('layoutCenter');
+    var size = geoModel.get('layoutSize');
+
+    var viewWidth = api.getWidth();
+    var viewHeight = api.getHeight();
+
+    var aspectScale = geoModel.get('aspectScale') || 0.75;
+    var aspect = rect.width / rect.height * aspectScale;
+
+    var useCenterAndSize = false;
+
+    if (center && size) {
+        center = [
+            parsePercent$1(center[0], viewWidth),
+            parsePercent$1(center[1], viewHeight)
+        ];
+        size = parsePercent$1(size, Math.min(viewWidth, viewHeight));
+
+        if (!isNaN(center[0]) && !isNaN(center[1]) && !isNaN(size)) {
+            useCenterAndSize = true;
+        }
+        else {
+            if (__DEV__) {
+                console.warn('Given layoutCenter or layoutSize data are invalid. Use left/top/width/height instead.');
+            }
+        }
+    }
+
+    var viewRect;
+    if (useCenterAndSize) {
+        var viewRect = {};
+        if (aspect > 1) {
+            // Width is same with size
+            viewRect.width = size;
+            viewRect.height = size / aspect;
+        }
+        else {
+            viewRect.height = size;
+            viewRect.width = size * aspect;
+        }
+        viewRect.y = center[1] - viewRect.height / 2;
+        viewRect.x = center[0] - viewRect.width / 2;
+    }
+    else {
+        // Use left/top/width/height
+        boxLayoutOption = geoModel.getBoxLayoutParams();
+
+        // 0.75 rate
+        boxLayoutOption.aspect = aspect;
+
+        viewRect = getLayoutRect(boxLayoutOption, {
+            width: viewWidth,
+            height: viewHeight
+        });
+    }
+
+    this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+
+    this.setCenter(geoModel.get('center'));
+    this.setZoom(geoModel.get('zoom'));
+}
+
+/**
+ * @param {module:echarts/coord/Geo} geo
+ * @param {module:echarts/model/Model} model
+ * @inner
+ */
+function setGeoCoords(geo, model) {
+    each$1(model.get('geoCoord'), function (geoCoord, name) {
+        geo.addGeoCoord(name, geoCoord);
+    });
+}
+
+if (__DEV__) {
+    var mapNotExistsError = function (name) {
+        console.error('Map ' + name + ' not exists. You can download map file on http://echarts.baidu.com/download-map.html');
+    };
+}
+
+var geoCreator = {
+
+    // For deciding which dimensions to use when creating list data
+    dimensions: Geo.prototype.dimensions,
+
+    create: function (ecModel, api) {
+        var geoList = [];
+
+        // FIXME Create each time may be slow
+        ecModel.eachComponent('geo', function (geoModel, idx) {
+            var name = geoModel.get('map');
+            var mapData = getMap(name);
+            if (__DEV__) {
+                if (!mapData) {
+                    mapNotExistsError(name);
+                }
+            }
+            var geo = new Geo(
+                name + idx, name,
+                mapData && mapData.geoJson, mapData && mapData.specialAreas,
+                geoModel.get('nameMap')
+            );
+            geo.zoomLimit = geoModel.get('scaleLimit');
+            geoList.push(geo);
+
+            setGeoCoords(geo, geoModel);
+
+            geoModel.coordinateSystem = geo;
+            geo.model = geoModel;
+
+            // Inject resize method
+            geo.resize = resizeGeo;
+
+            geo.resize(geoModel, api);
+        });
+
+        ecModel.eachSeries(function (seriesModel) {
+            var coordSys = seriesModel.get('coordinateSystem');
+            if (coordSys === 'geo') {
+                var geoIndex = seriesModel.get('geoIndex') || 0;
+                seriesModel.coordinateSystem = geoList[geoIndex];
+            }
+        });
+
+        // If has map series
+        var mapModelGroupBySeries = {};
+
+        ecModel.eachSeriesByType('map', function (seriesModel) {
+            if (!seriesModel.getHostGeoModel()) {
+                var mapType = seriesModel.getMapType();
+                mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
+                mapModelGroupBySeries[mapType].push(seriesModel);
+            }
+        });
+
+        each$1(mapModelGroupBySeries, function (mapSeries, mapType) {
+            var mapData = getMap(mapType);
+            if (__DEV__) {
+                if (!mapData) {
+                    mapNotExistsError(mapSeries[0].get('map'));
+                }
+            }
+
+            var nameMapList = map(mapSeries, function (singleMapSeries) {
+                return singleMapSeries.get('nameMap');
+            });
+            var geo = new Geo(
+                mapType, mapType,
+                mapData && mapData.geoJson, mapData && mapData.specialAreas,
+                mergeAll(nameMapList)
+            );
+            geo.zoomLimit = retrieve.apply(null, map(mapSeries, function (singleMapSeries) {
+                return singleMapSeries.get('scaleLimit');
+            }));
+            geoList.push(geo);
+
+            // Inject resize method
+            geo.resize = resizeGeo;
+
+            geo.resize(mapSeries[0], api);
+
+            each$1(mapSeries, function (singleMapSeries) {
+                singleMapSeries.coordinateSystem = geo;
+
+                setGeoCoords(geo, singleMapSeries);
+            });
+        });
+
+        return geoList;
+    },
+
+    /**
+     * Fill given regions array
+     * @param  {Array.<Object>} originRegionArr
+     * @param  {string} mapName
+     * @param  {Object} [nameMap]
+     * @return {Array}
+     */
+    getFilledRegions: function (originRegionArr, mapName, nameMap) {
+        // Not use the original
+        var regionsArr = (originRegionArr || []).slice();
+        nameMap = nameMap || {};
+
+        var map$$1 = getMap(mapName);
+        var geoJson = map$$1 && map$$1.geoJson;
+        if (!geoJson) {
+            if (__DEV__) {
+                mapNotExistsError(mapName);
+            }
+            return originRegionArr;
+        }
+
+        var dataNameMap = createHashMap();
+        var features = geoJson.features;
+        for (var i = 0; i < regionsArr.length; i++) {
+            dataNameMap.set(regionsArr[i].name, regionsArr[i]);
+        }
+
+        for (var i = 0; i < features.length; i++) {
+            var name = features[i].properties.name;
+            if (!dataNameMap.get(name)) {
+                if (nameMap.hasOwnProperty(name)) {
+                    name = nameMap[name];
+                }
+                regionsArr.push({
+                    name: name
+                });
+            }
+        }
+        return regionsArr;
+    }
+};
+
+registerCoordinateSystem('geo', geoCreator);
 
 var MapSeries = SeriesModel.extend({
 
@@ -38580,12 +39903,12 @@ var MapSeries = SeriesModel.extend({
 
     init: function (option) {
 
-        this._fillOption(option, this.getMapType());
+        // this._fillOption(option, this.getMapType());
         // this.option = option;
 
         MapSeries.superApply(this, 'init', arguments);
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
     },
 
     getInitialData: function (option) {
@@ -38593,11 +39916,28 @@ var MapSeries = SeriesModel.extend({
     },
 
     mergeOption: function (newOption) {
-        this._fillOption(newOption, this.getMapType());
+        // this._fillOption(newOption, this.getMapType());
 
         MapSeries.superApply(this, 'mergeOption', arguments);
 
-        this.updateSelectedMap(this.getRawData());
+        this.updateSelectedMap(this._createSelectableList());
+    },
+
+    _createSelectableList: function () {
+        var data = this.getRawData();
+        var valueDim = data.mapDimension('value');
+        var targetList = [];
+        for (var i = 0, len = data.count(); i < len; i++) {
+            targetList.push({
+                name: data.getName(i),
+                value: data.get(valueDim, i),
+                selected: retrieveRawAttr(data, i, 'selected')
+            });
+        }
+
+        targetList = geoCreator.getFilledRegions(targetList, this.getMapType(), this.option.nameMap);
+
+        return targetList;
     },
 
     /**
@@ -38814,13 +40154,6 @@ registerAction(
     function () {}
 );
 
-/**
- * @alias module:echarts/component/helper/RoamController
- * @constructor
- * @mixin {module:zrender/mixin/Eventful}
- *
- * @param {module:zrender/zrender~ZRender} zr
- */
 function RoamController(zr) {
 
     /**
@@ -39641,15 +40974,6 @@ function updateCenterAndZoom(
     };
 }
 
-/**
- * @payload
- * @property {string} [componentType=series]
- * @property {number} [dx]
- * @property {number} [dy]
- * @property {number} [zoom]
- * @property {number} [originX]
- * @property {number} [originY]
- */
 registerAction({
     type: 'geoRoam',
     event: 'geoRoam',
@@ -39686,876 +41010,6 @@ registerAction({
         }
     );
 });
-
-/**
- * Simple view coordinate system
- * Mapping given x, y to transformd view x, y
- */
-
-var v2ApplyTransform$1 = applyTransform;
-
-// Dummy transform node
-function TransformDummy() {
-    Transformable.call(this);
-}
-mixin(TransformDummy, Transformable);
-
-function View(name) {
-    /**
-     * @type {string}
-     */
-    this.name = name;
-
-    /**
-     * @type {Object}
-     */
-    this.zoomLimit;
-
-    Transformable.call(this);
-
-    this._roamTransformable = new TransformDummy();
-
-    this._rawTransformable = new TransformDummy();
-
-    this._center;
-    this._zoom;
-}
-
-View.prototype = {
-
-    constructor: View,
-
-    type: 'view',
-
-    /**
-     * @param {Array.<string>}
-     * @readOnly
-     */
-    dimensions: ['x', 'y'],
-
-    /**
-     * Set bounding rect
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-
-    // PENDING to getRect
-    setBoundingRect: function (x, y, width, height) {
-        this._rect = new BoundingRect(x, y, width, height);
-        return this._rect;
-    },
-
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
-    // PENDING to getRect
-    getBoundingRect: function () {
-        return this._rect;
-    },
-
-    /**
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-    setViewRect: function (x, y, width, height) {
-        this.transformTo(x, y, width, height);
-        this._viewRect = new BoundingRect(x, y, width, height);
-    },
-
-    /**
-     * Transformed to particular position and size
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-    transformTo: function (x, y, width, height) {
-        var rect = this.getBoundingRect();
-        var rawTransform = this._rawTransformable;
-
-        rawTransform.transform = rect.calculateTransform(
-            new BoundingRect(x, y, width, height)
-        );
-
-        rawTransform.decomposeTransform();
-
-        this._updateTransform();
-    },
-
-    /**
-     * Set center of view
-     * @param {Array.<number>} [centerCoord]
-     */
-    setCenter: function (centerCoord) {
-        if (!centerCoord) {
-            return;
-        }
-        this._center = centerCoord;
-
-        this._updateCenterAndZoom();
-    },
-
-    /**
-     * @param {number} zoom
-     */
-    setZoom: function (zoom) {
-        zoom = zoom || 1;
-
-        var zoomLimit = this.zoomLimit;
-        if (zoomLimit) {
-            if (zoomLimit.max != null) {
-                zoom = Math.min(zoomLimit.max, zoom);
-            }
-            if (zoomLimit.min != null) {
-                zoom = Math.max(zoomLimit.min, zoom);
-            }
-        }
-        this._zoom = zoom;
-
-        this._updateCenterAndZoom();
-    },
-
-    /**
-     * Get default center without roam
-     */
-    getDefaultCenter: function () {
-        // Rect before any transform
-        var rawRect = this.getBoundingRect();
-        var cx = rawRect.x + rawRect.width / 2;
-        var cy = rawRect.y + rawRect.height / 2;
-
-        return [cx, cy];
-    },
-
-    getCenter: function () {
-        return this._center || this.getDefaultCenter();
-    },
-
-    getZoom: function () {
-        return this._zoom || 1;
-    },
-
-    /**
-     * @return {Array.<number}
-     */
-    getRoamTransform: function () {
-        return this._roamTransformable.getLocalTransform();
-    },
-
-    /**
-     * Remove roam
-     */
-
-    _updateCenterAndZoom: function () {
-        // Must update after view transform updated
-        var rawTransformMatrix = this._rawTransformable.getLocalTransform();
-        var roamTransform = this._roamTransformable;
-        var defaultCenter = this.getDefaultCenter();
-        var center = this.getCenter();
-        var zoom = this.getZoom();
-
-        center = applyTransform([], center, rawTransformMatrix);
-        defaultCenter = applyTransform([], defaultCenter, rawTransformMatrix);
-
-        roamTransform.origin = center;
-        roamTransform.position = [
-            defaultCenter[0] - center[0],
-            defaultCenter[1] - center[1]
-        ];
-        roamTransform.scale = [zoom, zoom];
-
-        this._updateTransform();
-    },
-
-    /**
-     * Update transform from roam and mapLocation
-     * @private
-     */
-    _updateTransform: function () {
-        var roamTransformable = this._roamTransformable;
-        var rawTransformable = this._rawTransformable;
-
-        rawTransformable.parent = roamTransformable;
-        roamTransformable.updateTransform();
-        rawTransformable.updateTransform();
-
-        copy$1(this.transform || (this.transform = []), rawTransformable.transform || create$1());
-
-        this._rawTransform = rawTransformable.getLocalTransform();
-
-        this.invTransform = this.invTransform || [];
-        invert(this.invTransform, this.transform);
-
-        this.decomposeTransform();
-    },
-
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
-    getViewRect: function () {
-        return this._viewRect;
-    },
-
-    /**
-     * Get view rect after roam transform
-     * @return {module:zrender/core/BoundingRect}
-     */
-    getViewRectAfterRoam: function () {
-        var rect = this.getBoundingRect().clone();
-        rect.applyTransform(this.transform);
-        return rect;
-    },
-
-    /**
-     * Convert a single (lon, lat) data item to (x, y) point.
-     * @param {Array.<number>} data
-     * @param {boolean} noRoam
-     * @param {Array.<number>} [out]
-     * @return {Array.<number>}
-     */
-    dataToPoint: function (data, noRoam, out) {
-        var transform = noRoam ? this._rawTransform : this.transform;
-        out = out || [];
-        return transform
-            ? v2ApplyTransform$1(out, data, transform)
-            : copy(out, data);
-    },
-
-    /**
-     * Convert a (x, y) point to (lon, lat) data
-     * @param {Array.<number>} point
-     * @return {Array.<number>}
-     */
-    pointToData: function (point) {
-        var invTransform = this.invTransform;
-        return invTransform
-            ? v2ApplyTransform$1([], point, invTransform)
-            : [point[0], point[1]];
-    },
-
-    /**
-     * @implements
-     * see {module:echarts/CoodinateSystem}
-     */
-    convertToPixel: curry(doConvert$1, 'dataToPoint'),
-
-    /**
-     * @implements
-     * see {module:echarts/CoodinateSystem}
-     */
-    convertFromPixel: curry(doConvert$1, 'pointToData'),
-
-    /**
-     * @implements
-     * see {module:echarts/CoodinateSystem}
-     */
-    containPoint: function (point) {
-        return this.getViewRectAfterRoam().contain(point[0], point[1]);
-    }
-
-    /**
-     * @return {number}
-     */
-    // getScalarScale: function () {
-    //     // Use determinant square root of transform to mutiply scalar
-    //     var m = this.transform;
-    //     var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
-    //     return det;
-    // }
-};
-
-mixin(View, Transformable);
-
-function doConvert$1(methodName, ecModel, finder, value) {
-    var seriesModel = finder.seriesModel;
-    var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
-    return coordSys === this ? coordSys[methodName](value) : null;
-}
-
-// Fix for 南海诸岛
-
-var geoCoord = [126, 25];
-
-var points$1 = [
-    [[0,3.5],[7,11.2],[15,11.9],[30,7],[42,0.7],[52,0.7],
-        [56,7.7],[59,0.7],[64,0.7],[64,0],[5,0],[0,3.5]],
-    [[13,16.1],[19,14.7],[16,21.7],[11,23.1],[13,16.1]],
-    [[12,32.2],[14,38.5],[15,38.5],[13,32.2],[12,32.2]],
-    [[16,47.6],[12,53.2],[13,53.2],[18,47.6],[16,47.6]],
-    [[6,64.4],[8,70],[9,70],[8,64.4],[6,64.4]],
-    [[23,82.6],[29,79.8],[30,79.8],[25,82.6],[23,82.6]],
-    [[37,70.7],[43,62.3],[44,62.3],[39,70.7],[37,70.7]],
-    [[48,51.1],[51,45.5],[53,45.5],[50,51.1],[48,51.1]],
-    [[51,35],[51,28.7],[53,28.7],[53,35],[51,35]],
-    [[52,22.4],[55,17.5],[56,17.5],[53,22.4],[52,22.4]],
-    [[58,12.6],[62,7],[63,7],[60,12.6],[58,12.6]],
-    [[0,3.5],[0,93.1],[64,93.1],[64,0],[63,0],[63,92.4],
-        [1,92.4],[1,3.5],[0,3.5]]
-];
-
-for (var i$1 = 0; i$1 < points$1.length; i$1++) {
-    for (var k = 0; k < points$1[i$1].length; k++) {
-        points$1[i$1][k][0] /= 10.5;
-        points$1[i$1][k][1] /= -10.5 / 0.75;
-
-        points$1[i$1][k][0] += geoCoord[0];
-        points$1[i$1][k][1] += geoCoord[1];
-    }
-}
-
-var fixNanhai = function (geo) {
-    if (geo.map === 'china') {
-        geo.regions.push(new Region(
-            '南海诸岛',
-            map(points$1, function (exterior) {
-                return {
-                    type: 'polygon',
-                    exterior: exterior
-                };
-            }), geoCoord
-        ));
-    }
-};
-
-var coordsOffsetMap = {
-    '南海诸岛' : [32, 80],
-    // 全国
-    '广东': [0, -10],
-    '香港': [10, 5],
-    '澳门': [-10, 10],
-    //'北京': [-10, 0],
-    '天津': [5, 5]
-};
-
-var fixTextCoord = function (geo) {
-    each$1(geo.regions, function (region) {
-        var coordFix = coordsOffsetMap[region.name];
-        if (coordFix) {
-            var cp = region.center;
-            cp[0] += coordFix[0] / 10.5;
-            cp[1] += -coordFix[1] / (10.5 / 0.75);
-        }
-    });
-};
-
-var geoCoordMap = {
-    'Russia': [100, 60],
-    'United States': [-99, 38],
-    'United States of America': [-99, 38]
-};
-
-var fixGeoCoord = function (geo) {
-    each$1(geo.regions, function (region) {
-        var geoCoord = geoCoordMap[region.name];
-        if (geoCoord) {
-            var cp = region.center;
-            cp[0] = geoCoord[0];
-            cp[1] = geoCoord[1];
-        }
-    });
-};
-
-// Fix for 钓鱼岛
-
-// var Region = require('../Region');
-// var zrUtil = require('zrender/src/core/util');
-
-// var geoCoord = [126, 25];
-
-var points$2 = [
-    [
-        [123.45165252685547, 25.73527164402261],
-        [123.49731445312499, 25.73527164402261],
-        [123.49731445312499, 25.750734064600884],
-        [123.45165252685547, 25.750734064600884],
-        [123.45165252685547, 25.73527164402261]
-    ]
-];
-
-var fixDiaoyuIsland = function (geo) {
-    if (geo.map === 'china') {
-        for (var i = 0, len = geo.regions.length; i < len; ++i) {
-            if (geo.regions[i].name === '台湾') {
-                geo.regions[i].geometries.push({
-                    type: 'polygon',
-                    exterior: points$2[0]
-                });
-            }
-        }
-    }
-};
-
-// Geo fix functions
-var geoFixFuncs = [
-    fixNanhai,
-    fixTextCoord,
-    fixGeoCoord,
-    fixDiaoyuIsland
-];
-
-/**
- * [Geo description]
- * @param {string} name Geo name
- * @param {string} map Map type
- * @param {Object} geoJson
- * @param {Object} [specialAreas]
- *        Specify the positioned areas by left, top, width, height
- * @param {Object.<string, string>} [nameMap]
- *        Specify name alias
- */
-function Geo(name, map$$1, geoJson, specialAreas, nameMap) {
-
-    View.call(this, name);
-
-    /**
-     * Map type
-     * @type {string}
-     */
-    this.map = map$$1;
-
-    this._nameCoordMap = createHashMap();
-
-    this.loadGeoJson(geoJson, specialAreas, nameMap);
-}
-
-Geo.prototype = {
-
-    constructor: Geo,
-
-    type: 'geo',
-
-    /**
-     * @param {Array.<string>}
-     * @readOnly
-     */
-    dimensions: ['lng', 'lat'],
-
-    /**
-     * If contain given lng,lat coord
-     * @param {Array.<number>}
-     * @readOnly
-     */
-    containCoord: function (coord) {
-        var regions = this.regions;
-        for (var i = 0; i < regions.length; i++) {
-            if (regions[i].contain(coord)) {
-                return true;
-            }
-        }
-        return false;
-    },
-    /**
-     * @param {Object} geoJson
-     * @param {Object} [specialAreas]
-     *        Specify the positioned areas by left, top, width, height
-     * @param {Object.<string, string>} [nameMap]
-     *        Specify name alias
-     */
-    loadGeoJson: function (geoJson, specialAreas, nameMap) {
-        // https://jsperf.com/try-catch-performance-overhead
-        try {
-            this.regions = geoJson ? parseGeoJson$1(geoJson) : [];
-        }
-        catch (e) {
-            throw 'Invalid geoJson format\n' + e.message;
-        }
-        specialAreas = specialAreas || {};
-        nameMap = nameMap || {};
-        var regions = this.regions;
-        var regionsMap = createHashMap();
-        for (var i = 0; i < regions.length; i++) {
-            var regionName = regions[i].name;
-            // Try use the alias in nameMap
-            regionName = nameMap.hasOwnProperty(regionName) ? nameMap[regionName] : regionName;
-            regions[i].name = regionName;
-
-            regionsMap.set(regionName, regions[i]);
-            // Add geoJson
-            this.addGeoCoord(regionName, regions[i].center);
-
-            // Some area like Alaska in USA map needs to be tansformed
-            // to look better
-            var specialArea = specialAreas[regionName];
-            if (specialArea) {
-                regions[i].transformTo(
-                    specialArea.left, specialArea.top, specialArea.width, specialArea.height
-                );
-            }
-        }
-
-        this._regionsMap = regionsMap;
-
-        this._rect = null;
-
-        each$1(geoFixFuncs, function (fixFunc) {
-            fixFunc(this);
-        }, this);
-    },
-
-    // Overwrite
-    transformTo: function (x, y, width, height) {
-        var rect = this.getBoundingRect();
-
-        rect = rect.clone();
-        // Longitute is inverted
-        rect.y = -rect.y - rect.height;
-
-        var rawTransformable = this._rawTransformable;
-
-        rawTransformable.transform = rect.calculateTransform(
-            new BoundingRect(x, y, width, height)
-        );
-
-        rawTransformable.decomposeTransform();
-
-        var scale = rawTransformable.scale;
-        scale[1] = -scale[1];
-
-        rawTransformable.updateTransform();
-
-        this._updateTransform();
-    },
-
-    /**
-     * @param {string} name
-     * @return {module:echarts/coord/geo/Region}
-     */
-    getRegion: function (name) {
-        return this._regionsMap.get(name);
-    },
-
-    getRegionByCoord: function (coord) {
-        var regions = this.regions;
-        for (var i = 0; i < regions.length; i++) {
-            if (regions[i].contain(coord)) {
-                return regions[i];
-            }
-        }
-    },
-
-    /**
-     * Add geoCoord for indexing by name
-     * @param {string} name
-     * @param {Array.<number>} geoCoord
-     */
-    addGeoCoord: function (name, geoCoord) {
-        this._nameCoordMap.set(name, geoCoord);
-    },
-
-    /**
-     * Get geoCoord by name
-     * @param {string} name
-     * @return {Array.<number>}
-     */
-    getGeoCoord: function (name) {
-        return this._nameCoordMap.get(name);
-    },
-
-    // Overwrite
-    getBoundingRect: function () {
-        if (this._rect) {
-            return this._rect;
-        }
-        var rect;
-
-        var regions = this.regions;
-        for (var i = 0; i < regions.length; i++) {
-            var regionRect = regions[i].getBoundingRect();
-            rect = rect || regionRect.clone();
-            rect.union(regionRect);
-        }
-        // FIXME Always return new ?
-        return (this._rect = rect || new BoundingRect(0, 0, 0, 0));
-    },
-
-    /**
-     * @param {string|Array.<number>} data
-     * @param {boolean} noRoam
-     * @param {Array.<number>} [out]
-     * @return {Array.<number>}
-     */
-    dataToPoint: function (data, noRoam, out) {
-        if (typeof data === 'string') {
-            // Map area name to geoCoord
-            data = this.getGeoCoord(data);
-        }
-        if (data) {
-            return View.prototype.dataToPoint.call(this, data, noRoam, out);
-        }
-    },
-
-    /**
-     * @inheritDoc
-     */
-    convertToPixel: curry(doConvert, 'dataToPoint'),
-
-    /**
-     * @inheritDoc
-     */
-    convertFromPixel: curry(doConvert, 'pointToData')
-
-};
-
-mixin(Geo, View);
-
-function doConvert(methodName, ecModel, finder, value) {
-    var geoModel = finder.geoModel;
-    var seriesModel = finder.seriesModel;
-
-    var coordSys = geoModel
-        ? geoModel.coordinateSystem
-        : seriesModel
-        ? (
-            seriesModel.coordinateSystem // For map.
-            || (seriesModel.getReferringComponents('geo')[0] || {}).coordinateSystem
-        )
-        : null;
-
-    return coordSys === this ? coordSys[methodName](value) : null;
-}
-
-/**
- * Resize method bound to the geo
- * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
- * @param {module:echarts/ExtensionAPI} api
- */
-function resizeGeo(geoModel, api) {
-
-    var boundingCoords = geoModel.get('boundingCoords');
-    if (boundingCoords != null) {
-        var leftTop = boundingCoords[0];
-        var rightBottom = boundingCoords[1];
-        if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
-            if (__DEV__) {
-                console.error('Invalid boundingCoords');
-            }
-        }
-        else {
-            this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
-        }
-    }
-
-    var rect = this.getBoundingRect();
-
-    var boxLayoutOption;
-
-    var center = geoModel.get('layoutCenter');
-    var size = geoModel.get('layoutSize');
-
-    var viewWidth = api.getWidth();
-    var viewHeight = api.getHeight();
-
-    var aspectScale = geoModel.get('aspectScale') || 0.75;
-    var aspect = rect.width / rect.height * aspectScale;
-
-    var useCenterAndSize = false;
-
-    if (center && size) {
-        center = [
-            parsePercent$1(center[0], viewWidth),
-            parsePercent$1(center[1], viewHeight)
-        ];
-        size = parsePercent$1(size, Math.min(viewWidth, viewHeight));
-
-        if (!isNaN(center[0]) && !isNaN(center[1]) && !isNaN(size)) {
-            useCenterAndSize = true;
-        }
-        else {
-            if (__DEV__) {
-                console.warn('Given layoutCenter or layoutSize data are invalid. Use left/top/width/height instead.');
-            }
-        }
-    }
-
-    var viewRect;
-    if (useCenterAndSize) {
-        var viewRect = {};
-        if (aspect > 1) {
-            // Width is same with size
-            viewRect.width = size;
-            viewRect.height = size / aspect;
-        }
-        else {
-            viewRect.height = size;
-            viewRect.width = size * aspect;
-        }
-        viewRect.y = center[1] - viewRect.height / 2;
-        viewRect.x = center[0] - viewRect.width / 2;
-    }
-    else {
-        // Use left/top/width/height
-        boxLayoutOption = geoModel.getBoxLayoutParams();
-
-        // 0.75 rate
-        boxLayoutOption.aspect = aspect;
-
-        viewRect = getLayoutRect(boxLayoutOption, {
-            width: viewWidth,
-            height: viewHeight
-        });
-    }
-
-    this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
-
-    this.setCenter(geoModel.get('center'));
-    this.setZoom(geoModel.get('zoom'));
-}
-
-/**
- * @param {module:echarts/coord/Geo} geo
- * @param {module:echarts/model/Model} model
- * @inner
- */
-function setGeoCoords(geo, model) {
-    each$1(model.get('geoCoord'), function (geoCoord, name) {
-        geo.addGeoCoord(name, geoCoord);
-    });
-}
-
-if (__DEV__) {
-    var mapNotExistsError = function (name) {
-        console.error('Map ' + name + ' not exists. You can download map file on http://echarts.baidu.com/download-map.html');
-    };
-}
-
-var geoCreator = {
-
-    // For deciding which dimensions to use when creating list data
-    dimensions: Geo.prototype.dimensions,
-
-    create: function (ecModel, api) {
-        var geoList = [];
-
-        // FIXME Create each time may be slow
-        ecModel.eachComponent('geo', function (geoModel, idx) {
-            var name = geoModel.get('map');
-            var mapData = getMap(name);
-            if (__DEV__) {
-                if (!mapData) {
-                    mapNotExistsError(name);
-                }
-            }
-            var geo = new Geo(
-                name + idx, name,
-                mapData && mapData.geoJson, mapData && mapData.specialAreas,
-                geoModel.get('nameMap')
-            );
-            geo.zoomLimit = geoModel.get('scaleLimit');
-            geoList.push(geo);
-
-            setGeoCoords(geo, geoModel);
-
-            geoModel.coordinateSystem = geo;
-            geo.model = geoModel;
-
-            // Inject resize method
-            geo.resize = resizeGeo;
-
-            geo.resize(geoModel, api);
-        });
-
-        ecModel.eachSeries(function (seriesModel) {
-            var coordSys = seriesModel.get('coordinateSystem');
-            if (coordSys === 'geo') {
-                var geoIndex = seriesModel.get('geoIndex') || 0;
-                seriesModel.coordinateSystem = geoList[geoIndex];
-            }
-        });
-
-        // If has map series
-        var mapModelGroupBySeries = {};
-
-        ecModel.eachSeriesByType('map', function (seriesModel) {
-            if (!seriesModel.getHostGeoModel()) {
-                var mapType = seriesModel.getMapType();
-                mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
-                mapModelGroupBySeries[mapType].push(seriesModel);
-            }
-        });
-
-        each$1(mapModelGroupBySeries, function (mapSeries, mapType) {
-            var mapData = getMap(mapType);
-            if (__DEV__) {
-                if (!mapData) {
-                    mapNotExistsError(mapSeries[0].get('map'));
-                }
-            }
-
-            var nameMapList = map(mapSeries, function (singleMapSeries) {
-                return singleMapSeries.get('nameMap');
-            });
-            var geo = new Geo(
-                mapType, mapType,
-                mapData && mapData.geoJson, mapData && mapData.specialAreas,
-                mergeAll(nameMapList)
-            );
-            geo.zoomLimit = retrieve.apply(null, map(mapSeries, function (singleMapSeries) {
-                return singleMapSeries.get('scaleLimit');
-            }));
-            geoList.push(geo);
-
-            // Inject resize method
-            geo.resize = resizeGeo;
-
-            geo.resize(mapSeries[0], api);
-
-            each$1(mapSeries, function (singleMapSeries) {
-                singleMapSeries.coordinateSystem = geo;
-
-                setGeoCoords(geo, singleMapSeries);
-            });
-        });
-
-        return geoList;
-    },
-
-    /**
-     * Fill given regions array
-     * @param  {Array.<Object>} originRegionArr
-     * @param  {string} mapName
-     * @param  {Object} [nameMap]
-     * @return {Array}
-     */
-    getFilledRegions: function (originRegionArr, mapName, nameMap) {
-        // Not use the original
-        var regionsArr = (originRegionArr || []).slice();
-        nameMap = nameMap || {};
-
-        var map$$1 = getMap(mapName);
-        var geoJson = map$$1 && map$$1.geoJson;
-        if (!geoJson) {
-            if (__DEV__) {
-                mapNotExistsError(mapName);
-            }
-            return originRegionArr;
-        }
-
-        var dataNameMap = createHashMap();
-        var features = geoJson.features;
-        for (var i = 0; i < regionsArr.length; i++) {
-            dataNameMap.set(regionsArr[i].name, regionsArr[i]);
-        }
-
-        for (var i = 0; i < features.length; i++) {
-            var name = features[i].properties.name;
-            if (!dataNameMap.get(name)) {
-                if (nameMap.hasOwnProperty(name)) {
-                    name = nameMap[name];
-                }
-                regionsArr.push({
-                    name: name
-                });
-            }
-        }
-        return regionsArr;
-    }
-};
-
-registerCoordinateSystem('geo', geoCreator);
 
 var mapSymbolLayout = function (ecModel) {
 
@@ -40627,12 +41081,6 @@ var mapVisual = function (ecModel) {
     });
 };
 
-// FIXME 公用？
-/**
- * @param {Array.<module:echarts/data/List>} datas
- * @param {string} statisticType 'average' 'sum'
- * @inner
- */
 function dataStatistics(datas, statisticType) {
     var dataNameMap = {};
 
@@ -40873,11 +41321,6 @@ function linkSingle(data, dataType, mainData, opt) {
  * @module echarts/data/Tree
  */
 
-/**
- * @constructor module:echarts/data/Tree~TreeNode
- * @param {string} name
- * @param {module:echarts/data/Tree} hostTree
- */
 var TreeNode = function (name, hostTree) {
     /**
      * @type {string}
@@ -41516,10 +41959,6 @@ SeriesModel.extend({
  * @see https://github.com/d3/d3-hierarchy
  */
 
-/**
- * Initialize all computational message for following algorithm
- * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
- */
 function init$2(root) {
     root.hierNode = {
         defaultAncestor: null,
@@ -42820,21 +43259,6 @@ function packEventData(el, seriesModel, itemNode) {
     };
 }
 
-/**
- * @param {number} [time=500] Time in ms
- * @param {string} [easing='linear']
- * @param {number} [delay=0]
- * @param {Function} [callback]
- *
- * @example
- *  // Animate position
- *  animation
- *      .createWrap()
- *      .add(el1, {position: [10, 10]})
- *      .add(el2, {shape: {width: 500}, style: {fill: 'red'}}, 400)
- *      .done(function () { // done })
- *      .start('cubicOut');
- */
 function createWrap() {
 
     var storage = [];
@@ -45254,7 +45678,6 @@ registerLayout(treemapLayout);
  * @author Yi Shen(https://www.github.com/pissang)
  */
 
-// id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey (id) {
     return '_EC_' + id;
 }
@@ -46503,12 +46926,6 @@ inherits(Line$1, Group);
  * @module echarts/chart/helper/LineDraw
  */
 
-// import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
-
-/**
- * @alias module:echarts/component/marker/LineDraw
- * @constructor
- */
 function LineDraw(ctor) {
     this._ctor = ctor || Line$1;
 
@@ -48473,11 +48890,6 @@ var FunnelSeries = extendSeriesModel({
     }
 });
 
-/**
- * Piece of pie including Sector, Label, LabelLine
- * @constructor
- * @extends {module:zrender/graphic/Group}
- */
 function FunnelPiece(data, idx) {
 
     Group.call(this);
@@ -48911,14 +49323,6 @@ function mergeAxisOptionFromParallel(option) {
     });
 }
 
-/**
- * @constructor module:echarts/coord/parallel/ParallelAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- */
 var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -49820,11 +50224,6 @@ ComponentModel.extend({
 
 });
 
-/**
- * @payload
- * @property {string} parallelAxisId
- * @property {Array.<Array.<number>>} intervals
- */
 var actionInfo$1 = {
     type: 'axisAreaSelect',
     event: 'axisAreaSelected'
@@ -51824,10 +52223,6 @@ function createGridClipShape$2(rect, seriesModel, cb) {
     return rectEl;
 }
 
-/**
- * nest helper used to group by the array.
- * can specified the keys and sort the keys.
- */
 function nest() {
 
     var keysFunction = [];
@@ -52488,6 +52883,12 @@ whiskerBoxDrawProto.updateData = function (data) {
     var oldData = this._data;
     var styleUpdater = this.styleUpdater;
 
+    // There is no old data only when first rendering or switching from
+    // stream mode to normal mode, where previous elements should be removed.
+    if (!this._data) {
+        group.removeAll();
+    }
+
     data.diff(oldData)
         .add(function (newIdx) {
             if (data.hasValue(newIdx)) {
@@ -52524,6 +52925,20 @@ whiskerBoxDrawProto.updateData = function (data) {
         .execute();
 
     this._data = data;
+};
+
+whiskerBoxDrawProto.incrementalPrepareUpdate = function (seriesModel, ecModel, api) {
+    this.group.removeAll();
+    this._data = null;
+};
+
+whiskerBoxDrawProto.incrementalUpdate = function (params, seriesModel, ecModel, api) {
+    var data = seriesModel.getData();
+    for (var idx = params.start; idx < params.end; idx++) {
+        var symbolEl = new WhiskerBox(data, idx, this.styleUpdater, true);
+        symbolEl.incremental = true;
+        this.group.add(symbolEl);
+    }
 };
 
 /**
@@ -52662,6 +53077,14 @@ var viewMixin = {
 
     render: function (seriesModel, ecModel, api) {
         this._whiskerBoxDraw.updateData(seriesModel.getData());
+    },
+
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this._whiskerBoxDraw.incrementalPrepareUpdate(seriesModel, ecModel, api);
+    },
+
+    incrementalRender: function (params, seriesModel, ecModel, api) {
+        this._whiskerBoxDraw.incrementalUpdate(params, seriesModel, ecModel, api);
     },
 
     remove: function (ecModel) {
@@ -53308,7 +53731,7 @@ var candlestickLayout = function (ecModel) {
                 return point;
             }
 
-        }, true);
+        });
     });
 };
 
@@ -53946,9 +54369,6 @@ var LinesSeries = SeriesModel.extend({
         // Available when large is true
         largeThreshold: 2000,
 
-        incremental: false,
-        incrementalThreshold: 3000,
-
         // If lines are polyline
         // polyline not support curveness, label, animation
         polyline: false,
@@ -53971,11 +54391,6 @@ var LinesSeries = SeriesModel.extend({
  * @module echarts/chart/helper/EffectLine
  */
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Line}
- */
 function EffectLine(lineData, idx, seriesScope) {
     Group.call(this);
 
@@ -54147,11 +54562,6 @@ inherits(EffectLine, Group);
  * @module echarts/chart/helper/Line
  */
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Polyline}
- */
 function Polyline$2(lineData, idx, seriesScope) {
     Group.call(this);
 
@@ -54227,11 +54637,6 @@ inherits(Polyline$2, Group);
  * @module echarts/chart/helper/EffectLine
  */
 
-/**
- * @constructor
- * @extends {module:echarts/chart/helper/EffectLine}
- * @alias {module:echarts/chart/helper/Polyline}
- */
 function EffectPolyline(lineData, idx, seriesScope) {
     EffectLine.call(this, lineData, idx, seriesScope);
     this._lastFrame = 0;
@@ -54823,7 +55228,9 @@ SeriesModel.extend({
     type: 'series.heatmap',
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(this.getSource(), this);
+        return createListFromArray(this.getSource(), this, {
+            generateCoord: 'value'
+        });
     },
 
     preventIncremental: function () {
@@ -56116,21 +56523,11 @@ function toIntTimes(times) {
         : Math.ceil(times);
 }
 
-// In case developer forget to include grid component
 registerLayout(curry(
     layout, 'pictorialBar'
 ));
 registerVisual(visualSymbol('pictorialBar', 'roundRect'));
 
-/**
- * @constructor  module:echarts/coord/single/SingleAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var SingleAxis = function (dim, scale, coordExtent, axisType, position) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -56220,13 +56617,6 @@ inherits(SingleAxis, Axis);
  * Single coordinates system.
  */
 
-/**
- * Create a single coordinates system.
- *
- * @param {module:echarts/coord/single/AxisModel} axisModel
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function Single(axisModel, ecModel, api) {
 
     /**
@@ -56486,13 +56876,6 @@ Single.prototype = {
  * Single coordinate system creator.
  */
 
-/**
- * Create single coordinate system and inject it into seriesModel.
- *
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- * @return {Array.<module:echarts/coord/single/Single>}
- */
 function create$3(ecModel, api) {
     var singles = [];
 
@@ -56525,13 +56908,6 @@ CoordinateSystemManager.register('single', {
     dimensions: Single.prototype.dimensions
 });
 
-/**
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, labelInterval, z2
- * }
- */
 function layout$2 (axisModel, opt) {
     opt = opt || {};
     var single = axisModel.coordinateSystem;
@@ -56784,11 +57160,6 @@ merge(AxisModel$4.prototype, axisModelCommonMixin);
 
 axisModelCreator('single', AxisModel$4, getAxisType$2, defaultOption$2);
 
-/**
- * @param {Object} finder contains {seriesIndex, dataIndex, dataIndexInside}
- * @param {module:echarts/model/Global} ecModel
- * @return {Object} {point: [x, y], el: ...} point Will not be null.
- */
 var findPointFromSeries = function (finder, ecModel) {
     var point = [];
     var seriesIndex = finder.seriesIndex;
@@ -57017,7 +57388,8 @@ function buildPayloadsBySeries(value, axisInfo) {
                 value,
                 // Add a threshold to avoid find the wrong dataIndex
                 // when data length is not same.
-                false, axis.type === 'category' ? 0.5 : null
+                // false,
+                axis.type === 'category' ? 0.5 : null
             );
             if (!dataIndices.length) {
                 return;
@@ -57986,9 +58358,6 @@ function updateMandatoryProps(group, axisPointerModel, silent) {
 
 enableClassExtend(BaseAxisPointer);
 
-/**
- * @param {module:echarts/model/Model} axisPointerModel
- */
 function buildElStyle(axisPointerModel) {
     var axisPointerType = axisPointerModel.get('type');
     var styleModel = axisPointerModel.getModel(axisPointerType + 'Style');
@@ -58310,9 +58679,6 @@ function getAxisDimIndex(axis) {
 
 AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 
-// CartesianAxisPointer is not supposed to be required here. But consider
-// echarts.simple.js and online build tooltip, which only require gridSimple,
-// CartesianAxisPointer should be able to required somewhere.
 registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.
     if (option) {
@@ -59376,6 +59742,16 @@ SunburstPieceProto.updateData = function (
         );
         sector.useStyle(style);
     }
+    else if (typeof style.fill === 'object' && style.fill.type
+        || typeof sector.style.fill === 'object' && sector.style.fill.type
+    ) {
+        // Disable animation for gradient since no interpolation method
+        // is supported for gradient
+        updateProps(sector, {
+            shape: sectorShape
+        }, seriesModel);
+        sector.useStyle(style);
+    }
     else {
         updateProps(sector, {
             shape: sectorShape,
@@ -59383,13 +59759,7 @@ SunburstPieceProto.updateData = function (
         }, seriesModel);
     }
 
-    if (state === 'normal') {
-        sector.hoverStyle = itemModel.getModel('emphasis.itemStyle')
-            .getItemStyle();
-        setHoverStyle(this);
-    }
-
-    this._updateLabel(seriesModel, ecModel, visualColor);
+    this._updateLabel(seriesModel, visualColor, state);
 
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && sector.attr('cursor', cursorStyle);
@@ -59436,10 +59806,13 @@ SunburstPieceProto.onDownplay = function () {
     this.updateData(false, this.node, 'downplay');
 };
 
-SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
+SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
     var itemModel = this.node.getModel();
-    var labelModel = itemModel.getModel('label');
-    var labelHoverModel = itemModel.getModel('label.emphasis');
+    var normalModel = itemModel.getModel('label');
+    var labelModel = state === 'normal' || state === 'emphasis'
+        ? normalModel
+        : itemModel.getModel(state + '.label');
+    var labelHoverModel = itemModel.getModel('emphasis.label');
 
     var text = retrieve(
         seriesModel.getFormattedLabel(
@@ -59447,14 +59820,26 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         ),
         this.node.name
     );
-    if (!labelModel.get('show')) {
+    if (getLabelAttr('show') === false) {
+        text = '';
+    }
+
+    var layout = this.node.getLayout();
+    var labelMinAngle = labelModel.get('minAngle');
+    if (labelMinAngle == null) {
+        labelMinAngle = normalModel.get('minAngle');
+    }
+    labelMinAngle = labelMinAngle / 180 * Math.PI;
+    var angle = layout.endAngle - layout.startAngle;
+    if (labelMinAngle != null && Math.abs(angle) < labelMinAngle) {
+        // Not displaying text when angle is too small
         text = '';
     }
 
     var label = this.childAt(1);
 
     setLabelStyle(
-        label.style, label.hoverStyle = {}, labelModel, labelHoverModel,
+        label.style, label.hoverStyle || {}, normalModel, labelHoverModel,
         {
             defaultText: labelModel.getShallow('show') ? text : null,
             autoColor: visualColor,
@@ -59462,15 +59847,14 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         }
     );
 
-    var layout = this.node.getLayout();
     var midAngle = (layout.startAngle + layout.endAngle) / 2;
     var dx = Math.cos(midAngle);
     var dy = Math.sin(midAngle);
 
     var r;
-    var labelPosition = labelModel.get('position');
-    var labelPadding = labelModel.get('distance') || 0;
-    var textAlign = labelModel.get('align');
+    var labelPosition = getLabelAttr('position');
+    var labelPadding = getLabelAttr('distance') || 0;
+    var textAlign = getLabelAttr('align');
     if (labelPosition === 'outside') {
         r = layout.r + labelPadding;
         textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
@@ -59497,15 +59881,15 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
     label.attr('style', {
         text: text,
         textAlign: textAlign,
-        textVerticalAlign: labelModel.get('verticalAlign') || 'middle',
-        opacity: labelModel.get('opacity')
+        textVerticalAlign: getLabelAttr('verticalAlign') || 'middle',
+        opacity: getLabelAttr('opacity')
     });
 
     var textX = r * dx + layout.cx;
     var textY = r * dy + layout.cy;
     label.attr('position', [textX, textY]);
 
-    var rotateType = labelModel.getShallow('rotate');
+    var rotateType = getLabelAttr('rotate');
     var rotate = 0;
     if (rotateType === 'radial') {
         rotate = -midAngle;
@@ -59525,6 +59909,16 @@ SunburstPieceProto._updateLabel = function (seriesModel, ecModel, visualColor) {
         rotate = rotateType * Math.PI / 180;
     }
     label.attr('rotation', rotate);
+
+    function getLabelAttr(name) {
+        var stateAttr = labelModel.get(name);
+        if (stateAttr == null) {
+            return normalModel.get(name);
+        }
+        else {
+            return stateAttr;
+        }
+    }
 };
 
 SunburstPieceProto._initEvents = function (
@@ -59562,18 +59956,11 @@ SunburstPieceProto._initEvents = function (
 
 inherits(SunburstPiece, Group);
 
-/**
- * Get node color
- *
- * @param {TreeNode} node the node to get color
- * @param {module:echarts/model/Series} seriesModel series
- * @param {module:echarts/model/Global} ecModel echarts defaults
- */
 function getNodeColor(node, seriesModel, ecModel) {
     // Color from visualMap
     var visualColor = node.getVisual('color');
     var visualMetaList = node.getVisual('visualMeta');
-    if (visualMetaList.length === 0) {
+    if (!visualMetaList || visualMetaList.length === 0) {
         // Use first-generation color if has no visualMap
         visualColor = null;
     }
@@ -59646,7 +60033,8 @@ var SunburstView = Chart.extend({
         this.api = api;
         this.ecModel = ecModel;
 
-        var virtualRoot = seriesModel.getData().tree.root;
+        var data = seriesModel.getData();
+        var virtualRoot = data.tree.root;
 
         var newRoot = seriesModel.getViewRoot();
 
@@ -59717,6 +60105,9 @@ var SunburstView = Chart.extend({
                         // Update
                         oldNode.piece.updateData(
                             false, newNode, 'normal', seriesModel, ecModel);
+
+                        // For tooltip
+                        data.setItemGraphicEl(newNode.dataIndex, oldNode.piece);
                     }
                     else {
                         // Remove
@@ -59731,6 +60122,9 @@ var SunburstView = Chart.extend({
                         ecModel
                     );
                     group.add(piece);
+
+                    // For tooltip
+                    data.setItemGraphicEl(newNode.dataIndex, piece);
                 }
             }
         }
@@ -59791,27 +60185,23 @@ var SunburstView = Chart.extend({
         var that = this;
 
         var event = function (e) {
-            var nodeClick = that.seriesModel.get('nodeClick', true);
-            if (!nodeClick) {
-                return;
-            }
-
             var targetFound = false;
             var viewRoot = that.seriesModel.getViewRoot();
             viewRoot.eachNode(function (node) {
                 if (!targetFound
                     && node.piece && node.piece.childAt(0) === e.target
                 ) {
+                    var nodeClick = node.getModel().get('nodeClick');
                     if (nodeClick === 'rootToNode') {
                         that._rootToNode(node);
                     }
                     else if (nodeClick === 'link') {
                         var itemModel = node.getModel();
-                        var link = itemModel.get('link', true);
+                        var link = itemModel.get('link');
                         if (link) {
                             var linkTarget = itemModel.get('target', true)
                                 || '_blank';
-                            link && window.open(link, linkTarget);
+                            window.open(link, linkTarget);
                         }
                     }
                     targetFound = true;
@@ -60171,9 +60561,11 @@ var prepareGeo = function (coordSys) {
             height: rect.height
         },
         api: {
-            coord: function (data, noRoam) {
-                // do not provide "out" param
-                return coordSys.dataToPoint(data, noRoam);
+            coord: function (data) {
+                // do not provide "out" and noRoam param,
+                // Compatible with this usage:
+                // echarts.util.map(item.points, api.coord)
+                return coordSys.dataToPoint(data);
             },
             size: bind(dataToCoordSize$1, coordSys)
         }
@@ -60282,7 +60674,7 @@ var prepareCalendar = function (coordSys) {
         api: {
             coord: function (data, clamp) {
                 return coordSys.dataToPoint(data, clamp);
-            },
+            }
         }
     };
 };
@@ -60376,17 +60768,15 @@ extendChartView({
 
         data.diff(oldData)
             .add(function (newIdx) {
-                data.hasValue(newIdx) && createOrUpdate$1(
+                createOrUpdate$1(
                     null, newIdx, renderItem(newIdx), customSeries, group, data
                 );
             })
             .update(function (newIdx, oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
-                data.hasValue(newIdx)
-                    ? createOrUpdate$1(
-                        el, newIdx, renderItem(newIdx), customSeries, group, data
-                    )
-                    : (el && group.remove(el));
+                createOrUpdate$1(
+                    el, newIdx, renderItem(newIdx), customSeries, group, data
+                );
             })
             .remove(function (oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
@@ -60849,10 +61239,6 @@ function processRemove(oldIndex) {
     var child = context.oldChildren[oldIndex];
     child && context.group.remove(child);
 }
-
-// -------------
-// Preprocessor
-// -------------
 
 registerPreprocessor(function (option) {
     var graphicOption = option.graphic;
@@ -61414,7 +61800,7 @@ var LegendModel = extendComponentModel({
         ecModel.eachRawSeries(function (seriesModel) {
             var seriesName = seriesModel.name;
             availableNames.push(seriesName);
-            var potentialSeriesName;
+            var isPotential;
 
             if (seriesModel.legendDataProvider) {
                 var data = seriesModel.legendDataProvider();
@@ -61428,15 +61814,15 @@ var LegendModel = extendComponentModel({
                     potentialData = potentialData.concat(names);
                 }
                 else {
-                    potentialSeriesName = seriesName;
+                    isPotential = true;
                 }
             }
             else {
-                potentialSeriesName = seriesName;
+                isPotential = true;
             }
 
-            if (potentialSeriesName && potentialSeriesName !== DEFAULT_COMPONENT_NAME) {
-                potentialData.push(potentialSeriesName);
+            if (isPotential && isNameSpecified(seriesModel)) {
+                potentialData.push(seriesModel.name);
             }
         });
 
@@ -61654,13 +62040,6 @@ registerAction(
     curry(legendSelectActionHandler, 'unSelect')
 );
 
-/**
- * Layout list like component.
- * It will box layout each items in group of component and then position the whole group in the viewport
- * @param {module:zrender/group/Group} group
- * @param {module:echarts/model/Component} componentModel
- * @param {module:echarts/ExtensionAPI}
- */
 function layout$3(group, componentModel, api) {
     var boxLayoutParams = componentModel.getBoxLayoutParams();
     var padding = componentModel.get('padding');
@@ -62079,7 +62458,6 @@ var legendFilter = function (ecModel) {
 
 // Do not contain scrollable legend, for sake of file size.
 
-// Series Filter
 registerProcessor(legendFilter);
 
 ComponentModel.registerSubTypeDefaulter('legend', function () {
@@ -62530,12 +62908,6 @@ var ScrollableLegendView = LegendView.extend({
 
 });
 
-/**
- * @event legendScroll
- * @type {Object}
- * @property {string} type 'legendScroll'
- * @property {string} scrollDataIndex
- */
 registerAction(
     'legendScroll', 'legendscroll',
     function (payload, ecModel) {
@@ -63688,14 +64060,6 @@ function isCenterAlign(align) {
 
 // FIXME Better way to pack data in graphic element
 
-/**
- * @action
- * @property {string} type
- * @property {number} seriesIndex
- * @property {number} dataIndex
- * @property {number} [x]
- * @property {number} [y]
- */
 registerAction(
     {
         type: 'showTip',
@@ -63736,7 +64100,6 @@ function barLayoutPolar(seriesType, ecModel, api) {
     var height = api.getHeight();
 
     var lastStackCoords = {};
-    var lastStackCoordsOrigin = {};
 
     var barWidthAndOffset = calRadialBar(
         filter(
@@ -63757,7 +64120,6 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
         var data = seriesModel.getData();
         var polar = seriesModel.coordinateSystem;
-        var angleAxis = polar.getAngleAxis();
         var baseAxis = polar.getBaseAxis();
 
         var stackId = getSeriesStackId$1(seriesModel);
@@ -63774,91 +64136,86 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
         var barMinAngle = seriesModel.get('barMinAngle') || 0;
 
-        var valueAxisStart = valueAxis.getExtent()[0];
-        var valueMax = valueAxis.model.get('max');
-        var valueMin = valueAxis.model.get('min');
-
-        var coordDims = [
-            data.mapDimension('radius'),
-            data.mapDimension('angle')
-        ];
-        var coords = data.mapArray(coordDims, function (radius, angle) {
-            return polar.dataToPoint([radius, angle]);
-        }, true);
-
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-        lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
-        data.each(data.mapDimension(valueAxis.dim), function (value, idx) {
+        var valueDim = data.mapDimension(valueAxis.dim);
+        var baseDim = data.mapDimension(baseAxis.dim);
+        var stacked = isDimensionStacked(data, valueDim, baseDim);
+
+        var valueAxisStart = valueAxis.getExtent()[0];
+
+        for (var idx = 0, len = data.count(); idx < len; idx++) {
+            var value = data.get(valueDim, idx);
+            var baseValue = data.get(baseDim, idx);
+
             if (isNaN(value)) {
-                return;
+                continue;
             }
 
-            if (!lastStackCoords[stackId][idx]) {
-                lastStackCoords[stackId][idx] = {
-                    p: valueAxisStart, // Positive stack
-                    n: valueAxisStart  // Negative stack
-                };
-                lastStackCoordsOrigin[stackId][idx] = {
-                    p: valueAxisStart, // Positive stack
-                    n: valueAxisStart  // Negative stack
-                };
-            }
             var sign = value >= 0 ? 'p' : 'n';
-            var coord = polar.pointToCoord(coords[idx]);
+            var baseCoord = valueAxisStart;
 
-            var lastCoordOrigin = lastStackCoordsOrigin[stackId][idx][sign];
+            // Because of the barMinHeight, we can not use the value in
+            // stackResultDimension directly.
+            // Only ordinal axis can be stacked.
+            if (stacked) {
+                if (!lastStackCoords[stackId][baseValue]) {
+                    lastStackCoords[stackId][baseValue] = {
+                        p: valueAxisStart, // Positive stack
+                        n: valueAxisStart  // Negative stack
+                    };
+                }
+                // Should also consider #4243
+                baseCoord = lastStackCoords[stackId][baseValue][sign];
+            }
+
             var r0;
             var r;
             var startAngle;
             var endAngle;
 
+            // radial sector
             if (valueAxis.dim === 'radius') {
-                // radial sector
-                r0 = lastCoordOrigin;
-                r = coord[0];
-                startAngle = (-coord[1] + columnOffset) * Math.PI / 180;
-                endAngle = startAngle + columnWidth * Math.PI / 180;
+                var radiusSpan = valueAxis.dataToRadius(value) - valueAxisStart;
+                var angle = baseAxis.dataToAngle(baseValue);
 
-                if (Math.abs(r) < barMinHeight) {
-                    r = r0 + (r < 0 ? -1 : 1) * barMinHeight;
+                if (Math.abs(radiusSpan) < barMinHeight) {
+                    radiusSpan = (radiusSpan < 0 ? -1 : 1) * barMinHeight;
                 }
 
-                lastStackCoordsOrigin[stackId][idx][sign] = r;
+                r0 = baseCoord;
+                r = baseCoord + radiusSpan;
+                startAngle = angle - columnOffset;
+                endAngle = startAngle - columnWidth;
+
+                stacked && (lastStackCoords[stackId][baseValue][sign] = r);
             }
+            // tangential sector
             else {
-                // tangential sector
-                r0 = coord[0] + columnOffset;
+                // angleAxis must be clamped.
+                var angleSpan = valueAxis.dataToAngle(value, true) - valueAxisStart;
+                var radius = baseAxis.dataToRadius(baseValue);
+
+                if (Math.abs(angleSpan) < barMinAngle) {
+                    angleSpan = (angleSpan < 0 ? -1 : 1) * barMinAngle;
+                }
+
+                r0 = radius + columnOffset;
                 r = r0 + columnWidth;
-
-                // clamp data if min or max is defined for valueAxis
-                if (valueMax != null) {
-                    value = Math.min(value, valueMax);
-                }
-                if (valueMin != null) {
-                    value = Math.max(value, valueMin);
-                }
-
-                var angle = angleAxis.dataToAngle(value);
-                if (Math.abs(angle - lastCoordOrigin) < barMinAngle) {
-                    angle = lastCoordOrigin - (value < 0 ? -1 : 1)
-                        * barMinAngle;
-                }
-
-                startAngle = -lastCoordOrigin * Math.PI / 180;
-                endAngle = -angle * Math.PI / 180;
+                startAngle = baseCoord;
+                endAngle = baseCoord + angleSpan;
 
                 // if the previous stack is at the end of the ring,
                 // add a round to differentiate it from origin
-                var extent = angleAxis.getExtent();
-                var stackCoord = angle;
-                if (stackCoord === extent[0] && value > 0) {
-                    stackCoord = extent[1];
-                }
-                else if (stackCoord === extent[1] && value < 0) {
-                    stackCoord = extent[0];
-                }
-                lastStackCoordsOrigin[stackId][idx][sign] = stackCoord;
+                // var extent = angleAxis.getExtent();
+                // var stackCoord = angle;
+                // if (stackCoord === extent[0] && value > 0) {
+                //     stackCoord = extent[1];
+                // }
+                // else if (stackCoord === extent[1] && value < 0) {
+                //     stackCoord = extent[0];
+                // }
+                stacked && (lastStackCoords[stackId][baseValue][sign] = endAngle);
             }
 
             data.setItemLayout(idx, {
@@ -63866,11 +64223,13 @@ function barLayoutPolar(seriesType, ecModel, api) {
                 cy: cy,
                 r0: r0,
                 r: r,
-                startAngle: startAngle,
-                endAngle: endAngle
+                // Consider that positive angle is anti-clockwise,
+                // while positive radian of sector is clockwise
+                startAngle: -startAngle * Math.PI / 180,
+                endAngle: -endAngle * Math.PI / 180
             });
 
-        }, true);
+        }
 
     }, this);
 
@@ -64073,11 +64432,6 @@ inherits(AngleAxis, Axis);
  * @module echarts/coord/polar/Polar
  */
 
-/**
- * @alias {module:echarts/coord/polar/Polar}
- * @constructor
- * @param {string} name
- */
 var Polar = function (name) {
 
     /**
@@ -64403,12 +64757,6 @@ extendComponentModel({
 
 // TODO Axis scale
 
-// 依赖 PolarModel 做预处理
-/**
- * Resize method bound to the polar
- * @param {module:echarts/coord/polar/PolarModel} polarModel
- * @param {module:echarts/ExtensionAPI} api
- */
 function resizePolar(polar, polarModel, api) {
     var center = polarModel.get('center');
     var width = api.getWidth();
@@ -65036,7 +65384,6 @@ var pointerShapeBuilder$2 = {
 
 AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
-// For reducing size of echarts.min, barLayoutPolar is required by polar.
 registerLayout(curry(barLayoutPolar, 'bar'));
 
 // Polar view
@@ -65434,10 +65781,10 @@ function applyVisual(stateList, visualMappings, data, getValueState, scope, dime
     }
 
     if (dimension == null) {
-        data.each(eachItem, true);
+        data.each(eachItem);
     }
     else {
-        data.each([dimension], eachItem, true);
+        data.each([dimension], eachItem);
     }
 
     function eachItem(valueOrIndex, index) {
@@ -65515,15 +65862,6 @@ function incrementalApplyVisual(stateList, visualMappings, getValueState, dim) {
     return {progress: progress};
 }
 
-// Key of the first level is brushType: `line`, `rect`, `polygon`.
-// Key of the second level is chart element type: `point`, `rect`.
-// See moudule:echarts/component/helper/BrushController
-// function param:
-//      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
-//      {Object} selectors {point: selector, rect: selector, ...}
-//      {Object} area {range: [[], [], ..], boudingRect}
-// function return:
-//      {boolean} Whether in the given brush.
 var selector = {
     lineX: getLineSelectors(0),
     lineY: getLineSelectors(1),
@@ -66563,6 +66901,11 @@ extendComponentView({
     /**
      * @override
      */
+    updateTransform: updateController,
+
+    /**
+     * @override
+     */
     updateView: updateController,
 
     // /**
@@ -66612,14 +66955,6 @@ function updateController(brushModel, ecModel, api, payload) {
         .updateCovers(brushModel.areas.slice());
 }
 
-/**
- * payload: {
- *      brushIndex: number, or,
- *      brushId: string, or,
- *      brushName: string,
- *      globalRanges: Array
- * }
- */
 registerAction(
         {type: 'brush', event: 'brush' /*, update: 'updateView' */},
     function (payload, ecModel) {
@@ -66785,7 +67120,6 @@ register$1('brush', Brush);
 
 registerPreprocessor(preprocessor$1);
 
-// (24*60*60*1000)
 var PROXIMATE_ONE_DAY = 86400000;
 
 /**
@@ -66811,7 +67145,7 @@ Calendar.prototype = {
 
     // Required in createListFromData
     getDimensionsInfo: function () {
-        return [{name: 'time', type: 'time'}];
+        return [{name: 'time', type: 'time'}, 'value'];
     },
 
     getRangeInfo: function () {
@@ -67845,7 +68179,6 @@ extendComponentView({
  * @author dxh
  */
 
-// Model
 extendComponentModel({
 
     type: 'title',
@@ -68238,11 +68571,11 @@ var AxisProxy = function (dimName, axisIndex, dataZoomModel, ecModel) {
      */
     this._dataZoomModel = dataZoomModel;
 
-    /**
-     * @readOnly
-     * @private
-     */
-    this.hasSeriesStacked;
+    // /**
+    //  * @readOnly
+    //  * @private
+    //  */
+    // this.hasSeriesStacked;
 };
 
 AxisProxy.prototype = {
@@ -68422,14 +68755,15 @@ AxisProxy.prototype = {
         // Culculate data window and data extent, and record them.
         this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
 
-        this.hasSeriesStacked = false;
-        each$23(targetSeries, function (series) {
-            var data = series.getData();
-            var dataDim = data.mapDimension(this._dimName);
-            if (data.isStacked(dataDim)) {
-                this.hasSeriesStacked = true;
-            }
-        }, this);
+        // this.hasSeriesStacked = false;
+        // each(targetSeries, function (series) {
+            // var data = series.getData();
+            // var dataDim = data.mapDimension(this._dimName);
+            // var stackedDimension = data.getCalculationInfo('stackedDimension');
+            // if (stackedDimension && stackedDimension === dataDim) {
+                // this.hasSeriesStacked = true;
+            // }
+        // }, this);
 
         var dataWindow = this.calculateDataWindow(dataZoomModel.option);
 
@@ -68479,13 +68813,15 @@ AxisProxy.prototype = {
         // when using toolbox#dataZoom, utill tooltip#dataZoom support "single axis
         // selection" some day, which might need "adapt to data extent on the
         // otherAxis", which is disabled by filterMode-'empty'.
-        var otherAxisModel = this.getOtherAxisModel();
-        if (dataZoomModel.get('$fromToolbox')
-            && otherAxisModel
-            && otherAxisModel.hasSeriesStacked
-        ) {
-            filterMode = 'empty';
-        }
+        // But currently, stack has been fixed to based on value but not index,
+        // so this is not an issue any more.
+        // var otherAxisModel = this.getOtherAxisModel();
+        // if (dataZoomModel.get('$fromToolbox')
+        //     && otherAxisModel
+        //     && otherAxisModel.hasSeriesStacked
+        // ) {
+        //     filterMode = 'empty';
+        // }
 
         // TODO
         // filterMode 'weakFilter' and 'empty' is not optimized for huge data yet.
@@ -71177,9 +71513,18 @@ var VisualMapModel = extendComponentModel({
             return;
         }
 
-        return list.getDimension(
-            optDim != null ? optDim : listDimensions.length - 1
-        );
+        if (optDim != null) {
+            return list.getDimension(optDim);
+        }
+
+        var dimNames = list.dimensions;
+        for (var i = dimNames.length - 1; i >= 0; i--) {
+            var dimName = dimNames[i];
+            var dimInfo = list.getDimensionInfo(dimName);
+            if (!dimInfo.isCalculationCoord) {
+                return dimName;
+            }
+        }
     },
 
     /**
@@ -71387,7 +71732,6 @@ var VisualMapModel = extendComponentModel({
 
 });
 
-// Constant
 var DEFAULT_BAR_BOUND = [20, 140];
 
 var ContinuousModel = VisualMapModel.extend({
@@ -71536,7 +71880,7 @@ var ContinuousModel = VisualMapModel.extend({
 
             data.each(this.getDataDimension(data), function (value, dataIndex) {
                 range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
-            }, true, this);
+            }, this);
 
             result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
         }, this);
@@ -71769,12 +72113,6 @@ var VisualMapView = extendComponentView({
 
 });
 
-/**
- * @param {module:echarts/component/visualMap/VisualMapModel} visualMapModel\
- * @param {module:echarts/ExtensionAPI} api
- * @param {Array.<number>} itemSize always [short, long]
- * @return {string} 'left' or 'right' or 'top' or 'bottom'
- */
 function getItemAlign(visualMapModel, api, itemSize) {
     var modelOption = visualMapModel.option;
     var itemAlign = modelOption.align;
@@ -72937,7 +73275,7 @@ var PiecewiseModel = VisualMapModel.extend({
                 // Should always base on model pieceList, because it is order sensitive.
                 var pIdx = VisualMapping.findPieceIndex(value, this._pieceList);
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
-            }, true, this);
+            }, this);
 
             result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
         }, this);
@@ -73576,32 +73914,48 @@ function hasXAndY(item) {
     return !isNaN(parseFloat(item.x)) && !isNaN(parseFloat(item.y));
 }
 
-function getPrecision$1(data, valueAxisDim, dataIndex) {
-    var precision = -1;
-    do {
-        precision = Math.max(
-            getPrecision(data.get(
-                valueAxisDim, dataIndex
-            )),
-            precision
-        );
-        data = data.stackedOn;
-    } while (data);
+// Make it simple, do not visit all stacked value to count precision.
+// function getPrecision(data, valueAxisDim, dataIndex) {
+//     var precision = -1;
+//     var stackedDim = data.mapDimension(valueAxisDim);
+//     do {
+//         precision = Math.max(
+//             numberUtil.getPrecision(data.get(stackedDim, dataIndex)),
+//             precision
+//         );
+//         var stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
+//         if (stackedOnSeries) {
+//             var byValue = data.get(data.getCalculationInfo('stackedByDimension'), dataIndex);
+//             data = stackedOnSeries.getData();
+//             dataIndex = data.indexOf(data.getCalculationInfo('stackedByDimension'), byValue);
+//             stackedDim = data.getCalculationInfo('stackedDimension');
+//         }
+//         else {
+//             data = null;
+//         }
+//     } while (data);
 
-    return precision;
-}
+//     return precision;
+// }
 
 function markerTypeCalculatorWithExtent(
     mlType, data, otherDataDim, targetDataDim, otherCoordIndex, targetCoordIndex
 ) {
     var coordArr = [];
-    var value = numCalculate(data, targetDataDim, mlType);
 
-    var dataIndex = data.indicesOfNearest(targetDataDim, value, true)[0];
-    coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex, true);
-    coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex, true);
+    var stacked = isDimensionStacked(data, targetDataDim, otherDataDim);
+    var calcDataDim = stacked
+        ? data.getCalculationInfo('stackResultDimension')
+        : targetDataDim;
 
-    var precision = getPrecision$1(data, targetDataDim, dataIndex);
+    var value = numCalculate(data, calcDataDim, mlType);
+
+    var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
+    coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
+    coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex);
+
+    // Make it simple, do not visit all stacked value to count precision.
+    var precision = getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
     if (precision >= 0) {
         coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
@@ -73757,7 +74111,7 @@ function numCalculate(data, valueDataDim, type) {
                 sum += val;
                 count++;
             }
-        }, true);
+        });
         return sum / count;
     }
     else {
@@ -73923,14 +74277,13 @@ function createList$1(coordSys, seriesModel, mpModel) {
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return defaults({name: coordDim, isSysCoord: true}, info);
+            return defaults({name: coordDim}, info);
         });
     }
     else {
         coordDimsInfos =[{
             name: 'value',
-            type: 'float',
-            isSysCoord: true
+            type: 'float'
         }];
     }
 
@@ -75118,16 +75471,6 @@ var TimelineView = Component.extend({
     type: 'timeline'
 });
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
 var TimelineAxis = function (dim, scale, coordExtent, axisType) {
 
     Axis.call(this, dim, scale, coordExtent);
@@ -77010,7 +77353,6 @@ DataZoomView.extend({
  * DataZoom component entry
  */
 
-// Use dataZoomSelect
 var dataZoomLang = lang.toolbox.dataZoom;
 var each$29 = each$1;
 
@@ -78974,24 +79316,6 @@ var svgTextDrawRectText = function (el, rect, textRect) {
         el.__textSvgEl = textSvgEl;
     }
 
-    bindStyle(textSvgEl, style, true);
-    if (el instanceof Text || el.style.transformText) {
-        // Transform text with element
-        setTransform(textSvgEl, el.transform);
-    }
-    else {
-        if (el.transform) {
-            tmpRect$3.copy(rect);
-            tmpRect$3.applyTransform(el.transform);
-            rect = tmpRect$3;
-        }
-        else {
-            var pos = el.transformCoordToGlobal(rect.x, rect.y);
-            rect.x = pos[0];
-            rect.y = pos[1];
-        }
-    }
-
     var x;
     var y;
     var textPosition = style.textPosition;
@@ -79042,6 +79366,38 @@ var svgTextDrawRectText = function (el, rect, textRect) {
     // Make baseline top
     attr(textSvgEl, 'x', x);
     attr(textSvgEl, 'y', y);
+
+    bindStyle(textSvgEl, style, true);
+    if (el instanceof Text || el.style.transformText) {
+        // Transform text with element
+        setTransform(textSvgEl, el.transform);
+    }
+    else {
+        if (el.transform) {
+            tmpRect$3.copy(rect);
+            tmpRect$3.applyTransform(el.transform);
+            rect = tmpRect$3;
+        }
+        else {
+            var pos = el.transformCoordToGlobal(rect.x, rect.y);
+            rect.x = pos[0];
+            rect.y = pos[1];
+        }
+
+        // Text rotation, but no element transform
+        var origin = style.textOrigin;
+        if (origin === 'center') {
+            x = textRect.width / 2 + x;
+            y = textRect.height / 2 + y;
+        }
+        else if (origin) {
+            x = origin[0] + x;
+            y = origin[1] + y;
+        }
+        var rotate = -style.textRotation * 180 / Math.PI;
+        attr(textSvgEl, 'transform', 'rotate(' + rotate + ','
+            + x + ',' + y + ')');
+    }
 
     var textLines = text.split('\n');
     var nTextLines = textLines.length;
@@ -79574,14 +79930,6 @@ Definable.prototype.getSvgElement = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG gradient elements.
- *
- * @class
- * @extends Definable
- * @param   {number}     zrId    zrender instance id
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function GradientManager(zrId, svgRoot) {
     Definable.call(
         this,
@@ -79777,14 +80125,6 @@ GradientManager.prototype.markUsed = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG clipPath elements.
- *
- * @class
- * @extends Definable
- * @param   {number}     zrId    zrender instance id
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function ClippathManager(zrId, svgRoot) {
     Definable.call(this, zrId, svgRoot, 'clipPath', '__clippath_in_use__');
 }
@@ -79943,14 +80283,6 @@ ClippathManager.prototype.markUsed = function (displayable) {
  * @author Zhang Wenli
  */
 
-/**
- * Manages SVG shadow elements.
- *
- * @class
- * @extends Definable
- * @param   {number}     zrId    zrender instance id
- * @param   {SVGElement} svgRoot root of SVG document
- */
 function ShadowManager(zrId, svgRoot) {
     Definable.call(
         this,
@@ -80530,8 +80862,6 @@ each$1([
 
 registerPainter('svg', SVGPainter);
 
-// Import all charts and components
-
 exports.version = version;
 exports.dependencies = dependencies;
 exports.PRIORITY = PRIORITY;
@@ -80576,6 +80906,8 @@ exports.List = List;
 exports.Model = Model;
 exports.Axis = Axis;
 exports.env = env$1;
+
+exports.bundleVersion = "1519707030861";
 
 })));
 //# sourceMappingURL=echarts.js.map
