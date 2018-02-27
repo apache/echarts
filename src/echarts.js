@@ -81,7 +81,6 @@ export var PRIORITY = {
 // This flag is used to carry out this rule.
 // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
 var IN_MAIN_PROCESS = '__flagInMainProcess';
-var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
 var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
@@ -808,42 +807,16 @@ var updateMethods = {
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
 
-        var painter = zr.painter;
-        // TODO all use clearColor ?
-        if (painter.isSingleCanvas && painter.isSingleCanvas()) {
-            zr.configLayer(0, {
-                clearColor: backgroundColor
-            });
+        // In IE8
+        if (!env.canvasSupported) {
+            var colorArr = colorTool.parse(backgroundColor);
+            backgroundColor = colorTool.stringify(colorArr, 'rgb');
+            if (colorArr[3] === 0) {
+                backgroundColor = 'transparent';
+            }
         }
         else {
-            // In IE8
-            if (!env.canvasSupported) {
-                var colorArr = colorTool.parse(backgroundColor);
-                backgroundColor = colorTool.stringify(colorArr, 'rgb');
-                if (colorArr[3] === 0) {
-                    backgroundColor = 'transparent';
-                }
-            }
-            if (backgroundColor.colorStops || backgroundColor.image) {
-                // Gradient background
-                // FIXME Fixed layer？
-                zr.configLayer(0, {
-                    clearColor: backgroundColor
-                });
-                this[HAS_GRADIENT_OR_PATTERN_BG] = true;
-
-                this._dom.style.background = 'transparent';
-            }
-            else {
-                if (this[HAS_GRADIENT_OR_PATTERN_BG]) {
-                    zr.configLayer(0, {
-                        clearColor: null
-                    });
-                }
-                this[HAS_GRADIENT_OR_PATTERN_BG] = false;
-
-                this._dom.style.background = backgroundColor;
-            }
+            zr.setBackgroundColor(backgroundColor);
         }
 
         performPostUpdateFuncs(ecModel, api);
