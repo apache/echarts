@@ -196,7 +196,7 @@ function renderTaskReset(context) {
     var methodName = canProgressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
-        ? 'updateMethod'
+        ? updateMethod
         // `appendData` is also supported when data amount
         // is less than progressive threshold.
         : 'render';
