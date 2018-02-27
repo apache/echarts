@@ -72,7 +72,8 @@ function calculateStack(stackInfoList) {
                 byValue = targetData.get(targetStackInfo.stackedByDimension, dataIndex);
             }
 
-            var stackedOver = 0;
+            // If stackOver is NaN, chart view will render point on value start.
+            var stackedOver = NaN;
 
             for (var j = idxInStack - 1; j >= 0; j--) {
                 var stackInfo = stackInfoList[j];

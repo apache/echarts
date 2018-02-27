@@ -63,9 +63,13 @@ function getValueStart(valueAxis, valueOrigin) {
 }
 
 export function getStackedOnPoint(dataCoordInfo, coordSys, data, idx) {
-    var value = dataCoordInfo.stacked
-        ? data.get(data.getCalculationInfo('stackedOverDimension'), idx)
-        : dataCoordInfo.valueStart;
+    var value = NaN;
+    if (dataCoordInfo.stacked) {
+        value = data.get(data.getCalculationInfo('stackedOverDimension'), idx);
+    }
+    if (isNaN(value)) {
+        value = dataCoordInfo.valueStart;
+    }
 
     var baseDataOffset = dataCoordInfo.baseDataOffset;
     var stackedData = [];

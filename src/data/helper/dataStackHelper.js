@@ -89,7 +89,9 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
 
         dimensionInfoList.push({
             name: stackedOverDimension,
-            coordDim: stackedDimCoordDim,
+            // This dimension contains stack base (generally, 0), so do not set it as
+            // `stackedDimCoordDim` to avoid extent calculation, consider log scale.
+            coordDim: stackedOverDimension,
             coordDimIndex: stackedDimCoordIndex,
             type: stackedDimType,
             isExtraCoord: true,
