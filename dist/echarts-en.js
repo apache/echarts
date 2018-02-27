@@ -10534,7 +10534,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.0.1';
+var version$1 = '4.0.2';
 
 /**
  * Initializing a zrender instance
@@ -23938,10 +23938,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.0.2';
+var version = '4.0.3';
 
 var dependencies = {
-    zrender: '4.0.1'
+    zrender: '4.0.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
