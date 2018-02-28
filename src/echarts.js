@@ -460,7 +460,7 @@ echartsProto.getSvgDataUrl = function () {
         el.stopAnimation(true);
     });
 
-    return zr.painter.pathToSvg();
+    return zr.painter.pathToDataUrl();
 };
 
 /**
