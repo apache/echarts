@@ -323,7 +323,7 @@ listProto.getDimensionsOnCoord = function () {
  *        If idx is not specified, return the first dim not extra.
  * @return {string|Array.<string>} concrete data dim.
  *        If idx is number, and not found, return null/undefined.
- *        If idx is `true`, and not found, return empty array.
+ *        If idx is `true`, and not found, return empty array (always return array).
  */
 listProto.mapDimension = function (coordDim, idx) {
     var dimensionsSummary = this._dimensionsSummary;
@@ -333,7 +333,10 @@ listProto.mapDimension = function (coordDim, idx) {
     }
 
     var dims = dimensionsSummary.encode[coordDim];
-    return dims && (idx === true ? dims.slice() : dims[idx]);
+    return idx === true
+        // always return array if idx is `true`
+        ? (dims || []).slice()
+        : (dims && dims[idx]);
 };
 
 /**
