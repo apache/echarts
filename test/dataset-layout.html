@@ -23,6 +23,8 @@
         <div id="layout1"></div>
         <div id="layout2"></div>
         <div id="layout3"></div>
+        <div id="layout4"></div>
+        <div id="layout5"></div>
 
 
 
@@ -251,6 +253,143 @@
                 });
             });
         </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    dataset: [{
+                        source: [
+                            ['2012-12-12', 323, 11.2],
+                            ['2012-12-13', 167, 8.3],
+                            ['2012-12-14', 284, 12],
+                            ['2012-12-18', 413, 4.1],
+                            ['2012-12-19', 287, 13.5]
+                        ]
+                    }, {
+                        source: [
+                            [new Date(2012, 11, 12), 323 + 100, 11.2 + 100],
+                            [new Date(2012, 11, 13), 167 + 100, 8.3 + 100],
+                            [new Date(2012, 11, 14), 284 + 100, 12 + 100],
+                            [new Date(2012, 11, 18), 413 + 100, 4.1 + 100],
+                            [new Date(2012, 11, 19), 287 + 100, 13.5 + 100]
+                        ]
+                    }],
+                    legend: {},
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: {},
+                    dataZoom: [{
+                        type: 'slider',
+                    }, {
+                        type: 'inside'
+                    }],
+                    grid: {
+                        bottom: 80
+                    },
+                    series: [{
+                        name: 'A1',
+                        encode: {x: 0, y: 1},
+                        type: 'line'
+                    }, {
+                        name: 'A2',
+                        encode: {x: 0, y: 2},
+                        type: 'line'
+                    }, {
+                        name: 'B1',
+                        encode: {x: 0, y: 1},
+                        datasetIndex: 1,
+                        type: 'line'
+                    }, {
+                        name: 'B2',
+                        encode: {x: 0, y: 2},
+                        datasetIndex: 1,
+                        type: 'line'
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout4', {
+                    title: 'time axis',
+                    option: option,
+                    dataTables: [
+                        option.dataset[0].source,
+                        option.dataset[1].source
+                    ]
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['2012-12-12 15:18:09.321', 323, 11.2],
+                            ['2012-12-12 15:18:10.432', 167, 8.3],
+                            ['2012-12-12 15:18:11.543', 284, 12],
+                            ['2012-12-12 15:18:12.654', 413, 4.1],
+                            ['2012-12-12 15:18:13.765', 287, 13.5]
+                        ]
+                    },
+                    legend: {},
+                    xAxis: {
+                        type: 'time',
+                        axisLabel: {
+                            formatter: function (val) {
+                                return echarts.format.formatTime('hh:mm:ss.SSS\nyyyy-MM-dd', val)
+                            }
+                        }
+                    },
+                    yAxis: {},
+                    dataZoom: [{
+                        type: 'slider',
+                    }, {
+                        type: 'inside'
+                    }],
+                    grid: {
+                        bottom: 80
+                    },
+                    series: [{
+                        name: 'A1',
+                        encode: {x: 0, y: 1},
+                        label: {
+                            show: true,
+                            formatter: function (param) {
+                                return echarts.format.formatTime('hh:mm:ss.SSS', param.value[0])
+                            },
+                            textBorderColor: '#fff',
+                            textBorderWidth: 3
+                        },
+                        type: 'line'
+                    }, {
+                        name: 'A2',
+                        encode: {x: 0, y: 2},
+                        type: 'line'
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout5', {
+                    title: 'time axis2',
+                    option: option,
+                    dataTable: option.dataset.source
+                });
+            });
+        </script>
+
+
+
 
 
 
