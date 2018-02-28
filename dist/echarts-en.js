@@ -3338,6 +3338,12 @@ function lift(color, level) {
             else {
                 colorArr[i] = ((255 - colorArr[i]) * level + colorArr[i]) | 0;
             }
+            if (colorArr[i] > 255) {
+                colorArr[i] = 255;
+            }
+            else if (color[i] < 0) {
+                colorArr[i] = 0;
+            }
         }
         return stringify(colorArr, colorArr.length === 4 ? 'rgba' : 'rgb');
     }
@@ -6761,8 +6767,10 @@ Layer.prototype = {
         var domStyle = dom.style;
         var domBack = this.domBack;
 
-        domStyle.width = width + 'px';
-        domStyle.height = height + 'px';
+        if (domStyle) {
+            domStyle.width = width + 'px';
+            domStyle.height = height + 'px';
+        }
 
         dom.width = width * dpr;
         dom.height = height * dpr;
@@ -6779,15 +6787,16 @@ Layer.prototype = {
 
     /**
      * 清空该层画布
-     * @param {boolean} clearAll Clear all with out motion blur
+     * @param {boolean} [clearAll]=false Clear all with out motion blur
+     * @param {Color} [clearColor]
      */
-    clear: function (clearAll) {
+    clear: function (clearAll, clearColor) {
         var dom = this.dom;
         var ctx = this.ctx;
         var width = dom.width;
         var height = dom.height;
 
-        var clearColor = this.clearColor;
+        var clearColor = clearColor || this.clearColor;
         var haveMotionBLur = this.motionBlur && !clearAll;
         var lastFrameAlpha = this.lastFrameAlpha;
 
@@ -6807,7 +6816,7 @@ Layer.prototype = {
         }
 
         ctx.clearRect(0, 0, width, height);
-        if (clearColor) {
+        if (clearColor && clearColor !== 'transparent') {
             var clearColorGradientOrPattern;
             // Gradient
             if (clearColor.colorStops) {
@@ -8753,21 +8762,27 @@ var Painter = function (root, storage, opts) {
         root.appendChild(domRoot);
     }
     else {
-        if (opts.width != null) {
-            root.width = opts.width;
-        }
-        if (opts.height != null) {
-            root.height = opts.height;
-        }
-        // Use canvas width and height directly
         var width = root.width;
         var height = root.height;
+
+        if (opts.width != null) {
+            width = opts.width;
+        }
+        if (opts.height != null) {
+            height = opts.height;
+        }
+        this.dpr = opts.devicePixelRatio || 1;
+
+        // Use canvas width and height directly
+        root.width = width * this.dpr;
+        root.height = height * this.dpr;
+
         this._width = width;
         this._height = height;
 
         // Create layer if only one given canvas
-        // Device pixel ratio is fixed to 1 because given canvas has its specified width and height
-        var mainLayer = new Layer(root, this, 1);
+        // Device can be specified to create a high dpi image.
+        var mainLayer = new Layer(root, this, this.dpr);
         mainLayer.__builtin__ = true;
         mainLayer.initContext();
         // FIXME Use canvas width and height
@@ -8839,7 +8854,8 @@ Painter.prototype = {
             var z = zlevelList[i];
             var layer = this._layers[z];
             if (!layer.__builtin__ && layer.refresh) {
-                layer.refresh();
+                var clearColor = i === 0 ? this._backgroundColor : null;
+                layer.refresh(clearColor);
             }
         }
 
@@ -8994,14 +9010,16 @@ Painter.prototype = {
             var useTimer = !paintAll && layer.incremental && Date.now;
             var startTime = useTimer && Date.now();
 
+            var clearColor = layer.zlevel === this._zlevelList[0]
+                ? this._backgroundColor : null;
             // All elements in this layer are cleared.
             if (layer.__startIndex === layer.__endIndex) {
-                layer.clear();
+                layer.clear(false, clearColor);
             }
             else if (start === layer.__startIndex) {
                 var firstEl = list[start];
                 if (!firstEl.incremental || !firstEl.notClear || paintAll) {
-                    layer.clear();
+                    layer.clear(false, clearColor);
                 }
             }
             if (start === -1) {
@@ -9340,6 +9358,10 @@ Painter.prototype = {
         layer.clear();
     },
 
+    setBackgroundColor: function (backgroundColor) {
+        this._backgroundColor = backgroundColor;
+    },
+
     /**
      * 修改指定zlevel的绘制参数
      *
@@ -9477,8 +9499,7 @@ Painter.prototype = {
 
         var imageLayer = new Layer('image', this, opts.pixelRatio || this.dpr);
         imageLayer.initContext();
-        imageLayer.clearColor = opts.backgroundColor;
-        imageLayer.clear();
+        imageLayer.clear(false, opts.backgroundColor || this._backgroundColor);
 
         if (opts.pixelRatio <= this.dpr) {
             this.refresh();
@@ -10534,7 +10555,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.0.2';
+var version$1 = '4.0.3';
 
 /**
  * Initializing a zrender instance
@@ -10711,7 +10732,20 @@ ZRender.prototype = {
      * @param {number} [config.lastFrameAlpha=0.7] Motion blur factor. Larger value cause longer trailer
     */
     configLayer: function (zLevel, config) {
-        this.painter.configLayer(zLevel, config);
+        if (this.painter.configLayer) {
+            this.painter.configLayer(zLevel, config);
+        }
+        this._needsRefresh = true;
+    },
+
+    /**
+     * Set background color
+     * @param {string} backgroundColor
+     */
+    setBackgroundColor: function (backgroundColor) {
+        if (this.painter.setBackgroundColor) {
+            this.painter.setBackgroundColor(backgroundColor);
+        }
         this._needsRefresh = true;
     },
 
@@ -20077,6 +20111,9 @@ var GlobalModel = Model.extend({
     },
 
     /**
+     * Get series list before filtered by type.
+     * FIXME: rename to getRawSeriesByType?
+     *
      * @param {string} subType
      * @return {Array.<module:echarts/model/Series>}
      */
@@ -23938,10 +23975,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.0.3';
+var version = '4.0.4';
 
 var dependencies = {
-    zrender: '4.0.2'
+    zrender: '4.0.3'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -23977,7 +24014,6 @@ var PRIORITY = {
 // This flag is used to carry out this rule.
 // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
 var IN_MAIN_PROCESS = '__flagInMainProcess';
-var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
 var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
@@ -24357,7 +24393,7 @@ echartsProto.getSvgDataUrl = function () {
         el.stopAnimation(true);
     });
 
-    return zr.painter.pathToSvg();
+    return zr.painter.pathToDataUrl();
 };
 
 /**
@@ -24704,42 +24740,16 @@ var updateMethods = {
         // Set background
         var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
 
-        var painter = zr.painter;
-        // TODO all use clearColor ?
-        if (painter.isSingleCanvas && painter.isSingleCanvas()) {
-            zr.configLayer(0, {
-                clearColor: backgroundColor
-            });
+        // In IE8
+        if (!env$1.canvasSupported) {
+            var colorArr = parse(backgroundColor);
+            backgroundColor = stringify(colorArr, 'rgb');
+            if (colorArr[3] === 0) {
+                backgroundColor = 'transparent';
+            }
         }
         else {
-            // In IE8
-            if (!env$1.canvasSupported) {
-                var colorArr = parse(backgroundColor);
-                backgroundColor = stringify(colorArr, 'rgb');
-                if (colorArr[3] === 0) {
-                    backgroundColor = 'transparent';
-                }
-            }
-            if (backgroundColor.colorStops || backgroundColor.image) {
-                // Gradient background
-                // FIXME Fixed layer？
-                zr.configLayer(0, {
-                    clearColor: backgroundColor
-                });
-                this[HAS_GRADIENT_OR_PATTERN_BG] = true;
-
-                this._dom.style.background = 'transparent';
-            }
-            else {
-                if (this[HAS_GRADIENT_OR_PATTERN_BG]) {
-                    zr.configLayer(0, {
-                        clearColor: null
-                    });
-                }
-                this[HAS_GRADIENT_OR_PATTERN_BG] = false;
-
-                this._dom.style.background = backgroundColor;
-            }
+            zr.setBackgroundColor(backgroundColor);
         }
 
         performPostUpdateFuncs(ecModel, api);
@@ -26641,7 +26651,7 @@ listProto.getDimensionsOnCoord = function () {
  *        If idx is not specified, return the first dim not extra.
  * @return {string|Array.<string>} concrete data dim.
  *        If idx is number, and not found, return null/undefined.
- *        If idx is `true`, and not found, return empty array.
+ *        If idx is `true`, and not found, return empty array (always return array).
  */
 listProto.mapDimension = function (coordDim, idx) {
     var dimensionsSummary = this._dimensionsSummary;
@@ -26651,7 +26661,10 @@ listProto.mapDimension = function (coordDim, idx) {
     }
 
     var dims = dimensionsSummary.encode[coordDim];
-    return dims && (idx === true ? dims.slice() : dims[idx]);
+    return idx === true
+        // always return array if idx is `true`
+        ? (dims || []).slice()
+        : (dims && dims[idx]);
 };
 
 /**
@@ -29517,14 +29530,13 @@ function doCalBarWidthAndOffset(seriesInfoList, api) {
  */
 function layout(seriesType, ecModel, api) {
 
-    var seriesModels = filter(
-        ecModel.getSeriesByType(seriesType),
-        function (seriesModel) {
-            // Check series coordinate, do layout for cartesian2d only
-            return seriesModel.coordinateSystem
-                && seriesModel.coordinateSystem.type === 'cartesian2d';
+    var seriesModels = [];
+    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+        // Check series coordinate, do layout for cartesian2d only
+        if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
+            seriesModels.push(seriesModel);
         }
-    );
+    });
 
     var barWidthAndOffset = calBarWidthAndOffset(seriesModels);
 
@@ -30111,7 +30123,7 @@ function getScaleExtent(scale, model) {
         var barSeriesModels = [];
         var isBaseAxisAndHasBarSeries;
 
-        each$1(ecModel.getSeriesByType('bar'), function (seriesModel) {
+        ecModel.eachSeriesByType('bar', function (seriesModel) {
             if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
                 barSeriesModels.push(seriesModel);
                 isBaseAxisAndHasBarSeries |= seriesModel.getBaseAxis() === model.axis;
@@ -81138,6 +81150,11 @@ SVGPainter.prototype = {
         this._paintList(list);
     },
 
+    setBackgroundColor: function (backgroundColor) {
+        // TODO gradient
+        this._viewport.style.background = backgroundColor;
+    },
+
     _paintList: function (list) {
         this.gradientManager.markAllUnused();
         this.clipPathManager.markAllUnused();
@@ -81374,10 +81391,10 @@ SVGPainter.prototype = {
         }
     },
 
-    pathToSvg: function () {
+    pathToDataUrl: function () {
         this.refresh();
         var html = this._svgRoot.outerHTML;
-        return 'data:img/svg+xml;utf-8,' + unescape(html);
+        return 'data:image/svg+xml;charset=UTF-8,' + html;
     }
 };
 
