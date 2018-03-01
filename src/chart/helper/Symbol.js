@@ -38,7 +38,13 @@ function driftSymbol(dx, dy) {
     this.parent.drift(dx, dy);
 }
 
-symbolProto._createSymbol = function (symbolType, data, idx, symbolSize) {
+symbolProto._createSymbol = function (
+    symbolType,
+    data,
+    idx,
+    symbolSize,
+    keepAspect
+) {
     // Remove paths created before
     this.removeAll();
 
@@ -51,7 +57,7 @@ symbolProto._createSymbol = function (symbolType, data, idx, symbolSize) {
     // and macOS Sierra, a circle stroke become a rect, no matter what
     // the scale is set. So we set width/height as 2. See #4150.
     var symbolPath = createSymbol(
-        symbolType, -1, -1, 2, 2, color
+        symbolType, -1, -1, 2, 2, color, keepAspect
     );
 
     symbolPath.attr({
@@ -152,7 +158,8 @@ symbolProto.updateData = function (data, idx, seriesScope) {
     var isInit = symbolType !== this._symbolType;
 
     if (isInit) {
-        this._createSymbol(symbolType, data, idx, symbolSize);
+        var keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
+        this._createSymbol(symbolType, data, idx, symbolSize, keepAspect);
     }
     else {
         var symbolPath = this.childAt(0);
