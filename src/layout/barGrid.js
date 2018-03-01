@@ -204,14 +204,13 @@ function doCalBarWidthAndOffset(seriesInfoList, api) {
  */
 export function layout(seriesType, ecModel, api) {
 
-    var seriesModels = zrUtil.filter(
-        ecModel.getSeriesByType(seriesType),
-        function (seriesModel) {
-            // Check series coordinate, do layout for cartesian2d only
-            return seriesModel.coordinateSystem
-                && seriesModel.coordinateSystem.type === 'cartesian2d';
+    var seriesModels = [];
+    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+        // Check series coordinate, do layout for cartesian2d only
+        if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
+            seriesModels.push(seriesModel);
         }
-    );
+    });
 
     var barWidthAndOffset = calBarWidthAndOffset(seriesModels);
 

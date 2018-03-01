@@ -126,7 +126,7 @@ export function getScaleExtent(scale, model) {
         var barSeriesModels = [];
         var isBaseAxisAndHasBarSeries;
 
-        zrUtil.each(ecModel.getSeriesByType('bar'), function (seriesModel) {
+        ecModel.eachSeriesByType('bar', function (seriesModel) {
             if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
                 barSeriesModels.push(seriesModel);
                 isBaseAxisAndHasBarSeries |= seriesModel.getBaseAxis() === model.axis;
