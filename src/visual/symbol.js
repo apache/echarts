@@ -9,11 +9,13 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
 
             var symbolType = seriesModel.get('symbol') || defaultSymbolType;
             var symbolSize = seriesModel.get('symbolSize');
+            var keepAspect = seriesModel.get('symbolKeepAspect');
 
             data.setVisual({
                 legendSymbol: legendSymbol || symbolType,
                 symbol: symbolType,
-                symbolSize: symbolSize
+                symbolSize: symbolSize,
+                symbolKeepAspect: keepAspect
             });
 
             // Only visible series has each data be visual encoded
@@ -34,7 +36,11 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 if (data.hasItemOption) {
                     var itemModel = data.getItemModel(idx);
                     var itemSymbolType = itemModel.getShallow('symbol', true);
-                    var itemSymbolSize = itemModel.getShallow('symbolSize', true);
+                    var itemSymbolSize = itemModel.getShallow('symbolSize',
+                        true);
+                    var itemSymbolKeepAspect =
+                        itemModel.getShallow('symbolKeepAspect',true);
+
                     // If has item symbol
                     if (itemSymbolType != null) {
                         data.setItemVisual(idx, 'symbol', itemSymbolType);
@@ -42,6 +48,10 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                     if (itemSymbolSize != null) {
                         // PENDING Transform symbolSize ?
                         data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+                    }
+                    if (itemSymbolKeepAspect != null) {
+                        data.setItemVisual(idx, 'symbolKeepAspect',
+                            itemSymbolKeepAspect);
                     }
                 }
             }

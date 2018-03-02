@@ -657,7 +657,7 @@ export default echarts.extendComponentView({
     },
 
     dispose: function (ecModel, api) {
-        if (env.node) {
+        if (env.node || env.wxa) {
             return;
         }
         this._tooltipContent.hide();

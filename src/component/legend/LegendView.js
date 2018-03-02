@@ -197,6 +197,7 @@ export default echarts.extendComponentView({
         var itemWidth = legendModel.get('itemWidth');
         var itemHeight = legendModel.get('itemHeight');
         var inactiveColor = legendModel.get('inactiveColor');
+        var symbolKeepAspect = legendModel.get('symbolKeepAspect');
 
         var isSelected = legendModel.isSelected(name);
         var itemGroup = new Group();
@@ -217,7 +218,8 @@ export default echarts.extendComponentView({
             itemWidth,
             itemHeight,
             isSelected ? color : inactiveColor,
-            true
+            // symbolKeepAspect default true for legend
+            symbolKeepAspect == null ? true : symbolKeepAspect
         ));
 
         // Compose symbols
@@ -232,8 +234,14 @@ export default echarts.extendComponentView({
             }
             // Put symbol in the center
             itemGroup.add(createSymbol(
-                symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size,
-                isSelected ? color : inactiveColor
+                symbolType,
+                (itemWidth - size) / 2,
+                (itemHeight - size) / 2,
+                size,
+                size,
+                isSelected ? color : inactiveColor,
+                // symbolKeepAspect default true for legend
+                symbolKeepAspect == null ? true : symbolKeepAspect
             ));
         }
 
