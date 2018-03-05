@@ -1,3 +1,6 @@
+var CANVAS_WIDTH = 400;
+var CANVAS_HEIGHT = 300;
+
 (function (context) {
 
     var helper = context.uiHelper = {};
@@ -164,8 +167,8 @@
     helper.getRenderedCanvas = function(echarts, operations) {
         // init canvas with echarts
         var canvas = document.createElement('canvas');
-        canvas.width = 400;
-        canvas.height = 300;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
         var myChart = echarts.init(canvas);
 
         // user defined operations
@@ -282,10 +285,15 @@
         var oldImg = document.createElement('img');
         oldImg.src = oldImgSrc;
         oldImg.setAttribute('title', 'Old Image');
+        oldImg.width = CANVAS_WIDTH;
+        oldImg.height = CANVAS_HEIGHT;
+        group.appendChild(oldImg);
+
         var newImg = document.createElement('img');
         newImg.src = newImgSrc;
         newImg.setAttribute('title', 'New Image');
-        group.appendChild(oldImg);
+        newImg.width = CANVAS_WIDTH;
+        newImg.height = CANVAS_HEIGHT;
         group.appendChild(newImg);
 
         // diff image
