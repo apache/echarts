@@ -142,4 +142,4 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 
 ## License
 
-ECharts is available under the BSD 3 license.
+ECharts is available under the Apache license V2.
