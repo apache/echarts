@@ -74,13 +74,7 @@ export default function (seriesModel, api) {
         });
     }
     else {
-        var orient = seriesModel.get('orient');
-        if (orient === 'horizontal') {
-            orient = 'LR';
-        }
-        else if (orient === 'vertical') {
-            orient = 'TB';
-        }
+        var orient = seriesModel.getOrient(); 
         if (orient === 'RL' || orient === 'LR') {
             ky = height / (right.getLayout().x + delta + tx);
             kx = width / ((bottom.depth - 1) || 1);
