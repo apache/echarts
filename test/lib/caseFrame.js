@@ -11,6 +11,7 @@
     var SELECTOR_CASES_ITEM = 'li a';
     var SELECTOR_CONTENT_IFRAME = CSS_BASE + ' .page-content iframe';
     var SELECTOR_RENDERER = CSS_BASE + ' .renderer-selector input';
+    var SELECTOR_LISTER_FILTER = CSS_BASE + ' .list-filter';
     var SELECTOR_CURRENT = CSS_BASE + ' .info-panel .current';
     var SELECTOR_DIST = CSS_BASE + ' .dist-selector';
 
@@ -22,6 +23,7 @@
         '            <input type="radio" value="canvas" name="renderer" /> CANVAS ',
         '            <input type="radio" value="svg" name="renderer" /> SVG ',
         '        </div>',
+        '        <div class="list-filter"></div>',
         '        <select class="dist-selector">',
         '           <option value="dist"/>echarts/dist</option>',
         '           <option value="webpack-req-ec"/>boilerplat/webpack-req-ec</option>',
@@ -39,8 +41,10 @@
         '</div>',
     ].join('');
 
+    var globalOpt;
     var pagePaths;
     var baseURL;
+    var listFilters;
 
     /**
      * @public
@@ -55,17 +59,18 @@
      * @param {string} [opt.baseURL='.']
      * @param {string} [opt.disableRendererSelector]
      * @param {string} [opt.disableDistSelector]
+     * @param {Array.<Object} [opt.filters] [{name: 'stream', whiteList: [...]}, ...]
      */
     caseFrame.init = function (opt) {
         renderHTML(opt.dom);
 
+        globalOpt = opt;
         pagePaths = opt.pagePaths.slice();
         baseURL = opt.baseURL || '.';
+        listFilters = opt.filters || [];
 
         $(window).on('hashchange', updateView);
 
-        initPanel(opt);
-        initList();
         updateView();
     };
 
@@ -74,52 +79,84 @@
         dom.innerHTML = HTML;
     }
 
-    function initList() {
-        var html = [];
-
-        for (var i = 0; i < pagePaths.length; i++) {
-            var path = pagePaths[i];
-            html.push('<li><a href="' + baseURL + '/' + encodeHTML(path) + '">' + encodeHTML(path) + '</a></li>');
-        }
-
-        var caseListContainer = $(SELECTOR_CASES_LIST_CONTAINER);
-
-        caseListContainer[0].innerHTML = html.join('');
-
-        caseListContainer.on('click', SELECTOR_CASES_ITEM, function (e) {
-            setState('pagePath', e.currentTarget.innerHTML);
-            return false;
-        });
-    }
-
-    function initPanel(opt) {
+    function updateRendererSelector() {
         var rendererSelector = $(SELECTOR_RENDERER);
-        var distSelector = $(SELECTOR_DIST);
 
-        if (opt.disableRendererSelector) {
-            rendererSelector.each(function (index, el) {
-                el.disabled = true;
-            });
-        }
-        if (opt.disableDistSelector) {
-            distSelector[0].disabled = true;
-        }
+        rendererSelector.each(function (index, el) {
+            el.disabled = !!globalOpt.disableRendererSelector;
+        });
 
-        rendererSelector.on('click', function (e) {
+        rendererSelector.off('click').on('click', function (e) {
             setState('renderer', e.target.value);
         });
 
-        $(SELECTOR_CURRENT).on('mouseover', function (e) {
+        var renderer = getState('renderer');
+
+        rendererSelector.each(function (index, el) {
+            el.checked = el.value === renderer;
+        });
+    }
+
+    function updateListSelectedHint() {
+        var hint = $(SELECTOR_CURRENT);
+        hint.off('mouseover').on('mouseover', function (e) {
             updatePageHint('full');
             this.select();
         });
-        $(SELECTOR_CURRENT).on('mouseout', function (e) {
+        hint.off('mouseout').on('mouseout', function (e) {
             updatePageHint('short');
         });
-        distSelector.on('change', function (e) {
+    }
+
+    function updateDistSelector() {
+        var distSelector = $(SELECTOR_DIST);
+
+        distSelector[0].disabled = !!globalOpt.disableDistSelector;
+
+        distSelector.off('change').on('change', function (e) {
             var selector = e.target;
             setState('dist', selector.options[selector.selectedIndex].value);
         });
+
+        var dist = getState('dist');
+
+        var options = distSelector[0].options;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value === dist) {
+                distSelector[0].selectedIndex = i;
+            }
+        }
+    }
+
+    function updateListFilter() {
+        var html = [
+            '<select class="dist-selector">',
+            '<option value="all">all</option>'
+        ];
+        for (var i = 0; i < listFilters.length; i++) {
+            var name = encodeHTML(listFilters[i].name);
+            html.push('<option value="' + name + '">' + name + '</option>');
+        }
+        html.push('</select>');
+
+        var filterContainer = $(SELECTOR_LISTER_FILTER);
+
+        filterContainer[0].innerHTML = 'FILTER: &nbsp;' + html.join('');
+
+        var filterSelector = filterContainer.find('select');
+
+        filterSelector.off('change').on('change', function (e) {
+            var selector = e.target;
+            setState('listFilterName', selector.options[selector.selectedIndex].value);
+        });
+
+        var currentFilterName = getState('listFilterName');
+        var options = filterSelector[0].options;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value === currentFilterName) {
+                filterSelector[0].selectedIndex = i;
+            }
+        }
     }
 
     // prop: renderer, dist, pagePath
@@ -137,6 +174,10 @@
         dist: function (pageURL) {
             var matchResult = (pageURL || '').match(/[?&]__ECDIST__=(webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
             return matchResult && matchResult[1] || 'dist';
+        },
+        listFilterName: function (pageURL) {
+            var matchResult = (pageURL || '').match(/[?&]__FILTER__=([a-zA-Z0-9_-]*)(&|$)/);
+            return matchResult && matchResult[1] || null;
         },
         // {index, pagePath} or null
         pagePathInfo: getStatePagePathInfo,
@@ -163,7 +204,8 @@
         var curr = {
             renderer: getState('renderer'),
             dist: getState('dist'),
-            pagePath: getState('pagePath')
+            pagePath: getState('pagePath'),
+            listFilterName: getState('listFilterName')
         };
         curr[prop] = value;
 
@@ -173,12 +215,19 @@
     }
 
     function makePageURL(curr) {
-        return curr.pagePath + '?__RENDERER__=' + curr.renderer + '&__ECDIST__=' + curr.dist;
+        return curr.pagePath + '?' + [
+            '__RENDERER__=' + curr.renderer,
+            '__ECDIST__=' + curr.dist,
+            '__FILTER__=' + curr.listFilterName
+        ].join('&');
     }
 
     function updateView() {
         updateRendererSelector();
         updateDistSelector();
+        updateListSelectedHint();
+        updateListFilter();
+        updateList();
         updatePage();
         updatePageHint('short');
     }
@@ -187,6 +236,49 @@
         return decodeURIComponent(
             (location.hash || '').replace(/^#/, '')
         );
+    }
+
+    function updateList() {
+        var html = [];
+
+        var filter;
+        var listFilterName = getState('listFilterName');
+        if (listFilters && listFilterName) {
+            for (var i = 0; i < listFilters.length; i++) {
+                if (listFilters[i].name === listFilterName) {
+                    filter = listFilters[i];
+                    break;
+                }
+            }
+        }
+
+        for (var i = 0; i < pagePaths.length; i++) {
+            var path = pagePaths[i];
+
+            var whiteList = filter && filter.whiteList;
+            if (whiteList) {
+                var j = 0;
+                for (; j < whiteList.length; j++) {
+                    if (path === whiteList[j]) {
+                        break;
+                    }
+                }
+                if (j >= whiteList.length) {
+                    continue;
+                }
+            }
+
+            html.push('<li><a href="' + baseURL + '/' + encodeHTML(path) + '">' + encodeHTML(path) + '</a></li>');
+        }
+
+        var caseListContainer = $(SELECTOR_CASES_LIST_CONTAINER);
+
+        caseListContainer[0].innerHTML = html.join('');
+
+        caseListContainer.off('click').on('click', SELECTOR_CASES_ITEM, function (e) {
+            setState('pagePath', e.currentTarget.innerHTML);
+            return false;
+        });
     }
 
     function updatePage() {
@@ -214,26 +306,6 @@
             : testHelper.dir() + '/' + pagePathInfo.pagePath;
 
         $(SELECTOR_CURRENT).val(newValue);
-    }
-
-    function updateRendererSelector() {
-        var renderer = getState('renderer');
-
-        $(SELECTOR_RENDERER).each(function (index, el) {
-            el.checked = el.value === renderer;
-        });
-    }
-
-    function updateDistSelector() {
-        var dist = getState('dist');
-
-        var selector = $(SELECTOR_DIST)[0];
-        var options = selector.options;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].value === dist) {
-                selector.selectedIndex = i;
-            }
-        }
     }
 
 })();
