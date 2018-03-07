@@ -72,15 +72,19 @@ Cartesian2D.prototype = {
      * @return {Array.<number>}
      */
     clampData: function (data, out) {
-        var xAxisExtent = this.getAxis('x').scale.getExtent();
-        var yAxisExtent = this.getAxis('y').scale.getExtent();
+        var xScale = this.getAxis('x').scale;
+        var yScale = this.getAxis('y').scale;
+        var xAxisExtent = xScale.getExtent();
+        var yAxisExtent = yScale.getExtent();
+        var x = xScale.parse(data[0]);
+        var y = yScale.parse(data[1]);
         out = out || [];
         out[0] = Math.min(
-            Math.max(Math.min(xAxisExtent[0], xAxisExtent[1]), data[0]),
+            Math.max(Math.min(xAxisExtent[0], xAxisExtent[1]), x),
             Math.max(xAxisExtent[0], xAxisExtent[1])
         );
         out[1] = Math.min(
-            Math.max(Math.min(yAxisExtent[0], yAxisExtent[1]), data[1]),
+            Math.max(Math.min(yAxisExtent[0], yAxisExtent[1]), y),
             Math.max(yAxisExtent[0], yAxisExtent[1])
         );
 
