@@ -3,6 +3,9 @@ import {createHashMap, each} from 'zrender/src/core/util';
 
 echarts.registerProcessor({
 
+    // `dataZoomProcessor` will only be performed in needed series. Consider if
+    // there is a line series and a pie series, it is better not to update the
+    // line series if only pie series is needed to be updated.
     getTargetSeries: function (ecModel) {
         var seriesModelMap = createHashMap();
 
@@ -24,6 +27,7 @@ echarts.registerProcessor({
     // in block mode currently, it is not need to worry about that the overallProgress
     // execute every frame.
     overallReset: function (ecModel, api) {
+
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because

@@ -41,8 +41,6 @@ var OPTION_INNER_KEY = '\0_ec_inner';
  */
 var GlobalModel = Model.extend({
 
-    constructor: GlobalModel,
-
     init: function (option, parentModel, theme, optionManager) {
         theme = theme || {};
 

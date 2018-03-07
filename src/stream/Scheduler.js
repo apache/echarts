@@ -2,7 +2,7 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
+import {each, isArray, isFunction, createHashMap, noop, assert} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
@@ -13,8 +13,6 @@ import {normalizeToArray} from '../util/model';
  * @constructor
  */
 function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
-    // this._pipelineMap = createHashMap();
-
     this.ecInstance = ecInstance;
     this.api = api;
     this.unfinished;
@@ -23,8 +21,9 @@ function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
     // processors might be registered after echarts instance created.
     // Register processors incrementally for a echarts instance is
     // not supported by this stream architecture.
-    this._dataProcessorHandlers = dataProcessorHandlers.slice();
-    this._visualHandlers = visualHandlers.slice();
+    var dataProcessorHandlers = this._dataProcessorHandlers = dataProcessorHandlers.slice();
+    var visualHandlers = this._visualHandlers = visualHandlers.slice();
+    this._allHandlers = dataProcessorHandlers.concat(visualHandlers);
 
     /**
      * @private
@@ -41,6 +40,44 @@ function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
 }
 
 var proto = Scheduler.prototype;
+
+/**
+ * @param {module:echarts/model/Global} ecModel
+ * @param {Object} payload
+ */
+proto.restoreData = function (ecModel, payload) {
+    // TODO: Only restroe needed series and components, but not all components.
+    // Currently `restoreData` of all of the series and component will be called.
+    // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
+    // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,
+    // and some components like coordinate system, axes, dataZoom, visualMap only
+    // need their target series refresh.
+    // (1) If we are implementing this feature some day, we should consider these cases:
+    // if a data processor depends on a component (e.g., dataZoomProcessor depends
+    // on the settings of `dataZoom`), it should be re-performed if the component
+    // is modified by `setOption`.
+    // (2) If a processor depends on sevral series, speicified by its `getTargetSeries`,
+    // it should be re-performed when the result array of `getTargetSeries` changed.
+    // We use `dependencies` to cover these issues.
+    // (3) How to update target series when coordinate system related components modified.
+
+    // TODO: simply the dirty mechanism? Check whether only the case here can set tasks dirty,
+    // and this case all of the tasks will be set as dirty.
+
+    ecModel.restoreData(payload);
+
+    // Theoretically an overall task not only depends on each of its target series, but also
+    // depends on all of the series.
+    // The overall task is not in pipeline, and `ecModel.restoreData` only set pipeline tasks
+    // dirty. If `getTargetSeries` of an overall task returns nothing, we should also ensure
+    // that the overall task is set as dirty and to be performed, otherwise it probably cause
+    // state chaos. So we have to set dirty of all of the overall tasks manually, otherwise it
+    // probably cause state chaos (consider `dataZoomProcessor`).
+    this._stageTaskMap.each(function (taskRecord) {
+        var overallTask = taskRecord.overallTask;
+        overallTask && overallTask.dirty();
+    });
+};
 
 // If seriesModel provided, incremental threshold is check by series data.
 proto.getPerformArgs = function (task, isBlock) {
@@ -95,6 +132,7 @@ proto.updateStreamModes = function (seriesModel, view) {
 proto.restorePipelines = function (ecModel) {
     var scheduler = this;
     var pipelineMap = scheduler._pipelineMap = createHashMap();
+
     ecModel.eachSeries(function (seriesModel) {
         var progressive = seriesModel.getProgressive();
         var pipelineId = seriesModel.uid;
@@ -120,13 +158,11 @@ proto.prepareStageTasks = function () {
     var ecModel = this.ecInstance.getModel();
     var api = this.api;
 
-    each([this._dataProcessorHandlers, this._visualHandlers], function (stageHandlers) {
-        each(stageHandlers, function (handler) {
-            var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, []);
+    each(this._allHandlers, function (handler) {
+        var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, []);
 
-            handler.reset && createSeriesStageTask(this, handler, record, ecModel, api);
-            handler.overallReset && createOverallStageTask(this, handler, record, ecModel, api);
-        }, this);
+        handler.reset && createSeriesStageTask(this, handler, record, ecModel, api);
+        handler.overallReset && createOverallStageTask(this, handler, record, ecModel, api);
     }, this);
 };
 
@@ -334,9 +370,15 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
 
     function createStub(seriesModel) {
         var pipelineId = seriesModel.uid;
-        var stub = agentStubMap.get(pipelineId) || agentStubMap.set(pipelineId, createTask(
-            {reset: stubReset, onDirty: stubOnDirty}
-        ));
+        var stub = agentStubMap.get(pipelineId);
+        if (!stub) {
+            stub = agentStubMap.set(pipelineId, createTask(
+                {reset: stubReset, onDirty: stubOnDirty}
+            ));
+            // When the result of `getTargetSeries` changed, the overallTask
+            // should be set as dirty and re-performed.
+            overallTask.dirty();
+        }
         stub.context = {
             model: seriesModel,
             overallProgress: overallProgress,
@@ -353,6 +395,9 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     agentStubMap.each(function (stub, pipelineId) {
         if (!pipelineMap.get(pipelineId)) {
             stub.dispose();
+            // When the result of `getTargetSeries` changed, the overallTask
+            // should be set as dirty and re-performed.
+            overallTask.dirty();
             agentStubMap.removeKey(pipelineId);
         }
     });
