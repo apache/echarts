@@ -41,11 +41,14 @@ Axis2D.prototype = {
      * Index of axis, can be used as key
      */
     index: 0,
+
     /**
-     * If axis is on the zero position of the other axis
-     * @type {boolean}
+     * Implemented in <module:echarts/coord/cartesian/Grid>.
+     * @return {Array.<module:echarts/coord/cartesian/Axis2D>}
+     *         If not on zero of other axis, return null/undefined.
+     *         If no axes, return an empty array.
      */
-    onZero: false,
+    getAxesOnZeroOf: null,
 
     /**
      * Axis model

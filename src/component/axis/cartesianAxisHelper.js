@@ -12,9 +12,10 @@ export function layout(gridModel, axisModel, opt) {
     var grid = gridModel.coordinateSystem;
     var axis = axisModel.axis;
     var layout = {};
+    var otherAxisOnZeroOf = axis.getAxesOnZeroOf()[0];
 
     var rawAxisPosition = axis.position;
-    var axisPosition = axis.onZero ? 'onZero' : rawAxisPosition;
+    var axisPosition = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
     var axisDim = axis.dim;
 
     var rect = grid.getRect();
@@ -26,9 +27,8 @@ export function layout(gridModel, axisModel, opt) {
         ? [rectBound[2] - axisOffset, rectBound[3] + axisOffset]
         : [rectBound[0] - axisOffset, rectBound[1] + axisOffset];
 
-    if (axis.onZero) {
-        var otherAxis = grid.getAxis(axisDim === 'x' ? 'y' : 'x', axis.onZeroAxisIndex);
-        var onZeroCoord = otherAxis.toGlobalCoord(otherAxis.dataToCoord(0));
+    if (otherAxisOnZeroOf) {
+        var onZeroCoord = otherAxisOnZeroOf.toGlobalCoord(otherAxisOnZeroOf.dataToCoord(0));
         posBound[idx['onZero']] = Math.max(Math.min(onZeroCoord, posBound[1]), posBound[0]);
     }
 
@@ -45,7 +45,7 @@ export function layout(gridModel, axisModel, opt) {
     var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
 
     layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
-    layout.labelOffset = axis.onZero ? posBound[idx[rawAxisPosition]] - posBound[idx['onZero']] : 0;
+    layout.labelOffset = otherAxisOnZeroOf ? posBound[idx[rawAxisPosition]] - posBound[idx['onZero']] : 0;
 
     if (axisModel.get('axisTick.inside')) {
         layout.tickDirection = -layout.tickDirection;
