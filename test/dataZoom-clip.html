@@ -18,6 +18,7 @@
         </style>
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
@@ -94,5 +95,66 @@
 
 
         </script>
+
+
+
+
+
+
+        <script>
+            option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['first', 'middle', 'last']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name:'邮件营销',
+                        type:'line',
+                        stack: '总量',
+                        symbolSize: 20,
+                        data:[120, 132, 101]
+                    },
+                    // {
+                    //     name:'联盟广告',
+                    //     type:'line',
+                    //     stack: '总量',
+                    //     symbolSize: 20,
+                    //     data:[220, 182, 191]
+                    // }
+                ]
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main1', {
+                title: 'The first and last symbols (on the edge) should be displayed.',
+                option: option
+            });
+
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </body>
 </html>
