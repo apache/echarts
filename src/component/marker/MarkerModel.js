@@ -50,7 +50,7 @@ var MarkerModel = echarts.extendComponentModel({
         if (!createdBySelf) {
             ecModel.eachSeries(function (seriesModel) {
 
-                var markerOpt = seriesModel.get(this.mainType);
+                var markerOpt = seriesModel.get(this.mainType, true);
 
                 var markerModel = seriesModel[modelPropName];
                 if (!markerOpt || !markerOpt.data) {
