@@ -861,6 +861,29 @@ listProto.getSum = function (dim /*, stack */) {
     return sum;
 };
 
+/**
+ * Get median of data in one dimension
+ * @param {string} dim
+ */
+listProto.getMedian = function (dim /*, stack */) {
+    var dimDataArray = [];
+    // map all data of one dimension
+    this.each(dim, function (val, idx) {
+        if (!isNaN(val)) {
+            dimDataArray.push(val);
+        }
+    });
+    // immutability & sort
+    var sortedDimDataArray = [].concat(dimDataArray).sort(function(a, b) {
+        return a - b;
+    });
+    var len = this.count();
+    // calculate median
+    return len === 0 ? 0 :
+        len % 2 === 1 ? sortedDimDataArray[(len - 1) / 2] :
+            (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
+};
+
 // /**
 //  * Retreive the index with given value
 //  * @param {string} dim Concrete dimension.
