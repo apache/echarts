@@ -82,6 +82,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 #### Ember Binding
 + [echarts-ember](https://github.com/bruckwubete/echarts-ember) by [bruck wubete](https://github.com/bruckwubete)
++ [ember-cli-echarts](https://github.com/funnelcloudinc/ember-cli-echarts) by FunnelCloud
 
 #### Vue Component
 

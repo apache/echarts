@@ -9,6 +9,7 @@ import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
 import {Polyline, Polygon} from './poly';
 import ChartView from '../../view/Chart';
+import {round} from '../../util/number';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 
 function isPointsSame(points1, points2) {
@@ -81,6 +82,14 @@ function createGridClipShape(cartesian, hasAnimation, seriesModel) {
         width += expandSize * 2;
     }
 
+    // Avoid numberic rounding error (when the point is on the edge,
+    // the result may be unexpectedly by rounding error).
+    // See #7913 and `test/dataZoom-clip.html`.
+    x = round(x, 1);
+    y = round(y, 1);
+    width = round(width, 1);
+    height = round(height, 1);
+
     var clipPath = new graphic.Rect({
         shape: {
             x: x,
@@ -114,10 +123,10 @@ function createPolarClipShape(polar, hasAnimation, seriesModel) {
 
     var clipPath = new graphic.Sector({
         shape: {
-            cx: polar.cx,
-            cy: polar.cy,
-            r0: radiusExtent[0],
-            r: radiusExtent[1],
+            cx: round(polar.cx, 1),
+            cy: round(polar.cy, 1),
+            r0: round(radiusExtent[0], 1),
+            r: round(radiusExtent[1], 1),
             startAngle: -angleExtent[0] * RADIAN,
             endAngle: -angleExtent[1] * RADIAN,
             clockwise: angleAxis.inverse

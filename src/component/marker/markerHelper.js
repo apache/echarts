@@ -212,7 +212,11 @@ export function numCalculate(data, valueDataDim, type) {
         });
         return sum / count;
     }
+    else if (type === 'median') {
+        return data.getMedian(valueDataDim);
+    }
     else {
+        // max & min
         return data.getDataExtent(valueDataDim, true)[type === 'max' ? 1 : 0];
     }
 }
