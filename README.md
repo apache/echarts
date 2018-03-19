@@ -6,6 +6,9 @@
 
 ECharts is a free, powerful charting and visualization library offering an easy way of adding intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
 
+Now ECharts is an incubator project of Apache Software Foundation.
+Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
+
 **[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](http://ecomfe.github.io/echarts-doc/public/en/index.html)**
 
 ## Get ECharts
@@ -77,6 +80,10 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [ng-echarts](https://github.com/liekkas/ng-echarts) by liekkas
 + [ngx-echarts](https://github.com/xieziyu/ngx-echarts) by xieziyu
 
+#### Ember Binding
++ [echarts-ember](https://github.com/bruckwubete/echarts-ember) by [bruck wubete](https://github.com/bruckwubete)
++ [ember-cli-echarts](https://github.com/funnelcloudinc/ember-cli-echarts) by FunnelCloud
+
 #### Vue Component
 
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
@@ -142,4 +149,4 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 
 ## License
 
-ECharts is available under the BSD 3 license.
+ECharts is available under the Apache License V2.

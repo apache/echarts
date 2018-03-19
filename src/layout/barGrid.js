@@ -244,7 +244,10 @@ export function layout(seriesType, ecModel, api) {
         var stacked = isDimensionStacked(data, valueDim, baseDim);
         var isValueAxisH = valueAxis.isHorizontal();
 
-        var valueAxisStart = (baseAxis.onZero || stacked)
+        var valueAxisStart = (
+                zrUtil.indexOf(baseAxis.getAxesOnZeroOf(), valueAxis) >= 0
+                || stacked
+            )
             ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
             : valueAxis.getGlobalExtent()[0];
 

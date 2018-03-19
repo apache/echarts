@@ -35,6 +35,7 @@ import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
 import lightTheme from './theme/light';
 import darkTheme from './theme/dark';
+import './component/dataset';
 
 var assert = zrUtil.assert;
 var each = zrUtil.each;
@@ -776,7 +777,7 @@ var updateMethods = {
             return;
         }
 
-        ecModel.restoreData(payload);
+        scheduler.restoreData(ecModel, payload);
 
         scheduler.performSeriesTasks(ecModel);
 

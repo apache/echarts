@@ -107,16 +107,19 @@ export default AxisView.extend({
     _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
         var axis = angleAxisModel.axis;
 
-        var categoryData = angleAxisModel.getCategories();
+        var rawCategoryData = angleAxisModel.getCategories(true);
 
-        var labelModel = angleAxisModel.getModel('axisLabel');
+        var commonLabelModel = angleAxisModel.getModel('axisLabel');
         var labels = angleAxisModel.getFormattedLabels();
 
-        var labelMargin = labelModel.get('margin');
+        var labelMargin = commonLabelModel.get('margin');
         var labelsAngles = axis.getLabelsCoords();
+        var ticks = axis.scale.getTicks();
 
         // Use length of ticksAngles because it may remove the last tick to avoid overlapping
-        for (var i = 0; i < ticksAngles.length; i++) {
+        for (var i = 0; i < ticks.length; i++) {
+            var labelModel = commonLabelModel;
+            var tickVal = ticks[i];
             var r = radiusExtent[getRadiusIdx(polar)];
             var p = polar.coordToPoint([r + labelMargin, labelsAngles[i]]);
             var cx = polar.cx;
@@ -127,8 +130,8 @@ export default AxisView.extend({
             var labelTextVerticalAlign = Math.abs(p[1] - cy) / r < 0.3
                 ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
-            if (categoryData && categoryData[i] && categoryData[i].textStyle) {
-                labelModel = new Model(categoryData[i].textStyle, labelModel, labelModel.ecModel);
+            if (rawCategoryData && rawCategoryData[tickVal] && rawCategoryData[tickVal].textStyle) {
+                labelModel = new Model(rawCategoryData[tickVal].textStyle, commonLabelModel, commonLabelModel.ecModel);
             }
 
             var textEl = new graphic.Text({silent: true});

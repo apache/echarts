@@ -22,11 +22,13 @@ var symbolDrawProto = SymbolDraw.prototype;
 function symbolNeedsDraw(data, point, idx, opt) {
     return point && !isNaN(point[0]) && !isNaN(point[1])
         && !(opt.isIgnore && opt.isIgnore(idx))
-        // We do not set clipShape on group, because it will
-        // cut part of the symbol element shape.
+        // We do not set clipShape on group, because it will cut part of
+        // the symbol element shape. We use the same clip shape here as
+        // the line clip.
         && !(opt.clipShape && !opt.clipShape.contain(point[0], point[1]))
         && data.getItemVisual(idx, 'symbol') !== 'none';
 }
+
 /**
  * Update symbols draw by new data
  * @param {module:echarts/data/List} data

@@ -55,6 +55,21 @@ export default SeriesModel.extend({
 
         return tree.data;
     },
+    
+    /**
+     * make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
+     * @returns {string} orient
+     */
+    getOrient: function () {
+        var orient = this.get('orient');
+        if (orient === 'horizontal') {
+            orient = 'LR';
+        }
+        else if (orient === 'vertical') {
+            orient = 'TB';
+        }
+        return orient;
+    },
 
     /**
      * @override
@@ -88,8 +103,9 @@ export default SeriesModel.extend({
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
 
-        // the orient of orthoginal layout, can be setted to 'horizontal' or 'vertical'
-        orient: 'horizontal',
+        // The orient of orthoginal layout, can be setted to 'LR', 'TB', 'RL', 'BT'.
+        // and the backward compatibility configuration 'horizontal = LR', 'vertical = TB'.
+        orient: 'LR',
 
         symbol: 'emptyCircle',
 

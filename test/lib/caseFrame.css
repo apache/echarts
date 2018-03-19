@@ -15,30 +15,32 @@
 }
 .case-frame .cases-list ul {
     padding-left: 32px;
-    margin-top: 90px;
+    margin-top: 130px;
     list-style-type: decimal;
 }
 .case-frame .info-panel {
     position: fixed;
+    padding: 10px 20px;
     top: 0;
     left: 0;
-    width: 230px;
+    width: 195px;
     background: #fff;
+    border-bottom: 1px solid #ccc;
 }
 .case-frame .info-panel .current {
     height: 24px;
     line-height: 24px;
-    margin-left: 20px;
     white-space: nowrap;
     text-decoration: underline;
 }
 .case-frame .info-panel .renderer-selector {
-    padding-left: 20px;
     height: 40px;
     line-height: 40px;
 }
 .case-frame .info-panel .dist-selector {
-    margin-left: 20px;
+}
+.case-frame .info-panel .list-filter {
+    margin: 10px 0;
 }
 .case-frame .page-content {
     margin-left: 235px;

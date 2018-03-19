@@ -7,12 +7,12 @@ import MarkerView from './MarkerView';
 
 var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
     var data = seriesModel.getData();
-    // Special type markLine like 'min', 'max', 'average'
+    // Special type markLine like 'min', 'max', 'average', 'median'
     var mlType = item.type;
 
     if (!zrUtil.isArray(item)
         && (
-            mlType === 'min' || mlType === 'max' || mlType === 'average'
+            mlType === 'min' || mlType === 'max' || mlType === 'average' || mlType === 'median'
             // In case
             // data: [{
             //   yAxis: 10

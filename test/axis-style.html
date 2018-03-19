@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                option = {
+                    dataZoom: {
+                    },
+                    grid: {
+                        bottom: 80
+                    },
+                    xAxis: {
+                        type: 'category',
+                        // boundaryGap: false,
+                        data: [
+                            'A',
+                            {
+                                value: 'Red label',
+                                textStyle: {
+                                    color: 'red', fontSize: 20
+                                }
+                            },
+                            'Mon',
+                            'Tue',
+                            {
+                                value: 'Blue label',
+                                textStyle: {
+                                    color: 'blue', fontSize: 20
+                                }
+                            },
+                            'Wed',
+                            'Thu'
+                        ]
+                    },
+                    yAxis: {},
+                    series: {
+                        type: 'line',
+                        data: [12, 32,42]
+                    }
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main0', {
+                    title: 'Check label color and correct when dataZoomed',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                option = {
+                    dataZoom: {
+                    },
+                    polar: {
+                    },
+                    radiusAxis: {
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        // boundaryGap: false,
+                        data: [
+                            'A',
+                            {
+                                value: 'Red label',
+                                textStyle: {
+                                    color: 'red', fontSize: 20
+                                }
+                            },
+                            'Mon',
+                            'Tue',
+                            {
+                                value: 'Blue label',
+                                textStyle: {
+                                    color: 'blue', fontSize: 20
+                                }
+                            },
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                            'Sun'
+                        ]
+                    },
+                    series: {
+                        type: 'line',
+                        coordinateSystem: 'polar',
+                        data: [12, 32,42]
+                    }
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main1', {
+                    title: 'Check label color and correct when dataZoomed',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+    </body>
+</html>

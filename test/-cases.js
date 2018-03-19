@@ -5,6 +5,46 @@
 
     var caseFrame = window.caseFrame;
 
+    var filters = [{
+        name: 'primary-cases',
+        whiteList: [
+            'ut/ut.html',
+            'ie8.html',
+            'touch-slide.html',
+            'touch-test.html',
+            'touch-candlestick.html',
+            'tooltip-touch.html',
+            'bar.html',
+            'line.html',
+            'geoLine.html',
+            'graph.html',
+            'graph-grid.html',
+            'map.html',
+            'media-finance.html',
+            'axes.html',
+            'dataZoom-axes.html',
+            'dataZoom-axis-type.html',
+            'dataZoom-dynamic.html',
+            'visualMap-continuous.html',
+            'visualMap-opacity.html',
+            'brush.html',
+            'brush2.html'
+        ]
+    }, {
+        name: 'stream-cases',
+        whiteList: [
+            'lines-ny-appendData.html',
+            'scatter-random-stream.html',
+            'scatter-random-stream-fix-axis.html',
+            'scatter-gps.html',
+            'scatter-weibo.html',
+            'lines-flight.html',
+            'stream-filter.html',
+            'scatter-stream-visual.html'
+        ]
+    }];
+
+
     function run() {
 
         // Init list
@@ -17,7 +57,8 @@
                 if (pagePaths.length) {
                     caseFrame.init({
                         dom: document.getElementById('main'),
-                        pagePaths: pagePaths
+                        pagePaths: pagePaths,
+                        filters: filters
                     });
                 }
                 else {

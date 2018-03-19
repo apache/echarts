@@ -31,6 +31,7 @@
      * @param {number} [opt.height]
      * @param {boolean} [opt.draggable]
      * @param {boolean} [opt.lazyUpdate]
+     * @param {boolean} [opt.notMerge]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      */
@@ -83,7 +84,7 @@
         }
 
         if (opt.option) {
-            chart = testHelper.createChart(echarts, chartContainer, opt.option, opt);
+            chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
         }
 
         var dataTables = opt.dataTables;
@@ -122,7 +123,7 @@
     };
 
     /**
-     * opt: {boolean}: lazyUpdate, {number}: height, {Object}: {width, height, draggable}
+     * opt: {boolean}: lazyUpdate, {boolean}: notMerge, {number}: height, {Object}: {width, height, draggable}
      */
     testHelper.createChart = function (echarts, domOrId, option, opt) {
         if (typeof opt === 'number') {
@@ -148,7 +149,10 @@
                 window.draggable.init(dom, chart, {throttle: 70, addPlaceholder: true});
             }
 
-            option && chart.setOption(option, {lazyUpdate: opt.lazyUpdate});
+            option && chart.setOption(option, {
+                lazyUpdate: opt.lazyUpdate,
+                notMerge: opt.notMerge
+            });
             testHelper.resizable(chart);
 
             return chart;

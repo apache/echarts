@@ -171,12 +171,12 @@ MarkerView.extend({
 
     renderSeries: function (seriesModel, maModel, ecModel, api) {
         var coordSys = seriesModel.coordinateSystem;
-        var seriesName = seriesModel.name;
+        var seriesId = seriesModel.id;
         var seriesData = seriesModel.getData();
 
         var areaGroupMap = this.markerGroupMap;
-        var polygonGroup = areaGroupMap.get(seriesName)
-            || areaGroupMap.set(seriesName, {group: new graphic.Group()});
+        var polygonGroup = areaGroupMap.get(seriesId)
+            || areaGroupMap.set(seriesId, {group: new graphic.Group()});
 
         this.group.add(polygonGroup.group);
         polygonGroup.__keep = true;

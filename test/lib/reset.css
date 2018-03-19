@@ -39,6 +39,7 @@ body > .main {
     background: #fff;
     z-index: 99;
     width: 300px;
+    max-height: 99%;
     border-left: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
 }

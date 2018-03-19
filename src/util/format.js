@@ -35,13 +35,22 @@ export function toCamelCase(str, upperCaseFirst) {
 
 export var normalizeCssArray = zrUtil.normalizeCssArray;
 
+
+var replaceReg = /([&<>"'])/g;
+var replaceMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    '\'': '&#39;',
+};
+
 export function encodeHTML(source) {
-    return String(source)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    return source == null
+        ? ''
+        : (source + '').replace(replaceReg, function (str, char) {
+            return replaceMap[char];
+        });
 }
 
 var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];

@@ -32,11 +32,6 @@
 
                     $.getJSON('./data/flare.json')
                     .done(function (data) {
-
-                        echarts.util.each(data.children, function (datum, index) {
-                            index % 2 === 0 && (datum.collapsed = true);
-                        });
-
                         chart.setOption({
 
                             tooltip: {
@@ -50,30 +45,33 @@
 
                                     data: [data],
 
-                                    top: '1%',
-                                    left: '7%',
-                                    bottom: '1%',
-                                    right: '20%',
+                                    left: '2%',
+                                    right: '2%',
+                                    top: '20%',
+                                    bottom: '8%',
 
-                                    symbolSize: 7,
+                                    symbol: 'emptyCircle',
 
-                                    // initialTreeDepth: -1,
+                                    orient: 'BT',
+
+                                    expandAndCollapse: true,
+
                                     label: {
-                                            position: 'left',
+                                            position: 'bottom',
+                                            rotate: 90,
                                             verticalAlign: 'middle',
                                             align: 'right'
                                     },
 
                                     leaves: {
                                         label: {
-                                                position: 'right',
+                                                position: 'top',
+                                                rotate: 90,
                                                 verticalAlign: 'middle',
                                                 align: 'left'
                                         }
                                     },
 
-                                    expandAndCollapse: true,
-                                    animationDuration: 550,
                                     animationDurationUpdate: 750
                                 }
                             ]

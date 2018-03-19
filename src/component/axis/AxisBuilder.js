@@ -678,7 +678,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     ) * PI / 180;
 
     var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
-    var categoryData = axisModel.getCategories();
+    var rawCategoryData = axisModel.getCategories(true);
 
     var labelEls = [];
     var silent = isSilent(axisModel);
@@ -692,13 +692,13 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
             axis, index, opt.labelInterval, ticks.length,
             showMinLabel, showMaxLabel
         )) {
-                return;
+            return;
         }
 
         var itemLabelModel = labelModel;
-        if (categoryData && categoryData[tickVal] && categoryData[tickVal].textStyle) {
+        if (rawCategoryData && rawCategoryData[tickVal] && rawCategoryData[tickVal].textStyle) {
             itemLabelModel = new Model(
-                categoryData[tickVal].textStyle, labelModel, axisModel.ecModel
+                rawCategoryData[tickVal].textStyle, labelModel, axisModel.ecModel
             );
         }
 

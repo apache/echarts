@@ -193,6 +193,9 @@ function processSeries(seriesOpt) {
             removeEC3NormalStatus(opt);
         });
     }
+    else if (seriesOpt.type === 'tree') {
+        removeEC3NormalStatus(seriesOpt.leaves);
+    }
     // sunburst starts from ec4, so it does not need to compat levels.
 }
 

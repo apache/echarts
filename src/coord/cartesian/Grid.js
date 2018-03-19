@@ -127,44 +127,45 @@ gridProto.update = function (ecModel, api) {
 };
 
 function fixAxisOnZero(axesMap, otherAxisDim, axis) {
+
+    axis.getAxesOnZeroOf = function () {
+        // TODO: onZero of multiple axes.
+        return otherAxis ? [otherAxis] : [];
+    };
+
     // onZero can not be enabled in these two situations:
     // 1. When any other axis is a category axis.
     // 2. When no axis is cross 0 point.
-    var axes = axesMap[otherAxisDim];
+    var otherAxes = axesMap[otherAxisDim];
 
-    if (!axis.onZero) {
+    var otherAxis;
+    var axisModel = axis.model;
+    var onZero = axisModel.get('axisLine.onZero');
+    var onZeroAxisIndex = axisModel.get('axisLine.onZeroAxisIndex');
+
+    if (!onZero) {
         return;
     }
-
-    var onZeroAxisIndex = axis.onZeroAxisIndex;
 
     // If target axis is specified.
     if (onZeroAxisIndex != null) {
-        var otherAxis = axes[onZeroAxisIndex];
-        if (otherAxis && canNotOnZeroToAxis(otherAxis)) {
-            axis.onZero = false;
+        if (canOnZeroToAxis(otherAxes[onZeroAxisIndex])) {
+            otherAxis = otherAxes[onZeroAxisIndex];
         }
         return;
     }
 
-    for (var idx in axes) {
-        if (axes.hasOwnProperty(idx)) {
-            var otherAxis = axes[idx];
-            if (otherAxis && !canNotOnZeroToAxis(otherAxis)) {
-                onZeroAxisIndex = +idx;
-                break;
-            }
+    // Find the first available other axis.
+    for (var idx in otherAxes) {
+        if (otherAxes.hasOwnProperty(idx) && canOnZeroToAxis(otherAxes[idx])) {
+            otherAxis = otherAxes[idx];
+            break;
         }
     }
-
-    if (onZeroAxisIndex == null) {
-        axis.onZero = false;
-    }
-    axis.onZeroAxisIndex = onZeroAxisIndex;
 }
 
-function canNotOnZeroToAxis(axis) {
-    return axis.type === 'category' || axis.type === 'time' || !ifAxisCrossZero(axis);
+function canOnZeroToAxis(axis) {
+    return axis && axis.type !== 'category' && axis.type !== 'time' && ifAxisCrossZero(axis);
 }
 
 /**
@@ -446,9 +447,6 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
             var isCategory = axis.type === 'category';
             axis.onBand = isCategory && axisModel.get('boundaryGap');
             axis.inverse = axisModel.get('inverse');
-
-            axis.onZero = axisModel.get('axisLine.onZero');
-            axis.onZeroAxisIndex = axisModel.get('axisLine.onZeroAxisIndex');
 
             // Inject axis into axisModel
             axisModel.axis = axis;
