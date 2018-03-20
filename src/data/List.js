@@ -14,25 +14,26 @@ import {summarizeDimensions} from './helper/dimensionHelper';
 var isObject = zrUtil.isObject;
 
 var UNDEFINED = 'undefined';
-var globalObj = typeof window === UNDEFINED ? global : window;
 
 // Use prefix to avoid index to be the same as otherIdList[idx],
 // which will cause weird udpate animation.
 var ID_PREFIX = 'e\0\0';
 
 var dataCtors = {
-    'float': typeof globalObj.Float64Array === UNDEFINED
-        ? Array : globalObj.Float64Array,
-    'int': typeof globalObj.Int32Array === UNDEFINED
-        ? Array : globalObj.Int32Array,
+    'float': typeof Float64Array === UNDEFINED
+        ? Array : Float64Array,
+    'int': typeof Int32Array === UNDEFINED
+        ? Array : Int32Array,
     // Ordinal data type can be string or int
     'ordinal': Array,
     'number': Array,
     'time': Array
 };
 
-var CtorUint32Array = typeof globalObj.Uint32Array === UNDEFINED ? Array : globalObj.Uint32Array;
-var CtorUint16Array = typeof globalObj.Uint16Array === UNDEFINED ? Array : globalObj.Uint16Array;
+// Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
+// different from the Ctor of typed array.
+var CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
+var CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
 
 function getIndicesCtor(list) {
     // The possible max value in this._indicies is always this._rawCount despite of filtering.
@@ -618,17 +619,32 @@ listProto.count = function () {
 };
 
 listProto.getIndices = function () {
-    if (this._indices) {
-        var Ctor = this._indices.constructor;
-        return new Ctor(this._indices.buffer, 0, this._count);
+    var newIndices;
+
+    var indices = this._indices;
+    if (indices) {
+        var Ctor = indices.constructor;
+        var thisCount = this._count;
+        // `new Array(a, b, c)` is different from `new Uint32Array(a, b, c)`.
+        if (Ctor === Array) {
+            newIndices = new Ctor(thisCount);
+            for (var i = 0; i < thisCount; i++) {
+                newIndices[i] = indices[i];
+            }
+        }
+        else {
+            newIndices = new Ctor(indices.buffer, 0, thisCount);
+        }
+    }
+    else {
+        var Ctor = getIndicesCtor(this);
+        var newIndices = new Ctor(this.count());
+        for (var i = 0; i < newIndices.length; i++) {
+            newIndices[i] = i;
+        }
     }
 
-    var Ctor = getIndicesCtor(this);
-    var arr = new Ctor(this.count());
-    for (var i = 0; i < arr.length; i++) {
-        arr[i] = i;
-    }
-    return arr;
+    return newIndices;
 };
 
 /**
@@ -873,6 +889,10 @@ listProto.getMedian = function (dim /*, stack */) {
             dimDataArray.push(val);
         }
     });
+
+    // TODO
+    // Use quick select?
+
     // immutability & sort
     var sortedDimDataArray = [].concat(dimDataArray).sort(function(a, b) {
         return a - b;

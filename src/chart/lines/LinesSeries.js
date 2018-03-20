@@ -5,10 +5,8 @@ import { concatArray, mergeAll, map } from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import CoordinateSystem from '../../CoordinateSystem';
 
-var globalObj = typeof window === 'undefined' ? global : window;
-
-var Uint32Arr = globalObj.Uint32Array || Array;
-var Float64Arr = globalObj.Float64Array || Array;
+var Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
+var Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;
 
 function compatEc2(seriesOpt) {
     var data = seriesOpt.data;
