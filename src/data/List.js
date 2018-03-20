@@ -508,14 +508,24 @@ listProto._initDataFromProvider = function (start, end) {
         if (!rawData.pure) {
             var name = nameList[idx];
 
-            if (dataItem && !name) {
-                if (nameDimIdx != null) {
-                    name = this._getNameFromStore(idx);
-                }
-                else if (dataItem.name != null) {
+            if (dataItem && name == null) {
+                // If dataItem is {name: ...}, it has highest priority.
+                // That is appropriate for many common cases.
+                if (dataItem.name != null) {
                     // There is no other place to persistent dataItem.name,
                     // so save it to nameList.
                     nameList[idx] = name = dataItem.name;
+                }
+                else if (nameDimIdx != null) {
+                    var nameDim = dimensions[nameDimIdx];
+                    var nameDimChunk = storage[dim][chunkIndex];
+                    if (nameDimChunk) {
+                        name = nameDimChunk[chunkOffset];
+                        var ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
+                        if (ordinalMeta) {
+                            name = ordinalMeta.categories[name];
+                        }
+                    }
                 }
             }
 
@@ -573,43 +583,24 @@ function prepareInvertedIndex(list) {
     });
 }
 
-// TODO refactor
-listProto._getNameFromStore = function (rawIndex) {
-    var nameDimIdx = this._nameDimIdx;
-    if (nameDimIdx != null) {
-        var chunkSize = this._chunkSize;
+function getRawValueFromStore(list, dimIndex, rawIndex) {
+    var val;
+    if (dimIndex != null) {
+        var chunkSize = list._chunkSize;
         var chunkIndex = Math.floor(rawIndex / chunkSize);
         var chunkOffset = rawIndex % chunkSize;
-        var dim = this.dimensions[nameDimIdx];
-        var ordinalMeta = this._dimensionInfos[dim].ordinalMeta;
-        if (ordinalMeta) {
-            return ordinalMeta.categories[rawIndex];
-        }
-        else {
-            var chunk = this._storage[dim][chunkIndex];
-            return chunk && chunk[chunkOffset];
-        }
-    }
-};
-
-// TODO refactor
-listProto._getIdFromStore = function (rawIndex) {
-    var idDimIdx = this._idDimIdx;
-    if (idDimIdx != null) {
-        var chunkSize = this._chunkSize;
-        var chunkIndex = Math.floor(rawIndex / chunkSize);
-        var chunkOffset = rawIndex % chunkSize;
-        var dim = this.dimensions[idDimIdx];
-        var ordinalMeta = this._dimensionInfos[dim].ordinalMeta;
-        if (ordinalMeta) {
-            return ordinalMeta.categories[rawIndex];
-        }
-        else {
-            var chunk = this._storage[dim][chunkIndex];
-            return chunk && chunk[chunkOffset];
+        var dim = list.dimensions[dimIndex];
+        var chunk = list._storage[dim][chunkIndex];
+        if (chunk) {
+            val = chunk[chunkOffset];
+            var ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
+            if (ordinalMeta) {
+                val = ordinalMeta.categories[val];
+            }
         }
     }
-};
+    return val;
+}
 
 /**
  * @return {number}
@@ -1092,7 +1083,7 @@ listProto.getRawDataItem = function (idx) {
 listProto.getName = function (idx) {
     var rawIndex = this.getRawIndex(idx);
     return this._nameList[rawIndex]
-        || this._getNameFromStore(rawIndex)
+        || getRawValueFromStore(this, this._nameDimIdx, rawIndex)
         || '';
 };
 
@@ -1108,7 +1099,7 @@ listProto.getId = function (idx) {
 function getId(list, rawIndex) {
     var id = list._idList[rawIndex];
     if (id == null) {
-        id = list._getIdFromStore(rawIndex);
+        id = getRawValueFromStore(list, list._idDimIdx, rawIndex);
     }
     if (id == null) {
         // FIXME Check the usage in graph, should not use prefix.

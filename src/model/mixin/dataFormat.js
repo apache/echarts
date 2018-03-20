@@ -15,7 +15,7 @@ export default {
         var data = this.getData(dataType);
         var rawValue = this.getRawValue(dataIndex, dataType);
         var rawDataIndex = data.getRawIndex(dataIndex);
-        var name = data.getName(dataIndex, true);
+        var name = data.getName(dataIndex);
         var itemOpt = data.getRawDataItem(dataIndex);
         var color = data.getItemVisual(dataIndex, 'color');
 
