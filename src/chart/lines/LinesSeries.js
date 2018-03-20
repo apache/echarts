@@ -42,6 +42,9 @@ var LinesSeries = SeriesModel.extend({
     visualColorAccessPath: 'lineStyle.color',
 
     init: function (option) {
+        // The input data may be null/undefined.
+        option.data = option.data || [];
+
         // Not using preprocessor because mergeOption may not have series.type
         compatEc2(option);
 
@@ -56,6 +59,9 @@ var LinesSeries = SeriesModel.extend({
     },
 
     mergeOption: function (option) {
+        // The input data may be null/undefined.
+        option.data = option.data || [];
+
         compatEc2(option);
 
         if (option.data) {
