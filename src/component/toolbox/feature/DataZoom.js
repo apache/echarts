@@ -231,6 +231,7 @@ featureManager.register('dataZoom', DataZoom);
 
 
 // Create special dataZoom option for select
+// FIXME consider the case of merge option, where axes options are not exists.
 echarts.registerPreprocessor(function (option) {
     if (!option) {
         return;

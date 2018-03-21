@@ -62,8 +62,10 @@
                 }
 
                 chart = myChart = testHelper.create(echarts, 'main0', createParams());
-                // Set option again with notMerge mode.
-                chart.setOption(createParams().option, true);
+                if (chart) {
+                    // Set option again with notMerge mode.
+                    chart.setOption(createParams().option, true);
+                }
             });
 
         </script>
