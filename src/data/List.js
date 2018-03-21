@@ -1267,14 +1267,12 @@ listProto.filterSelf = function (dimensions, cb, context, contextCompat) {
  * Select data in range. (For optimization of filter)
  * (Manually inline code, support 5 million data filtering in data zoom.)
  */
-listProto.selectRange = function (range /*, stack */) {
+listProto.selectRange = function (range) {
     'use strict';
 
     if (!this._count) {
         return;
     }
-
-    // stack = stack || false;
 
     var dimensions = [];
     for (var dim in range) {
@@ -1303,7 +1301,7 @@ listProto.selectRange = function (range /*, stack */) {
     var max = range[dim0][1];
 
     var quickFinished = false;
-    if (!this._indices /* && !stack */) {
+    if (!this._indices) {
         // Extreme optimization for common case. About 2x faster in chrome.
         var idx = 0;
         if (dimSize === 1) {
@@ -1313,7 +1311,14 @@ listProto.selectRange = function (range /*, stack */) {
                 var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
                 for (var i = 0; i < len; i++) {
                     var val = chunkStorage[i];
-                    if (val >= min && val <= max) {
+                    // NaN will not be filtered. Consider the case, in line chart, empty
+                    // value indicates the line should be broken. But for the case like
+                    // scatter plot, a data item with empty value will not be rendered,
+                    // but the axis extent may be effected if some other dim of the data
+                    // item has value. Fortunately it is not a significant negative effect.
+                    if (
+                        (val >= min && val <= max) || isNaN(val)
+                    ) {
                         newIndices[offset++] = idx;
                     }
                     idx++;
@@ -1333,7 +1338,14 @@ listProto.selectRange = function (range /*, stack */) {
                 for (var i = 0; i < len; i++) {
                     var val = chunkStorage[i];
                     var val2 = chunkStorage2[i];
-                    if (val >= min && val <= max && val2 >= min2 && val2 <= max2) {
+                    // Do not filter NaN, see comment above.
+                    if ((
+                            (val >= min && val <= max) || isNaN(val)
+                        )
+                        && (
+                            (val2 >= min2 && val2 <= max2) || isNaN(val2)
+                        )
+                    ) {
                         newIndices[offset++] = idx;
                     }
                     idx++;
@@ -1344,12 +1356,13 @@ listProto.selectRange = function (range /*, stack */) {
     }
     if (!quickFinished) {
         if (dimSize === 1) {
-            // stack = stack || !!this.getCalculationInfo(dim0);
             for (var i = 0; i < originalCount; i++) {
                 var rawIndex = this.getRawIndex(i);
-                // var val = stack ? this.get(dim0, i, true) : this._getFast(dim0, rawIndex);
                 var val = this._getFast(dim0, rawIndex);
-                if (val >= min && val <= max) {
+                // Do not filter NaN, see comment above.
+                if (
+                    (val >= min && val <= max) || isNaN(val)
+                ) {
                     newIndices[offset++] = rawIndex;
                 }
             }
@@ -1360,8 +1373,8 @@ listProto.selectRange = function (range /*, stack */) {
                 var rawIndex = this.getRawIndex(i);
                 for (var k = 0; k < dimSize; k++) {
                     var dimk = dimensions[k];
-                    // var val = stack ? this.get(dimk, i, true) : this._getFast(dim, rawIndex);
                     var val = this._getFast(dim, rawIndex);
+                    // Do not filter NaN, see comment above.
                     if (val < range[dimk][0] || val > range[dimk][1]) {
                         keep = false;
                     }
