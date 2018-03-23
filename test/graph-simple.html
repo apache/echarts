@@ -13,6 +13,7 @@
                 margin: 0;
             }
         </style>
+        hover node3, edge label should be displayed.
         <div id="main"></div>
         <script>
 
@@ -36,7 +37,7 @@
                     series : [
                         {
                             type: 'graph',
-                            symbolSize: 50,
+                            symbolSize: 20,
                             roam: true,
                             label: {
                                 normal: {
@@ -100,7 +101,12 @@
                                 }
                             }, {
                                 source: '节点1',
-                                target: '节点3'
+                                target: '节点3',
+                                emphasis: {
+                                    label: {
+                                        show: true
+                                    }
+                                }
                             }, {
                                 source: '节点2',
                                 target: '节点3'

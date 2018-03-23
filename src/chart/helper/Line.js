@@ -296,30 +296,36 @@ lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
 
     var label = this.childOfName('label');
     var defaultLabelColor;
-    var normalText;
-    var emphasisText;
+    var baseText;
 
+    // FIXME: the logic below probably should be merged to `graphic.setLabelStyle`.
     if (showLabel || hoverShowLabel) {
         defaultLabelColor = visualColor || '#000';
 
-        normalText = seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType);
-        if (normalText == null) {
+        baseText = seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType);
+        if (baseText == null) {
             var rawVal = seriesModel.getRawValue(idx);
-            normalText = rawVal == null
+            baseText = rawVal == null
                 ? lineData.getName(idx)
                 : isFinite(rawVal)
                 ? round(rawVal)
                 : rawVal;
         }
-        emphasisText = zrUtil.retrieve2(
-            seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-            normalText
-        );
     }
+    var normalText = showLabel ? baseText : null;
+    var emphasisText = hoverShowLabel
+        ? zrUtil.retrieve2(
+            seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
+            baseText
+        )
+        : null;
 
-    // label.afterUpdate = lineAfterUpdate;
-    if (showLabel) {
-        var labelStyle = graphic.setTextStyle(label.style, labelModel, {
+    var labelStyle = label.style;
+
+    // Always set `textStyle` even if `normalStyle.text` is null, because default
+    // values have to be set on `normalStyle`.
+    if (normalText != null || emphasisText != null) {
+        graphic.setTextStyle(label.style, labelModel, {
             text: normalText
         }, {
             autoColor: defaultLabelColor
@@ -330,11 +336,8 @@ lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
         // 'start', 'middle', 'end'
         label.__position = labelModel.get('position') || 'middle';
     }
-    else {
-        label.setStyle('text', null);
-    }
 
-    if (hoverShowLabel) {
+    if (emphasisText != null) {
         // Only these properties supported in this emphasis style here.
         label.hoverStyle = {
             text: emphasisText,

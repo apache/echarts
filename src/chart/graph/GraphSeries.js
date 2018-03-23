@@ -65,6 +65,12 @@ var GraphSeries = echarts.extendSeriesModel({
                 edgeLabelModel.parentModel,
                 ecModel
             );
+            var emphasisEdgeLabelModel = self.getModel('emphasis.edgeLabel');
+            var emphasisFakeSeriesModel = new Model(
+                {emphasis: {label: emphasisEdgeLabelModel.option}},
+                emphasisEdgeLabelModel.parentModel,
+                ecModel
+            );
 
             edgeData.wrapMethod('getItemModel', function (model) {
                 model.customizeGetParent(edgeGetParent);
@@ -75,6 +81,8 @@ var GraphSeries = echarts.extendSeriesModel({
                 path = this.parsePath(path);
                 return (path && path[0] === 'label')
                     ? fakeSeriesModel
+                    : (path && path[0] === 'emphasis' && path[1] === 'label')
+                    ? emphasisFakeSeriesModel
                     : this.parentModel;
             }
         }
