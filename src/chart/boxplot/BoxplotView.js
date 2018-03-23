@@ -20,7 +20,7 @@ zrUtil.mixin(BoxplotView, viewMixin, true);
 var normalStyleAccessPath = ['itemStyle'];
 var emphasisStyleAccessPath = ['emphasis', 'itemStyle'];
 
-function updateStyle(itemGroup, data, idx) {
+function updateStyle(data, idx, boxEl, whiskerEl, bodyEl) {
     var itemModel = data.getItemModel(idx);
     var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
     var borderColor = data.getItemVisual(idx, 'color');
@@ -28,18 +28,16 @@ function updateStyle(itemGroup, data, idx) {
     // Exclude borderColor.
     var itemStyle = normalItemStyleModel.getItemStyle(['borderColor']);
 
-    var whiskerEl = itemGroup.childAt(itemGroup.whiskerIndex);
     whiskerEl.style.set(itemStyle);
     whiskerEl.style.stroke = borderColor;
     whiskerEl.dirty();
 
-    var bodyEl = itemGroup.childAt(itemGroup.bodyIndex);
     bodyEl.style.set(itemStyle);
     bodyEl.style.stroke = borderColor;
     bodyEl.dirty();
 
     var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
-    graphic.setHoverStyle(itemGroup, hoverStyle);
+    graphic.setHoverStyle(boxEl, hoverStyle);
 }
 
 export default BoxplotView;

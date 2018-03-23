@@ -1,124 +1,106 @@
-import * as zrUtil from 'zrender/src/core/util';
-import {parsePercent} from '../../util/number';
 import {subPixelOptimize} from '../../util/graphic';
+import createRenderPlanner from '../helper/createRenderPlanner';
+import {calculateCandleWidth} from './helper';
 
-var retrieve2 = zrUtil.retrieve2;
+var LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
-export default function (ecModel) {
+export default {
 
-    ecModel.eachSeriesByType('candlestick', function (seriesModel) {
+    seriesType: 'candlestick',
+
+    plan: createRenderPlanner(),
+
+    reset: function (seriesModel) {
+
+        var pipelineContext = seriesModel.pipelineContext;
+        var isLargeRender = pipelineContext.large;
 
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
         var candleWidth = calculateCandleWidth(seriesModel, data);
         var chartLayout = seriesModel.get('layout');
-        var variableDim = chartLayout === 'horizontal' ? 0 : 1;
-        var constDim = 1 - variableDim;
+        var cDimIdx = chartLayout === 'horizontal' ? 0 : 1;
+        var vDimIdx = 1 - cDimIdx;
         var coordDims = ['x', 'y'];
-        var vDims = [];
-        var cDim;
-
-        zrUtil.each(data.dimensions, function (dimName) {
-            var dimInfo = data.getDimensionInfo(dimName);
-            var coordDim = dimInfo.coordDim;
-            if (coordDim === coordDims[constDim]) {
-                vDims.push(dimName);
-            }
-            else if (coordDim === coordDims[variableDim]) {
-                cDim = dimName;
-            }
-        });
+        var cDim = data.mapDimension(coordDims[cDimIdx]);
+        var vDims = data.mapDimension(coordDims[vDimIdx], true);
+        var openDim = vDims[0];
+        var closeDim = vDims[1];
+        var lowestDim = vDims[2];
+        var highestDim = vDims[3];
 
         if (cDim == null || vDims.length < 4) {
             return;
         }
 
-        var dataIndex = 0;
+        return {progress: isLargeRender ? largeProgress : normalProgress};
 
-        data.each([cDim].concat(vDims), function () {
-            var args = arguments;
-            var axisDimVal = args[0];
-            var idx = args[vDims.length + 1];
 
-            var openVal = args[1];
-            var closeVal = args[2];
-            var lowestVal = args[3];
-            var highestVal = args[4];
+        function normalProgress(params, data) {
 
-            var ocLow = Math.min(openVal, closeVal);
-            var ocHigh = Math.max(openVal, closeVal);
-
-            var ocLowPoint = getPoint(ocLow);
-            var ocHighPoint = getPoint(ocHigh);
-            var lowestPoint = getPoint(lowestVal);
-            var highestPoint = getPoint(highestVal);
-
-            var whiskerEnds = [
-                [
-                    subPixelOptimizePoint(highestPoint),
-                    subPixelOptimizePoint(ocHighPoint)
-                ],
-                [
-                    subPixelOptimizePoint(lowestPoint),
-                    subPixelOptimizePoint(ocLowPoint)
-                ]
-            ];
-
-            var bodyEnds = [];
-            addBodyEnd(ocHighPoint, 0);
-            addBodyEnd(ocLowPoint, 1);
-
-            var sign;
-            if (openVal > closeVal) {
-                sign = -1;
-            }
-            else if (openVal < closeVal) {
-                sign = 1;
-            }
-            else {
-                // If close === open, compare with close of last record
-                if (dataIndex > 0) {
-                    sign = data.getItemModel(dataIndex - 1).get()[2]
-                        <= closeVal
-                            ? 1
-                            : -1;
-                }
-                else {
-                    // No record of previous, set to be positive
-                    sign = 1;
-                }
+            for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+                layoutDataItem(dataIndex);
             }
 
-            data.setItemLayout(idx, {
-                chartLayout: chartLayout,
-                sign: sign,
-                initBaseline: openVal > closeVal
-                    ? ocHighPoint[constDim] : ocLowPoint[constDim], // open point.
-                bodyEnds: bodyEnds,
-                whiskerEnds: whiskerEnds,
-                brushRect: makeBrushRect()
-            });
+            function layoutDataItem(dataIndex) {
+                var axisDimVal = data.get(cDim, dataIndex);
+                var openVal = data.get(openDim, dataIndex);
+                var closeVal = data.get(closeDim, dataIndex);
+                var lowestVal = data.get(lowestDim, dataIndex);
+                var highestVal = data.get(highestDim, dataIndex);
 
-            ++dataIndex;
+                var ocLow = Math.min(openVal, closeVal);
+                var ocHigh = Math.max(openVal, closeVal);
 
-            function getPoint(val) {
+                var ocLowPoint = getPoint(ocLow, axisDimVal);
+                var ocHighPoint = getPoint(ocHigh, axisDimVal);
+                var lowestPoint = getPoint(lowestVal, axisDimVal);
+                var highestPoint = getPoint(highestVal, axisDimVal);
+
+                var whiskerEnds = [
+                    [
+                        subPixelOptimizePoint(highestPoint),
+                        subPixelOptimizePoint(ocHighPoint)
+                    ],
+                    [
+                        subPixelOptimizePoint(lowestPoint),
+                        subPixelOptimizePoint(ocLowPoint)
+                    ]
+                ];
+
+                var bodyEnds = [];
+                addBodyEnd(bodyEnds, ocHighPoint, 0);
+                addBodyEnd(bodyEnds, ocLowPoint, 1);
+
+                data.setItemLayout(dataIndex, {
+                    chartLayout: chartLayout,
+                    sign: getSign(data, dataIndex, openVal, closeVal, closeDim),
+                    initBaseline: openVal > closeVal
+                        ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
+                    bodyEnds: bodyEnds,
+                    whiskerEnds: whiskerEnds,
+                    brushRect: makeBrushRect(lowestVal, highestVal, axisDimVal)
+                });
+            }
+
+            function getPoint(val, axisDimVal) {
                 var p = [];
-                p[variableDim] = axisDimVal;
-                p[constDim] = val;
+                p[cDimIdx] = axisDimVal;
+                p[vDimIdx] = val;
                 return (isNaN(axisDimVal) || isNaN(val))
                     ? [NaN, NaN]
                     : coordSys.dataToPoint(p);
             }
 
-            function addBodyEnd(point, start) {
+            function addBodyEnd(bodyEnds, point, start) {
                 var point1 = point.slice();
                 var point2 = point.slice();
 
-                point1[variableDim] = subPixelOptimize(
-                    point1[variableDim] + candleWidth / 2, 1, false
+                point1[cDimIdx] = subPixelOptimize(
+                    point1[cDimIdx] + candleWidth / 2, 1, false
                 );
-                point2[variableDim] = subPixelOptimize(
-                    point2[variableDim] - candleWidth / 2, 1, true
+                point2[cDimIdx] = subPixelOptimize(
+                    point2[cDimIdx] - candleWidth / 2, 1, true
                 );
 
                 start
@@ -126,52 +108,86 @@ export default function (ecModel) {
                     : bodyEnds.push(point2, point1);
             }
 
-            function makeBrushRect() {
-                var pmin = getPoint(Math.min(openVal, closeVal, lowestVal, highestVal));
-                var pmax = getPoint(Math.max(openVal, closeVal, lowestVal, highestVal));
+            function makeBrushRect(lowestVal, highestVal, axisDimVal) {
+                var pmin = getPoint(lowestVal, axisDimVal);
+                var pmax = getPoint(highestVal, axisDimVal);
 
-                pmin[variableDim] -= candleWidth / 2;
-                pmax[variableDim] -= candleWidth / 2;
+                pmin[cDimIdx] -= candleWidth / 2;
+                pmax[cDimIdx] -= candleWidth / 2;
 
                 return {
                     x: pmin[0],
                     y: pmin[1],
-                    width: constDim ? candleWidth : pmax[0] - pmin[0],
-                    height: constDim ? pmax[1] - pmin[1] : candleWidth
+                    width: vDimIdx ? candleWidth : pmax[0] - pmin[0],
+                    height: vDimIdx ? pmax[1] - pmin[1] : candleWidth
                 };
             }
 
             function subPixelOptimizePoint(point) {
-                point[variableDim] = subPixelOptimize(point[variableDim], 1);
+                point[cDimIdx] = subPixelOptimize(point[cDimIdx], 1);
                 return point;
             }
+        }
 
-        });
-    });
-}
+        function largeProgress(params, data) {
+            var segCount = params.end - params.start;
+            // Structure: [sign, x1, y1, x2, y2, sign, x1, y1, x2, y2, ...]
+            var points = new LargeArr(segCount * 5);
 
-function calculateCandleWidth(seriesModel, data) {
-    var baseAxis = seriesModel.getBaseAxis();
-    var extent;
+            for (
+                var dataIndex = params.start, offset = 0, point, tmpIn = [], tmpOut = [];
+                dataIndex < params.end;
+                dataIndex++
+            ) {
+                var axisDimVal = data.get(cDim, dataIndex);
+                var openVal = data.get(openDim, dataIndex);
+                var closeVal = data.get(closeDim, dataIndex);
+                var lowestVal = data.get(lowestDim, dataIndex);
+                var highestVal = data.get(highestDim, dataIndex);
 
-    var bandWidth = baseAxis.type === 'category'
-        ? baseAxis.getBandWidth()
-        : (
-            extent = baseAxis.getExtent(),
-            Math.abs(extent[1] - extent[0]) / data.count()
-        );
+                if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
+                    points[offset++] = NaN;
+                    offset += 4;
+                    continue;
+                }
 
-    var barMaxWidth = parsePercent(
-        retrieve2(seriesModel.get('barMaxWidth'), bandWidth),
-        bandWidth
-    );
-    var barMinWidth = parsePercent(
-        retrieve2(seriesModel.get('barMinWidth'), 1),
-        bandWidth
-    );
-    var barWidth = seriesModel.get('barWidth');
-    return barWidth != null
-        ? parsePercent(barWidth, bandWidth)
-        // Put max outer to ensure bar visible in spite of overlap.
-        : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
+                points[offset++] = getSign(data, dataIndex, openVal, closeVal, closeDim);
+
+                tmpIn[cDimIdx] = axisDimVal;
+
+                tmpIn[vDimIdx] = lowestVal;
+                point = coordSys.dataToPoint(tmpIn, null, tmpOut);
+                points[offset++] = point ? point[0] : NaN;
+                points[offset++] = point ? point[1] : NaN;
+
+                tmpIn[vDimIdx] = highestVal;
+                point = coordSys.dataToPoint(tmpIn, null, tmpOut);
+                points[offset++] = point ? point[0] : NaN;
+                points[offset++] = point ? point[1] : NaN;
+            }
+
+            data.setLayout('largePoints', points);
+            data.setLayout('candleWidth', candleWidth);
+            data.setLayout('candleWidth', candleWidth);
+        }
+    }
+};
+
+function getSign(data, dataIndex, openVal, closeVal, closeDim) {
+    var sign;
+    if (openVal > closeVal) {
+        sign = -1;
+    }
+    else if (openVal < closeVal) {
+        sign = 1;
+    }
+    else {
+        sign = dataIndex > 0
+            // If close === open, compare with close of last record
+            ? (data.get(closeDim, dataIndex - 1) <= closeVal ? 1 : -1)
+            // No record of previous, set to be positive
+            : 1;
+    }
+
+    return sign;
 }

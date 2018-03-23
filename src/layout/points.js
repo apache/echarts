@@ -38,12 +38,12 @@ export default function (seriesType) {
                     var point;
 
                     if (dimLen === 1) {
-                        var x = data.get(dims[0], i, true);
+                        var x = data.get(dims[0], i);
                         point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
                     }
                     else {
-                        var x = tmpIn[0] = data.get(dims[0], i, true);
-                        var y = tmpIn[1] = data.get(dims[1], i, true);
+                        var x = tmpIn[0] = data.get(dims[0], i);
+                        var y = tmpIn[1] = data.get(dims[1], i);
                         // Also {Array.<number>}, not undefined to avoid if...else... statement
                         point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
                     }

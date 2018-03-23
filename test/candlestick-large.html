@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="panel0"></div>
+
+
+
+
+
+        <script>
+
+            /**
+             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
+             * @see <http://bl.ocks.org/mbostock/4061502>
+             */
+            require([
+                'echarts',
+                'data/stock-DJI.json'
+            ], update)
+
+            function splitData(rawData) {
+                var categoryData = [];
+                var values = [];
+                var volumns = [];
+                for (var i = 0; i < rawData.length; i++) {
+                    categoryData.push(rawData[i].splice(0, 1)[0]);
+                    values.push(rawData[i])
+                    volumns.push(rawData[i][4]);
+                }
+                return {
+                    categoryData: categoryData,
+                    values: values,
+                    volumns: volumns
+                };
+            }
+
+            function calculateMA(dayCount, data) {
+                var result = [];
+                for (var i = 0, len = data.values.length; i < len; i++) {
+                    if (i < dayCount) {
+                        result.push('-');
+                        continue;
+                    }
+                    var sum = 0;
+                    for (var j = 0; j < dayCount; j++) {
+                        sum += data.values[i - j][1];
+                    }
+                    result.push(+(sum / dayCount).toFixed(3));
+                }
+                return result;
+            }
+
+            function update(echarts, rawData) {
+
+                // var data = splitData(rawData);
+
+                var option = {
+                    dataset: {
+                        source: rawData
+                    },
+                    backgroundColor: '#eee',
+                    // animation: false,
+                    legend: {
+                        left: 0
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
+                            brush: {
+                                type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
+                            }
+                        }
+                    },
+                    brush: {
+                        xAxisIndex: 'all',
+                        brushLink: 'all',
+                        outOfBrush: {
+                            colorAlpha: 0.1
+                        }
+                    },
+                    grid: [
+                        {
+                            left: '10%',
+                            right: '10%',
+                            height: 300
+                        },
+                        // {
+                        //     left: '10%',
+                        //     right: '10%',
+                        //     height: 70,
+                        //     bottom: 80
+                        // }
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category',
+                            // data: data.categoryData,
+                            scale: true,
+                            boundaryGap : false,
+                            axisLine: {onZero: false},
+                            splitLine: {show: false},
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax'
+                        },
+                        // {
+                        //     type: 'category',
+                        //     gridIndex: 1,
+                        //     data: data.categoryData,
+                        //     scale: true,
+                        //     boundaryGap : false,
+                        //     axisLine: {onZero: false},
+                        //     axisTick: {show: false},
+                        //     splitLine: {show: false},
+                        //     axisLabel: {show: false},
+                        //     splitNumber: 20,
+                        //     min: 'dataMin',
+                        //     max: 'dataMax'
+                        // }
+                    ],
+                    yAxis: [
+                        {
+                            scale: true,
+                            splitArea: {
+                                show: true
+                            }
+                        },
+                        // {
+                        //     scale: true,
+                        //     gridIndex: 1,
+                        //     splitNumber: 2,
+                        //     axisLabel: {show: false},
+                        //     axisLine: {show: false},
+                        //     axisTick: {show: false},
+                        //     splitLine: {show: false}
+                        // }
+                    ],
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            // xAxisIndex: [0, 1],
+                            start: 10,
+                            end: 100
+                        },
+                        {
+                            show: true,
+                            // xAxisIndex: [0, 1],
+                            type: 'slider',
+                            bottom: 10,
+                            start: 10,
+                            end: 100
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'Dow-Jones index',
+                            type: 'candlestick',
+                            encode: {
+                                x: 0,
+                                y: [1, 2, 3, 4]
+                            },
+                            itemStyle: {
+                                normal: {
+                                    borderColor: null,
+                                    borderColor0: null
+                                }
+                            },
+                            // tooltip: {
+                            //     formatter: function (param) {
+                            //         var param = param[0];
+                            //         return [
+                            //             'Date: ' + param.name + '<hr size=1 style="margin: 3px 0">',
+                            //             'Open: ' + param.data[0] + '<br/>',
+                            //             'Close: ' + param.data[1] + '<br/>',
+                            //             'Lowest: ' + param.data[2] + '<br/>',
+                            //             'Highest: ' + param.data[3] + '<br/>'
+                            //         ].join('')
+                            //     }
+                            // }
+                        } //,
+                        // {
+                        //     name: 'MA5',
+                        //     type: 'line',
+                        //     data: calculateMA(5, data),
+                        //     smooth: true,
+                        //     lineStyle: {
+                        //         normal: {opacity: 0.5}
+                        //     }
+                        // },
+                        // {
+                        //     name: 'MA10',
+                        //     type: 'line',
+                        //     data: calculateMA(10, data),
+                        //     smooth: true,
+                        //     lineStyle: {
+                        //         normal: {opacity: 0.5}
+                        //     }
+                        // },
+                        // {
+                        //     name: 'MA20',
+                        //     type: 'line',
+                        //     data: calculateMA(20, data),
+                        //     smooth: true,
+                        //     lineStyle: {
+                        //         normal: {opacity: 0.5}
+                        //     }
+                        // },
+                        // {
+                        //     name: 'MA30',
+                        //     type: 'line',
+                        //     data: calculateMA(30, data),
+                        //     smooth: true,
+                        //     lineStyle: {
+                        //         normal: {opacity: 0.5}
+                        //     }
+                        // },
+                        // {
+                        //     name: 'Volumn',
+                        //     type: 'bar',
+                        //     xAxisIndex: 1,
+                        //     yAxisIndex: 1,
+                        //     data: data.volumns
+                        // }
+                    ]
+                };
+
+                var panel = document.getElementById('panel0');
+                var chart = testHelper.create(echarts, 'main0', {
+                    option: option,
+                    height: 550
+                });
+
+                // chart && chart.on('brushSelected', renderBrushed);
+
+                // function renderBrushed(params) {
+                //     var sum = 0;
+                //     var min = Infinity;
+                //     var max = -Infinity;
+                //     var countBySeries = [];
+                //     var brushComponent = params.batch[0];
+
+                //     var rawIndices = brushComponent.selected[0].dataIndex;
+                //     for (var i = 0; i < rawIndices.length; i++) {
+                //         var val = data.values[rawIndices[i]][1];
+                //         sum += val;
+                //         min = Math.min(val, min);
+                //         max = Math.max(val, max);
+                //     }
+
+                //     panel.innerHTML = [
+                //         '<h3>STATISTICS:</h3>',
+                //         'SUM of open: ' + (sum / rawIndices.length).toFixed(4) + '<br>',
+                //         'MIN of open: ' + min.toFixed(4) + '<br>',
+                //         'MAX of open: ' + max.toFixed(4) + '<br>'
+                //     ].join(' ');
+
+                // }
+
+                // chart && chart.dispatchAction({
+                //     type: 'brush',
+                //     areas: [
+                //         {
+                //             brushType: 'lineX',
+                //             coordRange: ['2016-06-02', '2016-06-20'],
+                //             xAxisIndex: 0
+                //         }
+                //     ]
+                // });
+            }
+
+        </script>
+
+
+
+    </body>
+</html>

@@ -791,14 +791,13 @@ var updateMethods = {
 
         scheduler.performDataProcessorTasks(ecModel, payload);
 
+        coordSysMgr.update(ecModel, api);
+
         // Current stream render is not supported in data process. So we can update
         // stream modes after data processing, where the filtered data is used to
-        // deteming whether use progressive rendering.
+        // deteming whether use progressive rendering. And we update stream modes
+        // after coordinate system updated, then full coord info can be fetched.
         updateStreamModes(this, ecModel);
-
-        // stackSeriesData(ecModel);
-
-        coordSysMgr.update(ecModel, api);
 
         clearColorPalette(ecModel);
         scheduler.performVisualTasks(ecModel, payload);
