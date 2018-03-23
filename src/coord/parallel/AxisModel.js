@@ -71,15 +71,25 @@ var AxisModel = ComponentModel.extend({
             return 'normal';
         }
 
-        if (value == null) {
+        if (value == null || isNaN(value)) {
             return 'inactive';
         }
 
-        for (var i = 0, len = activeIntervals.length; i < len; i++) {
-            if (activeIntervals[i][0] <= value && value <= activeIntervals[i][1]) {
+        // Simple optimization
+        if (activeIntervals.length === 1) {
+            var interval = activeIntervals[0];
+            if (interval[0] <= value && value <= interval[1]) {
                 return 'active';
             }
         }
+        else {
+            for (var i = 0, len = activeIntervals.length; i < len; i++) {
+                if (activeIntervals[i][0] <= value && value <= activeIntervals[i][1]) {
+                    return 'active';
+                }
+            }
+        }
+
         return 'inactive';
     }
 

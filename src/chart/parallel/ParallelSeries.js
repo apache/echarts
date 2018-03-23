@@ -70,7 +70,7 @@ export default SeriesModel.extend({
         },
 
         progressive: false, // 100
-        smooth: false,
+        smooth: false, // true | false | number
 
         animationEasing: 'linear'
     }

@@ -6,6 +6,13 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import Path from 'zrender/src/graphic/Path';
 
+
+
+
+// ------------------
+// -- Whisker Path --
+// ------------------
+
 var WhiskerPath = Path.extend({
 
     type: 'whiskerInBox',
@@ -23,55 +30,31 @@ var WhiskerPath = Path.extend({
     }
 });
 
+
+
+
+// ----------------
+// -- Normal Box --
+// ----------------
+
+
+var BODY_INDEX = 0;
+var WHISKER_INDEX = 1;
+
 /**
- * @constructor
- * @alias {module:echarts/chart/helper/WhiskerBox}
  * @param {module:echarts/data/List} data
  * @param {number} idx
  * @param {Function} styleUpdater
  * @param {boolean} isInit
- * @extends {module:zrender/graphic/Group}
  */
-function WhiskerBox(data, idx, styleUpdater, isInit) {
-    graphic.Group.call(this);
+function createNormalBox(data, dataIndex, styleUpdater, isInit) {
+    var boxEl = new graphic.Group();
 
-    /**
-     * @type {number}
-     * @readOnly
-     */
-    this.bodyIndex;
-
-    /**
-     * @type {number}
-     * @readOnly
-     */
-    this.whiskerIndex;
-
-    /**
-     * @type {Function}
-     */
-    this.styleUpdater = styleUpdater;
-
-    this._createContent(data, idx, isInit);
-
-    this.updateData(data, idx, isInit);
-
-    /**
-     * Last series model.
-     * @type {module:echarts/model/Series}
-     */
-    this._seriesModel;
-}
-
-var whiskerBoxProto = WhiskerBox.prototype;
-
-whiskerBoxProto._createContent = function (data, idx, isInit) {
-    var itemLayout = data.getItemLayout(idx);
+    var itemLayout = data.getItemLayout(dataIndex);
     var constDim = itemLayout.chartLayout === 'horizontal' ? 1 : 0;
-    var count = 0;
 
     // Whisker element.
-    this.add(new graphic.Polygon({
+    boxEl.add(new graphic.Polygon({
         shape: {
             points: isInit
                 ? transInit(itemLayout.bodyEnds, constDim, itemLayout)
@@ -80,19 +63,42 @@ whiskerBoxProto._createContent = function (data, idx, isInit) {
         style: {strokeNoScale: true},
         z2: 100
     }));
-    this.bodyIndex = count++;
 
     // Box element.
     var whiskerEnds = zrUtil.map(itemLayout.whiskerEnds, function (ends) {
         return isInit ? transInit(ends, constDim, itemLayout) : ends;
     });
-    this.add(new WhiskerPath({
+    boxEl.add(new WhiskerPath({
         shape: makeWhiskerEndsShape(whiskerEnds),
         style: {strokeNoScale: true},
         z2: 100
     }));
-    this.whiskerIndex = count++;
-};
+
+    updateNormalBoxData(boxEl, data, dataIndex, styleUpdater, isInit);
+
+    return boxEl;
+}
+
+function updateNormalBoxData(boxEl, data, dataIndex, styleUpdater, isInit) {
+    var seriesModel = boxEl._seriesModel = data.hostModel;
+    var itemLayout = data.getItemLayout(dataIndex);
+    var updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
+    var whiskerEl = boxEl.childAt(WHISKER_INDEX);
+    var bodyEl = boxEl.childAt(BODY_INDEX);
+
+    updateMethod(
+        bodyEl,
+        {shape: {points: itemLayout.bodyEnds}},
+        seriesModel, dataIndex
+    );
+    updateMethod(
+        whiskerEl,
+        {shape: makeWhiskerEndsShape(itemLayout.whiskerEnds)},
+        seriesModel, dataIndex
+    );
+
+    styleUpdater(data, dataIndex, boxEl, whiskerEl, bodyEl);
+}
 
 function transInit(points, dim, itemLayout) {
     return zrUtil.map(points, function (point) {
@@ -111,33 +117,74 @@ function makeWhiskerEndsShape(whiskerEnds) {
     return shape;
 }
 
-/**
- * Update symbol properties
- * @param  {module:echarts/data/List} data
- * @param  {number} idx
- */
-whiskerBoxProto.updateData = function (data, idx, isInit) {
-    var seriesModel = this._seriesModel = data.hostModel;
-    var itemLayout = data.getItemLayout(idx);
-    var updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
-    // this.childAt(this.bodyIndex).stopAnimation(true);
-    // this.childAt(this.whiskerIndex).stopAnimation(true);
-    updateMethod(
-        this.childAt(this.bodyIndex),
-        {shape: {points: itemLayout.bodyEnds}},
-        seriesModel, idx
+
+
+
+// ---------------
+// -- Large Box --
+// ---------------
+
+var NORMAL_STYLE_ACCESS_PATH = ['itemStyle'];
+var EMPHASIS_STYLE_ACCESS_PATH = ['emphasis', 'itemStyle'];
+
+function createLargeBox(data, largePoints, dataIndex, segmentStart) {
+    var boxEl = new graphic.Line({
+        shape: largeBoxMakeShape(largePoints, dataIndex, segmentStart)
+    });
+
+    boxEl.__largeWhiskerBox = true;
+
+    largeBoxSetStyle(boxEl, data, dataIndex);
+
+    return boxEl;
+}
+
+function largeBoxMakeShape(largePoints, dataIndex, segmentStart) {
+    var baseIdx = (dataIndex - (segmentStart || 0)) * 5;
+    return {
+        x1: largePoints[baseIdx + 1],
+        y1: largePoints[baseIdx + 2],
+        x2: largePoints[baseIdx + 3],
+        y2: largePoints[baseIdx + 4]
+    };
+}
+
+function updateLargeBoxData(boxEl, data, dataIndex) {
+    graphic.updateProps(
+        boxEl,
+        {shape: largeBoxMakeShape(data.getLayout('largePoints'), dataIndex, 0)},
+        data.hostModel,
+        dataIndex
     );
-    updateMethod(
-        this.childAt(this.whiskerIndex),
-        {shape: makeWhiskerEndsShape(itemLayout.whiskerEnds)},
-        seriesModel, idx
+
+    largeBoxSetStyle(boxEl, data, dataIndex);
+}
+
+function largeBoxSetStyle(boxEl, data, dataIndex) {
+    var itemModel = data.getItemModel(dataIndex);
+    var normalItemStyleModel = itemModel.getModel(NORMAL_STYLE_ACCESS_PATH);
+    var color = data.getItemVisual(dataIndex, 'color');
+    var borderColor = data.getItemVisual(dataIndex, 'borderColor') || color;
+
+    // Color must be excluded.
+    // Because symbol provide setColor individually to set fill and stroke
+    var itemStyle = normalItemStyleModel.getItemStyle(
+        ['color', 'color0', 'borderColor', 'borderColor0']
     );
 
-    this.styleUpdater.call(null, this, data, idx);
-};
+    boxEl.useStyle(itemStyle);
+    boxEl.style.stroke = borderColor;
 
-zrUtil.inherits(WhiskerBox, graphic.Group);
+    var hoverStyle = itemModel.getModel(EMPHASIS_STYLE_ACCESS_PATH).getItemStyle();
+    graphic.setHoverStyle(boxEl, hoverStyle);
+}
 
+
+
+
+// --------------------
+// -- WhiskerBoxDraw --
+// --------------------
 
 /**
  * @constructor
@@ -158,6 +205,9 @@ whiskerBoxDrawProto.updateData = function (data) {
     var group = this.group;
     var oldData = this._data;
     var styleUpdater = this.styleUpdater;
+    var pipelineContext = data.hostModel.pipelineContext;
+    var isLargeRender = pipelineContext.large;
+    var largePoints = isLargeRender && data.getLayout('largePoints');
 
     // There is no old data only when first rendering or switching from
     // stream mode to normal mode, where previous elements should be removed.
@@ -168,7 +218,9 @@ whiskerBoxDrawProto.updateData = function (data) {
     data.diff(oldData)
         .add(function (newIdx) {
             if (data.hasValue(newIdx)) {
-                var symbolEl = new WhiskerBox(data, newIdx, styleUpdater, true);
+                var symbolEl = isLargeRender
+                    ? createLargeBox(data, largePoints, newIdx)
+                    : createNormalBox(data, newIdx, styleUpdater, true);
                 data.setItemGraphicEl(newIdx, symbolEl);
                 group.add(symbolEl);
             }
@@ -182,11 +234,20 @@ whiskerBoxDrawProto.updateData = function (data) {
                 return;
             }
 
+            if (symbolEl && symbolEl.__largeWhiskerBox ^ isLargeRender) {
+                group.remove(symbolEl);
+                symbolEl = null;
+            }
+
             if (!symbolEl) {
-                symbolEl = new WhiskerBox(data, newIdx, styleUpdater);
+                symbolEl = isLargeRender
+                    ? createLargeBox(data, largePoints, newIdx)
+                    : createNormalBox(data, newIdx, styleUpdater);
             }
             else {
-                symbolEl.updateData(data, newIdx);
+                isLargeRender
+                    ? updateLargeBoxData(symbolEl, data, newIdx)
+                    : updateNormalBoxData(symbolEl, data, newIdx, styleUpdater);
             }
 
             // Add back
@@ -210,8 +271,14 @@ whiskerBoxDrawProto.incrementalPrepareUpdate = function (seriesModel, ecModel, a
 
 whiskerBoxDrawProto.incrementalUpdate = function (params, seriesModel, ecModel, api) {
     var data = seriesModel.getData();
+    var pipelineContext = seriesModel.pipelineContext;
+    var isLargeRender = pipelineContext.large;
+    var largePoints = isLargeRender && data.getLayout('largePoints');
+
     for (var idx = params.start; idx < params.end; idx++) {
-        var symbolEl = new WhiskerBox(data, idx, this.styleUpdater, true);
+        var symbolEl = isLargeRender
+            ? createLargeBox(data, largePoints, idx, params.start)
+            : createNormalBox(data, idx, this.styleUpdater, true);
         symbolEl.incremental = true;
         this.group.add(symbolEl);
     }
