@@ -994,11 +994,18 @@ function updateDirectly(ecIns, method, payload, mainType, subType) {
     var condition = {mainType: mainType, query: query};
     subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
+    var excludeSeriesId = payload.excludeSeriesId;
+    if (excludeSeriesId != null) {
+        excludeSeriesId = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
+    }
+
     // If dispatchAction before setOption, do nothing.
-    ecModel && ecModel.eachComponent(condition, function (model, index) {
-        callView(ecIns[
-            mainType === 'series' ? '_chartsMap' : '_componentsMap'
-        ][model.__viewId]);
+    ecModel && ecModel.eachComponent(condition, function (model) {
+        if (!excludeSeriesId || excludeSeriesId.get(model.id) == null) {
+            callView(ecIns[
+                mainType === 'series' ? '_chartsMap' : '_componentsMap'
+            ][model.__viewId]);
+        }
     }, ecIns);
 
     function callView(view) {

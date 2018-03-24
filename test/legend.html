@@ -26,7 +26,7 @@
             }
         </style>
 
-         <h1>No scroll, left not set (should be center)</h1>
+        <h1>No scroll, left not set (should be center)</h1>
         <div class="chart" id="plain"></div>
         <h1>No scroll, width 300, right: 10</h1>
         <div class="chart" id="plain2"></div>
@@ -46,6 +46,9 @@
         <div class="chart" id="scroll-v"></div>
         <h1>Scroll vertically, left: 10, top: 'center', position: 'start', height: 50% (Turn the second page and resize it until page button disappear)</h1>
         <div class="chart" id="scroll-v2"></div>
+
+        <div id="legendHoverLink"></div>
+
 
         <script>
             function makeSeries(seriesCount, categoryCount) {
@@ -786,6 +789,79 @@
             })
         </script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['AAA']
+                    },
+                    xAxis: {
+                        data: ['A', 'B', 'C']
+                    },
+                    yAxis: {
+                    },
+                    grid: {
+                        right: '50%'
+                    },
+                    series: [
+                        {
+                            name: 'AAA',
+                            type: 'bar',
+                            data: [12, 33, 11]
+                        },
+                        {
+                            name: 'AAA',
+                            type: 'pie',
+                            legendHoverLink: false,
+                            center: ['75%', '50%'],
+                            label: {
+                                show: false,
+                            },
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
+                            },
+                            data: [
+                                { value: 0, name: 'A' },
+                                { value: 367, name: 'B' },
+                                { value: 20, name: 'C' }
+                            ]
+                        }
+                    ]
+                }
+
+                chart = myChart = testHelper.create(echarts, legendHoverLink, {
+                    title: 'legendHoverLink is disabled on pie',
+                    option: option
+                });
+            });
+
+        </script>
 
     </body>
 </html>

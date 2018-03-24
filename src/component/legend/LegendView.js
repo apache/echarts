@@ -100,6 +100,11 @@ export default echarts.extendComponentView({
         var legendDrawnMap = zrUtil.createHashMap();
         var selectMode = legendModel.get('selectedMode');
 
+        var excludeSeriesId = [];
+        ecModel.eachRawSeries(function (seriesModel) {
+            !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
+        });
+
         each(legendModel.getData(), function (itemModel, dataIndex) {
             var name = itemModel.get('name');
 
@@ -111,6 +116,7 @@ export default echarts.extendComponentView({
                 return;
             }
 
+            // Representitive series.
             var seriesModel = ecModel.getSeriesByName(name)[0];
 
             if (legendDrawnMap.get(name)) {
@@ -141,8 +147,8 @@ export default echarts.extendComponentView({
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                    .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api));
+                    .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api, excludeSeriesId))
+                    .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api, excludeSeriesId));
 
                 legendDrawnMap.set(name, true);
             }
@@ -153,6 +159,7 @@ export default echarts.extendComponentView({
                     if (legendDrawnMap.get(name)) {
                         return;
                     }
+
                     if (seriesModel.legendDataProvider) {
                         var data = seriesModel.legendDataProvider();
                         var idx = data.indexOfName(name);
@@ -171,13 +178,15 @@ export default echarts.extendComponentView({
                             selectMode
                         );
 
+                        // FIXME: consider different series has items with the same name.
                         itemGroup.on('click', curry(dispatchSelectAction, name, api))
                             // FIXME Should not specify the series name
-                            .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api))
-                            .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api));
+                            .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api, excludeSeriesId))
+                            .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api, excludeSeriesId));
 
                         legendDrawnMap.set(name, true);
                     }
+
                 }, this);
             }
 
@@ -333,26 +342,28 @@ function dispatchSelectAction(name, api) {
     });
 }
 
-function dispatchHighlightAction(seriesModel, dataName, api) {
+function dispatchHighlightAction(seriesModel, dataName, api, excludeSeriesId) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
-        seriesModel.get('legendHoverLink') && api.dispatchAction({
+        api.dispatchAction({
             type: 'highlight',
             seriesName: seriesModel.name,
-            name: dataName
+            name: dataName,
+            excludeSeriesId: excludeSeriesId
         });
     }
 }
 
-function dispatchDownplayAction(seriesModel, dataName, api) {
+function dispatchDownplayAction(seriesModel, dataName, api, excludeSeriesId) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
-        seriesModel.get('legendHoverLink') && api.dispatchAction({
+        api.dispatchAction({
             type: 'downplay',
             seriesName: seriesModel.name,
-            name: dataName
+            name: dataName,
+            excludeSeriesId: excludeSeriesId
         });
     }
 }
