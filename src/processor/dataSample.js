@@ -47,7 +47,11 @@ var indexSampler = function (frame, value) {
 
 export default function (seriesType) {
     return {
+
         seriesType: seriesType,
+
+        modifyOutputEnd: true,
+
         reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
             var sampling = seriesModel.get('sampling');

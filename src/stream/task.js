@@ -73,8 +73,6 @@ taskProto.perform = function (performArgs) {
         if (__DEV__) {
             assert(upTask._outputDueEnd != null);
         }
-        // ??? FIXME move to schedueler?
-        // this._dueEnd = Math.max(upTask._outputDueEnd, this._dueEnd);
         this._dueEnd = upTask._outputDueEnd;
     }
     // DataTask or overallTask
@@ -198,14 +196,12 @@ taskProto.getDownstream = function () {
 };
 
 taskProto.setOutputEnd = function (end) {
-    // ??? FIXME: check
     // This only happend in dataTask, dataZoom, map, currently.
     // where dataZoom do not set end each time, but only set
     // when reset. So we should record the setted end, in case
     // that the stub of dataZoom perform again and earse the
     // setted end by upstream.
     this._outputDueEnd = this._settedOutputEnd = end;
-    // this._outputDueEnd = end;
 };
 
 

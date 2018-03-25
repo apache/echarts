@@ -2,7 +2,7 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, isArray, isFunction, createHashMap, noop, assert} from 'zrender/src/core/util';
+import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
@@ -347,7 +347,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
     var seriesType = stageHandler.seriesType;
     var getTargetSeries = stageHandler.getTargetSeries;
     var overallProgress = true;
-    var isOverallFilter = stageHandler.isOverallFilter;
+    var modifyOutputEnd = stageHandler.modifyOutputEnd;
 
     // An overall task with seriesType detected or has `getTargetSeries`, we add
     // stub in each pipelines, it will set the overall task dirty when the pipeline
@@ -382,7 +382,7 @@ function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecM
         stub.context = {
             model: seriesModel,
             overallProgress: overallProgress,
-            isOverallFilter: isOverallFilter
+            modifyOutputEnd: modifyOutputEnd
         };
         stub.agent = overallTask;
         stub.__block = overallProgress;

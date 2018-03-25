@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var count = 1e6;
+
+                function randomData() {
+                    value = value + Math.random() * 21 - 10;
+                    return [
+                        xValue += 1,
+                        Math.round(value)
+                    ];
+                }
+
+                var data = [];
+                var xValue = 100;
+                var value = Math.random() * 1000;
+                for (var i = 0; i < count; i++) {
+                    data.push(randomData());
+                }
+
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    dataZoom: [{}, {type: 'inside'}],
+                    series: [{
+                        name: 'large-line',
+                        type: 'line',
+                        showSymbol: false,
+                        sampling: 'max',
+                        data: data
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main0', {
+                    option: option
+                });
+            });
+
+        </script>
+    </body>
+</html>
