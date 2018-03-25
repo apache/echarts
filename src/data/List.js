@@ -518,7 +518,7 @@ listProto._initDataFromProvider = function (start, end) {
                 }
                 else if (nameDimIdx != null) {
                     var nameDim = dimensions[nameDimIdx];
-                    var nameDimChunk = storage[dim][chunkIndex];
+                    var nameDimChunk = storage[nameDim][chunkIndex];
                     if (nameDimChunk) {
                         name = nameDimChunk[chunkOffset];
                         var ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
