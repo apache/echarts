@@ -143,14 +143,14 @@ var providerMethods = {
         count: function () {
             return this._data ? (this._data.length / this._dimSize) : 0;
         },
-        getItem: function (idx) {
+        getItem: function (idx, out) {
             idx = idx - this._offset;
-            var item = [];
+            out = out || [];
             var offset = this._dimSize * idx;
             for (var i = 0; i < this._dimSize; i++) {
-                item[i] = this._data[offset + i];
+                out[i] = this._data[offset + i];
             }
-            return item;
+            return out;
         },
         appendData: function (newData) {
             if (__DEV__) {

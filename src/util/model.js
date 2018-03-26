@@ -40,6 +40,7 @@ export function normalizeToArray(value) {
  * @param {Array.<string>} subOpts
  */
 export function defaultEmphasis(opt, key, subOpts) {
+    // Caution: performance sensitive.
     if (opt) {
         opt[key] = opt[key] || {};
         opt.emphasis = opt.emphasis || {};

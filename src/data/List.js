@@ -430,6 +430,7 @@ listProto._initDataFromProvider = function (start, end) {
     var rawData = this._rawData;
     var storage = this._storage;
     var dimensions = this.dimensions;
+    var dimLen = dimensions.length;
     var dimensionInfoMap = this._dimensionInfos;
     var nameList = this._nameList;
     var idList = this._idList;
@@ -439,7 +440,7 @@ listProto._initDataFromProvider = function (start, end) {
 
     var chunkCount = this._chunkCount;
     var lastChunkIndex = chunkCount - 1;
-    for (var i = 0; i < dimensions.length; i++) {
+    for (var i = 0; i < dimLen; i++) {
         var dim = dimensions[i];
         if (!rawExtent[dim]) {
             rawExtent[dim] = getInitialExtent();
@@ -475,9 +476,10 @@ listProto._initDataFromProvider = function (start, end) {
         this._chunkCount = storage[dim].length;
     }
 
+    var dataItem = new Array(dimLen);
     for (var idx = start; idx < end; idx++) {
         // NOTICE: Try not to write things into dataItem
-        var dataItem = rawData.getItem(idx);
+        dataItem = rawData.getItem(idx, dataItem);
         // Each data item is value
         // [1, 2]
         // 2
@@ -488,18 +490,19 @@ listProto._initDataFromProvider = function (start, end) {
         var chunkOffset = idx % chunkSize;
 
         // Store the data by dimensions
-        for (var k = 0; k < dimensions.length; k++) {
+        for (var k = 0; k < dimLen; k++) {
             var dim = dimensions[k];
             var dimStorage = storage[dim][chunkIndex];
             // PENDING NULL is empty or zero
             var val = this._dimValueGetter(dataItem, dim, idx, k);
             dimStorage[chunkOffset] = val;
 
-            if (val < rawExtent[dim][0]) {
-                rawExtent[dim][0] = val;
+            var dimRawExtent = rawExtent[dim];
+            if (val < dimRawExtent[0]) {
+                dimRawExtent[0] = val;
             }
-            if (val > rawExtent[dim][1]) {
-                rawExtent[dim][1] = val;
+            if (val > dimRawExtent[1]) {
+                dimRawExtent[1] = val;
             }
         }
 

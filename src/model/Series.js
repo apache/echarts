@@ -171,7 +171,7 @@ var SeriesModel = ComponentModel.extend({
         // Default data label emphasis `show`
         // FIXME Tree structure data ?
         // FIXME Performance ?
-        if (data) {
+        if (data && !zrUtil.isTypedArray(data)) {
             var props = ['show'];
             for (var i = 0; i < data.length; i++) {
                 if (data[i] && data[i].label) {
