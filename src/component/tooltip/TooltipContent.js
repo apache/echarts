@@ -119,7 +119,7 @@ function TooltipContent(container, api) {
     this._x = api.getWidth() / 2;
     this._y = api.getHeight() / 2;
 
-    container.appendChild(el);
+    document.body.appendChild(el);
 
     this._container = container;
 
