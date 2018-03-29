@@ -181,7 +181,10 @@ Calendar.prototype = {
         var date = dayInfo.formatedDate;
 
         // if not in range return [NaN, NaN]
-        if (clamp && !(dayInfo.time >= range.start.time && dayInfo.time <= range.end.time)) {
+        if (clamp && !(
+            dayInfo.time >= range.start.time
+            && dayInfo.time < range.end.time + PROXIMATE_ONE_DAY
+        )) {
             return [NaN, NaN];
         }
 

@@ -20,6 +20,7 @@
 
             var graphData = [
                 [
+                    // This is the first day of Feb
                     1485878400000,
                     260
                 ],
@@ -46,6 +47,11 @@
                 [
                     1488124800000,
                     985
+                ],
+                [
+                    // This is the last day of Feb. See #8045
+                    1488240000000,
+                    371
                 ]
             ];
 
@@ -59,15 +65,6 @@
 
             require([
                 'echarts'
-                // 'echarts/chart/heatmap',
-                // 'echarts/chart/scatter',
-                // 'echarts/chart/effectScatter',
-                // 'echarts/chart/graph',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/calendar',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -89,6 +86,7 @@
 
                     series: {
                         type: 'graph',
+                        // type: 'scatter',
                         edgeSymbol: ['none', 'arrow'],
                         coordinateSystem: 'calendar',
                         links: links,
