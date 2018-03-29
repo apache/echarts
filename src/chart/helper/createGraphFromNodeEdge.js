@@ -38,14 +38,18 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
         nodeData = createListFromArray(nodes, seriesModel);
     }
     else {
-        // FIXME
         var coordSysCtor = CoordinateSystem.get(coordSys);
-        // FIXME
+        var coordDimensions = (coordSysCtor && coordSysCtor.type !== 'view')
+            ? (coordSysCtor.dimensions || []) : [];
+        // FIXME: Some geo do not need `value` dimenson, whereas `calendar` needs
+        // `value` dimension, but graph need `value` dimension. It's better to
+        // uniform this behavior.
+        if (zrUtil.indexOf(coordDimensions, 'value') < 0) {
+            coordDimensions.concat(['value']);
+        }
+
         var dimensionNames = createDimensions(nodes, {
-            coordDimensions: (
-                (coordSysCtor && coordSysCtor.type !== 'view')
-                    ? (coordSysCtor.dimensions || []) : []
-            ).concat(['value'])
+            coordDimensions: coordDimensions
         });
         nodeData = new List(dimensionNames, seriesModel);
         nodeData.initData(nodes);
