@@ -1,4 +1,3 @@
-/* globals testHelper */
 (function (global) {
 
     var frameInsight = global.frameInsight = {};
@@ -136,7 +135,7 @@
     }
 
     function initDurationChart() {
-        var dom = testHelper.getDom(settings.durationChartDom);
+        var dom = document.getElementById(settings.durationChartDom);
         var domStyle = dom.style;
         // domStyle.border = '2px solid #333';
         domStyle.boxShadow = '0 0 3px #000';

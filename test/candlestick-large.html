@@ -53,16 +53,16 @@
                 };
             }
 
-            function calculateMA(dayCount, data) {
+            function calculateMA(dayCount, rawData) {
                 var result = [];
-                for (var i = 0, len = data.values.length; i < len; i++) {
+                for (var i = 0, len = rawData.length; i < len; i++) {
                     if (i < dayCount) {
                         result.push('-');
                         continue;
                     }
                     var sum = 0;
                     for (var j = 0; j < dayCount; j++) {
-                        sum += data.values[i - j][1];
+                        sum += rawData[i - j][2];
                     }
                     result.push(+(sum / dayCount).toFixed(3));
                 }
@@ -78,14 +78,31 @@
                         source: rawData
                     },
                     backgroundColor: '#eee',
-                    // animation: false,
                     legend: {
-                        left: 0
+                        left: 0,
                     },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
-                            type: 'line'
+                            type: 'cross'
+                        },
+                        backgroundColor: 'rgba(245, 245, 245, 0.8)',
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        padding: 10,
+                        textStyle: {
+                            color: '#000'
+                        },
+                        position: function (pos, params, el, elRect, size) {
+                            var obj = {top: 10};
+                            obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                            return obj;
+                        }
+                    },
+                    axisPointer: {
+                        link: {xAxisIndex: 'all'},
+                        label: {
+                            backgroundColor: '#777'
                         }
                     },
                     toolbox: {
@@ -166,16 +183,16 @@
                         {
                             type: 'inside',
                             // xAxisIndex: [0, 1],
-                            start: 10,
-                            end: 100
+                            // start: 10,
+                            // end: 100
                         },
                         {
                             show: true,
                             // xAxisIndex: [0, 1],
                             type: 'slider',
                             bottom: 10,
-                            start: 10,
-                            end: 100
+                            // start: 10,
+                            // end: 100
                         }
                     ],
                     series: [
@@ -204,11 +221,12 @@
                             //         ].join('')
                             //     }
                             // }
-                        } //,
+                        },
                         // {
                         //     name: 'MA5',
                         //     type: 'line',
-                        //     data: calculateMA(5, data),
+                        //     sampling: 'max',
+                        //     data: calculateMA(5, rawData),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -217,7 +235,7 @@
                         // {
                         //     name: 'MA10',
                         //     type: 'line',
-                        //     data: calculateMA(10, data),
+                        //     data: calculateMA(10, rawData),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -226,7 +244,7 @@
                         // {
                         //     name: 'MA20',
                         //     type: 'line',
-                        //     data: calculateMA(20, data),
+                        //     data: calculateMA(20, rawData),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -235,7 +253,7 @@
                         // {
                         //     name: 'MA30',
                         //     type: 'line',
-                        //     data: calculateMA(30, data),
+                        //     data: calculateMA(30, rawData),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -253,6 +271,7 @@
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
+                    title: 'Use dataset',
                     option: option,
                     height: 550
                 });
