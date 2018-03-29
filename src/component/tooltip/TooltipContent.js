@@ -254,7 +254,11 @@ TooltipContent.prototype = {
 
     isShow: function () {
         return this._show;
-    }
+    },
+
+    dispose: function () {
+        this.el.parentNode.removeChild(this.el)
+    },
 };
 
 export default TooltipContent;

@@ -666,7 +666,7 @@ export default echarts.extendComponentView({
         if (env.node || env.wxa) {
             return;
         }
-        this._tooltipContent.hide();
+        this._tooltipContent.dispose();
         globalListener.unregister('itemTooltip', api);
     }
 });
