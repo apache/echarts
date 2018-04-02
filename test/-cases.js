@@ -39,6 +39,7 @@
             'scatter-gps.html',
             'scatter-weibo.html',
             'lines-flight.html',
+            'lines-stream-not-large.html',
             'stream-filter.html',
             'scatter-stream-visual.html'
         ]
