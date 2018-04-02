@@ -441,7 +441,7 @@ function Edge(n1, n2, dataIndex) {
  * @param {string} [path]
  * @return {module:echarts/model/Model}
  */
-    Edge.prototype.getModel = function (path) {
+Edge.prototype.getModel = function (path) {
     if (this.dataIndex < 0) {
         return;
     }

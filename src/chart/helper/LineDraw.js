@@ -117,7 +117,9 @@ lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
         if (lineNeedsDraw(itemLayout)) {
             var el = new this._ctor(lineData, idx, this._seriesScope);
             el.traverse(updateIncrementalAndHover);
+
             this.group.add(el);
+            lineData.setItemGraphicEl(idx, el);
         }
     }
 };

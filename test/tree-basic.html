@@ -47,6 +47,7 @@
                             series:[
                                 {
                                     type: 'tree',
+                                    id: 'a',
 
                                     data: [data],
 
@@ -78,6 +79,20 @@
                                 }
                             ]
                         });
+
+
+                        setTimeout(function () {
+                            var newData = echarts.util.clone(data);
+                            newData.children.splice(0, 1);
+
+                            chart.setOption({
+                                series: {
+                                    id: 'a',
+                                    data: [newData]
+                                }
+                            });
+                        }, 1000);
+
                     });
                 });
         </script>
