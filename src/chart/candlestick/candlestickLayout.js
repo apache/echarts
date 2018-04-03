@@ -18,9 +18,8 @@ export default {
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
         var candleWidth = calculateCandleWidth(seriesModel, data);
-        var chartLayout = seriesModel.get('layout');
-        var cDimIdx = chartLayout === 'horizontal' ? 0 : 1;
-        var vDimIdx = 1 - cDimIdx;
+        var cDimIdx = 0;
+        var vDimIdx = 1;
         var coordDims = ['x', 'y'];
         var cDim = data.mapDimension(coordDims[cDimIdx]);
         var vDims = data.mapDimension(coordDims[vDimIdx], true);
@@ -39,10 +38,7 @@ export default {
         function normalProgress(params, data) {
 
             for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
-                layoutDataItem(dataIndex);
-            }
 
-            function layoutDataItem(dataIndex) {
                 var axisDimVal = data.get(cDim, dataIndex);
                 var openVal = data.get(openDim, dataIndex);
                 var closeVal = data.get(closeDim, dataIndex);
@@ -57,28 +53,22 @@ export default {
                 var lowestPoint = getPoint(lowestVal, axisDimVal);
                 var highestPoint = getPoint(highestVal, axisDimVal);
 
-                var whiskerEnds = [
-                    [
-                        subPixelOptimizePoint(highestPoint),
-                        subPixelOptimizePoint(ocHighPoint)
-                    ],
-                    [
-                        subPixelOptimizePoint(lowestPoint),
-                        subPixelOptimizePoint(ocLowPoint)
-                    ]
-                ];
+                var ends = [];
+                addBodyEnd(ends, ocHighPoint, 0);
+                addBodyEnd(ends, ocLowPoint, 1);
 
-                var bodyEnds = [];
-                addBodyEnd(bodyEnds, ocHighPoint, 0);
-                addBodyEnd(bodyEnds, ocLowPoint, 1);
+                ends.push(
+                    subPixelOptimizePoint(highestPoint),
+                    subPixelOptimizePoint(ocHighPoint),
+                    subPixelOptimizePoint(lowestPoint),
+                    subPixelOptimizePoint(ocLowPoint)
+                );
 
                 data.setItemLayout(dataIndex, {
-                    chartLayout: chartLayout,
                     sign: getSign(data, dataIndex, openVal, closeVal, closeDim),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
-                    bodyEnds: bodyEnds,
-                    whiskerEnds: whiskerEnds,
+                    ends: ends,
                     brushRect: makeBrushRect(lowestVal, highestVal, axisDimVal)
                 });
             }
@@ -92,7 +82,7 @@ export default {
                     : coordSys.dataToPoint(p);
             }
 
-            function addBodyEnd(bodyEnds, point, start) {
+            function addBodyEnd(ends, point, start) {
                 var point1 = point.slice();
                 var point2 = point.slice();
 
@@ -104,8 +94,8 @@ export default {
                 );
 
                 start
-                    ? bodyEnds.push(point1, point2)
-                    : bodyEnds.push(point2, point1);
+                    ? ends.push(point1, point2)
+                    : ends.push(point2, point1);
             }
 
             function makeBrushRect(lowestVal, highestVal, axisDimVal) {
@@ -167,7 +157,6 @@ export default {
             }
 
             data.setLayout('largePoints', points);
-            data.setLayout('candleWidth', candleWidth);
             data.setLayout('candleWidth', candleWidth);
         }
     }

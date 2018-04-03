@@ -1,6 +1,5 @@
 
 import createListSimply from '../helper/createListSimply';
-import WhiskerBoxDraw from '../helper/WhiskerBoxDraw';
 import * as zrUtil from 'zrender/src/core/util';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 
@@ -109,35 +108,4 @@ export var seriesModelMixin = {
         return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
     }
 
-};
-
-export var viewMixin = {
-
-    init: function () {
-        /**
-         * Old data.
-         * @private
-         * @type {module:echarts/chart/helper/WhiskerBoxDraw}
-         */
-        var whiskerBoxDraw = this._whiskerBoxDraw = new WhiskerBoxDraw(
-            this.getStyleUpdater()
-        );
-        this.group.add(whiskerBoxDraw.group);
-    },
-
-    render: function (seriesModel, ecModel, api) {
-        this._whiskerBoxDraw.updateData(seriesModel.getData());
-    },
-
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
-        this._whiskerBoxDraw.incrementalPrepareUpdate(seriesModel, ecModel, api);
-    },
-
-    incrementalRender: function (params, seriesModel, ecModel, api) {
-        this._whiskerBoxDraw.incrementalUpdate(params, seriesModel, ecModel, api);
-    },
-
-    remove: function (ecModel) {
-        this._whiskerBoxDraw.remove();
-    }
 };

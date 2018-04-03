@@ -22,7 +22,11 @@ export default {
         var largePoints = isLargeRender && data.getLayout('largePoints');
 
         data.setVisual({
-            legendSymbol: 'roundRect'
+            legendSymbol: 'roundRect',
+            colorP: getColor(1, seriesModel),
+            colorN: getColor(-1, seriesModel),
+            borderColorP: getBorderColor(1, seriesModel),
+            borderColorN: getBorderColor(-1, seriesModel)
         });
 
         // Only visible series has each data be visual encoded
@@ -40,15 +44,23 @@ export default {
                 data.setItemVisual(
                     dataIndex,
                     {
-                        color: itemModel.get(
-                            sign > 0 ? positiveColorQuery : negativeColorQuery
-                        ),
-                        borderColor: itemModel.get(
-                            sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
-                        )
+                        color: getColor(sign, itemModel),
+                        borderColor: getBorderColor(sign, itemModel)
                     }
                 );
             }
+        }
+
+        function getColor(sign, model) {
+            return model.get(
+                sign > 0 ? positiveColorQuery : negativeColorQuery
+            );
+        }
+
+        function getBorderColor(sign, model) {
+            return model.get(
+                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
+            );
         }
 
         return {progress: progress};
