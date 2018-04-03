@@ -278,7 +278,6 @@ var ThemeRiverSeries = SeriesModel.extend({
 
         label: {
             margin: 4,
-            textAlign: 'right',
             show: true,
             position: 'left',
             color: '#000',
