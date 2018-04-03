@@ -34,11 +34,14 @@
         name: 'stream-cases',
         whiteList: [
             'lines-ny-appendData.html',
+            'scatter-stream-large.html',
+            'scatter-stream-not-large.html',
             'scatter-random-stream.html',
             'scatter-random-stream-fix-axis.html',
             'scatter-gps.html',
             'scatter-weibo.html',
             'lines-flight.html',
+            'lines-stream-large.html',
             'lines-stream-not-large.html',
             'stream-filter.html',
             'scatter-stream-visual.html'
