@@ -11,7 +11,13 @@ import {
     getViewRect
 } from './layoutHelper';
 
-export default function (seriesModel, api) {
+export default function (ecModel, api) {
+    ecModel.eachSeriesByType('tree', function (seriesModel) {
+        commonLayout(seriesModel, api);
+    });
+}
+
+function commonLayout(seriesModel, api) {
 
     var layoutInfo = getViewRect(seriesModel, api);
     seriesModel.layoutInfo = layoutInfo;
@@ -35,6 +41,7 @@ export default function (seriesModel, api) {
 
     var virtualRoot = seriesModel.getData().tree.root;
     var realRoot = virtualRoot.children[0];
+
     init(virtualRoot);
     eachAfter(realRoot, firstWalk, separation);
     virtualRoot.hierNode.modifier = - realRoot.hierNode.prelim;

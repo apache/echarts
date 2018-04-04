@@ -1,0 +1,132 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+            require([
+                'echarts'
+                ], function (echarts) {
+                    var chart = echarts.init(document.getElementById('main'), null, {
+                    });
+
+                    window.onresize = function () {
+                        chart.resize();
+                    };
+
+                    var data = {
+                        "name": "flare",
+                        "children": [
+                            {
+                                "name": "flex",
+                                "children": [
+                                    {"name": "FlareVis", "value": 4116}
+                                ]
+                            },
+                            {
+                                "name": "scale",
+                                "children": [
+                                    {"name": "IScaleMap", "value": 2105},
+                                    {"name": "LinearScale", "value": 1316},
+                                    {"name": "LogScale", "value": 3151},
+                                    {"name": "OrdinalScale", "value": 3770},
+                                    {"name": "QuantileScale", "value": 2435},
+                                    {"name": "QuantitativeScale", "value": 4839},
+                                    {"name": "RootScale", "value": 1756},
+                                    {"name": "Scale", "value": 4268},
+                                    {"name": "ScaleType", "value": 1821},
+                                    {"name": "TimeScale", "value": 5833}
+                               ]
+                            },
+                            {
+                                "name": "display",
+                                "children": [
+                                    {"name": "DirtySprite", "value": 8833}
+                               ]
+                            }
+                        ]
+                    };
+
+                    chart.setOption({
+
+                        tooltip: {
+                            trigger: 'item',
+                            triggerOn: 'mousemove'
+                        },
+
+                        legend: {
+                            top: '2%',
+                            left: '3%',
+                            orient: 'vertical',
+                            data: [{
+                                name: 'tree1',
+                                icon: 'rectangle'
+                            }],
+                            borderColor: '#c23531'
+                        },
+
+                        series:[
+                            {
+                                type: 'tree',
+                                id: '2',
+                                name: 'tree1',
+                                data: [data],
+
+                                top: '20%',
+                                left: '30%',
+                                bottom: '22%',
+                                right: '20%',
+
+                                symbolSize: 7,
+                                orient: 'RL',
+
+                                label: {
+                                    position: 'right',
+                                    verticalAlign: 'middle',
+                                    align: 'left' 
+                                },
+
+                                leaves: {
+                                    label: {
+                                            position: 'left',
+                                            verticalAlign: 'middle',
+                                            align: 'right'
+                                    }
+                                },
+                                
+                                expandAndCollapse: true,
+                                animationDuration: 550,
+                                animationDurationUpdate: 750
+                            }
+                        ]
+                    });
+
+                     setTimeout(function() {
+                        var cloneData = echarts.util.clone(data);
+                        cloneData.children.splice(0, 1);
+                        chart.setOption({
+                            series: [{
+                                type: 'tree',
+                                id: '2',
+                                data: [cloneData]
+                            }]
+                        }, false);
+                    }, 1000);
+
+                });
+        </script>
+    </body>
+</html>

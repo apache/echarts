@@ -5,9 +5,7 @@ import './tree/TreeView';
 import './tree/treeAction';
 
 import visualSymbol from '../visual/symbol';
-import orthogonalLayout from './tree/orthogonalLayout';
-import radialLayout from './tree/radialLayout';
+import treeLayout from './tree/treeLayout';
 
 echarts.registerVisual(visualSymbol('tree', 'circle'));
-echarts.registerLayout(orthogonalLayout);
-echarts.registerLayout(radialLayout);
+echarts.registerLayout(treeLayout);

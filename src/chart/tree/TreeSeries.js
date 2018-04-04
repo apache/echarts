@@ -48,6 +48,7 @@ export default SeriesModel.extend({
 
         tree.root.eachNode('preorder', function (node) {
             var item = node.hostTree.data.getRawDataItem(node.dataIndex);
+            // add item.collapsed != null, because users can collapse node original in the series.data.
             node.isExpand = (item && item.collapsed != null)
                 ? !item.collapsed
                 : node.depth <= expandTreeDepth;
@@ -57,7 +58,7 @@ export default SeriesModel.extend({
     },
     
     /**
-     * make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
+     * Make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
      * @returns {string} orient
      */
     getOrient: function () {

@@ -76,7 +76,7 @@ export default echarts.extendChartView({
             .update(function (newIdx, oldIdx) {
                 var symbolEl = oldData.getItemGraphicEl(oldIdx);
                 if (!symbolNeedsDraw(data, newIdx)) {
-                    symbolEl && removeNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
+                    symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
                     return;
                 }
                 // update  node and edge
@@ -84,7 +84,7 @@ export default echarts.extendChartView({
             })
             .remove(function (oldIdx) {
                 var symbolEl = oldData.getItemGraphicEl(oldIdx);
-                removeNode(data, oldIdx, symbolEl, group, seriesModel, seriesScope);
+                removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
             })
             .execute();
 
