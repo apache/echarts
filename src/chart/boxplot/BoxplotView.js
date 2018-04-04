@@ -70,7 +70,9 @@ var BoxplotView = ChartView.extend({
         data && data.eachItemGraphicEl(function (el) {
             el && group.remove(el);
         });
-    }
+    },
+
+    dispose: zrUtil.noop
 
 });
 

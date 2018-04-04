@@ -1,6 +1,7 @@
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
-import {calculateCandleWidth} from './helper';
+import {parsePercent} from '../../util/number';
+import {retrieve2} from 'zrender/src/core/util';
 
 var LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
@@ -11,9 +12,6 @@ export default {
     plan: createRenderPlanner(),
 
     reset: function (seriesModel) {
-
-        var pipelineContext = seriesModel.pipelineContext;
-        var isLargeRender = pipelineContext.large;
 
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
@@ -28,12 +26,20 @@ export default {
         var lowestDim = vDims[2];
         var highestDim = vDims[3];
 
+        data.setLayout({
+            candleWidth: candleWidth,
+            // The value is experimented visually.
+            isSimpleBox: candleWidth <= 1.3
+        });
+
         if (cDim == null || vDims.length < 4) {
             return;
         }
 
-        return {progress: isLargeRender ? largeProgress : normalProgress};
-
+        return {
+            progress: seriesModel.pipelineContext.large
+                ? largeProgress : normalProgress
+        };
 
         function normalProgress(params, data) {
 
@@ -121,7 +127,7 @@ export default {
 
         function largeProgress(params, data) {
             var segCount = params.end - params.start;
-            // Structure: [sign, x1, y1, x2, y2, sign, x1, y1, x2, y2, ...]
+            // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
             var points = new LargeArr(segCount * 5);
 
             for (
@@ -149,15 +155,12 @@ export default {
                 point = coordSys.dataToPoint(tmpIn, null, tmpOut);
                 points[offset++] = point ? point[0] : NaN;
                 points[offset++] = point ? point[1] : NaN;
-
                 tmpIn[vDimIdx] = highestVal;
                 point = coordSys.dataToPoint(tmpIn, null, tmpOut);
-                points[offset++] = point ? point[0] : NaN;
                 points[offset++] = point ? point[1] : NaN;
             }
 
             data.setLayout('largePoints', points);
-            data.setLayout('candleWidth', candleWidth);
         }
     }
 };
@@ -179,4 +182,31 @@ function getSign(data, dataIndex, openVal, closeVal, closeDim) {
     }
 
     return sign;
+}
+
+function calculateCandleWidth(seriesModel, data) {
+    var baseAxis = seriesModel.getBaseAxis();
+    var extent;
+
+    var bandWidth = baseAxis.type === 'category'
+        ? baseAxis.getBandWidth()
+        : (
+            extent = baseAxis.getExtent(),
+            Math.abs(extent[1] - extent[0]) / data.count()
+        );
+
+    var barMaxWidth = parsePercent(
+        retrieve2(seriesModel.get('barMaxWidth'), bandWidth),
+        bandWidth
+    );
+    var barMinWidth = parsePercent(
+        retrieve2(seriesModel.get('barMinWidth'), 1),
+        bandWidth
+    );
+    var barWidth = seriesModel.get('barWidth');
+
+    return barWidth != null
+        ? parsePercent(barWidth, bandWidth)
+        // Put max outer to ensure bar visible in spite of overlap.
+        : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
 }

@@ -3,11 +3,12 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/esl.js"></script>
+        <script src="../dist/echarts.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/frameInsight.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -21,6 +22,7 @@
 
         <div id="main0"></div>
         <div id="panel0"></div>
+        <div id="duration"></div>
 
 
 
@@ -28,81 +30,86 @@
 
         <script>
 
-            /**
-             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
-             * @see <http://bl.ocks.org/mbostock/4061502>
-             */
-            require([
-                'echarts',
-                'data/stock-DJI.json'
-            ], update)
+            // The data count is from a real requirement.
+            var rawDataCount = 2e5;
 
-            function splitData(rawData) {
-                var categoryData = [];
-                var values = [];
-                var volumns = [];
-                for (var i = 0; i < rawData.length; i++) {
-                    categoryData.push(rawData[i].splice(0, 1)[0]);
-                    values.push(rawData[i])
-                    volumns.push(rawData[i][4]);
-                }
-                return {
-                    categoryData: categoryData,
-                    values: values,
-                    volumns: volumns
-                };
+            function run() {
+                var data = generateOHLC(rawDataCount);
+                // var result = reorder(data);
+                init(data);
             }
 
-            function calculateMA(dayCount, rawData) {
+            function generateOHLC(count) {
+                var data = [];
+
+                var xValue = +new Date(2011, 0, 1);
+                var minute = 60 * 1000;
+                var baseValue = Math.random() * 12000;
+                var tmpVals = new Array(4);
+                var dayRange = 12;
+
+                for (var i = 0; i < count; i++) {
+                    baseValue = baseValue + Math.random() * 20 - 10;
+
+                    for (var j = 0; j < 4; j++) {
+                        tmpVals[j] = (Math.random() - 0.5) * dayRange + baseValue;
+                    }
+                    tmpVals.sort();
+
+                    var idxRandom = Math.random();
+                    var openIdx = Math.round(Math.random() * 3);
+                    var closeIdx = Math.round(Math.random() * 2);
+                    if (closeIdx === openIdx) {
+                        closeIdx++;
+                    }
+
+                    // ['open', 'close', 'lowest', 'highest']
+                    // [1, 4, 3, 2]
+                    data.push([
+                        echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', xValue += minute),
+                        +tmpVals[openIdx].toFixed(2), // open
+                        +tmpVals[3].toFixed(2), // highest
+                        +tmpVals[0].toFixed(2), // lowest
+                        +tmpVals[closeIdx].toFixed(2)  // close
+                    ]);
+                }
+
+                return data;
+            }
+
+            function calculateMA(dayCount, data) {
                 var result = [];
-                for (var i = 0, len = rawData.length; i < len; i++) {
+                for (var i = 0, len = data.length; i < len; i++) {
                     if (i < dayCount) {
                         result.push('-');
                         continue;
                     }
                     var sum = 0;
                     for (var j = 0; j < dayCount; j++) {
-                        sum += rawData[i - j][2];
+                        sum += data[i - j][2];
                     }
                     result.push(+(sum / dayCount).toFixed(3));
                 }
                 return result;
             }
 
-            function update(echarts, rawData) {
+            function init(rawData) {
 
-                // var data = splitData(rawData);
+                frameInsight.init(echarts, 'duration');
 
                 var option = {
                     dataset: {
                         source: rawData
                     },
                     backgroundColor: '#eee',
+                    // animation: false,
                     legend: {
-                        left: 0,
+                        left: 0
                     },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
-                            type: 'cross'
-                        },
-                        backgroundColor: 'rgba(245, 245, 245, 0.8)',
-                        borderWidth: 1,
-                        borderColor: '#ccc',
-                        padding: 10,
-                        textStyle: {
-                            color: '#000'
-                        },
-                        position: function (pos, params, el, elRect, size) {
-                            var obj = {top: 10};
-                            obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
-                            return obj;
-                        }
-                    },
-                    axisPointer: {
-                        link: {xAxisIndex: 'all'},
-                        label: {
-                            backgroundColor: '#777'
+                            type: 'line'
                         }
                     },
                     toolbox: {
@@ -115,13 +122,13 @@
                             }
                         }
                     },
-                    brush: {
-                        xAxisIndex: 'all',
-                        brushLink: 'all',
-                        outOfBrush: {
-                            colorAlpha: 0.1
-                        }
-                    },
+                    // brush: {
+                    //     xAxisIndex: 'all',
+                    //     brushLink: 'all',
+                    //     outOfBrush: {
+                    //         colorAlpha: 0.1
+                    //     }
+                    // },
                     grid: [
                         {
                             left: '10%',
@@ -138,7 +145,6 @@
                     xAxis: [
                         {
                             type: 'category',
-                            // data: data.categoryData,
                             scale: true,
                             boundaryGap : false,
                             axisLine: {onZero: false},
@@ -183,38 +189,29 @@
                         {
                             type: 'inside',
                             // xAxisIndex: [0, 1],
-                            // start: 99,
-                            // end: 100
-                            // startValue: '2010-08-17',
-                            // endValue: '2012-08-06'
+                            start: 10,
+                            end: 100
                         },
                         {
                             show: true,
                             // xAxisIndex: [0, 1],
                             type: 'slider',
                             bottom: 10,
-                            // start: 99,
-                            // end: 100
-                            // startValue: '2010-08-17',
-                            // endValue: '2012-08-06'
+                            start: 10,
+                            end: 100
                         }
                     ],
-                    animation: false,
                     series: [
                         {
-                            name: 'Dow-Jones index',
+                            name: 'Fake index',
                             type: 'candlestick',
-                            // large: false,
+                            // data: data,
                             encode: {
                                 x: 0,
-                                y: [1, 2, 3, 4]
+                                y: [1, 4, 3, 2]
                             },
-                            itemStyle: {
-                                normal: {
-                                    borderColor: null,
-                                    borderColor0: null
-                                }
-                            },
+                            // progressive: false
+                            // progressive: progressive
                             // tooltip: {
                             //     formatter: function (param) {
                             //         var param = param[0];
@@ -227,12 +224,11 @@
                             //         ].join('')
                             //     }
                             // }
-                        },
+                        } //,
                         // {
                         //     name: 'MA5',
                         //     type: 'line',
-                        //     sampling: 'max',
-                        //     data: calculateMA(5, rawData),
+                        //     data: calculateMA(5, data),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -241,7 +237,7 @@
                         // {
                         //     name: 'MA10',
                         //     type: 'line',
-                        //     data: calculateMA(10, rawData),
+                        //     data: calculateMA(10, data),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -250,7 +246,7 @@
                         // {
                         //     name: 'MA20',
                         //     type: 'line',
-                        //     data: calculateMA(20, rawData),
+                        //     data: calculateMA(20, data),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -259,7 +255,7 @@
                         // {
                         //     name: 'MA30',
                         //     type: 'line',
-                        //     data: calculateMA(30, rawData),
+                        //     data: calculateMA(30, data),
                         //     smooth: true,
                         //     lineStyle: {
                         //         normal: {opacity: 0.5}
@@ -277,7 +273,7 @@
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
-                    title: 'Use dataset. Check item tooltip in large mode.',
+                    title: 'Fake OHLC data',
                     option: option,
                     height: 550
                 });
@@ -318,7 +314,10 @@
                 //         }
                 //     ]
                 // });
+
             }
+
+            run();
 
         </script>
 

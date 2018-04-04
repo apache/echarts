@@ -17,9 +17,7 @@ export default {
     reset: function (seriesModel, ecModel) {
 
         var data = seriesModel.getData();
-        var pipelineContext = seriesModel.pipelineContext;
-        var isLargeRender = pipelineContext.large;
-        var largePoints = isLargeRender && data.getLayout('largePoints');
+        var isLargeRender = seriesModel.pipelineContext.large;
 
         data.setVisual({
             legendSymbol: 'roundRect',
@@ -34,12 +32,13 @@ export default {
             return;
         }
 
+        return !isLargeRender && {progress: progress};
+
+
         function progress(params, data) {
             for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
                 var itemModel = data.getItemModel(dataIndex);
-                var sign = isLargeRender
-                    ? largePoints[(dataIndex - params.start) * 5]
-                    : data.getItemLayout(dataIndex).sign;
+                var sign = data.getItemLayout(dataIndex).sign;
 
                 data.setItemVisual(
                     dataIndex,
@@ -63,7 +62,6 @@ export default {
             );
         }
 
-        return {progress: progress};
     }
 
 };
