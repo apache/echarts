@@ -102,7 +102,7 @@ function computeNodeBreadths(nodes, nodeWidth, width) {
         ++x;
     }
 
-    moveSinksRight(nodes, x);
+    // moveSinksRight(nodes, x);
     kx = (width - nodeWidth) / (x - 1);
 
     scaleNodeBreadths(nodes, kx);
