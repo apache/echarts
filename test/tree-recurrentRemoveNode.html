@@ -33,7 +33,7 @@
                             {
                                 "name": "flex",
                                 "children": [
-                                    {"name": "FlareVis", "value": 4116, symbolSize: 20}
+                                    {"name": "FlareVis", "value": 4116}
                                 ]
                             },
                             {
@@ -90,7 +90,7 @@
                                 bottom: '22%',
                                 right: '20%',
 
-                                symbolSize: 15,
+                                symbolSize: 7,
                                 orient: 'RL',
 
                                 label: {
@@ -106,7 +106,7 @@
                                             align: 'right'
                                     }
                                 },
-                                
+                    
                                 expandAndCollapse: true,
                                 animationDuration: 550,
                                 animationDurationUpdate: 750
@@ -114,10 +114,9 @@
                         ]
                     });
 
-                     setTimeout(function() {
-                        var cloneData = echarts.util.clone(data);
-                        var appendNode = cloneData.children[1].children.splice(2, 1);
-                        cloneData.children.push(appendNode[0]);
+                    var cloneData = echarts.util.clone(data);
+                    setInterval(function() {
+                        cloneData.children[1].children.splice(0, 1);
                         chart.setOption({
                             series: [{
                                 type: 'tree',
@@ -126,7 +125,7 @@
                             }]
                         }, false);
                     }, 1000);
-
+ 
                 });
         </script>
     </body>
