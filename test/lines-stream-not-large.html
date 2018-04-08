@@ -14,7 +14,18 @@
                 height: 100%;
                 margin: 0;
             }
+            #info {
+                position: fixed;
+                left: 5;
+                top: 5;
+                height: 100px;
+                width: 200px;
+                background: #fff;
+                border: 2px solid #999;
+                z-index: 9999;
+            }
         </style>
+        <div id="info">Rendering (large: false), please wait ...</div>
         <div id='main'></div>
         <script>
 
@@ -43,16 +54,7 @@
                     };
 
                     var chart;
-
-                    // var gui = new dat.GUI();
-                    // gui.add(config, 'dataLoading', ['whole', 'chunked'])
-                    //     .onChange(init);
-                    // gui.add(config, 'largeModel')
-                    //     .onChange(init);
-                    // gui.add(config, 'streamRender')
-                    //     .onChange(init);
-                    // gui.add(config, 'streamThreshold', 0, 200000)
-                    //     .onChange(init);
+                    var infoEl = document.getElementById('info');
 
                     init();
 
@@ -107,11 +109,12 @@
                                 coordinateSystem: 'geo',
                                 blendModel: 'lighter',
                                 data: routes,
-                                large: true,
+                                // Test not large mode.
+                                large: false,
                                 largeThreshold: 100,
                                 lineStyle: {
                                     normal: {
-                                        opacity: 0.5,
+                                        opacity: 0.05,
                                         width: 0.5,
                                         curveness: 0.3
                                     }
@@ -120,6 +123,10 @@
                                 blendMode: 'lighter'
                             }]
                         };
+
+                        chart.on('finished', function () {
+                            infoEl.innerHTML = 'Finished (large: false). Please test roam (in not large mode, should no error thrown';
+                        });
 
                         chart.setOption(option);
                     }

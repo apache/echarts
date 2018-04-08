@@ -139,9 +139,9 @@
         var domStyle = dom.style;
         // domStyle.border = '2px solid #333';
         domStyle.boxShadow = '0 0 3px #000';
-        domStyle.backgroundColor = '#fff';
+        domStyle.backgroundColor = '#eee';
         domStyle.padding = '0';
-        domStyle.height = '80px';
+        domStyle.height = '60px';
         domStyle.margin = '10px 20px';
 
         var domWidth = getSize(dom, 0);

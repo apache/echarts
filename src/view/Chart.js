@@ -189,11 +189,11 @@ function renderTaskReset(context) {
     var api = context.api;
     var payload = context.payload;
     // ???! remove updateView updateVisual
-    var canProgressiveRender = seriesModel.pipelineContext.canProgressiveRender;
+    var progressiveRender = seriesModel.pipelineContext.progressiveRender;
     var view = context.view;
 
     var updateMethod = payload && inner(payload).updateMethod;
-    var methodName = canProgressiveRender
+    var methodName = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod

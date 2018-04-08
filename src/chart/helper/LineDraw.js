@@ -87,6 +87,12 @@ function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScop
 
 lineDrawProto.updateLayout = function () {
     var lineData = this._lineData;
+
+    // Do not support update layout in incremental mode.
+    if (!lineData) {
+        return;
+    }
+
     lineData.eachItemGraphicEl(function (el, idx) {
         el.updateLayout(lineData, idx);
     }, this);
@@ -111,7 +117,9 @@ lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
         if (lineNeedsDraw(itemLayout)) {
             var el = new this._ctor(lineData, idx, this._seriesScope);
             el.traverse(updateIncrementalAndHover);
+
             this.group.add(el);
+            lineData.setItemGraphicEl(idx, el);
         }
     }
 };

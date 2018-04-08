@@ -23,7 +23,7 @@ export default {
                     points = new Float32Array(segCount + totalCoordsCount * 2);
                 }
                 else {
-                    points = new Float32Array(segCount * 2);
+                    points = new Float32Array(segCount * 4);
                 }
 
                 var offset = 0;

@@ -1,7 +1,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import {seriesModelMixin} from '../helper/whiskerBoxCommon';
-// import {calculateCandleWidth} from './helper';
 
 var CandlestickSeries = SeriesModel.extend({
 
@@ -57,7 +56,10 @@ var CandlestickSeries = SeriesModel.extend({
         barWidth: null,
 
         large: true,
-        largeThreshold: 500,
+        largeThreshold: 600,
+
+        progressive: 5e3,
+        progressiveThreshold: 1e4,
 
         animationUpdate: false,
         animationEasing: 'linear',
@@ -76,11 +78,6 @@ var CandlestickSeries = SeriesModel.extend({
         var itemLayout = data.getItemLayout(dataIndex);
         return itemLayout && selectors.rect(itemLayout.brushRect);
     }
-
-    // isLargeMode: function (data) {
-    //     // Experience number
-    //     return calculateCandleWidth(this, data) <= 1;
-    // }
 
 });
 

@@ -1,46 +1,287 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
-import {viewMixin} from '../helper/whiskerBoxCommon';
+import Path from 'zrender/src/graphic/Path';
+
+var NORMAL_ITEM_STYLE_PATH = ['itemStyle'];
+var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'];
+var SKIP_PROPS = ['color', 'color0', 'borderColor', 'borderColor0'];
+
 
 var CandlestickView = ChartView.extend({
 
     type: 'candlestick',
 
-    getStyleUpdater: function () {
-        return updateStyle;
+    render: function (seriesModel, ecModel, api) {
+        this._updateDrawMode(seriesModel);
+
+        this._isLargeDraw
+            ? this._renderLarge(seriesModel)
+            : this._renderNormal(seriesModel);
+    },
+
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this._clear();
+        this._updateDrawMode(seriesModel);
+    },
+
+    incrementalRender: function (params, seriesModel, ecModel, api) {
+        this._isLargeDraw
+             ? this._incrementalRenderLarge(params, seriesModel)
+             : this._incrementalRenderNormal(params, seriesModel);
+    },
+
+    _updateDrawMode: function (seriesModel) {
+        var isLargeDraw = seriesModel.pipelineContext.large;
+        if (this._isLargeDraw == null || isLargeDraw ^ this._isLargeDraw) {
+            this._isLargeDraw = isLargeDraw;
+            this._clear();
+        }
+    },
+
+    _clear: function () {
+        this.group.removeAll();
+        this._data = null;
+    },
+
+    _renderNormal: function (seriesModel) {
+        // var largePoints = data.getLayout('largePoints');
+        var data = seriesModel.getData();
+        var oldData = this._data;
+        var group = this.group;
+        var isSimpleBox = data.getLayout('isSimpleBox');
+
+        // There is no old data only when first rendering or switching from
+        // stream mode to normal mode, where previous elements should be removed.
+        if (!this._data) {
+            group.removeAll();
+        }
+
+        data.diff(oldData)
+            .add(function (newIdx) {
+                if (data.hasValue(newIdx)) {
+                    var el;
+
+                    var itemLayout = data.getItemLayout(newIdx);
+                    el = createNormalBox(itemLayout, newIdx, true);
+                    graphic.initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
+
+                    setBoxCommon(el, data, newIdx, isSimpleBox);
+
+                    group.add(el);
+                    data.setItemGraphicEl(newIdx, el);
+                }
+            })
+            .update(function (newIdx, oldIdx) {
+                var el = oldData.getItemGraphicEl(oldIdx);
+
+                // Empty data
+                if (!data.hasValue(newIdx)) {
+                    group.remove(el);
+                    return;
+                }
+
+                var itemLayout = data.getItemLayout(newIdx);
+                if (!el) {
+                    el = createNormalBox(itemLayout, newIdx);
+                }
+                else {
+                    graphic.updateProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
+                }
+
+                setBoxCommon(el, data, newIdx, isSimpleBox);
+
+                group.add(el);
+                data.setItemGraphicEl(newIdx, el);
+            })
+            .remove(function (oldIdx) {
+                var el = oldData.getItemGraphicEl(oldIdx);
+                el && group.remove(el);
+            })
+            .execute();
+
+        this._data = data;
+    },
+
+    _renderLarge: function (seriesModel) {
+        var group = this.group;
+
+        group.removeAll();
+
+        createLarge(seriesModel, group);
+    },
+
+    _incrementalRenderNormal: function (params, seriesModel) {
+        var data = seriesModel.getData();
+        var isSimpleBox = data.getLayout('isSimpleBox');
+
+        for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+            var el;
+
+            var itemLayout = data.getItemLayout(dataIndex);
+            el = createNormalBox(itemLayout, dataIndex);
+            setBoxCommon(el, data, dataIndex, isSimpleBox);
+
+            el.incremental = true;
+            this.group.add(el);
+        }
+    },
+
+    _incrementalRenderLarge: function (params, seriesModel) {
+        createLarge(seriesModel, this.group, true);
+    },
+
+    remove: function (ecModel) {
+        var group = this.group;
+        var data = this._data;
+        this._data = null;
+        data && data.eachItemGraphicEl(function (el) {
+            el && group.remove(el);
+        });
     },
 
     dispose: zrUtil.noop
+
 });
 
-zrUtil.mixin(CandlestickView, viewMixin, true);
 
-// Update common properties
-var normalStyleAccessPath = ['itemStyle'];
-var emphasisStyleAccessPath = ['emphasis', 'itemStyle'];
+var NormalBoxPath = Path.extend({
 
-function updateStyle(data, idx, boxEl, whiskerEl, bodyEl) {
-    var itemModel = data.getItemModel(idx);
-    var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
-    var color = data.getItemVisual(idx, 'color');
-    var borderColor = data.getItemVisual(idx, 'borderColor') || color;
+    type: 'normalCandlestickBox',
+
+    shape: {},
+
+    buildPath: function (ctx, shape) {
+        var ends = shape.points;
+
+        if (this.__simpleBox) {
+            ctx.moveTo(ends[4][0], ends[4][1]);
+            ctx.lineTo(ends[6][0], ends[6][1]);
+        }
+        else {
+            ctx.moveTo(ends[0][0], ends[0][1]);
+            ctx.lineTo(ends[1][0], ends[1][1]);
+            ctx.lineTo(ends[2][0], ends[2][1]);
+            ctx.lineTo(ends[3][0], ends[3][1]);
+            ctx.closePath();
+
+            ctx.moveTo(ends[4][0], ends[4][1]);
+            ctx.lineTo(ends[5][0], ends[5][1]);
+            ctx.moveTo(ends[6][0], ends[6][1]);
+            ctx.lineTo(ends[7][0], ends[7][1]);
+        }
+    }
+});
+
+function createNormalBox(itemLayout, dataIndex, isInit) {
+    var ends = itemLayout.ends;
+    return new NormalBoxPath({
+        shape: {
+            points: isInit
+                ? transInit(ends, itemLayout)
+                : ends
+        },
+        z2: 100
+    });
+}
+
+function setBoxCommon(el, data, dataIndex, isSimpleBox) {
+    var itemModel = data.getItemModel(dataIndex);
+    var normalItemStyleModel = itemModel.getModel(NORMAL_ITEM_STYLE_PATH);
+    var color = data.getItemVisual(dataIndex, 'color');
+    var borderColor = data.getItemVisual(dataIndex, 'borderColor') || color;
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    var itemStyle = normalItemStyleModel.getItemStyle(
-        ['color', 'color0', 'borderColor', 'borderColor0']
-    );
+    var itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
 
-    whiskerEl.useStyle(itemStyle);
-    whiskerEl.style.stroke = borderColor;
+    el.useStyle(itemStyle);
+    el.style.strokeNoScale = true;
+    el.style.fill = color;
+    el.style.stroke = borderColor;
 
-    bodyEl.useStyle(itemStyle);
-    bodyEl.style.fill = color;
-    bodyEl.style.stroke = borderColor;
+    el.__simpleBox = isSimpleBox;
 
-    var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
-    graphic.setHoverStyle(boxEl, hoverStyle);
+    var hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
+    graphic.setHoverStyle(el, hoverStyle);
 }
 
+function transInit(points, itemLayout) {
+    return zrUtil.map(points, function (point) {
+        point = point.slice();
+        point[1] = itemLayout.initBaseline;
+        return point;
+    });
+}
+
+
+
+var LargeBoxPath = Path.extend({
+
+    type: 'largeCandlestickBox',
+
+    shape: {},
+
+    buildPath: function (ctx, shape) {
+        // Drawing lines is more efficient than drawing
+        // a whole line or drawing rects.
+        var points = shape.points;
+        for (var i = 0; i < points.length;) {
+            if (this.__sign === points[i++]) {
+                var x = points[i++];
+                ctx.moveTo(x, points[i++]);
+                ctx.lineTo(x, points[i++]);
+            }
+            else {
+                i += 3;
+            }
+        }
+    }
+});
+
+function createLarge(seriesModel, group, incremental) {
+    var data = seriesModel.getData();
+    var largePoints = data.getLayout('largePoints');
+
+    var elP = new LargeBoxPath({
+        shape: {points: largePoints},
+        __sign: 1
+    });
+    group.add(elP);
+    var elN = new LargeBoxPath({
+        shape: {points: largePoints},
+        __sign: -1
+    });
+    group.add(elN);
+
+    setLargeStyle(1, elP, seriesModel, data);
+    setLargeStyle(-1, elN, seriesModel, data);
+
+    if (incremental) {
+        elP.incremental = true;
+        elN.incremental = true;
+    }
+}
+
+function setLargeStyle(sign, el, seriesModel, data) {
+    var normalItemStyleModel = seriesModel.getModel(NORMAL_ITEM_STYLE_PATH);
+    var suffix = sign > 0 ? 'P' : 'N';
+
+    var color = data.getVisual('color' + suffix);
+    var borderColor = data.getVisual('borderColor' + suffix) || color;
+
+    // Color must be excluded.
+    // Because symbol provide setColor individually to set fill and stroke
+    var itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
+
+    el.useStyle(itemStyle);
+    el.style.fill = null;
+    el.style.stroke = borderColor;
+    // No different
+    // el.style.lineWidth = .5;
+}
+
+
+
 export default CandlestickView;
+

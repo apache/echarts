@@ -163,6 +163,7 @@ largeLineProto.incrementalUpdate = function (taskParams, data) {
     lineEl.setShape({
         segs: data.getLayout('linesPoints')
     });
+
     this._setCommon(lineEl, data, !!this._incremental);
 
     if (!this._incremental) {

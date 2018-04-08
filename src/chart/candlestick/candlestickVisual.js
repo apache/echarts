@@ -17,12 +17,14 @@ export default {
     reset: function (seriesModel, ecModel) {
 
         var data = seriesModel.getData();
-        var pipelineContext = seriesModel.pipelineContext;
-        var isLargeRender = pipelineContext.large;
-        var largePoints = isLargeRender && data.getLayout('largePoints');
+        var isLargeRender = seriesModel.pipelineContext.large;
 
         data.setVisual({
-            legendSymbol: 'roundRect'
+            legendSymbol: 'roundRect',
+            colorP: getColor(1, seriesModel),
+            colorN: getColor(-1, seriesModel),
+            borderColorP: getBorderColor(1, seriesModel),
+            borderColorN: getBorderColor(-1, seriesModel)
         });
 
         // Only visible series has each data be visual encoded
@@ -30,28 +32,36 @@ export default {
             return;
         }
 
+        return !isLargeRender && {progress: progress};
+
+
         function progress(params, data) {
             for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
                 var itemModel = data.getItemModel(dataIndex);
-                var sign = isLargeRender
-                    ? largePoints[(dataIndex - params.start) * 5]
-                    : data.getItemLayout(dataIndex).sign;
+                var sign = data.getItemLayout(dataIndex).sign;
 
                 data.setItemVisual(
                     dataIndex,
                     {
-                        color: itemModel.get(
-                            sign > 0 ? positiveColorQuery : negativeColorQuery
-                        ),
-                        borderColor: itemModel.get(
-                            sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
-                        )
+                        color: getColor(sign, itemModel),
+                        borderColor: getBorderColor(sign, itemModel)
                     }
                 );
             }
         }
 
-        return {progress: progress};
+        function getColor(sign, model) {
+            return model.get(
+                sign > 0 ? positiveColorQuery : negativeColorQuery
+            );
+        }
+
+        function getBorderColor(sign, model) {
+            return model.get(
+                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
+            );
+        }
+
     }
 
 };

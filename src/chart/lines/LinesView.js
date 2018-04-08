@@ -82,8 +82,9 @@ export default echarts.extendChartView({
 
     updateTransform: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
+        var pipelineContext = seriesModel.pipelineContext;
 
-        if (!this._finished || seriesModel.pipelineContext.large) {
+        if (!this._finished || pipelineContext.large || pipelineContext.progressiveRender) {
             // TODO Don't have to do update in large mode. Only do it when there are millions of data.
             return {
                 update: true
