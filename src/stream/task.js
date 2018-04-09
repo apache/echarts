@@ -14,8 +14,8 @@ export function createTask(define) {
  * @param {Object} define
  * @param {Function} define.reset Custom reset
  * @param {Function} [define.plan] Returns 'reset' indicate reset immediately.
- * @param {Function} [define.count] count is used to determin data task.
- * @param {Function} [define.onDirty] count is used to determin data task.
+ * @param {Function} [define.count] count is used to determine data task.
+ * @param {Function} [define.onDirty] count is used to determine data task.
  */
 function Task(define) {
     define = define || {};
