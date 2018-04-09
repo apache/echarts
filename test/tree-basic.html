@@ -47,8 +47,8 @@
                             series:[
                                 {
                                     type: 'tree',
-                                    id: 'a',
-
+                                    id: '3',
+                                    
                                     data: [data],
 
                                     top: '1%',
@@ -80,17 +80,16 @@
                             ]
                         });
 
-
-                        setTimeout(function () {
+                        setTimeout(function() {
                             var newData = echarts.util.clone(data);
                             newData.children.splice(0, 1);
-
                             chart.setOption({
-                                series: {
-                                    id: 'a',
+                                series: [{
+                                    type: 'tree',
+                                    id: '3',
                                     data: [newData]
-                                }
-                            });
+                                }]
+                            }, false);
                         }, 1000);
 
                     });
