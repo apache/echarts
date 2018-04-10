@@ -84,25 +84,48 @@ function computeNodeValues(nodes) {
  */
 function computeNodeBreadths(nodes, nodeWidth, width) {
     var remainNodes = nodes;
-    var nextNode = null;
+    // var computedNodes = [];
+    var nextNode = [];
     var x = 0;
     var kx = 0;
 
+    // while (remainNodes.length) {
+    //     nextNode = [];
+    //     for (var i = 0, len = remainNodes.length; i < len; i++) {
+    //         var node = remainNodes[i];
+    //         node.setLayout({x: x}, true);
+    //         node.setLayout({dx: nodeWidth}, true);
+    //         // if (computedNodes.indexOf(node) === -1) {
+    //             // computedNodes.push(node);
+    //         // }
+            
+    //         for (var j = 0; j < node.outEdges.length; j++) {
+    //             var targetNode = node.outEdges[j].node2;
+    //             // if (computedNodes.indexOf(targetNode) === -1) {
+    //                 nextNode.push(node.outEdges[j].node2);
+
+    //             // } 
+    //         }
+    //     }
+    //     remainNodes = nextNode;
+    //     ++x;
+    // }
     while (remainNodes.length) {
-        nextNode = [];
-        for (var i = 0, len = remainNodes.length; i < len; i++) {
-            var node = remainNodes[i];
+        zrUtil.each(remainNodes, function (node) {
             node.setLayout({x: x}, true);
             node.setLayout({dx: nodeWidth}, true);
-            for (var j = 0, lenj = node.outEdges.length; j < lenj; j++) {
-                nextNode.push(node.outEdges[j].node2);
-            }
-        }
-        remainNodes = nextNode;
+            zrUtil.each(node.outEdges, function (edge) {
+                var targetNode = edge.node2;
+                if (nextNode.indexOf(targetNode) < 0) {
+                    nextNode.push(targetNode);
+                }
+            });
+        });
         ++x;
+        remainNodes = nextNode;
+        nextNode = [];
     }
-
-    // moveSinksRight(nodes, x);
+    moveSinksRight(nodes, x);
     kx = (width - nodeWidth) / (x - 1);
 
     scaleNodeBreadths(nodes, kx);
