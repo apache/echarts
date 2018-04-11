@@ -6,6 +6,7 @@
 import * as layout from '../../util/layout';
 import nest from '../../util/array/nest';
 import * as zrUtil from 'zrender/src/core/util';
+import { __DEV__ } from '../../config';
 
 export default function (ecModel, api, payload) {
 
@@ -56,7 +57,7 @@ function getViewRect(seriesModel, api) {
 }
 
 function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations) {
-    computeNodeBreadths(nodes, nodeWidth, width);
+    computeNodeBreadths(nodes, edges, nodeWidth, width);
     computeNodeDepths(nodes, edges, height, nodeGap, iterations);
     computeEdgeDepths(nodes);
 }
@@ -76,55 +77,64 @@ function computeNodeValues(nodes) {
 }
 
 /**
- * Compute the x-position for each node
+ * Compute the x-position for each node.
+ * 
+ * Here we use Kahn algorithm to detect cycle when we traverse
+ * the node to computer the initial x position.
  *
  * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
  * @param  {number} nodeWidth  the dx of the node
  * @param  {number} width  the whole width of the area to draw the view
  */
-function computeNodeBreadths(nodes, nodeWidth, width) {
-    var remainNodes = nodes;
-    // var computedNodes = [];
+function computeNodeBreadths(nodes, edges, nodeWidth, width) {
+    // Used to mark whether the edge is deleted. if it is deleted,
+    // the value is 0, otherwise it is 1.
+    var remainEdges = [];
+    // Storage each node's indegree.
+    var indegreeArr = [];
+    //Used to storage the node with indegree is equal to 0.
+    var zeroIndegrees = [];
     var nextNode = [];
     var x = 0;
     var kx = 0;
 
-    // while (remainNodes.length) {
-    //     nextNode = [];
-    //     for (var i = 0, len = remainNodes.length; i < len; i++) {
-    //         var node = remainNodes[i];
-    //         node.setLayout({x: x}, true);
-    //         node.setLayout({dx: nodeWidth}, true);
-    //         // if (computedNodes.indexOf(node) === -1) {
-    //             // computedNodes.push(node);
-    //         // }
-            
-    //         for (var j = 0; j < node.outEdges.length; j++) {
-    //             var targetNode = node.outEdges[j].node2;
-    //             // if (computedNodes.indexOf(targetNode) === -1) {
-    //                 nextNode.push(node.outEdges[j].node2);
+    for (var i = 0; i < edges.length; i++) {
+        remainEdges[i] = 1;
+    }
 
-    //             // } 
-    //         }
-    //     }
-    //     remainNodes = nextNode;
-    //     ++x;
-    // }
-    while (remainNodes.length) {
-        zrUtil.each(remainNodes, function (node) {
+    for (var i = 0; i < nodes.length; i++) {
+        indegreeArr[i] = nodes[i].inEdges.length;
+        if (indegreeArr[i] === 0) {
+            zeroIndegrees.push(nodes[i]);
+        }
+    }
+    
+    while (zeroIndegrees.length) {
+        zrUtil.each(zeroIndegrees, function (node) {
             node.setLayout({x: x}, true);
             node.setLayout({dx: nodeWidth}, true);
             zrUtil.each(node.outEdges, function (edge) {
+                var indexEdge = edges.indexOf(edge);
+                remainEdges[indexEdge] = 0;
                 var targetNode = edge.node2;
-                if (nextNode.indexOf(targetNode) < 0) {
+                var nodeIndex = nodes.indexOf(targetNode);
+                if (--indegreeArr[nodeIndex] === 0) {
                     nextNode.push(targetNode);
                 }
             });
         });
+       
         ++x;
-        remainNodes = nextNode;
+        zeroIndegrees = nextNode;
         nextNode = [];
     }
+    
+    for (var i = 0; i < remainEdges.length; i++) {
+        if (remainEdges[i] === 1 && __DEV__) {
+            throw new Error('Sankey is a DAG, the original data has cycle!');
+        }
+    }
+    
     moveSinksRight(nodes, x);
     kx = (width - nodeWidth) / (x - 1);
 
@@ -264,7 +274,7 @@ function resolveCollisions(nodesByBreadth, nodeGap, height) {
             y0 = node.getLayout().y + node.getLayout().dy + nodeGap;
         }
 
-        // if the bottommost node goes outside the bounds, push it back up
+        // If the bottommost node goes outside the bounds, push it back up
         dy = y0 - nodeGap - height;
         if (dy > 0) {
             var nodeY = node.getLayout().y - dy;
