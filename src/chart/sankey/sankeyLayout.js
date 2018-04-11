@@ -130,11 +130,13 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width) {
     }
     
     for (var i = 0; i < remainEdges.length; i++) {
-        if (remainEdges[i] === 1 && __DEV__) {
-            throw new Error('Sankey is a DAG, the original data has cycle!');
-        }
+        if (__DEV__) {
+            if (remainEdges[i] === 1) {
+                throw new Error('Sankey is a DAG, the original data has cycle!');
+            }
+        } 
     }
-    
+
     moveSinksRight(nodes, x);
     kx = (width - nodeWidth) / (x - 1);
 
