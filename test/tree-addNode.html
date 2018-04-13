@@ -84,6 +84,8 @@
                                 id: '2',
                                 name: 'tree1',
                                 data: [data],
+                                // Used to test when the data is null whether it is work well. 
+                                // data: [],
 
                                 top: '20%',
                                 left: '30%',
@@ -114,7 +116,7 @@
                         ]
                     });
 
-                     setTimeout(function() {
+                    setTimeout(function() {
                         var cloneData = echarts.util.clone(data);
                         var appendNode = cloneData.children[1].children.splice(2, 1);
                         cloneData.children.push(appendNode[0]);

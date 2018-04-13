@@ -43,7 +43,7 @@ var SunburstView = ChartView.extend({
             payload.highlight.piece.onEmphasis(highlightPolicy);
         }
         else if (payload && payload.unhighlight) {
-            var piece = virtualRoot.piece;
+            var piece = this.virtualPiece;
             if (!piece && virtualRoot.children.length) {
                 piece = virtualRoot.children[0].piece;
             }
@@ -129,19 +129,19 @@ var SunburstView = ChartView.extend({
         function renderRollUp(virtualRoot, viewRoot) {
             if (viewRoot.depth > 0) {
                 // Render
-                if (virtualRoot.piece) {
+                if (that.virtualPiece) {
                     // Update
-                    virtualRoot.piece.updateData(
+                    that.virtualPiece.updateData(
                         false, virtualRoot, 'normal', seriesModel, ecModel);
                 }
                 else {
                     // Add
-                    virtualRoot.piece = new SunburstPiece(
+                    that.virtualPiece = new SunburstPiece(
                         virtualRoot,
                         seriesModel,
                         ecModel
                     );
-                    group.add(virtualRoot.piece);
+                    group.add(that.virtualPiece);
                 }
 
                 if (viewRoot.piece._onclickEvent) {
@@ -151,12 +151,12 @@ var SunburstView = ChartView.extend({
                     that._rootToNode(viewRoot.parentNode);
                 };
                 viewRoot.piece._onclickEvent = event;
-                virtualRoot.piece.on('click', event);
+                that.virtualPiece.on('click', event);
             }
-            else if (virtualRoot.piece) {
+            else if (that.virtualPiece) {
                 // Remove
-                group.remove(virtualRoot.piece);
-                virtualRoot.piece = null;
+                group.remove(that.virtualPiece);
+                that.virtualPiece = null;
             }
         }
     },

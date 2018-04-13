@@ -23,6 +23,8 @@ function SunburstPiece(node, seriesModel, ecModel) {
     var sector = new graphic.Sector({
         z2: DEFAULT_SECTOR_Z
     });
+    sector.seriesIndex = seriesModel.seriesIndex;
+
     var text = new graphic.Text({
         z2: DEFAULT_TEXT_Z,
         silent: node.getModel('label').get('silent')
@@ -65,6 +67,9 @@ SunburstPieceProto.updateData = function (
 
     var itemModel = node.getModel();
     var layout = node.getLayout();
+    if (!layout) {
+        console.log(node.getLayout());
+    }
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
