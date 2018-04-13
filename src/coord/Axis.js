@@ -1,6 +1,6 @@
-import {each, map, createHashMap} from 'zrender/src/core/util';
+import {each, map} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision} from '../util/number';
-import * as axisHelper from './axisHelper';
+import {createAxisTicks, createAxisLabels} from './axisTickLabelBuilder';
 
 var NORMALIZED_EXTENT = [0, 1];
 
@@ -38,14 +38,6 @@ var Axis = function (dim, scale, extent) {
      * @type {boolean}
      */
     this.onBand = false;
-
-    /**
-     * Key: tickCategoryInterval
-     * Value: {ticks, labels}
-     * @private
-     * @type {HashMap}
-     */
-    this._ticksCache = createHashMap();
 };
 
 Axis.prototype = {
@@ -169,12 +161,8 @@ Axis.prototype = {
         opt = opt || {};
 
         var tickModel = opt.tickModel || this.model.getModel('axisTick');
-        var alignWithLabel = tickModel.get('alignWithLabel');
-        var tickCategoryInterval = tickModel.get('interval');
 
-        var result = axisHelper.createAxisTicksAndLabels(this, {
-            tickCategoryInterval: tickCategoryInterval
-        });
+        var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
 
         var ticksCoords = map(ticks, function (tickValue) {
@@ -184,6 +172,7 @@ Axis.prototype = {
             };
         }, this);
 
+        var alignWithLabel = tickModel.get('alignWithLabel');
         fixOnBandTicksCoords(
             this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp
         );
@@ -199,9 +188,7 @@ Axis.prototype = {
      * }, ...]
      */
     getViewLabels: function () {
-        return axisHelper.createAxisTicksAndLabels(this, {
-            tickCategoryInterval: this.model.get('axisTick.interval')
-        }).labels;
+        return createAxisLabels(this).labels;
     },
 
     getLabelModel: function () {

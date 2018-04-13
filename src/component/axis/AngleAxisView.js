@@ -52,10 +52,10 @@ export default AxisView.extend({
         var radiusExtent = polar.getRadiusAxis().getExtent();
 
         var ticksAngles = angleAxis.getTicksCoords();
-        var labels = angleAxis.getViewLabels();
-
-        zrUtil.each(labels, function (labelItem) {
+        var labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem) {
+            var labelItem = zrUtil.clone(labelItem);
             labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
+            return labelItem;
         });
 
         fixAngleOverlap(labels);

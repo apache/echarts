@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="../dist/echarts.js"></script>
+        <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
@@ -29,6 +29,8 @@
 
 
         <script>
+
+        require(['echarts'], function (echarts) {
 
             // The data count is from a real requirement.
             var rawDataCount = 2e5;
@@ -318,6 +320,8 @@
             }
 
             run();
+
+        });
 
         </script>
 

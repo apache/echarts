@@ -32,6 +32,7 @@
         <div class="chart" id="main3"></div>
         <div class="chart" id="main4"></div>
         <div class="chart" id="main5"></div>
+        <div class="chart" id="main6"></div>
 
 
         <script>
@@ -836,6 +837,93 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        data: xAxisData,
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        startValue: 17,
+                        endValue: 24
+                    }, {
+                        startValue: 17,
+                        endValue: 24
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'Only axisTick show, zoom and check axis tick.'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
 
 
 
