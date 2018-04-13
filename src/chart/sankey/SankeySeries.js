@@ -23,7 +23,7 @@ var SankeySeries = SeriesModel.extend({
         var links = option.edges || option.links;
         var nodes = option.data || option.nodes;
         if (nodes && links) {
-            var graph = createGraphFromNodeEdge(nodes, links, this, false);
+            var graph = createGraphFromNodeEdge(nodes, links, this, true);
             return graph.data;
         }
     },
