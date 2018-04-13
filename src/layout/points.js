@@ -23,11 +23,12 @@ export default function (seriesType) {
             }).slice(0, 2);
             var dimLen = dims.length;
 
+            var stackResultDim = data.getCalculationInfo('stackResultDimension');
             if (isDimensionStacked(data, dims[0], dims[1])) {
-                dims[0] = data.getCalculationInfo('stackResultDimension');
+                dims[0] = stackResultDim;
             }
             if (isDimensionStacked(data, dims[1], dims[0])) {
-                dims[1] = data.getCalculationInfo('stackResultDimension');
+                dims[1] = stackResultDim;
             }
 
             function progress(params, data) {

@@ -1,7 +1,7 @@
 import * as graphic from '../../util/graphic';
 import BaseAxisPointer from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
-import * as cartesianAxisHelper from '../axis/cartesianAxisHelper';
+import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import AxisView from '../axis/AxisView';
 
 var CartesianAxisPointer = BaseAxisPointer.extend({

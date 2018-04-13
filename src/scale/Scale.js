@@ -118,18 +118,6 @@ Scale.prototype.setExtent = function (start, end) {
 };
 
 /**
- * @return {Array.<string>}
- */
-Scale.prototype.getTicksLabels = function () {
-    var labels = [];
-    var ticks = this.getTicks();
-    for (var i = 0; i < ticks.length; i++) {
-        labels.push(this.getLabel(ticks[i]));
-    }
-    return labels;
-};
-
-/**
  * When axis extent depends on data and no data exists,
  * axis ticks should not be drawn, which is named 'blank'.
  */
@@ -144,6 +132,13 @@ Scale.prototype.isBlank = function () {
 Scale.prototype.setBlank = function (isBlank) {
     this._isBlank = isBlank;
 };
+
+/**
+ * @abstract
+ * @param {*} tick
+ * @return {string} label of the tick.
+ */
+Scale.prototype.getLabel = null;
 
 
 clazzUtil.enableClassExtend(Scale);

@@ -82,21 +82,6 @@ Axis2D.prototype = {
     },
 
     /**
-     * If label is ignored.
-     * Automatically used when axis is category and label can not be all shown
-     * @param  {number}  idx
-     * @return {boolean}
-     */
-    isLabelIgnored: function (idx) {
-        if (this.type === 'category') {
-            var labelInterval = this.getLabelInterval();
-            return ((typeof labelInterval === 'function')
-                && !labelInterval(idx, this.scale.getLabel(idx)))
-                || idx % (labelInterval + 1);
-        }
-    },
-
-    /**
      * @override
      */
     pointToData: function (point, clamp) {

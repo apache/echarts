@@ -302,8 +302,7 @@ Parallel.prototype = {
                 axisLabelShow: posInfo.axisLabelShow,
                 nameTruncateMaxWidth: posInfo.nameTruncateMaxWidth,
                 tickDirection: 1,
-                labelDirection: 1,
-                labelInterval: axes.get(dim).getLabelInterval()
+                labelDirection: 1
             };
         }, this);
     },

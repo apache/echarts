@@ -4,10 +4,10 @@ import * as zrUtil from 'zrender/src/core/util';
  * @param {Object} opt {labelInside}
  * @return {Object} {
  *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, labelInterval, z2
+ *  tickDirection, labelRotate, z2
  * }
  */
-export function layout (axisModel, opt) {
+export function layout(axisModel, opt) {
     opt = opt || {};
     var single = axisModel.coordinateSystem;
     var axis = axisModel.axis;
@@ -53,8 +53,6 @@ export function layout (axisModel, opt) {
     var labelRotation = opt.rotate;
     labelRotation == null && (labelRotation = axisModel.get('axisLabel.rotate'));
     layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
-
-    layout.labelInterval = axis.getLabelInterval();
 
     layout.z2 = 1;
 

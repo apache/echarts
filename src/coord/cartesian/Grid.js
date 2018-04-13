@@ -5,10 +5,14 @@
  */
 
 import {__DEV__} from '../../config';
-import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import {isObject, each, map, indexOf, retrieve} from 'zrender/src/core/util';
 import {getLayoutRect} from '../../util/layout';
-import * as axisHelper from '../../coord/axisHelper';
+import {
+    createScaleByModel,
+    ifAxisCrossZero,
+    niceScaleExtent,
+    estimateLabelUnionRect
+} from '../../coord/axisHelper';
 import Cartesian2D from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystem from '../../CoordinateSystem';
@@ -16,50 +20,12 @@ import CoordinateSystem from '../../CoordinateSystem';
 // Depends on GridModel, AxisModel, which performs preprocess.
 import './GridModel';
 
-var each = zrUtil.each;
-var ifAxisCrossZero = axisHelper.ifAxisCrossZero;
-var niceScaleExtent = axisHelper.niceScaleExtent;
-
 /**
  * Check if the axis is used in the specified grid
  * @inner
  */
 function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
     return axisModel.getCoordSysModel() === gridModel;
-}
-
-function rotateTextRect(textRect, rotate) {
-  var rotateRadians = rotate * Math.PI / 180;
-  var boundingBox = textRect.plain();
-  var beforeWidth = boundingBox.width;
-  var beforeHeight = boundingBox.height;
-  var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
-  var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
-  var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
-
-  return rotatedRect;
-}
-
-function getLabelUnionRect(axis) {
-    var axisModel = axis.model;
-    var labels = axisModel.get('axisLabel.show') ? axisModel.getFormattedLabels() : [];
-    var axisLabelModel = axisModel.getModel('axisLabel');
-    var rect;
-    var step = 1;
-    var labelCount = labels.length;
-    if (labelCount > 40) {
-        // Simple optimization for large amount of labels
-        step = Math.ceil(labelCount / 40);
-    }
-    for (var i = 0; i < labelCount; i += step) {
-        if (!axis.isLabelIgnored(i)) {
-            var unrotatedSingleRect = axisLabelModel.getTextRect(labels[i]);
-            var singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
-
-            rect ? rect.union(singleRect) : (rect = singleRect);
-        }
-    }
-    return rect;
 }
 
 function Grid(gridModel, ecModel, api) {
@@ -191,7 +157,7 @@ gridProto.resize = function (gridModel, api, ignoreContainLabel) {
     if (!ignoreContainLabel && gridModel.get('containLabel')) {
         each(axesList, function (axis) {
             if (!axis.model.get('axisLabel.inside')) {
-                var labelUnionRect = getLabelUnionRect(axis);
+                var labelUnionRect = estimateLabelUnionRect(axis);
                 if (labelUnionRect) {
                     var dim = axis.isHorizontal() ? 'height' : 'width';
                     var margin = axis.model.get('axisLabel.margin');
@@ -262,7 +228,7 @@ gridProto.getCartesian = function (xAxisIndex, yAxisIndex) {
         return this._coordsMap[key];
     }
 
-    if (zrUtil.isObject(xAxisIndex)) {
+    if (isObject(xAxisIndex)) {
         yAxisIndex = xAxisIndex.yAxisIndex;
         xAxisIndex = xAxisIndex.xAxisIndex;
     }
@@ -324,7 +290,7 @@ gridProto._findConvertTarget = function (ecModel, finder) {
 
     if (seriesModel) {
         cartesian = seriesModel.coordinateSystem;
-        zrUtil.indexOf(coordsList, cartesian) < 0 && (cartesian = null);
+        indexOf(coordsList, cartesian) < 0 && (cartesian = null);
     }
     else if (xAxisModel && yAxisModel) {
         cartesian = this.getCartesian(xAxisModel.componentIndex, yAxisModel.componentIndex);
@@ -438,7 +404,7 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
             axisPositionUsed[axisPosition] = true;
 
             var axis = new Axis2D(
-                axisType, axisHelper.createScaleByModel(axisModel),
+                axisType, createScaleByModel(axisModel),
                 [0, 0],
                 axisModel.get('type'),
                 axisPosition
@@ -475,7 +441,7 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
  */
 gridProto._updateScale = function (ecModel, gridModel) {
     // Reset scale
-    zrUtil.each(this._axesList, function (axis) {
+    each(this._axesList, function (axis) {
         axis.scale.setExtent(Infinity, -Infinity);
     });
     ecModel.eachSeries(function (seriesModel) {
@@ -523,8 +489,8 @@ gridProto.getTooltipAxes = function (dim) {
         var baseAxis = (dim != null && dim !== 'auto')
             ? cartesian.getAxis(dim) : cartesian.getBaseAxis();
         var otherAxis = cartesian.getOtherAxis(baseAxis);
-        zrUtil.indexOf(baseAxes, baseAxis) < 0 && baseAxes.push(baseAxis);
-        zrUtil.indexOf(otherAxes, otherAxis) < 0 && otherAxes.push(otherAxis);
+        indexOf(baseAxes, baseAxis) < 0 && baseAxes.push(baseAxis);
+        indexOf(otherAxes, otherAxis) < 0 && otherAxes.push(otherAxis);
     });
 
     return {baseAxes: baseAxes, otherAxes: otherAxes};
@@ -559,12 +525,12 @@ var axesTypes = ['xAxis', 'yAxis'];
  * @inner
  */
 function findAxesModels(seriesModel, ecModel) {
-    return zrUtil.map(axesTypes, function (axisType) {
+    return map(axesTypes, function (axisType) {
         var axisModel = seriesModel.getReferringComponents(axisType)[0];
 
         if (__DEV__) {
             if (!axisModel) {
-                throw new Error(axisType + ' "' + zrUtil.retrieve(
+                throw new Error(axisType + ' "' + retrieve(
                     seriesModel.get(axisType + 'Index'),
                     seriesModel.get(axisType + 'Id'),
                     0
@@ -611,7 +577,7 @@ Grid.create = function (ecModel, api) {
         if (__DEV__) {
             if (!gridModel) {
                 throw new Error(
-                    'Grid "' + zrUtil.retrieve(
+                    'Grid "' + retrieve(
                         xAxisModel.get('gridIndex'),
                         xAxisModel.get('gridId'),
                         0
