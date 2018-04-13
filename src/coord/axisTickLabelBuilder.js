@@ -168,7 +168,6 @@ function makeAutoCategoryInterval(axis, useFake) {
  * should be implemented in axis.
  */
 function calculateCategoryInterval(axis, fakeRect) {
-// console.time('a');
     var params = fetchAutoCategoryIntervalCalculationParams(axis);
     var labelFormatter = makeLabelFormatter(axis);
     var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
@@ -180,82 +179,65 @@ function calculateCategoryInterval(axis, fakeRect) {
     // in large category data case.
     var tickCount = ordinalScale.count();
 
+    if (ordinalExtent[1] - ordinalExtent[0] < 1) {
+        return 0;
+    }
+
     var step = 1;
-    // Simple optimization. Empirical value: tick count less 40.
+    // Simple optimization. Empirical value: tick count should less than 40.
     if (tickCount > 40) {
         step = Math.max(1, Math.floor(tickCount / 40));
     }
+    var tickValue = ordinalExtent[0];
+    var unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
+    var unitW = Math.abs(unitSpan * Math.cos(rotation));
+    var unitH = Math.abs(unitSpan * Math.sin(rotation));
 
-    var textSpaceTakenRect;
-    var accumulatedLabelInterval = 0;
-
+    var maxW = 0;
+    var maxH = 0;
     // Caution: Performance sensitive for large category data.
-    // Consider dataZoom, it should avoid O(n).
-    for (var tickValue = ordinalExtent[0]; tickValue <= ordinalExtent[1]; ) {
-        var formattedLabel = labelFormatter(tickValue);
+    // Consider dataZoom, we should make appropriate step to avoid O(n) loop.
+    for (; tickValue <= ordinalExtent[1]; tickValue += step) {
         // Not precise, do not consider align and vertical align
         // and each distance from axis line yet.
-        var rect = fakeRect
-            ? fakeRect.clone()
-            : textContain.getBoundingRect(formattedLabel, params.font, 'center', 'top');
+        var rect = fakeRect || textContain.getBoundingRect(
+            labelFormatter(tickValue), params.font, 'center', 'top'
+        );
         // Polar is also calculated in assumptive linear layout here.
-        var tickCoord = axis.dataToCoord(tickValue);
-        rect.x += tickCoord * Math.cos(rotation);
-        rect.y += tickCoord * Math.sin(rotation);
 
         // Magic number
-        rect.width *= 1.3;
-        rect.height *= 1.3;
-        if (!textSpaceTakenRect) {
-            textSpaceTakenRect = rect;
-            tickValue += step;
-        }
-        // There is no space for current label.
-        else if (textSpaceTakenRect.intersect(rect)) {
-            accumulatedLabelInterval++;
-            tickValue++;
-        }
-        else {
-            textSpaceTakenRect.union(rect);
-            if (accumulatedLabelInterval) {
-                // Optimize: add step to escape uncessary loop.
-                step += accumulatedLabelInterval;
-                accumulatedLabelInterval = 0;
-            }
-            tickValue += step;
-        }
+        maxW = Math.max(maxW, rect.width * 1.3);
+        maxH = Math.max(maxH, rect.height * 1.3);
     }
 
-    if (accumulatedLabelInterval) {
-        step += accumulatedLabelInterval;
-    }
+    // Note that unitH or unitW might be Infinity.
+    var interval = Math.max(0, Math.floor(Math.min(maxW / unitW, maxH / unitH)));
 
     var cache = inner(axis.model);
-    var lastStep = cache.lastStep;
+    var lastAutoInterval = cache.lastAutoInterval;
     var lastTickCount = cache.lastTickCount;
 
     // Use cache to keep interval stable while moving zoom window,
     // otherwise the calculated interval might jitter when the zoom
     // window size is close to the interval-changing size.
-    if (lastStep != null
+    if (lastAutoInterval != null
         && lastTickCount != null
-        && Math.abs(lastStep - step) <= 1
+        && Math.abs(lastAutoInterval - interval) <= 1
         && Math.abs(lastTickCount - tickCount) <= 1
         // Always choose the bigger one, otherwise the critical
         // point is not the same when zooming in or zooming out.
-        && lastStep > step
+        && lastAutoInterval > interval
     ) {
-        step = lastStep;
+        interval = lastAutoInterval;
     }
     // Only update cache if cache not used, otherwise the
     // changing of interval is too insensitive.
     else {
         cache.lastTickCount = tickCount;
-        cache.lastStep = step;
+        cache.lastAutoInterval = interval;
     }
-// console.timeEnd('a');
-// console.log(tickCount);
-    return step - 1;
+
+    return interval;
 }
 
 function fetchAutoCategoryIntervalCalculationParams(axis) {
