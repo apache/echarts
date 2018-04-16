@@ -525,7 +525,7 @@ listProto._initDataFromProvider = function (start, end) {
                     if (nameDimChunk) {
                         name = nameDimChunk[chunkOffset];
                         var ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
-                        if (ordinalMeta) {
+                        if (ordinalMeta && ordinalMeta.categories.length) {
                             name = ordinalMeta.categories[name];
                         }
                     }
@@ -597,7 +597,7 @@ function getRawValueFromStore(list, dimIndex, rawIndex) {
         if (chunk) {
             val = chunk[chunkOffset];
             var ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
-            if (ordinalMeta) {
+            if (ordinalMeta && ordinalMeta.categories.length) {
                 val = ordinalMeta.categories[val];
             }
         }

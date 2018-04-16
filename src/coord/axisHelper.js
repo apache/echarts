@@ -98,7 +98,11 @@ export function getScaleExtent(scale, model) {
     (min == null || !isFinite(min)) && (min = NaN);
     (max == null || !isFinite(max)) && (max = NaN);
 
-    scale.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
+    scale.setBlank(
+        zrUtil.eqNaN(min)
+        || zrUtil.eqNaN(max)
+        || (scaleType === 'ordinal' && !scale.getOrdinalMeta().categories.length)
+    );
 
     // Evaluate if axis needs cross zero
     if (model.getNeedCrossZero()) {
@@ -307,12 +311,12 @@ export function getAxisRawValue(axis, value) {
  */
 export function estimateLabelUnionRect(axis) {
     var axisModel = axis.model;
+    var scale = axis.scale;
 
-    if (!axisModel.get('axisLabel.show')) {
+    if (!axisModel.get('axisLabel.show') || scale.isBlank()) {
         return;
     }
 
-    var scale = axis.scale;
     var isCategory = axis.type === 'category';
 
     var realNumberScaleTicks;

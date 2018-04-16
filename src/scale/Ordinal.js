@@ -78,7 +78,10 @@ var OrdinalScale = Scale.extend({
      * @return {string}
      */
     getLabel: function (n) {
-        return this._ordinalMeta.categories[n];
+        if (!this.isBlank()) {
+            // Note that if no data, ordinalMeta.categories is an empty array.
+            return this._ordinalMeta.categories[n];
+        }
     },
 
     /**
@@ -93,6 +96,10 @@ var OrdinalScale = Scale.extend({
      */
     unionExtentFromData: function (data, dim) {
         this.unionExtent(data.getApproximateExtent(dim));
+    },
+
+    getOrdinalMeta: function () {
+        return this._ordinalMeta;
     },
 
     niceTicks: zrUtil.noop,

@@ -33,6 +33,7 @@
         <div class="chart" id="main4"></div>
         <div class="chart" id="main5"></div>
         <div class="chart" id="main6"></div>
+        <div class="chart" id="main7"></div>
 
 
         <script>
@@ -927,6 +928,84 @@
 
 
 
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: true
+                        },
+                        min: -300,
+                        max: 333333
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        cursor: 'move'
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main7', {
+                    title: [
+                        'No data but has xAxis.min and xAxis.max, should no ticks and labels.',
+                        'label.show: false, should no dead loop.'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
 
 
 
