@@ -17,7 +17,13 @@ var BoxplotSeries = SeriesModel.extend({
      * and echarts do not need to know it.
      * @readOnly
      */
-    defaultValueDimensions: ['min', 'Q1', 'median', 'Q3', 'max'],
+    defaultValueDimensions: [
+        {name: 'min', defaultTooltip: true},
+        {name: 'Q1', defaultTooltip: true},
+        {name: 'median', defaultTooltip: true},
+        {name: 'Q3', defaultTooltip: true},
+        {name: 'max', defaultTooltip: true}
+    ],
 
     /**
      * @type {Array.<string>}
