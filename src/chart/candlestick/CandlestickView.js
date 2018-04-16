@@ -45,7 +45,6 @@ var CandlestickView = ChartView.extend({
     },
 
     _renderNormal: function (seriesModel) {
-        // var largePoints = data.getLayout('largePoints');
         var data = seriesModel.getData();
         var oldData = this._data;
         var group = this.group;
@@ -115,7 +114,8 @@ var CandlestickView = ChartView.extend({
         var data = seriesModel.getData();
         var isSimpleBox = data.getLayout('isSimpleBox');
 
-        for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+        var dataIndex;
+        while ((dataIndex = params.next()) != null) {
             var el;
 
             var itemLayout = data.getItemLayout(dataIndex);

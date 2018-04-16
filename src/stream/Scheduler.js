@@ -93,7 +93,11 @@ proto.getPerformArgs = function (task, isBlock) {
         && (!pCtx || pCtx.progressiveRender)
         && task.__idxInPipeline > pipeline.bockIndex;
 
-    return {step: incremental ? pipeline.step : null};
+    var step = incremental ? pipeline.step : null;
+    var modDataCount = pCtx && pCtx.modDataCount;
+    var modBy = modDataCount != null ? Math.ceil(modDataCount / step): null;
+
+    return {step: step, modBy: modBy, modDataCount: modDataCount};
 };
 
 proto.getPipeline = function (pipelineId) {
@@ -123,8 +127,13 @@ proto.updateStreamModes = function (seriesModel, view) {
 
     var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
 
+    // TODO: modDataCount should not updated if `appendData`, otherwise cause whole repaint.
+    // see `test/candlestick-large3.html`
+    var modDataCount = seriesModel.get('progressiveChunkMode') === 'mod' ? dataLen : null;
+
     seriesModel.pipelineContext = pipeline.context = {
         progressiveRender: progressiveRender,
+        modDataCount: modDataCount,
         large: large
     };
 };
@@ -145,7 +154,7 @@ proto.restorePipelines = function (ecModel) {
             progressiveEnabled: progressive
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
             bockIndex: -1,
-            step: progressive || 700, // ??? Temporarily number
+            step: Math.round(progressive || 700),
             count: 0
         });
 

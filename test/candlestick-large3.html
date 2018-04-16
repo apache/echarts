@@ -33,20 +33,54 @@
         require(['echarts'], function (echarts) {
 
             // The data count is from a real requirement.
-            var rawDataCount = 2e5;
+            var rawDataChunkSize = 1e4;
+            var chunkCount = 20;
+
+            var minute = 60 * 1000;
+            var xValue = +new Date(2011, 0, 1);
+            var baseValue = Math.random() * 12000;
+            var xValueMin = 0;
+            var xValueMax = rawDataChunkSize * chunkCount;
+            var yValueMin = Infinity;
+            var yValueMax = -Infinity;
+
+            var rawData = [];
+            for (var i = 0; i < chunkCount; i++) {
+                rawData.push(generateOHLC(rawDataChunkSize));
+            }
+            yValueMax = Math.ceil(yValueMax);
+            yValueMin = Math.floor(yValueMin);
 
             function run() {
-                var data = generateOHLC(rawDataCount);
-                // var result = reorder(data);
-                init(data);
+
+                frameInsight.init(echarts, 'duration');
+
+                // var data = generateOHLC(rawDataChunkSize);
+                var chart = window.chart = init();
+
+                var loadedChunkIndex = 0;
+
+                appendData();
+
+                function appendData() {
+                    if (loadedChunkIndex >= chunkCount) {
+                        return;
+                    }
+
+                    setTimeout(function () {
+
+                        chart.appendData({seriesIndex: 0, data: rawData[loadedChunkIndex]});
+
+                        loadedChunkIndex++;
+
+                        appendData();
+                    }, 300);
+                }
             }
 
             function generateOHLC(count) {
                 var data = [];
 
-                var xValue = +new Date(2011, 0, 1);
-                var minute = 60 * 1000;
-                var baseValue = Math.random() * 12000;
                 var tmpVals = new Array(4);
                 var dayRange = 12;
 
@@ -55,6 +89,12 @@
 
                     for (var j = 0; j < 4; j++) {
                         tmpVals[j] = (Math.random() - 0.5) * dayRange + baseValue;
+                        if (tmpVals[j] < yValueMin) {
+                            yValueMin = tmpVals[j];
+                        }
+                        if (tmpVals[j] > yValueMax) {
+                            yValueMax = tmpVals[j];
+                        }
                     }
                     tmpVals.sort();
 
@@ -95,14 +135,9 @@
                 return result;
             }
 
-            function init(rawData) {
-
-                frameInsight.init(echarts, 'duration');
+            function init() {
 
                 var option = {
-                    dataset: {
-                        source: rawData
-                    },
                     backgroundColor: '#eee',
                     // animation: false,
                     legend: {
@@ -153,8 +188,8 @@
                             axisLine: {onZero: false},
                             splitLine: {show: false},
                             splitNumber: 20,
-                            min: 'dataMin',
-                            max: 'dataMax'
+                            min: xValueMin,
+                            max: xValueMax
                         },
                         // {
                         //     type: 'category',
@@ -176,7 +211,9 @@
                             scale: true,
                             splitArea: {
                                 show: true
-                            }
+                            },
+                            min: yValueMin,
+                            max: yValueMax
                         },
                         // {
                         //     scale: true,
@@ -192,27 +229,28 @@
                         {
                             type: 'inside',
                             // xAxisIndex: [0, 1],
-                            start: 10,
-                            end: 100
+                            // start: 10,
+                            // end: 100
                         },
                         {
                             show: true,
                             // xAxisIndex: [0, 1],
                             type: 'slider',
                             bottom: 10,
-                            start: 10,
-                            end: 100
+                            // start: 10,
+                            // end: 100
                         }
                     ],
                     series: [
                         {
-                            name: 'Fake index',
                             type: 'candlestick',
+                            // progressiveMode: 'linear',
                             // data: data,
                             encode: {
                                 x: 0,
                                 y: [1, 4, 3, 2]
                             },
+                            // progressiveChunkMode: 'sequential'
                             // progressive: false
                             // progressive: progressive
                             // tooltip: {
@@ -276,10 +314,12 @@
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
-                    title: 'Fake OHLC data',
+                    title: 'Append data and progressive by mod',
                     option: option,
                     height: 550
                 });
+
+                return chart;
 
                 // chart && chart.on('brushSelected', renderBrushed);
 

@@ -3,11 +3,12 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="../dist/echarts.js"></script>
+        <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/frameInsight.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -21,6 +22,7 @@
 
         <div id="main0"></div>
         <div id="panel0"></div>
+        <div id="duration"></div>
 
 
 
@@ -28,14 +30,15 @@
 
         <script>
 
+        require(['echarts'], function (echarts) {
+
             // The data count is from a real requirement.
             var rawDataCount = 2e5;
-            var progressive = 4e3;
 
             function run() {
                 var data = generateOHLC(rawDataCount);
-                var result = reorder(data);
-                init(result.data, result.categoryData);
+                // var result = reorder(data);
+                init(data);
             }
 
             function generateOHLC(count) {
@@ -76,27 +79,6 @@
                 return data;
             }
 
-            function reorder(data) {
-                var categoryData = new Array(data.length);
-                var categoryMap = {};
-                for (var i = 0; i < data.length; i++) {
-                    categoryData[i] = data[i][0];
-                    categoryMap[categoryData[i]] = i;
-                }
-
-                var newData = new Array(data.length);
-                var step = Math.round(data.length / progressive);
-                var newOffset = 0;
-                for (var offset = 0; offset < step; offset++) {
-                    for (var i = offset; i < data.length; i += step) {
-                        var item = data[i].slice();
-                        newData[newOffset++] = item;
-                        item[0] = categoryMap[item[0]];
-                    }
-                }
-                return {data: newData, categoryData: categoryData};
-            }
-
             function calculateMA(dayCount, data) {
                 var result = [];
                 for (var i = 0, len = data.length; i < len; i++) {
@@ -113,7 +95,9 @@
                 return result;
             }
 
-            function init(rawData, categoryData) {
+            function init(rawData) {
+
+                frameInsight.init(echarts, 'duration');
 
                 var option = {
                     dataset: {
@@ -165,12 +149,12 @@
                             type: 'category',
                             scale: true,
                             boundaryGap : false,
+                            // inverse: true,
                             axisLine: {onZero: false},
                             splitLine: {show: false},
                             splitNumber: 20,
                             min: 'dataMin',
-                            max: 'dataMax',
-                            data: categoryData
+                            max: 'dataMax'
                         },
                         // {
                         //     type: 'category',
@@ -222,14 +206,16 @@
                     ],
                     series: [
                         {
-                            name: 'Fake index',
+                            name: 'Data Amount: ' + echarts.format.addCommas(rawDataCount),
                             type: 'candlestick',
+                            // progressiveMode: 'linear',
                             // data: data,
                             encode: {
                                 x: 0,
                                 y: [1, 4, 3, 2]
                             },
-                            progressive: progressive
+                            // progressive: false
+                            // progressive: progressive
                             // tooltip: {
                             //     formatter: function (param) {
                             //         var param = param[0];
@@ -291,7 +277,7 @@
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
-                    title: 'Fake OHLC data',
+                    title: 'Progressive by mod',
                     option: option,
                     height: 550
                 });
@@ -336,6 +322,8 @@
             }
 
             run();
+
+        });
 
         </script>
 

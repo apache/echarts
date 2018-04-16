@@ -60,6 +60,7 @@ var CandlestickSeries = SeriesModel.extend({
 
         progressive: 5e3,
         progressiveThreshold: 1e4,
+        progressiveChunkMode: 'mod',
 
         animationUpdate: false,
         animationEasing: 'linear',

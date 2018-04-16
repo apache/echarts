@@ -42,8 +42,8 @@ export default {
         };
 
         function normalProgress(params, data) {
-
-            for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+            var dataIndex;
+            while ((dataIndex = params.next()) != null) {
 
                 var axisDimVal = data.get(cDim, dataIndex);
                 var openVal = data.get(openDim, dataIndex);
@@ -126,15 +126,15 @@ export default {
         }
 
         function largeProgress(params, data) {
-            var segCount = params.end - params.start;
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
-            var points = new LargeArr(segCount * 5);
+            var points = new LargeArr(params.count * 5);
+            var offset = 0;
+            var point;
+            var tmpIn = [];
+            var tmpOut = [];
+            var dataIndex;
 
-            for (
-                var dataIndex = params.start, offset = 0, point, tmpIn = [], tmpOut = [];
-                dataIndex < params.end;
-                dataIndex++
-            ) {
+            while ((dataIndex = params.next()) != null) {
                 var axisDimVal = data.get(cDim, dataIndex);
                 var openVal = data.get(openDim, dataIndex);
                 var closeVal = data.get(closeDim, dataIndex);
