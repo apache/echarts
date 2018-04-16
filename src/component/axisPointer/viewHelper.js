@@ -107,6 +107,7 @@ function confineInContainer(position, width, height, api) {
  * @param {string|Function} opt.formatter label formatter
  */
 export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
+    value = axis.scale.parse(value);
     var text = axis.scale.getLabel(
         // If `precision` is set, width can be fixed (like '12.00500'), which
         // helps to debounce when when moving label.
