@@ -91,7 +91,7 @@ proto.getPerformArgs = function (task, isBlock) {
     var incremental = !isBlock
         && pipeline.progressiveEnabled
         && (!pCtx || pCtx.progressiveRender)
-        && task.__idxInPipeline > pipeline.bockIndex;
+        && task.__idxInPipeline > pipeline.blockIndex;
 
     var step = incremental ? pipeline.step : null;
     var modDataCount = pCtx && pCtx.modDataCount;
@@ -153,7 +153,7 @@ proto.restorePipelines = function (ecModel) {
             threshold: seriesModel.getProgressiveThreshold(),
             progressiveEnabled: progressive
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
-            bockIndex: -1,
+            blockIndex: -1,
             step: Math.round(progressive || 700),
             count: 0
         });
@@ -273,7 +273,7 @@ proto.plan = function () {
         var task = pipeline.tail;
         do {
             if (task.__block) {
-                pipeline.bockIndex = task.__idxInPipeline;
+                pipeline.blockIndex = task.__idxInPipeline;
                 break;
             }
             task = task.getUpstream();
