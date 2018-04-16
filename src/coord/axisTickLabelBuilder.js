@@ -1,6 +1,5 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
-import BoundingRect from 'zrender/src/core/BoundingRect';
 import {makeInner} from '../util/model';
 import {makeLabelFormatter} from './axisHelper';
 
@@ -53,7 +52,7 @@ function makeCategoryLabels(axis) {
     var labels;
     var numericLabelInterval;
 
-    if (!labelModel.get('show')) {
+    if (!labelModel.get('show') || axis.scale.isBlank()) {
         labels = [];
     }
     else if (zrUtil.isFunction(optionLabelInterval)) {
@@ -85,7 +84,7 @@ function makeCategoryTicks(axis, tickModel) {
 
     // Optimize for the case that large category data and no label displayed,
     // we should not return all ticks.
-    if (!tickModel.get('show')) {
+    if (!tickModel.get('show') || axis.scale.isBlank()) {
         ticks = [];
     }
 
@@ -158,8 +157,7 @@ function makeAutoCategoryInterval(axis, useFake) {
     if (result != null) {
         return result;
     }
-    var fakeRect = useFake && new BoundingRect(0, 0, 5, 5);
-    return (inner(axis)[cacheKey] = calculateCategoryInterval(axis, fakeRect));
+    return (inner(axis)[cacheKey] = calculateCategoryInterval(axis, useFake));
 }
 
 /**
@@ -167,7 +165,7 @@ function makeAutoCategoryInterval(axis, useFake) {
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */
-function calculateCategoryInterval(axis, fakeRect) {
+function calculateCategoryInterval(axis, useFake) {
     var params = fetchAutoCategoryIntervalCalculationParams(axis);
     var labelFormatter = makeLabelFormatter(axis);
     var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
@@ -195,23 +193,36 @@ function calculateCategoryInterval(axis, fakeRect) {
 
     var maxW = 0;
     var maxH = 0;
+
     // Caution: Performance sensitive for large category data.
     // Consider dataZoom, we should make appropriate step to avoid O(n) loop.
     for (; tickValue <= ordinalExtent[1]; tickValue += step) {
-        // Not precise, do not consider align and vertical align
-        // and each distance from axis line yet.
-        var rect = fakeRect || textContain.getBoundingRect(
-            labelFormatter(tickValue), params.font, 'center', 'top'
-        );
-        // Polar is also calculated in assumptive linear layout here.
+        var width = 0;
+        var height = 0;
 
-        // Magic number
-        maxW = Math.max(maxW, rect.width * 1.3);
-        maxH = Math.max(maxH, rect.height * 1.3);
+        if (!useFake) {
+            // Polar is also calculated in assumptive linear layout here.
+            // Not precise, do not consider align and vertical align
+            // and each distance from axis line yet.
+            var rect = textContain.getBoundingRect(
+                labelFormatter(tickValue), params.font, 'center', 'top'
+            );
+            // Magic number
+            width = rect.width * 1.3;
+            height = rect.height * 1.3;
+        }
+
+        // Min size, void long loop.
+        maxW = Math.max(maxW, width, 7);
+        maxH = Math.max(maxH, height, 7);
     }
 
-    // Note that unitH or unitW might be Infinity.
-    var interval = Math.max(0, Math.floor(Math.min(maxW / unitW, maxH / unitH)));
+    var dw = maxW / unitW;
+    var dh = maxH / unitH;
+    // 0/0 is NaN, 1/0 is Infinity.
+    isNaN(dw) && (dw = Infinity);
+    isNaN(dh) && (dh = Infinity);
+    var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
 
     var cache = inner(axis.model);
     var lastAutoInterval = cache.lastAutoInterval;
