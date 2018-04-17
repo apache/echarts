@@ -1,6 +1,6 @@
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import { layout } from '../layout/barGrid';
+import {layout, largeLayout} from '../layout/barGrid';
 
 import '../coord/cartesian/Grid';
 import './bar/BarSeries';
@@ -10,11 +10,13 @@ import '../component/gridSimple';
 
 
 echarts.registerLayout(zrUtil.curry(layout, 'bar'));
+// Should after normal bar layout, otherwise it is blocked by normal bar layout.
+echarts.registerLayout(largeLayout);
 
-// Visual coding for legend
-echarts.registerVisual(function (ecModel) {
-    ecModel.eachSeriesByType('bar', function (seriesModel) {
-        var data = seriesModel.getData();
-        data.setVisual('legendSymbol', 'roundRect');
-    });
+echarts.registerVisual({
+    seriesType: 'bar',
+    reset: function (seriesModel) {
+        // Visual coding for legend
+        seriesModel.getData().setVisual('legendSymbol', 'roundRect');
+    }
 });

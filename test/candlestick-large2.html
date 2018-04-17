@@ -34,6 +34,7 @@
 
             // The data count is from a real requirement.
             var rawDataCount = 2e5;
+            // var rawDataCount = 2e2;
 
             function run() {
                 var data = generateOHLC(rawDataCount);
@@ -47,16 +48,16 @@
                 var xValue = +new Date(2011, 0, 1);
                 var minute = 60 * 1000;
                 var baseValue = Math.random() * 12000;
-                var tmpVals = new Array(4);
+                var boxVals = new Array(4);
                 var dayRange = 12;
 
                 for (var i = 0; i < count; i++) {
                     baseValue = baseValue + Math.random() * 20 - 10;
 
                     for (var j = 0; j < 4; j++) {
-                        tmpVals[j] = (Math.random() - 0.5) * dayRange + baseValue;
+                        boxVals[j] = (Math.random() - 0.5) * dayRange + baseValue;
                     }
-                    tmpVals.sort();
+                    boxVals.sort();
 
                     var idxRandom = Math.random();
                     var openIdx = Math.round(Math.random() * 3);
@@ -64,15 +65,17 @@
                     if (closeIdx === openIdx) {
                         closeIdx++;
                     }
+                    var volumn = boxVals[3] * (1000 + Math.random() * 500);
 
-                    // ['open', 'close', 'lowest', 'highest']
+                    // ['open', 'close', 'lowest', 'highest', 'volumn']
                     // [1, 4, 3, 2]
                     data.push([
                         echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', xValue += minute),
-                        +tmpVals[openIdx].toFixed(2), // open
-                        +tmpVals[3].toFixed(2), // highest
-                        +tmpVals[0].toFixed(2), // lowest
-                        +tmpVals[closeIdx].toFixed(2)  // close
+                        +boxVals[openIdx].toFixed(2), // open
+                        +boxVals[3].toFixed(2), // highest
+                        +boxVals[0].toFixed(2), // lowest
+                        +boxVals[closeIdx].toFixed(2),  // close
+                        volumn.toFixed(0)
                     ]);
                 }
 
@@ -98,6 +101,11 @@
             function init(rawData) {
 
                 frameInsight.init(echarts, 'duration');
+
+                var upColor = '#ec0000';
+                var upBorderColor = '#8A0000';
+                var downColor = '#00da3c';
+                var downBorderColor = '#008F28';
 
                 var option = {
                     dataset: {
@@ -137,12 +145,12 @@
                             right: '10%',
                             height: 300
                         },
-                        // {
-                        //     left: '10%',
-                        //     right: '10%',
-                        //     height: 70,
-                        //     bottom: 80
-                        // }
+                        {
+                            left: '10%',
+                            right: '10%',
+                            height: 70,
+                            bottom: 80
+                        }
                     ],
                     xAxis: [
                         {
@@ -156,20 +164,19 @@
                             min: 'dataMin',
                             max: 'dataMax'
                         },
-                        // {
-                        //     type: 'category',
-                        //     gridIndex: 1,
-                        //     data: data.categoryData,
-                        //     scale: true,
-                        //     boundaryGap : false,
-                        //     axisLine: {onZero: false},
-                        //     axisTick: {show: false},
-                        //     splitLine: {show: false},
-                        //     axisLabel: {show: false},
-                        //     splitNumber: 20,
-                        //     min: 'dataMin',
-                        //     max: 'dataMax'
-                        // }
+                        {
+                            type: 'category',
+                            gridIndex: 1,
+                            scale: true,
+                            boundaryGap : false,
+                            axisLine: {onZero: false},
+                            axisTick: {show: false},
+                            splitLine: {show: false},
+                            axisLabel: {show: false},
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax'
+                        }
                     ],
                     yAxis: [
                         {
@@ -178,26 +185,26 @@
                                 show: true
                             }
                         },
-                        // {
-                        //     scale: true,
-                        //     gridIndex: 1,
-                        //     splitNumber: 2,
-                        //     axisLabel: {show: false},
-                        //     axisLine: {show: false},
-                        //     axisTick: {show: false},
-                        //     splitLine: {show: false}
-                        // }
+                        {
+                            scale: true,
+                            gridIndex: 1,
+                            splitNumber: 2,
+                            axisLabel: {show: false},
+                            axisLine: {show: false},
+                            axisTick: {show: false},
+                            splitLine: {show: false}
+                        }
                     ],
                     dataZoom: [
                         {
                             type: 'inside',
-                            // xAxisIndex: [0, 1],
+                            xAxisIndex: [0, 1],
                             start: 10,
                             end: 100
                         },
                         {
                             show: true,
-                            // xAxisIndex: [0, 1],
+                            xAxisIndex: [0, 1],
                             type: 'slider',
                             bottom: 10,
                             start: 10,
@@ -210,25 +217,19 @@
                             type: 'candlestick',
                             // progressiveMode: 'linear',
                             // data: data,
+                            itemStyle: {
+                                color: upColor,
+                                color0: downColor,
+                                borderColor: upBorderColor,
+                                borderColor0: downBorderColor
+                            },
                             encode: {
                                 x: 0,
                                 y: [1, 4, 3, 2]
                             },
                             // progressive: false
                             // progressive: progressive
-                            // tooltip: {
-                            //     formatter: function (param) {
-                            //         var param = param[0];
-                            //         return [
-                            //             'Date: ' + param.name + '<hr size=1 style="margin: 3px 0">',
-                            //             'Open: ' + param.data[0] + '<br/>',
-                            //             'Close: ' + param.data[1] + '<br/>',
-                            //             'Lowest: ' + param.data[2] + '<br/>',
-                            //             'Highest: ' + param.data[3] + '<br/>'
-                            //         ].join('')
-                            //     }
-                            // }
-                        } //,
+                        },
                         // {
                         //     name: 'MA5',
                         //     type: 'line',
@@ -265,13 +266,17 @@
                         //         normal: {opacity: 0.5}
                         //     }
                         // },
-                        // {
-                        //     name: 'Volumn',
-                        //     type: 'bar',
-                        //     xAxisIndex: 1,
-                        //     yAxisIndex: 1,
-                        //     data: data.volumns
-                        // }
+                        {
+                            name: 'Volumn',
+                            type: 'bar',
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            large: true,
+                            encode: {
+                                x: 0,
+                                y: 5
+                            }
+                        }
                     ]
                 };
 

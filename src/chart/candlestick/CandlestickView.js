@@ -103,11 +103,8 @@ var CandlestickView = ChartView.extend({
     },
 
     _renderLarge: function (seriesModel) {
-        var group = this.group;
-
-        group.removeAll();
-
-        createLarge(seriesModel, group);
+        this._clear();
+        createLarge(seriesModel, this.group);
     },
 
     _incrementalRenderNormal: function (params, seriesModel) {
@@ -264,15 +261,13 @@ function createLarge(seriesModel, group, incremental) {
 }
 
 function setLargeStyle(sign, el, seriesModel, data) {
-    var normalItemStyleModel = seriesModel.getModel(NORMAL_ITEM_STYLE_PATH);
     var suffix = sign > 0 ? 'P' : 'N';
-
-    var color = data.getVisual('color' + suffix);
-    var borderColor = data.getVisual('borderColor' + suffix) || color;
+    var borderColor = data.getVisual('borderColor' + suffix)
+        || data.getVisual('color' + suffix);
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    var itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
+    var itemStyle = seriesModel.getModel(NORMAL_ITEM_STYLE_PATH).getItemStyle(SKIP_PROPS);
 
     el.useStyle(itemStyle);
     el.style.fill = null;
