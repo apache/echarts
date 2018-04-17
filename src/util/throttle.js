@@ -42,6 +42,14 @@ export function throttle(fn, delay, debounce) {
 
         clearTimeout(timer);
 
+        // Here we should make sure that: the `exec` SHOULD NOT be called later
+        // than a new call of `cb`, that is, preserving the command order. Consider
+        // calculating "scale rate" when roaming as an example. When a call of `cb`
+        // happens, either the `exec` is called dierectly, or the call is delayed.
+        // But the delayed call should never be later than next call of `cb`. Under
+        // this assurance, we can simply update view state each time `dispatchAction`
+        // triggered by user roaming, but not need to add extra code to avoid the
+        // state being "rolled-back".
         if (thisDebounce) {
             timer = setTimeout(exec, thisDelay);
         }
