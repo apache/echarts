@@ -152,17 +152,15 @@ export default echarts.extendChartView({
     _clear: function (ecModel) {
         var group = this.group;
         var data = this._data;
-        if (ecModel && ecModel.get('animation')) {
-            if (data) {
-                data.eachItemGraphicEl(function (el) {
-                    if (el.type === 'sector') {
-                        removeSector(el.dataIndex, ecModel, el);
-                    }
-                    else {
-                        removeRect(el.dataIndex, ecModel, el);
-                    }
-                });
-            }
+        if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
+            data.eachItemGraphicEl(function (el) {
+                if (el.type === 'sector') {
+                    removeSector(el.dataIndex, ecModel, el);
+                }
+                else {
+                    removeRect(el.dataIndex, ecModel, el);
+                }
+            });
         }
         else {
             group.removeAll();

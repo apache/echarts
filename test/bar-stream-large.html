@@ -10,13 +10,15 @@
     </head>
     <body>
         <style>
-            html, body, #main0 {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            #snapshot {
+                width: 150;
+                height: 100;
+                background: #fff;
+                border: 5px solid rgba(0,0,0,0.5);
             }
         </style>
         <div id='main0'></div>
+        <img id="snapshot"/>
         <script>
 
         require(['echarts'], function (echarts) {
@@ -61,7 +63,7 @@
                     '(1) Check all bars rendered (full of xAxis)',
                     '(2) And check roam.',
                     '(3) Check click legend',
-                    '(4) "finished" should be printed on console'
+                    '(4) Check snapshot rendering when "finished"'
                 ],
                 option: option,
                 info: {
@@ -71,7 +73,9 @@
             });
 
             chart.on('finished', function () {
-                console.log('finished');
+                var url = chart.getDataURL();
+                var snapshotEl = document.getElementById('snapshot');
+                snapshotEl.src = url;
             });
 
         });

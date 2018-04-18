@@ -41,6 +41,7 @@
             'scatter-gps.html',
             'scatter-weibo.html',
             'bar-stream-large.html',
+            'bar-stream-large1.html',
             'candlestick-large1.html',
             'lines-flight.html',
             'lines-stream-large.html',
