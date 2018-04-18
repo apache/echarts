@@ -36,7 +36,8 @@ export default {
 
 
         function progress(params, data) {
-            for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+            var dataIndex;
+            while ((dataIndex = params.next()) != null) {
                 var itemModel = data.getItemModel(dataIndex);
                 var sign = data.getItemLayout(dataIndex).sign;
 

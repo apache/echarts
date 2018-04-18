@@ -287,28 +287,22 @@ export default TimelineView.extend({
         var axisType = timelineModel.get('axisType');
 
         var scale = axisHelper.createScaleByModel(timelineModel, axisType);
-        var dataExtent = data.getDataExtent('value');
-        scale.setExtent(dataExtent[0], dataExtent[1]);
-        this._customizeScale(scale, data);
-        scale.niceTicks();
 
-        var axis = new TimelineAxis('value', scale, layoutInfo.axisExtent, axisType);
-        axis.model = timelineModel;
-
-        return axis;
-    },
-
-    _customizeScale: function (scale, data) {
-
+        // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
             return data.mapArray(['value'], function (value) {
                 return value;
             });
         };
 
-        scale.getTicksLabels = function () {
-            return zrUtil.map(this.getTicks(), scale.getLabel, scale);
-        };
+        var dataExtent = data.getDataExtent('value');
+        scale.setExtent(dataExtent[0], dataExtent[1]);
+        scale.niceTicks();
+
+        var axis = new TimelineAxis('value', scale, layoutInfo.axisExtent, axisType);
+        axis.model = timelineModel;
+
+        return axis;
     },
 
     _createGroup: function (name) {
@@ -343,23 +337,24 @@ export default TimelineView.extend({
      */
     _renderAxisTick: function (layoutInfo, group, axis, timelineModel) {
         var data = timelineModel.getData();
+        // Show all ticks, despite ignoring strategy.
         var ticks = axis.scale.getTicks();
 
-        each(ticks, function (value, dataIndex) {
-
+        // The value is dataIndex, see the costomized scale.
+        each(ticks, function (value) {
             var tickCoord = axis.dataToCoord(value);
-            var itemModel = data.getItemModel(dataIndex);
+            var itemModel = data.getItemModel(value);
             var itemStyleModel = itemModel.getModel('itemStyle');
             var hoverStyleModel = itemModel.getModel('emphasis.itemStyle');
             var symbolOpt = {
                 position: [tickCoord, 0],
-                onclick: bind(this._changeTimeline, this, dataIndex)
+                onclick: bind(this._changeTimeline, this, value)
             };
             var el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
             graphic.setHoverStyle(el, hoverStyleModel.getItemStyle());
 
             if (itemModel.get('tooltip')) {
-                el.dataIndex = dataIndex;
+                el.dataIndex = value;
                 el.dataModel = timelineModel;
             }
             else {
@@ -373,28 +368,23 @@ export default TimelineView.extend({
      * @private
      */
     _renderAxisLabel: function (layoutInfo, group, axis, timelineModel) {
-        var labelModel = timelineModel.getModel('label');
+        var labelModel = axis.getLabelModel();
 
         if (!labelModel.get('show')) {
             return;
         }
 
         var data = timelineModel.getData();
-        var ticks = axis.scale.getTicks();
-        var labels = axisHelper.getFormattedLabels(
-            axis, labelModel.get('formatter')
-        );
-        var labelInterval = axis.getLabelInterval();
+        var labels = axis.getViewLabels();
 
-        each(ticks, function (tick, dataIndex) {
-            if (axis.isLabelIgnored(dataIndex, labelInterval)) {
-                return;
-            }
+        each(labels, function (labelItem) {
+            // The tickValue is dataIndex, see the costomized scale.
+            var dataIndex = labelItem.tickValue;
 
             var itemModel = data.getItemModel(dataIndex);
             var normalLabelModel = itemModel.getModel('label');
             var hoverLabelModel = itemModel.getModel('emphasis.label');
-            var tickCoord = axis.dataToCoord(tick);
+            var tickCoord = axis.dataToCoord(labelItem.tickValue);
             var textEl = new graphic.Text({
                 position: [tickCoord, 0],
                 rotation: layoutInfo.labelRotation - layoutInfo.rotation,
@@ -402,7 +392,7 @@ export default TimelineView.extend({
                 silent: false
             });
             graphic.setTextStyle(textEl.style, normalLabelModel, {
-                text: labels[dataIndex],
+                text: labelItem.formattedLabel,
                 textAlign: layoutInfo.labelAlign,
                 textVerticalAlign: layoutInfo.labelBaseline
             });

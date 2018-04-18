@@ -23,6 +23,18 @@ function getRadiusIdx(polar) {
     return radiusAxis.inverse ? 0 : 1;
 }
 
+// Remove the last tick which will overlap the first tick
+function fixAngleOverlap(list) {
+    var firstItem = list[0];
+    var lastItem = list[list.length - 1];
+    if (firstItem
+        && lastItem
+        && Math.abs(Math.abs(firstItem.coord - lastItem.coord) - 360) < 1e-4
+    ) {
+        list.pop();
+    }
+}
+
 export default AxisView.extend({
 
     type: 'angleAxis',
@@ -38,18 +50,22 @@ export default AxisView.extend({
         var angleAxis = angleAxisModel.axis;
         var polar = angleAxis.polar;
         var radiusExtent = polar.getRadiusAxis().getExtent();
-        var ticksAngles = angleAxis.getTicksCoords();
 
-        if (angleAxis.type !== 'category') {
-            // Remove the last tick which will overlap the first tick
-            ticksAngles.pop();
-        }
+        var ticksAngles = angleAxis.getTicksCoords();
+        var labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem) {
+            var labelItem = zrUtil.clone(labelItem);
+            labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
+            return labelItem;
+        });
+
+        fixAngleOverlap(labels);
+        fixAngleOverlap(ticksAngles);
 
         zrUtil.each(elementList, function (name) {
             if (angleAxisModel.get(name +'.show')
                 && (!angleAxis.scale.isBlank() || name === 'axisLine')
             ) {
-                this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent);
+                this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent, labels);
             }
         }, this);
     },
@@ -84,9 +100,9 @@ export default AxisView.extend({
         var tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
         var radius = radiusExtent[getRadiusIdx(polar)];
 
-        var lines = zrUtil.map(ticksAngles, function (tickAngle) {
+        var lines = zrUtil.map(ticksAngles, function (tickAngleItem) {
             return new graphic.Line({
-                shape: getAxisLineShape(polar, [radius, radius + tickLen], tickAngle)
+                shape: getAxisLineShape(polar, [radius, radius + tickLen], tickAngleItem.coord)
             });
         });
         this.group.add(graphic.mergePath(
@@ -104,24 +120,20 @@ export default AxisView.extend({
     /**
      * @private
      */
-    _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
-        var axis = angleAxisModel.axis;
-
+    _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent, labels) {
         var rawCategoryData = angleAxisModel.getCategories(true);
 
         var commonLabelModel = angleAxisModel.getModel('axisLabel');
-        var labels = angleAxisModel.getFormattedLabels();
 
         var labelMargin = commonLabelModel.get('margin');
-        var labelsAngles = axis.getLabelsCoords();
-        var ticks = axis.scale.getTicks();
 
         // Use length of ticksAngles because it may remove the last tick to avoid overlapping
-        for (var i = 0; i < ticks.length; i++) {
+        zrUtil.each(labels, function (labelItem, idx) {
             var labelModel = commonLabelModel;
-            var tickVal = ticks[i];
+            var tickValue = labelItem.tickValue;
+
             var r = radiusExtent[getRadiusIdx(polar)];
-            var p = polar.coordToPoint([r + labelMargin, labelsAngles[i]]);
+            var p = polar.coordToPoint([r + labelMargin, labelItem.coord]);
             var cx = polar.cx;
             var cy = polar.cy;
 
@@ -130,8 +142,8 @@ export default AxisView.extend({
             var labelTextVerticalAlign = Math.abs(p[1] - cy) / r < 0.3
                 ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
-            if (rawCategoryData && rawCategoryData[tickVal] && rawCategoryData[tickVal].textStyle) {
-                labelModel = new Model(rawCategoryData[tickVal].textStyle, commonLabelModel, commonLabelModel.ecModel);
+            if (rawCategoryData && rawCategoryData[tickValue] && rawCategoryData[tickValue].textStyle) {
+                labelModel = new Model(rawCategoryData[tickValue].textStyle, commonLabelModel, commonLabelModel.ecModel);
             }
 
             var textEl = new graphic.Text({silent: true});
@@ -140,11 +152,11 @@ export default AxisView.extend({
                 x: p[0],
                 y: p[1],
                 textFill: labelModel.getTextColor() || angleAxisModel.get('axisLine.lineStyle.color'),
-                text: labels[i],
+                text: labelItem.formattedLabel,
                 textAlign: labelTextAlign,
                 textVerticalAlign: labelTextVerticalAlign
             });
-        }
+        }, this);
     },
 
     /**
@@ -164,7 +176,7 @@ export default AxisView.extend({
             var colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Line({
-                shape: getAxisLineShape(polar, radiusExtent, ticksAngles[i])
+                shape: getAxisLineShape(polar, radiusExtent, ticksAngles[i].coord)
             }));
         }
 
@@ -185,6 +197,9 @@ export default AxisView.extend({
      * @private
      */
     _splitArea: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
+        if (!ticksAngles.length) {
+            return;
+        }
 
         var splitAreaModel = angleAxisModel.getModel('splitArea');
         var areaStyleModel = splitAreaModel.getModel('areaStyle');
@@ -196,7 +211,7 @@ export default AxisView.extend({
         var splitAreas = [];
 
         var RADIAN = Math.PI / 180;
-        var prevAngle = -ticksAngles[0] * RADIAN;
+        var prevAngle = -ticksAngles[0].coord * RADIAN;
         var r0 = Math.min(radiusExtent[0], radiusExtent[1]);
         var r1 = Math.max(radiusExtent[0], radiusExtent[1]);
 
@@ -212,12 +227,12 @@ export default AxisView.extend({
                     r0: r0,
                     r: r1,
                     startAngle: prevAngle,
-                    endAngle: -ticksAngles[i] * RADIAN,
+                    endAngle: -ticksAngles[i].coord * RADIAN,
                     clockwise: clockwise
                 },
                 silent: true
             }));
-            prevAngle = -ticksAngles[i] * RADIAN;
+            prevAngle = -ticksAngles[i].coord * RADIAN;
         }
 
         // Simple optimization

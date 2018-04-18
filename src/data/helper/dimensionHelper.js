@@ -10,6 +10,7 @@ export function summarizeDimensions(data) {
     var encode = summary.encode = {};
     var notExtraCoordDimMap = createHashMap();
     var defaultedLabel = [];
+    var defaultedTooltip = [];
 
     each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
@@ -35,6 +36,9 @@ export function summarizeDimensions(data) {
                 if (mayLabelDimType(dimItem.type)) {
                     defaultedLabel[0] = dimName;
                 }
+            }
+            if (dimItem.defaultTooltip) {
+                defaultedTooltip.push(dimName);
             }
         }
 
@@ -75,10 +79,12 @@ export function summarizeDimensions(data) {
         defaultedLabel = encodeLabel.slice();
     }
 
-    var defaultedTooltip = defaultedLabel.slice();
     var encodeTooltip = encode.tooltip;
     if (encodeTooltip && encodeTooltip.length) {
         defaultedTooltip = encodeTooltip.slice();
+    }
+    else if (!defaultedTooltip.length) {
+        defaultedTooltip = defaultedLabel.slice();
     }
 
     encode.defaultedLabel = defaultedLabel;

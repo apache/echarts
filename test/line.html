@@ -49,8 +49,6 @@
                         xAxisData.push('类目' + i);
                     }
 
-
-
                     if (i < 5 && i > 1) {
                         data1.push(0);
                     }
@@ -80,25 +78,27 @@
                 };
 
                 chart.setOption({
-
                     title: {
-                        text: '折线图{a|asdf}Step line',
-                        subtext: 'subtitle',
-                        backgroundColor: '#ee99aa',
-                        borderRadius: 5,
-                        padding: 10,
-                        textStyle: {
-                            rich: {
-                                a: {
-                                    color: '#338844',
-                                    fontSize: 30,
-                                    borderColor: '#119955',
-                                    borderWidth: 3,
-                                    backgroundColor: '#445566'
-                                }
-                            }
-                        }
+                        text: 'tick 14 and 20 should be red (has textStyle)'
                     },
+                    // title: {
+                    //     text: '折线图{a|asdf}Step line',
+                    //     subtext: 'subtitle',
+                    //     backgroundColor: '#ee99aa',
+                    //     borderRadius: 5,
+                    //     padding: 10,
+                    //     textStyle: {
+                    //         rich: {
+                    //             a: {
+                    //                 color: '#338844',
+                    //                 fontSize: 30,
+                    //                 borderColor: '#119955',
+                    //                 borderWidth: 3,
+                    //                 backgroundColor: '#445566'
+                    //             }
+                    //         }
+                    //     }
+                    // },
 
                     legend: {
                         data: ['line', 'line2', 'line3']
@@ -122,8 +122,8 @@
                             show: false
                         },
                         axisLabel: {
-                            showMaxLabel: true,
-                            showMinLabel: true
+                            // showMaxLabel: true,
+                            // showMinLabel: true
                         }
                     },
                     grid: {
@@ -140,11 +140,17 @@
                             show: true
                         }
                     },
-                    dataZoom: {
+                    dataZoom: [{
                         type: 'inside',
-                        start: 10,
-                        end: 30
-                    },
+                        // start: 10,
+                        // end: 30
+                        startValue: 11,
+                        endValue: 85
+                    }, {
+                        type: 'slider',
+                        startValue: 11,
+                        endValue: 85
+                    }],
                     // animation: false,
                     series: [null,  // 用于测试 option 中含有null的情况。
                     {

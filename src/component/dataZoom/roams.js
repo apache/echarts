@@ -100,20 +100,6 @@ export function unregister(api, dataZoomId) {
 /**
  * @public
  */
-export function shouldRecordRange(payload, dataZoomId) {
-    if (payload && payload.type === 'dataZoom' && payload.batch) {
-        for (var i = 0, len = payload.batch.length; i < len; i++) {
-            if (payload.batch[i].dataZoomId === dataZoomId) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-/**
- * @public
- */
 export function generateCoordId(coordModel) {
     return coordModel.type + '\0_' + coordModel.id;
 }
@@ -170,7 +156,7 @@ function wrapAndDispatch(record, getRange) {
         });
     });
 
-    record.dispatchAction(batch);
+    batch.length && record.dispatchAction(batch);
 }
 
 /**

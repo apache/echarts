@@ -32,14 +32,9 @@
 
             require([
                 'echarts'
-                // 'zrender/core/util',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/timeline'
             ], function (echarts) {
                 var zrUtil = echarts.util;
+
                 makeChart({
                     timeline: {
                         label: {
@@ -63,7 +58,8 @@
                         symbolRotate: 30
                     }
                 });
-                makeChart({timeline: {inverse: true, controlStyle: {position: 'right'}}});
+
+                makeChart({timeline: {inverse: true, controlStyle: {position: 'right'}}, width: 400});
 
                 makeChart({timeline: {orient: 'vertical', x: 0, y: 10, width: 55, height: '80%'}});
                 makeChart({timeline: {orient: 'vertical', inverse: true, rewind: true, x: 0, y: 10, width: 55, height: '80%'}});
@@ -118,7 +114,11 @@
                     var containerEl = document.getElementById('main');
                     var el = document.createElement('div');
                     el.className = 'block';
-                    el.innerHTML = '<div class="ec"></div><label>'
+                    var widthString = '';
+                    if (opt.width != null) {
+                        widthString = ' style="width:' + opt.width + 'px" ';
+                    }
+                    el.innerHTML = '<div class="ec" ' + widthString + '></div><label>'
                         + encodeHTML(JSON.stringify(opt)) + '</label>';
                     containerEl.appendChild(el);
 

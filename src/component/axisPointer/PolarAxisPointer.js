@@ -110,7 +110,7 @@ var pointerShapeBuilder = {
     },
 
     shadow: function (axis, polar, coordValue, otherExtent, elStyle) {
-        var bandWidth = axis.getBandWidth();
+        var bandWidth = Math.max(1, axis.getBandWidth());
         var radian = Math.PI / 180;
 
         return axis.dim === 'angle'

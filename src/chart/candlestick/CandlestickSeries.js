@@ -11,7 +11,12 @@ var CandlestickSeries = SeriesModel.extend({
     /**
      * @readOnly
      */
-    defaultValueDimensions: ['open', 'close', 'lowest', 'highest'],
+    defaultValueDimensions: [
+        {name: 'open', defaultTooltip: true},
+        {name: 'close', defaultTooltip: true},
+        {name: 'lowest', defaultTooltip: true},
+        {name: 'highest', defaultTooltip: true}
+    ],
 
     /**
      * @type {Array.<string>}
@@ -23,8 +28,8 @@ var CandlestickSeries = SeriesModel.extend({
      * @override
      */
     defaultOption: {
-        zlevel: 0,                  // 一级层叠
-        z: 2,                       // 二级层叠
+        zlevel: 0,
+        z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
@@ -60,6 +65,7 @@ var CandlestickSeries = SeriesModel.extend({
 
         progressive: 5e3,
         progressiveThreshold: 1e4,
+        progressiveChunkMode: 'mod',
 
         animationUpdate: false,
         animationEasing: 'linear',

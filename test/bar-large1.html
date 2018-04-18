@@ -1,0 +1,132 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+        <div id="main0"></div>
+
+        <script>
+
+            function ValueGenerator(baseValue) {
+                this._baseValue = baseValue;
+            }
+            ValueGenerator.prototype.next = function () {
+                var value = this._baseValue += Math.random() * 20 - 10;
+                return Math.max(0, Math.round(value) + 3000);
+            }
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var count = 5e5;
+                // var count = 1e6;
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var generator1 = new ValueGenerator(Math.random() * 1000);
+                // var generator2 = new ValueGenerator(Math.random() * 5000);
+
+                for (var i = 0; i < count; i++) {
+                    xAxisData.push('category' + i);
+                    data1.push(generator1.next().toFixed(2));
+                    // data2.push(generator2.next().toFixed(2));
+                }
+
+                var option = {
+                    title: {
+                        text: echarts.format.addCommas(count) + ' Bars',
+                        left: 10
+                    },
+                    legend: {
+                        data: ['bar', 'bar2', 'bar3', 'bar4'],
+                        align: 'left'
+                    },
+                    toolbox: {
+                        // y: 'bottom',
+                        feature: {
+                            magicType: {
+                                type: ['line', 'bar', 'stack', 'tiled']
+                            },
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
+                            dataView: {},
+                            saveAsImage: {
+                                pixelRatio: 2
+                            }
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    dataZoom: [{
+                        // startValue: 48,
+                        // endValue: 99,
+                        type: 'inside'
+                    }, {
+                        // startValue: 48,
+                        // endValue: 99,
+                        type: 'slider'
+                    }],
+                    xAxis: {
+                        data: xAxisData,
+                        silent: false,
+                        splitLine: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        // stack: 'one',
+                        data: data1,
+                        itemStyle: {
+                            color: 'green'
+                            // borderColor: 'yellow'
+                        },
+                        large: true
+                        // progressiveChunkMode: 'sequential'
+                    // }, {
+                    //     show: false,
+                    //     name: 'bar2',
+                    //     type: 'bar',
+                    //     stack: 'one',
+                    //     data: data[1]
+                    }]
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    option: option
+                });
+
+            });
+        </script>
+    </body>
+</html>

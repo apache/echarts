@@ -4,17 +4,6 @@ import * as axisHelper from './axisHelper';
 export default {
 
     /**
-     * Format labels
-     * @return {Array.<string>}
-     */
-    getFormattedLabels: function () {
-        return axisHelper.getFormattedLabels(
-            this.axis,
-            this.get('axisLabel.formatter')
-        );
-    },
-
-    /**
      * @param {boolean} origin
      * @return {number|string} min value or 'dataMin' or null/undefined (means auto) or NaN
      */

@@ -1,8 +1,12 @@
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../util/number';
 import {isDimensionStacked} from '../data/helper/dataStackHelper';
+import createRenderPlanner from '../chart/helper/createRenderPlanner';
 
 var STACK_PREFIX = '__ec_stack_';
+var LARGE_BAR_MIN_WIDTH = 0.5;
+
+var LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
 function getSeriesStackId(seriesModel) {
     return seriesModel.get('stack') || STACK_PREFIX + seriesModel.seriesIndex;
@@ -22,7 +26,7 @@ function getAxisKey(axis) {
  * @param {number} [opt.barCategoryGap]
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
  */
-export function getLayoutOnAxis(opt, api) {
+export function getLayoutOnAxis(opt) {
     var params = [];
     var baseAxis = opt.axis;
     var axisKey = 'axis0';
@@ -39,7 +43,7 @@ export function getLayoutOnAxis(opt, api) {
             stackId: STACK_PREFIX + i
         }, opt));
     }
-    var widthAndOffsets = doCalBarWidthAndOffset(params, api);
+    var widthAndOffsets = doCalBarWidthAndOffset(params);
 
     var result = [];
     for (var i = 0; i < opt.count; i++) {
@@ -51,8 +55,20 @@ export function getLayoutOnAxis(opt, api) {
     return result;
 }
 
-export function calBarWidthAndOffset(barSeries, api) {
-    var seriesInfoList = zrUtil.map(barSeries, function (seriesModel) {
+export function prepareLayoutBarSeries(seriesType, ecModel) {
+    var seriesModels = [];
+    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+        // Check series coordinate, do layout for cartesian2d only
+        if (isOnCartesian(seriesModel) && !isInLargeMode(seriesModel)) {
+            seriesModels.push(seriesModel);
+        }
+    });
+    return seriesModels;
+}
+
+export function makeColumnLayout(barSeries) {
+    var seriesInfoList = [];
+    zrUtil.each(barSeries, function (seriesModel) {
         var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();
@@ -70,7 +86,7 @@ export function calBarWidthAndOffset(barSeries, api) {
         var barGap = seriesModel.get('barGap');
         var barCategoryGap = seriesModel.get('barCategoryGap');
 
-        return {
+        seriesInfoList.push({
             bandWidth: bandWidth,
             barWidth: barWidth,
             barMaxWidth: barMaxWidth,
@@ -78,13 +94,13 @@ export function calBarWidthAndOffset(barSeries, api) {
             barCategoryGap: barCategoryGap,
             axisKey: getAxisKey(baseAxis),
             stackId: getSeriesStackId(seriesModel)
-        };
+        });
     });
 
-    return doCalBarWidthAndOffset(seriesInfoList, api);
+    return doCalBarWidthAndOffset(seriesInfoList);
 }
 
-function doCalBarWidthAndOffset(seriesInfoList, api) {
+function doCalBarWidthAndOffset(seriesInfoList) {
     // Columns info on each category axis. Key is cartesian name
     var columnsMap = {};
 
@@ -198,21 +214,28 @@ function doCalBarWidthAndOffset(seriesInfoList, api) {
 }
 
 /**
+ * @param {Object} barWidthAndOffset The result of makeColumnLayout
+ * @param {module:echarts/coord/Axis} axis
+ * @param {module:echarts/model/Series} [seriesModel] If not provided, return all.
+ * @return {Object} {stackId: {offset, width}} or {offset, width} if seriesModel provided.
+ */
+export function retrieveColumnLayout(barWidthAndOffset, axis, seriesModel) {
+    if (barWidthAndOffset && axis) {
+        var result = barWidthAndOffset[getAxisKey(axis)];
+        if (result != null && seriesModel != null) {
+            return result[getSeriesStackId(seriesModel)];
+        }
+    }
+}
+
+/**
  * @param {string} seriesType
  * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
  */
-export function layout(seriesType, ecModel, api) {
+export function layout(seriesType, ecModel) {
 
-    var seriesModels = [];
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-        // Check series coordinate, do layout for cartesian2d only
-        if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
-            seriesModels.push(seriesModel);
-        }
-    });
-
-    var barWidthAndOffset = calBarWidthAndOffset(seriesModels);
+    var seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
+    var barWidthAndOffset = makeColumnLayout(seriesModels);
 
     var lastStackCoords = {};
     var lastStackCoordsOrigin = {};
@@ -244,12 +267,7 @@ export function layout(seriesType, ecModel, api) {
         var stacked = isDimensionStacked(data, valueDim, baseDim);
         var isValueAxisH = valueAxis.isHorizontal();
 
-        var valueAxisStart = (
-                zrUtil.indexOf(baseAxis.getAxesOnZeroOf(), valueAxis) >= 0
-                || stacked
-            )
-            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
-            : valueAxis.getGlobalExtent()[0];
+        var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
 
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
@@ -318,4 +336,76 @@ export function layout(seriesType, ecModel, api) {
     }, this);
 }
 
+// TODO: Do not support stack in large mode yet.
+export var largeLayout = {
 
+    seriesType: 'bar',
+
+    plan: createRenderPlanner(),
+
+    reset: function (seriesModel) {
+        if (!isOnCartesian(seriesModel) || !isInLargeMode(seriesModel)) {
+            return;
+        }
+
+        var data = seriesModel.getData();
+        var cartesian = seriesModel.coordinateSystem;
+        var baseAxis = cartesian.getBaseAxis();
+        var valueAxis = cartesian.getOtherAxis(baseAxis);
+        var valueDim = data.mapDimension(valueAxis.dim);
+        var baseDim = data.mapDimension(baseAxis.dim);
+        var valueAxisHorizontal = valueAxis.isHorizontal();
+        var valueDimIdx = valueAxisHorizontal ? 0 : 1;
+
+        var barWidth = retrieveColumnLayout(
+            makeColumnLayout([seriesModel]), baseAxis, seriesModel
+        ).width;
+        if (!(barWidth > LARGE_BAR_MIN_WIDTH)) { // jshint ignore:line
+            barWidth = LARGE_BAR_MIN_WIDTH;
+        }
+
+        return {progress: progress};
+
+        function progress(params, data) {
+
+            var largePoints = new LargeArr(params.count * 2);
+            var dataIndex;
+            var coord = [];
+            var valuePair = [];
+            var offset = 0;
+
+            while ((dataIndex = params.next()) != null) {
+                valuePair[valueDimIdx] = data.get(valueDim, dataIndex);
+                valuePair[1 - valueDimIdx] = data.get(baseDim, dataIndex);
+
+                coord = cartesian.dataToPoint(valuePair, null, coord);
+                largePoints[offset++] = coord[0];
+                largePoints[offset++] = coord[1];
+            }
+
+            data.setLayout({
+                largePoints: largePoints,
+                barWidth: barWidth,
+                valueAxisStart: getValueAxisStart(baseAxis, valueAxis, false),
+                valueAxisHorizontal: valueAxisHorizontal
+            });
+        }
+    }
+};
+
+function isOnCartesian(seriesModel) {
+    return seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d';
+}
+
+function isInLargeMode(seriesModel) {
+    return seriesModel.pipelineContext && seriesModel.pipelineContext.large;
+}
+
+function getValueAxisStart(baseAxis, valueAxis, stacked) {
+    return (
+        zrUtil.indexOf(baseAxis.getAxesOnZeroOf(), valueAxis) >= 0
+        || stacked
+    )
+    ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
+    : valueAxis.getGlobalExtent()[0];
+}

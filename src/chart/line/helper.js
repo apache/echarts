@@ -17,18 +17,25 @@ export function prepareDataCoordInfo(coordSys, data, valueOrigin) {
     var baseDim = data.mapDimension(baseAxisDim);
     var baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
 
-    var stacked = isDimensionStacked(data, valueDim, baseDim);
-
-    var dataDimsForPoint = map(coordSys.dimensions, function (coordDim) {
+    var dims = map(coordSys.dimensions, function (coordDim) {
         return data.mapDimension(coordDim);
     });
 
+    var stacked;
+    var stackResultDim = data.getCalculationInfo('stackResultDimension');
+    if (stacked |= isDimensionStacked(data, dims[0], dims[1])) { // jshint ignore:line
+        dims[0] = stackResultDim;
+    }
+    if (stacked |= isDimensionStacked(data, dims[1], dims[0])) { // jshint ignore:line
+        dims[1] = stackResultDim;
+    }
+
     return {
-        dataDimsForPoint: dataDimsForPoint,
+        dataDimsForPoint: dims,
         valueStart: valueStart,
         valueAxisDim: valueAxisDim,
         baseAxisDim: baseAxisDim,
-        stacked: stacked,
+        stacked: !!stacked,
         valueDim: valueDim,
         baseDim: baseDim,
         baseDataOffset: baseDataOffset,

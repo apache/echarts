@@ -28,12 +28,10 @@ var InsideZoomView = DataZoomView.extend({
     render: function (dataZoomModel, ecModel, api, payload) {
         InsideZoomView.superApply(this, 'render', arguments);
 
-        // Notice: origin this._range should be maintained, and should not be re-fetched
-        // from dataZoomModel when payload.type is 'dataZoom', otherwise 'pan' or 'zoom'
-        // info will be missed because of 'throttle' of this.dispatchAction.
-        if (roams.shouldRecordRange(payload, dataZoomModel.id)) {
-            this._range = dataZoomModel.getPercentRange();
-        }
+        // Hance the `throttle` util ensures to preserve command order,
+        // here simply updating range all the time will not cause missing
+        // any of the the roam change.
+        this._range = dataZoomModel.getPercentRange();
 
         // Reset controllers.
         zrUtil.each(this.getTargetCoordInfo(), function (coordInfoList, coordSysName) {
@@ -85,7 +83,8 @@ var InsideZoomView = DataZoomView.extend({
      * @private
      */
     _onPan: function (coordInfo, coordSysName, controller, dx, dy, oldX, oldY, newX, newY) {
-        var range = this._range.slice();
+        var lastRange = this._range;
+        var range = lastRange.slice();
 
         // Calculate transform by the first axis.
         var axisModel = coordInfo.axisModels[0];
@@ -103,14 +102,19 @@ var InsideZoomView = DataZoomView.extend({
 
         sliderMove(percentDelta, range, [0, 100], 'all');
 
-        return (this._range = range);
+        this._range = range;
+
+        if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
+            return range;
+        }
     },
 
     /**
      * @private
      */
     _onZoom: function (coordInfo, coordSysName, controller, scale, mouseX, mouseY) {
-        var range = this._range.slice();
+        var lastRange = this._range;
+        var range = lastRange.slice();
 
         // Calculate transform by the first axis.
         var axisModel = coordInfo.axisModels[0];
@@ -136,7 +140,11 @@ var InsideZoomView = DataZoomView.extend({
 
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
-        return (this._range = range);
+        this._range = range;
+
+        if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
+            return range;
+        }
     }
 
 });

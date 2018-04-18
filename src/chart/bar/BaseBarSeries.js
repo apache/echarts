@@ -41,6 +41,11 @@ export default SeriesModel.extend({
         barMinAngle: 0,
         // cursor: null,
 
+        large: false,
+        largeThreshold: 400,
+        progressive: 5e3,
+        progressiveChunkMode: 'mod',
+
         // barMaxWidth: null,
         // 默认自适应
         // barWidth: null,

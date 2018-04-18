@@ -5,7 +5,7 @@ import * as graphic from '../../util/graphic';
 import {setLabel} from './helper';
 import Model from '../../model/Model';
 import barItemStyle from './barItemStyle';
-
+import Path from 'zrender/src/graphic/Path';
 
 var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
 
@@ -18,12 +18,16 @@ export default echarts.extendChartView({
     type: 'bar',
 
     render: function (seriesModel, ecModel, api) {
+        this._updateDrawMode(seriesModel);
+
         var coordinateSystemType = seriesModel.get('coordinateSystem');
 
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
         ) {
-            this._render(seriesModel, ecModel, api);
+            this._isLargeDraw
+                ? this._renderLarge(seriesModel, ecModel, api)
+                : this._renderNormal(seriesModel, ecModel, api);
         }
         else if (__DEV__) {
             console.warn('Only cartesian2d and polar supported for bar.');
@@ -32,9 +36,25 @@ export default echarts.extendChartView({
         return this.group;
     },
 
-    dispose: zrUtil.noop,
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this._clear();
+        this._updateDrawMode(seriesModel);
+    },
 
-    _render: function (seriesModel, ecModel, api) {
+    incrementalRender: function (params, seriesModel, ecModel, api) {
+        // Do not support progressive in normal mode.
+        this._incrementalRenderLarge(params, seriesModel);
+    },
+
+    _updateDrawMode: function (seriesModel) {
+        var isLargeDraw = seriesModel.pipelineContext.large;
+        if (this._isLargeDraw == null || isLargeDraw ^ this._isLargeDraw) {
+            this._isLargeDraw = isLargeDraw;
+            this._clear();
+        }
+    },
+
+    _renderNormal: function (seriesModel, ecModel, api) {
         var group = this.group;
         var data = seriesModel.getData();
         var oldData = this._data;
@@ -114,10 +134,25 @@ export default echarts.extendChartView({
         this._data = data;
     },
 
-    remove: function (ecModel, api) {
+    _renderLarge: function (seriesModel, ecModel, api) {
+        this._clear();
+        createLarge(seriesModel, this.group);
+    },
+
+    _incrementalRenderLarge: function (params, seriesModel) {
+        createLarge(seriesModel, this.group, true);
+    },
+
+    dispose: zrUtil.noop,
+
+    remove: function (ecModel) {
+        this._clear(ecModel);
+    },
+
+    _clear: function (ecModel) {
         var group = this.group;
         var data = this._data;
-        if (ecModel.get('animation')) {
+        if (ecModel && ecModel.get('animation')) {
             if (data) {
                 data.eachItemGraphicEl(function (el) {
                     if (el.type === 'sector') {
@@ -132,7 +167,9 @@ export default echarts.extendChartView({
         else {
             group.removeAll();
         }
+        this._data = null;
     }
+
 });
 
 var elementCreator = {
@@ -282,3 +319,53 @@ function getLineWidth(itemModel, rawLayout) {
     var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
     return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
 }
+
+
+var LargePath = Path.extend({
+
+    type: 'largeBar',
+
+    shape: {points: []},
+
+    buildPath: function (ctx, shape) {
+        // Drawing lines is more efficient than drawing
+        // a whole line or drawing rects.
+        var points = shape.points;
+        var startPoint = this.__startPoint;
+        var valueIdx = this.__valueIdx;
+
+        for (var i = 0; i < points.length; i += 2) {
+            startPoint[this.__valueIdx] = points[i + valueIdx];
+            ctx.moveTo(startPoint[0], startPoint[1]);
+            ctx.lineTo(points[i], points[i + 1]);
+        }
+    }
+});
+
+function createLarge(seriesModel, group, incremental) {
+    // TODO support polar
+    var data = seriesModel.getData();
+    var startPoint = [];
+    var valueIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
+    startPoint[1 - valueIdx] = data.getLayout('valueAxisStart');
+
+    var el = new LargePath({
+        shape: {points: data.getLayout('largePoints')},
+        incremental: !!incremental,
+        __startPoint: startPoint,
+        __valueIdx: valueIdx
+    });
+    group.add(el);
+    setLargeStyle(el, seriesModel, data);
+}
+
+function setLargeStyle(el, seriesModel, data) {
+    var borderColor = data.getVisual('borderColor') || data.getVisual('color');
+    var itemStyle = seriesModel.getModel('itemStyle').getItemStyle(['color', 'borderColor']);
+
+    el.useStyle(itemStyle);
+    el.style.fill = null;
+    el.style.stroke = borderColor;
+    el.style.lineWidth = data.getLayout('barWidth');
+}
+

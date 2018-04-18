@@ -60,7 +60,7 @@ export default AxisView.extend({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: ticksCoords[i]
+                    r: ticksCoords[i].coord
                 },
                 silent: true
             }));
@@ -83,6 +83,9 @@ export default AxisView.extend({
      * @private
      */
     _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
+        if (!ticksCoords.length) {
+            return;
+        }
 
         var splitAreaModel = radiusAxisModel.getModel('splitArea');
         var areaStyleModel = splitAreaModel.getModel('areaStyle');
@@ -93,7 +96,7 @@ export default AxisView.extend({
 
         var splitAreas = [];
 
-        var prevRadius = ticksCoords[0];
+        var prevRadius = ticksCoords[0].coord;
         for (var i = 1; i < ticksCoords.length; i++) {
             var colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
@@ -102,13 +105,13 @@ export default AxisView.extend({
                     cx: polar.cx,
                     cy: polar.cy,
                     r0: prevRadius,
-                    r: ticksCoords[i],
+                    r: ticksCoords[i].coord,
                     startAngle: 0,
                     endAngle: Math.PI * 2
                 },
                 silent: true
             }));
-            prevRadius = ticksCoords[i];
+            prevRadius = ticksCoords[i].coord;
         }
 
         // Simple optimization

@@ -42,11 +42,6 @@ var SingleAxis = function (dim, scale, coordExtent, axisType, position) {
      */
     this.orient = null;
 
-    /**
-     * @type {number}
-     */
-    this._labelInterval = null;
-
 };
 
 SingleAxis.prototype = {

@@ -1,11 +1,15 @@
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
-import * as textContain from 'zrender/src/contain/text';
 import OrdinalScale from '../scale/Ordinal';
 import IntervalScale from '../scale/Interval';
 import Scale from '../scale/Scale';
 import * as numberUtil from '../util/number';
-import {calBarWidthAndOffset} from '../layout/barGrid';
+import {
+    prepareLayoutBarSeries,
+    makeColumnLayout,
+    retrieveColumnLayout
+} from '../layout/barGrid';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 import '../scale/Time';
 import '../scale/Log';
@@ -98,7 +102,11 @@ export function getScaleExtent(scale, model) {
     (min == null || !isFinite(min)) && (min = NaN);
     (max == null || !isFinite(max)) && (max = NaN);
 
-    scale.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
+    scale.setBlank(
+        zrUtil.eqNaN(min)
+        || zrUtil.eqNaN(max)
+        || (scaleType === 'ordinal' && !scale.getOrdinalMeta().categories.length)
+    );
 
     // Evaluate if axis needs cross zero
     if (model.getNeedCrossZero()) {
@@ -116,26 +124,26 @@ export function getScaleExtent(scale, model) {
     // is base axis
     // FIXME
     // (1) Consider support value axis, where below zero and axis `onZero` should be handled properly.
-    // (2) Refactor the logic with `barGrid`. Is it not need to `calBarWidthAndOffset` twice with different extent?
+    // (2) Refactor the logic with `barGrid`. Is it not need to `makeBarWidthAndOffsetInfo` twice with different extent?
     //     Should not depend on series type `bar`?
     // (3) Fix that might overlap when using dataZoom.
     // (4) Consider other chart types using `barGrid`?
     // See #6728, #4862, `test/bar-overflow-time-plot.html`
     var ecModel = model.ecModel;
     if (ecModel && (scaleType === 'time' /*|| scaleType === 'interval' */)) {
-        var barSeriesModels = [];
+        var barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         var isBaseAxisAndHasBarSeries;
 
-        ecModel.eachSeriesByType('bar', function (seriesModel) {
-            if (seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d') {
-                barSeriesModels.push(seriesModel);
-                isBaseAxisAndHasBarSeries |= seriesModel.getBaseAxis() === model.axis;
-            }
+        zrUtil.each(barSeriesModels, function (seriesModel) {
+            isBaseAxisAndHasBarSeries |= seriesModel.getBaseAxis() === model.axis;
         });
 
         if (isBaseAxisAndHasBarSeries) {
+            // Calculate placement of bars on axis
+            var barWidthAndOffset = makeColumnLayout(barSeriesModels);
+
             // Adjust axis min and max to account for overflow
-            var adjustedScale = adjustScaleForOverflow(min, max, model, barSeriesModels);
+            var adjustedScale = adjustScaleForOverflow(min, max, model, barWidthAndOffset);
             min = adjustedScale.min;
             max = adjustedScale.max;
         }
@@ -144,18 +152,14 @@ export function getScaleExtent(scale, model) {
     return [min, max];
 }
 
-function adjustScaleForOverflow(min, max, model, barSeriesModels) {
+function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
 
     // Get Axis Length
     var axisExtent = model.axis.getExtent();
     var axisLength = axisExtent[1] - axisExtent[0];
 
-    // Calculate placement of bars on axis
-    var barWidthAndOffset = calBarWidthAndOffset(barSeriesModels);
-
     // Get bars on current base axis and calculate min and max overflow
-    var baseAxisKey = model.axis.dim + model.axis.index;
-    var barsOnCurrentAxis = barWidthAndOffset[baseAxisKey];
+    var barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
     if (barsOnCurrentAxis === undefined) {
         return {min: min, max: max};
     }
@@ -253,69 +257,17 @@ export function ifAxisCrossZero(axis) {
 }
 
 /**
- * @param {Array.<number>} tickCoords In axis self coordinate.
- * @param {Array.<string>} labels
- * @param {string} font
- * @param {number} axisRotate 0: towards right horizontally, clock-wise is negative.
- * @param {number} [labelRotate=0] 0: towards right horizontally, clock-wise is negative.
- * @return {number}
+ * @param {module:echarts/coord/Axis} axis
+ * @return {Function} Label formatter function.
+ *         param: {number} tickValue,
+ *         param: {number} idx, the index in all ticks.
+ *                         If category axis, this param is not requied.
+ *         return: {string} label string.
  */
-export function getAxisLabelInterval(tickCoords, labels, font, axisRotate, labelRotate) {
-    var textSpaceTakenRect;
-    var autoLabelInterval = 0;
-    var accumulatedLabelInterval = 0;
-    var rotation = (axisRotate - labelRotate) / 180 * Math.PI;
+export function makeLabelFormatter(axis) {
+    var labelFormatter = axis.getLabelModel().get('formatter');
+    var categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
-    var step = 1;
-    if (labels.length > 40) {
-        // Simple optimization for large amount of labels
-        step = Math.floor(labels.length / 40);
-    }
-
-    for (var i = 0; i < tickCoords.length; i += step) {
-        var tickCoord = tickCoords[i];
-
-        // Not precise, do not consider align and vertical align
-        // and each distance from axis line yet.
-        var rect = textContain.getBoundingRect(
-            labels[i], font, 'center', 'top'
-        );
-        rect.x += tickCoord * Math.cos(rotation);
-        rect.y += tickCoord * Math.sin(rotation);
-
-        // Magic number
-        rect.width *= 1.3;
-        rect.height *= 1.3;
-
-        if (!textSpaceTakenRect) {
-            textSpaceTakenRect = rect.clone();
-        }
-        // There is no space for current label;
-        else if (textSpaceTakenRect.intersect(rect)) {
-            accumulatedLabelInterval++;
-            autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
-        }
-        else {
-            textSpaceTakenRect.union(rect);
-            // Reset
-            accumulatedLabelInterval = 0;
-        }
-    }
-    if (autoLabelInterval === 0 && step > 1) {
-        return step;
-    }
-    return (autoLabelInterval + 1) * step - 1;
-}
-
-/**
- * @param {Object} axis
- * @param {Function} labelFormatter
- * @return {Array.<string>}
- */
-export function getFormattedLabels(axis, labelFormatter) {
-    var scale = axis.scale;
-    var labels = scale.getTicksLabels();
-    var ticks = scale.getTicks();
     if (typeof labelFormatter === 'string') {
         labelFormatter = (function (tpl) {
             return function (val) {
@@ -323,18 +275,26 @@ export function getFormattedLabels(axis, labelFormatter) {
             };
         })(labelFormatter);
         // Consider empty array
-        return zrUtil.map(labels, labelFormatter);
+        return labelFormatter;
     }
     else if (typeof labelFormatter === 'function') {
-        return zrUtil.map(ticks, function (tick, idx) {
-            return labelFormatter(
-                getAxisRawValue(axis, tick),
-                idx
-            );
-        }, this);
+        return function (tickValue, idx) {
+            // The original intention of `idx` is "the index of the tick in all ticks".
+            // But the previous implementation of category axis do not consider the
+            // `axisLabel.interval`, which cause that, for example, the `interval` is
+            // `1`, then the ticks "name5", "name7", "name9" are displayed, where the
+            // corresponding `idx` are `0`, `2`, `4`, but not `0`, `1`, `2`. So we keep
+            // the definition here for back compatibility.
+            if (categoryTickStart != null) {
+                idx = tickValue - categoryTickStart;
+            }
+            return labelFormatter(getAxisRawValue(axis, tickValue), idx);
+        };
     }
     else {
-        return labels;
+        return function (tick) {
+            return axis.scale.getLabel(tick);
+        };
     }
 }
 
@@ -344,3 +304,65 @@ export function getAxisRawValue(axis, value) {
     // in category axis.
     return axis.type === 'category' ? axis.scale.getLabel(value) : value;
 }
+
+/**
+ * @param {module:echarts/coord/Axis} axis
+ * @return {module:zrender/core/BoundingRect} Be null/undefined if no labels.
+ */
+export function estimateLabelUnionRect(axis) {
+    var axisModel = axis.model;
+    var scale = axis.scale;
+
+    if (!axisModel.get('axisLabel.show') || scale.isBlank()) {
+        return;
+    }
+
+    var isCategory = axis.type === 'category';
+
+    var realNumberScaleTicks;
+    var tickCount;
+    var categoryScaleExtent = scale.getExtent();
+
+    // Optimize for large category data, avoid call `getTicks()`.
+    if (isCategory) {
+        tickCount = scale.count();
+    }
+    else {
+        realNumberScaleTicks = scale.getTicks();
+        tickCount = realNumberScaleTicks.length;
+    }
+
+    var axisLabelModel = axis.getLabelModel();
+    var labelFormatter = makeLabelFormatter(axis);
+
+    var rect;
+    var step = 1;
+    // Simple optimization for large amount of labels
+    if (tickCount > 40) {
+        step = Math.ceil(tickCount / 40);
+    }
+    for (var i = 0; i < tickCount; i += step) {
+        var tickValue = realNumberScaleTicks ? realNumberScaleTicks[i] : categoryScaleExtent[0] + i;
+        var label = labelFormatter(tickValue);
+        var unrotatedSingleRect = axisLabelModel.getTextRect(label);
+        var singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
+
+        rect ? rect.union(singleRect) : (rect = singleRect);
+    }
+
+    return rect;
+}
+
+function rotateTextRect(textRect, rotate) {
+    var rotateRadians = rotate * Math.PI / 180;
+    var boundingBox = textRect.plain();
+    var beforeWidth = boundingBox.width;
+    var beforeHeight = boundingBox.height;
+    var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
+    var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+    var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
+
+    return rotatedRect;
+}
+
+

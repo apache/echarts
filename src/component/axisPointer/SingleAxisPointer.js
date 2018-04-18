@@ -1,7 +1,7 @@
 import * as graphic from '../../util/graphic';
 import BaseAxisPointer from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
-import * as singleAxisHelper from '../axis/singleAxisHelper';
+import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
 import AxisView from '../axis/AxisView';
 
 var XY = ['x', 'y'];

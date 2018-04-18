@@ -71,18 +71,6 @@ var IntervalScale = Scale.extend({
     },
 
     /**
-     * @return {Array.<string>}
-     */
-    getTicksLabels: function () {
-        var labels = [];
-        var ticks = this.getTicks();
-        for (var i = 0; i < ticks.length; i++) {
-            labels.push(this.getLabel(ticks[i]));
-        }
-        return labels;
-    },
-
-    /**
      * @param {number} data
      * @param {Object} [opt]
      * @param {number|string} [opt.precision] If 'auto', use nice presision.

@@ -1,10 +1,13 @@
 import * as zrUtil from 'zrender/src/core/util';
 
 /**
+ * Can only be called after coordinate system creation stage.
+ * (Can be called before coordinate system update stage).
+ *
  * @param {Object} opt {labelInside}
  * @return {Object} {
  *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, labelInterval, z2
+ *  tickDirection, labelRotate, z2
  * }
  */
 export function layout(gridModel, axisModel, opt) {
@@ -57,9 +60,6 @@ export function layout(gridModel, axisModel, opt) {
     // Special label rotation
     var labelRotate = axisModel.get('axisLabel.rotate');
     layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
-
-    // label interval when auto mode.
-    layout.labelInterval = axis.getLabelInterval();
 
     // Over splitLine and splitArea
     layout.z2 = 1;

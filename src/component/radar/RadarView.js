@@ -80,7 +80,7 @@ export default echarts.extendComponentView({
                         shape: {
                             cx: cx,
                             cy: cy,
-                            r: ticksRadius[i]
+                            r: ticksRadius[i].coord
                         }
                     }));
                 }
@@ -90,8 +90,8 @@ export default echarts.extendComponentView({
                         shape: {
                             cx: cx,
                             cy: cy,
-                            r0: ticksRadius[i],
-                            r: ticksRadius[i + 1]
+                            r0: ticksRadius[i].coord,
+                            r: ticksRadius[i + 1].coord
                         }
                     }));
                 }
@@ -106,7 +106,7 @@ export default echarts.extendComponentView({
                     ? ticksCoords.length - 1
                     : Math.min(ticksCoords.length - 1, realSplitNumber);
                 return zrUtil.map(ticksCoords, function (tickCoord) {
-                    return radar.coordToPoint(tickCoord, idx);
+                    return radar.coordToPoint(tickCoord.coord, idx);
                 });
             });
 

@@ -45,7 +45,6 @@ var CandlestickView = ChartView.extend({
     },
 
     _renderNormal: function (seriesModel) {
-        // var largePoints = data.getLayout('largePoints');
         var data = seriesModel.getData();
         var oldData = this._data;
         var group = this.group;
@@ -104,18 +103,16 @@ var CandlestickView = ChartView.extend({
     },
 
     _renderLarge: function (seriesModel) {
-        var group = this.group;
-
-        group.removeAll();
-
-        createLarge(seriesModel, group);
+        this._clear();
+        createLarge(seriesModel, this.group);
     },
 
     _incrementalRenderNormal: function (params, seriesModel) {
         var data = seriesModel.getData();
         var isSimpleBox = data.getLayout('isSimpleBox');
 
-        for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+        var dataIndex;
+        while ((dataIndex = params.next()) != null) {
             var el;
 
             var itemLayout = data.getItemLayout(dataIndex);
@@ -264,15 +261,13 @@ function createLarge(seriesModel, group, incremental) {
 }
 
 function setLargeStyle(sign, el, seriesModel, data) {
-    var normalItemStyleModel = seriesModel.getModel(NORMAL_ITEM_STYLE_PATH);
     var suffix = sign > 0 ? 'P' : 'N';
-
-    var color = data.getVisual('color' + suffix);
-    var borderColor = data.getVisual('borderColor' + suffix) || color;
+    var borderColor = data.getVisual('borderColor' + suffix)
+        || data.getVisual('color' + suffix);
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    var itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
+    var itemStyle = seriesModel.getModel(NORMAL_ITEM_STYLE_PATH).getItemStyle(SKIP_PROPS);
 
     el.useStyle(itemStyle);
     el.style.fill = null;

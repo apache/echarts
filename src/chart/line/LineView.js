@@ -605,15 +605,26 @@ export default ChartView.extend({
         this._polygon = polygon;
         return polygon;
     },
+
     /**
      * @private
      */
     _getSymbolIgnoreFunc: function (data, coordSys) {
         var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
-        // `getLabelInterval` is provided by echarts/component/axis
-        if (categoryAxis && categoryAxis.isLabelIgnored) {
-            return zrUtil.bind(categoryAxis.isLabelIgnored, categoryAxis);
+        if (!categoryAxis) {
+            return;
         }
+
+        var categoryDataDim = data.mapDimension(categoryAxis.dim);
+        var labelMap = {};
+
+        zrUtil.each(categoryAxis.getViewLabels(), function (labelItem) {
+            labelMap[labelItem.tickValue] = 1;
+        });
+
+        return function (dataIndex) {
+            return !labelMap.hasOwnProperty(data.get(categoryDataDim, dataIndex));
+        };
     },
 
     /**
