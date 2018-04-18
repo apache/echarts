@@ -60,7 +60,6 @@ export default echarts.extendChartView({
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
             var curve = new SankeyShape();
-
             curve.dataIndex = edge.dataIndex;
             curve.seriesIndex = seriesModel.seriesIndex;
             curve.dataType = 'edge';

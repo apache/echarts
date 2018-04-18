@@ -11,13 +11,18 @@ export default function (ecModel, payload) {
         var graph = seriesModel.getGraph();
         var nodes = graph.nodes;
         if (nodes.length) {
-            nodes.sort(function (a, b) {
-                return a.getLayout().value - b.getLayout().value;
+            var minValue = Infinity;
+            var maxValue = -Infinity;
+            zrUtil.each(nodes, function (node) {
+                var nodeValue = node.getLayout().value;
+                if (nodeValue < minValue) {
+                    minValue = nodeValue;
+                }
+                if (nodeValue > maxValue) {
+                    maxValue = nodeValue;
+                }
             });
-    
-            var minValue = nodes[0].getLayout().value;
-            var maxValue = nodes[nodes.length - 1].getLayout().value;
-    
+            
             zrUtil.each(nodes, function (node) {
                 var mapping = new VisualMapping({
                     type: 'color',
