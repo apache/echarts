@@ -47,21 +47,29 @@ function cloneChunk(originalChunk) {
 }
 
 var TRANSFERABLE_PROPERTIES = [
-    'hasItemOption', '_nameList', '_idList', '_calculationInfo', '_invertedIndicesMap',
-    '_rawData', '_rawExtent', '_chunkSize', '_chunkCount',
-    '_dimValueGetter', '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'
+    'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
+    '_rawData', '_chunkSize', '_chunkCount', '_dimValueGetter',
+    '_count', '_rawCount', '_nameDimIdx', '_idDimIdx'
+];
+var CLONE_PROPERTIES = [
+    '_extent', '_approximateExtent', '_rawExtent'
 ];
 
-function transferProperties(a, b) {
-    zrUtil.each(TRANSFERABLE_PROPERTIES.concat(b.__wrappedMethods || []), function (propName) {
-        if (b.hasOwnProperty(propName)) {
-            a[propName] = b[propName];
+function transferProperties(target, source) {
+    zrUtil.each(TRANSFERABLE_PROPERTIES.concat(source.__wrappedMethods || []), function (propName) {
+        if (source.hasOwnProperty(propName)) {
+            target[propName] = source[propName];
         }
     });
 
-    a.__wrappedMethods = b.__wrappedMethods;
-}
+    target.__wrappedMethods = source.__wrappedMethods;
 
+    zrUtil.each(CLONE_PROPERTIES, function (propName) {
+        target[propName] = zrUtil.clone(source[propName]);
+    });
+
+    target._calculationInfo = zrUtil.extend(source._calculationInfo);
+}
 
 
 
@@ -1441,15 +1449,17 @@ function cloneListForMapAndSample(original, excludeDimensions) {
 
     var storage = list._storage = {};
     var originalStorage = original._storage;
-    var rawExtent = zrUtil.extend({}, original._rawExtent);
 
     // Init storage
     for (var i = 0; i < allDimensions.length; i++) {
         var dim = allDimensions[i];
         if (originalStorage[dim]) {
+            // Notice that we do not reset invertedIndicesMap here, becuase
+            // there is no scenario of mapping or sampling ordinal dimension.
             if (zrUtil.indexOf(excludeDimensions, dim) >= 0) {
                 storage[dim] = cloneDimStore(originalStorage[dim]);
-                rawExtent[dim] = getInitialExtent();
+                list._rawExtent[dim] = getInitialExtent();
+                list._extent[dim] = null;
             }
             else {
                 // Direct reference for other dimensions
@@ -1854,9 +1864,6 @@ listProto.cloneShallow = function (list) {
         list._indices = null;
     }
     list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
-
-    list._extent = zrUtil.clone(this._extent);
-    list._approximateExtent = zrUtil.clone(this._approximateExtent);
 
     return list;
 };
