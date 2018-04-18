@@ -395,7 +395,7 @@ function ascendingDepth(a, b) {
 }
 
 function ascending(a, b) {
-    return a < b ? -1 : a > b ? 1 : a === b ? 0 : NaN;
+    return a - b;
 }
 
 function getEdgeValue(edge) {
