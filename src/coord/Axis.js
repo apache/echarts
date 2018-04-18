@@ -160,7 +160,7 @@ Axis.prototype = {
     getTicksCoords: function (opt) {
         opt = opt || {};
 
-        var tickModel = opt.tickModel || this.model.getModel('axisTick');
+        var tickModel = opt.tickModel || this.getTickModel();
 
         var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
@@ -191,8 +191,23 @@ Axis.prototype = {
         return createAxisLabels(this).labels;
     },
 
+    /**
+     * @return {module:echarts/coord/model/Model}
+     */
     getLabelModel: function () {
         return this.model.getModel('axisLabel');
+    },
+
+    /**
+     * Notice here we only get the default tick model. For splitLine
+     * or splitArea, we should pass the splitLineModel or splitAreaModel
+     * manually when calling `getTicksCoords`.
+     * In GL, this method may be overrided to:
+     * `axisModel.getModel('axisTick', grid3DModel.getModel('axisTick'));`
+     * @return {module:echarts/coord/model/Model}
+     */
+    getTickModel: function () {
+        return this.model.getModel('axisTick');
     },
 
     /**
