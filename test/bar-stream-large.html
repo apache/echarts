@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src='lib/testHelper.js'></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+    </head>
+    <body>
+        <style>
+            html, body, #main0 {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main0'></div>
+        <script>
+
+        require(['echarts'], function (echarts) {
+
+            var count = 2e5;
+
+            var data = [];
+
+            for (var i = 0; i < count; i++) {
+                data.push(['c' + i, Math.sin(i / 180 * Math.PI)]);
+            }
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {},
+                xAxis: {
+                    type: 'category',
+                    min: 0,
+                    max: count - 1,
+                    axisLabel: {
+                        showMaxLabel: true,
+                        showMinLabel: true
+                    }
+                },
+                yAxis: {},
+                dataZoom: [{}, {type: 'inside'}],
+                series: [{
+                    type: 'bar',
+                    name: 'bar',
+                    color: ['green'],
+                    progressiveChunkMode: 'sequential',
+                    large: true,
+                    data: data
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    count + ' points should be rendered from left to right.',
+                    '(1) Check all bars rendered (full of xAxis)',
+                    '(2) And check roam.',
+                    '(3) Check click legend',
+                    '(4) "finished" should be printed on console'
+                ],
+                option: option,
+                info: {
+                    xAxis: option.xAxis,
+                    series: {progressiveChunkMode: 'sequential'}
+                }
+            });
+
+            chart.on('finished', function () {
+                console.log('finished');
+            });
+
+        });
+
+        </script>
+    </body>
+</html>

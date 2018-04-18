@@ -40,6 +40,8 @@
             'scatter-random-stream-fix-axis.html',
             'scatter-gps.html',
             'scatter-weibo.html',
+            'bar-stream-large.html',
+            'candlestick-large1.html',
             'lines-flight.html',
             'lines-stream-large.html',
             'lines-stream-not-large.html',

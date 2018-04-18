@@ -170,7 +170,8 @@ export function incrementalApplyVisual(stateList, visualMappings, getValueState,
             data.setItemVisual(dataIndex, key, value);
         }
 
-        for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
+        var dataIndex;
+        while ((dataIndex = params.next()) != null) {
             var rawDataItem = data.getRawDataItem(dataIndex);
 
             // Consider performance

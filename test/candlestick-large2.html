@@ -38,7 +38,6 @@
 
             function run() {
                 var data = generateOHLC(rawDataCount);
-                // var result = reorder(data);
                 init(data);
             }
 
@@ -69,17 +68,37 @@
 
                     // ['open', 'close', 'lowest', 'highest', 'volumn']
                     // [1, 4, 3, 2]
-                    data.push([
+                    data[i] = [
                         echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', xValue += minute),
                         +boxVals[openIdx].toFixed(2), // open
                         +boxVals[3].toFixed(2), // highest
                         +boxVals[0].toFixed(2), // lowest
                         +boxVals[closeIdx].toFixed(2),  // close
-                        volumn.toFixed(0)
-                    ]);
+                        volumn.toFixed(0),
+                        getSign(data, i, +boxVals[openIdx], +boxVals[closeIdx], 4) // sign
+                    ];
                 }
 
                 return data;
+
+                function getSign(data, dataIndex, openVal, closeVal, closeDimIdx) {
+                    var sign;
+                    if (openVal > closeVal) {
+                        sign = -1;
+                    }
+                    else if (openVal < closeVal) {
+                        sign = 1;
+                    }
+                    else {
+                        sign = dataIndex > 0
+                            // If close === open, compare with close of last record
+                            ? (data[dataIndex - 1][closeDimIdx] <= closeVal ? 1 : -1)
+                            // No record of previous, set to be positive
+                            : 1;
+                    }
+
+                    return sign;
+                }
             }
 
             function calculateMA(dayCount, data) {
@@ -112,7 +131,6 @@
                         source: rawData
                     },
                     backgroundColor: '#eee',
-                    // animation: false,
                     legend: {
                         left: 0
                     },
@@ -127,9 +145,9 @@
                             dataZoom: {
                                 yAxisIndex: false
                             },
-                            brush: {
-                                type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
-                            }
+                            // brush: {
+                            //     type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
+                            // }
                         }
                     },
                     // brush: {
@@ -211,12 +229,22 @@
                             end: 100
                         }
                     ],
+                    visualMap: {
+                        show: false,
+                        seriesIndex: 1,
+                        dimension: 6,
+                        pieces: [{
+                            value: 1,
+                            color: downColor
+                        }, {
+                            value: -1,
+                            color: upColor
+                        }]
+                    },
                     series: [
                         {
                             name: 'Data Amount: ' + echarts.format.addCommas(rawDataCount),
                             type: 'candlestick',
-                            // progressiveMode: 'linear',
-                            // data: data,
                             itemStyle: {
                                 color: upColor,
                                 color0: downColor,
@@ -226,51 +254,16 @@
                             encode: {
                                 x: 0,
                                 y: [1, 4, 3, 2]
-                            },
-                            // progressive: false
-                            // progressive: progressive
+                            }
                         },
-                        // {
-                        //     name: 'MA5',
-                        //     type: 'line',
-                        //     data: calculateMA(5, data),
-                        //     smooth: true,
-                        //     lineStyle: {
-                        //         normal: {opacity: 0.5}
-                        //     }
-                        // },
-                        // {
-                        //     name: 'MA10',
-                        //     type: 'line',
-                        //     data: calculateMA(10, data),
-                        //     smooth: true,
-                        //     lineStyle: {
-                        //         normal: {opacity: 0.5}
-                        //     }
-                        // },
-                        // {
-                        //     name: 'MA20',
-                        //     type: 'line',
-                        //     data: calculateMA(20, data),
-                        //     smooth: true,
-                        //     lineStyle: {
-                        //         normal: {opacity: 0.5}
-                        //     }
-                        // },
-                        // {
-                        //     name: 'MA30',
-                        //     type: 'line',
-                        //     data: calculateMA(30, data),
-                        //     smooth: true,
-                        //     lineStyle: {
-                        //         normal: {opacity: 0.5}
-                        //     }
-                        // },
                         {
                             name: 'Volumn',
                             type: 'bar',
                             xAxisIndex: 1,
                             yAxisIndex: 1,
+                            itemStyle: {
+                                color: '#7fbe9e'
+                            },
                             large: true,
                             encode: {
                                 x: 0,
@@ -282,7 +275,11 @@
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
-                    title: 'Progressive by mod',
+                    title: [
+                        'Progressive by mod',
+                        '(1) Check click legend',
+                        '(2) Check visualMap after zoomed to normal mode'
+                    ],
                     option: option,
                     height: 550
                 });

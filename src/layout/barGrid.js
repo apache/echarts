@@ -367,7 +367,6 @@ export var largeLayout = {
         return {progress: progress};
 
         function progress(params, data) {
-
             var largePoints = new LargeArr(params.count * 2);
             var dataIndex;
             var coord = [];
