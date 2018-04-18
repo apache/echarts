@@ -203,7 +203,7 @@ var CartesianAxisView = AxisView.extend({
             }
 
             var tickValue = ticksCoords[i - 1].tickValue;
-            newSplitAreaColors.set(tickValue, colorIndex);
+            tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
 
             this._axisGroup.add(new graphic.Rect({
                 anid: 'area_' + tickValue,

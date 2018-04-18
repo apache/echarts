@@ -34,6 +34,7 @@
         <div class="chart" id="main5"></div>
         <div class="chart" id="main6"></div>
         <div class="chart" id="main7"></div>
+        <div class="chart" id="main8"></div>
 
 
         <script>
@@ -1009,6 +1010,72 @@
 
 
 
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        splitArea: {
+                            interval: 3,
+                            show: true,
+                            areaStyle: {
+                                color: ['blue', 'red']
+                            }
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                    }],
+                    series: []
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main8', {
+                    title: [
+                        'Check splitArea correct for indivisible interval.',
+                        'Move left handle of the dataZoom and check splitArea correct'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
 
 
 
