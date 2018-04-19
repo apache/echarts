@@ -42,7 +42,7 @@
             'scatter-weibo.html',
             'bar-stream-large.html',
             'bar-stream-large1.html',
-            'candlestick-large1.html',
+            'candlestick-large2.html',
             'lines-flight.html',
             'lines-stream-large.html',
             'lines-stream-not-large.html',

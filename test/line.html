@@ -14,6 +14,8 @@
             }
         </style>
         <div id="info"></div>
+        (1) tick 14 and 20 should be red (has textStyle) <br>
+        (2) Check all symbol show if possible.
         <div id="main"></div>
         <script>
 
@@ -78,9 +80,6 @@
                 };
 
                 chart.setOption({
-                    title: {
-                        text: 'tick 14 and 20 should be red (has textStyle)'
-                    },
                     // title: {
                     //     text: '折线图{a|asdf}Step line',
                     //     subtext: 'subtitle',
@@ -188,6 +187,7 @@
                         stack: 'all',
                         symbol: 'circle',
                         symbolSize: 10,
+                        // showAllSymbol: false,
                         data: data2,
                         itemStyle: itemStyle,
                         step: 'end'
