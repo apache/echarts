@@ -11,11 +11,6 @@ export default SeriesModel.extend({
     visualColorAccessPath: 'lineStyle.color',
 
     getInitialData: function (option, ecModel) {
-        // Anication is forbiden in progressive data mode.
-        if (this.option.progressive) {
-            this.option.animation = false;
-        }
-
         var source = this.getSource();
 
         setEncodeAndDimensions(source, this);
@@ -69,7 +64,7 @@ export default SeriesModel.extend({
             }
         },
 
-        progressive: false, // 100
+        progressive: 500,
         smooth: false, // true | false | number
 
         animationEasing: 'linear'
