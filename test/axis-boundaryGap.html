@@ -6,26 +6,17 @@
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
-            h1 {
-                line-height: 60px;
-                background: #140;
-                text-align: center;
-                font-weight: bold;
-                color: #eee;
-                font-size: 14px;
-            }
-            .chart {
-                height: 200px;
-            }
         </style>
 
-        <h1>default {boundaryGap:true, alignWithLabel: false}, in category axis, axis tick and label should be consistent</h1>
         <div class="chart" id="a"></div>
+        <div class="chart" id="b"></div>
 
 
 
@@ -37,18 +28,7 @@
 
         <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/chart/bar',
-                // 'echarts/chart/candlestick',
-                // 'echarts/component/grid',
-                // 'echarts/component/graphic',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/dataZoom'
-            ], function (echarts) {
+            require(['echarts'], function (echarts) {
 
                 var axisData = [
                     "2013/1/24", "2013/1/25", "2013/1/28", "2013/1/29", "2013/1/30",
@@ -136,10 +116,118 @@
                     ]
                 };
 
-                chart = myChart = echarts.init(document.getElementById('a'));
-                chart.setOption(option);
+                testHelper.create(echarts, 'a', {
+                    title: [
+                        'default {boundaryGap:true, alignWithLabel: false}, in category axis, axis tick and label should be consistent'
+                    ],
+                    height: 200,
+                    option: option
+                });
+
             });
 
         </script>
+
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts) {
+
+                var gridLeft = 50;
+                var gridRight = 20;
+                var option = {
+                    tooltip : {
+                        trigger: 'axis',
+                    },
+                    legend: {
+                    },
+                    dataZoom: [{
+                    }, {
+                        type: 'inside'
+                    }],
+                    grid: {
+                        id: 'cartesian',
+                        left: gridLeft,
+                        right: gridRight
+                    },
+                    xAxis: {
+                        min: 500,
+                        max: 2000
+                    },
+                    yAxis: {
+                        min: 0,
+                        max: 200
+                    },
+                    series: [
+                        {
+                            type:'line',
+                            symbolSize: 20,
+                            data:[{
+                                value: [2000, 100],
+                                itemStyle: {
+                                    color: 'red'
+                                }
+                            }, {
+                                value: [1000, 200],
+                                itemStyle: {
+                                    color: 'red'
+                                }
+                            }, {
+                                value: [500, 0],
+                                itemStyle: {
+                                    color: 'red'
+                                }
+                            }, {
+                                value: [2001, 100],
+                                itemStyle: {
+                                    color: 'green'
+                                }
+                            }]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'b', {
+                    title: [
+                        'Three red symbol on grid edge should always be displayed',
+                        'One green symbol out of the grid should not be displayed'
+                    ],
+                    option: option,
+                    info: {
+                        xAxis: option.xAxis,
+                        yAxis: option.yAxis
+                    }
+                });
+
+                var delta = 7;
+                chart && setInterval(function () {
+                    var width = chart.getWidth();
+                    if (
+                        (delta > 0 && gridRight > width - gridLeft - 10)
+                        || (delta < 0 && gridRight < 10)
+                    ) {
+                        delta = -delta;
+                    }
+
+                    gridRight += delta;
+
+                    chart.setOption({
+                        grid: {
+                            id: 'cartesian',
+                            right: gridRight
+                        }
+                    });
+                }, 100);
+            });
+
+        </script>
+
+
+
+
+
+
     </body>
 </html>

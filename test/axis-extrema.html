@@ -300,10 +300,10 @@
                 xAxis: {
                     data: ['类目1', '类目2', '类目3', '类目4', '类目5'],
                     min: function (value) {
-                        return value + 20;
+                        return value.min - 20;
                     },
                     max: function (value) {
-                        return value + 20;
+                        return value.max + 20;
                     },
                     axisTick: {
                         interval: 0
@@ -420,10 +420,10 @@
                 },
                 xAxis: {
                     min: function (value) {
-                        return value + 20;
+                        return value.min - 20;
                     },
                     max: function (value) {
-                        return value + 20;
+                        return value.max + 20;
                     }
                 },
                 yAxis: {},
@@ -547,10 +547,10 @@
                 xAxis: {
                     type: 'time',
                     min: function (value) {
-                        return value + 20;
+                        return value.min - 20 * 24 * 3600 * 1000;
                     },
                     max: function (value) {
-                        return value + 20;
+                        return value.max + 20 * 24 * 3600 * 1000;
                     }
                 },
                 yAxis: {},
@@ -634,10 +634,10 @@
                 polar: {},
                 radiusAxis: {
                     min: function (value) {
-                        return value + 20;
+                        return value.min - 20;
                     },
                     max: function (value) {
-                        return value + 20;
+                        return value.max + 20;
                     },
                     data: ['类目1', '类目2', '类目3', '类目4', '类目5']
                 },
@@ -764,10 +764,10 @@
                 singleAxis: {
                     type: 'category',
                     min: function (value) {
-                        return value + 20;
+                        return value.min - 20;
                     },
                     max: function (value) {
-                        return value + 20;
+                        return value.max + 20;
                     },
                     data: ['类目1', '类目2', '类目3', '类目4', '类目5']
                 },
