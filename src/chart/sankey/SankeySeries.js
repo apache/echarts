@@ -28,6 +28,12 @@ var SankeySeries = SeriesModel.extend({
         }
     },
 
+    setNodePosition: function (dataIndex, localPosition) {
+        var dataItem = this.option.data[dataIndex];
+        dataItem.localX = localPosition[0];
+        dataItem.localY = localPosition[1];
+    },
+
     /**
      * Return the graphic data structure
      *
@@ -83,6 +89,9 @@ var SankeySeries = SeriesModel.extend({
 
         // the vertical distance between two nodes
         nodeGap: 8,
+
+        // control if the node can move or not
+        draggable: true,
 
         // the number of iterations to change the position of the node
         layoutIterations: 32,
