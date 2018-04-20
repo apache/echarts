@@ -151,13 +151,16 @@ function listCacheSet(cache, key, value) {
     return value;
 }
 
-function makeAutoCategoryInterval(axis, useFake) {
-    var cacheKey = useFake ? 'fakeAutoInterval' : 'autoInterval';
+function makeAutoCategoryInterval(axis, hideLabel) {
+    var cacheKey = hideLabel ? 'tickAutoInterval' : 'autoInterval';
     var result = inner(axis)[cacheKey];
     if (result != null) {
         return result;
     }
-    return (inner(axis)[cacheKey] = calculateCategoryInterval(axis, useFake));
+
+    return (
+        inner(axis)[cacheKey] = axis.calculateCategoryInterval(hideLabel)
+    );
 }
 
 /**
@@ -165,7 +168,7 @@ function makeAutoCategoryInterval(axis, useFake) {
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */
-function calculateCategoryInterval(axis, useFake) {
+export function calculateCategoryInterval(axis, hideLabel) {
     var params = fetchAutoCategoryIntervalCalculationParams(axis);
     var labelFormatter = makeLabelFormatter(axis);
     var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
@@ -200,7 +203,7 @@ function calculateCategoryInterval(axis, useFake) {
         var width = 0;
         var height = 0;
 
-        if (!useFake) {
+        if (!hideLabel) {
             // Polar is also calculated in assumptive linear layout here.
             // Not precise, do not consider align and vertical align
             // and each distance from axis line yet.

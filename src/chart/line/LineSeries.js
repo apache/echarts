@@ -19,8 +19,8 @@ export default SeriesModel.extend({
     },
 
     defaultOption: {
-        zlevel: 0,                  // 一级层叠
-        z: 2,                       // 二级层叠
+        zlevel: 0,
+        z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
@@ -58,22 +58,21 @@ export default SeriesModel.extend({
         // Disabled if step is true
         smooth: false,
         smoothMonotone: null,
-        // 拐点图形类型
         symbol: 'emptyCircle',
-        // 拐点图形大小
         symbolSize: 4,
-        // 拐点图形旋转控制
         symbolRotate: null,
 
-        // 是否显示 symbol, 只有在 tooltip hover 的时候显示
         showSymbol: true,
-        // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
-        showAllSymbol: false,
+        // `false`: follow the label interval strategy.
+        // `true`: show all symbols.
+        // `'auto'`: If possible, show all symbols, otherwise
+        //           follow the label interval strategy.
+        showAllSymbol: 'auto',
 
-        // 是否连接断点
+        // Whether to connect break point.
         connectNulls: false,
 
-        // 数据过滤，'average', 'max', 'min', 'sum'
+        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum'.
         sampling: 'none',
 
         animationEasing: 'linear',

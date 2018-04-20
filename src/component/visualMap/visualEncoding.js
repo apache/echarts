@@ -10,7 +10,10 @@ echarts.registerVisual(VISUAL_PRIORITY, {
     reset: function (seriesModel, ecModel) {
         var resetDefines = [];
         ecModel.eachComponent('visualMap', function (visualMapModel) {
-            if (!visualMapModel.isTargetSeries(seriesModel)) {
+            var pipelineContext = seriesModel.pipelineContext;
+            if (!visualMapModel.isTargetSeries(seriesModel)
+                || (pipelineContext && pipelineContext.large)
+            ) {
                 return;
             }
 

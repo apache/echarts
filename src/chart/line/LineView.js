@@ -284,6 +284,69 @@ function getVisualGradient(data, coordSys) {
     return gradient;
 }
 
+function getIsIgnoreFunc(seriesModel, data, coordSys) {
+    var showAllSymbol = seriesModel.get('showAllSymbol');
+    var isAuto = showAllSymbol === 'auto';
+
+    if (showAllSymbol && !isAuto) {
+        return;
+    }
+
+    var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+    if (!categoryAxis) {
+        return;
+    }
+
+    // Note that category label interval strategy might bring some weird effect
+    // in some scenario: users may wonder why some of the symbols are not
+    // displayed. So we show all symbols as possible as we can.
+    if (isAuto
+        // Simplify the logic, do not determine label overlap here.
+        && canShowAllSymbolForCategory(categoryAxis, data)
+    ) {
+        return;
+    }
+
+    // Otherwise follow the label interval strategy on category axis.
+    var categoryDataDim = data.mapDimension(categoryAxis.dim);
+    var labelMap = {};
+
+    zrUtil.each(categoryAxis.getViewLabels(), function (labelItem) {
+        labelMap[labelItem.tickValue] = 1;
+    });
+
+    return function (dataIndex) {
+        return !labelMap.hasOwnProperty(data.get(categoryDataDim, dataIndex));
+    };
+}
+
+function canShowAllSymbolForCategory(categoryAxis, data) {
+    // In mose cases, line is monotonous on category axis, and the label size
+    // is close with each other. So we check the symbol size and some of the
+    // label size alone with the category axis to estimate whether all symbol
+    // can be shown without overlap.
+    var axisExtent = categoryAxis.getExtent();
+    var availSize = Math.abs(axisExtent[1] - axisExtent[0]) / categoryAxis.scale.count();
+    isNaN(availSize) && (availSize = 0); // 0/0 is NaN.
+
+    // Sampling some points, max 5.
+    var dataLen = data.count();
+    var step = Math.max(1, Math.round(dataLen / 5));
+    for (var dataIndex = 0; dataIndex < dataLen; dataIndex += step) {
+        if (SymbolClz.getSymbolSize(
+                data, dataIndex
+            // Only for cartesian, where `isHorizontal` exists.
+            )[categoryAxis.isHorizontal() ? 1 : 0]
+            // Empirical number
+            * 1.5 > availSize
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export default ChartView.extend({
 
     type: 'line',
@@ -327,8 +390,8 @@ export default ChartView.extend({
 
         var showSymbol = seriesModel.get('showSymbol');
 
-        var isSymbolIgnore = showSymbol && !isCoordSysPolar && !seriesModel.get('showAllSymbol')
-            && this._getSymbolIgnoreFunc(data, coordSys);
+        var isIgnoreFunc = showSymbol && !isCoordSysPolar
+            && getIsIgnoreFunc(seriesModel, data, coordSys);
 
         // Remove temporary symbols
         var oldData = this._data;
@@ -353,7 +416,7 @@ export default ChartView.extend({
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
             showSymbol && symbolDraw.updateData(data, {
-                isIgnore: isSymbolIgnore,
+                isIgnore: isIgnoreFunc,
                 clipShape: createClipShape(coordSys, false, seriesModel)
             });
 
@@ -394,7 +457,7 @@ export default ChartView.extend({
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed
             showSymbol && symbolDraw.updateData(data, {
-                isIgnore: isSymbolIgnore,
+                isIgnore: isIgnoreFunc,
                 clipShape: coordSysClipShape
             });
 
@@ -604,27 +667,6 @@ export default ChartView.extend({
 
         this._polygon = polygon;
         return polygon;
-    },
-
-    /**
-     * @private
-     */
-    _getSymbolIgnoreFunc: function (data, coordSys) {
-        var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
-        if (!categoryAxis) {
-            return;
-        }
-
-        var categoryDataDim = data.mapDimension(categoryAxis.dim);
-        var labelMap = {};
-
-        zrUtil.each(categoryAxis.getViewLabels(), function (labelItem) {
-            labelMap[labelItem.tickValue] = 1;
-        });
-
-        return function (dataIndex) {
-            return !labelMap.hasOwnProperty(data.get(categoryDataDim, dataIndex));
-        };
     },
 
     /**

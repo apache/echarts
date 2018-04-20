@@ -1,6 +1,10 @@
 import {each, map} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision} from '../util/number';
-import {createAxisTicks, createAxisLabels} from './axisTickLabelBuilder';
+import {
+    createAxisTicks,
+    createAxisLabels,
+    calculateCategoryInterval
+} from './axisTickLabelBuilder';
 
 var NORMALIZED_EXTENT = [0, 1];
 
@@ -151,7 +155,9 @@ Axis.prototype = {
      * `boundaryGap:true` of category axis and splitLine and splitArea.
      * @param {Object} [opt]
      * @param {number} [opt.tickModel=axis.model.getModel('axisTick')]
-     * @param {boolean} [opt.clamp] If `false`, clip. If `true`, clamp.
+     * @param {boolean} [opt.clamp] If `true`, the first and the last
+     *        tick must be at the axis end points. Otherwise, clip ticks
+     *        that outside the axis extent.
      * @return {Array.<Object>} [{
      *     coord: ...,
      *     tickValue: ...
@@ -160,7 +166,7 @@ Axis.prototype = {
     getTicksCoords: function (opt) {
         opt = opt || {};
 
-        var tickModel = opt.tickModel || this.model.getModel('axisTick');
+        var tickModel = opt.tickModel || this.getTickModel();
 
         var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
@@ -191,8 +197,23 @@ Axis.prototype = {
         return createAxisLabels(this).labels;
     },
 
+    /**
+     * @return {module:echarts/coord/model/Model}
+     */
     getLabelModel: function () {
         return this.model.getModel('axisLabel');
+    },
+
+    /**
+     * Notice here we only get the default tick model. For splitLine
+     * or splitArea, we should pass the splitLineModel or splitAreaModel
+     * manually when calling `getTicksCoords`.
+     * In GL, this method may be overrided to:
+     * `axisModel.getModel('axisTick', grid3DModel.getModel('axisTick'));`
+     * @return {module:echarts/coord/model/Model}
+     */
+    getTickModel: function () {
+        return this.model.getModel('axisTick');
     },
 
     /**
@@ -222,7 +243,17 @@ Axis.prototype = {
      * @abstract
      * @return {number} Get axis rotate, by degree.
      */
-    getRotate: null
+    getRotate: null,
+
+    /**
+     * Only be called in category axis.
+     * Can be overrided, consider other axes like in 3D.
+     * @param {boolean} hideLabel
+     * @return {number} Auto interval for cateogry axis tick and label
+     */
+    calculateCategoryInterval: function (hideLabel) {
+        return calculateCategoryInterval(this, hideLabel);
+    }
 
 };
 
@@ -245,40 +276,48 @@ function fixExtentWithBands(extent, nTick) {
 // case).
 function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp) {
     var ticksLen = ticksCoords.length;
-    if (axis.onBand && !alignWithLabel && ticksLen) {
-        var axisExtent = axis.getExtent();
-        var last;
-        if (ticksLen === 1) {
-            ticksCoords[0].coord = axisExtent[0];
-            last = ticksCoords[1] = {coord: axisExtent[0]};
-        }
-        else {
-            var shift = (ticksCoords[1].coord - ticksCoords[0].coord);
-            each(ticksCoords, function (ticksItem) {
-                ticksItem.coord -= shift / 2;
-                var tickCategoryInterval = tickCategoryInterval || 0;
-                // Avoid split a single data item when odd interval.
-                if (tickCategoryInterval % 2 > 0) {
-                    ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
-                }
-            });
-            last = {coord: ticksCoords[ticksLen - 1].coord + shift};
-            ticksCoords.push(last);
-        }
 
-        var inverse = axisExtent[0] > axisExtent[1];
-        if (inverse
-            ? ticksCoords[0].coord > axisExtent[0]
-            : ticksCoords[0].coord < axisExtent[0]
-        ) {
-            clamp ? (ticksCoords[0].coord = axisExtent[0]) : ticksCoords.shift();
-        }
-        if (inverse
-            ? last.coord < axisExtent[1]
-            : last.coord > axisExtent[1]
-        ) {
-            clamp ? (last.coord = axisExtent[1]) : ticksCoords.pop();
-        }
+    if (!axis.onBand || alignWithLabel || !ticksLen) {
+        return;
+    }
+
+    var axisExtent = axis.getExtent();
+    var last;
+    if (ticksLen === 1) {
+        ticksCoords[0].coord = axisExtent[0];
+        last = ticksCoords[1] = {coord: axisExtent[0]};
+    }
+    else {
+        var shift = (ticksCoords[1].coord - ticksCoords[0].coord);
+        each(ticksCoords, function (ticksItem) {
+            ticksItem.coord -= shift / 2;
+            var tickCategoryInterval = tickCategoryInterval || 0;
+            // Avoid split a single data item when odd interval.
+            if (tickCategoryInterval % 2 > 0) {
+                ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
+            }
+        });
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift};
+        ticksCoords.push(last);
+    }
+
+    var inverse = axisExtent[0] > axisExtent[1];
+
+    if (littleThan(ticksCoords[0].coord, axisExtent[0])) {
+        clamp ? (ticksCoords[0].coord = axisExtent[0]) : ticksCoords.shift();
+    }
+    if (clamp && littleThan(axisExtent[0], ticksCoords[0].coord)) {
+        ticksCoords.unshift({coord: axisExtent[0]});
+    }
+    if (littleThan(axisExtent[1], last.coord)) {
+        clamp ? (last.coord = axisExtent[1]) : ticksCoords.pop();
+    }
+    if (clamp && littleThan(last.coord, axisExtent[1])) {
+        ticksCoords.push({coord: axisExtent[1]});
+    }
+
+    function littleThan(a, b) {
+        return inverse ? a > b : a < b;
     }
 }
 

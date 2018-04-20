@@ -15,9 +15,18 @@
                 background: #146402;
                 color: #fff;
             }
+
+            #snapshot {
+                width: 150;
+                height: 100;
+                background: #fff;
+                border: 5px solid rgba(0,0,0,0.5);
+            }
+
         </style>
 
         <div id="main0"></div>
+        <img id="snapshot"/>
 
         <script>
 
@@ -79,12 +88,8 @@
                         }
                     },
                     dataZoom: [{
-                        // startValue: 48,
-                        // endValue: 99,
                         type: 'inside'
                     }, {
-                        // startValue: 48,
-                        // endValue: 99,
                         type: 'slider'
                     }],
                     xAxis: {
@@ -122,8 +127,19 @@
                     }]
                 };
 
-                testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        '(1) Check legend click',
+                        '(2) Check `progressiveChunkMode: "mod"` render correct',
+                        '(3) Check snapshot rendering when "finished"'
+                    ],
                     option: option
+                });
+
+                chart.on('finished', function () {
+                    var url = chart.getDataURL();
+                    var snapshotEl = document.getElementById('snapshot');
+                    snapshotEl.src = url;
                 });
 
             });

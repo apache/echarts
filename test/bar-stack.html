@@ -12,57 +12,19 @@
     </head>
     <body>
         <style>
-            h1 {
-                line-height: 60px;
-                height: 60px;
-                background: #146402;
-                text-align: center;
-                font-weight: bold;
-                color: #eee;
-                font-size: 14px;
-            }
-            .chart {
-                height: 500px;
-            }
         </style>
 
 
-        <div class="chart" id="main0"></div>
-
-
+        <div id="main0"></div>
 
 
         <script>
 
             require([
                 'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/chart/bar',
-                // 'echarts/chart/pie',
-                // 'echarts/chart/scatter',
-                // 'echarts/chart/map',
-                // 'echarts/chart/parallel',
-                // 'echarts/chart/radar',
-                // 'echarts/component/grid',
-                // 'echarts/component/polar',
-                // 'echarts/component/geo',
-                // 'echarts/component/singleAxis',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
             ], function (echarts) {
 
                 var option = {
-                    "title": {
-                        "text": "简单柱状图标题",
-                        "left": 16,
-                        "textStyle": {
-                            "fontSize": 14
-                        },
-                        "show": true
-                    },
                     "tooltip": {
                         "trigger": "axis",
                         "axisPointer": {
@@ -128,7 +90,7 @@
                         "data": [
                             ["哪有那么多审批", 66],
                             ["审批中", 66],
-                            ["撤回",200],
+                            ["撤回",150],
                             ["barMinHeight:10px", 100]
                         ],
                         "name": "zly0031"
@@ -142,7 +104,10 @@
                     }
                 };
 
-                testHelper.createChart(echarts, 'main0', option);
+                testHelper.create(echarts, 'main0', {
+                    title: 'Click the first legend (to hide the bottom series), yAxis extent should be changed',
+                    option: option
+                });
             });
 
         </script>

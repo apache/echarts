@@ -39,11 +39,6 @@ var CandlestickView = ChartView.extend({
         }
     },
 
-    _clear: function () {
-        this.group.removeAll();
-        this._data = null;
-    },
-
     _renderNormal: function (seriesModel) {
         var data = seriesModel.getData();
         var oldData = this._data;
@@ -129,12 +124,12 @@ var CandlestickView = ChartView.extend({
     },
 
     remove: function (ecModel) {
-        var group = this.group;
-        var data = this._data;
+        this._clear();
+    },
+
+    _clear: function () {
+        this.group.removeAll();
         this._data = null;
-        data && data.eachItemGraphicEl(function (el) {
-            el && group.remove(el);
-        });
     },
 
     dispose: zrUtil.noop

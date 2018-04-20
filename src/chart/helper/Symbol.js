@@ -9,17 +9,6 @@ import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 
 
-function getSymbolSize(data, idx) {
-    var symbolSize = data.getItemVisual(idx, 'symbolSize');
-    return symbolSize instanceof Array
-        ? symbolSize.slice()
-        : [+symbolSize, +symbolSize];
-}
-
-function getScale(symbolSize) {
-    return [symbolSize[0] / 2, symbolSize[1] / 2];
-}
-
 /**
  * @constructor
  * @alias {module:echarts/chart/helper/Symbol}
@@ -33,6 +22,24 @@ function SymbolClz(data, idx, seriesScope) {
 }
 
 var symbolProto = SymbolClz.prototype;
+
+/**
+ * @public
+ * @static
+ * @param {module:echarts/data/List} data
+ * @param {number} dataIndex
+ * @return {Array.<number>} [width, height]
+ */
+var getSymbolSize = SymbolClz.getSymbolSize = function (data, idx) {
+    var symbolSize = data.getItemVisual(idx, 'symbolSize');
+    return symbolSize instanceof Array
+        ? symbolSize.slice()
+        : [+symbolSize, +symbolSize];
+};
+
+function getScale(symbolSize) {
+    return [symbolSize[0] / 2, symbolSize[1] / 2];
+}
 
 function driftSymbol(dx, dy) {
     this.parent.drift(dx, dy);
