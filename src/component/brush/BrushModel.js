@@ -82,9 +82,15 @@ var BrushModel = echarts.extendComponentModel({
             thisOption, newOption, ['inBrush', 'outOfBrush']
         );
 
-        thisOption.inBrush = thisOption.inBrush || {};
+        var inBrush = thisOption.inBrush = thisOption.inBrush || {};
         // Always give default visual, consider setOption at the second time.
         thisOption.outOfBrush = thisOption.outOfBrush || {color: DEFAULT_OUT_OF_BRUSH_COLOR};
+
+        if (!inBrush.hasOwnProperty('liftZ')) {
+            // Bigger than the highlight z lift, otherwise it will
+            // be effected by the highlight z when brush.
+            inBrush.liftZ = 5;
+        }
     },
 
     /**

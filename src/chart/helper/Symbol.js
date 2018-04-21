@@ -271,6 +271,19 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         elStyle.opacity = opacity;
     }
 
+    var liftZ = data.getItemVisual(idx, 'liftZ');
+    var z2Origin = symbolPath.__z2Origin;
+    if (liftZ != null) {
+        if (z2Origin == null) {
+            symbolPath.__z2Origin = symbolPath.z2;
+            symbolPath.z2 += liftZ;
+        }
+    }
+    else if (z2Origin != null) {
+        symbolPath.z2 = z2Origin;
+        symbolPath.__z2Origin = null;
+    }
+
     var useNameLabel = seriesScope && seriesScope.useNameLabel;
 
     graphic.setLabelStyle(

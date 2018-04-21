@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [];
+                for (var i = 0; i < 500; i++) {
+                    data.push([
+                        Math.random() * 10,
+                        Math.random() * 10
+                    ]);
+                }
+
+                var option = {
+                    toolbox: {
+                        feature: {
+                            brush: {
+                                type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
+                            }
+                        }
+                    },
+                    brush: {
+                        xAxisIndex: 'all',
+                        brushLink: 'all'
+                    },
+                    grid: {
+                        width: 300,
+                        height: 200
+                    },
+                    xAxis: {
+                        min: 0,
+                        max: 10
+                    },
+                    yAxis: {
+                        min: 0,
+                        max: 10
+                    },
+                    series: {
+                        type: 'scatter',
+                        symbolSize: 20,
+                        data: data
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: 'The highlight symbol should on the top (not be overlapped)',
+                    option: option,
+                    info: {
+                        brush: option.brush
+                    }
+                });
+
+                chart && chart.dispatchAction({
+                    type: 'brush',
+                    areas: [
+                        {
+                            gridIndex: 0,
+                            brushType: 'polygon',
+                            coordRange: [[3, 2], [7, 2], [7, 6], [4, 3]]
+                        }
+                    ]
+                });
+            });
+
+        </script>
+    </body>
+</html>

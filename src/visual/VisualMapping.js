@@ -188,6 +188,16 @@ var visualHandlers = VisualMapping.visualHandlers = {
         _doMap: makeDoMap([0, 1])
     },
 
+    liftZ: {
+        applyVisual: makeApplyVisual('liftZ'),
+        _doMap: {
+            linear: doMapFixed,
+            category: doMapFixed,
+            piecewise: doMapFixed,
+            fixed: doMapFixed
+        }
+    },
+
     symbol: {
         applyVisual: function (value, getter, setter) {
             var symbolCfg = this.mapValueToVisual(value);
