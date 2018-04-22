@@ -1,4 +1,4 @@
-import {assert} from 'zrender/src/core/util';
+import {assert, isArray} from 'zrender/src/core/util';
 import { __DEV__ } from '../config';
 
 /**
@@ -113,10 +113,15 @@ taskProto.perform = function (performArgs) {
         );
 
         if (!skip && (forceFirstProgress || start < end)) {
-            iterator.reset(start, end, modBy, modDataCount);
-            this._progress({
-                start: start, end: end, step: 1, count: end - start, next: iterator.next
-            }, this.context);
+            var progress = this._progress;
+            if (isArray(progress)) {
+                for (var i = 0; i < progress.length; i++) {
+                    doProgress(this, progress[i], start, end, modBy, modDataCount);
+                }
+            }
+            else {
+                doProgress(this, progress, start, end, modBy, modDataCount);
+            }
         }
 
         this._dueIndex = end;
@@ -189,9 +194,14 @@ taskProto.dirty = function () {
     this._onDirty && this._onDirty(this.context);
 };
 
-/**
- * @param {Object} [params]
- */
+function doProgress(taskIns, progress, start, end, modBy, modDataCount) {
+    iterator.reset(start, end, modBy, modDataCount);
+    taskIns._callingProgress = progress;
+    taskIns._callingProgress({
+        start: start, end: end, count: end - start, next: iterator.next
+    }, taskIns.context);
+}
+
 function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
     taskIns._settedOutputEnd = null;
@@ -204,6 +214,10 @@ function reset(taskIns, skip) {
         if (progress && progress.progress) {
             forceFirstProgress = progress.forceFirstProgress;
             progress = progress.progress;
+        }
+        // To simplify no progress checking, array must has item.
+        if (isArray(progress) && !progress.length) {
+            progress = null;
         }
     }
 

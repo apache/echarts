@@ -2,7 +2,7 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
+import {each, map, isArray, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
@@ -444,17 +444,20 @@ function seriesTaskReset(context) {
     var resetDefines = context.resetDefines = normalizeToArray(context.reset(
         context.model, context.ecModel, context.api, context.payload
     ));
-    if (resetDefines.length) {
-        return seriesTaskProgress;
-    }
+    return resetDefines.length > 1
+        ? map(resetDefines, function (v, idx) {
+            return makeSeriesTaskProgress(idx);
+        })
+        : singleSeriesTaskProgress;
 }
 
-function seriesTaskProgress(params, context) {
-    var data = context.data;
-    var resetDefines = context.resetDefines;
+var singleSeriesTaskProgress = makeSeriesTaskProgress(0);
 
-    for (var k = 0; k < resetDefines.length; k++) {
-        var resetDefine = resetDefines[k];
+function makeSeriesTaskProgress(resetDefineIdx) {
+    return function (params, context) {
+        var data = context.data;
+        var resetDefine = context.resetDefines[resetDefineIdx];
+
         if (resetDefine && resetDefine.dataEach) {
             for (var i = params.start; i < params.end; i++) {
                 resetDefine.dataEach(data, i);
