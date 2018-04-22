@@ -42,14 +42,14 @@ var replaceMap = {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    '\'': '&#39;',
+    '\'': '&#39;'
 };
 
 export function encodeHTML(source) {
     return source == null
         ? ''
-        : (source + '').replace(replaceReg, function (str, char) {
-            return replaceMap[char];
+        : (source + '').replace(replaceReg, function (str, c) {
+            return replaceMap[c];
         });
 }
 

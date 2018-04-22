@@ -466,7 +466,7 @@ function makeSeriesTaskProgress(resetDefineIdx) {
         else if (resetDefine && resetDefine.progress) {
             resetDefine.progress(params, data);
         }
-    }
+    };
 }
 
 function seriesTaskCount(context) {
