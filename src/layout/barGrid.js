@@ -223,8 +223,9 @@ export function retrieveColumnLayout(barWidthAndOffset, axis, seriesModel) {
     if (barWidthAndOffset && axis) {
         var result = barWidthAndOffset[getAxisKey(axis)];
         if (result != null && seriesModel != null) {
-            return result[getSeriesStackId(seriesModel)];
+            result = result[getSeriesStackId(seriesModel)];
         }
+        return result;
     }
 }
 
