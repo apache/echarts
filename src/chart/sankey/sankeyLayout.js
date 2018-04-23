@@ -19,7 +19,7 @@
 
 /**
  * @file The layout algorithm of sankey view
- * @author  Deqing Li(annong035@gmail.com)
+ * @author Deqing Li(annong035@gmail.com)
  */
 
 import * as layout from '../../util/layout';
