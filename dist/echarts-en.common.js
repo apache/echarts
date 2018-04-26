@@ -29717,17 +29717,29 @@ function enableDataStack(seriesModel, dimensionInfoList, opt) {
 /**
  * @param {module:echarts/data/List} data
  * @param {string} stackedDim
+ */
+function isDimensionStacked(data, stackedDim /*, stackedByDim*/) {
+    // Each single series only maps to one pair of axis. So we do not need to
+    // check stackByDim, whatever stacked by a dimension or stacked by index.
+    return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
+        // && (
+        //     stackedByDim != null
+        //         ? stackedByDim === data.getCalculationInfo('stackedByDimension')
+        //         : data.getCalculationInfo('isStackedByIndex')
+        // );
+}
+
+/**
+ * @param {module:echarts/data/List} data
+ * @param {string} targetDim
  * @param {string} [stackedByDim] If not input this parameter, check whether
  *                                stacked by index.
+ * @return {string} dimension
  */
-function isDimensionStacked(data, stackedDim, stackedByDim) {
-    return stackedDim
-        && stackedDim === data.getCalculationInfo('stackedDimension')
-        && (
-            stackedByDim != null
-                ? stackedByDim === data.getCalculationInfo('stackedByDimension')
-                : data.getCalculationInfo('isStackedByIndex')
-        );
+function getStackedDimension(data, targetDim) {
+    return isDimensionStacked(data, targetDim)
+        ? data.getCalculationInfo('stackResultDimension')
+        : targetDim;
 }
 
 /*
@@ -30866,7 +30878,7 @@ function layout(seriesType, ecModel) {
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
         var isValueAxisH = valueAxis.isHorizontal();
 
         var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
@@ -32286,7 +32298,8 @@ function createList(seriesModel) {
 
 var dataStack$1 = {
     isDimensionStacked: isDimensionStacked,
-    enableDataStack: enableDataStack
+    enableDataStack: enableDataStack,
+    getStackedDimension: getStackedDimension
 };
 
 /**
@@ -32732,7 +32745,14 @@ function createAxisTicks(axis, tickModel) {
 
 function makeCategoryLabels(axis) {
     var labelModel = axis.getLabelModel();
+    var result = makeCategoryLabelsActually(axis, labelModel);
 
+    return (!labelModel.get('show') || axis.scale.isBlank())
+        ? {labels: [], labelCategoryInterval: result.labelCategoryInterval}
+        : result;
+}
+
+function makeCategoryLabelsActually(axis, labelModel) {
     var labelsCache = getListCache(axis, 'labels');
     var optionLabelInterval = getOptionCategoryInterval(labelModel);
     var result = listCacheGet(labelsCache, optionLabelInterval);
@@ -32744,10 +32764,7 @@ function makeCategoryLabels(axis) {
     var labels;
     var numericLabelInterval;
 
-    if (!labelModel.get('show') || axis.scale.isBlank()) {
-        labels = [];
-    }
-    else if (isFunction$1(optionLabelInterval)) {
+    if (isFunction$1(optionLabelInterval)) {
         labels = makeLabelsByCustomizedCategoryInterval(axis, optionLabelInterval);
     }
     else {
@@ -32772,7 +32789,7 @@ function makeCategoryTicks(axis, tickModel) {
     }
 
     var ticks;
-    var numericTickInterval = optionTickInterval;
+    var tickCategoryInterval;
 
     // Optimize for the case that large category data and no label displayed,
     // we should not return all ticks.
@@ -32780,31 +32797,27 @@ function makeCategoryTicks(axis, tickModel) {
         ticks = [];
     }
 
-    if (isFunction$1(numericTickInterval)) {
-        ticks = makeLabelsByCustomizedCategoryInterval(axis, numericTickInterval, true);
+    if (isFunction$1(optionTickInterval)) {
+        ticks = makeLabelsByCustomizedCategoryInterval(axis, optionTickInterval, true);
     }
-    // Always use label interval by default.
+    // Always use label interval by default despite label show. Consider this
+    // scenario, Use multiple grid with the xAxis sync, and only one xAxis shows
+    // labels. `splitLine` and `axisTick` should be consistent in this case.
+    else if (optionTickInterval === 'auto') {
+        var labelsResult = makeCategoryLabelsActually(axis, axis.getLabelModel());
+        tickCategoryInterval = labelsResult.labelCategoryInterval;
+        ticks = map(labelsResult.labels, function (labelItem) {
+            return labelItem.tickValue;
+        });
+    }
     else {
-        if (numericTickInterval === 'auto') {
-            var labelsResult = makeCategoryLabels(axis);
-            numericTickInterval = labelsResult.labelCategoryInterval;
-            if (numericTickInterval != null) {
-                ticks = map(labelsResult.labels, function (labelItem) {
-                    return labelItem.tickValue;
-                });
-            }
-            else {
-                numericTickInterval = makeAutoCategoryInterval(axis, true);
-            }
-        }
-        if (ticks == null) {
-            ticks = makeLabelsByNumericCategoryInterval(axis, numericTickInterval, true);
-        }
+        tickCategoryInterval = optionTickInterval;
+        ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
     }
 
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(ticksCache, optionTickInterval, {
-        ticks: ticks, tickCategoryInterval: numericTickInterval
+        ticks: ticks, tickCategoryInterval: tickCategoryInterval
     });
 }
 
@@ -32843,16 +32856,11 @@ function listCacheSet(cache, key, value) {
     return value;
 }
 
-function makeAutoCategoryInterval(axis, hideLabel) {
-    var cacheKey = hideLabel ? 'tickAutoInterval' : 'autoInterval';
-    var result = inner$6(axis)[cacheKey];
-    if (result != null) {
-        return result;
-    }
-
-    return (
-        inner$6(axis)[cacheKey] = axis.calculateCategoryInterval(hideLabel)
-    );
+function makeAutoCategoryInterval(axis) {
+    var result = inner$6(axis).autoInterval;
+    return result != null
+        ? result
+        : (inner$6(axis).autoInterval = axis.calculateCategoryInterval());
 }
 
 /**
@@ -32860,7 +32868,7 @@ function makeAutoCategoryInterval(axis, hideLabel) {
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */
-function calculateCategoryInterval(axis, hideLabel) {
+function calculateCategoryInterval(axis) {
     var params = fetchAutoCategoryIntervalCalculationParams(axis);
     var labelFormatter = makeLabelFormatter(axis);
     var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
@@ -32895,17 +32903,15 @@ function calculateCategoryInterval(axis, hideLabel) {
         var width = 0;
         var height = 0;
 
-        if (!hideLabel) {
-            // Polar is also calculated in assumptive linear layout here.
-            // Not precise, do not consider align and vertical align
-            // and each distance from axis line yet.
-            var rect = getBoundingRect(
-                labelFormatter(tickValue), params.font, 'center', 'top'
-            );
-            // Magic number
-            width = rect.width * 1.3;
-            height = rect.height * 1.3;
-        }
+        // Polar is also calculated in assumptive linear layout here.
+        // Not precise, do not consider align and vertical align
+        // and each distance from axis line yet.
+        var rect = getBoundingRect(
+            labelFormatter(tickValue), params.font, 'center', 'top'
+        );
+        // Magic number
+        width = rect.width * 1.3;
+        height = rect.height * 1.3;
 
         // Min size, void long loop.
         maxW = Math.max(maxW, width, 7);
@@ -33309,11 +33315,10 @@ Axis.prototype = {
     /**
      * Only be called in category axis.
      * Can be overrided, consider other axes like in 3D.
-     * @param {boolean} hideLabel
      * @return {number} Auto interval for cateogry axis tick and label
      */
-    calculateCategoryInterval: function (hideLabel) {
-        return calculateCategoryInterval(this, hideLabel);
+    calculateCategoryInterval: function () {
+        return calculateCategoryInterval(this);
     }
 
 };
@@ -34184,10 +34189,10 @@ function prepareDataCoordInfo(coordSys, data, valueOrigin) {
 
     var stacked;
     var stackResultDim = data.getCalculationInfo('stackResultDimension');
-    if (stacked |= isDimensionStacked(data, dims[0], dims[1])) { // jshint ignore:line
+    if (stacked |= isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
         dims[0] = stackResultDim;
     }
-    if (stacked |= isDimensionStacked(data, dims[1], dims[0])) { // jshint ignore:line
+    if (stacked |= isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
         dims[1] = stackResultDim;
     }
 
@@ -35748,10 +35753,10 @@ var pointsLayout = function (seriesType) {
             var dimLen = dims.length;
 
             var stackResultDim = data.getCalculationInfo('stackResultDimension');
-            if (isDimensionStacked(data, dims[0], dims[1])) {
+            if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) {
                 dims[0] = stackResultDim;
             }
-            if (isDimensionStacked(data, dims[1], dims[0])) {
+            if (isDimensionStacked(data, dims[1] /*, dims[0]*/)) {
                 dims[1] = stackResultDim;
             }
 
@@ -37192,7 +37197,12 @@ gridProto._updateScale = function (ecModel, gridModel) {
 
     function unionExtent(data, axis, seriesModel) {
         each$1(data.mapDimension(axis.dim, true), function (dim) {
-            axis.scale.unionExtentFromData(data, dim);
+            axis.scale.unionExtentFromData(
+                // For example, the extent of the orginal dimension
+                // is [0.1, 0.5], the extent of the `stackResultDimension`
+                // is [7, 9], the final extent should not include [0.1, 0.5].
+                data, getStackedDimension(data, dim)
+            );
         });
     }
 };
@@ -38710,8 +38720,9 @@ var CartesianAxisView = AxisView.extend({
             }
 
             var colorIndex = (lineCount++) % lineColors.length;
+            var tickValue = ticksCoords[i].tickValue;
             this._axisGroup.add(new Line(subPixelOptimizeLine({
-                anid: 'line_' + ticksCoords[i].tickValue,
+                anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -38800,7 +38811,7 @@ var CartesianAxisView = AxisView.extend({
             tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
 
             this._axisGroup.add(new Rect({
-                anid: 'area_' + tickValue,
+                anid: tickValue != null ? 'area_' + tickValue : null,
                 shape: {
                     x: x,
                     y: y,
@@ -46793,7 +46804,7 @@ function markerTypeCalculatorWithExtent(
 ) {
     var coordArr = [];
 
-    var stacked = isDimensionStacked(data, targetDataDim, otherDataDim);
+    var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
     var calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
