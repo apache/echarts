@@ -42,10 +42,10 @@ export function prepareDataCoordInfo(coordSys, data, valueOrigin) {
 
     var stacked;
     var stackResultDim = data.getCalculationInfo('stackResultDimension');
-    if (stacked |= isDimensionStacked(data, dims[0], dims[1])) { // jshint ignore:line
+    if (stacked |= isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
         dims[0] = stackResultDim;
     }
-    if (stacked |= isDimensionStacked(data, dims[1], dims[0])) { // jshint ignore:line
+    if (stacked |= isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
         dims[1] = stackResultDim;
     }
 

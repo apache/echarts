@@ -284,7 +284,7 @@ export function layout(seriesType, ecModel) {
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
         var isValueAxisH = valueAxis.isHorizontal();
 
         var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
