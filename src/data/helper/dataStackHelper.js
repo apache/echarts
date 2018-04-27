@@ -72,10 +72,16 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
         }
     });
 
+    if (stackedDimInfo && !byIndex && !stackedByDimInfo) {
+        // Compatible with previous design, value axis (time axis) only stack by index.
+        // It may make sense if the user provides elaborately constructed data.
+        byIndex = true;
+    }
+
     // Add stack dimension, they can be both calculated by coordinate system in `unionExtent`.
     // That put stack logic in List is for using conveniently in echarts extensions, but it
     // might not be a good way.
-    if (stackedDimInfo && (byIndex || stackedByDimInfo)) {
+    if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
         stackResultDimension = '__\0ecstackresult';
         stackedOverDimension = '__\0ecstackedover';
