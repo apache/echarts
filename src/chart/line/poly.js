@@ -42,24 +42,30 @@ function drawSegment(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
 ) {
-    if (smoothMonotone == null) {
-        if (isMono(points, 'x')) {
-            return drawMono(ctx, points, start, segLen, allLen,
-                dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
-        }
-        else if (isMono(points, 'y')) {
-            return drawMono(ctx, points, start, segLen, allLen,
-                dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
-        }
-        else {
-            return drawNonMono.apply(this, arguments);
-        }
-    }
-    else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
-        return drawMono.apply(this, arguments);
+    // if (smoothMonotone == null) {
+    //     if (isMono(points, 'x')) {
+    //         return drawMono(ctx, points, start, segLen, allLen,
+    //             dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
+    //     }
+    //     else if (isMono(points, 'y')) {
+    //         return drawMono(ctx, points, start, segLen, allLen,
+    //             dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
+    //     }
+    //     else {
+    //         return drawNonMono.apply(this, arguments);
+    //     }
+    // }
+    // else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
+    //     return drawMono.apply(this, arguments);
+    // }
+    // else {
+    //     return drawNonMono.apply(this, arguments);
+    // }
+    if (smoothMonotone === 'none' || !smoothMonotone) {
+        return drawNonMono.apply(this, arguments);
     }
     else {
-        return drawNonMono.apply(this, arguments);
+        return drawMono.apply(this, arguments);
     }
 }
 
