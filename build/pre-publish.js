@@ -33,6 +33,7 @@ const srcDir = path.resolve(__dirname, '../src');
 const extensionSrcDir = path.resolve(__dirname, '../extension-src');
 const extensionDir = path.resolve(__dirname, '../extension');
 const libDir = path.resolve(__dirname, '../lib');
+const preamble = require('./preamble');
 
 
 module.exports = function () {
@@ -58,15 +59,18 @@ module.exports = function () {
 
     prePulishSrc({
         inputPath: path.resolve(ecDir, 'echarts.all.js'),
-        outputPath: path.resolve(ecDir, 'index.js')
+        outputPath: path.resolve(ecDir, 'index.js'),
+        preamble: preamble
     });
     prePulishSrc({
         inputPath: path.resolve(ecDir, 'echarts.common.js'),
-        outputPath: path.resolve(ecDir, 'index.common.js')
+        outputPath: path.resolve(ecDir, 'index.common.js'),
+        preamble: preamble
     });
     prePulishSrc({
         inputPath: path.resolve(ecDir, 'echarts.simple.js'),
-        outputPath: path.resolve(ecDir, 'index.simple.js')
+        outputPath: path.resolve(ecDir, 'index.simple.js'),
+        preamble: preamble
     });
 
     function transform({code, inputPath, outputPath}) {

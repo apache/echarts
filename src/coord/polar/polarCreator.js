@@ -28,8 +28,8 @@ import {
     niceScaleExtent
 } from '../../coord/axisHelper';
 import CoordinateSystem from '../../CoordinateSystem';
+import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
-// 依赖 PolarModel 做预处理
 import './PolarModel';
 
 /**
@@ -68,10 +68,14 @@ function updatePolarScale(ecModel, api) {
         if (seriesModel.coordinateSystem === polar) {
             var data = seriesModel.getData();
             zrUtil.each(data.mapDimension('radius', true), function (dim) {
-                radiusAxis.scale.unionExtentFromData(data, dim);
+                radiusAxis.scale.unionExtentFromData(
+                    data, getStackedDimension(data, dim)
+                );
             });
             zrUtil.each(data.mapDimension('angle', true), function (dim) {
-                angleAxis.scale.unionExtentFromData(data, dim);
+                angleAxis.scale.unionExtentFromData(
+                    data, getStackedDimension(data, dim)
+                );
             });
         }
     });

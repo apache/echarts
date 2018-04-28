@@ -22,6 +22,7 @@ const uglifyPlugin = require('rollup-plugin-uglify');
 const ecRemoveDevPlugin = require('./rollup-plugin-ec-remove-dev');
 const ecLangPlugin = require('./rollup-plugin-ec-lang');
 const {resolve} = require('path');
+const preamble = require('./preamble');
 
 function getPathBasedOnECharts(path) {
     return resolve(__dirname, '../', path);
@@ -58,6 +59,9 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
             //     __DEV__: false
             // },
             'dead_code': true
+        },
+        output: {
+            preamble: preamble
         }
     }));
 
@@ -77,9 +81,10 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
  */
 exports.createECharts = function (opt = {}) {
+    let min = opt.min;
     let srcType = opt.type ? '.' + opt.type : '.all';
     let postfixType = opt.type ? '.' + opt.type : '';
-    let postfixMin = opt.min ? '.min' : '';
+    let postfixMin = min ? '.min' : '';
     let postfixLang = opt.lang ? '-' + opt.lang.toLowerCase() : '';
     let input = opt.input;
     let output = opt.output;

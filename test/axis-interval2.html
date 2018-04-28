@@ -33,6 +33,7 @@
         <div class="chart" id="main4"></div>
         <div class="chart" id="main5"></div>
         <div class="chart" id="main6"></div>
+        <div class="chart" id="main6.5"></div>
         <div class="chart" id="main7"></div>
         <div class="chart" id="main8"></div>
 
@@ -929,6 +930,117 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        startValue: 17,
+                        endValue: 84
+                    }, {
+                        type: 'inside',
+                        xAxisIndex: 1,
+                        startValue: 17,
+                        endValue: 84
+                    }, {
+                        xAxisIndex: [0, 1],
+                        startValue: 17,
+                        endValue: 84
+                    }],
+                    xAxis: [{
+                        data: xAxisData,
+                        // axisTick: {
+                        //     alignWithLabel: true
+                        // },
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }, {
+                        data: xAxisData,
+                        gridIndex: 1,
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                    }, {
+                        gridIndex: 1,
+                        axisLabel: {
+                            showMaxLabel: false
+                        }
+                    }],
+                    grid: [{
+                        bottom: '50%'
+                    }, {
+                        top: '50%'
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'line',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'line',
+                        stack: 'two',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main6.5', {
+                    title: [
+                        'The first grid has no label, the second grid has label.',
+                        'splitLine and axisTick should be the same between the two grids.'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
 
 
 

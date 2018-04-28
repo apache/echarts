@@ -35,6 +35,7 @@ import {
 import Cartesian2D from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystem from '../../CoordinateSystem';
+import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import './GridModel';
@@ -491,7 +492,12 @@ gridProto._updateScale = function (ecModel, gridModel) {
 
     function unionExtent(data, axis, seriesModel) {
         each(data.mapDimension(axis.dim, true), function (dim) {
-            axis.scale.unionExtentFromData(data, dim);
+            axis.scale.unionExtentFromData(
+                // For example, the extent of the orginal dimension
+                // is [0.1, 0.5], the extent of the `stackResultDimension`
+                // is [7, 9], the final extent should not include [0.1, 0.5].
+                data, getStackedDimension(data, dim)
+            );
         });
     }
 };

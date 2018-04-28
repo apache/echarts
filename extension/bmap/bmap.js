@@ -1,3 +1,11 @@
+var echarts = require("echarts");
+
+var BMapCoordSys = require("./BMapCoordSys");
+
+require("./BMapModel");
+
+require("./BMapView");
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -16,14 +24,6 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-var echarts = require("echarts");
-
-var BMapCoordSys = require("./BMapCoordSys");
-
-require("./BMapModel");
-
-require("./BMapView");
 
 /**
  * BMap component extension

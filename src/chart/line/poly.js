@@ -42,24 +42,30 @@ function drawSegment(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
 ) {
-    if (smoothMonotone == null) {
-        if (isMono(points, 'x')) {
-            return drawMono(ctx, points, start, segLen, allLen,
-                dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
-        }
-        else if (isMono(points, 'y')) {
-            return drawMono(ctx, points, start, segLen, allLen,
-                dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
-        }
-        else {
-            return drawNonMono.apply(this, arguments);
-        }
-    }
-    else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
-        return drawMono.apply(this, arguments);
+    // if (smoothMonotone == null) {
+    //     if (isMono(points, 'x')) {
+    //         return drawMono(ctx, points, start, segLen, allLen,
+    //             dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
+    //     }
+    //     else if (isMono(points, 'y')) {
+    //         return drawMono(ctx, points, start, segLen, allLen,
+    //             dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
+    //     }
+    //     else {
+    //         return drawNonMono.apply(this, arguments);
+    //     }
+    // }
+    // else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
+    //     return drawMono.apply(this, arguments);
+    // }
+    // else {
+    //     return drawNonMono.apply(this, arguments);
+    // }
+    if (smoothMonotone === 'none' || !smoothMonotone) {
+        return drawNonMono.apply(this, arguments);
     }
     else {
-        return drawNonMono.apply(this, arguments);
+        return drawMono.apply(this, arguments);
     }
 }
 
@@ -74,29 +80,29 @@ function drawSegment(
  *                                    If is undefined, either being monotone
  *                                    in 'x' or 'y' will call `drawMono`.
  */
-function isMono(points, smoothMonotone) {
-    if (points.length <= 1) {
-        return true;
-    }
+// function isMono(points, smoothMonotone) {
+//     if (points.length <= 1) {
+//         return true;
+//     }
 
-    var dim = smoothMonotone === 'x' ? 0 : 1;
-    var last = points[0][dim];
-    var lastDiff = 0;
-    for (var i = 1; i < points.length; ++i) {
-        var diff = points[i][dim] - last;
-        if (!isNaN(diff) && !isNaN(lastDiff)
-            && diff !== 0 && lastDiff !== 0
-            && ((diff >= 0) !== (lastDiff >= 0))
-        ) {
-            return false;
-        }
-        if (!isNaN(diff) && diff !== 0) {
-            lastDiff = diff;
-            last = points[i][dim];
-        }
-    }
-    return true;
-}
+//     var dim = smoothMonotone === 'x' ? 0 : 1;
+//     var last = points[0][dim];
+//     var lastDiff = 0;
+//     for (var i = 1; i < points.length; ++i) {
+//         var diff = points[i][dim] - last;
+//         if (!isNaN(diff) && !isNaN(lastDiff)
+//             && diff !== 0 && lastDiff !== 0
+//             && ((diff >= 0) !== (lastDiff >= 0))
+//         ) {
+//             return false;
+//         }
+//         if (!isNaN(diff) && diff !== 0) {
+//             lastDiff = diff;
+//             last = points[i][dim];
+//         }
+//     }
+//     return true;
+// }
 
 /**
  * Draw smoothed line in monotone, in which only vertical or horizontal bezier

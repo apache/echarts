@@ -1,3 +1,5 @@
+var zrUtil = require("zrender/lib/core/util");
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -16,9 +18,6 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-var zrUtil = require("zrender/lib/core/util");
-
 // GEXF File Parser
 // http://gexf.net/1.2draft/gexf-12draft-primer.pdf
 function parse(xml) {

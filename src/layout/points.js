@@ -43,10 +43,10 @@ export default function (seriesType) {
             var dimLen = dims.length;
 
             var stackResultDim = data.getCalculationInfo('stackResultDimension');
-            if (isDimensionStacked(data, dims[0], dims[1])) {
+            if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) {
                 dims[0] = stackResultDim;
             }
-            if (isDimensionStacked(data, dims[1], dims[0])) {
+            if (isDimensionStacked(data, dims[1] /*, dims[0]*/)) {
                 dims[1] = stackResultDim;
             }
 
