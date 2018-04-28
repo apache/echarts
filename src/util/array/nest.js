@@ -17,6 +17,13 @@
 * under the License.
 */
 
+/*
+* The implementation references to d3.js. The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
+
 import * as zrUtil from 'zrender/src/core/util';
 
 /**
