@@ -31106,6 +31106,12 @@ function getValueAxisStart(baseAxis, valueAxis, stacked) {
 * under the License.
 */
 
+/*
+* The `scaleLevels` references to d3.js. The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
 // (except time zone is specified in time string). And `format.formateTime` returns
@@ -31248,7 +31254,7 @@ each$1(['contain', 'normalize'], function (methodName) {
     };
 });
 
-// Steps from d3
+// Steps from d3, see the license statement at the top of this file.
 var scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s

@@ -31199,6 +31199,12 @@ function getValueAxisStart(baseAxis, valueAxis, stacked) {
 * under the License.
 */
 
+/*
+* The `scaleLevels` references to d3.js. The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
 // (except time zone is specified in time string). And `format.formateTime` returns
@@ -31341,7 +31347,7 @@ each$1(['contain', 'normalize'], function (methodName) {
     };
 });
 
-// Steps from d3
+// Steps from d3, see the license statement at the top of this file.
 var scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s
@@ -46136,6 +46142,13 @@ SeriesModel.extend({
 * under the License.
 */
 
+/*
+* The tree layout implementation references to d3.js
+* (https://github.com/d3/d3-hierarchy). The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 /**
  * @file The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
  *       the tree.
@@ -49595,6 +49608,14 @@ function mapVisual$1(nodeModel, visuals, child, index, mapping, seriesModel) {
 * under the License.
 */
 
+/*
+* The treemap layout implementation references to the treemap
+* layout of d3.js (d3/src/layout/treemap.js in v3). The use of
+* the source code of this file is also subject to the terms
+* and consitions of its license (BSD-3Clause, see
+* <echarts/src/licenses/LICENSE-d3>).
+*/
+
 var mathMax$4 = Math.max;
 var mathMin$4 = Math.min;
 var retrieveValue = retrieve;
@@ -49715,7 +49736,8 @@ var treemapLayout = {
 /**
  * Layout treemap with squarify algorithm.
  * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
- * @see https://github.com/mbostock/d3/blob/master/src/layout/treemap.js
+ * The implementation references to the treemap layout of d3.js.
+ * See the license statement at the head of this file.
  *
  * @protected
  * @param {module:echarts/data/Tree~TreeNode} node
@@ -52753,6 +52775,13 @@ var circularLayout = function (ecModel) {
 * KIND, either express or implied.  See the License for the
 * specific language governing permissions and limitations
 * under the License.
+*/
+
+/*
+* The layout implementation references to d3.js. The use of
+* the source code of this file is also subject to the terms
+* and consitions of its license (BSD-3Clause, see
+* <echarts/src/licenses/LICENSE-d3>).
 */
 
 var scaleAndAdd$2 = scaleAndAdd;
@@ -57792,6 +57821,13 @@ registerAction({
 * specific language governing permissions and limitations
 * under the License.
 */
+
+/*
+* The implementation references to d3.js. The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 
 /**
  * nest helper used to group by the array.

@@ -17,6 +17,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+
 var _echarts = require("./lib/echarts");
 
 (function () {
