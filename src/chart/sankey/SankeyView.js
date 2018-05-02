@@ -294,7 +294,7 @@ export default echarts.extendChartView({
         var itemModel = data.getItemModel(dataIndex);
         var edgeDataIndex = payload.edgeDataIndex;
         
-        if (!dataIndex && !edgeDataIndex) {
+        if (dataIndex == null && edgeDataIndex == null) {
             return;
         }
         var node = graph.getNodeByIndex(dataIndex);
@@ -309,8 +309,8 @@ export default echarts.extendChartView({
 
         if (node) {
             fadeInItem(node, nodeOpacityPath);
-            var focusNodeAdjacency = itemModel.get('focusNodeAdjacency');
-            if (focusNodeAdjacency === 'outEdges') {
+            var focusNodeAdj = itemModel.get('focusNodeAdjacency');
+            if (focusNodeAdj === 'outEdges') {
                 zrUtil.each(node.outEdges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
@@ -319,7 +319,7 @@ export default echarts.extendChartView({
                     fadeInItem(edge.node2, nodeOpacityPath);
                 });
             }
-            else if (focusNodeAdjacency === 'inEdges') {
+            else if (focusNodeAdj === 'inEdges') {
                 zrUtil.each(node.inEdges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
@@ -328,7 +328,7 @@ export default echarts.extendChartView({
                     fadeInItem(edge.node1, nodeOpacityPath);
                 });
             }
-            else if (focusNodeAdjacency === 'allEdges') {
+            else if (focusNodeAdj === 'allEdges') {
                 zrUtil.each(node.edges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
