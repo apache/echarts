@@ -72,10 +72,16 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
         }
     });
 
+    if (stackedDimInfo && !byIndex && !stackedByDimInfo) {
+        // Compatible with previous design, value axis (time axis) only stack by index.
+        // It may make sense if the user provides elaborately constructed data.
+        byIndex = true;
+    }
+
     // Add stack dimension, they can be both calculated by coordinate system in `unionExtent`.
     // That put stack logic in List is for using conveniently in echarts extensions, but it
     // might not be a good way.
-    if (stackedDimInfo && (byIndex || stackedByDimInfo)) {
+    if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
         stackResultDimension = '__\0ecstackresult';
         stackedOverDimension = '__\0ecstackedover';
@@ -130,15 +136,27 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
 /**
  * @param {module:echarts/data/List} data
  * @param {string} stackedDim
+ */
+export function isDimensionStacked(data, stackedDim /*, stackedByDim*/) {
+    // Each single series only maps to one pair of axis. So we do not need to
+    // check stackByDim, whatever stacked by a dimension or stacked by index.
+    return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
+        // && (
+        //     stackedByDim != null
+        //         ? stackedByDim === data.getCalculationInfo('stackedByDimension')
+        //         : data.getCalculationInfo('isStackedByIndex')
+        // );
+}
+
+/**
+ * @param {module:echarts/data/List} data
+ * @param {string} targetDim
  * @param {string} [stackedByDim] If not input this parameter, check whether
  *                                stacked by index.
+ * @return {string} dimension
  */
-export function isDimensionStacked(data, stackedDim, stackedByDim) {
-    return stackedDim
-        && stackedDim === data.getCalculationInfo('stackedDimension')
-        && (
-            stackedByDim != null
-                ? stackedByDim === data.getCalculationInfo('stackedByDimension')
-                : data.getCalculationInfo('isStackedByIndex')
-        );
+export function getStackedDimension(data, targetDim) {
+    return isDimensionStacked(data, targetDim)
+        ? data.getCalculationInfo('stackResultDimension')
+        : targetDim;
 }

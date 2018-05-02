@@ -267,11 +267,10 @@ Axis.prototype = {
     /**
      * Only be called in category axis.
      * Can be overrided, consider other axes like in 3D.
-     * @param {boolean} hideLabel
      * @return {number} Auto interval for cateogry axis tick and label
      */
-    calculateCategoryInterval: function (hideLabel) {
-        return calculateCategoryInterval(this, hideLabel);
+    calculateCategoryInterval: function () {
+        return calculateCategoryInterval(this);
     }
 
 };

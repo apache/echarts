@@ -81,7 +81,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
 
         var valueAxisStart = valueAxis.getExtent()[0];
 

@@ -135,8 +135,9 @@ var CartesianAxisView = AxisView.extend({
             }
 
             var colorIndex = (lineCount++) % lineColors.length;
+            var tickValue = ticksCoords[i].tickValue;
             this._axisGroup.add(new graphic.Line(graphic.subPixelOptimizeLine({
-                anid: 'line_' + ticksCoords[i].tickValue,
+                anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -225,7 +226,7 @@ var CartesianAxisView = AxisView.extend({
             tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
 
             this._axisGroup.add(new graphic.Rect({
-                anid: 'area_' + tickValue,
+                anid: tickValue != null ? 'area_' + tickValue : null,
                 shape: {
                     x: x,
                     y: y,

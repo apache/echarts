@@ -60,7 +60,7 @@ function markerTypeCalculatorWithExtent(
 ) {
     var coordArr = [];
 
-    var stacked = isDimensionStacked(data, targetDataDim, otherDataDim);
+    var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
     var calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;

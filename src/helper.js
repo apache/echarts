@@ -24,7 +24,11 @@ import * as axisHelper from './coord/axisHelper';
 import axisModelCommonMixin from './coord/axisModelCommonMixin';
 import Model from './model/Model';
 import {getLayoutRect} from './util/layout';
-import {enableDataStack, isDimensionStacked} from './data/helper/dataStackHelper';
+import {
+    enableDataStack,
+    isDimensionStacked,
+    getStackedDimension
+} from './data/helper/dataStackHelper';
 
 /**
  * Create a muti dimension List structure from seriesModel.
@@ -52,7 +56,8 @@ export {default as createDimensions} from './data/helper/createDimensions';
 
 export var dataStack = {
     isDimensionStacked: isDimensionStacked,
-    enableDataStack: enableDataStack
+    enableDataStack: enableDataStack,
+    getStackedDimension: getStackedDimension
 };
 
 /**

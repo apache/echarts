@@ -209,15 +209,50 @@
 Apache ECharts Subcomponents:
 
 The Apache ECharts project contains subcomponents with separate copyright
-notices and license terms. Your use of the source code for the these
+notices and license terms. Your use of the source code for these
 subcomponents is subject to the terms and conditions of the following
 licenses.
 
-[BSD 3-Clause] <https://github.com/ecomfe/zrender> is used as the render
-engine. See <licenses/LICENSE-zrender> for details.
+BSD 3-Clause (zrender):
+The following files embed [zrender](https://github.com/ecomfe/zrender) BSD 3-Clause:
+    `dist/echarts-en.common.js`,
+    `dist/echarts-en.common.min.js`,
+    `dist/echarts-en.js`,
+    `dist/echarts-en.min.js`,
+    `dist/echarts-en.simple.js`,
+    `dist/echarts-en.simple.min.js`,
+    `dist/echarts.common.js`,
+    `dist/echarts.common.min.js`,
+    `dist/echarts.js`,
+    `dist/echarts.min.js`,
+    `dist/echarts.simple.js`,
+    `dist/echarts.simple.min.js`,
+See `licenses/LICENSE-zrender` for details of the license.
 
-[BSD 3-Clause] Some of the implementation listed below refer to the logics
-from <https://github.com/d3/d3>: <src/chart/treemap/treemapLayout.js>,
-<src/chart/tree/layoutHelper.js>, <src/chart/graph/forceHelper.js>,
-<src/util/array/nest.js>, <src/scale/Time.js>.
-See <licenses/LICENSE-d3> for details.
+BSD 3-Clause (d3.js):
+The following files embed [d3.js](https://github.com/d3/d3) BSD 3-Clause:
+    `src/chart/treemap/treemapLayout.js`,
+    `src/chart/tree/layoutHelper.js`,
+    `src/chart/graph/forceHelper.js`,
+    `src/util/array/nest.js`,
+    `src/scale/Time.js`,
+    `lib/chart/treemap/treemapLayout.js`,
+    `lib/chart/tree/layoutHelper.js`,
+    `lib/chart/graph/forceHelper.js`,
+    `lib/util/array/nest.js`,
+    `lib/scale/Time.js`,
+    `extension-src/dataTool/quantile.js`,
+    `extension/dataTool/quantile.js`,
+    `dist/echarts-en.common.js`,
+    `dist/echarts-en.common.min.js`,
+    `dist/echarts-en.js`,
+    `dist/echarts-en.min.js`,
+    `dist/echarts-en.simple.js`,
+    `dist/echarts-en.simple.min.js`,
+    `dist/echarts.common.js`,
+    `dist/echarts.common.min.js`,
+    `dist/echarts.js`,
+    `dist/echarts.min.js`,
+    `dist/echarts.simple.js`,
+    `dist/echarts.simple.min.js`,
+See `licenses/LICENSE-d3` for details of the license.

@@ -29725,10 +29725,16 @@ function enableDataStack(seriesModel, dimensionInfoList, opt) {
         }
     });
 
+    if (stackedDimInfo && !byIndex && !stackedByDimInfo) {
+        // Compatible with previous design, value axis (time axis) only stack by index.
+        // It may make sense if the user provides elaborately constructed data.
+        byIndex = true;
+    }
+
     // Add stack dimension, they can be both calculated by coordinate system in `unionExtent`.
     // That put stack logic in List is for using conveniently in echarts extensions, but it
     // might not be a good way.
-    if (stackedDimInfo && (byIndex || stackedByDimInfo)) {
+    if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
         stackResultDimension = '__\0ecstackresult';
         stackedOverDimension = '__\0ecstackedover';
@@ -29783,17 +29789,29 @@ function enableDataStack(seriesModel, dimensionInfoList, opt) {
 /**
  * @param {module:echarts/data/List} data
  * @param {string} stackedDim
+ */
+function isDimensionStacked(data, stackedDim /*, stackedByDim*/) {
+    // Each single series only maps to one pair of axis. So we do not need to
+    // check stackByDim, whatever stacked by a dimension or stacked by index.
+    return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
+        // && (
+        //     stackedByDim != null
+        //         ? stackedByDim === data.getCalculationInfo('stackedByDimension')
+        //         : data.getCalculationInfo('isStackedByIndex')
+        // );
+}
+
+/**
+ * @param {module:echarts/data/List} data
+ * @param {string} targetDim
  * @param {string} [stackedByDim] If not input this parameter, check whether
  *                                stacked by index.
+ * @return {string} dimension
  */
-function isDimensionStacked(data, stackedDim, stackedByDim) {
-    return stackedDim
-        && stackedDim === data.getCalculationInfo('stackedDimension')
-        && (
-            stackedByDim != null
-                ? stackedByDim === data.getCalculationInfo('stackedByDimension')
-                : data.getCalculationInfo('isStackedByIndex')
-        );
+function getStackedDimension(data, targetDim) {
+    return isDimensionStacked(data, targetDim)
+        ? data.getCalculationInfo('stackResultDimension')
+        : targetDim;
 }
 
 /*
@@ -30959,7 +30977,7 @@ function layout(seriesType, ecModel) {
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
         var isValueAxisH = valueAxis.isHorizontal();
 
         var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
@@ -31123,6 +31141,12 @@ function getValueAxisStart(baseAxis, valueAxis, stacked) {
 * under the License.
 */
 
+/*
+* The `scaleLevels` references to d3.js. The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
 // (except time zone is specified in time string). And `format.formateTime` returns
@@ -31265,7 +31289,7 @@ each$1(['contain', 'normalize'], function (methodName) {
     };
 });
 
-// Steps from d3
+// Steps from d3, see the license statement at the top of this file.
 var scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s
@@ -32379,7 +32403,8 @@ function createList(seriesModel) {
 
 var dataStack$1 = {
     isDimensionStacked: isDimensionStacked,
-    enableDataStack: enableDataStack
+    enableDataStack: enableDataStack,
+    getStackedDimension: getStackedDimension
 };
 
 /**
@@ -32825,7 +32850,14 @@ function createAxisTicks(axis, tickModel) {
 
 function makeCategoryLabels(axis) {
     var labelModel = axis.getLabelModel();
+    var result = makeCategoryLabelsActually(axis, labelModel);
 
+    return (!labelModel.get('show') || axis.scale.isBlank())
+        ? {labels: [], labelCategoryInterval: result.labelCategoryInterval}
+        : result;
+}
+
+function makeCategoryLabelsActually(axis, labelModel) {
     var labelsCache = getListCache(axis, 'labels');
     var optionLabelInterval = getOptionCategoryInterval(labelModel);
     var result = listCacheGet(labelsCache, optionLabelInterval);
@@ -32837,10 +32869,7 @@ function makeCategoryLabels(axis) {
     var labels;
     var numericLabelInterval;
 
-    if (!labelModel.get('show') || axis.scale.isBlank()) {
-        labels = [];
-    }
-    else if (isFunction$1(optionLabelInterval)) {
+    if (isFunction$1(optionLabelInterval)) {
         labels = makeLabelsByCustomizedCategoryInterval(axis, optionLabelInterval);
     }
     else {
@@ -32865,7 +32894,7 @@ function makeCategoryTicks(axis, tickModel) {
     }
 
     var ticks;
-    var numericTickInterval = optionTickInterval;
+    var tickCategoryInterval;
 
     // Optimize for the case that large category data and no label displayed,
     // we should not return all ticks.
@@ -32873,31 +32902,27 @@ function makeCategoryTicks(axis, tickModel) {
         ticks = [];
     }
 
-    if (isFunction$1(numericTickInterval)) {
-        ticks = makeLabelsByCustomizedCategoryInterval(axis, numericTickInterval, true);
+    if (isFunction$1(optionTickInterval)) {
+        ticks = makeLabelsByCustomizedCategoryInterval(axis, optionTickInterval, true);
     }
-    // Always use label interval by default.
+    // Always use label interval by default despite label show. Consider this
+    // scenario, Use multiple grid with the xAxis sync, and only one xAxis shows
+    // labels. `splitLine` and `axisTick` should be consistent in this case.
+    else if (optionTickInterval === 'auto') {
+        var labelsResult = makeCategoryLabelsActually(axis, axis.getLabelModel());
+        tickCategoryInterval = labelsResult.labelCategoryInterval;
+        ticks = map(labelsResult.labels, function (labelItem) {
+            return labelItem.tickValue;
+        });
+    }
     else {
-        if (numericTickInterval === 'auto') {
-            var labelsResult = makeCategoryLabels(axis);
-            numericTickInterval = labelsResult.labelCategoryInterval;
-            if (numericTickInterval != null) {
-                ticks = map(labelsResult.labels, function (labelItem) {
-                    return labelItem.tickValue;
-                });
-            }
-            else {
-                numericTickInterval = makeAutoCategoryInterval(axis, true);
-            }
-        }
-        if (ticks == null) {
-            ticks = makeLabelsByNumericCategoryInterval(axis, numericTickInterval, true);
-        }
+        tickCategoryInterval = optionTickInterval;
+        ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
     }
 
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(ticksCache, optionTickInterval, {
-        ticks: ticks, tickCategoryInterval: numericTickInterval
+        ticks: ticks, tickCategoryInterval: tickCategoryInterval
     });
 }
 
@@ -32936,16 +32961,11 @@ function listCacheSet(cache, key, value) {
     return value;
 }
 
-function makeAutoCategoryInterval(axis, hideLabel) {
-    var cacheKey = hideLabel ? 'tickAutoInterval' : 'autoInterval';
-    var result = inner$6(axis)[cacheKey];
-    if (result != null) {
-        return result;
-    }
-
-    return (
-        inner$6(axis)[cacheKey] = axis.calculateCategoryInterval(hideLabel)
-    );
+function makeAutoCategoryInterval(axis) {
+    var result = inner$6(axis).autoInterval;
+    return result != null
+        ? result
+        : (inner$6(axis).autoInterval = axis.calculateCategoryInterval());
 }
 
 /**
@@ -32953,7 +32973,7 @@ function makeAutoCategoryInterval(axis, hideLabel) {
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */
-function calculateCategoryInterval(axis, hideLabel) {
+function calculateCategoryInterval(axis) {
     var params = fetchAutoCategoryIntervalCalculationParams(axis);
     var labelFormatter = makeLabelFormatter(axis);
     var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
@@ -32988,17 +33008,15 @@ function calculateCategoryInterval(axis, hideLabel) {
         var width = 0;
         var height = 0;
 
-        if (!hideLabel) {
-            // Polar is also calculated in assumptive linear layout here.
-            // Not precise, do not consider align and vertical align
-            // and each distance from axis line yet.
-            var rect = getBoundingRect(
-                labelFormatter(tickValue), params.font, 'center', 'top'
-            );
-            // Magic number
-            width = rect.width * 1.3;
-            height = rect.height * 1.3;
-        }
+        // Polar is also calculated in assumptive linear layout here.
+        // Not precise, do not consider align and vertical align
+        // and each distance from axis line yet.
+        var rect = getBoundingRect(
+            labelFormatter(tickValue), params.font, 'center', 'top'
+        );
+        // Magic number
+        width = rect.width * 1.3;
+        height = rect.height * 1.3;
 
         // Min size, void long loop.
         maxW = Math.max(maxW, width, 7);
@@ -33402,11 +33420,10 @@ Axis.prototype = {
     /**
      * Only be called in category axis.
      * Can be overrided, consider other axes like in 3D.
-     * @param {boolean} hideLabel
      * @return {number} Auto interval for cateogry axis tick and label
      */
-    calculateCategoryInterval: function (hideLabel) {
-        return calculateCategoryInterval(this, hideLabel);
+    calculateCategoryInterval: function () {
+        return calculateCategoryInterval(this);
     }
 
 };
@@ -34277,10 +34294,10 @@ function prepareDataCoordInfo(coordSys, data, valueOrigin) {
 
     var stacked;
     var stackResultDim = data.getCalculationInfo('stackResultDimension');
-    if (stacked |= isDimensionStacked(data, dims[0], dims[1])) { // jshint ignore:line
+    if (stacked |= isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
         dims[0] = stackResultDim;
     }
-    if (stacked |= isDimensionStacked(data, dims[1], dims[0])) { // jshint ignore:line
+    if (stacked |= isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
         dims[1] = stackResultDim;
     }
 
@@ -34579,24 +34596,30 @@ function drawSegment(
     ctx, points, start, segLen, allLen,
     dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
 ) {
-    if (smoothMonotone == null) {
-        if (isMono(points, 'x')) {
-            return drawMono(ctx, points, start, segLen, allLen,
-                dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
-        }
-        else if (isMono(points, 'y')) {
-            return drawMono(ctx, points, start, segLen, allLen,
-                dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
-        }
-        else {
-            return drawNonMono.apply(this, arguments);
-        }
-    }
-    else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
-        return drawMono.apply(this, arguments);
+    // if (smoothMonotone == null) {
+    //     if (isMono(points, 'x')) {
+    //         return drawMono(ctx, points, start, segLen, allLen,
+    //             dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
+    //     }
+    //     else if (isMono(points, 'y')) {
+    //         return drawMono(ctx, points, start, segLen, allLen,
+    //             dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
+    //     }
+    //     else {
+    //         return drawNonMono.apply(this, arguments);
+    //     }
+    // }
+    // else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
+    //     return drawMono.apply(this, arguments);
+    // }
+    // else {
+    //     return drawNonMono.apply(this, arguments);
+    // }
+    if (smoothMonotone === 'none' || !smoothMonotone) {
+        return drawNonMono.apply(this, arguments);
     }
     else {
-        return drawNonMono.apply(this, arguments);
+        return drawMono.apply(this, arguments);
     }
 }
 
@@ -34611,29 +34634,29 @@ function drawSegment(
  *                                    If is undefined, either being monotone
  *                                    in 'x' or 'y' will call `drawMono`.
  */
-function isMono(points, smoothMonotone) {
-    if (points.length <= 1) {
-        return true;
-    }
+// function isMono(points, smoothMonotone) {
+//     if (points.length <= 1) {
+//         return true;
+//     }
 
-    var dim = smoothMonotone === 'x' ? 0 : 1;
-    var last = points[0][dim];
-    var lastDiff = 0;
-    for (var i = 1; i < points.length; ++i) {
-        var diff = points[i][dim] - last;
-        if (!isNaN(diff) && !isNaN(lastDiff)
-            && diff !== 0 && lastDiff !== 0
-            && ((diff >= 0) !== (lastDiff >= 0))
-        ) {
-            return false;
-        }
-        if (!isNaN(diff) && diff !== 0) {
-            lastDiff = diff;
-            last = points[i][dim];
-        }
-    }
-    return true;
-}
+//     var dim = smoothMonotone === 'x' ? 0 : 1;
+//     var last = points[0][dim];
+//     var lastDiff = 0;
+//     for (var i = 1; i < points.length; ++i) {
+//         var diff = points[i][dim] - last;
+//         if (!isNaN(diff) && !isNaN(lastDiff)
+//             && diff !== 0 && lastDiff !== 0
+//             && ((diff >= 0) !== (lastDiff >= 0))
+//         ) {
+//             return false;
+//         }
+//         if (!isNaN(diff) && diff !== 0) {
+//             lastDiff = diff;
+//             last = points[i][dim];
+//         }
+//     }
+//     return true;
+// }
 
 /**
  * Draw smoothed line in monotone, in which only vertical or horizontal bezier
@@ -35841,10 +35864,10 @@ var pointsLayout = function (seriesType) {
             var dimLen = dims.length;
 
             var stackResultDim = data.getCalculationInfo('stackResultDimension');
-            if (isDimensionStacked(data, dims[0], dims[1])) {
+            if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) {
                 dims[0] = stackResultDim;
             }
-            if (isDimensionStacked(data, dims[1], dims[0])) {
+            if (isDimensionStacked(data, dims[1] /*, dims[0]*/)) {
                 dims[1] = stackResultDim;
             }
 
@@ -37285,7 +37308,12 @@ gridProto._updateScale = function (ecModel, gridModel) {
 
     function unionExtent(data, axis, seriesModel) {
         each$1(data.mapDimension(axis.dim, true), function (dim) {
-            axis.scale.unionExtentFromData(data, dim);
+            axis.scale.unionExtentFromData(
+                // For example, the extent of the orginal dimension
+                // is [0.1, 0.5], the extent of the `stackResultDimension`
+                // is [7, 9], the final extent should not include [0.1, 0.5].
+                data, getStackedDimension(data, dim)
+            );
         });
     }
 };
@@ -38803,8 +38831,9 @@ var CartesianAxisView = AxisView.extend({
             }
 
             var colorIndex = (lineCount++) % lineColors.length;
+            var tickValue = ticksCoords[i].tickValue;
             this._axisGroup.add(new Line(subPixelOptimizeLine({
-                anid: 'line_' + ticksCoords[i].tickValue,
+                anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -38893,7 +38922,7 @@ var CartesianAxisView = AxisView.extend({
             tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
 
             this._axisGroup.add(new Rect({
-                anid: 'area_' + tickValue,
+                anid: tickValue != null ? 'area_' + tickValue : null,
                 shape: {
                     x: x,
                     y: y,
@@ -46055,6 +46084,13 @@ SeriesModel.extend({
 * under the License.
 */
 
+/*
+* The tree layout implementation references to d3.js
+* (https://github.com/d3/d3-hierarchy). The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 /**
  * @file The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
  *       the tree.
@@ -49514,6 +49550,14 @@ function mapVisual$1(nodeModel, visuals, child, index, mapping, seriesModel) {
 * under the License.
 */
 
+/*
+* The treemap layout implementation references to the treemap
+* layout of d3.js (d3/src/layout/treemap.js in v3). The use of
+* the source code of this file is also subject to the terms
+* and consitions of its license (BSD-3Clause, see
+* <echarts/src/licenses/LICENSE-d3>).
+*/
+
 var mathMax$4 = Math.max;
 var mathMin$4 = Math.min;
 var retrieveValue = retrieve;
@@ -49634,7 +49678,8 @@ var treemapLayout = {
 /**
  * Layout treemap with squarify algorithm.
  * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
- * @see https://github.com/mbostock/d3/blob/master/src/layout/treemap.js
+ * The implementation references to the treemap layout of d3.js.
+ * See the license statement at the head of this file.
  *
  * @protected
  * @param {module:echarts/data/Tree~TreeNode} node
@@ -52672,6 +52717,13 @@ var circularLayout = function (ecModel) {
 * KIND, either express or implied.  See the License for the
 * specific language governing permissions and limitations
 * under the License.
+*/
+
+/*
+* The layout implementation references to d3.js. The use of
+* the source code of this file is also subject to the terms
+* and consitions of its license (BSD-3Clause, see
+* <echarts/src/licenses/LICENSE-d3>).
 */
 
 var scaleAndAdd$2 = scaleAndAdd;
@@ -57711,6 +57763,13 @@ registerAction({
 * specific language governing permissions and limitations
 * under the License.
 */
+
+/*
+* The implementation references to d3.js. The use of the source
+* code of this file is also subject to the terms and consitions
+* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+*/
+
 
 /**
  * nest helper used to group by the array.
@@ -71559,7 +71618,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
 
         var valueAxisStart = valueAxis.getExtent()[0];
 
@@ -72295,7 +72354,6 @@ extendComponentModel({
 
 // TODO Axis scale
 
-// 依赖 PolarModel 做预处理
 /**
  * Resize method bound to the polar
  * @param {module:echarts/coord/polar/PolarModel} polarModel
@@ -72332,10 +72390,14 @@ function updatePolarScale(ecModel, api) {
         if (seriesModel.coordinateSystem === polar) {
             var data = seriesModel.getData();
             each$1(data.mapDimension('radius', true), function (dim) {
-                radiusAxis.scale.unionExtentFromData(data, dim);
+                radiusAxis.scale.unionExtentFromData(
+                    data, getStackedDimension(data, dim)
+                );
             });
             each$1(data.mapDimension('angle', true), function (dim) {
-                angleAxis.scale.unionExtentFromData(data, dim);
+                angleAxis.scale.unionExtentFromData(
+                    data, getStackedDimension(data, dim)
+                );
             });
         }
     });
@@ -82617,7 +82679,7 @@ function markerTypeCalculatorWithExtent(
 ) {
     var coordArr = [];
 
-    var stacked = isDimensionStacked(data, targetDataDim, otherDataDim);
+    var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
     var calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
