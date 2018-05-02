@@ -19,8 +19,7 @@
 
 const glob = require('glob');
 const fs = require('fs');
-
-const headerStr = reuqire('./preamble');
+const headerStr = require('./preamble');
 
 const lists = [
     '../src/**/*.js',
