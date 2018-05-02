@@ -19,6 +19,7 @@
 
 /**
  * @file Create data struct and define tree view's series model
+ * @author Deqing Li(annong035@gmail.com)
  */
 
 import SeriesModel from '../../model/Series';

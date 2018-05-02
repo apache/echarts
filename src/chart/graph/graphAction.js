@@ -19,7 +19,7 @@
 
 import * as echarts from '../../echarts';
 import {updateCenterAndZoom} from '../../action/roamHelper';
-import '../focusNodeAdjacencyAction';
+import '../helper/focusNodeAdjacencyAction';
 
 var actionInfo = {
     type: 'graphRoam',

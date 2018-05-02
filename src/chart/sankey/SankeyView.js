@@ -24,6 +24,43 @@
 
 import * as graphic from '../../util/graphic';
 import * as echarts from '../../echarts';
+import * as zrUtil from 'zrender/src/core/util';
+
+var nodeOpacityPath = ['itemStyle', 'opacity'];
+var lineOpacityPath = ['lineStyle', 'opacity'];
+
+function getItemOpacity(item, opacityPath) {
+    return item.getVisual('opacity') || item.getModel().get(opacityPath);
+}
+
+function fadeOutItem(item, opacityPath, opacityRatio) {
+    var el = item.getGraphicEl();
+
+    var opacity = getItemOpacity(item, opacityPath);
+    if (opacityRatio != null) {
+        opacity == null && (opacity = 1);
+        opacity *= opacityRatio;
+    }
+
+    el.downplay && el.downplay();
+    el.traverse(function (child) {
+        if (child.type !== 'group') {
+            child.setStyle('opacity', opacity);
+        }
+    });
+}
+
+function fadeInItem(item, opacityPath) {
+    var opacity = getItemOpacity(item, opacityPath);
+    var el = item.getGraphicEl();
+
+    el.highlight && el.highlight();
+    el.traverse(function (child) {
+        if (child.type !== 'group') {
+            child.setStyle('opacity', opacity);
+        }
+    });
+}
 
 var SankeyShape = graphic.extendShape({
     shape: {
@@ -180,10 +217,11 @@ export default echarts.extendChartView({
 
             rect.dataType = 'node';
         });
-
-        var draggable = seriesModel.get('draggable');
-        if (draggable) {
-            nodeData.eachItemGraphicEl(function (el, dataIndex) {
+       
+        nodeData.eachItemGraphicEl(function (el, dataIndex) {
+            var itemModel = nodeData.getItemModel(dataIndex);
+            // var draggable = seriesModel.get('draggable');
+            if (itemModel.get('draggable')) {
                 el.drift = function (dx, dy) {
                     this.shape.x += dx;
                     this.shape.y += dy;
@@ -199,9 +237,45 @@ export default echarts.extendChartView({
         
                 el.draggable = true;
                 el.cursor = 'move';
-            });
-        }
-        
+
+            }
+            
+            if (itemModel.get('focusNodeAdjacency')) {
+                el.off('mouseover').on('mouseover', function () {
+                    api.dispatchAction({
+                        type: 'focusNodeAdjacency',
+                        seriesId: seriesModel.id,
+                        dataIndex: el.dataIndex
+                    });
+                });
+                el.off('mouseout').on('mouseout', function () {
+                    api.dispatchAction({
+                        type: 'unfocusNodeAdjacency',
+                        seriesId: seriesModel.id
+                    })
+                });
+            }
+        });
+
+        edgeData.eachItemGraphicEl(function (el, dataIndex) {
+            var edgeModel = edgeData.getItemModel(dataIndex);
+            if (edgeModel.get('focusNodeAdjacency')) {
+                el.off('mouseover').on('mouseover', function () {
+                    api.dispatchAction({
+                        type: 'focusNodeAdjacency',
+                        seriesId: seriesModel.id,
+                        edgeDataIndex: el.dataIndex
+                    });
+                });
+                el.off('mouseout').on('mouseout', function () {
+                    api.dispatchAction({
+                        type: 'unfocusNodeAdjacency',
+                        seriesId: seriesModel.id,
+                    });
+                })
+            }
+        });
+
         if (!this._data && seriesModel.get('animation')) {
             group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
                 group.removeClipPath();
@@ -211,7 +285,77 @@ export default echarts.extendChartView({
         this._data = seriesModel.getData();
     },
 
-    dispose: function () {}
+    dispose: function () {},
+
+    focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
+        var data = this._model.getData();
+        var graph = data.graph;
+        var dataIndex = payload.dataIndex;
+        var itemModel = data.getItemModel(dataIndex);
+        var edgeDataIndex = payload.edgeDataIndex;
+        
+        if (!dataIndex && !edgeDataIndex) {
+            return;
+        }
+        var node = graph.getNodeByIndex(dataIndex);
+        var edge = graph.getEdgeByIndex(edgeDataIndex);
+
+        graph.eachNode(function (node) {
+            fadeOutItem(node, nodeOpacityPath, 0.1);
+        });
+        graph.eachEdge(function (edge) {
+            fadeOutItem(edge, lineOpacityPath, 0.1);
+        });
+
+        if (node) {
+            fadeInItem(node, nodeOpacityPath);
+            var focusNodeAdjacency = itemModel.get('focusNodeAdjacency');
+            if (focusNodeAdjacency === 'outEdges') {
+                zrUtil.each(node.outEdges, function (edge) {
+                    if (edge.dataIndex < 0) {
+                        return;
+                    }
+                    fadeInItem(edge, lineOpacityPath);
+                    fadeInItem(edge.node2, nodeOpacityPath);
+                });
+            }
+            else if (focusNodeAdjacency === 'inEdges') {
+                zrUtil.each(node.inEdges, function (edge) {
+                    if (edge.dataIndex < 0) {
+                        return;
+                    }
+                    fadeInItem(edge, lineOpacityPath);
+                    fadeInItem(edge.node1, nodeOpacityPath);
+                });
+            }
+            else if (focusNodeAdjacency === 'allEdges') {
+                zrUtil.each(node.edges, function (edge) {
+                    if (edge.dataIndex < 0) {
+                        return;
+                    }
+                    fadeInItem(edge, lineOpacityPath);
+                    fadeInItem(edge.node1, nodeOpacityPath);
+                    fadeInItem(edge.node2, nodeOpacityPath);
+                });
+            }
+        }
+        if (edge) {
+            fadeInItem(edge, lineOpacityPath);
+            fadeInItem(edge.node1, nodeOpacityPath);
+            fadeInItem(edge.node2, nodeOpacityPath);
+        }
+    },
+
+    unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
+        var graph = this._model.getGraph();
+
+        graph.eachNode(function (node) {
+            fadeOutItem(node, nodeOpacityPath);
+        });
+        graph.eachEdge(function (edge) {
+            fadeOutItem(edge, lineOpacityPath);
+        });
+    }
 });
 
 // add animation to the view

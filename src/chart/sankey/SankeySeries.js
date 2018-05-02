@@ -112,6 +112,8 @@ var SankeySeries = SeriesModel.extend({
         // control if the node can move or not
         draggable: true,
 
+        focusNodeAdjacency: 'outEdges',
+
         // the number of iterations to change the position of the node
         layoutIterations: 32,
 
