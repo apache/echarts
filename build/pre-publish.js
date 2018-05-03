@@ -60,17 +60,17 @@ module.exports = function () {
     prePulishSrc({
         inputPath: path.resolve(ecDir, 'echarts.all.js'),
         outputPath: path.resolve(ecDir, 'index.js'),
-        preamble: preamble
+        preamble: preamble.js
     });
     prePulishSrc({
         inputPath: path.resolve(ecDir, 'echarts.common.js'),
         outputPath: path.resolve(ecDir, 'index.common.js'),
-        preamble: preamble
+        preamble: preamble.js
     });
     prePulishSrc({
         inputPath: path.resolve(ecDir, 'echarts.simple.js'),
         outputPath: path.resolve(ecDir, 'index.simple.js'),
-        preamble: preamble
+        preamble: preamble.js
     });
 
     function transform({code, inputPath, outputPath}) {

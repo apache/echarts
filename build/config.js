@@ -61,7 +61,7 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
             'dead_code': true
         },
         output: {
-            preamble: preamble
+            preamble: preamble.js
         }
     }));
 
