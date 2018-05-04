@@ -150,3 +150,10 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 ## License
 
 ECharts is available under the Apache License V2.
+
+## Reference Paper
+
+Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
+[ECharts: A Declarative Framework for Rapid Construction of Wed-based Visualization](http://www.cad.zju.edu.cn/home/vagblog/VAG_Work/echarts.pdf).
+Visual Informatics, 2018.
+
