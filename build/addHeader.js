@@ -17,78 +17,170 @@
 * under the License.
 */
 
-const glob = require('glob');
+/**
+ * Usage of `.rat-excludes`:
+ * For consistency, we use `.rat-excludes` for both Apache Rat and this tool.
+ * In the `.rat-excludes`, each line is a string of RegExp.
+ * Notice, the regular expression should match the entire path
+ * (a relative path based on `echarts` root).
+ */
+
 const fs = require('fs');
+const preamble = require('./preamble');
+const pathTool = require('path');
+const {color} = require('zrender/build/helper');
+const excludesPath = pathTool.join(__dirname, '../.rat-excludes');
+const ecBasePath = pathTool.join(__dirname, '../');
 
-const headerStr = reuqire('./preamble');
+// const lists = [
+//     '../src/**/*.js',
+//     '../build/*.js',
+//     '../benchmark/src/*.js',
+//     '../benchmark/src/gulpfile.js',
+//     '../extension-src/**/*.js',
+//     '../extension/**/*.js',
+//     '../map/js/**/*.js',
+//     '../test/build/**/*.js',
+//     '../test/node/**/*.js',
+//     '../test/ut/core/*.js',
+//     '../test/ut/spe/*.js',
+//     '../test/ut/ut.js',
+//     '../test/*.js',
+//     '../theme/*.js',
+//     '../theme/tool/**/*.js',
+//     '../echarts.all.js',
+//     '../echarts.blank.js',
+//     '../echarts.common.js',
+//     '../echarts.simple.js',
+//     '../index.js',
+//     '../index.common.js',
+//     '../index.simple.js'
+// ];
 
-const lists = [
-    '../src/**/*.js',
-    '../build/*.js',
-    '../benchmark/src/*.js',
-    '../benchmark/src/gulpfile.js',
-    '../extension-src/**/*.js',
-    '../extension/**/*.js',
-    '../map/js/**/*.js',
-    '../test/build/**/*.js',
-    '../test/node/**/*.js',
-    '../test/ut/core/*.js',
-    '../test/ut/spe/*.js',
-    '../test/ut/ut.js',
-    '../test/*.js',
-    '../theme/*.js',
-    '../theme/tool/**/*.js',
-    '../echarts.all.js',
-    '../echarts.blank.js',
-    '../echarts.common.js',
-    '../echarts.simple.js',
-    '../index.js',
-    '../index.common.js',
-    '../index.simple.js'
-];
+function run() {
+    const updatedFiles = [];
+    const passFiles = [];
+    const pendingFiles = [];
 
-function extractLicense(str) {
-    str = str.trim();
-    const regex = new RegExp('/\\*[\\S\\s]*?\\*/', 'm');
-    const res = regex.exec(str);
-    const commentText = res && res[0];
-    if (commentText) {
-        if(commentText.toLowerCase().includes('apache license') || commentText.toLowerCase().includes('apache commons')) {
-            return 'Apache';
+    eachFile(function (absolutePath, fileExt) {
+        const fileStr = fs.readFileSync(absolutePath, 'utf-8');
+
+        const existLicense = preamble.extractLicense(fileStr, fileExt);
+
+        if (existLicense) {
+            passFiles.push(absolutePath);
+            return;
         }
-        else if(commentText.toUpperCase().includes('BSD')) {
-            return 'BSD';
+
+        // Conside binary files, only add for files with known ext.
+        if (!preamble.hasPreamble(fileExt)) {
+            pendingFiles.push(absolutePath);
+            return;
         }
-        else if(commentText.toUpperCase().includes('LGPL')) {
-            return 'LGPL';
+
+        // fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
+        updatedFiles.push(absolutePath);
+    });
+
+    if (passFiles.length) {
+        console.log('\n\n');
+        console.log('----------------------------');
+        console.log(' Files that exists license: ');
+        console.log('----------------------------');
+        passFiles.forEach(function (path) {
+            console.log(color('fgGreen', 'dim')(path));
+        });
+    }
+
+    if (updatedFiles.length) {
+        console.log('\n\n');
+        console.log('--------------------');
+        console.log(' License added for: ');
+        console.log('--------------------');
+        updatedFiles.forEach(function (path) {
+            console.log(color('fgGreen', 'bright')(path));
+        });
+    }
+
+    if (pendingFiles.length) {
+        console.log('\n\n');
+        console.log('----------------');
+        console.log(' Pending files: ');
+        console.log('----------------');
+        pendingFiles.forEach(function (path) {
+            console.log(color('fgRed', 'dim')(path));
+        });
+    }
+
+    console.log('\n Done.');
+}
+
+function eachFile(visit) {
+
+    const excludePatterns = [];
+    const extReg = /\.([a-zA-Z0-9_-]+)$/;
+
+    prepareExcludePatterns();
+    travel('./');
+
+    function travel(relativePath) {
+        if (isExclude(relativePath)) {
+            return;
         }
-        else if(commentText.toUpperCase().includes('GPL')) {
-            return 'GPL';
+
+        const absolutePath = pathTool.join(ecBasePath, relativePath);
+        const stat = fs.statSync(absolutePath);
+
+        if (stat.isFile()) {
+            visit(absolutePath, getExt(absolutePath));
         }
-        else if(commentText.toLowerCase().includes('mozilla public')) {
-            return 'Mozilla';
+        else if (stat.isDirectory()) {
+            fs.readdirSync(relativePath).forEach(function (file) {
+                travel(pathTool.join(relativePath, file));
+            });
         }
-        else if(commentText.toLowerCase().includes('mit license')) {
-            return 'MIT';
+    }
+
+    // In Apache Rat, an item of the exclude file should be a regular expression
+    // that matches the entire relative path, like `pattern.matches(...)` of Java.
+    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/AbstractScanner.java#L374>,
+    // That means that if a directory `some/dir` is in the exclude file,
+    // `some/dir/aa` will not be excluded, which is not expected conventionally,
+    // so we do not tread it like that.
+    function prepareExcludePatterns() {
+        const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
+        content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
+            line = line.trim();
+            if (line) {
+                excludePatterns.push(new RegExp(line));
+            }
+        });
+    }
+
+    // In Apache Rat, the ecludes file is check against the relative path
+    // (based on the base directory specified by the "--dir")
+    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/DirectoryScanner.java#L400>
+    // Here we assume that the base directory is the `ecBasePath`.
+    function isExclude(relativePath) {
+        for (let i = 0; i < excludePatterns.length; i++) {
+            if (excludePatterns[i].test(relativePath)) {
+                return true;
+            }
+        }
+    }
+
+    function getExt(path) {
+        if (path) {
+            const mathResult = path.match(extReg);
+            return mathResult && mathResult[1];
         }
     }
 }
 
-lists.forEach(function (pattern) {
-    glob(pattern, function (err, fileList) {
-        if (err) {
-            throw new Error();
-        }
-        fileList.forEach(function (fileUrl) {
-            const str = fs.readFileSync(fileUrl, 'utf-8');
+// function assert(cond, msg) {
+//     if (!cond) {
+//         throw new Error(msg);
+//     }
+// }
 
-            const existLicense = extractLicense(str);
-            if (existLicense) {
-                console.log('File ' + fileUrl + ' already have license ' + existLicense);
-                return;
-            }
-
-            fs.writeFileSync(fileUrl, headerStr + str, 'utf-8');
-        });
-    });
-});
+run();

@@ -37793,7 +37793,7 @@ var BaseBarSeries = SeriesModel.extend({
 
         large: false,
         largeThreshold: 400,
-        progressive: 5e3,
+        progressive: 3e3,
         progressiveChunkMode: 'mod',
 
         // barMaxWidth: null,

@@ -39105,7 +39105,7 @@ var BaseBarSeries = SeriesModel.extend({
 
         large: false,
         largeThreshold: 400,
-        progressive: 5e3,
+        progressive: 3e3,
         progressiveChunkMode: 'mod',
 
         // barMaxWidth: null,
@@ -59107,7 +59107,7 @@ var CandlestickSeries = SeriesModel.extend({
         large: true,
         largeThreshold: 600,
 
-        progressive: 5e3,
+        progressive: 3e3,
         progressiveThreshold: 1e4,
         progressiveChunkMode: 'mod',
 
