@@ -20,10 +20,10 @@ map/js
 map/json
 test/ut/lib
 test/data$
-test/lib/esl\.js$
-test/lib/perlin\.js$
-test/lib/countup\.js$
-jquery
+test/lib/esl\.js
+test/lib/perlin\.js
+test/lib/countup\.js
+jquery\.min\.js
 configure
 IAxisPointer$
 ICoordinateSystem$

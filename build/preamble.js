@@ -156,7 +156,7 @@ function extractLicense(fileStr, fileExt) {
 }
 
 const cStyleCommentReg = /\/\*[\S\s]*?\*\//;
-const hashCommentReg = /^\s*#.*$/m;
+const hashCommentReg = /^\s*#.*$/gm;
 const mlCommentReg = /<\!\-\-[\S\s]*?\-\->/;
 const commentReg = {
     js: cStyleCommentReg,
@@ -167,11 +167,21 @@ const commentReg = {
 
 function extractComment(str, fileExt) {
     const reg = commentReg[fileExt];
+
     if (!fileExt || !reg || !str) {
         return;
     }
-    let result = cStyleCommentReg.exec(str);
-    return result && result[0];
+
+    reg.lastIndex = 0;
+
+    if (fileExt === 'sh') {
+        let result = str.match(reg);
+        return result && result.join('\n');
+    }
+    else {
+        let result = reg.exec(str);
+        return result && result[0];
+    }
 }
 
 module.exports = Object.assign({

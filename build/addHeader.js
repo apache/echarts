@@ -17,12 +17,18 @@
 * under the License.
 */
 
+/**
+ * Usage of `.rat-excludes`:
+ * For consistency, we use `.rat-excludes` for both Apache Rat and this tool.
+ * In the `.rat-excludes`, each line is a string of RegExp.
+ * Notice, the regular expression should match the entire path
+ * (a relative path based on `echarts` root).
+ */
+
 const fs = require('fs');
 const preamble = require('./preamble');
 const pathTool = require('path');
 const {color} = require('zrender/build/helper');
-// For consistency, we use `rat-excludes` for both Apache Rat and this tool.
-// Each item is a string of RegExp
 const excludesPath = pathTool.join(__dirname, '../.rat-excludes');
 const ecBasePath = pathTool.join(__dirname, '../');
 
@@ -60,7 +66,6 @@ function run() {
         const fileStr = fs.readFileSync(absolutePath, 'utf-8');
 
         const existLicense = preamble.extractLicense(fileStr, fileExt);
-        // !existLicense && console.log(absolutePath);
 
         if (existLicense) {
             passFiles.push(absolutePath);
@@ -73,7 +78,7 @@ function run() {
             return;
         }
 
-        fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
+        // fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
         updatedFiles.push(absolutePath);
     });
 
@@ -136,6 +141,12 @@ function eachFile(visit) {
         }
     }
 
+    // In Apache Rat, an item of the exclude file should be a regular expression
+    // that matches the entire relative path, like `pattern.matches(...)` of Java.
+    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/AbstractScanner.java#L374>,
+    // That means that if a directory `some/dir` is in the exclude file,
+    // `some/dir/aa` will not be excluded, which is not expected conventionally,
+    // so we do not tread it like that.
     function prepareExcludePatterns() {
         const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
         content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
