@@ -1,3 +1,4 @@
+#!/bin/sh
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,8 +18,8 @@
 # under the License.
 
 basePath=$(cd `dirname $0`; pwd)
-ecPath=${basePath}/..
+ecPath=${basePath}/../..
+runRatSrcDir=${ecPath}/build/rat/src
 
-java -jar "${basePath}/apache-rat-0.12.jar" --exclude-file "${ecPath}/.rat-excludes" --dir "${ecPath}"
-#  > "${basePath}/rat-result.txt"
-# java -jar "${basePath}/apache-rat/apache-rat-0.12.jar" -h
+javac -classpath ${ecPath}/build/rat/javassist.jar ${runRatSrcDir}/RunRat.java
+jar cfmv ${ecPath}/build/rat/runrat.jar ${runRatSrcDir}/MANIFEST.txt -C ${runRatSrcDir} RunRat.class

@@ -103,6 +103,10 @@ const addFns = {
         return headStr + fileStr;
     },
 
+    java: function (headStr, fileStr) {
+        return headStr + fileStr;
+    },
+
     sh: function (headStr, fileStr) {
         // Git diff enables manual check.
         if (/^#\!/.test(fileStr)) {
@@ -122,16 +126,32 @@ const addFns = {
         if (resultStr.length === fileStr.length) {
             resultStr = headStr + fileStr;
         }
-
         return resultStr;
-    }
+    },
+
+    xml: xmlAddFn,
+
+    xsl: xmlAddFn
 };
+
+function xmlAddFn(headStr, fileStr) {
+    // Git diff enables manual check.
+    let resultStr = fileStr.replace(/^\s*<\?xml\s[^<>]+\?>/i, '$&' + headStr);
+    // If no <?xml version='1.0' ?>
+    if (resultStr.length === fileStr.length) {
+        resultStr = headStr + fileStr;
+    }
+    return resultStr;
+}
 
 const preambleMap = {
     js: cStyleComment,
     css: cStyleComment,
+    java: cStyleComment,
     sh: hashComment,
-    html: mlComment
+    html: mlComment,
+    xml: mlComment,
+    xsl: mlComment
 };
 
 const licenseReg = [
@@ -161,8 +181,11 @@ const mlCommentReg = /<\!\-\-[\S\s]*?\-\->/;
 const commentReg = {
     js: cStyleCommentReg,
     css: cStyleCommentReg,
+    java: cStyleCommentReg,
     sh: hashCommentReg,
-    html: mlCommentReg
+    html: mlCommentReg,
+    xml: mlCommentReg,
+    xsl: mlCommentReg
 };
 
 function extractComment(str, fileExt) {
