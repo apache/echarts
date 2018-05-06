@@ -18,11 +18,10 @@
 */
 
 /**
- * Usage of `.rat-excludes`:
  * For consistency, we use `.rat-excludes` for both Apache Rat and this tool.
- * In the `.rat-excludes`, each line is a string of RegExp.
- * Notice, the regular expression should match the entire path
- * (a relative path based on `echarts` root).
+ * In the `.rat-excludes`, each line is a pattern in RegExp.
+ * all relative path (based on the echarts base directory) is tected.
+ * The pattern should match the relative path completely.
  */
 
 const fs = require('fs');
@@ -78,7 +77,7 @@ function run() {
             return;
         }
 
-        // fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
+        fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
         updatedFiles.push(absolutePath);
     });
 
@@ -141,12 +140,6 @@ function eachFile(visit) {
         }
     }
 
-    // In Apache Rat, an item of the exclude file should be a regular expression
-    // that matches the entire relative path, like `pattern.matches(...)` of Java.
-    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/AbstractScanner.java#L374>,
-    // That means that if a directory `some/dir` is in the exclude file,
-    // `some/dir/aa` will not be excluded, which is not expected conventionally,
-    // so we do not tread it like that.
     function prepareExcludePatterns() {
         const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
         content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
@@ -157,10 +150,6 @@ function eachFile(visit) {
         });
     }
 
-    // In Apache Rat, the ecludes file is check against the relative path
-    // (based on the base directory specified by the "--dir")
-    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/DirectoryScanner.java#L400>
-    // Here we assume that the base directory is the `ecBasePath`.
     function isExclude(relativePath) {
         for (let i = 0; i < excludePatterns.length; i++) {
             if (excludePatterns[i].test(relativePath)) {
