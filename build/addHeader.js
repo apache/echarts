@@ -151,7 +151,7 @@ function eachFile(visit) {
         const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
         content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
             line = line.trim();
-            if (line) {
+            if (line && line.charAt(0) !== '#') {
                 excludePatterns.push(new RegExp(line));
             }
         });
@@ -176,11 +176,5 @@ function eachFile(visit) {
         }
     }
 }
-
-// function assert(cond, msg) {
-//     if (!cond) {
-//         throw new Error(msg);
-//     }
-// }
 
 run();
