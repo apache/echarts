@@ -31,6 +31,8 @@ const {color} = require('zrender/build/helper');
 const excludesPath = pathTool.join(__dirname, '../.rat-excludes');
 const ecBasePath = pathTool.join(__dirname, '../');
 
+const isVerbose = process.argv[2] === '--verbose';
+
 // const lists = [
 //     '../src/**/*.js',
 //     '../build/*.js',
@@ -81,37 +83,51 @@ function run() {
         updatedFiles.push(absolutePath);
     });
 
+    console.log('\n');
+    console.log('----------------------------');
+    console.log(' Files that exists license: ');
+    console.log('----------------------------');
     if (passFiles.length) {
-        console.log('\n\n');
-        console.log('----------------------------');
-        console.log(' Files that exists license: ');
-        console.log('----------------------------');
-        passFiles.forEach(function (path) {
-            console.log(color('fgGreen', 'dim')(path));
-        });
+        if (isVerbose) {
+            passFiles.forEach(function (path) {
+                console.log(color('fgGreen', 'dim')(path));
+            });
+        }
+        else {
+            console.log(color('fgGreen', 'dim')(passFiles.length + ' files. (use argument "--verbose" see details)'));
+        }
+    }
+    else {
+        console.log('Nothing.');
     }
 
+    console.log('\n');
+    console.log('--------------------');
+    console.log(' License added for: ');
+    console.log('--------------------');
     if (updatedFiles.length) {
-        console.log('\n\n');
-        console.log('--------------------');
-        console.log(' License added for: ');
-        console.log('--------------------');
         updatedFiles.forEach(function (path) {
             console.log(color('fgGreen', 'bright')(path));
         });
     }
+    else {
+        console.log('Nothing.');
+    }
 
+    console.log('\n');
+    console.log('----------------');
+    console.log(' Pending files: ');
+    console.log('----------------');
     if (pendingFiles.length) {
-        console.log('\n\n');
-        console.log('----------------');
-        console.log(' Pending files: ');
-        console.log('----------------');
         pendingFiles.forEach(function (path) {
             console.log(color('fgRed', 'dim')(path));
         });
     }
+    else {
+        console.log('Nothing.');
+    }
 
-    console.log('\n Done.');
+    console.log('\nDone.');
 }
 
 function eachFile(visit) {
