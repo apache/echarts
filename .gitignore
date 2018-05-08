@@ -14,6 +14,7 @@ tmp/
 .svn
 local.properties
 .classpath
+.class
 .settings/
 .loadpath
 
@@ -162,6 +163,8 @@ pip-log.txt
 # Mac crap
 .DS_Store
 .idea
+.ideaout
+rat.iml
 
 node_modules
 

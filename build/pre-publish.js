@@ -45,7 +45,8 @@ module.exports = function () {
         prePulishSrc({
             inputPath: absolutePath,
             outputPath: path.resolve(libDir, relativePath, fileName),
-            transform
+            transform: transform,
+            preamble: preamble.js
         });
     });
 
@@ -53,7 +54,8 @@ module.exports = function () {
         prePulishSrc({
             inputPath: absolutePath,
             outputPath: path.resolve(extensionDir, relativePath, fileName),
-            transform
+            transform: transform,
+            preamble: preamble.js
         });
     });
 

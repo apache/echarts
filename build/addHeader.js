@@ -18,11 +18,10 @@
 */
 
 /**
- * Usage of `.rat-excludes`:
  * For consistency, we use `.rat-excludes` for both Apache Rat and this tool.
- * In the `.rat-excludes`, each line is a string of RegExp.
- * Notice, the regular expression should match the entire path
- * (a relative path based on `echarts` root).
+ * In the `.rat-excludes`, each line is a pattern in RegExp.
+ * all relative path (based on the echarts base directory) is tected.
+ * The pattern should match the relative path completely.
  */
 
 const fs = require('fs');
@@ -31,6 +30,8 @@ const pathTool = require('path');
 const {color} = require('zrender/build/helper');
 const excludesPath = pathTool.join(__dirname, '../.rat-excludes');
 const ecBasePath = pathTool.join(__dirname, '../');
+
+const isVerbose = process.argv[2] === '--verbose';
 
 // const lists = [
 //     '../src/**/*.js',
@@ -78,41 +79,55 @@ function run() {
             return;
         }
 
-        // fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
+        fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
         updatedFiles.push(absolutePath);
     });
 
+    console.log('\n');
+    console.log('----------------------------');
+    console.log(' Files that exists license: ');
+    console.log('----------------------------');
     if (passFiles.length) {
-        console.log('\n\n');
-        console.log('----------------------------');
-        console.log(' Files that exists license: ');
-        console.log('----------------------------');
-        passFiles.forEach(function (path) {
-            console.log(color('fgGreen', 'dim')(path));
-        });
+        if (isVerbose) {
+            passFiles.forEach(function (path) {
+                console.log(color('fgGreen', 'dim')(path));
+            });
+        }
+        else {
+            console.log(color('fgGreen', 'dim')(passFiles.length + ' files. (use argument "--verbose" see details)'));
+        }
+    }
+    else {
+        console.log('Nothing.');
     }
 
+    console.log('\n');
+    console.log('--------------------');
+    console.log(' License added for: ');
+    console.log('--------------------');
     if (updatedFiles.length) {
-        console.log('\n\n');
-        console.log('--------------------');
-        console.log(' License added for: ');
-        console.log('--------------------');
         updatedFiles.forEach(function (path) {
             console.log(color('fgGreen', 'bright')(path));
         });
     }
+    else {
+        console.log('Nothing.');
+    }
 
+    console.log('\n');
+    console.log('----------------');
+    console.log(' Pending files: ');
+    console.log('----------------');
     if (pendingFiles.length) {
-        console.log('\n\n');
-        console.log('----------------');
-        console.log(' Pending files: ');
-        console.log('----------------');
         pendingFiles.forEach(function (path) {
             console.log(color('fgRed', 'dim')(path));
         });
     }
+    else {
+        console.log('Nothing.');
+    }
 
-    console.log('\n Done.');
+    console.log('\nDone.');
 }
 
 function eachFile(visit) {
@@ -141,26 +156,16 @@ function eachFile(visit) {
         }
     }
 
-    // In Apache Rat, an item of the exclude file should be a regular expression
-    // that matches the entire relative path, like `pattern.matches(...)` of Java.
-    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/AbstractScanner.java#L374>,
-    // That means that if a directory `some/dir` is in the exclude file,
-    // `some/dir/aa` will not be excluded, which is not expected conventionally,
-    // so we do not tread it like that.
     function prepareExcludePatterns() {
         const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
         content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
             line = line.trim();
-            if (line) {
+            if (line && line.charAt(0) !== '#') {
                 excludePatterns.push(new RegExp(line));
             }
         });
     }
 
-    // In Apache Rat, the ecludes file is check against the relative path
-    // (based on the base directory specified by the "--dir")
-    // See <https://github.com/sonatype/plexus-utils/blob/master/src/main/java/org/codehaus/plexus/util/DirectoryScanner.java#L400>
-    // Here we assume that the base directory is the `ecBasePath`.
     function isExclude(relativePath) {
         for (let i = 0; i < excludePatterns.length; i++) {
             if (excludePatterns[i].test(relativePath)) {
@@ -176,11 +181,5 @@ function eachFile(visit) {
         }
     }
 }
-
-// function assert(cond, msg) {
-//     if (!cond) {
-//         throw new Error(msg);
-//     }
-// }
 
 run();
