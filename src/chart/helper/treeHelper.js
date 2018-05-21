@@ -23,6 +23,11 @@ export function retrieveTargetInfo(payload, validPayloadTypes, seriesModel) {
     if (payload && zrUtil.indexOf(validPayloadTypes, payload.type) >= 0) {
         var root = seriesModel.getData().tree.root;
         var targetNode = payload.targetNode;
+
+        if (typeof targetNode === 'string') {
+            targetNode = root.getNodeById(targetNode);
+        }
+
         if (targetNode && root.contains(targetNode)) {
             return {node: targetNode};
         }
