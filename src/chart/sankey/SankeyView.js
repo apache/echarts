@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * @file  The file used to draw sankey view
  * @author  Deqing Li(annong035@gmail.com)
@@ -48,6 +67,11 @@ export default echarts.extendChartView({
         var graph = seriesModel.getGraph();
         var group = this.group;
         var layoutInfo = seriesModel.layoutInfo;
+        // view width
+        var width = layoutInfo.width;
+        // view height
+        var height = layoutInfo.height;
+        
         var nodeData = seriesModel.getData();
         var edgeData = seriesModel.getData('edge');
 
@@ -77,10 +101,10 @@ export default echarts.extendChartView({
 
             curve.shape.extent = Math.max(1, edgeLayout.dy);
 
-            var x1 = (dragX1 != null ? dragX1 : n1Layout.x) + n1Layout.dx;
-            var y1 = (dragY1 != null ? dragY1 : n1Layout.y) + edgeLayout.sy + edgeLayout.dy / 2;
-            var x2 = dragX2 != null ? dragX2 : n2Layout.x;
-            var y2 = (dragY2 != null ? dragY2 : n2Layout.y) + edgeLayout.ty + edgeLayout.dy / 2;
+            var x1 = (dragX1 != null ? dragX1 * width : n1Layout.x) + n1Layout.dx;
+            var y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + edgeLayout.sy + edgeLayout.dy / 2;
+            var x2 = dragX2 != null ? dragX2 * width : n2Layout.x;
+            var y2 = (dragY2 != null ? dragY2 * height : n2Layout.y) + edgeLayout.ty + edgeLayout.dy / 2;
             var cpx1 = x1 * (1 - curvature) + x2 * curvature;
             var cpy1 = y1;
             var cpx2 = x1 * curvature + x2 * (1 - curvature);
@@ -126,8 +150,8 @@ export default echarts.extendChartView({
 
             var rect = new graphic.Rect({
                 shape: {
-                    x: dragX != null ? dragX : layout.x,
-                    y: dragY != null ? dragY : layout.y,
+                    x: dragX != null ? dragX * width : layout.x,
+                    y: dragY != null ? dragY * height : layout.y,
                     width: layout.dx,
                     height: layout.dy
                 },
@@ -168,8 +192,8 @@ export default echarts.extendChartView({
                         type: 'dragNode',
                         seriesId: seriesModel.id,
                         dataIndex: nodeData.getRawIndex(dataIndex),
-                        localX: this.shape.x,
-                        localY: this.shape.y
+                        localX: this.shape.x / width,
+                        localY: this.shape.y / height
                     });
                 };
         

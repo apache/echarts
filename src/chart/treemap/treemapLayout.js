@@ -1,3 +1,30 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/*
+* The treemap layout implementation references to the treemap
+* layout of d3.js (d3/src/layout/treemap.js in v3). The use of
+* the source code of this file is also subject to the terms
+* and consitions of its license (BSD-3Clause, see
+* <echarts/src/licenses/LICENSE-d3>).
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
@@ -125,7 +152,8 @@ export default {
 /**
  * Layout treemap with squarify algorithm.
  * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
- * @see https://github.com/mbostock/d3/blob/master/src/layout/treemap.js
+ * The implementation references to the treemap layout of d3.js.
+ * See the license statement at the head of this file.
  *
  * @protected
  * @param {module:echarts/data/Tree~TreeNode} node

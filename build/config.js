@@ -1,8 +1,28 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
 const uglifyPlugin = require('rollup-plugin-uglify');
 const ecRemoveDevPlugin = require('./rollup-plugin-ec-remove-dev');
 const ecLangPlugin = require('./rollup-plugin-ec-lang');
 const {resolve} = require('path');
+const preamble = require('./preamble');
 
 function getPathBasedOnECharts(path) {
     return resolve(__dirname, '../', path);
@@ -39,6 +59,9 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
             //     __DEV__: false
             // },
             'dead_code': true
+        },
+        output: {
+            preamble: preamble.js
         }
     }));
 
@@ -58,9 +81,10 @@ function getPlugins({min, lang, sourcemap, removeDev, addBundleVersion}) {
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
  */
 exports.createECharts = function (opt = {}) {
+    let min = opt.min;
     let srcType = opt.type ? '.' + opt.type : '.all';
     let postfixType = opt.type ? '.' + opt.type : '';
-    let postfixMin = opt.min ? '.min' : '';
+    let postfixMin = min ? '.min' : '';
     let postfixLang = opt.lang ? '-' + opt.lang.toLowerCase() : '';
     let input = opt.input;
     let output = opt.output;

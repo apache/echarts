@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "4.0.4",
+  "version": "4.1.0",
   "description": "A powerful charting and visualization library for browser",
   "keywords": [
     "visualization",
@@ -39,7 +39,7 @@
     "prepublish": "node build/build.js --prepublish"
   },
   "dependencies": {
-    "zrender": "4.0.3"
+    "zrender": "4.0.4"
   },
   "devDependencies": {
     "@babel/core": "7.0.0-beta.31",
@@ -58,6 +58,6 @@
     "rollup": "0.50.0",
     "rollup-plugin-node-resolve": "3.0.0",
     "rollup-plugin-uglify": "2.0.1",
-    "zrender": "4.0.3"
+    "zrender": "4.0.4"
   }
 }

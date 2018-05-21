@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import {makeInner} from '../util/model';
@@ -40,7 +59,14 @@ export function createAxisTicks(axis, tickModel) {
 
 function makeCategoryLabels(axis) {
     var labelModel = axis.getLabelModel();
+    var result = makeCategoryLabelsActually(axis, labelModel);
 
+    return (!labelModel.get('show') || axis.scale.isBlank())
+        ? {labels: [], labelCategoryInterval: result.labelCategoryInterval}
+        : result;
+}
+
+function makeCategoryLabelsActually(axis, labelModel) {
     var labelsCache = getListCache(axis, 'labels');
     var optionLabelInterval = getOptionCategoryInterval(labelModel);
     var result = listCacheGet(labelsCache, optionLabelInterval);
@@ -52,10 +78,7 @@ function makeCategoryLabels(axis) {
     var labels;
     var numericLabelInterval;
 
-    if (!labelModel.get('show') || axis.scale.isBlank()) {
-        labels = [];
-    }
-    else if (zrUtil.isFunction(optionLabelInterval)) {
+    if (zrUtil.isFunction(optionLabelInterval)) {
         labels = makeLabelsByCustomizedCategoryInterval(axis, optionLabelInterval);
     }
     else {
@@ -80,7 +103,7 @@ function makeCategoryTicks(axis, tickModel) {
     }
 
     var ticks;
-    var numericTickInterval = optionTickInterval;
+    var tickCategoryInterval;
 
     // Optimize for the case that large category data and no label displayed,
     // we should not return all ticks.
@@ -88,31 +111,27 @@ function makeCategoryTicks(axis, tickModel) {
         ticks = [];
     }
 
-    if (zrUtil.isFunction(numericTickInterval)) {
-        ticks = makeLabelsByCustomizedCategoryInterval(axis, numericTickInterval, true);
+    if (zrUtil.isFunction(optionTickInterval)) {
+        ticks = makeLabelsByCustomizedCategoryInterval(axis, optionTickInterval, true);
     }
-    // Always use label interval by default.
+    // Always use label interval by default despite label show. Consider this
+    // scenario, Use multiple grid with the xAxis sync, and only one xAxis shows
+    // labels. `splitLine` and `axisTick` should be consistent in this case.
+    else if (optionTickInterval === 'auto') {
+        var labelsResult = makeCategoryLabelsActually(axis, axis.getLabelModel());
+        tickCategoryInterval = labelsResult.labelCategoryInterval;
+        ticks = zrUtil.map(labelsResult.labels, function (labelItem) {
+            return labelItem.tickValue;
+        });
+    }
     else {
-        if (numericTickInterval === 'auto') {
-            var labelsResult = makeCategoryLabels(axis);
-            numericTickInterval = labelsResult.labelCategoryInterval;
-            if (numericTickInterval != null) {
-                ticks = zrUtil.map(labelsResult.labels, function (labelItem) {
-                    return labelItem.tickValue;
-                });
-            }
-            else {
-                numericTickInterval = makeAutoCategoryInterval(axis, true);
-            }
-        }
-        if (ticks == null) {
-            ticks = makeLabelsByNumericCategoryInterval(axis, numericTickInterval, true);
-        }
+        tickCategoryInterval = optionTickInterval;
+        ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
     }
 
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(ticksCache, optionTickInterval, {
-        ticks: ticks, tickCategoryInterval: numericTickInterval
+        ticks: ticks, tickCategoryInterval: tickCategoryInterval
     });
 }
 
@@ -151,16 +170,11 @@ function listCacheSet(cache, key, value) {
     return value;
 }
 
-function makeAutoCategoryInterval(axis, hideLabel) {
-    var cacheKey = hideLabel ? 'tickAutoInterval' : 'autoInterval';
-    var result = inner(axis)[cacheKey];
-    if (result != null) {
-        return result;
-    }
-
-    return (
-        inner(axis)[cacheKey] = axis.calculateCategoryInterval(hideLabel)
-    );
+function makeAutoCategoryInterval(axis) {
+    var result = inner(axis).autoInterval;
+    return result != null
+        ? result
+        : (inner(axis).autoInterval = axis.calculateCategoryInterval());
 }
 
 /**
@@ -168,7 +182,7 @@ function makeAutoCategoryInterval(axis, hideLabel) {
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */
-export function calculateCategoryInterval(axis, hideLabel) {
+export function calculateCategoryInterval(axis) {
     var params = fetchAutoCategoryIntervalCalculationParams(axis);
     var labelFormatter = makeLabelFormatter(axis);
     var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
@@ -203,17 +217,15 @@ export function calculateCategoryInterval(axis, hideLabel) {
         var width = 0;
         var height = 0;
 
-        if (!hideLabel) {
-            // Polar is also calculated in assumptive linear layout here.
-            // Not precise, do not consider align and vertical align
-            // and each distance from axis line yet.
-            var rect = textContain.getBoundingRect(
-                labelFormatter(tickValue), params.font, 'center', 'top'
-            );
-            // Magic number
-            width = rect.width * 1.3;
-            height = rect.height * 1.3;
-        }
+        // Polar is also calculated in assumptive linear layout here.
+        // Not precise, do not consider align and vertical align
+        // and each distance from axis line yet.
+        var rect = textContain.getBoundingRect(
+            labelFormatter(tickValue), params.font, 'center', 'top'
+        );
+        // Magic number
+        width = rect.width * 1.3;
+        height = rect.height * 1.3;
 
         // Min size, void long loop.
         maxW = Math.max(maxW, width, 7);
