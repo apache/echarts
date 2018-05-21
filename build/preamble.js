@@ -160,7 +160,8 @@ const licenseReg = [
     {name: 'LGPL', reg: /LGPL/},
     {name: 'GPL', reg: /GPL/},
     {name: 'Mozilla', reg: /mozilla public/i},
-    {name: 'MIT', reg: /mit license/i}
+    {name: 'MIT', reg: /mit license/i},
+    {name: 'BSD-d3', reg: /Copyright\s+\(c\)\s+2010-2015,\s+Michael\s+Bostock/i}
 ];
 
 function extractLicense(fileStr, fileExt) {
