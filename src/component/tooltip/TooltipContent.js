@@ -217,6 +217,13 @@ TooltipContent.prototype = {
 
         el.style.display = el.innerHTML ?  'block' : 'none';
 
+        // If mouse occsionally move over the tooltip, a mouseout event will be
+        // triggered by canvas, and cuase some unexpectable result like dragging
+        // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
+        // it. Although it is not suppored by IE8~IE10, fortunately it is a rare
+        // scenario.
+        el.style.pointerEvents = this._enterable ? 'auto' : 'none';
+
         this._show = true;
     },
 

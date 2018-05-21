@@ -17,21 +17,29 @@
 * under the License.
 */
 
-/**
- * @file The interactive action of sankey view
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import * as echarts from '../../echarts';
-import '../helper/focusNodeAdjacencyAction';
 
+/**
+ * @payload
+ * @property {number} [seriesIndex]
+ * @property {string} [seriesId]
+ * @property {string} [seriesName]
+ * @property {number} [dataIndex]
+ */
 echarts.registerAction({
-    type: 'dragNode',
-    event: 'dragNode',
-    // here can only use 'update' now, other value is not support in echarts.
-    update: 'update'
-}, function (payload, ecModel) {
-    ecModel.eachComponent({mainType: 'series', subType: 'sankey', query: payload}, function (seriesModel) {
-        seriesModel.setNodePosition(payload.dataIndex, [payload.localX, payload.localY]);
-    });
-});
+    type: 'focusNodeAdjacency',
+    event: 'focusNodeAdjacency',
+    update: 'series:focusNodeAdjacency'
+}, function () {});
+
+/**
+ * @payload
+ * @property {number} [seriesIndex]
+ * @property {string} [seriesId]
+ * @property {string} [seriesName]
+ */
+echarts.registerAction({
+    type: 'unfocusNodeAdjacency',
+    event: 'unfocusNodeAdjacency',
+    update: 'series:unfocusNodeAdjacency'
+}, function () {});

@@ -33,6 +33,7 @@ under the License.
                 margin: 0;
             }
         </style>
+        新疆 should be yellow
         <div id="main"></div>
         <script>
 
@@ -279,7 +280,7 @@ under the License.
                         geo: [{
                             map: 'china',
                             roam: true,
-                            left: 10,
+                            left: 100,
                             width: 300,
                             // zoom: 1.5,
                             scaleLimit: {
@@ -290,12 +291,14 @@ under the License.
                                 name: '新疆',
                                 label: {
                                     normal: {
-                                        show: true
+                                        formatter: 'asdf',
+                                        show: true,
+                                        offset: [100, 200]
                                     }
                                 },
                                 itemStyle: {
                                     normal: {
-                                        areaColor: '#aaa'
+                                        areaColor: 'yellow'
                                     }
                                 }
                             }]
@@ -304,7 +307,7 @@ under the License.
                             roam: true,
                             selectedMode: 'single',
                             left: null,
-                            right: 10,
+                            right: 100,
                             width: 300
                         }],
                         tooltip: {

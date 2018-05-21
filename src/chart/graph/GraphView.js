@@ -132,7 +132,7 @@ export default echarts.extendChartView({
             var itemModel = data.getItemModel(idx);
             // Update draggable
             el.off('drag').off('dragend');
-            var draggable = data.getItemModel(idx).get('draggable');
+            var draggable = itemModel.get('draggable');
             if (draggable) {
                 el.on('drag', function () {
                     if (forceLayout) {

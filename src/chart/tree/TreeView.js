@@ -19,6 +19,7 @@
 
 /**
  * @file  This file used to draw tree view
+ * @author Deqing Li(annong035@gmail.com)
  */
 
 import * as zrUtil from 'zrender/src/core/util';
