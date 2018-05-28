@@ -22,6 +22,8 @@ import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
+import geoSourceManager from '../../coord/geo/geoSourceManager';
+import {getUID} from '../../util/component';
 
 function getFixedItemStyle(model, scale) {
     var itemStyle = model.getItemStyle();
@@ -36,17 +38,17 @@ function getFixedItemStyle(model, scale) {
     return itemStyle;
 }
 
-function updateMapSelectHandler(mapDraw, mapOrGeoModel, group, api, fromView) {
-    group.off('click');
-    group.off('mousedown');
+function updateMapSelectHandler(mapDraw, mapOrGeoModel, regionsGroup, api, fromView) {
+    regionsGroup.off('click');
+    regionsGroup.off('mousedown');
 
     if (mapOrGeoModel.get('selectedMode')) {
 
-        group.on('mousedown', function () {
+        regionsGroup.on('mousedown', function () {
             mapDraw._mouseDownFlag = true;
         });
 
-        group.on('click', function (e) {
+        regionsGroup.on('click', function (e) {
             if (!mapDraw._mouseDownFlag) {
                 return;
             }
@@ -73,14 +75,14 @@ function updateMapSelectHandler(mapDraw, mapOrGeoModel, group, api, fromView) {
 
             api.dispatchAction(action);
 
-            updateMapSelected(mapOrGeoModel, group);
+            updateMapSelected(mapOrGeoModel, regionsGroup);
         });
     }
 }
 
-function updateMapSelected(mapOrGeoModel, group) {
+function updateMapSelected(mapOrGeoModel, regionsGroup) {
     // FIXME
-    group.eachChild(function (otherRegionEl) {
+    regionsGroup.eachChild(function (otherRegionEl) {
         zrUtil.each(otherRegionEl.__regions, function (region) {
             otherRegionEl.trigger(mapOrGeoModel.isSelected(region.name) ? 'emphasis' : 'normal');
         });
@@ -95,6 +97,12 @@ function updateMapSelected(mapOrGeoModel, group) {
 function MapDraw(api, updateGroup) {
 
     var group = new graphic.Group();
+
+    /**
+     * @type {string}
+     * @private
+     */
+    this.uid = getUID('ec_map_draw');
 
     /**
      * @type {module:echarts/component/helper/RoamController}
@@ -127,6 +135,26 @@ function MapDraw(api, updateGroup) {
      * @type {booelan}
      */
     this._mouseDownFlag;
+
+    /**
+     * @type {string}
+     */
+    this._mapName;
+
+    /**
+     * @type {boolean}
+     */
+    this._initialized;
+
+    /**
+     * @type {module:zrender/container/Group}
+     */
+    group.add(this._regionsGroup = new graphic.Group());
+
+    /**
+     * @type {module:zrender/container/Group}
+     */
+    group.add(this._backgroundGroup = new graphic.Group());
 }
 
 MapDraw.prototype = {
@@ -148,23 +176,26 @@ MapDraw.prototype = {
 
         var geo = mapOrGeoModel.coordinateSystem;
 
+        this._updateBackground(geo);
+
+        var regionsGroup = this._regionsGroup;
         var group = this.group;
 
         var scale = geo.scale;
-        var groupNewProp = {
+        var transform = {
             position: geo.position,
             scale: scale
         };
 
         // No animation when first draw or in action
-        if (!group.childAt(0) || payload) {
-            group.attr(groupNewProp);
+        if (!regionsGroup.childAt(0) || payload) {
+            group.attr(transform);
         }
         else {
-            graphic.updateProps(group, groupNewProp, mapOrGeoModel);
+            graphic.updateProps(group, transform, mapOrGeoModel);
         }
 
-        group.removeAll();
+        regionsGroup.removeAll();
 
         var itemStyleAccessPath = ['itemStyle'];
         var hoverItemStyleAccessPath = ['emphasis', 'itemStyle'];
@@ -306,20 +337,35 @@ MapDraw.prototype = {
                 {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')}
             );
 
-            group.add(regionGroup);
+            regionsGroup.add(regionGroup);
         });
 
         this._updateController(mapOrGeoModel, ecModel, api);
 
-        updateMapSelectHandler(this, mapOrGeoModel, group, api, fromView);
+        updateMapSelectHandler(this, mapOrGeoModel, regionsGroup, api, fromView);
 
-        updateMapSelected(mapOrGeoModel, group);
+        updateMapSelected(mapOrGeoModel, regionsGroup);
     },
 
     remove: function () {
-        this.group.removeAll();
+        this._regionsGroup.removeAll();
+        this._backgroundGroup.removeAll();
         this._controller.dispose();
+        this._mapName && geoSourceManager.removeGraphic(this._mapName, this.uid);
+        this._mapName = null;
         this._controllerHost = {};
+    },
+
+    _updateBackground: function (geo) {
+        var mapName = geo.map;
+
+        if (this._mapName !== mapName) {
+            zrUtil.each(geoSourceManager.makeGraphic(mapName, this.uid), function (root) {
+                this._backgroundGroup.add(root);
+            }, this);
+        }
+
+        this._mapName = mapName;
     },
 
     _updateController: function (mapOrGeoModel, ecModel, api) {
@@ -366,9 +412,8 @@ MapDraw.prototype = {
             }));
 
             if (this._updateGroup) {
-                var group = this.group;
-                var scale = group.scale;
-                group.traverse(function (el) {
+                var scale = this.group.scale;
+                this._regionsGroup.traverse(function (el) {
                     if (el.type === 'text') {
                         el.attr('scale', [1 / scale[0], 1 / scale[1]]);
                     }
