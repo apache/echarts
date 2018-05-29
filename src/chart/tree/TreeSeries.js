@@ -92,6 +92,14 @@ export default SeriesModel.extend({
         return orient;
     },
 
+    setZoom: function (zoom) {
+        this.option.zoom = zoom;
+    },
+
+    setCenter: function (center) {
+        this.option.center = center;
+    },
+
     /**
      * @override
      * @param {number} dataIndex

@@ -18,7 +18,6 @@
 */
 
 import * as echarts from '../echarts';
-import {updateCenterAndZoom} from '../action/roamHelper';
 
 import './tree/TreeSeries';
 import './tree/TreeView';
@@ -29,21 +28,3 @@ import treeLayout from './tree/treeLayout';
 
 echarts.registerVisual(visualSymbol('tree', 'circle'));
 echarts.registerLayout(treeLayout);
-
-echarts.registerAction({
-    type: 'treeRoam',
-    event: 'treeRoam',
-    update: 'none'
-}, function (payload, ecModel) {
-    ecModel.eachComponent({mainType: 'series', query: payload}, function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-
-        var res = updateCenterAndZoom(coordSys, payload);
-
-        seriesModel.setCenter
-            && seriesModel.setCenter(res.center);
-
-        seriesModel.setZoom
-            && seriesModel.setZoom(res.zoom);
-    });
-});

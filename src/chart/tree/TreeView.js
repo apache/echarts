@@ -147,9 +147,12 @@ export default echarts.extendChartView({
 
     _updateViewCoordSys: function (seriesModel) {
         var data = seriesModel.getData();
-        var points = data.mapArray(function (idx) {
-            var layout = data.getItemLayout(idx) || {};
-            return [+layout.x, +layout.y];
+        var points = [];
+        data.each(function (idx) {
+            var layout = data.getItemLayout(idx);
+            if (layout && !isNaN(layout.x) && !isNaN(layout.y)) {
+                points.push([+layout.x, +layout.y]);
+            }
         });
         var min = [];
         var max = [];
@@ -171,6 +174,11 @@ export default echarts.extendChartView({
 
         viewCoordSys.setCenter(seriesModel.get('center'));
         viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        this.group.attr({
+            position: viewCoordSys.position,
+            scale: viewCoordSys.scale
+        });
 
         this._viewCoordSys = viewCoordSys;
     },
