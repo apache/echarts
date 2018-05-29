@@ -185,6 +185,8 @@ function mousewheel(e) {
     var shouldMove = checkKeyBinding(this, 'moveOnMouseWheel', e);
     var wheelDelta = e.wheelDelta;
     var absWheelDeltaDelta = Math.abs(wheelDelta);
+    var originX = e.offsetX;
+    var originY = e.offsetY;
 
     // wheelDelta maybe -0 in chrome mac.
     if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
@@ -203,16 +205,19 @@ function mousewheel(e) {
         // wheelDelta of mouse wheel is bigger than touch pad.
         var factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
         var scale = wheelDelta > 0 ? factor : 1 / factor;
-        zoom.call(this, e, scale, e.offsetX, e.offsetY);
+        checkPointerAndTrigger(
+            'zoom', this, e, {scale: scale, originX: originX, originY: originY}
+        );
     }
 
     if (shouldMove) {
         // FIXME: Should do more test in different environment.
         var absDelta = Math.abs(wheelDelta);
         // wheelDelta of mouse wheel is bigger than touch pad.
-        var scrollDelta = absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05;
-        var sign = wheelDelta > 0 ? 1 : -1;
-        this.trigger('scrollMove', {scrollDelta: sign * scrollDelta});
+        var scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
+        checkPointerAndTrigger(
+            'scrollMove', this, e, {scrollDelta: scrollDelta, originX: originX, originY: originY}
+        );
     }
 }
 
@@ -221,17 +226,21 @@ function pinch(e) {
         return;
     }
     var scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
-    zoom.call(this, e, scale, e.pinchX, e.pinchY);
+    checkPointerAndTrigger(
+        'zoom', this, e, {scale: scale, originX: e.pinchX, originY: e.pinchY}
+    );
 }
 
-function zoom(e, scale, originX, originY) {
-    if (this.pointerChecker && this.pointerChecker(e, originX, originY)) {
+function checkPointerAndTrigger(eventName, controller, e, contollerEvent) {
+    if (controller.pointerChecker
+        && controller.pointerChecker(e, contollerEvent.originX, contollerEvent.originY)
+    ) {
         // When mouse is out of roamController rect,
         // default befavoius should not be be disabled, otherwise
         // page sliding is disabled, contrary to expectation.
         eventTool.stop(e.event);
 
-        this.trigger('zoom', {scale: scale, originX: originX, originY: originY});
+        controller.trigger(eventName, contollerEvent);
     }
 }
 
