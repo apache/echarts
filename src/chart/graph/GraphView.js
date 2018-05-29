@@ -335,7 +335,7 @@ export default echarts.extendChartView({
                 api.dispatchAction({
                     seriesId: seriesModel.id,
                     type: 'graphRoam',
-                    zoom:  zoom,
+                    zoom: zoom,
                     originX: mouseX,
                     originY: mouseY
                 });

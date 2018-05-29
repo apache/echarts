@@ -27,6 +27,11 @@ import * as graphic from '../../util/graphic';
 import SymbolClz from '../helper/Symbol';
 import {radialCoordinate} from './layoutHelper';
 import * as echarts from '../../echarts';
+import * as bbox from 'zrender/src/core/bbox';
+import View from '../../coord/View';
+import * as roamHelper from '../../component/helper/roamHelper';
+import RoamController from '../../component/helper/RoamController';
+import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 
 export default echarts.extendChartView({
 
@@ -53,6 +58,9 @@ export default echarts.extendChartView({
         this._mainGroup = new graphic.Group();
 
         this.group.add(this._mainGroup);
+
+        this._controller = new RoamController(api.getZr());
+        this._controllerHost = {target: this.group};
     },
 
     render: function (seriesModel, ecModel, api, payload) {
@@ -71,6 +79,9 @@ export default echarts.extendChartView({
         else {
             group.attr('position', [layoutInfo.x, layoutInfo.y]);
         }
+
+        this._updateViewCoordSys(seriesModel);
+        this._updateController(seriesModel, ecModel, api);
 
         var oldData = this._data;
 
@@ -115,6 +126,10 @@ export default echarts.extendChartView({
             })
             .execute();
 
+        this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
+
+        this._updateNodeAndLinkScale(seriesModel);
+
         if (seriesScope.expandAndCollapse === true) {
             data.eachItemGraphicEl(function (el, dataIndex) {
                 el.off('click').on('click', function () {
@@ -130,7 +145,106 @@ export default echarts.extendChartView({
         this._data = data;
     },
 
-    dispose: function () {},
+    _updateViewCoordSys: function (seriesModel) {
+        var data = seriesModel.getData();
+        var points = data.mapArray(function (idx) {
+            var layout = data.getItemLayout(idx) || {};
+            return [+layout.x, +layout.y];
+        });
+        var min = [];
+        var max = [];
+        bbox.fromPoints(points, min, max);
+        // If width or height is 0
+        if (max[0] - min[0] === 0) {
+            max[0] += 1;
+            min[0] -= 1;
+        }
+        if (max[1] - min[1] === 0) {
+            max[1] += 1;
+            min[1] -= 1;
+        }
+
+        var viewCoordSys = seriesModel.coordinateSystem = new View();
+        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+
+        viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
+
+        viewCoordSys.setCenter(seriesModel.get('center'));
+        viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        this._viewCoordSys = viewCoordSys;
+    },
+
+    _updateController: function (seriesModel, ecModel, api) {
+        var controller = this._controller;
+        var controllerHost = this._controllerHost;
+        var group = this.group;
+        controller.setPointerChecker(function (e, x, y) {
+            var rect = group.getBoundingRect();
+            rect.applyTransform(group.transform);
+            return rect.contain(x, y)
+                && !onIrrelevantElement(e, api, seriesModel);
+        });
+
+        controller.enable(seriesModel.get('roam'));
+        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
+        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
+
+        controller.off('pan').off('zoom')
+            .on('pan', function (dx, dy) {
+                roamHelper.updateViewOnPan(controllerHost, dx, dy);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'treeRoam',
+                    dx: dx,
+                    dy: dy
+                });
+            }, this)
+            .on('zoom', function (zoom, mouseX, mouseY) {
+                roamHelper.updateViewOnZoom(controllerHost, zoom, mouseX, mouseY);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'treeRoam',
+                    zoom: zoom,
+                    originX: mouseX,
+                    originY: mouseY
+                });
+                this._updateNodeAndLinkScale(seriesModel);
+            }, this);
+    },
+
+    _updateNodeAndLinkScale: function (seriesModel) {
+        var data = seriesModel.getData();
+
+        var nodeScale = this._getNodeGlobalScale(seriesModel);
+        var invScale = [nodeScale, nodeScale];
+
+        data.eachItemGraphicEl(function (el, idx) {
+            el.attr('scale', invScale);
+        });
+    },
+
+    _getNodeGlobalScale: function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys.type !== 'view') {
+            return 1;
+        }
+
+        var nodeScaleRatio = this._nodeScaleRatio;
+
+        var groupScale = coordSys.scale;
+        var groupZoom = (groupScale && groupScale[0]) || 1;
+        // Scale node when zoom changes
+        var roamZoom = coordSys.getZoom();
+        var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
+
+        return nodeScale / groupZoom;
+    },
+
+    dispose: function () {
+        this._controller && this._controller.dispose();
+        this._controllerHost = {};
+    },
 
     remove: function () {
         this._mainGroup.removeAll();
@@ -259,7 +373,7 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         if (!edge) {
             edge = symbolEl.__edge = new graphic.BezierCurve({
                 shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
-                style: zrUtil.defaults({opacity: 0}, seriesScope.lineStyle)
+                style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
             });
         }
 
