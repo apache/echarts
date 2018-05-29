@@ -199,23 +199,23 @@ export default echarts.extendChartView({
         controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
 
         controller.off('pan').off('zoom')
-            .on('pan', function (dx, dy) {
-                roamHelper.updateViewOnPan(controllerHost, dx, dy);
+            .on('pan', function (e) {
+                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
                 api.dispatchAction({
                     seriesId: seriesModel.id,
                     type: 'treeRoam',
-                    dx: dx,
-                    dy: dy
+                    dx: e.dx,
+                    dy: e.dy
                 });
             }, this)
-            .on('zoom', function (zoom, mouseX, mouseY) {
-                roamHelper.updateViewOnZoom(controllerHost, zoom, mouseX, mouseY);
+            .on('zoom', function (e) {
+                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
                 api.dispatchAction({
                     seriesId: seriesModel.id,
                     type: 'treeRoam',
-                    zoom: zoom,
-                    originX: mouseX,
-                    originY: mouseY
+                    zoom: e.scale,
+                    originX: e.originX,
+                    originY: e.originY
                 });
                 this._updateNodeAndLinkScale(seriesModel);
             }, this);
