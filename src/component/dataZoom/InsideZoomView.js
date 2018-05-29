@@ -63,6 +63,11 @@ var InsideZoomView = DataZoomView.extend({
                 var coordModel = coordInfo.model;
                 var dataZoomOption = dataZoomModel.option;
 
+                var getRange = {};
+                zrUtil.each(['pan', 'zoom', 'scrollMove'], function (eventName) {
+                    getRange[eventName] = bind(roamHandlers[eventName], this, coordInfo, coordSysName);
+                }, this);
+
                 roams.register(
                     api,
                     {
@@ -73,8 +78,7 @@ var InsideZoomView = DataZoomView.extend({
                         },
                         dataZoomId: dataZoomModel.id,
                         throttleRate: dataZoomModel.get('throttle', true),
-                        panGetRange: bind(this._onPan, this, coordInfo, coordSysName),
-                        zoomGetRange: bind(this._onZoom, this, coordInfo, coordSysName),
+                        getRange: getRange,
                         zoomLock: dataZoomOption.zoomLock,
                         disabled: dataZoomOption.disabled,
                         roamControllerOpt: {
@@ -97,42 +101,16 @@ var InsideZoomView = DataZoomView.extend({
         roams.unregister(this.api, this.dataZoomModel.id);
         InsideZoomView.superApply(this, 'dispose', arguments);
         this._range = null;
-    },
+    }
+
+});
+
+var roamHandlers = {
 
     /**
-     * @private
+     * @this {module:echarts/component/dataZoom/InsideZoomView}
      */
-    _onPan: function (coordInfo, coordSysName, controller, e) {
-        var lastRange = this._range;
-        var range = lastRange.slice();
-
-        // Calculate transform by the first axis.
-        var axisModel = coordInfo.axisModels[0];
-        if (!axisModel) {
-            return;
-        }
-
-        var directionInfo = getDirectionInfo[coordSysName](
-            [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordInfo
-        );
-
-        var percentDelta = directionInfo.signal
-            * (range[1] - range[0])
-            * directionInfo.pixel / directionInfo.pixelLength;
-
-        sliderMove(percentDelta, range, [0, 100], 'all');
-
-        this._range = range;
-
-        if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
-            return range;
-        }
-    },
-
-    /**
-     * @private
-     */
-    _onZoom: function (coordInfo, coordSysName, controller, e) {
+    zoom: function (coordInfo, coordSysName, controller, e) {
         var lastRange = this._range;
         var range = lastRange.slice();
 
@@ -165,9 +143,53 @@ var InsideZoomView = DataZoomView.extend({
         if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
             return range;
         }
-    }
+    },
 
-});
+    /**
+     * @this {module:echarts/component/dataZoom/InsideZoomView}
+     */
+    pan: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e) {
+        var directionInfo = getDirectionInfo[coordSysName](
+            [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordInfo
+        );
+
+        return directionInfo.signal
+            * (range[1] - range[0])
+            * directionInfo.pixel / directionInfo.pixelLength;
+    }),
+
+    /**
+     * @this {module:echarts/component/dataZoom/InsideZoomView}
+     */
+    scrollMove: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e) {
+        return (range[1] - range[0]) * e.scrollDelta;
+    })
+};
+
+function makeMover(getPercentDelta) {
+    return function (coordInfo, coordSysName, controller, e) {
+        var lastRange = this._range;
+        var range = lastRange.slice();
+
+        // Calculate transform by the first axis.
+        var axisModel = coordInfo.axisModels[0];
+        if (!axisModel) {
+            return;
+        }
+
+        var percentDelta = getPercentDelta(
+            range, axisModel, coordInfo, coordSysName, controller, e
+        );
+
+        sliderMove(percentDelta, range, [0, 100], 'all');
+
+        this._range = range;
+
+        if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
+            return range;
+        }
+    };
+}
 
 var getDirectionInfo = {
 

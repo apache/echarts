@@ -210,8 +210,9 @@ function mousewheel(e) {
         // FIXME: Should do more test in different environment.
         var absDelta = Math.abs(wheelDelta);
         // wheelDelta of mouse wheel is bigger than touch pad.
-        var scrollDelta = absDelta > 3 ? 1.4 : absDelta > 1 ? 1.2 : 1.1;
-        this.trigger('scrollMove', {scrollDelta: scrollDelta});
+        var scrollDelta = absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05;
+        var sign = wheelDelta > 0 ? 1 : -1;
+        this.trigger('scrollMove', {scrollDelta: sign * scrollDelta});
     }
 }
 
