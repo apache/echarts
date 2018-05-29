@@ -1,2 +1,0 @@
-Main-Class: RunRat
-Class-Path: ./ ./javassist.jar

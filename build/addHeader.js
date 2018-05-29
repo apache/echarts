@@ -17,18 +17,16 @@
 * under the License.
 */
 
-/**
- * For consistency, we use `.rat-excludes` for both Apache Rat and this tool.
- * In the `.rat-excludes`, each line is a pattern in RegExp.
- * all relative path (based on the echarts base directory) is tected.
- * The pattern should match the relative path completely.
- */
 
 const fs = require('fs');
 const preamble = require('./preamble');
 const pathTool = require('path');
 const {color} = require('zrender/build/helper');
-const excludesPath = pathTool.join(__dirname, '../.rat-excludes');
+
+// In the `.headerignore`, each line is a pattern in RegExp.
+// all relative path (based on the echarts base directory) is tested.
+// The pattern should match the relative path completely.
+const excludesPath = pathTool.join(__dirname, '../.headerignore');
 const ecBasePath = pathTool.join(__dirname, '../');
 
 const isVerbose = process.argv[2] === '--verbose';

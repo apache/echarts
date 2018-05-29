@@ -1,19 +1,17 @@
 # Only support regexp, testing against each relative file path
 # based on the echart base directory. And the pattern should
 # match the relative path completely.
-# Do not use wildcard. Although Apache Rat v0.12 implemented
-# it, it probably does not do it right, where patterns are
-# parsed as Regex firstly but do not catch the exception.
 
 node_modules
 .*\.git
 .*\.github
 .*\.editorconfig
 .*\.gitignore
-.*\.jshintrc$
+.*\.jshintrc
 .*\.jshintrc-dist
 .*\.npmignore
-.*\.rat-excludes
+.*\.ratignore
+.*\.headerignore
 .*\.DS_Store
 .*\.idea
 .*rat\.iml
@@ -24,6 +22,7 @@ DISCLAIMER
 NOTICE
 KEYS
 LICENSE
+LICENSE-.+
 licenses
 map/js
 map/json
@@ -36,8 +35,6 @@ test/lib/countup\.js
 .*jquery\.min\.js
 .*rollup\.browser\.js
 .*configure
-.*IAxisPointer
-.*ICoordinateSystem
 .+\.json
 .+\.map
 .+\.gexf
