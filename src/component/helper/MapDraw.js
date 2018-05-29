@@ -389,26 +389,26 @@ MapDraw.prototype = {
             return action;
         }
 
-        controller.off('pan').on('pan', function (dx, dy) {
+        controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
-            roamHelper.updateViewOnPan(controllerHost, dx, dy);
+            roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
-                dx: dx,
-                dy: dy
+                dx: e.dx,
+                dy: e.dy
             }));
         }, this);
 
-        controller.off('zoom').on('zoom', function (zoom, mouseX, mouseY) {
+        controller.off('zoom').on('zoom', function (e) {
             this._mouseDownFlag = false;
 
-            roamHelper.updateViewOnZoom(controllerHost, zoom, mouseX, mouseY);
+            roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
-                zoom: zoom,
-                originX: mouseX,
-                originY: mouseY
+                zoom: e.scale,
+                originX: e.originX,
+                originY: e.originY
             }));
 
             if (this._updateGroup) {

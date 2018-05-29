@@ -136,8 +136,15 @@ function giveStore(api) {
 
 function createController(api, newRecord) {
     var controller = new RoamController(api.getZr());
-    controller.on('pan', curry(onPan, newRecord));
-    controller.on('zoom', curry(onZoom, newRecord));
+
+    zrUtil.each(['pan', 'zoom', 'scrollMove'], function (eventName) {
+        controller.on(eventName, function (event) {
+            wrapAndDispatch(newRecord, function (info) {
+                var methodName = eventName + 'GetRange';
+                return info[methodName] && info[methodName](newRecord.controller, event);
+            });
+        });
+    });
 
     return controller;
 }
@@ -151,17 +158,23 @@ function cleanStore(store) {
     });
 }
 
-function onPan(record, dx, dy, oldX, oldY, newX, newY) {
-    wrapAndDispatch(record, function (info) {
-        return info.panGetRange(record.controller, dx, dy, oldX, oldY, newX, newY);
-    });
-}
+// function onPan(record, dx, dy, oldX, oldY, newX, newY) {
+//     wrapAndDispatch(record, function (info) {
+//         return info.panGetRange(record.controller, dx, dy, oldX, oldY, newX, newY);
+//     });
+// }
 
-function onZoom(record, scale, mouseX, mouseY) {
-    wrapAndDispatch(record, function (info) {
-        return info.zoomGetRange(record.controller, scale, mouseX, mouseY);
-    });
-}
+// function onZoom(record, scale, mouseX, mouseY) {
+//     wrapAndDispatch(record, function (info) {
+//         return info.zoomGetRange(record.controller, scale, mouseX, mouseY);
+//     });
+// }
+
+// function onScrollMove(record, scrollDelta) {
+//     wrapAndDispatch(record, function (info) {
+//         return info.scrollMoveGetRange(record.controller, scrollDelta);
+//     });
+// }
 
 function wrapAndDispatch(record, getRange) {
     var batch = [];

@@ -31,6 +31,7 @@ export default DataZoomModel.extend({
         zoomLock: false,   // Whether disable zoom but only pan.
         zoomOnMouseWheel: true, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
         moveOnMouseMove: true,   // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
+        moveOnMouseWheel: false, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
         preventDefaultMouseMove: true
     }
 });

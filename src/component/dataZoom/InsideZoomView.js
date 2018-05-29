@@ -80,6 +80,7 @@ var InsideZoomView = DataZoomView.extend({
                         roamControllerOpt: {
                             zoomOnMouseWheel: dataZoomOption.zoomOnMouseWheel,
                             moveOnMouseMove: dataZoomOption.moveOnMouseMove,
+                            moveOnMouseWheel: dataZoomOption.moveOnMouseWheel,
                             preventDefaultMouseMove: dataZoomOption.preventDefaultMouseMove
                         }
                     }
@@ -101,7 +102,7 @@ var InsideZoomView = DataZoomView.extend({
     /**
      * @private
      */
-    _onPan: function (coordInfo, coordSysName, controller, dx, dy, oldX, oldY, newX, newY) {
+    _onPan: function (coordInfo, coordSysName, controller, e) {
         var lastRange = this._range;
         var range = lastRange.slice();
 
@@ -112,7 +113,7 @@ var InsideZoomView = DataZoomView.extend({
         }
 
         var directionInfo = getDirectionInfo[coordSysName](
-            [oldX, oldY], [newX, newY], axisModel, controller, coordInfo
+            [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordInfo
         );
 
         var percentDelta = directionInfo.signal
@@ -131,7 +132,7 @@ var InsideZoomView = DataZoomView.extend({
     /**
      * @private
      */
-    _onZoom: function (coordInfo, coordSysName, controller, scale, mouseX, mouseY) {
+    _onZoom: function (coordInfo, coordSysName, controller, e) {
         var lastRange = this._range;
         var range = lastRange.slice();
 
@@ -142,7 +143,7 @@ var InsideZoomView = DataZoomView.extend({
         }
 
         var directionInfo = getDirectionInfo[coordSysName](
-            null, [mouseX, mouseY], axisModel, controller, coordInfo
+            null, [e.originX, e.originY], axisModel, controller, coordInfo
         );
         var percentPoint = (
             directionInfo.signal > 0
@@ -150,7 +151,7 @@ var InsideZoomView = DataZoomView.extend({
                 : (directionInfo.pixel - directionInfo.pixelStart)
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
-        scale = Math.max(1 / scale, 0);
+        var scale = Math.max(1 / e.scale, 0);
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 

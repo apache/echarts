@@ -76,6 +76,7 @@ function RoamController(zr) {
      * @param {Object} [opt]
      * @param {Object} [opt.zoomOnMouseWheel=true]
      * @param {Object} [opt.moveOnMouseMove=true]
+     * @param {Object} [opt.moveOnMouseWheel=false]
      * @param {Object} [opt.preventDefaultMouseMove=true] When pan.
      */
     this.enable = function (controlType, opt) {
@@ -86,6 +87,7 @@ function RoamController(zr) {
         this._opt = zrUtil.defaults(zrUtil.clone(opt) || {}, {
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
+            moveOnMouseWheel: false,
             preventDefaultMouseMove: true
         });
 
@@ -169,7 +171,7 @@ function mousemove(e) {
 
     this._opt.preventDefaultMouseMove && eventTool.stop(e.event);
 
-    this.trigger('pan', dx, dy, oldX, oldY, x, y);
+    this.trigger('pan', {dx: dx, dy: dy, oldX: oldX, oldY: oldY, newX: x, newY: y});
 }
 
 function mouseup(e) {
@@ -179,34 +181,56 @@ function mouseup(e) {
 }
 
 function mousewheel(e) {
+    var shouldZoom = checkKeyBinding(this, 'zoomOnMouseWheel', e);
+    var shouldMove = checkKeyBinding(this, 'moveOnMouseWheel', e);
+    var wheelDelta = e.wheelDelta;
+    var absWheelDeltaDelta = Math.abs(wheelDelta);
+
     // wheelDelta maybe -0 in chrome mac.
-    if (!checkKeyBinding(this, 'zoomOnMouseWheel', e) || e.wheelDelta === 0) {
+    if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
         return;
     }
+    // console.log(wheelDelta);
+    if (shouldZoom) {
+        // Convenience:
+        // Mac and VM Windows on Mac: scroll up: zoom out.
+        // Windows: scroll up: zoom in.
 
-    // Convenience:
-    // Mac and VM Windows on Mac: scroll up: zoom out.
-    // Windows: scroll up: zoom in.
-    var zoomDelta = e.wheelDelta > 0 ? 1.1 : 1 / 1.1;
-    zoom.call(this, e, zoomDelta, e.offsetX, e.offsetY);
+        // FIXME: Should do more test in different environment.
+        // wheelDelta is too complicated in difference nvironment
+        // (https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel),
+        // although it has been normallized by zrender.
+        // wheelDelta of mouse wheel is bigger than touch pad.
+        var factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
+        var scale = wheelDelta > 0 ? factor : 1 / factor;
+        zoom.call(this, e, scale, e.offsetX, e.offsetY);
+    }
+
+    if (shouldMove) {
+        // FIXME: Should do more test in different environment.
+        var absDelta = Math.abs(wheelDelta);
+        // wheelDelta of mouse wheel is bigger than touch pad.
+        var scrollDelta = absDelta > 3 ? 1.4 : absDelta > 1 ? 1.2 : 1.1;
+        this.trigger('scrollMove', {scrollDelta: scrollDelta});
+    }
 }
 
 function pinch(e) {
     if (interactionMutex.isTaken(this._zr, 'globalPan')) {
         return;
     }
-    var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
-    zoom.call(this, e, zoomDelta, e.pinchX, e.pinchY);
+    var scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
+    zoom.call(this, e, scale, e.pinchX, e.pinchY);
 }
 
-function zoom(e, zoomDelta, zoomX, zoomY) {
-    if (this.pointerChecker && this.pointerChecker(e, zoomX, zoomY)) {
+function zoom(e, scale, originX, originY) {
+    if (this.pointerChecker && this.pointerChecker(e, originX, originY)) {
         // When mouse is out of roamController rect,
         // default befavoius should not be be disabled, otherwise
         // page sliding is disabled, contrary to expectation.
         eventTool.stop(e.event);
 
-        this.trigger('zoom', zoomDelta, zoomX, zoomY);
+        this.trigger('zoom', {scale: scale, originX: originX, originY: originY});
     }
 }
 
