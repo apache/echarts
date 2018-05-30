@@ -61,7 +61,6 @@ var InsideZoomView = DataZoomView.extend({
 
             zrUtil.each(coordInfoList, function (coordInfo) {
                 var coordModel = coordInfo.model;
-                var dataZoomOption = dataZoomModel.option;
 
                 var getRange = {};
                 zrUtil.each(['pan', 'zoom', 'scrollMove'], function (eventName) {
@@ -77,16 +76,8 @@ var InsideZoomView = DataZoomView.extend({
                             return coordModel.coordinateSystem.containPoint([x, y]);
                         },
                         dataZoomId: dataZoomModel.id,
-                        throttleRate: dataZoomModel.get('throttle', true),
-                        getRange: getRange,
-                        zoomLock: dataZoomOption.zoomLock,
-                        disabled: dataZoomOption.disabled,
-                        roamControllerOpt: {
-                            zoomOnMouseWheel: dataZoomOption.zoomOnMouseWheel,
-                            moveOnMouseMove: dataZoomOption.moveOnMouseMove,
-                            moveOnMouseWheel: dataZoomOption.moveOnMouseWheel,
-                            preventDefaultMouseMove: dataZoomOption.preventDefaultMouseMove
-                        }
+                        dataZoomModel: dataZoomModel,
+                        getRange: getRange
                     }
                 );
             }, this);

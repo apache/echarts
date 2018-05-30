@@ -46,12 +46,83 @@ under the License.
             }
         </style>
 
+        <div class="chart" id="mainA"></div>
+
         <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
         <div class="chart" id="main0"></div>
         <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
         <div class="chart" id="main1"></div>
         <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
         <div class="chart" id="main2"></div>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var dataCount = 200;
+                var data = [];
+                var d = +new Date(2015, 3, 13);
+                var oneDay = 3600 * 1000;
+                for (var i = 0; i < dataCount; i++) {
+                    data.push([d, Math.random()]);
+                    d += 2.5 * oneDay;
+                }
+
+                var startValue = '2015-04-24T04:21';
+                var endValue = '2015-04-24T10:12';
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        startValue: startValue,
+                        endValue: endValue
+                    }, {
+                        type: 'inside',
+                        startValue: startValue,
+                        endValue: endValue
+                    }],
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: 60,
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'time',
+                        splitNumber: 7
+                    },
+                    yAxis: {},
+                    series: [
+                        {
+                            type:'line',
+                            data: data
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'mainA', {
+                    title: 'xAxis (type: time) should be 1 hour interval',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
 
 
         <script>

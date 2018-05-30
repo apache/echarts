@@ -103,23 +103,21 @@ under the License.
                     dataZoom: [
                         {
                             type: 'inside',
+                            zoomOnMouseWheel: false,
+                            xAxisIndex: 0,
+                            // zoomLock: true,
+                            start: 30,
+                            end: 40
+                        },
+                        {
+                            type: 'inside',
                             yAxisIndex: 0,
                             zoomOnMouseWheel: false,
-                            // moveOnMouseMove: 'alt',
                             moveOnMouseWheel: true,
                             // zoomLock: true,
                             start: 30,
                             end: 40
                         },
-                        // {
-                        //     type: 'inside',
-                        //     // zoomOnMouseWheel: false,
-                        //     // moveOnMouseMove: 'alt',
-                        //     yAxisIndex: 0,
-                        //     zoomLock: true,
-                        //     start: 30,
-                        //     end: 40
-                        // },
                         {
                             type: 'slider',
                             start: 30,
@@ -133,7 +131,7 @@ under the License.
                 };
 
                 testHelper.create(echarts, 'd3', {
-                    title: 'Simulate browser scroll bar',
+                    title: 'Simulate browser scroll bar on y scroll',
                     option: option,
                     height: 600
                 });

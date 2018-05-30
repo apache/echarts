@@ -74,9 +74,9 @@ function RoamController(zr) {
      *                          which can be null/undefined or true/false
      *                          or 'pan/move' or 'zoom'/'scale'
      * @param {Object} [opt]
-     * @param {Object} [opt.zoomOnMouseWheel=true]
-     * @param {Object} [opt.moveOnMouseMove=true]
-     * @param {Object} [opt.moveOnMouseWheel=false]
+     * @param {Object} [opt.zoomOnMouseWheel=true] The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+     * @param {Object} [opt.moveOnMouseMove=true] The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+     * @param {Object} [opt.moveOnMouseWheel=false] The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
      * @param {Object} [opt.preventDefaultMouseMove=true] When pan.
      */
     this.enable = function (controlType, opt) {
@@ -87,6 +87,7 @@ function RoamController(zr) {
         this._opt = zrUtil.defaults(zrUtil.clone(opt) || {}, {
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
+            // By default, wheel do not trigger move.
             moveOnMouseWheel: false,
             preventDefaultMouseMove: true
         });
@@ -149,7 +150,7 @@ function mousedown(e) {
 
 function mousemove(e) {
     if (eventTool.notLeftMouse(e)
-        || !checkKeyBinding(this, 'moveOnMouseMove', e)
+        || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
         || !this._dragging
         || e.gestureEvent === 'pinch'
         || interactionMutex.isTaken(this._zr, 'globalPan')
@@ -171,7 +172,9 @@ function mousemove(e) {
 
     this._opt.preventDefaultMouseMove && eventTool.stop(e.event);
 
-    this.trigger('pan', {dx: dx, dy: dy, oldX: oldX, oldY: oldY, newX: x, newY: y});
+    trigger(this, 'pan', 'moveOnMouseMove', e, {
+        dx: dx, dy: dy, oldX: oldX, oldY: oldY, newX: x, newY: y
+    });
 }
 
 function mouseup(e) {
@@ -181,8 +184,8 @@ function mouseup(e) {
 }
 
 function mousewheel(e) {
-    var shouldZoom = checkKeyBinding(this, 'zoomOnMouseWheel', e);
-    var shouldMove = checkKeyBinding(this, 'moveOnMouseWheel', e);
+    var shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
+    var shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
     var wheelDelta = e.wheelDelta;
     var absWheelDeltaDelta = Math.abs(wheelDelta);
     var originX = e.offsetX;
@@ -205,19 +208,19 @@ function mousewheel(e) {
         // wheelDelta of mouse wheel is bigger than touch pad.
         var factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
         var scale = wheelDelta > 0 ? factor : 1 / factor;
-        checkPointerAndTrigger(
-            'zoom', this, e, {scale: scale, originX: originX, originY: originY}
-        );
+        checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
+            scale: scale, originX: originX, originY: originY
+        });
     }
-
+    // console.log(shouldMove);
     if (shouldMove) {
         // FIXME: Should do more test in different environment.
         var absDelta = Math.abs(wheelDelta);
         // wheelDelta of mouse wheel is bigger than touch pad.
         var scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
-        checkPointerAndTrigger(
-            'scrollMove', this, e, {scrollDelta: scrollDelta, originX: originX, originY: originY}
-        );
+        checkPointerAndTrigger(this, 'scrollMove', 'moveOnMouseWheel', e, {
+            scrollDelta: scrollDelta, originX: originX, originY: originY
+        });
     }
 }
 
@@ -226,12 +229,12 @@ function pinch(e) {
         return;
     }
     var scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
-    checkPointerAndTrigger(
-        'zoom', this, e, {scale: scale, originX: e.pinchX, originY: e.pinchY}
-    );
+    checkPointerAndTrigger(this, 'zoom', null, e, {
+        scale: scale, originX: e.pinchX, originY: e.pinchY
+    });
 }
 
-function checkPointerAndTrigger(eventName, controller, e, contollerEvent) {
+function checkPointerAndTrigger(controller, eventName, behaviorToCheck, e, contollerEvent) {
     if (controller.pointerChecker
         && controller.pointerChecker(e, contollerEvent.originX, contollerEvent.originY)
     ) {
@@ -240,14 +243,28 @@ function checkPointerAndTrigger(eventName, controller, e, contollerEvent) {
         // page sliding is disabled, contrary to expectation.
         eventTool.stop(e.event);
 
-        controller.trigger(eventName, contollerEvent);
+        trigger(controller, eventName, behaviorToCheck, e, contollerEvent);
     }
 }
 
-function checkKeyBinding(roamController, prop, e) {
-    var setting = roamController._opt[prop];
-    return setting
-        && (!zrUtil.isString(setting) || e.event[setting + 'Key']);
+function trigger(controller, eventName, behaviorToCheck, e, contollerEvent) {
+    // Also provide behavior checker for event listener, for some case that
+    // multiple components share one listener.
+    contollerEvent.isAvailableBehavior = zrUtil.bind(isAvailableBehavior, null, behaviorToCheck, e);
+    controller.trigger(eventName, contollerEvent);
+}
+
+// settings: {
+//     zoomOnMouseWheel
+//     moveOnMouseMove
+//     moveOnMouseWheel
+// }
+// The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+function isAvailableBehavior(behaviorToCheck, e, settings) {
+    var setting = settings[behaviorToCheck];
+    return !behaviorToCheck || (
+        setting && (!zrUtil.isString(setting) || e.event[setting + 'Key'])
+    );
 }
 
 export default RoamController;
