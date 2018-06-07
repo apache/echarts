@@ -18,6 +18,8 @@ Please check its incubator status [here](http://incubator.apache.org/projects/ec
 
 + `npm install echarts --save`
 
++ include it from [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
+
 ## Get ECharts GL
 
 ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visualization and WebGL acceleration.
