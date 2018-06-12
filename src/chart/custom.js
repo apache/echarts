@@ -74,7 +74,9 @@ echarts.extendSeriesModel({
         coordinateSystem: 'cartesian2d', // Can be set as 'none'
         zlevel: 0,
         z: 2,
-        legendHoverLink: true
+        legendHoverLink: true,
+
+        useTransform: true
 
         // Cartesian coordinate system
         // xAxisIndex: 0,
@@ -112,24 +114,27 @@ echarts.extendChartView({
     /**
      * @override
      */
-    render: function (customSeries, ecModel, api) {
+    render: function (customSeries, ecModel, api, payload) {
         var oldData = this._data;
         var data = customSeries.getData();
         var group = this.group;
         var renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
-        this.group.removeAll();
-
+        // By default, merge mode is applied. In most cases, custom series is
+        // used in the scenario that data amount is not large but graphic elements
+        // is complicated, where merge mode is probably necessary for optimization.
+        // For example, reuse graphic elements and only update the transform when
+        // roam or data zoom according to `actionType`.
         data.diff(oldData)
             .add(function (newIdx) {
                 createOrUpdate(
-                    null, newIdx, renderItem(newIdx), customSeries, group, data
+                    null, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .update(function (newIdx, oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
                 createOrUpdate(
-                    el, newIdx, renderItem(newIdx), customSeries, group, data
+                    el, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .remove(function (oldIdx) {
@@ -146,7 +151,7 @@ echarts.extendChartView({
         this._data = null;
     },
 
-    incrementalRender: function (params, customSeries, ecModel, api) {
+    incrementalRender: function (params, customSeries, ecModel, api, payload) {
         var data = customSeries.getData();
         var renderItem = makeRenderItem(customSeries, data, ecModel, api);
         function setIncrementalAndHoverLayer(el) {
@@ -156,7 +161,7 @@ echarts.extendChartView({
             }
         }
         for (var idx = params.start; idx < params.end; idx++) {
-            var el = createOrUpdate(null, idx, renderItem(idx), customSeries, this.group, data);
+            var el = createOrUpdate(null, idx, renderItem(idx, payload), customSeries, this.group, data);
             el.traverse(setIncrementalAndHoverLayer);
         }
     },
@@ -328,13 +333,16 @@ function makeRenderItem(customSeries, data, ecModel, api) {
     var currLabelEmphasisModel;
     var currVisualColor;
 
-    return function (dataIndexInside) {
+    return function (dataIndexInside, payload) {
         currDataIndexInside = dataIndexInside;
         currDirty = true;
+
         return renderItem && renderItem(
             zrUtil.defaults({
                 dataIndexInside: dataIndexInside,
-                dataIndex: data.getRawIndex(dataIndexInside)
+                dataIndex: data.getRawIndex(dataIndexInside),
+                // Can be used for optimization when zoom or roam.
+                actionType: payload ? payload.type : null
             }, userParams),
             userAPI
         ) || {};
@@ -495,13 +503,20 @@ function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
 }
 
 function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
+    elOption = elOption || {};
+
     var elOptionType = elOption.type;
-    if (el
-        && elOptionType !== el.__customGraphicType
-        && (elOptionType !== 'path' || elOption.pathData !== el.__customPathData)
-        && (elOptionType !== 'image' || elOption.style.image !== el.__customImagePath)
-        && (elOptionType !== 'text' || elOption.style.text !== el.__customText)
-    ) {
+    if (el && (
+        // Also consider that if `renderItem` returns nothing, the original element
+        // (if exists) will be removed (elOption is an empty object in that case).
+        elOptionType == null
+        || elOption.$merge === false
+        || (elOptionType !== el.__customGraphicType
+            && (elOptionType !== 'path' || elOption.pathData !== el.__customPathData)
+            && (elOptionType !== 'image' || elOption.style.image !== el.__customImagePath)
+            && (elOptionType !== 'text' || elOption.style.text !== el.__customText)
+        )
+    )) {
         group.remove(el);
         el = null;
     }
@@ -515,12 +530,18 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data)
     !el && (el = createEl(elOption));
     updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
 
-    if (elOptionType === 'group') {
+    // If `renderItem` returns no children, follow the principle of
+    // "merge", remain the children of the original elements
+    // (if exists). The feature can help optimization when roam and
+    // data zoom. If intending to clear children, `renderItem` could
+    // returns an empty array as children.
+    var newChildren = elOption.children;
+    if (elOptionType === 'group' && newChildren) {
         var oldChildren = el.children() || [];
-        var newChildren = elOption.children || [];
 
+        // By default, do not diff elements by name inside a
+        // group, because that might be lower performance.
         if (elOption.diffChildrenByName) {
-            // lower performance.
             diffGroupChildren({
                 oldChildren: oldChildren,
                 newChildren: newChildren,
@@ -530,8 +551,9 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data)
                 data: data
             });
         }
+        // Mapping children of a group simply by index, which
+        // might be better performance.
         else {
-            // better performance.
             var index = 0;
             for (; index < newChildren.length; index++) {
                 doCreateOrUpdate(
@@ -549,6 +571,7 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data)
         }
     }
 
+    // Always add whatever already added to ensure sequence.
     group.add(el);
 
     return el;
