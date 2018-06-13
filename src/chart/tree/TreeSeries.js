@@ -19,6 +19,7 @@
 
 /**
  * @file Create data struct and define tree view's series model
+ * @author Deqing Li(annong035@gmail.com)
  */
 
 import SeriesModel from '../../model/Series';
@@ -75,7 +76,7 @@ export default SeriesModel.extend({
 
         return tree.data;
     },
-    
+
     /**
      * Make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
      * @returns {string} orient
@@ -89,6 +90,14 @@ export default SeriesModel.extend({
             orient = 'TB';
         }
         return orient;
+    },
+
+    setZoom: function (zoom) {
+        this.option.zoom = zoom;
+    },
+
+    setCenter: function (center) {
+        this.option.center = center;
     },
 
     /**
@@ -122,6 +131,15 @@ export default SeriesModel.extend({
 
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
+
+        roam: false,
+        // Symbol size scale ratio in roam
+        nodeScaleRatio: 0.4,
+
+        // Default on center of graph
+        center: null,
+
+        zoom: 1,
 
         // The orient of orthoginal layout, can be setted to 'LR', 'TB', 'RL', 'BT'.
         // and the backward compatibility configuration 'horizontal = LR', 'vertical = TB'.

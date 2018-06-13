@@ -267,7 +267,7 @@ function nextAncestor(nodeInLeft, node, ancestor) {
  * @param  {module:echarts/data/Tree~TreeNode} wr
  * @param  {number} shift [description]
  */
-function moveSubtree(wl, wr,shift) {
+function moveSubtree(wl, wr, shift) {
     var change = shift / (wr.hierNode.i - wl.hierNode.i);
     wr.hierNode.change -= change;
     wr.hierNode.shift += shift;

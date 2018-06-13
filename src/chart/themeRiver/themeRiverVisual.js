@@ -19,7 +19,7 @@
 
 /**
  * @file Visual encoding for themeRiver view
- * @author  Deqing Li(annong035@gmail.com)
+ * @author Deqing Li(annong035@gmail.com)
  */
 
 import {createHashMap} from 'zrender/src/core/util';

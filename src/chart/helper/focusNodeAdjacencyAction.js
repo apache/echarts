@@ -17,14 +17,29 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import * as echarts from '../../echarts';
 
-import './tree/TreeSeries';
-import './tree/TreeView';
-import './tree/treeAction';
+/**
+ * @payload
+ * @property {number} [seriesIndex]
+ * @property {string} [seriesId]
+ * @property {string} [seriesName]
+ * @property {number} [dataIndex]
+ */
+echarts.registerAction({
+    type: 'focusNodeAdjacency',
+    event: 'focusNodeAdjacency',
+    update: 'series:focusNodeAdjacency'
+}, function () {});
 
-import visualSymbol from '../visual/symbol';
-import treeLayout from './tree/treeLayout';
-
-echarts.registerVisual(visualSymbol('tree', 'circle'));
-echarts.registerLayout(treeLayout);
+/**
+ * @payload
+ * @property {number} [seriesIndex]
+ * @property {string} [seriesId]
+ * @property {string} [seriesName]
+ */
+echarts.registerAction({
+    type: 'unfocusNodeAdjacency',
+    event: 'unfocusNodeAdjacency',
+    update: 'series:unfocusNodeAdjacency'
+}, function () {});

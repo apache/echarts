@@ -20,7 +20,7 @@ under the License.
 
 <html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
@@ -30,18 +30,18 @@ under the License.
         <style>
             html, body, #main {
                 width: 100%;
+                padding: 0;
+                margin: 0;
                 height: 100%;
-                /*border: 1px solid #000;*/
             }
         </style>
-        <div id="main"><div>
+        <div id="main"></div>
         <script>
             require([
                 'echarts'
-                // 'echarts/chart/sankey',
+                // 'echarts/chart/tree',
                 // 'echarts/component/tooltip'
                 ], function (echarts) {
-
                     var chart = echarts.init(document.getElementById('main'), null, {
 
                     });
@@ -50,38 +50,36 @@ under the License.
                         chart.resize();
                     };
 
-                    chart.on('click', function (params) {
-                        console.log(params, params.data);
-                    });
-
-
-                    $.getJSON('./data/energy.json')
-                    .done(function(data) {
-
-                        data.nodes[0].itemStyle = {
-                            normal: {
-                                color: 'red'
-                            }
-                        };
+                    $.getJSON('./data/flare.json')
+                    .done(function (data) {
                         chart.setOption({
+
                             tooltip: {
                                 trigger: 'item',
                                 triggerOn: 'mousemove'
                             },
-                            animation: false,
-                            series: [
+
+                            series:[
                                 {
-                                    type: 'sankey',
-                                    layout:'none',
-                                    focusNodeAdjacency: 'allEdges',
-                                    data: data.nodes,
-                                    links: data.links,
-                                    lineStyle: {
-                                        normal: {
-                                            color: 'source',
-                                            curveness: 0.5
-                                        }
-                                    }
+                                    type: 'tree',
+
+                                    data: [data],
+
+                                    top: '18%',
+                                    bottom: '14%',
+
+                                    roam: true,
+
+                                    layout: 'radial',
+
+                                    symbol: 'emptyCircle',
+
+                                    symbolSize: 7,
+
+                                    initialTreeDepth: 3,
+
+                                    animationDurationUpdate: 750
+
                                 }
                             ]
                         });

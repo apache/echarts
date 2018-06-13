@@ -17,7 +17,13 @@
 * under the License.
 */
 
+/**
+ * @file The interactive action of sankey view
+ * @author Deqing Li(annong035@gmail.com)
+ */
+
 import * as echarts from '../../echarts';
+import '../helper/focusNodeAdjacencyAction';
 
 echarts.registerAction({
     type: 'dragNode',

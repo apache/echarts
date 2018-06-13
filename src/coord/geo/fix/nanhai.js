@@ -51,9 +51,9 @@ for (var i = 0; i < points.length; i++) {
     }
 }
 
-export default function (geo) {
-    if (geo.map === 'china') {
-        geo.regions.push(new Region(
+export default function (mapType, regions) {
+    if (mapType === 'china') {
+        regions.push(new Region(
             '南海诸岛',
             zrUtil.map(points, function (exterior) {
                 return {

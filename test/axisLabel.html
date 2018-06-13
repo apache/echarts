@@ -40,6 +40,7 @@ under the License.
         </style>
         <div class="chart" id="main1"></div>
         <div class="chart" id="main2"></div>
+        <div class="chart" id="main3"></div>
 
 
 
@@ -57,7 +58,11 @@ under the License.
                 // 'echarts/component/toolbox',
                 // 'echarts/component/visualMap'
             ], function (echarts) {
-                var chart = echarts.init(document.getElementById('main1'));
+                var el = document.getElementById('main1');
+                if (!el) {
+                    return;
+                }
+                var chart = echarts.init(el);
 
                 var DECIMALS = [1];
                 for (var i = 1; i < 15; i++) {
@@ -181,7 +186,11 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-                var chart = echarts.init(document.getElementById('main2'));
+                var el = document.getElementById('main2');
+                if (!el) {
+                    return;
+                }
+                var chart = echarts.init(el);
                 var rotate = 30;
 
                 option = {
@@ -234,6 +243,64 @@ under the License.
 
         </script>
 
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main3'));
+                var rotate = 30;
+
+                option = {
+                    backgroundColor: '#eee',
+                    title: {
+                        text: 'axisLable.formatter: {value} should be correct'
+                    },
+                    grid: {
+                        containLabel: true,
+                        left: 0
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        data: ['categoryA', 'categoryB', 'categoryC', 'categoryD', 'categoryE'],
+                        axisLabel: {
+                            formatter: '{value}'
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            formatter: '{value}',
+                            rotate: rotate
+                        }
+                    },
+                    series: [{
+                        type: 'line',
+                        data: [
+                            1111111111111,
+                            2222222222222,
+                            3333333333333,
+                            4444444444444,
+                            5555555555555,
+                            6666666666666
+                        ]
+                    }]
+                };
+
+                chart.setOption(option);
+            });
+
+        </script>
 
     </body>
 </html>
