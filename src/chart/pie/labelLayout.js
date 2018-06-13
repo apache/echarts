@@ -28,18 +28,20 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
 
     // 压
     function shiftDown(start, end, delta, dir) {
+        // 防止边缘出界
+        var couldShiftUp = (list[0].y - delta / 2) >= list[0].height * 0.61;
         for (var j = start; j < end; j++) {
             list[j].y += delta;
             if (j > start
                 && j + 1 < end
                 && list[j + 1].y > list[j].y + list[j].height
             ) {
-                shiftUp(j, delta / 2);
+                couldShiftUp && shiftUp(j, delta / 2);
                 return;
             }
         }
 
-        shiftUp(end - 1, delta / 2);
+        couldShiftUp && shiftUp(end - 1, delta / 2);
     }
 
     // 弹
