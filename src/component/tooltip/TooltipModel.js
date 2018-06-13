@@ -46,6 +46,8 @@ export default echarts.extendComponentModel({
 
         displayMode: 'single', // 'single' | 'multipleByCoordSys'
 
+        useHtml: true,
+
         // 位置 {Array} | {Function}
         // position: null
         // Consider triggered from axisPointer handle, verticalAlign should be 'middle'
