@@ -273,6 +273,25 @@ TooltipContent.prototype = {
 
     isShow: function () {
         return this._show;
+    },
+
+    getOuterSize: function () {
+        var width = this.el.clientWidth;
+        var height = this.el.clientHeight;
+
+        // Consider browser compatibility.
+        // IE8 does not support getComputedStyle.
+        if (document.defaultView && document.defaultView.getComputedStyle) {
+            var stl = document.defaultView.getComputedStyle(this.el);
+            if (stl) {
+                width += parseInt(stl.paddingLeft, 10) + parseInt(stl.paddingRight, 10)
+                    + parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
+                height += parseInt(stl.paddingTop, 10) + parseInt(stl.paddingBottom, 10)
+                    + parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
+            }
+        }
+
+        return {width: width, height: height};
     }
 };
 
