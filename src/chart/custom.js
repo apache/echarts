@@ -218,7 +218,7 @@ function createEl(elOption) {
     return el;
 }
 
-function updateEl(el, dataIndex, elOption, animatableModel, data, isInit) {
+function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot) {
     var targetProps = {};
     var elOptionStyle = elOption.style || {};
 
@@ -272,7 +272,21 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit) {
     // z2 must not be null/undefined, otherwise sort error may occur.
     el.attr({z2: elOption.z2 || 0, silent: elOption.silent});
 
-    elOption.styleEmphasis !== false && graphicUtil.setHoverStyle(el, elOption.styleEmphasis);
+    // If `elOption.styleEmphasis` is `false`, remove hover style. The
+    // logic is ensured by `graphicUtil.setElementHoverStyle`.
+    var styleEmphasis = elOption.styleEmphasis;
+    var disableStyleEmphasis = styleEmphasis === false;
+    if (!(
+        // Try to escapse setting hover style for performance.
+        (el.__cusHasEmphStl && styleEmphasis == null)
+        || (!el.__cusHasEmphStl && disableStyleEmphasis)
+    )) {
+        // Should not use graphicUtil.setHoverStyle, since the styleEmphasis
+        // should not be share by group and its descendants.
+        graphicUtil.setElementHoverStyle(el, styleEmphasis);
+        el.__cusHasEmphStl = !disableStyleEmphasis;
+    }
+    isRoot && graphicUtil.setAsHoverStyleTrigger(el, !disableStyleEmphasis);
 }
 
 function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, isInit) {
@@ -496,13 +510,13 @@ function wrapEncodeDef(data) {
 }
 
 function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
-    el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data);
+    el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
     return el;
 }
 
-function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
+function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, isRoot) {
     elOption = elOption || {};
 
     var elOptionType = elOption.type;
@@ -528,7 +542,7 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data)
 
     var isInit = !el;
     !el && (el = createEl(elOption));
-    updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
+    updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot);
 
     // If `renderItem` returns no children, follow the principle of
     // "merge", remain the children of the original elements
