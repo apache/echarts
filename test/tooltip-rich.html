@@ -55,13 +55,10 @@ under the License.
 
                 chart.setOption({
                     backgroundColor: '#eee',
-                    title: {
-                        text: '我是柱状图',
-                        padding: 20
-                    },
                     tooltip: {
                         show: true,
-                        // useHtml: false
+                        useHtml: false,
+                        trigger: 'axis'
                     },
                     yAxis: {
                         type: 'value'
