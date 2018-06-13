@@ -51,7 +51,9 @@ export default echarts.extendComponentView({
         var tooltip = ecModel.get('tooltip');
 
         this._isRich = false;
-        if (tooltip.length && tooltip[0].useHtml === false) {
+        if (tooltip.length && (tooltip[0].useHtml === false // force using non-html
+            || tooltip[0].useHtml === 'auto' && !document)) // auto using non-html when no `document`
+        {
             this._isRich = true;
         }
 

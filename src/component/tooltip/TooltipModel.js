@@ -46,7 +46,10 @@ export default echarts.extendComponentModel({
 
         displayMode: 'single', // 'single' | 'multipleByCoordSys'
 
-        useHtml: true,
+        useHtml: 'auto', // 'auto', true, or false
+        // 'auto': use html by default, and use non-html if `document` is not defined
+        // true: use html for tooltip
+        // false: use canvas, svg, and etc. for tooltip
 
         // 位置 {Array} | {Function}
         // position: null
