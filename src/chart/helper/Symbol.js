@@ -345,7 +345,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 function onEmphasis() {
     // Do not support this hover animation util some scenario required.
     // Animation can only be supported in hover layer when using `el.incremetal`.
-    if (this.incremental || graphic.isInEmphasis(this)) {
+    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
         return;
     }
     var scale = this.__symbolOriginalScale;
@@ -359,7 +359,7 @@ function onEmphasis() {
 }
 
 function onNormal() {
-    if (this.incremental || graphic.isInEmphasis(this)) {
+    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
         return;
     }
     this.animateTo({

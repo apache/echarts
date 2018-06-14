@@ -241,8 +241,23 @@ function hasFillOrStroke(fillOrStroke) {
     return fillOrStroke != null && fillOrStroke != 'none';
 }
 
+// Most lifted color are duplicated.
+var liftedColorMap = zrUtil.createHashMap();
+var liftedColorCount = 0;
+
 function liftColor(color) {
-    return typeof color === 'string' ? colorTool.lift(color, -0.1) : color;
+    if (typeof color !== 'string') {
+        return color;
+    }
+    var liftedColor = liftedColorMap.get(color);
+    if (!liftedColor) {
+        liftedColor = colorTool.lift(color, -0.1);
+        if (liftedColorCount < 10000) {
+            liftedColorMap.set(color, liftedColor);
+            liftedColorCount++;
+        }
+    }
+    return liftedColor;
 }
 
 function cacheElementStl(el) {
@@ -258,54 +273,51 @@ function cacheElementStl(el) {
     }
 
     var normalStyle = el.__normalStl = {};
-
-    // Create default hoverStyle on mouseover
-    var stroke = el.style.stroke;
-    var fill = el.style.fill;
-    hoverStyle.fill = hoverStyle.fill
-        || (hasFillOrStroke(fill) ? liftColor(fill) : null);
-    hoverStyle.stroke = hoverStyle.stroke
-        || (hasFillOrStroke(stroke) ? liftColor(stroke) : null);
+    var elStyle = el.style;
 
     for (var name in hoverStyle) {
         // See comment in `doSingleEnterHover`.
         if (hoverStyle[name] != null) {
-            normalStyle[name] = el.style[name];
+            normalStyle[name] = elStyle[name];
         }
     }
+
+    // Always cache fill and stroke to normalStyle for lifting color.
+    normalStyle.fill = elStyle.fill;
+    normalStyle.stroke = elStyle.stroke;
 }
 
 function doSingleEnterHover(el) {
     var hoverStl = el.__hoverStl;
 
-    if (!hoverStl || el.__isHover) {
+    if (!hoverStl || el.__highlighted) {
         return;
     }
 
-    if (el.useHoverLayer) {
-        el.__zr && el.__zr.addHover(el, hoverStl);
-    }
-    else {
-        doSingleApplyHoverStyle(el);
-    }
+    var useHoverLayer = el.useHoverLayer;
+    el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
-    el.__isHover = true;
-}
-
-function doSingleApplyHoverStyle(el) {
-    var style = el.style;
-    var hoverStl = el.__hoverStl;
-
-    if (!hoverStl) {
+    var zr = el.__zr;
+    if (!zr && useHoverLayer) {
         return;
+    }
+
+    var elTarget = el;
+    var targetStyle = el.style;
+
+    if (useHoverLayer) {
+        elTarget = zr.addHover(el);
+        targetStyle = elTarget.style;
     }
 
     // Consider case: only `position: 'top'` is set on emphasis, then text
     // color should be returned to `autoColor`, rather than remain '#fff'.
     // So we should rollback then apply again after style merging.
-    rollbackDefaultTextStyle(style);
+    rollbackDefaultTextStyle(targetStyle);
 
-    cacheElementStl(el);
+    if (!useHoverLayer) {
+        cacheElementStl(elTarget);
+    }
 
     // styles can be:
     // {
@@ -326,43 +338,53 @@ function doSingleApplyHoverStyle(el) {
     // all properties in merge. So we use merge mode when setting style here, where
     // only properties that is not `null/undefined` can be set. The disadventage:
     // null/undefined can not be used to remove style any more in `emphasis`.
-    style.extendFrom(hoverStl);
+    targetStyle.extendFrom(hoverStl);
 
-    applyDefaultTextStyle(style);
+    setDefaultHoverFillStroke(targetStyle, hoverStl, 'fill');
+    setDefaultHoverFillStroke(targetStyle, hoverStl, 'stroke');
 
-    el.dirty(false);
-    el.z2 += 1;
+    applyDefaultTextStyle(targetStyle);
+
+    if (!useHoverLayer) {
+        el.dirty(false);
+        el.z2 += 1;
+    }
+}
+
+function setDefaultHoverFillStroke(targetStyle, hoverStyle, prop) {
+    if (!hasFillOrStroke(hoverStyle[prop]) && hasFillOrStroke(targetStyle[prop])) {
+        targetStyle[prop] = liftColor(targetStyle[prop]);
+    }
 }
 
 function doSingleLeaveHover(el) {
-    if (!el.__isHover) {
-        return;
-    }
-
-    if (el.useHoverLayer) {
-        el.__zr && el.__zr.removeHover(el);
-    }
-    else {
+    if (el.__highlighted) {
         doSingleRestoreHoverStyle(el);
+        el.__highlighted = false;
     }
-
-    el.__isHover = false;
 }
 
 function doSingleRestoreHoverStyle(el) {
-    var style = el.style;
-    var normalStl = el.__normalStl;
+    var highlighted = el.__highlighted;
 
-    if (normalStl) {
-        rollbackDefaultTextStyle(style);
+    if (highlighted === 'layer') {
+        el.__zr && el.__zr.removeHover(el);
+    }
+    else if (highlighted) {
+        var style = el.style;
+        var normalStl = el.__normalStl;
 
-        // Consider null/undefined value, should use
-        // `setStyle` but not `extendFrom(stl, true)`.
-        el.setStyle(normalStl);
+        if (normalStl) {
+            rollbackDefaultTextStyle(style);
 
-        applyDefaultTextStyle(style);
+            // Consider null/undefined value, should use
+            // `setStyle` but not `extendFrom(stl, true)`.
+            el.setStyle(normalStl);
 
-        el.z2 -= 1;
+            applyDefaultTextStyle(style);
+
+            el.z2 -= 1;
+        }
     }
 }
 
@@ -390,15 +412,9 @@ export function setElementHoverStyle(el, hoverStl) {
     hoverStl = el.__hoverStl = hoverStl !== false && (hoverStl || {});
     el.__hoverStlDirty = true;
 
-    if (el.__isHover) {
-        if (el.useHoverLayer) {
-            // Update hover style on hover layer.
-            el.__zr && el.__zr.addHover(el, hoverStl);
-        }
-        else {
-            doSingleRestoreHoverStyle(el);
-            doSingleApplyHoverStyle(el);
-        }
+    if (el.__highlighted) {
+        doSingleLeaveHover(el);
+        doSingleEnterHover(el);
     }
 }
 
