@@ -270,7 +270,12 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     }
 
     // z2 must not be null/undefined, otherwise sort error may occur.
-    el.attr({z2: elOption.z2 || 0, silent: elOption.silent});
+    el.attr({
+        z2: elOption.z2 || 0,
+        silent: elOption.silent,
+        invisible: elOption.invisible,
+        ignore: elOption.ignore
+    });
 
     // If `elOption.styleEmphasis` is `false`, remove hover style. The
     // logic is ensured by `graphicUtil.setElementHoverStyle`.
@@ -544,51 +549,76 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
     !el && (el = createEl(elOption));
     updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot);
 
-    // If `renderItem` returns no children, follow the principle of
-    // "merge", remain the children of the original elements
-    // (if exists). The feature can help optimization when roam and
-    // data zoom. If intending to clear children, `renderItem` could
-    // returns an empty array as children.
-    var newChildren = elOption.children;
-    if (elOptionType === 'group' && newChildren) {
-        var oldChildren = el.children() || [];
-
-        // By default, do not diff elements by name inside a
-        // group, because that might be lower performance.
-        if (elOption.diffChildrenByName) {
-            diffGroupChildren({
-                oldChildren: oldChildren,
-                newChildren: newChildren,
-                dataIndex: dataIndex,
-                animatableModel: animatableModel,
-                group: el,
-                data: data
-            });
-        }
-        // Mapping children of a group simply by index, which
-        // might be better performance.
-        else {
-            var index = 0;
-            for (; index < newChildren.length; index++) {
-                doCreateOrUpdate(
-                    el.childAt(index),
-                    dataIndex,
-                    newChildren[index],
-                    animatableModel,
-                    el,
-                    data
-                );
-            }
-            for (; index < oldChildren.length; index++) {
-                oldChildren[index] && el.remove(oldChildren[index]);
-            }
-        }
+    if (elOptionType === 'group') {
+        mergeChildren(el, dataIndex, elOption, animatableModel, data);
     }
 
     // Always add whatever already added to ensure sequence.
     group.add(el);
 
     return el;
+}
+
+// Usage:
+// (1) By default, `elOption.$mergeChildren` is `'byIndex'`, which indicates that
+//     the existing children will not be removed, and enables the feature that
+//     update some of the props of some of the children simply by construct
+//     the returned children of `renderItem` like:
+//     `var children = group.children = []; children[3] = {opacity: 0.5};`
+// (2) If `elOption.$mergeChildren` is `'byName'`, add/update/remove children
+//     by child.name. But that might be lower performance.
+// (3) If `elOption.$mergeChildren` is `false`, the existing children will be
+//     replaced totally.
+// For implementation simpleness, do not provide a direct way to remove sinlge
+// child (otherwise the total indicies of the children array have to be modified).
+// User can remove a single child by set its `ignore` as `true` or replace
+// it by another element, where its `$merge` can be set as `true` if necessary.
+function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
+    var newChildren = elOption.children;
+    var newLen = newChildren ? newChildren.length : 0;
+    var mergeChildren = elOption.$mergeChildren;
+    // `diffChildrenByName` has been deprecated.
+    var byName = mergeChildren === 'byName' || elOption.diffChildrenByName;
+    var notMerge = mergeChildren === false;
+
+    // For better performance on roam update, only enter if necessary.
+    if (!newChildren.length && !byName && !notMerge) {
+        return;
+    }
+
+    if (byName) {
+        diffGroupChildren({
+            oldChildren: el.children() || [],
+            newChildren: newChildren || [],
+            dataIndex: dataIndex,
+            animatableModel: animatableModel,
+            group: el,
+            data: data
+        });
+        return;
+    }
+
+    notMerge && el.removeAll();
+
+    // Mapping children of a group simply by index, which
+    // might be better performance.
+    var index = 0;
+    for (; index < newLen; index++) {
+        newChildren[index] && doCreateOrUpdate(
+            el.childAt(index),
+            dataIndex,
+            newChildren[index],
+            animatableModel,
+            el,
+            data
+        );
+    }
+    if (__DEV__) {
+        zrUtil.assert(
+            !notMerge || el.childCount() === index,
+            'MUST NOT contain empty item in children array when `group.$mergeChildren` is `false`.'
+        );
+    }
 }
 
 function diffGroupChildren(context) {
