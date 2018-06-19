@@ -19,33 +19,22 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import parseGeoJson from './parseGeoJson';
 import View from '../View';
+import geoSourceManager from './geoSourceManager';
 
-import fixNanhai from './fix/nanhai';
-import fixTextCoord from './fix/textCoord';
-import fixGeoCoord from './fix/geoCoord';
-import fixDiaoyuIsland from './fix/diaoyuIsland';
-
-// Geo fix functions
-var geoFixFuncs = [
-    fixNanhai,
-    fixTextCoord,
-    fixGeoCoord,
-    fixDiaoyuIsland
-];
 
 /**
  * [Geo description]
- * @param {string} name Geo name
+ * For backward compatibility, the orginal interface:
+ * `name, map, geoJson, specialAreas, nameMap` is kept.
+ *
+ * @param {string|Object} name
  * @param {string} map Map type
- * @param {Object} geoJson
- * @param {Object} [specialAreas]
  *        Specify the positioned areas by left, top, width, height
  * @param {Object.<string, string>} [nameMap]
  *        Specify name alias
  */
-function Geo(name, map, geoJson, specialAreas, nameMap) {
+function Geo(name, map, nameMap) {
 
     View.call(this, name);
 
@@ -55,9 +44,20 @@ function Geo(name, map, geoJson, specialAreas, nameMap) {
      */
     this.map = map;
 
-    this._nameCoordMap = zrUtil.createHashMap();
+    var source = geoSourceManager.load(map, nameMap);
 
-    this.loadGeoJson(geoJson, specialAreas, nameMap);
+    this._nameCoordMap = source.nameCoordMap;
+    this._regionsMap = source.nameCoordMap;
+
+    /**
+     * @readOnly
+     */
+    this.regions = source.regions;
+
+    /**
+     * @type {module:zrender/src/core/BoundingRect}
+     */
+    this._rect = source.boundingRect;
 }
 
 Geo.prototype = {
@@ -86,61 +86,23 @@ Geo.prototype = {
         }
         return false;
     },
+
     /**
-     * @param {Object} geoJson
-     * @param {Object} [specialAreas]
-     *        Specify the positioned areas by left, top, width, height
-     * @param {Object.<string, string>} [nameMap]
-     *        Specify name alias
+     * @override
      */
-    loadGeoJson: function (geoJson, specialAreas, nameMap) {
-        // https://jsperf.com/try-catch-performance-overhead
-        try {
-            this.regions = geoJson ? parseGeoJson(geoJson) : [];
-        }
-        catch (e) {
-            throw 'Invalid geoJson format\n' + e.message;
-        }
-        specialAreas = specialAreas || {};
-        nameMap = nameMap || {};
-        var regions = this.regions;
-        var regionsMap = zrUtil.createHashMap();
-        for (var i = 0; i < regions.length; i++) {
-            var regionName = regions[i].name;
-            // Try use the alias in nameMap
-            regionName = nameMap.hasOwnProperty(regionName) ? nameMap[regionName] : regionName;
-            regions[i].name = regionName;
-
-            regionsMap.set(regionName, regions[i]);
-            // Add geoJson
-            this.addGeoCoord(regionName, regions[i].center);
-
-            // Some area like Alaska in USA map needs to be tansformed
-            // to look better
-            var specialArea = specialAreas[regionName];
-            if (specialArea) {
-                regions[i].transformTo(
-                    specialArea.left, specialArea.top, specialArea.width, specialArea.height
-                );
-            }
-        }
-
-        this._regionsMap = regionsMap;
-
-        this._rect = null;
-
-        zrUtil.each(geoFixFuncs, function (fixFunc) {
-            fixFunc(this);
-        }, this);
-    },
-
-    // Overwrite
     transformTo: function (x, y, width, height) {
         var rect = this.getBoundingRect();
 
+        // FIXME
+        // Should not name it as invertLng.
+        var invertLng = this.invertLng;
+
         rect = rect.clone();
-        // Longitute is inverted
-        rect.y = -rect.y - rect.height;
+
+        if (invertLng) {
+            // Longitute is inverted
+            rect.y = -rect.y - rect.height;
+        }
 
         var rawTransformable = this._rawTransformable;
 
@@ -150,8 +112,10 @@ Geo.prototype = {
 
         rawTransformable.decomposeTransform();
 
-        var scale = rawTransformable.scale;
-        scale[1] = -scale[1];
+        if (invertLng) {
+            var scale = rawTransformable.scale;
+            scale[1] = -scale[1];
+        }
 
         rawTransformable.updateTransform();
 
@@ -193,21 +157,11 @@ Geo.prototype = {
         return this._nameCoordMap.get(name);
     },
 
-    // Overwrite
+    /**
+     * @override
+     */
     getBoundingRect: function () {
-        if (this._rect) {
-            return this._rect;
-        }
-        var rect;
-
-        var regions = this.regions;
-        for (var i = 0; i < regions.length; i++) {
-            var regionRect = regions[i].getBoundingRect();
-            rect = rect || regionRect.clone();
-            rect.union(regionRect);
-        }
-        // FIXME Always return new ?
-        return (this._rect = rect || new BoundingRect(0, 0, 0, 0));
+        return this._rect;
     },
 
     /**
@@ -227,12 +181,12 @@ Geo.prototype = {
     },
 
     /**
-     * @inheritDoc
+     * @override
      */
     convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
 
     /**
-     * @inheritDoc
+     * @override
      */
     convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
 

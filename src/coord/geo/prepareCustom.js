@@ -41,7 +41,8 @@ export default function (coordSys) {
             x: rect.x,
             y: rect.y,
             width: rect.width,
-            height: rect.height
+            height: rect.height,
+            zoom: coordSys.getZoom()
         },
         api: {
             coord: function (data) {

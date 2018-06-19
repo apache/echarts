@@ -431,9 +431,9 @@ export default echarts.extendChartView({
     /**
      * @private
      */
-    _onPan: function (dx, dy) {
+    _onPan: function (e) {
         if (this._state !== 'animating'
-            && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
+            && (Math.abs(e.dx) > DRAG_THRESHOLD || Math.abs(e.dy) > DRAG_THRESHOLD)
         ) {
             // These param must not be cached.
             var root = this.seriesModel.getData().tree.root;
@@ -453,7 +453,7 @@ export default echarts.extendChartView({
                 from: this.uid,
                 seriesId: this.seriesModel.id,
                 rootRect: {
-                    x: rootLayout.x + dx, y: rootLayout.y + dy,
+                    x: rootLayout.x + e.dx, y: rootLayout.y + e.dy,
                     width: rootLayout.width, height: rootLayout.height
                 }
             });
@@ -463,7 +463,10 @@ export default echarts.extendChartView({
     /**
      * @private
      */
-    _onZoom: function (scale, mouseX, mouseY) {
+    _onZoom: function (e) {
+        var mouseX = e.originX;
+        var mouseY = e.originY;
+
         if (this._state !== 'animating') {
             // These param must not be cached.
             var root = this.seriesModel.getData().tree.root;
@@ -490,7 +493,7 @@ export default echarts.extendChartView({
             // Scale root bounding rect.
             var m = matrix.create();
             matrix.translate(m, m, [-mouseX, -mouseY]);
-            matrix.scale(m, m, [scale, scale]);
+            matrix.scale(m, m, [e.scale, e.scale]);
             matrix.translate(m, m, [mouseX, mouseY]);
 
             rect.applyTransform(m);

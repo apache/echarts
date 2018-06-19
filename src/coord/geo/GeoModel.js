@@ -78,14 +78,15 @@ var GeoModel = ComponentModel.extend({
 
         // Aspect is width / height. Inited to be geoJson bbox aspect
         // This parameter is used for scale this aspect
-        aspectScale: 0.75,
+        // If svg used, aspectScale is 1 by default.
+        // aspectScale: 0.75,
+        aspectScale: null,
 
         ///// Layout with center and size
         // If you wan't to put map in a fixed size box with right aspect ratio
         // This two properties may more conveninet
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
-
 
         silent: false,
 
