@@ -335,6 +335,9 @@ function makeRenderItem(customSeries, data, ecModel, api) {
     }, prepareResult.api || {});
 
     var userParams = {
+        // The life cycle of context: current round of rendering.
+        // The global life cycle is probably not necessary, because
+        // user can store global status by themselves.
         context: {},
         seriesId: customSeries.id,
         seriesName: customSeries.name,
@@ -582,7 +585,7 @@ function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
     var notMerge = mergeChildren === false;
 
     // For better performance on roam update, only enter if necessary.
-    if (!newChildren.length && !byName && !notMerge) {
+    if (!newLen && !byName && !notMerge) {
         return;
     }
 

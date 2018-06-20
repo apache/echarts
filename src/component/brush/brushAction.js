@@ -58,6 +58,6 @@ echarts.registerAction(
  * }
  */
 echarts.registerAction(
-        {type: 'brushSelect', event: 'brushSelected', update: 'none'},
+    {type: 'brushSelect', event: 'brushSelected', update: 'none'},
     function () {}
 );
