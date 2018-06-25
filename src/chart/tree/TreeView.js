@@ -18,7 +18,7 @@
 */
 
 /**
- * @file  This file used to draw tree view
+ * @file This file used to draw tree view.
  * @author Deqing Li(annong035@gmail.com)
  */
 
@@ -57,14 +57,18 @@ export default echarts.extendChartView({
          */
         this._mainGroup = new graphic.Group();
 
-        this.group.add(this._mainGroup);
-
+        /**
+         * @private
+         * @type {module:echarts/componet/helper/RoamController}
+         */
         this._controller = new RoamController(api.getZr());
+
         this._controllerHost = {target: this.group};
+
+        this.group.add(this._mainGroup);
     },
 
     render: function (seriesModel, ecModel, api, payload) {
-
         var data = seriesModel.getData();
 
         var layoutInfo = seriesModel.layoutInfo;
@@ -100,7 +104,7 @@ export default echarts.extendChartView({
         data.diff(oldData)
             .add(function (newIdx) {
                 if (symbolNeedsDraw(data, newIdx)) {
-                    // create node and edge
+                    // Create node and edge
                     updateNode(data, newIdx, null, group, seriesModel, seriesScope);
                 }
             })
@@ -110,7 +114,7 @@ export default echarts.extendChartView({
                     symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
                     return;
                 }
-                // update  node and edge
+                // Update node and edge
                 updateNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
             })
             .remove(function (oldIdx) {
@@ -141,7 +145,6 @@ export default echarts.extendChartView({
                 });
             });
         }
-
         this._data = data;
     },
 
@@ -175,6 +178,7 @@ export default echarts.extendChartView({
         viewCoordSys.setCenter(seriesModel.get('center'));
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
+        // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group
         this.group.attr({
             position: viewCoordSys.position,
             scale: viewCoordSys.scale
@@ -198,7 +202,9 @@ export default echarts.extendChartView({
         controllerHost.zoomLimit = seriesModel.get('scaleLimit');
         controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
 
-        controller.off('pan').off('zoom')
+        controller
+            .off('pan')
+            .off('zoom')
             .on('pan', function (e) {
                 roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
                 api.dispatchAction({
