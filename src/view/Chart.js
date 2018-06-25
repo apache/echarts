@@ -134,7 +134,7 @@ Chart.prototype = {
      * @param  {Object} payload
      * @return {Object} {update: true}
      */
-    updateTransform: null
+    updateTransform: null,
 
     /**
      * The view contains the given point.
@@ -143,6 +143,15 @@ Chart.prototype = {
      * @return {boolean}
      */
     // containPoint: function () {}
+
+    /**
+     * @param {string} eventType
+     * @param {Object} query
+     * @param {module:zrender/Element} targetEl
+     * @param {Object} packedEvent
+     * @return {boolen} Pass only when return `true`.
+     */
+    filterForExposedEvent: null
 
 };
 

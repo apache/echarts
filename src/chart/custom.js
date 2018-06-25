@@ -169,7 +169,27 @@ echarts.extendChartView({
     /**
      * @override
      */
-    dispose: zrUtil.noop
+    dispose: zrUtil.noop,
+
+    /**
+     * @override
+     */
+    filterForExposedEvent: function (eventType, query, targetEl, packedEvent) {
+        var targetName = query.target;
+        if (targetName == null || targetEl.name === targetName) {
+            return true;
+        }
+
+        // Enable to give a name on a group made by `renderItem`, and listen
+        // events that triggerd by its descendents.
+        while ((targetEl = targetEl.parent) && targetEl !== this.group) {
+            if (targetEl.name === targetName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 });
 
 

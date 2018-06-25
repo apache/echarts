@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <h2><a href="./custom-feature.html">custom element event case.</a></h2>
+        <div id="main3"></div>
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        triggerEvent: true,
+                        data: ['aaaa', 'bbbb', 'cccc', 'dddd', 'eeee']
+                    },
+                    yAxis: [{
+                        triggerEvent: true
+                    }, {
+                        triggerEvent: true,
+                        type: 'category'
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [121, 442, 55],
+                    }, {
+                        type: 'scatter',
+                        yAxisIndex: 1,
+                        data: ['asdf', 'zxcv', 'qwer']
+                    }, {
+                        type: 'line',
+                        data: [234, 213, 255],
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Check event log on console:',
+                        'click | xAxis click | yAxis.category click | series click | series scatter click',
+                    ],
+                    option: option
+                });
+
+                chart.on('click', function () {
+                    console.log('click');
+                });
+                chart.on('click', 'xAxis', function () {
+                    console.log('click xAxis');
+                });
+                chart.on('click', 'yAxis.category', function () {
+                    console.log('click yAxis.category');
+                });
+                chart.on('click', 'series', function () {
+                    console.log('click series');
+                });
+                chart.on('click', 'series.scatter', function () {
+                    console.log('click series.scatter');
+                });
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {
+                        triggerEvent: true,
+                        data: ['aaaa', 'bbbb', 'cccc', 'dddd', 'eeee']
+                    },
+                    yAxis: [{
+                        id: 'left',
+                        triggerEvent: true
+                    }, {
+                        triggerEvent: true,
+                        type: 'category'
+                    }],
+                    series: [{
+                        type: 'line',
+                        name: 'line-all',
+                        symbolSize: 20,
+                        data: [121, 442, 55],
+                    }, {
+                        type: 'scatter',
+                        yAxisIndex: 1,
+                        label: {
+                            show: true,
+                            formatter: 'name: {b}'
+                        },
+                        symbolSize: 20,
+                        data: [
+                            'asdf',
+                            {name: 'ff', value: 'zxcv'},
+                            'qwer'
+                        ]
+                    }, {
+                        type: 'line',
+                        name: 'line-all',
+                        symbolSize: 20,
+                        label: {
+                            show: true,
+                            formatter: 'name: {b}'
+                        },
+                        data: [
+                            {name: 'ee', value: 234},
+                            {name: 'ff', value: 113},
+                            {name: 'gg', value: 255}
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Check event log on console:',
+                        'click | click yAxisIndex: 1 | mouseover yAxisId: "left" | click seriesName: "line-all"',
+                        'click data name "ff" | mouseup seriesName: "line-all", dataIndex: 1'
+                    ],
+                    option: option
+                });
+
+                chart.on('click', function () {
+                    console.log('click');
+                });
+                chart.on('click', {yAxisIndex: 1}, function () {
+                    console.log('click yAxisIndex: 1');
+                });
+                chart.on('mouseover', {yAxisId: 'left'}, function () {
+                    console.log('mouseover yAxisId: "x"');
+                });
+                chart.on('click', {seriesName: 'line-all'}, function () {
+                    console.log('click seriesName: "line-all"');
+                });
+                chart.on('click', {name: 'ff'}, function () {
+                    console.log('click {name: "ff"}');
+                });
+                chart.on('mouseup', {seriesName: 'line-all', dataIndex: 1}, function () {
+                    console.log('mouseup {seriesName: "line-all", dataIndex: 1}');
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+    </body>
+</html>

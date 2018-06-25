@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    dataZoom: [{}, {type: 'inside'}],
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            return {
+                                type: 'group',
+                                position: api.coord([api.value(0), api.value(1)]),
+                                children: [{
+                                    type: 'rect',
+                                    shape: {
+                                        x: -100,
+                                        y: -100,
+                                        width: 200,
+                                        height: 200,
+                                        r: 10
+                                    },
+                                    style: {
+                                        fill: 'rgba(102,241,98,0.4)'
+                                    },
+                                    silent: true,
+                                    styleEmphasis: false
+                                }, {
+                                    type: 'group',
+                                    name: 'innerGroup',
+                                    children: [{
+                                        type: 'circle',
+                                        shape: {
+                                            r: 30,
+                                            cx: 0,
+                                            cy: 0
+                                        },
+                                        style: {
+                                            fill: 'red',
+                                            text: 'dataIndex: ' + params.dataIndex,
+                                            textStroke: '#fff',
+                                            textStrokeWidth: 1
+                                        }
+                                    }, {
+                                        type: 'rect',
+                                        shape: {
+                                            x: 50,
+                                            y: 60,
+                                            width: 80,
+                                            height: 80
+                                        },
+                                        style: {
+                                            fill: '#ff3391'
+                                        }
+                                    }]
+                                }]
+                            };
+                        },
+                        data: [[121, 333], [29, 212]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Eventful: ',
+                        '+ red shapes trigger events, but green shapes not. ',
+                        '+ Only dataIndex: 1 trigger event',
+                        'events (click, mousedown, mousemove, mouseup) are printed in console log.'
+                    ],
+                    option: option
+                });
+
+                echarts.util.each(['click', 'mousedown', 'mousemove', 'mouseup'], function (eventName) {
+                    chart.on(eventName, {dataIndex: 1, target: 'innerGroup'}, function (e) {
+                        console.log(e.type, e);
+                    });
+                });
+            });
+
+        </script>
+    </body>
+</html>
