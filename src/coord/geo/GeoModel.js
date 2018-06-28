@@ -148,7 +148,9 @@ var GeoModel = ComponentModel.extend({
      */
     getFormattedLabel: function (name, status) {
         var regionModel = this.getRegionModel(name);
-        var formatter = regionModel.get('label.' + status + '.formatter');
+        // label参数结构更新
+        var path = status == 'normal' ? 'label.formatter' : 'label.' + status + '.formatter';
+        var formatter = regionModel.get(path);
         var params = {
             name: name
         };
