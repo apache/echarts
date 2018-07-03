@@ -48,17 +48,16 @@ export default echarts.extendComponentView({
         if (env.node) {
             return;
         }
-        var tooltip = ecModel.get('tooltip');
 
+        var tooltipModel = ecModel.getComponent('tooltip');
+        var renderMode = tooltipModel.get('renderMode');
         this._renderMode = 'html';
-        if (tooltip.length) {
-            if (tooltip[0].renderMode === 'auto') {
-                // using html when `document` exists, use richtext otherwise
-                this._renderMode = document ? 'html' : 'richtext';
-            }
-            else {
-                this._renderMode = tooltip[0].renderMode || this._renderMode;
-            }
+        if (renderMode === 'auto') {
+            // using html when `document` exists, use richtext otherwise
+            this._renderMode = document ? 'html' : 'richtext';
+        }
+        else {
+            this._renderMode = renderMode || this._renderMode;
         }
 
         var tooltipContent;
@@ -500,7 +499,8 @@ export default echarts.extendComponentView({
 
         var params = dataModel.getDataParams(dataIndex, dataType);
         var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
-        var defaultHtml, markers;
+        var defaultHtml;
+        var markers;
         if (zrUtil.isObject(seriesTooltip)) {
             defaultHtml = seriesTooltip.html;
             markers = seriesTooltip.markers;

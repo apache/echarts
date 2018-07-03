@@ -37,8 +37,8 @@ export default {
         var name = data.getName(dataIndex);
         var itemOpt = data.getRawDataItem(dataIndex);
         var color = data.getItemVisual(dataIndex, 'color');
-        var tooltip = this.ecModel.get('tooltip');
-        var renderMode = tooltip && tooltip.length ? tooltip[0].renderMode : 'auto';
+        var tooltipModel = this.ecModel.getComponent('tooltip');
+        var renderMode = tooltipModel.get('renderMode') || 'html';
 
         return {
             componentType: this.mainType,
