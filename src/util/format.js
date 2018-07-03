@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
+import Text from 'zrender/src/graphic/Text';
 
 /**
  * 每三位默认加,格式化
@@ -135,7 +136,8 @@ export function formatTplSimple(tpl, param, encode) {
  * @param {string} [opt.color]
  * @param {string} [opt.extraCssText]
  * @param {string} [opt.type='item'] 'item' or 'subItem'
- * @param {boolean} [opt.isRich=false] if renders with rich text
+ * @param {string} [opt.renderMode='html'] render mode of tooltip, 'html' or 'richtext'
+ * @param {string} [opt.markerId='X'] id name for marker. If only one marker is in a rich text, this can be omitted.
  * @return {string}
  */
 export function getTooltipMarker(opt, extraCssText) {
@@ -143,17 +145,14 @@ export function getTooltipMarker(opt, extraCssText) {
     var color = opt.color;
     var type = opt.type;
     var extraCssText = opt.extraCssText;
-    var isRich = opt.isRich == null ? false : opt.isRich;
+    var renderMode = opt.renderMode || 'html';
+    var markerId = opt.markerId || 'X';
 
     if (!color) {
         return '';
     }
 
-    if (isRich) {
-        // Space for rich element marker
-        return '{marker' + opt.markerId + '|}  ';
-    }
-    else {
+    if (renderMode === 'html') {
         return type === 'subItem'
         ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
             + 'border-radius:4px;width:4px;height:4px;background-color:'
@@ -161,6 +160,16 @@ export function getTooltipMarker(opt, extraCssText) {
         : '<span style="display:inline-block;margin-right:5px;'
             + 'border-radius:10px;width:10px;height:10px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
+    }
+    else {
+        // Space for rich element marker
+        return {
+            renderMode: renderMode,
+            content: '{marker' + markerId + '|}  ',
+            style: {
+                color: color
+            }
+        };
     }
 }
 

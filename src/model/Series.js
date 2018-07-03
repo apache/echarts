@@ -303,13 +303,19 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} dataIndex
      * @param {boolean} [multipleSeries=false]
      * @param {number} [dataType]
-     * @param {boolean} [isRich=false]
+     * @param {string} [renderMode='html'] valid values: 'html' and 'richtext'.
+     *                                     'html' is used for rendering tooltip in extra DOM form, and the result
+     *                                     string is used as DOM HTML content.
+     *                                     'richtext' is used for rendering tooltip in rich text form, for those where
+     *                                     DOM operation is not supported.
      * @return {Object} formatted tooltip with `html` and `markers`
      */
-    formatTooltip: function (dataIndex, multipleSeries, dataType, isRich) {
+    formatTooltip: function (dataIndex, multipleSeries, dataType, renderMode) {
 
         var series = this;
-        var newLine = isRich ? '\n' : '<br/>';
+        renderMode = renderMode || 'html';
+        var newLine = renderMode === 'html' ? '<br/>' : '\n';
+        var isRichText = renderMode === 'richtext';
         var markers = {};
         var markerId = 0;
 
@@ -338,9 +344,16 @@ var SeriesModel = ComponentModel.extend({
                 }
                 var dimType = dimInfo.type;
                 var markName = series.seriesIndex + 'at' + markerId;
-                var dimHead = getTooltipMarker({color: color, type: 'subItem', isRich: isRich, markerId: markName});
+                var dimHead = getTooltipMarker({
+                    color: color,
+                    type: 'subItem',
+                    renderMode: renderMode,
+                    markerId: markName
+                });
+
+                var dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
                 var valStr = (vertially
-                        ? dimHead + encodeHTML(dimInfo.displayName || '-') + ': '
+                        ? dimHeadStr + encodeHTML(dimInfo.displayName || '-') + ': '
                         : ''
                     )
                     // FIXME should not format time for raw data?
@@ -352,15 +365,16 @@ var SeriesModel = ComponentModel.extend({
                     );
                 valStr && result.push(valStr);
 
-                if (isRich) {
+                if (isRichText) {
                     markers[markName] = color;
                     ++markerId;
                 }
             }
 
             return {
-                html: (vertially ? isRich : '') + result.join(vertially ? isRich : ', '),
-                markers: markers
+                renderMode: renderMode,
+                content: (vertially ? isRichText : '') + result.join(vertially ? isRichText : ', '),
+                style: markers
             };
         }
 
@@ -388,7 +402,12 @@ var SeriesModel = ComponentModel.extend({
             : formatSingleValue(isValueArr ? value[0] : value);
 
         var markName = series.seriesIndex + 'at' + markerId;
-        var colorEl = getTooltipMarker({ color: color, type: 'item', isRich: isRich, markerId: markName });
+        var colorEl = getTooltipMarker({
+            color: color,
+            type: 'item',
+            renderMode: renderMode,
+            markerId: markName
+        });
         markers[markName] = color;
         ++markerId;
 
@@ -402,13 +421,14 @@ var SeriesModel = ComponentModel.extend({
             ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ': ')
             : '';
 
+        var colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
         var html = !multipleSeries
-            ? seriesName + colorEl
+            ? seriesName + colorStr
                 + (name
                     ? encodeHTML(name) + ': ' + formattedValue
                     : formattedValue
                 )
-            : colorEl + seriesName + formattedValue;
+            : colorStr + seriesName + formattedValue;
 
         return {
             html: html,

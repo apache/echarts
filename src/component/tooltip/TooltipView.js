@@ -50,22 +50,26 @@ export default echarts.extendComponentView({
         }
         var tooltip = ecModel.get('tooltip');
 
-        this._isRich = false;
-        if (tooltip.length && (tooltip[0].useHtml === false // force using non-html
-            || tooltip[0].useHtml === 'auto' && !document)) // auto using non-html when no `document`
-        {
-            this._isRich = true;
+        this._renderMode = 'html';
+        if (tooltip.length) {
+            if (tooltip[0].renderMode === 'auto') {
+                // using html when `document` exists, use richtext otherwise
+                this._renderMode = document ? 'html' : 'richtext';
+            }
+            else {
+                this._renderMode = tooltip[0].renderMode || this._renderMode;
+            }
         }
 
-        var tooltipContent
-        if (this._isRich) {
-            tooltipContent = new TooltipRichContent(api);
+        var tooltipContent;
+        if (this._renderMode === 'html') {
+            tooltipContent = new TooltipContent(api.getDom(), api);
+            this._newLine = '<br/>';
         }
         else {
-            tooltipContent = new TooltipContent(api.getDom(), api);
+            tooltipContent = new TooltipRichContent(api);
+            this._newLine = '\n';
         }
-
-        this._newLine = this._isRich ? '\n' : '<br/>';
 
         this._tooltipContent = tooltipContent;
     },
@@ -364,7 +368,7 @@ export default echarts.extendComponentView({
             globalTooltipModel
         ]);
 
-        var isRich = this._isRich;
+        var renderMode = this._renderMode;
         var newLine = this._newLine;
 
         var markers = {};
@@ -409,7 +413,7 @@ export default echarts.extendComponentView({
 
                     if (dataParams) {
                         singleParamsList.push(dataParams);
-                        var seriesTooltip = series.formatTooltip(dataIndex, true, null, isRich);
+                        var seriesTooltip = series.formatTooltip(dataIndex, true, null, renderMode);
 
                         var html;
                         if (zrUtil.isObject(seriesTooltip)) {
@@ -429,7 +433,7 @@ export default echarts.extendComponentView({
                 // (1) shold be the first data which has name?
                 // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
                 var firstLine = valueLabel;
-                if (isRich) {
+                if (renderMode !== 'html') {
                     singleDefaultHTML.push(seriesDefaultHTML.join(newLine))
                 }
                 else {
@@ -495,7 +499,7 @@ export default echarts.extendComponentView({
         }
 
         var params = dataModel.getDataParams(dataIndex, dataType);
-        var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._isRich);
+        var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
         var defaultHtml, markers;
         if (zrUtil.isObject(seriesTooltip)) {
             defaultHtml = seriesTooltip.html;

@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
 
@@ -29,9 +30,6 @@ function TooltipRichContent(api) {
 
     var zr = this._zr = api.getZr();
     // zr.add(this.el);
-
-    this._x = api.getWidth() / 2;
-    this._y = api.getHeight() / 2;
 
     this._show = false;
 
@@ -55,6 +53,7 @@ TooltipRichContent.prototype = {
      * Update when tooltip is rendered
      */
     update: function () {
+        // noop
     },
 
     show: function (tooltipModel) {
@@ -66,6 +65,13 @@ TooltipRichContent.prototype = {
         this._show = true;
     },
 
+    /**
+     * Set tooltip content
+     *
+     * @param {string} content rich text string of content
+     * @param {Object} markerRich rich text style
+     * @param {Object} tooltipModel tooltip model
+     */
     setContent: function (content, markerRich, tooltipModel) {
         if (this.el) {
             this._zr.remove(this.el);
@@ -103,6 +109,34 @@ TooltipRichContent.prototype = {
             z: tooltipModel.get('z')
         });
         this._zr.add(this.el);
+
+        var self = this;
+        this.el.on('mouseover', function () {
+            // clear the timeout in hideLater and keep showing tooltip
+            if (self._enterable) {
+                clearTimeout(self._hideTimeout);
+                self._show = true;
+            }
+            self._inContent = true;
+        });
+        this.el.on('mousemove', function (e) {
+            e = e || window.event;
+            if (!self._enterable) {
+                // Try trigger zrender event to avoid mouse
+                // in and out shape too frequently
+                var handler = zr.handler;
+                eventUtil.normalizeEvent(container, e, true);
+                handler.dispatch('mousemove', e);
+            }
+        });
+        this.el.on('mouseout', function () {
+            if (self._enterable) {
+                if (self._show) {
+                    self.hideLater(self._hideDelay);
+                }
+            }
+            self._inContent = false;
+        });
     },
 
     setEnterable: function (enterable) {
@@ -121,9 +155,22 @@ TooltipRichContent.prototype = {
     },
 
     hide: function () {
+        this.el.hide();
+        this._show = false;
     },
 
     hideLater: function (time) {
+        if (this._show && !(this._inContent && this._enterable)) {
+            if (time) {
+                this._hideDelay = time;
+                // Set show false to avoid invoke hideLater mutiple times
+                this._show = false;
+                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
+            }
+            else {
+                this.hide();
+            }
+        }
     },
 
     isShow: function () {

@@ -37,6 +37,8 @@ export default {
         var name = data.getName(dataIndex);
         var itemOpt = data.getRawDataItem(dataIndex);
         var color = data.getItemVisual(dataIndex, 'color');
+        var tooltip = this.ecModel.get('tooltip');
+        var renderMode = tooltip && tooltip.length ? tooltip[0].renderMode : 'auto';
 
         return {
             componentType: this.mainType,
@@ -51,7 +53,10 @@ export default {
             dataType: dataType,
             value: rawValue,
             color: color,
-            marker: getTooltipMarker(color),
+            marker: getTooltipMarker({
+                color: color,
+                renderMode: renderMode
+            }),
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']
