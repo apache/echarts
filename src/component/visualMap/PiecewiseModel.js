@@ -109,6 +109,11 @@ var PiecewiseModel = VisualMapModel.extend({
 
         resetMethods[this._mode].call(this);
 
+        // If the user has chosen selected options, do not reset them
+        if (!isInit && this.option.selected && newOption.selected === undefined) {
+            newOption.selected = this.option.selected
+        }
+
         this._resetSelected(newOption, isInit);
 
         var categories = this.option.categories;
