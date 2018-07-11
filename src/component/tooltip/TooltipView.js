@@ -479,6 +479,10 @@ export default echarts.extendComponentView({
         var seriesIndex = el.seriesIndex;
         var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
+        if (!el.dataModel && !seriesModel) {
+            return;
+        }
+
         // For example, graph link.
         var dataModel = el.dataModel || seriesModel;
         var dataIndex = el.dataIndex;
