@@ -48,7 +48,8 @@ var SankeySeries = SeriesModel.extend({
     },
 
     setNodePosition: function (dataIndex, localPosition) {
-        var dataItem = this.option.data[dataIndex];
+        var nodes = this.option.data || this.option.nodes;
+        var dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
     },
