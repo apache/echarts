@@ -303,6 +303,7 @@ var SliderZoomView = DataZoomView.extend({
         var size = this._size;
         var seriesModel = info.series;
         var data = seriesModel.getRawData();
+        var dataExtent = data.getDataExtent(info.thisDim);
 
         var otherDim = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
@@ -321,24 +322,35 @@ var SliderZoomView = DataZoomView.extend({
         ];
         var otherShadowExtent = [0, size[1]];
 
-        var thisShadowExtent = [0, size[0]];
+        var xAxisIndex = this.dataZoomModel.option.xAxisIndex[0];
 
-        var areaPoints = [[size[0], 0], [0, 0]];
+        var requestedStartValue = this.dataZoomModel.parentModel.option.xAxis[xAxisIndex].min
+            ? this.dataZoomModel.parentModel.option.xAxis[xAxisIndex].min
+            : 0;
+        var thisShadowExtentStart = (dataExtent[0] - requestedStartValue) / (requestedEndValue - requestedStartValue) * size[0];
+
+        var requestedEndValue = this.dataZoomModel.parentModel.option.xAxis[xAxisIndex].max
+            ? this.dataZoomModel.parentModel.option.xAxis[xAxisIndex].max
+            : size[0];
+
+        var thisShadowExtent = [
+            (dataExtent[0] - requestedStartValue) / (requestedEndValue - requestedStartValue) * size[0],
+            (dataExtent[1] - requestedStartValue) / (requestedEndValue - requestedStartValue) * size[0]
+        ];
+
+        var areaPoints = [[(thisShadowExtent[1]), 0], [thisShadowExtent[0], 0]];
         var linePoints = [];
-        var step = thisShadowExtent[1] / (data.count() - 1);
-        var thisCoord = 0;
+        var step = (thisShadowExtent[1] - thisShadowExtent[0]) / (data.count() - 1);
+        var thisCoord = thisShadowExtent[0];
 
         // Optimize for large data shadow
-        var stride = Math.round(data.count() / size[0]);
+        var stride = Math.round(data.count() / (thisShadowExtent[1] - thisShadowExtent[0]));
         var lastIsEmpty;
         data.each([otherDim], function (value, index) {
             if (stride > 0 && (index % stride)) {
                 thisCoord += step;
                 return;
             }
-
-            // FIXME
-            // Should consider axis.min/axis.max when drawing dataShadow.
 
             // FIXME
             // 应该使用统一的空判断？还是在list里进行空判断？
