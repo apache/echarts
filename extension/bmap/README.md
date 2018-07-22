@@ -31,9 +31,11 @@ ECharts 百度地图扩展，可以在百度地图上展现 [点图](http://echa
 
 如果是 webpack 打包，也可以 require 引入
 
+先在入口文件的`index.html`里引入百度地图的jssdk`<script src="http://api.map.baidu.com/api?v=2.0&ak="></script>`，然后
+
 ```js
 require('echarts');
-require('echarts/extension/bmap/bmap');
+require('echarts/extension/bmap/bmap'); // 或者require('echarts/dist/extension/bmap.min');
 ```
 
 插件会自动注册相应的组件。
