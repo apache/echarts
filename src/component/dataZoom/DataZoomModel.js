@@ -174,7 +174,7 @@ var DataZoomModel = echarts.extendComponentModel({
         var axisProxies = this._axisProxies;
 
         this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-            var axisModel = this.dependentModels[dimNames.axis][axisIndex];
+            var axisModel = this.dependentModels[dimNames.axis][axisIndex] || dataZoomModel;
 
             // If exists, share axisProxy with other dataZoomModels.
             var axisProxy = axisModel.__dzAxisProxy || (
