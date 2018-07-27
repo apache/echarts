@@ -9,12 +9,12 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 Now ECharts is an incubator project of Apache Software Foundation.
 Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
 
-**[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](http://ecomfe.github.io/echarts-doc/public/en/index.html)**
+**[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
 
 ## Get ECharts
 
 + Download [中文](http://echarts.baidu.com/download.html)
-+ Download [English](https://ecomfe.github.io/echarts-doc/public/en/download.html)
++ Download [English](https://echarts.apache.org/download.html)
 
 + `npm install echarts --save`
 
