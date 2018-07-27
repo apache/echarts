@@ -119,16 +119,6 @@ TooltipRichContent.prototype = {
             }
             self._inContent = true;
         });
-        this.el.on('mousemove', function (e) {
-            e = e || window.event;
-            if (!self._enterable) {
-                // Try trigger zrender event to avoid mouse
-                // in and out shape too frequently
-                var handler = zr.handler;
-                eventUtil.normalizeEvent(container, e, true);
-                handler.dispatch('mousemove', e);
-            }
-        });
         this.el.on('mouseout', function () {
             if (self._enterable) {
                 if (self._show) {

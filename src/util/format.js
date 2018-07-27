@@ -136,7 +136,7 @@ export function formatTplSimple(tpl, param, encode) {
  * @param {string} [opt.color]
  * @param {string} [opt.extraCssText]
  * @param {string} [opt.type='item'] 'item' or 'subItem'
- * @param {string} [opt.renderMode='html'] render mode of tooltip, 'html' or 'richtext'
+ * @param {string} [opt.renderMode='html'] render mode of tooltip, 'html' or 'richText'
  * @param {string} [opt.markerId='X'] id name for marker. If only one marker is in a rich text, this can be omitted.
  * @return {string}
  */

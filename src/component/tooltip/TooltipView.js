@@ -53,8 +53,8 @@ export default echarts.extendComponentView({
         var renderMode = tooltipModel.get('renderMode');
         this._renderMode = 'html';
         if (renderMode === 'auto') {
-            // using html when `document` exists, use richtext otherwise
-            this._renderMode = document ? 'html' : 'richtext';
+            // using html when `document` exists, use richText otherwise
+            this._renderMode = env.domSupported ? 'html' : 'richText';
         }
         else {
             this._renderMode = renderMode || this._renderMode;

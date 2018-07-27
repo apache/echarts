@@ -303,10 +303,10 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} dataIndex
      * @param {boolean} [multipleSeries=false]
      * @param {number} [dataType]
-     * @param {string} [renderMode='html'] valid values: 'html' and 'richtext'.
+     * @param {string} [renderMode='html'] valid values: 'html' and 'richText'.
      *                                     'html' is used for rendering tooltip in extra DOM form, and the result
      *                                     string is used as DOM HTML content.
-     *                                     'richtext' is used for rendering tooltip in rich text form, for those where
+     *                                     'richText' is used for rendering tooltip in rich text form, for those where
      *                                     DOM operation is not supported.
      * @return {Object} formatted tooltip with `html` and `markers`
      */
@@ -315,7 +315,7 @@ var SeriesModel = ComponentModel.extend({
         var series = this;
         renderMode = renderMode || 'html';
         var newLine = renderMode === 'html' ? '<br/>' : '\n';
-        var isRichText = renderMode === 'richtext';
+        var isRichText = renderMode === 'richText';
         var markers = {};
         var markerId = 0;
 
