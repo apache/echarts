@@ -7,30 +7,6 @@
     "canvas"
   ],
   "homepage": "http://echarts.baidu.com/",
-  "author": [
-    {
-      "name": "Kenner",
-      "email": "kener.linfeng@gmail.com"
-    },
-    {
-      "name": "Yi Shen",
-      "url": "https://github.com/pissang"
-    },
-    {
-      "name": "Shuang Su",
-      "url": "https://github.com/100pah"
-    },
-    {
-      "name": "Ovilia",
-      "url": "https://github.com/Ovilia"
-    }
-  ],
-  "contributors": [
-    {
-      "name": "erik",
-      "email": "errorrik@gmail.com"
-    }
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ecomfe/echarts.git"
