@@ -100,7 +100,14 @@ export default echarts.extendChartView({
      */
     _model: null,
 
+    /**
+     * @private
+     * @type {boolean}
+     */
+    _focusAdjacencyDisabled: false,
+
     render: function (seriesModel, ecModel, api) {
+        var sankeyView = this;
         var graph = seriesModel.getGraph();
         var group = this.group;
         var layoutInfo = seriesModel.layoutInfo;
@@ -111,6 +118,7 @@ export default echarts.extendChartView({
         
         var nodeData = seriesModel.getData();
         var edgeData = seriesModel.getData('edge');
+        var orient = seriesModel.get('orient');
 
         this._model = seriesModel;
 
@@ -127,7 +135,7 @@ export default echarts.extendChartView({
             var lineStyleModel = edge.getModel('lineStyle');
             var curvature = lineStyleModel.get('curveness');
             var n1Layout = edge.node1.getLayout();
-            var node1Model =edge.node1.getModel();
+            var node1Model = edge.node1.getModel();
             var dragX1 = node1Model.get('localX');
             var dragY1 = node1Model.get('localY');
             var n2Layout = edge.node2.getLayout();
@@ -176,7 +184,7 @@ export default echarts.extendChartView({
             edgeData.setItemGraphicEl(edge.dataIndex, curve);
         });
 
-        // generate a rect for each node
+        // Generate a rect for each node
         graph.eachNode(function (node) {
             var layout = node.getLayout();
             var itemModel = node.getModel();
@@ -220,9 +228,9 @@ export default echarts.extendChartView({
        
         nodeData.eachItemGraphicEl(function (el, dataIndex) {
             var itemModel = nodeData.getItemModel(dataIndex);
-            // var draggable = seriesModel.get('draggable');
             if (itemModel.get('draggable')) {
                 el.drift = function (dx, dy) {
+                    sankeyView._focusAdjacencyDisabled = true;
                     this.shape.x += dx;
                     this.shape.y += dy;
                     this.dirty();
@@ -234,25 +242,27 @@ export default echarts.extendChartView({
                         localY: this.shape.y / height
                     });
                 };
-        
                 el.draggable = true;
                 el.cursor = 'move';
-
             }
             
             if (itemModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
-                    api.dispatchAction({
-                        type: 'focusNodeAdjacency',
-                        seriesId: seriesModel.id,
-                        dataIndex: el.dataIndex
-                    });
+                    if (!sankeyView._focusAdjacencyDisabled) {
+                        api.dispatchAction({
+                            type: 'focusNodeAdjacency',
+                            seriesId: seriesModel.id,
+                            dataIndex: el.dataIndex
+                        });
+                    }
                 });
                 el.off('mouseout').on('mouseout', function () {
-                    api.dispatchAction({
-                        type: 'unfocusNodeAdjacency',
-                        seriesId: seriesModel.id
-                    })
+                    if (!sankeyView._focusAdjacencyDisabled) {
+                        api.dispatchAction({
+                            type: 'unfocusNodeAdjacency',
+                            seriesId: seriesModel.id
+                        });
+                    }
                 });
             }
         });
@@ -261,18 +271,22 @@ export default echarts.extendChartView({
             var edgeModel = edgeData.getItemModel(dataIndex);
             if (edgeModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
-                    api.dispatchAction({
-                        type: 'focusNodeAdjacency',
-                        seriesId: seriesModel.id,
-                        edgeDataIndex: el.dataIndex
-                    });
+                    if (!sankeyView._focusAdjacencyDisabled) {
+                        api.dispatchAction({
+                            type: 'focusNodeAdjacency',
+                            seriesId: seriesModel.id,
+                            edgeDataIndex: el.dataIndex
+                        });
+                    }
                 });
                 el.off('mouseout').on('mouseout', function () {
-                    api.dispatchAction({
-                        type: 'unfocusNodeAdjacency',
-                        seriesId: seriesModel.id,
-                    });
-                })
+                    if (!sankeyView._focusAdjacencyDisabled) {
+                        api.dispatchAction({
+                            type: 'unfocusNodeAdjacency',
+                            seriesId: seriesModel.id
+                        });
+                    }
+                });
             }
         });
 
