@@ -115,7 +115,6 @@ export default echarts.extendChartView({
         var width = layoutInfo.width;
         // view height
         var height = layoutInfo.height;
-        
         var nodeData = seriesModel.getData();
         var edgeData = seriesModel.getData('edge');
         var orient = seriesModel.get('orient');
@@ -150,10 +149,23 @@ export default echarts.extendChartView({
             var y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + edgeLayout.sy + edgeLayout.dy / 2;
             var x2 = dragX2 != null ? dragX2 * width : n2Layout.x;
             var y2 = (dragY2 != null ? dragY2 * height : n2Layout.y) + edgeLayout.ty + edgeLayout.dy / 2;
-            var cpx1 = x1 * (1 - curvature) + x2 * curvature;
-            var cpy1 = y1;
-            var cpx2 = x1 * curvature + x2 * (1 - curvature);
-            var cpy2 = y2;
+
+            if (orient === 'vertical') {
+                var cpx1 = x1;
+                var cpy1 = y1 * (1 - curvature) + y2 * curvature;
+                var cpx2 = x2;
+                var cpy2 = y1 * curvature + y2 * (1 - curvature);
+            }
+            else {
+                var cpx1 = x1 * (1 - curvature) + x2 * curvature;
+                var cpy1 = y1;
+                var cpx2 = x1 * curvature + x2 * (1 - curvature);
+                var cpy2 = y2;
+            }
+            // var cpx1 = x1 * (1 - curvature) + x2 * curvature;
+            // var cpy1 = y1;
+            // var cpx2 = x1 * curvature + x2 * (1 - curvature);
+            // var cpy2 = y2;
 
             curve.setShape({
                 x1: x1,
@@ -225,7 +237,7 @@ export default echarts.extendChartView({
 
             rect.dataType = 'node';
         });
-       
+
         nodeData.eachItemGraphicEl(function (el, dataIndex) {
             var itemModel = nodeData.getItemModel(dataIndex);
             if (itemModel.get('draggable')) {
@@ -242,10 +254,13 @@ export default echarts.extendChartView({
                         localY: this.shape.y / height
                     });
                 };
+                el.ondragend = function () {
+                    sankeyView._focusAdjacencyDisabled = false;
+                };
                 el.draggable = true;
                 el.cursor = 'move';
             }
-            
+
             if (itemModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
@@ -307,7 +322,7 @@ export default echarts.extendChartView({
         var dataIndex = payload.dataIndex;
         var itemModel = data.getItemModel(dataIndex);
         var edgeDataIndex = payload.edgeDataIndex;
-        
+
         if (dataIndex == null && edgeDataIndex == null) {
             return;
         }
