@@ -68,24 +68,41 @@ var SankeyShape = graphic.extendShape({
         x2: 0, y2: 0,
         cpx1: 0, cpy1: 0,
         cpx2: 0, cpy2: 0,
-
-        extent: 0
+        extent: 0,
+        orient: ''
     },
 
     buildPath: function (ctx, shape) {
         var halfExtent = shape.extent / 2;
-        ctx.moveTo(shape.x1, shape.y1 - halfExtent);
-        ctx.bezierCurveTo(
-            shape.cpx1, shape.cpy1 - halfExtent,
-            shape.cpx2, shape.cpy2 - halfExtent,
-            shape.x2, shape.y2 - halfExtent
-        );
-        ctx.lineTo(shape.x2, shape.y2 + halfExtent);
-        ctx.bezierCurveTo(
-            shape.cpx2, shape.cpy2 + halfExtent,
-            shape.cpx1, shape.cpy1 + halfExtent,
-            shape.x1, shape.y1 + halfExtent
-        );
+        var orient = shape.orient;
+        if (orient === 'vertical') {
+            ctx.moveTo(shape.x1 - halfExtent, shape.y1);
+            ctx.bezierCurveTo(
+                shape.cpx1 - halfExtent, shape.cpy1,
+                shape.cpx2 - halfExtent, shape.cpy2,
+                shape.x2 - halfExtent, shape.y2
+            );
+            ctx.lineTo(shape.x2 + halfExtent, shape.y2);
+            ctx.bezierCurveTo(
+                shape.cpx2 + halfExtent, shape.cpy2,
+                shape.cpx1 + halfExtent, shape.cpy1,
+                shape.x1 + halfExtent, shape.y1
+            );
+        }
+        else {
+            ctx.moveTo(shape.x1, shape.y1 - halfExtent);
+            ctx.bezierCurveTo(
+                shape.cpx1, shape.cpy1 - halfExtent,
+                shape.cpx2, shape.cpy2 - halfExtent,
+                shape.x2, shape.y2 - halfExtent
+            );
+            ctx.lineTo(shape.x2, shape.y2 + halfExtent);
+            ctx.bezierCurveTo(
+                shape.cpx2, shape.cpy2 + halfExtent,
+                shape.cpx1, shape.cpy1 + halfExtent,
+                shape.x1, shape.y1 + halfExtent
+            );
+        }
         ctx.closePath();
     }
 });
@@ -144,28 +161,28 @@ export default echarts.extendChartView({
             var edgeLayout = edge.getLayout();
 
             curve.shape.extent = Math.max(1, edgeLayout.dy);
-
-            var x1 = (dragX1 != null ? dragX1 * width : n1Layout.x) + n1Layout.dx;
-            var y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + edgeLayout.sy + edgeLayout.dy / 2;
-            var x2 = dragX2 != null ? dragX2 * width : n2Layout.x;
-            var y2 = (dragY2 != null ? dragY2 * height : n2Layout.y) + edgeLayout.ty + edgeLayout.dy / 2;
+            curve.shape.orient = orient;
 
             if (orient === 'vertical') {
+                var x1 = (dragX1 != null ? dragX1 * width : n1Layout.x) + edgeLayout.sy + edgeLayout.dy / 2;
+                var y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + n1Layout.dy;
+                var x2 = (dragX2 != null ? dragX2 * width : n2Layout.x) + edgeLayout.ty + edgeLayout.dy / 2;
+                var y2 = dragY2 != null ? dragY2 * height : n2Layout.y;
                 var cpx1 = x1;
                 var cpy1 = y1 * (1 - curvature) + y2 * curvature;
                 var cpx2 = x2;
                 var cpy2 = y1 * curvature + y2 * (1 - curvature);
             }
             else {
+                var x1 = (dragX1 != null ? dragX1 * width : n1Layout.x) + n1Layout.dx;
+                var y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + edgeLayout.sy + edgeLayout.dy / 2;
+                var x2 = dragX2 != null ? dragX2 * width : n2Layout.x;
+                var y2 = (dragY2 != null ? dragY2 * height : n2Layout.y) + edgeLayout.ty + edgeLayout.dy / 2;
                 var cpx1 = x1 * (1 - curvature) + x2 * curvature;
                 var cpy1 = y1;
                 var cpx2 = x1 * curvature + x2 * (1 - curvature);
                 var cpy2 = y2;
             }
-            // var cpx1 = x1 * (1 - curvature) + x2 * curvature;
-            // var cpy1 = y1;
-            // var cpx2 = x1 * curvature + x2 * (1 - curvature);
-            // var cpy2 = y2;
 
             curve.setShape({
                 x1: x1,
@@ -387,7 +404,7 @@ export default echarts.extendChartView({
     }
 });
 
-// add animation to the view
+// Add animation to the view
 function createGridClipShape(rect, seriesModel, cb) {
     var rectEl = new graphic.Rect({
         shape: {
