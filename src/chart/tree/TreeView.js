@@ -440,12 +440,16 @@ function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
     var cpx2;
     var cpy2;
     var orient = seriesScope.orient;
+    var x1;
+    var x2;
+    var y1;
+    var y2;
 
     if (seriesScope.layout === 'radial') {
-        var x1 = sourceLayout.rawX;
-        var y1 = sourceLayout.rawY;
-        var x2 = targetLayout.rawX;
-        var y2 = targetLayout.rawY;
+        x1 = sourceLayout.rawX;
+        y1 = sourceLayout.rawY;
+        x2 = targetLayout.rawX;
+        y2 = targetLayout.rawY;
 
         var radialCoor1 = radialCoordinate(x1, y1);
         var radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
@@ -463,33 +467,34 @@ function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
             cpy2: radialCoor3.y
         };
     }
-    else {
-        var x1 = sourceLayout.x;
-        var y1 = sourceLayout.y;
-        var x2 = targetLayout.x;
-        var y2 = targetLayout.y;
 
-        if (orient === 'LR' || orient === 'RL') {
-            cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
-            cpy1 = y1;
-            cpx2 = x2 + (x1 - x2) * seriesScope.curvature;
-            cpy2 = y2;
-        }
-        if (orient === 'TB' || orient === 'BT') {
-            cpx1 = x1;
-            cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
-            cpx2 = x2;
-            cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
-        }
-        return {
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2,
-            cpx1: cpx1,
-            cpy1: cpy1,
-            cpx2: cpx2,
-            cpy2: cpy2
-        };
+    x1 = sourceLayout.x;
+    y1 = sourceLayout.y;
+    x2 = targetLayout.x;
+    y2 = targetLayout.y;
+
+    if (orient === 'LR' || orient === 'RL') {
+        cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
+        cpy1 = y1;
+        cpx2 = x2 + (x1 - x2) * seriesScope.curvature;
+        cpy2 = y2;
     }
+    if (orient === 'TB' || orient === 'BT') {
+        cpx1 = x1;
+        cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
+        cpx2 = x2;
+        cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
+    }
+
+    return {
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2,
+        cpx1: cpx1,
+        cpy1: cpy1,
+        cpx2: cpx2,
+        cpy2: cpy2
+    };
+
 }

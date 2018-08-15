@@ -43,7 +43,7 @@ function commonLayout(seriesModel, api) {
     var width = 0;
     var height = 0;
     var separation = null;
-    
+
     if (layout === 'radial') {
         width = 2 * Math.PI;
         height = Math.min(layoutInfo.height, layoutInfo.width) / 2;
@@ -63,7 +63,7 @@ function commonLayout(seriesModel, api) {
     if (realRoot) {
         init(virtualRoot);
         eachAfter(realRoot, firstWalk, separation);
-        virtualRoot.hierNode.modifier = - realRoot.hierNode.prelim;
+        virtualRoot.hierNode.modifier = -realRoot.hierNode.prelim;
         eachBefore(realRoot, secondWalk);
 
         var left = realRoot;
@@ -100,7 +100,7 @@ function commonLayout(seriesModel, api) {
             });
         }
         else {
-            var orient = seriesModel.getOrient(); 
+            var orient = seriesModel.getOrient();
             if (orient === 'RL' || orient === 'LR') {
                 ky = height / (right.getLayout().x + delta + tx);
                 kx = width / ((bottom.depth - 1) || 1);
@@ -124,5 +124,5 @@ function commonLayout(seriesModel, api) {
                 });
             }
         }
-    } 
+    }
 }

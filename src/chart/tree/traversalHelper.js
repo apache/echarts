@@ -23,7 +23,7 @@
  * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
  * @param  {Function} callback
  */
-function eachAfter (root, callback, separation) {
+function eachAfter(root, callback, separation) {
     var nodes = [root];
     var next = [];
     var node;
@@ -50,7 +50,7 @@ function eachAfter (root, callback, separation) {
  * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
  * @param  {Function} callback
  */
-function eachBefore (root, callback) {
+function eachBefore(root, callback) {
     var nodes = [root];
     var node;
     while (node = nodes.pop()) { // jshint ignore:line
