@@ -17,7 +17,13 @@
 * under the License.
 */
 
+/**
+ * @file Register the actions of the tree
+ * @author Deqing Li(annong035@gmail.com)
+ */
+
 import * as echarts from '../../echarts';
+import {updateCenterAndZoom} from '../../action/roamHelper';
 
 echarts.registerAction({
     type: 'treeExpandAndCollapse',
@@ -30,5 +36,26 @@ echarts.registerAction({
         var node = tree.getNodeByDataIndex(dataIndex);
         node.isExpand = !node.isExpand;
 
+    });
+});
+
+echarts.registerAction({
+    type: 'treeRoam',
+    event: 'treeRoam',
+    // Here we set 'none' instead of 'update', because roam action
+    // just need to update the transform matrix without having to recalculate
+    // the layout. So don't need to go through the whole update process, such
+    // as 'dataPrcocess', 'coordSystemUpdate', 'layout' and so on.
+    update: 'none'
+}, function (payload, ecModel) {
+    ecModel.eachComponent({mainType: 'series', subType: 'tree', query: payload}, function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        var res = updateCenterAndZoom(coordSys, payload);
+
+        seriesModel.setCenter
+            && seriesModel.setCenter(res.center);
+        
+        seriesModel.setZoom
+            && seriesModel.setZoom(res.zoom);
     });
 });

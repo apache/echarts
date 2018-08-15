@@ -332,37 +332,41 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     // Do not use symbol.trigger('emphasis'), but use symbol.highlight() instead.
     graphic.setHoverStyle(symbolPath);
 
-    var scale = getScale(symbolSize);
+    symbolPath.__symbolOriginalScale = getScale(symbolSize);
 
     if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        var onEmphasis = function() {
-            // Do not support this hover animation util some scenario required.
-            // Animation can only be supported in hover layer when using `el.incremetal`.
-            if (this.incremental) {
-                return;
-            }
-            var ratio = scale[1] / scale[0];
-            this.animateTo({
-                scale: [
-                    Math.max(scale[0] * 1.1, scale[0] + 3),
-                    Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-                ]
-            }, 400, 'elasticOut');
-        };
-        var onNormal = function() {
-            if (this.incremental) {
-                return;
-            }
-            this.animateTo({
-                scale: scale
-            }, 400, 'elasticOut');
-        };
         symbolPath.on('mouseover', onEmphasis)
             .on('mouseout', onNormal)
             .on('emphasis', onEmphasis)
             .on('normal', onNormal);
     }
 };
+
+function onEmphasis() {
+    // Do not support this hover animation util some scenario required.
+    // Animation can only be supported in hover layer when using `el.incremetal`.
+    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
+        return;
+    }
+    var scale = this.__symbolOriginalScale;
+    var ratio = scale[1] / scale[0];
+    this.animateTo({
+        scale: [
+            Math.max(scale[0] * 1.1, scale[0] + 3),
+            Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
+        ]
+    }, 400, 'elasticOut');
+}
+
+function onNormal() {
+    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
+        return;
+    }
+    this.animateTo({
+        scale: this.__symbolOriginalScale
+    }, 400, 'elasticOut');
+}
+
 
 /**
  * @param {Function} cb

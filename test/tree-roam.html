@@ -52,11 +52,6 @@ under the License.
 
                     $.getJSON('./data/flare.json')
                     .done(function (data) {
-
-                        echarts.util.each(data.children, function (datum, index) {
-                            index % 2 === 0 && (datum.collapsed = true);
-                        });
-
                         chart.setOption({
 
                             tooltip: {
@@ -67,52 +62,27 @@ under the License.
                             series:[
                                 {
                                     type: 'tree',
-                                    id: '3',
-                                    
+
                                     data: [data],
 
-                                    top: '1%',
-                                    left: '7%',
-                                    bottom: '1%',
-                                    right: '20%',
+                                    top: '18%',
+                                    bottom: '14%',
+
+                                    roam: true,
+
+                                    layout: 'radial',
+
+                                    symbol: 'emptyCircle',
 
                                     symbolSize: 7,
 
-                                    // initialTreeDepth: -1,
+                                    initialTreeDepth: 3,
 
-                                    label: {
-                                            position: 'left',
-                                            verticalAlign: 'middle',
-                                            align: 'right'
-                                    },
-
-                                    leaves: {
-                                        label: {
-                                                position: 'right',
-                                                verticalAlign: 'middle',
-                                                align: 'left'
-                                        }
-                                    },
-
-                                    // expandAndCollapse: false,
-                                    animationDuration: 550,
                                     animationDurationUpdate: 750
+
                                 }
                             ]
                         });
-
-                        setTimeout(function() {
-                            var newData = echarts.util.clone(data);
-                            newData.children.splice(0, 1);
-                            chart.setOption({
-                                series: [{
-                                    type: 'tree',
-                                    id: '3',
-                                    data: [newData]
-                                }]
-                            }, false);
-                        }, 1000);
-
                     });
                 });
         </script>

@@ -34,15 +34,11 @@ var points = [
     ]
 ];
 
-export default function (geo) {
-    if (geo.map === 'china') {
-        for (var i = 0, len = geo.regions.length; i < len; ++i) {
-            if (geo.regions[i].name === '台湾') {
-                geo.regions[i].geometries.push({
-                    type: 'polygon',
-                    exterior: points[0]
-                });
-            }
-        }
+export default function (mapType, region) {
+    if (mapType === 'china' && region.name === '台湾') {
+        region.geometries.push({
+            type: 'polygon',
+            exterior: points[0]
+        });
     }
 }

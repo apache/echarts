@@ -43,6 +43,7 @@ import Scheduler from './stream/Scheduler';
 import lightTheme from './theme/light';
 import darkTheme from './theme/dark';
 import './component/dataset';
+import mapDataStorage from './coord/geo/mapDataStorage';
 
 var assert = zrUtil.assert;
 var each = zrUtil.each;
@@ -221,7 +222,7 @@ function ECharts(dom, theme, opts) {
      */
     this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
 
-    Eventful.call(this);
+    Eventful.call(this, this._ecEventProcessor = makeEventProcessor(this));
 
     /**
      * @type {module:echarts~MessageCenter}
@@ -1509,9 +1510,10 @@ echartsProto._initEvents = function () {
             var ecModel = this.getModel();
             var el = e.target;
             var params;
+            var isGlobalOut = eveName === 'globalout';
 
             // no e.target when 'globalout'.
-            if (eveName === 'globalout') {
+            if (isGlobalOut) {
                 params = {};
             }
             else if (el && el.dataIndex != null) {
@@ -1524,8 +1526,30 @@ echartsProto._initEvents = function () {
             }
 
             if (params) {
+                var componentType = params.componentType;
+                var componentIndex = params[componentType + 'Index'];
+                var model = componentType && componentIndex != null
+                    && ecModel.getComponent(componentType, componentIndex);
+                var view = model && this[
+                    model.mainType === 'series' ? '_chartsMap' : '_componentsMap'
+                ][model.__viewId];
+
+                if (__DEV__) {
+                    // `event.componentType` and `event[componentTpype + 'Index']` must not
+                    // be missed, otherwise there is no way to distinguish source component.
+                    // See `dataFormat.getDataParams`.
+                    zrUtil.assert(isGlobalOut || (model && view));
+                }
+
                 params.event = e;
                 params.type = eveName;
+
+                var ecEventProcessor = this._ecEventProcessor;
+                ecEventProcessor.targetEl = el;
+                ecEventProcessor.packedEvent = params;
+                ecEventProcessor.model = model;
+                ecEventProcessor.view = view;
+
                 this.trigger(eveName, params);
             }
 
@@ -1667,6 +1691,108 @@ function createExtensionAPI(ecInstance) {
 }
 
 /**
+ * Usage of query:
+ * `chart.on('click', query, handler);`
+ * The `query` can be:
+ * + The component type query string, only `mainType` or `mainType.subType`,
+ *   like: 'xAxis', 'series', 'xAxis.category' or 'series.line'.
+ * + The component query object, like:
+ *   `{seriesIndex: 2}`, `{seriesName: 'xx'}`, `{seriesId: 'some'}`,
+ *   `{xAxisIndex: 2}`, `{xAxisName: 'xx'}`, `{xAxisId: 'some'}`.
+ * + The element query object, like:
+ *   `{targetName: 'some'}` (only available in custom series).
+ *
+ * Caveat: If a prop in the `query` object is `null/undefined`, it is the
+ * same as there is no such prop in the `query` object.
+ */
+function makeEventProcessor(ecIns) {
+    return {
+
+        normalizeQuery: function (query) {
+            var cptQuery = {};
+            var dataQuery = {};
+            var otherQuery = {};
+
+            // `query` is `mainType` or `mainType.subType` of component.
+            if (zrUtil.isString(query)) {
+                var condCptType = parseClassType(query);
+                // `.main` and `.sub` may be ''.
+                cptQuery.mainType = condCptType.main || null;
+                cptQuery.subType = condCptType.sub || null;
+            }
+            // `query` is an object, convert to {mainType, index, name, id}.
+            else {
+                // `xxxIndex`, `xxxName`, `xxxId`, `name`, `dataIndex`, `dataType` is reserved,
+                // can not be used in `compomentModel.filterForExposedEvent`.
+                var suffixes = ['Index', 'Name', 'Id'];
+                var dataKeys = {name: 1, dataIndex: 1, dataType: 1};
+                zrUtil.each(query, function (val, key) {
+                    var reserved;
+                    for (var i = 0; i < suffixes.length; i++) {
+                        var propSuffix = suffixes[i];
+                        var suffixPos = key.lastIndexOf(propSuffix);
+                        if (suffixPos > 0 && suffixPos === key.length - propSuffix.length) {
+                            var mainType = key.slice(0, suffixPos);
+                            // Consider `dataIndex`.
+                            if (mainType !== 'data') {
+                                cptQuery.mainType = mainType;
+                                cptQuery[propSuffix.toLowerCase()] = val;
+                                reserved = true;
+                            }
+                        }
+                    }
+                    if (dataKeys.hasOwnProperty(key)) {
+                        dataQuery[key] = val;
+                        reserved = true;
+                    }
+                    if (!reserved) {
+                        otherQuery[key] = val;
+                    }
+                });
+            }
+
+            return {
+                cptQuery: cptQuery,
+                dataQuery: dataQuery,
+                otherQuery: otherQuery
+            };
+        },
+
+        filter: function (eventType, query, args) {
+            // They should be assigned before each trigger call.
+            var targetEl = this.targetEl;
+            var packedEvent = this.packedEvent;
+            var model = this.model;
+            var view = this.view;
+
+            // For event like 'globalout'.
+            if (!model || !view) {
+                return true;
+            }
+
+            var cptQuery = query.cptQuery;
+            var dataQuery = query.dataQuery;
+
+            return check(cptQuery, model, 'mainType')
+                && check(cptQuery, model, 'subType')
+                && check(cptQuery, model, 'index', 'componentIndex')
+                && check(cptQuery, model, 'name')
+                && check(cptQuery, model, 'id')
+                && check(dataQuery, packedEvent, 'name')
+                && check(dataQuery, packedEvent, 'dataIndex')
+                && check(dataQuery, packedEvent, 'dataType')
+                && (!view.filterForExposedEvent || view.filterForExposedEvent(
+                    eventType, query.otherQuery, targetEl, packedEvent
+                ));
+        }
+    };
+
+    function check(query, host, prop, propOnHost) {
+        return query[prop] == null || host[propOnHost || prop] === query[prop];
+    }
+}
+
+/**
  * @type {Object} key: actionType.
  * @inner
  */
@@ -1719,8 +1845,6 @@ var connectedGroups = {};
 var idBase = new Date() - 0;
 var groupIdBase = new Date() - 0;
 var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-
-var mapDataStores = {};
 
 function enableConnect(chart) {
     var STATUS_PENDING = 0;
@@ -2115,10 +2239,10 @@ export function setCanvasCreator(creator) {
 
 /**
  * @param {string} mapName
- * @param {Object|string} geoJson
+ * @param {Array.<Object>|Object|string} geoJson
  * @param {Object} [specialAreas]
  *
- * @example
+ * @example GeoJSON
  *     $.get('USA.json', function (geoJson) {
  *         echarts.registerMap('USA', geoJson);
  *         // Or
@@ -2127,20 +2251,20 @@ export function setCanvasCreator(creator) {
  *             specialAreas: {}
  *         })
  *     });
+ *
+ *     $.get('airport.svg', function (svg) {
+ *         echarts.registerMap('airport', {
+ *             svg: svg
+ *         }
+ *     });
+ *
+ *     echarts.registerMap('eu', [
+ *         {svg: eu-topographic.svg},
+ *         {geoJSON: eu.json}
+ *     ])
  */
 export function registerMap(mapName, geoJson, specialAreas) {
-    if (geoJson.geoJson && !geoJson.features) {
-        specialAreas = geoJson.specialAreas;
-        geoJson = geoJson.geoJson;
-    }
-    if (typeof geoJson === 'string') {
-        geoJson = (typeof JSON !== 'undefined' && JSON.parse)
-            ? JSON.parse(geoJson) : (new Function('return (' + geoJson + ');'))();
-    }
-    mapDataStores[mapName] = {
-        geoJson: geoJson,
-        specialAreas: specialAreas
-    };
+    mapDataStorage.registerMap(mapName, geoJson, specialAreas);
 }
 
 /**
@@ -2148,7 +2272,12 @@ export function registerMap(mapName, geoJson, specialAreas) {
  * @return {Object}
  */
 export function getMap(mapName) {
-    return mapDataStores[mapName];
+    // For backward compatibility, only return the first one.
+    var records = mapDataStorage.retrieveMap(mapName);
+    return records && records[0] && {
+        geoJson: records[0].geoJSON,
+        specialAreas: records[0].specialAreas
+    };
 }
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);

@@ -9,12 +9,12 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 Now ECharts is an incubator project of Apache Software Foundation.
 Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
 
-**[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](http://ecomfe.github.io/echarts-doc/public/en/index.html)**
+**[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
 
 ## Get ECharts
 
 + Download [中文](http://echarts.baidu.com/download.html)
-+ Download [English](https://ecomfe.github.io/echarts-doc/public/en/download.html)
++ Download [English](https://echarts.apache.org/download.html)
 
 + `npm install echarts --save`
 
@@ -64,6 +64,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ### Developers Contributions
 
+
 #### GIS
 
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
@@ -72,6 +73,14 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [echarts-leaflet](https://github.com/gnijuohz/echarts-leaflet) by gnijuohz
 
 + [ol3Echarts](https://github.com/sakitam-fdd/ol3Echarts) by sakitam-fdd
+
+#### Map Data and Tools
+
++ [echarts-mapmaker](https://github.com/echarts-maps/echarts-mapmaker) by chfw
++ [echarts-cities-js](https://github.com/echarts-maps/echarts-cities-js) by chfw
++ [echarts-china-cities-js](https://github.com/echarts-maps/echarts-china-cities-js) by chfw
++ [echarts-countries-js](https://github.com/echarts-maps/echarts-countries-js) by chfw
+
 
 #### AngularJS Binding
 
@@ -154,6 +163,6 @@ ECharts is available under the Apache License V2.
 ## Reference Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
-[ECharts: A Declarative Framework for Rapid Construction of Wed-based Visualization](http://www.cad.zju.edu.cn/home/vagblog/VAG_Work/echarts.pdf).
+[ECharts: A Declarative Framework for Rapid Construction of Wed-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).
 Visual Informatics, 2018.
 

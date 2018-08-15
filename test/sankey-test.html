@@ -117,7 +117,7 @@ under the License.
                     nodes: [
                         {
                             name: 'a'
-                        }, 
+                        },
                         {
                             name: 'b'
                         },
@@ -154,7 +154,7 @@ under the License.
                             source: 'b1',
                             target: 'a1',
                             value: 1
-                        }, 
+                        },
                         {
                             source: 'b1',
                             target: 'c',
@@ -183,10 +183,13 @@ under the License.
                             // focusNodeAdjacency: 'allEdges',
                             data: testData.nodes,
                             links: testData.links,
+                            orient: 'vertical',
+                            // orient: 'horizontal',
+
                             label: {
                                 position: 'left'
                             },
-                            // Used to test when the data is null whether it is work well. 
+                            // Used to test when the data is null whether it is work well.
                             // data: [],
                             // links: [],
                             lineStyle: {

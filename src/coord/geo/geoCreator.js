@@ -23,6 +23,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import Geo from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
+import geoSourceManager from './geoSourceManager';
+import mapDataStorage from './mapDataStorage';
 
 /**
  * Resize method bound to the geo
@@ -55,8 +57,7 @@ function resizeGeo(geoModel, api) {
     var viewWidth = api.getWidth();
     var viewHeight = api.getHeight();
 
-    var aspectScale = geoModel.get('aspectScale') || 0.75;
-    var aspect = rect.width / rect.height * aspectScale;
+    var aspect = rect.width / rect.height * this.aspectScale;
 
     var useCenterAndSize = false;
 
@@ -122,12 +123,6 @@ function setGeoCoords(geo, model) {
     });
 }
 
-if (__DEV__) {
-    var mapNotExistsError = function (name) {
-        console.error('Map ' + name + ' not exists. You can download map file on http://echarts.baidu.com/download-map.html');
-    };
-}
-
 var geoCreator = {
 
     // For deciding which dimensions to use when creating list data
@@ -139,17 +134,8 @@ var geoCreator = {
         // FIXME Create each time may be slow
         ecModel.eachComponent('geo', function (geoModel, idx) {
             var name = geoModel.get('map');
-            var mapData = echarts.getMap(name);
-            if (__DEV__) {
-                if (!mapData) {
-                    mapNotExistsError(name);
-                }
-            }
-            var geo = new Geo(
-                name + idx, name,
-                mapData && mapData.geoJson, mapData && mapData.specialAreas,
-                geoModel.get('nameMap')
-            );
+            var geo = new Geo(name + idx, name, geoModel.get('nameMap'));
+
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
 
@@ -157,6 +143,20 @@ var geoCreator = {
 
             geoModel.coordinateSystem = geo;
             geo.model = geoModel;
+
+            // FIXME ???
+            var aspectScale = geoModel.get('aspectScale');
+            var invertLng = true;
+            var mapRecords = mapDataStorage.retrieveMap(name);
+            if (mapRecords && mapRecords[0] && mapRecords[0].type === 'svg') {
+                aspectScale == null && (aspectScale = 1);
+                invertLng = false;
+            }
+            else {
+                aspectScale == null && (aspectScale = 0.75);
+            }
+            geo.aspectScale = aspectScale;
+            geo.invertLng = invertLng;
 
             // Inject resize method
             geo.resize = resizeGeo;
@@ -184,21 +184,11 @@ var geoCreator = {
         });
 
         zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
-            var mapData = echarts.getMap(mapType);
-            if (__DEV__) {
-                if (!mapData) {
-                    mapNotExistsError(mapSeries[0].get('map'));
-                }
-            }
-
             var nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('nameMap');
             });
-            var geo = new Geo(
-                mapType, mapType,
-                mapData && mapData.geoJson, mapData && mapData.specialAreas,
-                zrUtil.mergeAll(nameMapList)
-            );
+            var geo = new Geo(mapType, mapType, zrUtil.mergeAll(nameMapList));
+
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');
             }));
@@ -229,34 +219,18 @@ var geoCreator = {
     getFilledRegions: function (originRegionArr, mapName, nameMap) {
         // Not use the original
         var regionsArr = (originRegionArr || []).slice();
-        nameMap = nameMap || {};
-
-        var map = echarts.getMap(mapName);
-        var geoJson = map && map.geoJson;
-        if (!geoJson) {
-            if (__DEV__) {
-                mapNotExistsError(mapName);
-            }
-            return originRegionArr;
-        }
 
         var dataNameMap = zrUtil.createHashMap();
-        var features = geoJson.features;
         for (var i = 0; i < regionsArr.length; i++) {
             dataNameMap.set(regionsArr[i].name, regionsArr[i]);
         }
 
-        for (var i = 0; i < features.length; i++) {
-            var name = features[i].properties.name;
-            if (!dataNameMap.get(name)) {
-                if (nameMap.hasOwnProperty(name)) {
-                    name = nameMap[name];
-                }
-                regionsArr.push({
-                    name: name
-                });
-            }
-        }
+        var source = geoSourceManager.load(mapName, nameMap);
+        zrUtil.each(source.regions, function (region) {
+            var name = region.name;
+            !dataNameMap.get(name) && regionsArr.push({name: name});
+        });
+
         return regionsArr;
     }
 };

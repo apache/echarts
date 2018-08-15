@@ -97,24 +97,28 @@ var SankeySeries = SeriesModel.extend({
 
         layout: null,
 
-        // the position of the whole view
+        // The position of the whole view
         left: '5%',
         top: '5%',
         right: '20%',
         bottom: '5%',
 
-        // the dx of the node
+        // Value can be 'vertical'
+        orient: 'horizontal',
+
+        // The dx of the node
         nodeWidth: 20,
 
-        // the vertical distance between two nodes
+        // The vertical distance between two nodes
         nodeGap: 8,
 
-        // control if the node can move or not
+        // Control if the node can move or not
         draggable: true,
-       
+
+       // Value can be 'inEdges', 'outEdges', 'allEdges'.
         focusNodeAdjacency: false,
 
-        // the number of iterations to change the position of the node
+        // The number of iterations to change the position of the node
         layoutIterations: 32,
 
         label: {
