@@ -238,6 +238,10 @@ export function calculateCategoryInterval(axis) {
     isNaN(dw) && (dw = Infinity);
     isNaN(dh) && (dh = Infinity);
     var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
+    // add showAll attrbute in radiusAxis.axisLabel to show All Labels
+    if (axis.getLabelModel().get('showAll')) {
+        interval = 0;
+    }
 
     var cache = inner(axis.model);
     var lastAutoInterval = cache.lastAutoInterval;
