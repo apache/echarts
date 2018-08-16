@@ -23,6 +23,7 @@
  */
 
 import * as layout from '../../util/layout';
+import nest from '../../util/nest';
 import * as zrUtil from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
 
@@ -227,38 +228,15 @@ function scaleNodeBreadths(nodes, kx, orient) {
  * @param {number} iterations  the number of iterations for the algorithm
  */
 function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient) {
-    var i = -1;
-    var valuesByKey = {};
-    while (++i < nodes.length) {
-        if (orient === 'vertical') {
-            var keyValue = nodes[i].getLayout().y;
-        }
-        else {
-            var keyValue = nodes[i].getLayout().x;
-        }
-        var values = valuesByKey[keyValue];
-        if (values) {
-            values.push(nodes[i]);
-        }
-        else {
-            valuesByKey[keyValue] = [nodes[i]];
-        }
-    }
-
-    var tempArray = [];
-    zrUtil.each(valuesByKey, function (value, key) {
-        tempArray.push({
-            key: key, values: value
+    var nodesByBreadth = nest()
+        .key(getKeyFunction(orient))
+        .sortKeys(function (a, b) {
+            return a - b;
+        })
+        .entries(nodes)
+        .map(function (d) {
+            return d.values;
         });
-    });
-
-    tempArray.sort(function (a, b) {
-        return a.key - b.key;
-    });
-
-    var nodesByBreadth = tempArray.map(function (d) {
-        return d.values;
-    });
 
     initializeNodeDepth(nodes, nodesByBreadth, edges, height, width, nodeGap, orient);
     resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
@@ -272,6 +250,17 @@ function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, ori
         relaxLeftToRight(nodesByBreadth, alpha, orient);
         resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
     }
+}
+
+function getKeyFunction(orient) {
+    if (orient === 'vertical') {
+        return function (d) {
+            return d.getLayout().y;
+        };
+    }
+    return function (d) {
+        return d.getLayout().x;
+    };
 }
 
 /**
