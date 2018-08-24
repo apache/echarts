@@ -751,7 +751,7 @@ function renderNode(
 
         updateStyle(bg, function () {
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
-            normalStyle.fill = visualBorderColor;
+            normalStyle.fill = 'transparent';
             var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
             emphasisStyle.fill = emphasisBorderColor;
 
