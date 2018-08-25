@@ -74,7 +74,7 @@ export default echarts.extendComponentView({
     },
 
     render: function (tooltipModel, ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
 
@@ -730,7 +730,7 @@ export default echarts.extendComponentView({
     },
 
     dispose: function (ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
         this._tooltipContent.hide();
