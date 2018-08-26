@@ -371,8 +371,8 @@ var SeriesModel = ComponentModel.extend({
                 }
             }
 
-            const newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
-            const content = newLine + result.join(newLine || ', ');
+            var newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
+            var content = newLine + result.join(newLine || ', ');
             return {
                 renderMode: renderMode,
                 content: content,
