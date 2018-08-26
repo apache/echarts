@@ -85,12 +85,24 @@ TooltipRichContent.prototype = {
         while (startId >= 0) {
             var endId = text.indexOf(suffix);
             var name = text.substr(startId + prefix.length, endId - startId - prefix.length);
-            markers['marker' + name] = {
-                textWidth: 12,
-                textHeight: 12,
-                textBorderRadius: 6,
-                textBackgroundColor: markerRich[name]
-            };
+            if (name.indexOf('sub') > -1) {
+                markers['marker' + name] = {
+                    textWidth: 4,
+                    textHeight: 4,
+                    textBorderRadius: 2,
+                    textBackgroundColor: markerRich[name],
+                    // TODO: textOffset is not implemented for rich text
+                    textOffset: [3, 0]
+                };
+            }
+            else {
+                markers['marker' + name] = {
+                    textWidth: 10,
+                    textHeight: 10,
+                    textBorderRadius: 5,
+                    textBackgroundColor: markerRich[name]
+                };
+            }
 
             text = text.substr(endId + 1);
             startId = text.indexOf('{marker');
