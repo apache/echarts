@@ -217,7 +217,6 @@ export function calculateCategoryInterval(axis) {
         var width = 0;
         var height = 0;
 
-        // Polar is also calculated in assumptive linear layout here.
         // Not precise, do not consider align and vertical align
         // and each distance from axis line yet.
         var rect = textContain.getBoundingRect(
