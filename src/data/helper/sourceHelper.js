@@ -62,6 +62,10 @@ export function detectSourceFormat(datasetModel) {
     }
     else if (isArray(data)) {
         // FIXME Whether tolerate null in top level array?
+        if (data.length === 0) {
+            sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
+        }
+
         for (var i = 0, len = data.length; i < len; i++) {
             var item = data[i];
 
