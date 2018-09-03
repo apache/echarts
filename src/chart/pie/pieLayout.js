@@ -25,6 +25,32 @@ import * as zrUtil from 'zrender/src/core/util';
 var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;
 
+var limitScaleLayout = function (seriesModel,valueSum) {
+    var data = seriesModel.getData();
+    data.each(function(idx){
+        var itemModel = data.getItemModel(idx);
+        var labelModel = itemModel.getModel('label');
+        var limitScale = labelModel.get('limitScale');
+        if(limitScale !==undefined){
+            //限制比例的话，循环data数据获得比例，小于对应比例的，label和labelLine中的show设置成false
+            if(valueSum*limitScale > itemModel.option.value){
+                itemModel.option.label = {
+                    show:false
+                };
+                itemModel.option.emphasis={
+                    label:{
+                        show : false
+                    },
+                    labelLine:{
+                        show:false
+                    }
+                };
+                itemModel.option.labelLine = {show:false};
+            }
+        }
+    });
+}
+
 export default function (seriesType, ecModel, api, payload) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
         var data = seriesModel.getData();
@@ -58,6 +84,7 @@ export default function (seriesType, ecModel, api, payload) {
         });
 
         var sum = data.getSum(valueDim);
+        limitScaleLayout(seriesModel, sum);
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
