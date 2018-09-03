@@ -106,6 +106,9 @@ var SankeySeries = SeriesModel.extend({
         // Value can be 'vertical'
         orient: 'horizontal',
 
+        // Value can be 'left'
+        align: 'justify',
+
         // The dx of the node
         nodeWidth: 20,
 
