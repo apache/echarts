@@ -33,7 +33,7 @@ rules:
         - 2
         - "allow-null"
     guard-for-in: 1
-    no-else-return: 1
+    no-else-return: 0
     no-labels:
         - 1
         -
@@ -52,7 +52,7 @@ rules:
     no-octal: 1
     no-octal-escape: 1
     no-proto: 2
-    no-redeclare: 1
+    no-redeclare: 0
     no-self-compare: 2
     no-unneeded-ternary: 2
     no-with: 1
@@ -152,7 +152,7 @@ rules:
             ignoreComments: true
     max-params:
         - 1
-        - 6
+        - 15
 
     space-infix-ops: 2
     dot-notation:
