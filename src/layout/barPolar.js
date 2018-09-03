@@ -70,9 +70,8 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var columnWidth = columnLayoutInfo.width;
         var valueAxis = polar.getOtherAxis(baseAxis);
 
-        var center = seriesModel.get('center') || ['50%', '50%'];
-        var cx = parsePercent(center[0], width);
-        var cy = parsePercent(center[1], height);
+        var cx = seriesModel.coordinateSystem.cx;
+        var cy = seriesModel.coordinateSystem.cy;
 
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
         var barMinAngle = seriesModel.get('barMinAngle') || 0;

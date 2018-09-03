@@ -123,7 +123,7 @@ export default SeriesModel.extend({
         zlevel: 0,
         z: 2,
         coordinateSystem: 'view',
-        
+
         // the position of the whole view
         left: '12%',
         top: '12%',

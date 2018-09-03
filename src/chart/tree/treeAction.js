@@ -54,7 +54,7 @@ echarts.registerAction({
 
         seriesModel.setCenter
             && seriesModel.setCenter(res.center);
-        
+
         seriesModel.setZoom
             && seriesModel.setZoom(res.zoom);
     });

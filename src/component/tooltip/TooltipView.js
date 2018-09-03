@@ -31,6 +31,7 @@ import Model from '../../model/Model';
 import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
+import { getRenderMode } from '../../util/model';
 
 var bind = zrUtil.bind;
 var each = zrUtil.each;
@@ -51,14 +52,7 @@ export default echarts.extendComponentView({
 
         var tooltipModel = ecModel.getComponent('tooltip');
         var renderMode = tooltipModel.get('renderMode');
-        this._renderMode = 'html';
-        if (renderMode === 'auto') {
-            // using html when `document` exists, use richText otherwise
-            this._renderMode = env.domSupported ? 'html' : 'richText';
-        }
-        else {
-            this._renderMode = renderMode || this._renderMode;
-        }
+        this._renderMode = getRenderMode(renderMode);
 
         var tooltipContent;
         if (this._renderMode === 'html') {
@@ -74,7 +68,7 @@ export default echarts.extendComponentView({
     },
 
     render: function (tooltipModel, ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
 
@@ -730,7 +724,7 @@ export default echarts.extendComponentView({
     },
 
     dispose: function (ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
         this._tooltipContent.hide();
