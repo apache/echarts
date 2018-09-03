@@ -173,7 +173,7 @@ rules:
     no-this-before-super: 1
     no-var: 0
     no-duplicate-imports: 1
-    prefer-rest-params: 2
+    prefer-rest-params: 0
     unicode-bom: 1
     max-statements-per-line: 2
 
