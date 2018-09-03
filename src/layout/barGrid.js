@@ -420,11 +420,23 @@ function isInLargeMode(seriesModel) {
     return seriesModel.pipelineContext && seriesModel.pipelineContext.large;
 }
 
+// See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis, valueAxis, stacked) {
-    return (
-        zrUtil.indexOf(baseAxis.getAxesOnZeroOf(), valueAxis) >= 0
-        || stacked
-    )
-    ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
-    : valueAxis.getGlobalExtent()[0];
+    var extent = valueAxis.getGlobalExtent();
+    var min;
+    var max;
+    if (extent[0] > extent[1]) {
+        min = extent[1];
+        max = extent[0];
+    }
+    else {
+        min = extent[0];
+        max = extent[1];
+    }
+
+    var valueStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    valueStart < min && (valueStart = min);
+    valueStart > max && (valueStart = max);
+
+    return valueStart;
 }
