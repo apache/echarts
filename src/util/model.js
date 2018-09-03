@@ -525,7 +525,7 @@ export function getAttribute(dom, key) {
         : dom[key];
 }
 
-export function getRenderMode(renderModeOption) {
+export function getTooltipRenderMode(renderModeOption) {
     if (renderModeOption === 'auto') {
         // Using html when `document` exists, use richText otherwise
         return env.domSupported ? 'html' : 'richText';
