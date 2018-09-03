@@ -31,7 +31,7 @@ import Model from '../../model/Model';
 import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
-import { getRenderMode } from '../../util/model';
+import { getTooltipRenderMode } from '../../util/model';
 
 var bind = zrUtil.bind;
 var each = zrUtil.each;
@@ -52,7 +52,7 @@ export default echarts.extendComponentView({
 
         var tooltipModel = ecModel.getComponent('tooltip');
         var renderMode = tooltipModel.get('renderMode');
-        this._renderMode = getRenderMode(renderMode);
+        this._renderMode = getTooltipRenderMode(renderMode);
 
         var tooltipContent;
         if (this._renderMode === 'html') {
