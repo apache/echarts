@@ -467,23 +467,24 @@ function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
             cpy2: radialCoor3.y
         };
     }
+    else {
+        x1 = sourceLayout.x;
+        y1 = sourceLayout.y;
+        x2 = targetLayout.x;
+        y2 = targetLayout.y;
 
-    x1 = sourceLayout.x;
-    y1 = sourceLayout.y;
-    x2 = targetLayout.x;
-    y2 = targetLayout.y;
-
-    if (orient === 'LR' || orient === 'RL') {
-        cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
-        cpy1 = y1;
-        cpx2 = x2 + (x1 - x2) * seriesScope.curvature;
-        cpy2 = y2;
-    }
-    if (orient === 'TB' || orient === 'BT') {
-        cpx1 = x1;
-        cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
-        cpx2 = x2;
-        cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
+        if (orient === 'LR' || orient === 'RL') {
+            cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
+            cpy1 = y1;
+            cpx2 = x2 + (x1 - x2) * seriesScope.curvature;
+            cpy2 = y2;
+        }
+        if (orient === 'TB' || orient === 'BT') {
+            cpx1 = x1;
+            cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
+            cpx2 = x2;
+            cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
+        }
     }
 
     return {
