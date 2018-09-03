@@ -365,6 +365,10 @@ var PieView = ChartView.extend({
                 shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel
             ));
         }
+        else {
+            // clipPath is used in first-time animation, so remove it when otherwise. See: #8994
+            group.removeClipPath();
+        }
 
         this._data = data;
     },
