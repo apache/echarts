@@ -9,7 +9,12 @@ globals:
     jQuery: true
     Promise: true
 rules:
-    no-console: 1
+    no-console:
+        - 2
+        -
+            allow:
+                - "warn"
+                - "error"
     no-constant-condition: 1
     comma-dangle: 2
     no-debugger: 2
