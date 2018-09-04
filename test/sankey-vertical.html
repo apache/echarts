@@ -44,6 +44,7 @@ under the License.
                     chart.resize();
                 };
 
+                // Data used to test the circle
                 // var data = {
                 //     nodes: [
                 //         {name: 'Brazil'},
@@ -180,16 +181,13 @@ under the License.
                             type: 'sankey',
                             layout:'none',
                             bottom: '10%',
-                            // focusNodeAdjacency: 'allEdges',
+                            focusNodeAdjacency: 'allEdges',
                             data: testData.nodes,
                             links: testData.links,
                             orient: 'vertical',
                             label: {
-                                position: 'left'
+                                position: 'top'
                             },
-                            // Used to test when the data is null whether it is work well.
-                            // data: [],
-                            // links: [],
                             lineStyle: {
                                 normal: {
                                     color: 'source',
