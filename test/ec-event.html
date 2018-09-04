@@ -78,26 +78,31 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
-                        'Check event log on console:',
-                        'click | xAxis click | yAxis.category click | series click | series scatter click',
+                        '[click scatter point, console.log]: "clk", "clk series", "clk series.scatter"',
+                        '[click xAxis, console.log]: "clk", "clk xAxis", "clk xAxis.category"',
+                        '[click yAxis.category, console.log]: "clk"',
+                        '[click line point, console.log]: "clk", "clk series"'
                     ],
                     option: option
                 });
 
                 chart.on('click', function () {
-                    console.log('click');
+                    console.log('clk');
                 });
                 chart.on('click', 'xAxis', function () {
-                    console.log('click xAxis');
+                    console.log('clk xAxis');
+                });
+                chart.on('click', 'xAxis.category', function () {
+                    console.log('clk xAxis.category');
                 });
                 chart.on('click', 'yAxis.category', function () {
-                    console.log('click yAxis.category');
+                    console.log('clk yAxis.category');
                 });
                 chart.on('click', 'series', function () {
-                    console.log('click series');
+                    console.log('clk series');
                 });
                 chart.on('click', 'series.scatter', function () {
-                    console.log('click series.scatter');
+                    console.log('clk series.scatter');
                 });
 
             });
@@ -123,8 +128,10 @@ under the License.
                     },
                     yAxis: [{
                         id: 'left',
+                        name: 'yAxisIndex: 0',
                         triggerEvent: true
                     }, {
+                        name: 'yAxisIndex: 1',
                         triggerEvent: true,
                         type: 'category'
                     }],
@@ -132,7 +139,7 @@ under the License.
                         type: 'line',
                         name: 'line-all',
                         symbolSize: 20,
-                        data: [121, 442, 55],
+                        data: [121, {name: 'dataIndex 1', value: 442}, 55],
                     }, {
                         type: 'scatter',
                         yAxisIndex: 1,
@@ -143,7 +150,7 @@ under the License.
                         symbolSize: 20,
                         data: [
                             'asdf',
-                            {name: 'ff', value: 'zxcv'},
+                            {name: 'ff, dataIndex 1', value: 'zxcv'},
                             'qwer'
                         ]
                     }, {
@@ -156,7 +163,7 @@ under the License.
                         },
                         data: [
                             {name: 'ee', value: 234},
-                            {name: 'ff', value: 113},
+                            {name: 'ff, dataIndex 1', value: 113},
                             {name: 'gg', value: 255}
                         ]
                     }]
@@ -164,30 +171,35 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main1', {
                     title: [
-                        'Check event log on console:',
-                        'click | click yAxisIndex: 1 | mouseover yAxisId: "left" | click seriesName: "line-all"',
-                        'click data name "ff" | mouseup seriesName: "line-all", dataIndex: 1'
+                        '[click scatter point, console.log]: "clk"',
+                        '[click line point, console.log]: "clk", "click line-all"',
+                        '[mouseup line point dataIndex 1, console.log]: "mup line-all dataIndex 1"',
+                        '[mouseup scatter point dataIndex 1, console.log]: nothing logged',
+                        '[mouseup line point not dataIndex 1, console.log]: nothing logged',
+                        '[mouseover yAxisId: "left", console.log]: "mover yAxisId x"',
+                        '[click yAxisIndex: 1, console.log]: "clk", "clk yAxisIndex 1"',
+                        '[click data name "gg", console.log]: "clk", "clk data name gg"'
                     ],
                     option: option
                 });
 
                 chart.on('click', function () {
-                    console.log('click');
+                    console.log('clk');
                 });
                 chart.on('click', {yAxisIndex: 1}, function () {
-                    console.log('click yAxisIndex: 1');
+                    console.log('clk yAxisIndex 1');
                 });
                 chart.on('mouseover', {yAxisId: 'left'}, function () {
-                    console.log('mouseover yAxisId: "x"');
+                    console.log('mover yAxisId x');
                 });
                 chart.on('click', {seriesName: 'line-all'}, function () {
-                    console.log('click seriesName: "line-all"');
+                    console.log('clk line-all');
                 });
-                chart.on('click', {name: 'ff'}, function () {
-                    console.log('click {name: "ff"}');
+                chart.on('click', {name: 'gg'}, function () {
+                    console.log('clk data name gg');
                 });
                 chart.on('mouseup', {seriesName: 'line-all', dataIndex: 1}, function () {
-                    console.log('mouseup {seriesName: "line-all", dataIndex: 1}');
+                    console.log('mup line-all dataIndex 1');
                 });
             });
 

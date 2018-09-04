@@ -222,7 +222,7 @@ function ECharts(dom, theme, opts) {
      */
     this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
 
-    Eventful.call(this, this._ecEventProcessor = makeEventProcessor(this));
+    Eventful.call(this, this._ecEventProcessor = new EventProcessor());
 
     /**
      * @type {module:echarts~MessageCenter}
@@ -391,7 +391,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
  * @DEPRECATED
  */
 echartsProto.setTheme = function () {
-    console.log('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+    console.error('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
 };
 
 /**
@@ -1526,7 +1526,10 @@ echartsProto._initEvents = function () {
             }
 
             if (params) {
-                var componentType = params.componentType;
+                // When trigger by markLine/markPoint/markArea, the
+                // componentType is 'markLine'/'markPoint'/'markArea'.
+                var componentType = params.seriesIndex != null
+                    ? 'series' : params.componentType;
                 var componentIndex = params[componentType + 'Index'];
                 var model = componentType && componentIndex != null
                     && ecModel.getComponent(componentType, componentIndex);
@@ -1544,11 +1547,12 @@ echartsProto._initEvents = function () {
                 params.event = e;
                 params.type = eveName;
 
-                var ecEventProcessor = this._ecEventProcessor;
-                ecEventProcessor.targetEl = el;
-                ecEventProcessor.packedEvent = params;
-                ecEventProcessor.model = model;
-                ecEventProcessor.view = view;
+                this._ecEventProcessor.eventInfo = {
+                    targetEl: el,
+                    packedEvent: params,
+                    model: model,
+                    view: view
+                };
 
                 this.trigger(eveName, params);
             }
@@ -1690,7 +1694,9 @@ function createExtensionAPI(ecInstance) {
     });
 }
 
+
 /**
+ * @class
  * Usage of query:
  * `chart.on('click', query, handler);`
  * The `query` can be:
@@ -1705,92 +1711,102 @@ function createExtensionAPI(ecInstance) {
  * Caveat: If a prop in the `query` object is `null/undefined`, it is the
  * same as there is no such prop in the `query` object.
  */
-function makeEventProcessor(ecIns) {
-    return {
+function EventProcessor() {
+    // These info required: targetEl, packedEvent, model, view
+    this.eventInfo;
+}
+EventProcessor.prototype = {
+    constructor: EventProcessor,
 
-        normalizeQuery: function (query) {
-            var cptQuery = {};
-            var dataQuery = {};
-            var otherQuery = {};
+    normalizeQuery: function (query) {
+        var cptQuery = {};
+        var dataQuery = {};
+        var otherQuery = {};
 
-            // `query` is `mainType` or `mainType.subType` of component.
-            if (zrUtil.isString(query)) {
-                var condCptType = parseClassType(query);
-                // `.main` and `.sub` may be ''.
-                cptQuery.mainType = condCptType.main || null;
-                cptQuery.subType = condCptType.sub || null;
-            }
-            // `query` is an object, convert to {mainType, index, name, id}.
-            else {
-                // `xxxIndex`, `xxxName`, `xxxId`, `name`, `dataIndex`, `dataType` is reserved,
-                // can not be used in `compomentModel.filterForExposedEvent`.
-                var suffixes = ['Index', 'Name', 'Id'];
-                var dataKeys = {name: 1, dataIndex: 1, dataType: 1};
-                zrUtil.each(query, function (val, key) {
-                    var reserved;
-                    for (var i = 0; i < suffixes.length; i++) {
-                        var propSuffix = suffixes[i];
-                        var suffixPos = key.lastIndexOf(propSuffix);
-                        if (suffixPos > 0 && suffixPos === key.length - propSuffix.length) {
-                            var mainType = key.slice(0, suffixPos);
-                            // Consider `dataIndex`.
-                            if (mainType !== 'data') {
-                                cptQuery.mainType = mainType;
-                                cptQuery[propSuffix.toLowerCase()] = val;
-                                reserved = true;
-                            }
+        // `query` is `mainType` or `mainType.subType` of component.
+        if (zrUtil.isString(query)) {
+            var condCptType = parseClassType(query);
+            // `.main` and `.sub` may be ''.
+            cptQuery.mainType = condCptType.main || null;
+            cptQuery.subType = condCptType.sub || null;
+        }
+        // `query` is an object, convert to {mainType, index, name, id}.
+        else {
+            // `xxxIndex`, `xxxName`, `xxxId`, `name`, `dataIndex`, `dataType` is reserved,
+            // can not be used in `compomentModel.filterForExposedEvent`.
+            var suffixes = ['Index', 'Name', 'Id'];
+            var dataKeys = {name: 1, dataIndex: 1, dataType: 1};
+            zrUtil.each(query, function (val, key) {
+                var reserved;
+                for (var i = 0; i < suffixes.length; i++) {
+                    var propSuffix = suffixes[i];
+                    var suffixPos = key.lastIndexOf(propSuffix);
+                    if (suffixPos > 0 && suffixPos === key.length - propSuffix.length) {
+                        var mainType = key.slice(0, suffixPos);
+                        // Consider `dataIndex`.
+                        if (mainType !== 'data') {
+                            cptQuery.mainType = mainType;
+                            cptQuery[propSuffix.toLowerCase()] = val;
+                            reserved = true;
                         }
                     }
-                    if (dataKeys.hasOwnProperty(key)) {
-                        dataQuery[key] = val;
-                        reserved = true;
-                    }
-                    if (!reserved) {
-                        otherQuery[key] = val;
-                    }
-                });
-            }
-
-            return {
-                cptQuery: cptQuery,
-                dataQuery: dataQuery,
-                otherQuery: otherQuery
-            };
-        },
-
-        filter: function (eventType, query, args) {
-            // They should be assigned before each trigger call.
-            var targetEl = this.targetEl;
-            var packedEvent = this.packedEvent;
-            var model = this.model;
-            var view = this.view;
-
-            // For event like 'globalout'.
-            if (!model || !view) {
-                return true;
-            }
-
-            var cptQuery = query.cptQuery;
-            var dataQuery = query.dataQuery;
-
-            return check(cptQuery, model, 'mainType')
-                && check(cptQuery, model, 'subType')
-                && check(cptQuery, model, 'index', 'componentIndex')
-                && check(cptQuery, model, 'name')
-                && check(cptQuery, model, 'id')
-                && check(dataQuery, packedEvent, 'name')
-                && check(dataQuery, packedEvent, 'dataIndex')
-                && check(dataQuery, packedEvent, 'dataType')
-                && (!view.filterForExposedEvent || view.filterForExposedEvent(
-                    eventType, query.otherQuery, targetEl, packedEvent
-                ));
+                }
+                if (dataKeys.hasOwnProperty(key)) {
+                    dataQuery[key] = val;
+                    reserved = true;
+                }
+                if (!reserved) {
+                    otherQuery[key] = val;
+                }
+            });
         }
-    };
 
-    function check(query, host, prop, propOnHost) {
-        return query[prop] == null || host[propOnHost || prop] === query[prop];
+        return {
+            cptQuery: cptQuery,
+            dataQuery: dataQuery,
+            otherQuery: otherQuery
+        };
+    },
+
+    filter: function (eventType, query, args) {
+        // They should be assigned before each trigger call.
+        var eventInfo = this.eventInfo;
+        var targetEl = eventInfo.targetEl;
+        var packedEvent = eventInfo.packedEvent;
+        var model = eventInfo.model;
+        var view = eventInfo.view;
+
+        // For event like 'globalout'.
+        if (!model || !view) {
+            return true;
+        }
+
+        var cptQuery = query.cptQuery;
+        var dataQuery = query.dataQuery;
+
+        return check(cptQuery, model, 'mainType')
+            && check(cptQuery, model, 'subType')
+            && check(cptQuery, model, 'index', 'componentIndex')
+            && check(cptQuery, model, 'name')
+            && check(cptQuery, model, 'id')
+            && check(dataQuery, packedEvent, 'name')
+            && check(dataQuery, packedEvent, 'dataIndex')
+            && check(dataQuery, packedEvent, 'dataType')
+            && (!view.filterForExposedEvent || view.filterForExposedEvent(
+                eventType, query.otherQuery, targetEl, packedEvent
+            ));
+
+        function check(query, host, prop, propOnHost) {
+            return query[prop] == null || host[propOnHost || prop] === query[prop];
+        }
+    },
+
+    afterTrigger: function () {
+        // clear immediately after used.
+        this.eventInfo = null;
     }
-}
+};
+
 
 /**
  * @type {Object} key: actionType.
@@ -1990,7 +2006,7 @@ export function dispose(chart) {
     if (typeof chart === 'string') {
         chart = instances[chart];
     }
-    else if (!(chart instanceof ECharts)){
+    else if (!(chart instanceof ECharts)) {
         // Try to treat as dom
         chart = getInstanceByDom(chart);
     }
