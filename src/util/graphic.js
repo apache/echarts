@@ -1077,6 +1077,8 @@ export function groupTransition(g1, g2, animatableModel, cb) {
  * @return {Array.<Array.<number>>} A new clipped points.
  */
 export function clipPointsByRect(points, rect) {
+    // FIXME: this way migth be incorrect when grpahic clipped by a corner.
+    // and when element have border.
     return zrUtil.map(points, function (point) {
         var x = point[0];
         x = mathMax(x, rect.x);
@@ -1099,6 +1101,8 @@ export function clipRectByRect(targetRect, rect) {
     var y = mathMax(targetRect.y, rect.y);
     var y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
 
+    // If the total rect is cliped, nothing, including the border,
+    // should be painted. So return undefined.
     if (x2 >= x && y2 >= y) {
         return {
             x: x,
