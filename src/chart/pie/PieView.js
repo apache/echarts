@@ -70,11 +70,11 @@ function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation
     hasAnimation
         // animateTo will stop revious animation like update transition
         ? el.animate()
-        .when(200, {
-            position: position
-        })
-        .start('bounceOut') :
-        el.attr('position', position);
+            .when(200, {
+                position: position
+            })
+            .start('bounceOut') 
+        : el.attr('position', position);
 }
 
 /**
@@ -146,7 +146,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
             }, seriesModel, idx);
         }
 
-    } 
+    }
     else {
         graphic.updateProps(sector, {
             shape: sectorShape
