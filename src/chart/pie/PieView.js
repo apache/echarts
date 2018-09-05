@@ -39,7 +39,7 @@ function updateDataSelected(uid, seriesModel, hasAnimation, api) {
         seriesId: seriesModel.id
     });
 
-    data.each(function(idx) {
+    data.each(function (idx) {
         toggleItemSelected(
             data.getItemGraphicEl(idx),
             data.getItemLayout(idx),
@@ -68,7 +68,7 @@ function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation
     var position = [dx * offset, dy * offset];
 
     hasAnimation
-    // animateTo will stop revious animation like update transition
+        // animateTo will stop revious animation like update transition
         ?
         el.animate()
         .when(200, {
@@ -103,7 +103,6 @@ function PiePiece(data, idx) {
         polyline.ignore = polyline.hoverIgnore;
         text.ignore = text.hoverIgnore;
     }
-
     function onNormal() {
         polyline.ignore = polyline.normalIgnore;
         text.ignore = text.normalIgnore;
@@ -240,9 +239,7 @@ piePieceProto._updateLabel = function(data, idx) {
     graphic.updateProps(labelLine, {
         shape: {
             points: labelLayout.linePoints || [
-                [labelLayout.x, labelLayout.y],
-                [labelLayout.x, labelLayout.y],
-                [labelLayout.x, labelLayout.y]
+                [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
             ]
         }
     }, seriesModel, idx);
@@ -266,13 +263,15 @@ piePieceProto._updateLabel = function(data, idx) {
     var visualColor = data.getItemVisual(idx, 'color');
 
     graphic.setLabelStyle(
-        labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel, {
+        labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
+        {
             labelFetcher: data.hostModel,
             labelDataIndex: idx,
             defaultText: data.getName(idx),
             autoColor: visualColor,
             useInsideStyle: !!labelLayout.inside
-        }, {
+        },
+        {
             textAlign: labelLayout.textAlign,
             textVerticalAlign: labelLayout.verticalAlign,
             opacity: data.getItemVisual(idx, 'opacity')
@@ -311,12 +310,12 @@ var PieView = ChartView.extend({
 
     type: 'pie',
 
-    init: function() {
+    init: function () {
         var sectorGroup = new graphic.Group();
         this._sectorGroup = sectorGroup;
     },
 
-    render: function(seriesModel, ecModel, api, payload) {
+    render: function (seriesModel, ecModel, api, payload) {
         if (payload && (payload.from === this.uid)) {
             return;
         }
@@ -336,7 +335,7 @@ var PieView = ChartView.extend({
         var selectedMode = seriesModel.get('selectedMode');
 
         data.diff(oldData)
-            .add(function(idx) {
+            .add(function (idx) {
                 var piePiece = new PiePiece(data, idx);
                 // Default expansion animation
                 if (isFirstRender && animationType !== 'scale') {
@@ -351,7 +350,7 @@ var PieView = ChartView.extend({
 
                 group.add(piePiece);
             })
-            .update(function(newIdx, oldIdx) {
+            .update(function (newIdx, oldIdx) {
                 var piePiece = oldData.getItemGraphicEl(oldIdx);
 
                 piePiece.updateData(data, newIdx);
@@ -361,7 +360,7 @@ var PieView = ChartView.extend({
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
             })
-            .remove(function(idx) {
+            .remove(function (idx) {
                 var piePiece = oldData.getItemGraphicEl(idx);
                 group.remove(piePiece);
             })
@@ -370,8 +369,7 @@ var PieView = ChartView.extend({
         if (
             hasAnimation && isFirstRender && data.count() > 0
             // Default expansion animation
-            &&
-            animationType !== 'scale'
+            && animationType !== 'scale'
         ) {
             var shape = data.getItemLayout(0);
             var r = Math.max(api.getWidth(), api.getHeight()) / 2;
@@ -385,9 +383,9 @@ var PieView = ChartView.extend({
         this._data = data;
     },
 
-    dispose: function() {},
+    dispose: function () {},
 
-    _createClipPath: function(
+    _createClipPath: function (
         cx, cy, r, startAngle, clockwise, cb, seriesModel
     ) {
         var clipPath = new graphic.Sector({
@@ -414,7 +412,7 @@ var PieView = ChartView.extend({
     /**
      * @implement
      */
-    containPoint: function(point, seriesModel) {
+    containPoint: function (point, seriesModel) {
         var data = seriesModel.getData();
         var itemLayout = data.getItemLayout(0);
         if (itemLayout) {
