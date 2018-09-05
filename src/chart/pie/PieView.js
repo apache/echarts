@@ -1,21 +1,21 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
@@ -39,7 +39,7 @@ function updateDataSelected(uid, seriesModel, hasAnimation, api) {
         seriesId: seriesModel.id
     });
 
-    data.each(function (idx) {
+    data.each(function(idx) {
         toggleItemSelected(
             data.getItemGraphicEl(idx),
             data.getItemLayout(idx),
@@ -68,13 +68,14 @@ function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation
     var position = [dx * offset, dy * offset];
 
     hasAnimation
-        // animateTo will stop revious animation like update transition
-        ? el.animate()
-            .when(200, {
-                position: position
-            })
-            .start('bounceOut')
-        : el.attr('position', position);
+    // animateTo will stop revious animation like update transition
+        ?
+        el.animate()
+        .when(200, {
+            position: position
+        })
+        .start('bounceOut') :
+        el.attr('position', position);
 }
 
 /**
@@ -102,6 +103,7 @@ function PiePiece(data, idx) {
         polyline.ignore = polyline.hoverIgnore;
         text.ignore = text.hoverIgnore;
     }
+
     function onNormal() {
         polyline.ignore = polyline.normalIgnore;
         text.ignore = text.normalIgnore;
@@ -114,7 +116,7 @@ function PiePiece(data, idx) {
 
 var piePieceProto = PiePiece.prototype;
 
-piePieceProto.updateData = function (data, idx, firstCreate) {
+piePieceProto.updateData = function(data, idx, firstCreate) {
 
     var sector = this.childAt(0);
 
@@ -146,8 +148,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
             }, seriesModel, idx);
         }
 
-    }
-    else {
+    } else {
         graphic.updateProps(sector, {
             shape: sectorShape
         }, seriesModel, idx);
@@ -157,8 +158,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     var visualColor = data.getItemVisual(idx, 'color');
 
     sector.useStyle(
-        zrUtil.defaults(
-            {
+        zrUtil.defaults({
                 lineJoin: 'bevel',
                 fill: visualColor
             },
@@ -189,6 +189,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
             }
         }, 300, 'elasticOut');
     }
+
     function onNormal() {
         sector.stopAnimation(true);
         sector.animateTo({
@@ -211,7 +212,20 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     graphic.setHoverStyle(this);
 };
 
-piePieceProto._updateLabel = function (data, idx) {
+piePieceProto._getFilterIgnore = function(data, idx) {
+    var seriesModel = data.hostModel;
+    var itemModel = data.getItemModel(idx);
+    var valueDim = data.mapDimension('value');
+    var sum = data.getSum(valueDim);
+    var filterValue = seriesModel.getModel('filterValue');
+    var filterIgnore = false;
+    if (sum * filterValue.option > itemModel.option.value) {
+        filterIgnore = true;
+    }
+    return filterIgnore;
+}
+
+piePieceProto._updateLabel = function(data, idx) {
 
     var labelLine = this.childAt(1);
     var labelText = this.childAt(2);
@@ -221,11 +235,14 @@ piePieceProto._updateLabel = function (data, idx) {
     var layout = data.getItemLayout(idx);
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
+    var filterIgnore = this._getFilterIgnore(data, idx);
 
     graphic.updateProps(labelLine, {
         shape: {
             points: labelLayout.linePoints || [
-                [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
+                [labelLayout.x, labelLayout.y],
+                [labelLayout.x, labelLayout.y],
+                [labelLayout.x, labelLayout.y]
             ]
         }
     }, seriesModel, idx);
@@ -249,26 +266,24 @@ piePieceProto._updateLabel = function (data, idx) {
     var visualColor = data.getItemVisual(idx, 'color');
 
     graphic.setLabelStyle(
-        labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
-        {
+        labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel, {
             labelFetcher: data.hostModel,
             labelDataIndex: idx,
             defaultText: data.getName(idx),
             autoColor: visualColor,
             useInsideStyle: !!labelLayout.inside
-        },
-        {
+        }, {
             textAlign: labelLayout.textAlign,
             textVerticalAlign: labelLayout.verticalAlign,
             opacity: data.getItemVisual(idx, 'opacity')
         }
     );
 
-    labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
-    labelText.hoverIgnore = !labelHoverModel.get('show');
+    labelText.ignore = labelText.normalIgnore = !labelModel.get('show') || filterIgnore;
+    labelText.hoverIgnore = !labelHoverModel.get('show') || filterIgnore;
 
-    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
-    labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show') || filterIgnore;
+    labelLine.hoverIgnore = !labelLineHoverModel.get('show') || filterIgnore;
 
     // Default use item visual color
     labelLine.setStyle({
@@ -296,12 +311,12 @@ var PieView = ChartView.extend({
 
     type: 'pie',
 
-    init: function () {
+    init: function() {
         var sectorGroup = new graphic.Group();
         this._sectorGroup = sectorGroup;
     },
 
-    render: function (seriesModel, ecModel, api, payload) {
+    render: function(seriesModel, ecModel, api, payload) {
         if (payload && (payload.from === this.uid)) {
             return;
         }
@@ -321,11 +336,11 @@ var PieView = ChartView.extend({
         var selectedMode = seriesModel.get('selectedMode');
 
         data.diff(oldData)
-            .add(function (idx) {
+            .add(function(idx) {
                 var piePiece = new PiePiece(data, idx);
                 // Default expansion animation
                 if (isFirstRender && animationType !== 'scale') {
-                    piePiece.eachChild(function (child) {
+                    piePiece.eachChild(function(child) {
                         child.stopAnimation(true);
                     });
                 }
@@ -336,7 +351,7 @@ var PieView = ChartView.extend({
 
                 group.add(piePiece);
             })
-            .update(function (newIdx, oldIdx) {
+            .update(function(newIdx, oldIdx) {
                 var piePiece = oldData.getItemGraphicEl(oldIdx);
 
                 piePiece.updateData(data, newIdx);
@@ -346,7 +361,7 @@ var PieView = ChartView.extend({
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
             })
-            .remove(function (idx) {
+            .remove(function(idx) {
                 var piePiece = oldData.getItemGraphicEl(idx);
                 group.remove(piePiece);
             })
@@ -355,7 +370,8 @@ var PieView = ChartView.extend({
         if (
             hasAnimation && isFirstRender && data.count() > 0
             // Default expansion animation
-            && animationType !== 'scale'
+            &&
+            animationType !== 'scale'
         ) {
             var shape = data.getItemLayout(0);
             var r = Math.max(api.getWidth(), api.getHeight()) / 2;
@@ -369,9 +385,9 @@ var PieView = ChartView.extend({
         this._data = data;
     },
 
-    dispose: function () {},
+    dispose: function() {},
 
-    _createClipPath: function (
+    _createClipPath: function(
         cx, cy, r, startAngle, clockwise, cb, seriesModel
     ) {
         var clipPath = new graphic.Sector({
@@ -398,7 +414,7 @@ var PieView = ChartView.extend({
     /**
      * @implement
      */
-    containPoint: function (point, seriesModel) {
+    containPoint: function(point, seriesModel) {
         var data = seriesModel.getData();
         var itemLayout = data.getItemLayout(0);
         if (itemLayout) {
