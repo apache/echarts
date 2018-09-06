@@ -6,10 +6,10 @@
     "visualization",
     "canvas"
   ],
-  "homepage": "http://echarts.baidu.com/",
+  "homepage": "http://echarts.apache.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ecomfe/echarts.git"
+    "url": "https://github.com/apache/incubator-echarts.git"
   },
   "scripts": {
     "prepublish": "node build/build.js --prepublish"

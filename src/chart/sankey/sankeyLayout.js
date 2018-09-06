@@ -166,7 +166,7 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient) {
         }
     }
 
-    moveSinksRight(nodes, x);
+    moveSinksRight(nodes, x, orient);
 
     if (orient === 'vertical') {
         kx = (height - nodeWidth) / (x - 1);
