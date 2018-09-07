@@ -95,10 +95,9 @@ rules:
     no-multi-spaces:
         - 2
         -
+            ignoreEOLComments: true
             exceptions:
                 Property: true
-                BinaryExpression: true
-                VariableDeclarator: true
     no-new-object: 2
     no-spaced-func: 2
     no-trailing-spaces: 2
