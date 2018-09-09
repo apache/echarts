@@ -246,11 +246,16 @@ under the License.
                             ].join('\n')
                         }
                     }],
-                    title: {
-                        text: 'this is a text of title component',
-                        subtext: 'this is a subtext of title component',
-                        top: 100
-                    }
+                    title: [{
+                        text: 'this is a text of title component, triggerEvent: true',
+                        subtext: 'this is a subtext of title component, triggerEvent: true',
+                        triggerEvent: true,
+                        top: 120
+                    }, {
+                        text: 'this is a text of title component, triggerEvent: default(false)',
+                        subtext: 'this is a subtext of title component, triggerEvent: default(false)',
+                        top: 180
+                    }]
                 };
 
                 chart = myChart = testHelper.create(echarts, 'main4', {

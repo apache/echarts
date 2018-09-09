@@ -132,9 +132,10 @@ echarts.extendComponentView({
 
         var link = titleModel.get('link');
         var sublink = titleModel.get('sublink');
+        var triggerEvent = titleModel.get('triggerEvent', true);
 
-        textEl.silent = !link;
-        subTextEl.silent = !sublink;
+        textEl.silent = !link && !triggerEvent;
+        subTextEl.silent = !sublink && !triggerEvent;
 
         if (link) {
             textEl.on('click', function () {
@@ -146,6 +147,13 @@ echarts.extendComponentView({
                 window.open(sublink, '_' + titleModel.get('subtarget'));
             });
         }
+
+        textEl.eventData = subTextEl.eventData = triggerEvent
+            ? {
+                componentType: 'title',
+                titleIndex: titleModel.componentIndex
+            }
+            : null;
 
         group.add(textEl);
         subText && group.add(subTextEl);
