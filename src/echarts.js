@@ -1518,7 +1518,7 @@ echartsProto._initEvents = function () {
             }
             else if (el && el.dataIndex != null) {
                 var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
-                params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
+                params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType, el) || {};
             }
             // If element has custom eventData of components
             else if (el && el.eventData) {
@@ -1705,8 +1705,10 @@ function createExtensionAPI(ecInstance) {
  * + The component query object, like:
  *   `{seriesIndex: 2}`, `{seriesName: 'xx'}`, `{seriesId: 'some'}`,
  *   `{xAxisIndex: 2}`, `{xAxisName: 'xx'}`, `{xAxisId: 'some'}`.
- * + The element query object, like:
- *   `{name: 'some'}` (only available in custom series).
+ * + The data query object, like:
+ *   `{dataIndex: 123}`, `{dataType: 'link'}`, `{name: 'some'}`.
+ * + The other query object (cmponent customized query), like:
+ *   `{element: 'some'}` (only available in custom series).
  *
  * Caveat: If a prop in the `query` object is `null/undefined`, it is the
  * same as there is no such prop in the `query` object.
@@ -1737,7 +1739,7 @@ EventProcessor.prototype = {
             var suffixes = ['Index', 'Name', 'Id'];
             var dataKeys = {name: 1, dataIndex: 1, dataType: 1};
             zrUtil.each(query, function (val, key) {
-                var reserved;
+                var reserved = false;
                 for (var i = 0; i < suffixes.length; i++) {
                     var propSuffix = suffixes[i];
                     var suffixPos = key.lastIndexOf(propSuffix);

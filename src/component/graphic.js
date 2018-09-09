@@ -86,7 +86,7 @@ var GraphicModel = echarts.extendComponentModel({
         //          This mode is similar to css behavior, which is useful when you
         //          want an element to be able to overflow its container. (Consider
         //          a rotated circle needs to be located in a corner.)
-        // data: custom data. enables user to mount some info on elements and use them
+        // info: custom info. enables user to mount some info on elements and use them
         //      in event handlers. Update them only when user specified, otherwise, remain.
 
         // Note: elements is always behind its ancestors in this elements array.
@@ -539,18 +539,13 @@ function setEventData(el, graphicModel, elOption) {
         eventData = el.eventData = {
             componentType: 'graphic',
             graphicIndex: graphicModel.componentIndex,
-            data: el.__userData,
             name: el.name
         };
     }
 
-    // `elOption.data` enables user to mount some info on
+    // `elOption.info` enables user to mount some info on
     // elements and use them in event handlers.
-    // Update them only when user specified, otherwise, remain.
-    if (elOption.hasOwnProperty('data')) {
-        el.__userData = elOption.data;
-    }
     if (eventData) {
-        eventData.data = el.__userData;
+        eventData.info = el.info;
     }
 }

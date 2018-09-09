@@ -288,36 +288,36 @@ under the License.
                         type: 'text',
                         left: 50,
                         top: 20,
-                        data: {
+                        info: {
                             x: 1
                         },
                         style: {
                             textBackgroundColor: '#123456',
                             textPadding: 5,
                             fill: '#fff',
-                            text: 'click data is {x: 1}'
+                            text: 'click info is {x: 1}'
                         }
                     }, {
                         type: 'text',
                         left: 50,
                         top: 100,
-                        data: 1234567,
+                        info: 1234567,
                         style: {
                             textBackgroundColor: '#678901',
                             textPadding: 5,
                             fill: '#ff0',
-                            text: 'click data is 1234567'
+                            text: 'click info is 1234567'
                         }
                     }, {
                         type: 'text',
                         left: 50,
                         top: 150,
-                        data: ['a', 'b'],
+                        info: ['a', 'b'],
                         style: {
                             textBackgroundColor: '#678901',
                             textPadding: 5,
                             fill: '#ff2',
-                            text: 'click data is ["a", "b"]'
+                            text: 'click info is ["a", "b"]'
                         }
                     }]
                 };
@@ -325,23 +325,23 @@ under the License.
                 var chart = testHelper.create(echarts, 'main5', {
                     option: option,
                     title: [
-                        'user data check',
+                        'user info check',
                         'click text see console.log',
                         'then click the button, and click text see console.log'
                     ],
                     button: {
-                        text: 'setOption to merge user data',
+                        text: 'setOption to merge user info',
                         onclick: function () {
                             chart.setOption({
                                 graphic: [{
-                                    data: {b: 2},
+                                    info: {b: 2},
                                     style: {
-                                        text: 'click data is {b: 2}'
+                                        text: 'click info is {b: 2}'
                                     }
                                 }, {
-                                    data: void 0,
+                                    info: void 0,
                                     style: {
-                                        text: 'click data is undefined'
+                                        text: 'click info is undefined'
                                     }
                                 }]
                             });
@@ -350,7 +350,7 @@ under the License.
                 });
 
                 chart.on('click', function (params) {
-                    console.log(params.data);
+                    console.log(params.info);
                 })
             });
         </script>

@@ -18,13 +18,14 @@
 */
 
 import {__DEV__} from '../config';
-import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
-import { getLayoutOnAxis } from '../layout/barGrid';
+import {getLayoutOnAxis} from '../layout/barGrid';
 import DataDiffer from '../data/DataDiffer';
+import SeriesModel from '../model/Series';
+import ChartView from '../view/Chart';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
 import prepareGeo from '../coord/geo/prepareCustom';
@@ -60,11 +61,12 @@ var prepareCustoms = {
     calendar: prepareCalendar
 };
 
+
 // ------
 // Model
 // ------
 
-echarts.extendSeriesModel({
+SeriesModel.extend({
 
     type: 'series.custom',
 
@@ -92,8 +94,20 @@ echarts.extendSeriesModel({
         // itemStyle: {}
     },
 
+    /**
+     * @override
+     */
     getInitialData: function (option, ecModel) {
         return createListFromArray(this.getSource(), this);
+    },
+
+    /**
+     * @override
+     */
+    getDataParams: function (dataIndex, dataType, el) {
+        var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
+        el && (params.info = el.info);
+        return params;
     }
 });
 
@@ -101,7 +115,7 @@ echarts.extendSeriesModel({
 // View
 // -----
 
-echarts.extendChartView({
+ChartView.extend({
 
     type: 'custom',
 
@@ -175,15 +189,15 @@ echarts.extendChartView({
      * @override
      */
     filterForExposedEvent: function (eventType, query, targetEl, packedEvent) {
-        var targetName = query.target;
-        if (targetName == null || targetEl.name === targetName) {
+        var elementName = query.element;
+        if (elementName == null || targetEl.name === elementName) {
             return true;
         }
 
         // Enable to give a name on a group made by `renderItem`, and listen
         // events that triggerd by its descendents.
         while ((targetEl = targetEl.parent) && targetEl !== this.group) {
-            if (targetEl.name === targetName) {
+            if (targetEl.name === elementName) {
                 return true;
             }
         }
@@ -213,13 +227,11 @@ function createEl(elOption) {
         el.__customPathData = elOption.pathData;
     }
     else if (graphicType === 'image') {
-        el = new graphicUtil.Image({
-        });
+        el = new graphicUtil.Image({});
         el.__customImagePath = elOption.style.image;
     }
     else if (graphicType === 'text') {
-        el = new graphicUtil.Text({
-        });
+        el = new graphicUtil.Text({});
         el.__customText = elOption.style.text;
     }
     else {
@@ -239,24 +251,24 @@ function createEl(elOption) {
 }
 
 function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot) {
-    var targetProps = {};
+    var transitionProps = {};
     var elOptionStyle = elOption.style || {};
 
-    elOption.shape && (targetProps.shape = zrUtil.clone(elOption.shape));
-    elOption.position && (targetProps.position = elOption.position.slice());
-    elOption.scale && (targetProps.scale = elOption.scale.slice());
-    elOption.origin && (targetProps.origin = elOption.origin.slice());
-    elOption.rotation && (targetProps.rotation = elOption.rotation);
+    elOption.shape && (transitionProps.shape = zrUtil.clone(elOption.shape));
+    elOption.position && (transitionProps.position = elOption.position.slice());
+    elOption.scale && (transitionProps.scale = elOption.scale.slice());
+    elOption.origin && (transitionProps.origin = elOption.origin.slice());
+    elOption.rotation && (transitionProps.rotation = elOption.rotation);
 
     if (el.type === 'image' && elOption.style) {
-        var targetStyle = targetProps.style = {};
+        var targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
     }
 
     if (el.type === 'text' && elOption.style) {
-        var targetStyle = targetProps.style = {};
+        var targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
@@ -283,19 +295,22 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     }
 
     if (isInit) {
-        el.attr(targetProps);
+        el.attr(transitionProps);
     }
     else {
-        graphicUtil.updateProps(el, targetProps, animatableModel, dataIndex);
+        graphicUtil.updateProps(el, transitionProps, animatableModel, dataIndex);
     }
 
+    // Merge by default.
     // z2 must not be null/undefined, otherwise sort error may occur.
-    el.attr({
-        z2: elOption.z2 || 0,
-        silent: elOption.silent,
-        invisible: elOption.invisible,
-        ignore: elOption.ignore
-    });
+    elOption.hasOwnProperty('z2') && el.attr('z2', elOption.z2 || 0);
+    elOption.hasOwnProperty('silent') && el.attr('silent', elOption.silent);
+    elOption.hasOwnProperty('invisible') && el.attr('invisible', elOption.invisible);
+    elOption.hasOwnProperty('ignore') && el.attr('ignore', elOption.ignore);
+    // `elOption.info` enables user to mount some info on
+    // elements and use them in event handlers.
+    // Update them only when user specified, otherwise, remain.
+    elOption.hasOwnProperty('info') && el.attr('info', elOption.info);
 
     // If `elOption.styleEmphasis` is `false`, remove hover style. The
     // logic is ensured by `graphicUtil.setElementHoverStyle`.

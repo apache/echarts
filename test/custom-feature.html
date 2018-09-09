@@ -40,6 +40,8 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main2"></div>
+        <!-- <div id="main1"></div> -->
 
 
         <script>
@@ -82,6 +84,7 @@ under the License.
                                             cx: 0,
                                             cy: 0
                                         },
+                                        info: 0,
                                         style: {
                                             fill: 'red',
                                             text: 'dataIndex: ' + params.dataIndex,
@@ -110,20 +113,173 @@ under the License.
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
                         'Eventful: ',
-                        '+ red shapes trigger events, but green shapes not. ',
+                        '+ red circle and red rect trigger events, but green shapes not. ',
                         '+ Only dataIndex: 1 trigger event',
-                        'events (click, mousedown, mousemove, mouseup) are printed in console log.'
+                        '+ events (click, mousedown, mousemove, mouseup) are printed in console log.',
+                        '+ red circle: params.info = 0, red rect: params.info = undefined'
                     ],
                     option: option
                 });
 
-                echarts.util.each(['click', 'mousedown', 'mousemove', 'mouseup'], function (eventName) {
-                    chart.on(eventName, {dataIndex: 1, target: 'innerGroup'}, function (e) {
-                        console.log(e.type, e);
+                chart && echarts.util.each(['click', 'mousedown', 'mousemove', 'mouseup'], function (eventName) {
+                    chart.on(eventName, {dataIndex: 1, element: 'innerGroup'}, function (params) {
+                        console.log(params.type, params);
+                        console.log('params.info: ', params.info);
                     });
                 });
             });
 
         </script>
+
+
+
+
+        <script>
+
+            // require([
+            //     'echarts'/*, 'map/js/china' */
+            // ], function (echarts) {
+
+            //     // deprecated: this case would be wrong.
+
+            //     var option = {
+            //         xAxis: {
+            //             min: 90,
+            //             max: 120,
+            //             scale: true
+            //         },
+            //         yAxis: {
+            //             min: 50,
+            //             max: 500,
+            //             scale: true
+            //         },
+            //         dataZoom: [{
+            //             type: 'inside'
+            //         }, {
+            //             type: 'slider'
+            //         }],
+            //         series: [{
+            //             type: 'custom',
+            //             renderItem: function (params, api) {
+            //                 var pos = api.coord([api.value(0), api.value(1)]);
+            //                 var rectClipBy = {
+            //                     x: params.coordSys.x - pos[0],
+            //                     y: params.coordSys.y - pos[1],
+            //                     width: params.coordSys.width,
+            //                     height: params.coordSys.height
+            //                 };
+            //                 var points = echarts.graphic.clipPointsByRect([
+            //                     [0, 0],
+            //                     [50, -50],
+            //                     [90, -50],
+            //                     [140, 0],
+            //                     [90, 50]
+            //                 ], rectClipBy);
+
+            //                 return {
+            //                     type: 'polygon',
+            //                     position: pos,
+            //                     shape: {points: points},
+            //                     style: {
+            //                         fill: 'green'
+            //                     }
+            //                 }
+            //             },
+            //             data: [[100, 300]]
+            //         }]
+            //     };
+
+            //     var chart = testHelper.create(echarts, 'main1', {
+            //         title: [
+            //             'Test clipPointsByRect: dataZoom clip should be normal, especially when all clipped',
+            //         ],
+            //         option: option
+            //     });
+
+            // });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                // deprecated: this case would be wrong.
+
+                var option = {
+                    xAxis: {
+                        min: 90,
+                        max: 120,
+                        scale: true
+                    },
+                    yAxis: {
+                        min: 50,
+                        max: 500,
+                        scale: true
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }],
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            return {
+                                type: 'polygon',
+                                position: api.coord([api.value(0), api.value(1)]),
+                                shape: {
+                                    points: [
+                                        [0, 0],
+                                        [50, -50],
+                                        [90, -50],
+                                        [140, 0],
+                                        [90, 50]
+                                    ]
+                                },
+                                clip: {
+                                    x: params.coordSys.x,
+                                    y: params.coordSys.y,
+                                    width: params.coordSys.width,
+                                    height: params.coordSys.height
+                                },
+                                style: {
+                                    fill: 'green'
+                                }
+                            }
+                        },
+                        data: [[100, 300]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Test clip shape',
+                    ],
+                    option: option
+                });
+
+            });
+
+        </script>
+
+
+
+
     </body>
 </html>
