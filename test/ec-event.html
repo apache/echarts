@@ -46,6 +46,7 @@ under the License.
         <div id="main3"></div>
         <div id="main4"></div>
         <div id="main5"></div>
+        <div id="main6"></div>
 
 
         <script>
@@ -353,6 +354,111 @@ under the License.
                     console.log(params.info);
                 })
             });
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {},
+                    animationDurationUpdate: 1500,
+                    animationEasingUpdate: 'quinticInOut',
+                    series : [
+                        {
+                            type: 'graph',
+                            symbolSize: 20,
+                            roam: true,
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
+                            edgeSymbol: ['circle', 'arrow'],
+                            edgeSymbolSize: [4, 10],
+                            edgeLabel: {
+                                normal: {
+                                    textStyle: {
+                                        fontSize: 20
+                                    }
+                                }
+                            },
+                            focusNodeAdjacency: true,
+                            data: [{
+                                name: '节点1',
+                                x: 300,
+                                y: 300,
+                                value: 2321
+                            }, {
+                                name: '节点2',
+                                x: 800,
+                                y: 300
+                            }],
+                            links: [{
+                                source: 0,
+                                target: 1,
+                                symbolSize: [5, 20],
+                                label: {
+                                    normal: {
+                                        show: true
+                                        // position: 'end'
+                                    }
+                                },
+                                lineStyle: {
+                                    normal: {
+                                        width: 5,
+                                        curveness: 0.2
+                                    }
+                                }
+                            }, {
+                                source: '节点2',
+                                target: '节点1',
+                                label: {
+                                    normal: {
+                                        show: true
+                                    }
+                                },
+                                lineStyle: {
+                                    normal: { curveness: 0.2 }
+                                }
+                            }],
+                            lineStyle: {
+                                normal: {
+                                    curveness: 0
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'dataType filter',
+                        '[click node, console.log]: "clk", "clk node"',
+                        '[click edge, console.log]: "clk", "clk edge"',
+                    ],
+                    option: option
+                });
+
+                chart.on('click', function () {
+                    console.log('clk');
+                });
+                chart.on('click', {dataType: 'node'}, function () {
+                    console.log('clk node');
+                });
+                chart.on('click', {dataType: 'edge'}, function () {
+                    console.log('clk edge');
+                });
+
+            });
+
         </script>
 
 
