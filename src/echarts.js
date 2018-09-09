@@ -1706,7 +1706,7 @@ function createExtensionAPI(ecInstance) {
  *   `{seriesIndex: 2}`, `{seriesName: 'xx'}`, `{seriesId: 'some'}`,
  *   `{xAxisIndex: 2}`, `{xAxisName: 'xx'}`, `{xAxisId: 'some'}`.
  * + The element query object, like:
- *   `{targetName: 'some'}` (only available in custom series).
+ *   `{name: 'some'}` (only available in custom series).
  *
  * Caveat: If a prop in the `query` object is `null/undefined`, it is the
  * same as there is no such prop in the `query` object.

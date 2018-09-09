@@ -44,6 +44,8 @@ under the License.
         <div id="main2"></div>
         <h2><a href="./custom-feature.html">custom element event case.</a></h2>
         <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
 
 
         <script>
@@ -203,6 +205,149 @@ under the License.
                 });
             });
 
+        </script>
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                option = {
+                    graphic: [{
+                        type: 'text',
+                        left: 50,
+                        top: 20,
+                        style: {
+                            textBackgroundColor: '#123456',
+                            textPadding: 5,
+                            fill: '#fff',
+                            text: [
+                                'this is a text of graphic component',
+                                'my name is not "aaa", click me must NOT console.log("aaa")'
+                            ].join('\n')
+                        }
+                    }, {
+                        type: 'text',
+                        name: 'aaa',
+                        left: 50,
+                        top: 60,
+                        style: {
+                            textBackgroundColor: '#654321',
+                            textPadding: 5,
+                            fill: '#ffffff',
+                            text: [
+                                'this is a text of graphic component',
+                                'my name is "aaa", click me MUST console.log("aaa")'
+                            ].join('\n')
+                        }
+                    }],
+                    title: {
+                        text: 'this is a text of title component',
+                        subtext: 'this is a subtext of title component',
+                        top: 100
+                    }
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main4', {
+                    option: option,
+                    title: 'click the text (graphic component), console.log the params'
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params);
+                })
+                chart.on('click', {name: 'aaa'}, function (params) {
+                    console.log('aaa', params);
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    graphic: [{
+                        type: 'text',
+                        left: 50,
+                        top: 20,
+                        data: {
+                            x: 1
+                        },
+                        style: {
+                            textBackgroundColor: '#123456',
+                            textPadding: 5,
+                            fill: '#fff',
+                            text: 'click data is {x: 1}'
+                        }
+                    }, {
+                        type: 'text',
+                        left: 50,
+                        top: 100,
+                        data: 1234567,
+                        style: {
+                            textBackgroundColor: '#678901',
+                            textPadding: 5,
+                            fill: '#ff0',
+                            text: 'click data is 1234567'
+                        }
+                    }, {
+                        type: 'text',
+                        left: 50,
+                        top: 150,
+                        data: ['a', 'b'],
+                        style: {
+                            textBackgroundColor: '#678901',
+                            textPadding: 5,
+                            fill: '#ff2',
+                            text: 'click data is ["a", "b"]'
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main5', {
+                    option: option,
+                    title: [
+                        'user data check',
+                        'click text see console.log',
+                        'then click the button, and click text see console.log'
+                    ],
+                    button: {
+                        text: 'setOption to merge user data',
+                        onclick: function () {
+                            chart.setOption({
+                                graphic: [{
+                                    data: {b: 2},
+                                    style: {
+                                        text: 'click data is {b: 2}'
+                                    }
+                                }, {
+                                    data: void 0,
+                                    style: {
+                                        text: 'click data is undefined'
+                                    }
+                                }]
+                            });
+                        }
+                    }
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params.data);
+                })
+            });
         </script>
 
 
