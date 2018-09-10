@@ -222,7 +222,7 @@ function createEl(elOption) {
                 height: shape.height
             }
             : null;
-        var pathData = shape.pathData || shape.d;
+        var pathData = getPathData(shape);
         // Path is also used for icon, so layout 'center' by default.
         el = graphicUtil.makePath(pathData, null, pathRect, shape.layout || 'center');
         el.__customPathData = pathData;
@@ -403,7 +403,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
                 actionType: payload ? payload.type : null
             }, userParams),
             userAPI
-        ) || {};
+        );
     };
 
     // Do not update cache until api called.
@@ -561,18 +561,39 @@ function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
 }
 
 function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, isRoot) {
-    elOption = elOption || {};
 
+    // [Rule]
+    // By default, follow merge mode.
+    //     (It probably brings benifit for performance in some cases of large data, where
+    //     user program can be optimized to that only updated props needed to be re-calculated,
+    //     or according to `actionType` some calculation can be skipped.)
+    // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.
+    //     (It seems that violate the "merge" principle, but most of users probably intuitively
+    //     regard "return;" as "show nothing element whatever", so make a exception to meet the
+    //     most cases.)
+
+    var simplyRemove = !elOption; // `null`/`undefined`/`false`
+    elOption = elOption || {};
     var elOptionType = elOption.type;
+    var elOptionShape = elOption.shape;
+    var elOptionStyle = elOption.style;
+
     if (el && (
-        // Also consider that if `renderItem` returns nothing, the original element
-        // (if exists) will be removed (elOption is an empty object in that case).
-        elOptionType == null
-        || elOption.$merge === false
-        || (elOptionType !== el.__customGraphicType
-            && (elOptionType !== 'path' || elOption.pathData !== el.__customPathData)
-            && (elOptionType !== 'image' || elOption.style.image !== el.__customImagePath)
-            && (elOptionType !== 'text' || elOption.style.text !== el.__customText)
+        simplyRemove
+        // || elOption.$merge === false
+        // If `elOptionType` is `null`, follow the merge principle.
+        || (elOptionType != null
+            && elOptionType !== el.__customGraphicType
+        )
+        || (elOptionType === 'path'
+            && hasOwnPathData(elOptionShape) && getPathData(elOptionShape) !== el.__customPathData
+        )
+        || (elOptionType === 'image'
+            && hasOwn(elOptionStyle, 'image') && elOptionStyle.image !== el.__customImagePath
+        )
+        // FIXME test and remove this restriction?
+        || (elOptionType === 'text'
+            && hasOwn(elOptionShape, 'text') && elOptionStyle.text !== el.__customText
         )
     )) {
         group.remove(el);
@@ -580,7 +601,7 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
     }
 
     // `elOption.type` is undefined when `renderItem` returns nothing.
-    if (elOptionType == null) {
+    if (simplyRemove) {
         return;
     }
 
@@ -608,6 +629,8 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
 //     by child.name. But that might be lower performance.
 // (3) If `elOption.$mergeChildren` is `false`, the existing children will be
 //     replaced totally.
+// (4) If `!elOption.children`, following the "merge" principle, nothing will happen.
+//
 // For implementation simpleness, do not provide a direct way to remove sinlge
 // child (otherwise the total indicies of the children array have to be modified).
 // User can remove a single child by set its `ignore` as `true` or replace
@@ -698,4 +721,17 @@ function processRemove(oldIndex) {
     var context = this.context;
     var child = context.oldChildren[oldIndex];
     child && context.group.remove(child);
+}
+
+function getPathData(shape) {
+    // "d" follows the SVG convention.
+    return shape && (shape.pathData || shape.d);
+}
+
+function hasOwnPathData(shape) {
+    return shape && (shape.hasOwnProperty('pathData') || shape.hasOwnProperty('d'));
+}
+
+function hasOwn(host, prop) {
+    return host && host.hasOwnProperty(prop);
 }
