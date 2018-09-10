@@ -391,6 +391,9 @@ under the License.
             ], function (echarts) {
 
                 var option = {
+                    title: {
+                        text: 'deafault (filter)'
+                    },
                     xAxis: {},
                     yAxis: {},
                     dataZoom: [{
@@ -424,7 +427,7 @@ under the License.
                             };
                         },
                         encode: {
-                            x: null,
+                            x: -1,
                             y: 0
                         },
                         data: [
@@ -443,11 +446,44 @@ under the License.
                         'series not controlled by xAxis but only by yAxis',
                         'x axis can not filter blue circle, but y axis can do'
                     ],
-                    info: option.series[0].encode
+                    info: option.series[0].encode,
+                    buttons: [{
+                        text: 'filterMode: weakFitler',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = 'weakFilter';
+                            option.title.text = 'filterMode: weakFilter';
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'filterMode: deafault (filter)',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = void 0;
+                            option.title.text = 'deafault (filter)'
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'filterMode: empty',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = 'empty';
+                            option.title.text = 'filterMode: empty';
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'filterMode: none',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = 'none'
+                            option.title.text = 'filterMode: none';
+                            chart.setOption(option, true);
+                        }
+                    }]
                 });
             });
 
         </script>
+
+
+
+
 
 
     </body>
