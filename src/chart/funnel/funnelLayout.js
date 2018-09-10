@@ -75,7 +75,7 @@ function labelLayout(data) {
                 textX = (points[0][0] + points[3][0]) / 2 + 5;
                 textY = (points[0][1] + points[3][1]) / 2;
                 textAlign = 'left';
-            }else if (labelPosition === 'insideRight'){
+            }else if (labelPosition === 'insideRight') {
                 textX = (points[1][0] + points[2][0]) / 2 - 5;
                 textY = (points[1][1] + points[2][1]) / 2;
                 textAlign = 'right';
