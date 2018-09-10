@@ -72,12 +72,10 @@ export function extendPath(pathData, opts) {
  */
 export function makePath(pathData, opts, rect, layout) {
     var path = pathTool.createFromString(pathData, opts);
-    var boundingRect = path.getBoundingRect();
     if (rect) {
         if (layout === 'center') {
-            rect = centerGraphic(rect, boundingRect);
+            rect = centerGraphic(rect, path.getBoundingRect());
         }
-
         resizePath(path, rect);
     }
     return path;

@@ -213,18 +213,19 @@ function createEl(elOption) {
 
     if (graphicType === 'path') {
         var shape = elOption.shape;
-        el = graphicUtil.makePath(
-            shape.pathData,
-            null,
-            {
+        // Using pathRect brings convenience to users sacle svg path.
+        var pathRect = (shape.width != null && shape.height != null)
+            ? {
                 x: shape.x || 0,
                 y: shape.y || 0,
-                width: shape.width || 0,
-                height: shape.height || 0
-            },
-            'center'
-        );
-        el.__customPathData = elOption.pathData;
+                width: shape.width,
+                height: shape.height
+            }
+            : null;
+        var pathData = shape.pathData || shape.d;
+        // Path is also used for icon, so layout 'center' by default.
+        el = graphicUtil.makePath(pathData, null, pathRect, shape.layout || 'center');
+        el.__customPathData = pathData;
     }
     else if (graphicType === 'image') {
         el = new graphicUtil.Image({});
