@@ -811,11 +811,14 @@ function getAutoColor(color, opt) {
 // text position changing when hovering or being emphasis should be
 // considered, where the `insideRollback` enables to restore the style.
 function applyDefaultTextStyle(textStyle) {
-    if (textStyle.textFill != null) {
+    var opt = textStyle.insideRollbackOpt;
+
+    // Only insideRollbackOpt create (setTextStyleCommon used),
+    // applyDefaultTextStyle works.
+    if (!opt || textStyle.textFill != null) {
         return;
     }
 
-    var opt = textStyle.insideRollbackOpt;
     var useInsideStyle = opt.useInsideStyle;
     var textPosition = textStyle.insideRawTextPosition;
     var insideRollback;

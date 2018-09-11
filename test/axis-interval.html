@@ -100,7 +100,9 @@ under the License.
                     },
                     xAxis: {
                         type: 'time',
-                        splitNumber: 7
+                        minInterval: 3600 * 1000,
+                        maxInterval: 3600 * 1000
+                        // splitNumber: 7
                     },
                     yAxis: {},
                     series: [
