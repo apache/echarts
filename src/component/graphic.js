@@ -538,7 +538,7 @@ function setEventData(el, graphicModel, elOption) {
     if (!el.silent && !el.ignore && !eventData) {
         eventData = el.eventData = {
             componentType: 'graphic',
-            graphicIndex: graphicModel.componentIndex,
+            componentIndex: graphicModel.componentIndex,
             name: el.name
         };
     }

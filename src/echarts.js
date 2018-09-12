@@ -1525,12 +1525,29 @@ echartsProto._initEvents = function () {
                 params = zrUtil.extend({}, el.eventData);
             }
 
+            // Contract: if params prepared in mouse event,
+            // these properties must be specified:
+            // {
+            //    componentType: string (component main type)
+            //    componentIndex: number
+            // }
+            // Otherwise event query can not work.
+
             if (params) {
-                // When trigger by markLine/markPoint/markArea, the
-                // componentType is 'markLine'/'markPoint'/'markArea'.
-                var componentType = params.seriesIndex != null
-                    ? 'series' : params.componentType;
-                var componentIndex = params[componentType + 'Index'];
+                var componentType = params.componentType;
+                var componentIndex = params.componentIndex;
+                // Special handling for historic reason: when trigger by
+                // markLine/markPoint/markArea, the componentType is
+                // 'markLine'/'markPoint'/'markArea', but we should better
+                // enable them to be queried by seriesIndex, since their
+                // option is set in each series.
+                if (componentType === 'markLine'
+                    || componentType === 'markPoint'
+                    || componentType === 'markArea'
+                ) {
+                    componentType = 'series';
+                    componentIndex = params.seriesIndex;
+                }
                 var model = componentType && componentIndex != null
                     && ecModel.getComponent(componentType, componentIndex);
                 var view = model && this[
@@ -1541,7 +1558,9 @@ echartsProto._initEvents = function () {
                     // `event.componentType` and `event[componentTpype + 'Index']` must not
                     // be missed, otherwise there is no way to distinguish source component.
                     // See `dataFormat.getDataParams`.
-                    zrUtil.assert(isGlobalOut || (model && view));
+                    if (!isGlobalOut && !(model && view)) {
+                        console.warn('model or view can not be found by params');
+                    }
                 }
 
                 params.event = e;
@@ -1773,6 +1792,11 @@ EventProcessor.prototype = {
     filter: function (eventType, query, args) {
         // They should be assigned before each trigger call.
         var eventInfo = this.eventInfo;
+
+        if (!eventInfo) {
+            return true;
+        }
+
         var targetEl = eventInfo.targetEl;
         var packedEvent = eventInfo.packedEvent;
         var model = eventInfo.model;
@@ -1804,7 +1828,7 @@ EventProcessor.prototype = {
     },
 
     afterTrigger: function () {
-        // clear immediately after used.
+        // Make sure the eventInfo wont be used in next trigger.
         this.eventInfo = null;
     }
 };

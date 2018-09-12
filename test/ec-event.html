@@ -76,6 +76,12 @@ under the License.
                     }, {
                         type: 'line',
                         data: [234, 213, 255],
+                        markPoint: {
+                            data: [{
+                                name: 'max value (default)',
+                                type: 'max'
+                            }]
+                        }
                     }]
                 };
 
@@ -83,8 +89,9 @@ under the License.
                     title: [
                         '[click scatter point, console.log]: "clk", "clk series", "clk series.scatter"',
                         '[click xAxis, console.log]: "clk", "clk xAxis", "clk xAxis.category"',
-                        '[click yAxis.category, console.log]: "clk"',
-                        '[click line point, console.log]: "clk", "clk series"'
+                        '[click yAxis.category, console.log]: "clk", "clk yAxis.category"',
+                        '[click line point, console.log]: "clk", "clk series"',
+                        '[click the markPoint]: "clk", "clk series"'
                     ],
                     option: option
                 });

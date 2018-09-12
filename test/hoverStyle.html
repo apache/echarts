@@ -40,12 +40,17 @@ under the License.
                 position: fixed;
                 left: 0;
                 top: 0;
-                background: #fff;
+                background: #333;
+                color: #fff;
                 padding: 2px 5px;
                 z-index: 9999;
                 box-shadow: 0 0 2px #333;
             }
         </style>
+
+        <br>
+        <br>
+        <br>
 
         <div id="info"></div>
         <div id="main0"></div>
@@ -56,32 +61,40 @@ under the License.
 
 
         <script>
-            var useHoverLayer = location.search.indexOf('?useHoverLayer&') >= 0;
+            var USE_HOVER_LAYER_KEY = '__EC_TEST_USE_HOVER_LAYER_KEY___';
+
+            var useHoverLayer = getUseHoverLayer();
             var hoverLayerThreshold = useHoverLayer ? 0 : null;
             var infoEl = document.getElementById('info');
             genInfo();
 
+            function setUseHoverLayer(useHoverLayer) {
+                window.localStorage.setItem(USE_HOVER_LAYER_KEY, useHoverLayer ? 'true' : '');
+            }
+            function getUseHoverLayer() {
+                return !!window.localStorage.getItem(USE_HOVER_LAYER_KEY);
+            }
+
             function genInfo(zrRefreshTimestamp) {
                 infoEl.innerHTML = [
+                    useHoverLayer ? 'Using HoverLayer' : 'NOT using HoverLayer',
                     'hoverLayerThreshold: ' + hoverLayerThreshold,
-                    'zr refresh base layer at: <span style="color:red">' + (zrRefreshTimestamp || null) + '</span>'
+                    'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
                 ].join('<br>');
             }
 
             function genHoverLayerBtns() {
                 return [{
-                    text: 'useHoverLayer',
+                    text: 'NOT use hoverLayer',
                     onclick: function () {
-                        var url = location.href;
-                        if (url.indexOf('?') < 0) {
-                            url += '?';
-                        }
-                        location.href = url.replace('?', '?useHoverLayer&');
+                        setUseHoverLayer(false);
+                        location.reload();
                     }
                 }, {
-                    text: 'notUseHoverLayer',
+                    text: 'Use hoverLayer',
                     onclick: function () {
-                        location.href = location.href.replace(/\?useHoverLayer&/, '\?');
+                        setUseHoverLayer(true);
+                        location.reload();
                     }
                 }]
             }
@@ -141,7 +154,7 @@ under the License.
                     title: [
                         'normal no label, hover show label inside',
                         'TEST: hover twice, should be normal',
-                        'zrBaseLayer should not be refreshed'
+                        'zrBaseLayer should not be refreshed if NOT using hoverLayer'
                     ],
                     option: option,
                     height: 200

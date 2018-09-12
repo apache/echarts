@@ -151,7 +151,7 @@ echarts.extendComponentView({
         textEl.eventData = subTextEl.eventData = triggerEvent
             ? {
                 componentType: 'title',
-                titleIndex: titleModel.componentIndex
+                componentIndex: titleModel.componentIndex
             }
             : null;
 
