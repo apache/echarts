@@ -335,17 +335,28 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     symbolPath.__symbolOriginalScale = getScale(symbolSize);
 
     if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        symbolPath.on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
+        // Note: consider `off`, should use static function here.
+        symbolPath.on('mouseover', onMouseOver)
+            .on('mouseout', onMouseOut)
             .on('emphasis', onEmphasis)
             .on('normal', onNormal);
     }
 };
 
+function onMouseOver() {
+    // see comment in `graphic.isInEmphasis`
+    !graphic.isInEmphasis(this) && onEmphasis.call(this);
+}
+
+function onMouseOut() {
+    // see comment in `graphic.isInEmphasis`
+    !graphic.isInEmphasis(this) && onNormal.call(this);
+}
+
 function onEmphasis() {
     // Do not support this hover animation util some scenario required.
     // Animation can only be supported in hover layer when using `el.incremetal`.
-    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
+    if (this.incremental || this.useHoverLayer) {
         return;
     }
     var scale = this.__symbolOriginalScale;
@@ -359,7 +370,7 @@ function onEmphasis() {
 }
 
 function onNormal() {
-    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
+    if (this.incremental || this.useHoverLayer) {
         return;
     }
     this.animateTo({

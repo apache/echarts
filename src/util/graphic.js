@@ -417,11 +417,18 @@ export function setElementHoverStyle(el, hoverStl) {
 }
 
 /**
+ * Emphasis (called by API) has higher priority than `mouseover`.
+ * When element has been called to be entered emphasis, mouse over
+ * should not trigger the highlight effect (for example, animation
+ * scale) again, and `mouseout` should not downplay the highlight
+ * effect. So the listener of `mouseover` and `mouseout` should
+ * check `isInEmphasis`.
+ *
  * @param {module:zrender/Element} el
  * @return {boolean}
  */
 export function isInEmphasis(el) {
-    return el && el.__isEmphasis;
+    return el && el.__isEmphasisEntered;
 }
 
 function onElementMouseOver(e) {
@@ -430,7 +437,7 @@ function onElementMouseOver(e) {
     }
 
     // Only if element is not in emphasis status
-    !this.__isEmphasis && traverseCall(this, doSingleEnterHover);
+    !this.__isEmphasisEntered && traverseCall(this, doSingleEnterHover);
 }
 
 function onElementMouseOut(e) {
@@ -439,16 +446,16 @@ function onElementMouseOut(e) {
     }
 
     // Only if element is not in emphasis status
-    !this.__isEmphasis && traverseCall(this, doSingleLeaveHover);
+    !this.__isEmphasisEntered && traverseCall(this, doSingleLeaveHover);
 }
 
 function enterEmphasis() {
-    this.__isEmphasis = true;
+    this.__isEmphasisEntered = true;
     traverseCall(this, doSingleEnterHover);
 }
 
 function leaveEmphasis() {
-    this.__isEmphasis = false;
+    this.__isEmphasisEntered = false;
     traverseCall(this, doSingleLeaveHover);
 }
 
