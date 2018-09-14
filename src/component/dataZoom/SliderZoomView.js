@@ -460,7 +460,7 @@ var SliderZoomView = DataZoomView.extend({
             onmouseout: bind(this._showDataInfo, this, false),
             style: {
                 fill: dataZoomModel.get('fillerColor'),
-                textPosition : 'inside'
+                textPosition: 'inside'
             }
         }));
 

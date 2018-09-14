@@ -54,9 +54,9 @@ var BrushModel = echarts.extendComponentModel({
             borderColor: 'rgba(120,140,180,0.8)'
         },
 
-        throttleType: 'fixRate',// Throttle in brushSelected event. 'fixRate' or 'debounce'.
-                                // If null, no throttle. Valid only in the first brush component
-        throttleDelay: 0,       // Unit: ms, 0 means every event will be triggered.
+        throttleType: 'fixRate', // Throttle in brushSelected event. 'fixRate' or 'debounce'.
+                                 // If null, no throttle. Valid only in the first brush component
+        throttleDelay: 0,        // Unit: ms, 0 means every event will be triggered.
 
         // FIXME
         // 试验效果

@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
-import Text from 'zrender/src/graphic/Text';
+// import Text from 'zrender/src/graphic/Text';
 
 /**
  * 每三位默认加,格式化
@@ -32,7 +32,7 @@ export function addCommas(x) {
         return '-';
     }
     x = (x + '').split('.');
-    return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
+    return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
             + (x.length > 1 ? ('.' + x[1]) : '');
 }
 
@@ -42,7 +42,7 @@ export function addCommas(x) {
  * @return {string} str
  */
 export function toCamelCase(str, upperCaseFirst) {
-    str = (str || '').toLowerCase().replace(/-(.)/g, function(match, group1) {
+    str = (str || '').toLowerCase().replace(/-(.)/g, function (match, group1) {
         return group1.toUpperCase();
     });
 

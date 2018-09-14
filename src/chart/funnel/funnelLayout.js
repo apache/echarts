@@ -43,7 +43,8 @@ function getSortedIndices(data, sort) {
     // Add custom sortable function & none sortable opetion by "options.sort"
     if (typeof sort === 'function') {
         indices.sort(sort);
-    } else if (sort !== 'none') {
+    }
+    else if (sort !== 'none') {
         indices.sort(function (a, b) {
             return isAscending ? valueArr[a] - valueArr[b] : valueArr[b] - valueArr[a];
         });

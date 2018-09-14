@@ -382,8 +382,8 @@ var DataZoomModel = echarts.extendComponentModel({
         }
         if (this._autoThrottle) {
             var globalOption = this.ecModel.option;
-            this.option.throttle =
-                (globalOption.animation && globalOption.animationDurationUpdate > 0)
+            this.option.throttle
+                = (globalOption.animation && globalOption.animationDurationUpdate > 0)
                 ? 100 : 20;
         }
     },

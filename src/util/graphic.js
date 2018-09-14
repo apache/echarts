@@ -236,7 +236,7 @@ export function subPixelOptimize(position, lineWidth, positiveOrNegative) {
 }
 
 function hasFillOrStroke(fillOrStroke) {
-    return fillOrStroke != null && fillOrStroke != 'none';
+    return fillOrStroke != null && fillOrStroke !== 'none';
 }
 
 // Most lifted color are duplicated.

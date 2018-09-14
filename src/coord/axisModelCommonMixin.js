@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import * as axisHelper from './axisHelper';
+// import * as axisHelper from './axisHelper';
 
 export default {
 
