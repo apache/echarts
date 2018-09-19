@@ -17,10 +17,6 @@
 * under the License.
 */
 
-/**
- * DataZoom component entry
- */
-
 import './dataZoom/typeDefaulter';
 
 import './dataZoom/DataZoomModel';

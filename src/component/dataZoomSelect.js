@@ -18,7 +18,8 @@
 */
 
 /**
- * DataZoom component entry
+ * Only work for toolbox dataZoom. User
+ * MUST NOT import this module directly.
  */
 
 import './dataZoom/typeDefaulter';
