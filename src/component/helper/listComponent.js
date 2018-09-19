@@ -21,7 +21,7 @@ import {
     getLayoutRect,
     box as layoutBox,
     positionElement
-}  from '../../util/layout';
+} from '../../util/layout';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
 

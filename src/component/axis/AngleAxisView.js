@@ -81,7 +81,7 @@ export default AxisView.extend({
         fixAngleOverlap(ticksAngles);
 
         zrUtil.each(elementList, function (name) {
-            if (angleAxisModel.get(name +'.show')
+            if (angleAxisModel.get(name + '.show')
                 && (!angleAxis.scale.isBlank() || name === 'axisLine')
             ) {
                 this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent, labels);
@@ -162,7 +162,9 @@ export default AxisView.extend({
                 ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
             if (rawCategoryData && rawCategoryData[tickValue] && rawCategoryData[tickValue].textStyle) {
-                labelModel = new Model(rawCategoryData[tickValue].textStyle, commonLabelModel, commonLabelModel.ecModel);
+                labelModel = new Model(
+                    rawCategoryData[tickValue].textStyle, commonLabelModel, commonLabelModel.ecModel
+                );
             }
 
             var textEl = new graphic.Text({silent: true});

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Uint8Array */
+
 import env from 'zrender/src/core/env';
 import lang from '../../../lang';
 import * as featureManager from '../featureManager';
@@ -74,7 +76,7 @@ proto.onclick = function (ecModel, api) {
             var bstr = atob(url.split(',')[1]);
             var n = bstr.length;
             var u8arr = new Uint8Array(n);
-            while(n--) {
+            while (n--) {
                 u8arr[n] = bstr.charCodeAt(n);
             }
             var blob = new Blob([u8arr]);
@@ -82,10 +84,10 @@ proto.onclick = function (ecModel, api) {
         }
         else {
             var lang = model.get('lang');
-            var html = '' +
-                '<body style="margin:0;">' +
-                '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />' +
-                '</body>';
+            var html = ''
+                + '<body style="margin:0;">'
+                + '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />'
+                + '</body>';
             var tab = window.open();
             tab.document.write(html);
         }

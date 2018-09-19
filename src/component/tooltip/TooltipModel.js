@@ -28,7 +28,7 @@ export default echarts.extendComponentModel({
     defaultOption: {
         zlevel: 0,
 
-        z: 8,
+        z: 60,
 
         show: true,
 

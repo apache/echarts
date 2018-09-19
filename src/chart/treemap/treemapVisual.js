@@ -227,8 +227,7 @@ function mapVisual(nodeModel, visuals, child, index, mapping, seriesModel) {
     if (mapping) {
         var mappingType = mapping.type;
         var colorMappingBy = mappingType === 'color' && mapping.__drColorMappingBy;
-        var value =
-            colorMappingBy === 'index'
+        var value = colorMappingBy === 'index'
             ? index
             : colorMappingBy === 'id'
             ? seriesModel.mapIdToIndex(child.getId())

@@ -89,6 +89,13 @@ var SankeySeries = SeriesModel.extend({
         return SankeySeries.superCall(this, 'formatTooltip', dataIndex, multipleSeries);
     },
 
+    optionUpdated: function () {
+        var option = this.option;
+        if (option.focusNodeAdjacency === true) {
+            option.focusNodeAdjacency = 'allEdges';
+        }
+    },
+
     defaultOption: {
         zlevel: 0,
         z: 2,
@@ -115,7 +122,7 @@ var SankeySeries = SeriesModel.extend({
         // Control if the node can move or not
         draggable: true,
 
-       // Value can be 'inEdges', 'outEdges', 'allEdges'.
+        // Value can be 'inEdges', 'outEdges', 'allEdges', true (the same as 'allEdges').
         focusNodeAdjacency: false,
 
         // The number of iterations to change the position of the node

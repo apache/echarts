@@ -37,8 +37,8 @@ function getAxisKey(axis) {
  */
 function barLayoutPolar(seriesType, ecModel, api) {
 
-    var width = api.getWidth();
-    var height = api.getHeight();
+    // var width = api.getWidth();
+    // var height = api.getHeight();
 
     var lastStackCoords = {};
 

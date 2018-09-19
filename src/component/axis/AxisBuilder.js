@@ -31,7 +31,8 @@ var PI = Math.PI;
 
 function makeAxisEventDataBase(axisModel) {
     var eventData = {
-        componentType: axisModel.mainType
+        componentType: axisModel.mainType,
+        componentIndex: axisModel.componentIndex
     };
     eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
     return eventData;

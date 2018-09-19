@@ -42,7 +42,7 @@ var SingleAxisView = AxisView.extend({
 
         group.removeAll();
 
-        var layout =  singleAxisHelper.layout(axisModel);
+        var layout = singleAxisHelper.layout(axisModel);
 
         var axisBuilder = new AxisBuilder(axisModel, layout);
 
@@ -57,7 +57,7 @@ var SingleAxisView = AxisView.extend({
         SingleAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
     },
 
-    _splitLine: function(axisModel) {
+    _splitLine: function (axisModel) {
         var axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Float32Array */
+
 import {map} from 'zrender/src/core/util';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import {isDimensionStacked} from '../data/helper/dataStackHelper';

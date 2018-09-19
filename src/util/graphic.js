@@ -72,12 +72,10 @@ export function extendPath(pathData, opts) {
  */
 export function makePath(pathData, opts, rect, layout) {
     var path = pathTool.createFromString(pathData, opts);
-    var boundingRect = path.getBoundingRect();
     if (rect) {
         if (layout === 'center') {
-            rect = centerGraphic(rect, boundingRect);
+            rect = centerGraphic(rect, path.getBoundingRect());
         }
-
         resizePath(path, rect);
     }
     return path;
@@ -238,7 +236,7 @@ export function subPixelOptimize(position, lineWidth, positiveOrNegative) {
 }
 
 function hasFillOrStroke(fillOrStroke) {
-    return fillOrStroke != null && fillOrStroke != 'none';
+    return fillOrStroke != null && fillOrStroke !== 'none';
 }
 
 // Most lifted color are duplicated.
@@ -419,11 +417,18 @@ export function setElementHoverStyle(el, hoverStl) {
 }
 
 /**
+ * Emphasis (called by API) has higher priority than `mouseover`.
+ * When element has been called to be entered emphasis, mouse over
+ * should not trigger the highlight effect (for example, animation
+ * scale) again, and `mouseout` should not downplay the highlight
+ * effect. So the listener of `mouseover` and `mouseout` should
+ * check `isInEmphasis`.
+ *
  * @param {module:zrender/Element} el
  * @return {boolean}
  */
 export function isInEmphasis(el) {
-    return el && el.__isEmphasis;
+    return el && el.__isEmphasisEntered;
 }
 
 function onElementMouseOver(e) {
@@ -432,7 +437,7 @@ function onElementMouseOver(e) {
     }
 
     // Only if element is not in emphasis status
-    !this.__isEmphasis && traverseCall(this, doSingleEnterHover);
+    !this.__isEmphasisEntered && traverseCall(this, doSingleEnterHover);
 }
 
 function onElementMouseOut(e) {
@@ -441,16 +446,16 @@ function onElementMouseOut(e) {
     }
 
     // Only if element is not in emphasis status
-    !this.__isEmphasis && traverseCall(this, doSingleLeaveHover);
+    !this.__isEmphasisEntered && traverseCall(this, doSingleLeaveHover);
 }
 
 function enterEmphasis() {
-    this.__isEmphasis = true;
+    this.__isEmphasisEntered = true;
     traverseCall(this, doSingleEnterHover);
 }
 
 function leaveEmphasis() {
-    this.__isEmphasis = false;
+    this.__isEmphasisEntered = false;
     traverseCall(this, doSingleLeaveHover);
 }
 
@@ -813,11 +818,14 @@ function getAutoColor(color, opt) {
 // text position changing when hovering or being emphasis should be
 // considered, where the `insideRollback` enables to restore the style.
 function applyDefaultTextStyle(textStyle) {
-    if (textStyle.textFill != null) {
+    var opt = textStyle.insideRollbackOpt;
+
+    // Only insideRollbackOpt create (setTextStyleCommon used),
+    // applyDefaultTextStyle works.
+    if (!opt || textStyle.textFill != null) {
         return;
     }
 
-    var opt = textStyle.insideRollbackOpt;
     var useInsideStyle = opt.useInsideStyle;
     var textPosition = textStyle.insideRawTextPosition;
     var insideRollback;
@@ -1077,6 +1085,8 @@ export function groupTransition(g1, g2, animatableModel, cb) {
  * @return {Array.<Array.<number>>} A new clipped points.
  */
 export function clipPointsByRect(points, rect) {
+    // FIXME: this way migth be incorrect when grpahic clipped by a corner.
+    // and when element have border.
     return zrUtil.map(points, function (point) {
         var x = point[0];
         x = mathMax(x, rect.x);
@@ -1099,6 +1109,8 @@ export function clipRectByRect(targetRect, rect) {
     var y = mathMax(targetRect.y, rect.y);
     var y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
 
+    // If the total rect is cliped, nothing, including the border,
+    // should be painted. So return undefined.
     if (x2 >= x && y2 >= y) {
         return {
             x: x,

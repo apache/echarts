@@ -134,8 +134,21 @@ var geoCreator = {
         // FIXME Create each time may be slow
         ecModel.eachComponent('geo', function (geoModel, idx) {
             var name = geoModel.get('map');
-            var geo = new Geo(name + idx, name, geoModel.get('nameMap'));
 
+            var aspectScale = geoModel.get('aspectScale');
+            var invertLongitute = true;
+            var mapRecords = mapDataStorage.retrieveMap(name);
+            if (mapRecords && mapRecords[0] && mapRecords[0].type === 'svg') {
+                aspectScale == null && (aspectScale = 1);
+                invertLongitute = false;
+            }
+            else {
+                aspectScale == null && (aspectScale = 0.75);
+            }
+
+            var geo = new Geo(name + idx, name, geoModel.get('nameMap'), invertLongitute);
+
+            geo.aspectScale = aspectScale;
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
 
@@ -143,20 +156,6 @@ var geoCreator = {
 
             geoModel.coordinateSystem = geo;
             geo.model = geoModel;
-
-            // FIXME ???
-            var aspectScale = geoModel.get('aspectScale');
-            var invertLng = true;
-            var mapRecords = mapDataStorage.retrieveMap(name);
-            if (mapRecords && mapRecords[0] && mapRecords[0].type === 'svg') {
-                aspectScale == null && (aspectScale = 1);
-                invertLng = false;
-            }
-            else {
-                aspectScale == null && (aspectScale = 0.75);
-            }
-            geo.aspectScale = aspectScale;
-            geo.invertLng = invertLng;
 
             // Inject resize method
             geo.resize = resizeGeo;
@@ -196,6 +195,7 @@ var geoCreator = {
 
             // Inject resize method
             geo.resize = resizeGeo;
+            geo.aspectScale = mapSeries[0].get('aspectScale');
 
             geo.resize(mapSeries[0], api);
 

@@ -41,6 +41,7 @@
     /**
      * @param {Object} opt
      * @param {string|Array.<string>} [opt.title] If array, each item is on a single line.
+     *        Can use '**abc**', means <strong>abc</strong>.
      * @param {Option} opt.option
      * @param {Object} [opt.info] info object to display.
      * @param {string} [opt.infoKey='option']
@@ -99,7 +100,9 @@
                 optTitle = optTitle.join('\n');
             }
             title.innerHTML = '<div class="test-title-inner">'
-                + testHelper.encodeHTML(optTitle).replace(/\n/g, '<br>')
+                + testHelper.encodeHTML(optTitle)
+                    .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>')
                 + '</div>';
         }
 

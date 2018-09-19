@@ -39,14 +39,17 @@
          * @param {boolean} [opt.lockY=false]
          * @param {number} [opt.throttle=false]
          * @param {boolean} [opt.addPlaceholder=false]
+         * @param {Function} [opt.onDrag]
          * @return {type}  description
          */
         init: function (mainEl, chart, opt) {
             opt = opt || {};
 
-            var chartResize = chart ? $.proxy(chart.resize, chart) : function () {};
+            var onDrag = opt.onDrag || $.proxy(chart.resize, chart);
+
+            var onDragThrottled = chart ? onDrag : function () {};
             if (opt.throttle) {
-                chartResize = throttle(chartResize, opt.throttle, true, false);
+                onDragThrottled = throttle(onDragThrottled, opt.throttle, true, false);
             }
 
             var mainEl = $(mainEl);
@@ -184,7 +187,7 @@
 
                 label.text(Math.round(mainContentWidth) + ' x ' + Math.round(mainContentHeight));
 
-                chartResize();
+                onDragThrottled();
             }
         }
     };

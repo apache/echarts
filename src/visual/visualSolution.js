@@ -28,7 +28,7 @@ var each = zrUtil.each;
 
 function hasKeys(obj) {
     if (obj) {
-        for (var name in obj){
+        for (var name in obj) {
             if (obj.hasOwnProperty(name)) {
                 return true;
             }
