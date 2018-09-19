@@ -42,7 +42,7 @@ under the License.
         <div id="main0"></div>
         <div id="main2"></div>
         <div id="main3"></div>
-        <!-- <div id="main1"></div> -->
+        <div id="main4"></div>
 
 
         <script>
@@ -446,6 +446,105 @@ under the License.
                     option: option
                 });
 
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+
+                var animationDuration = 5000;
+                var animationDurationUpdate = 4000;
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    dataZoom: [
+                        {
+                        },
+                        // {
+                        //     type: 'inside'
+                        // }
+                    ],
+                    animationDuration: animationDuration,
+                    animationDurationUpdate: animationDurationUpdate,
+                    // animation: false,
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            return {
+                                type: 'group',
+                                position: api.coord([api.value(0), api.value(1)]),
+                                children: [{
+                                    type: 'rect',
+                                    shape: {
+                                        x: -50,
+                                        y: 50,
+                                        width: 100,
+                                        height: 150,
+                                        r: 10
+                                    },
+                                    style: {
+                                        fill: 'rgba(102,241,98,0.9)'
+                                    }
+                                }, {
+                                    type: 'circle',
+                                    shape: {
+                                        cx: -50,
+                                        cy: 50,
+                                        r: 30
+                                    },
+                                    style: {
+                                        text: 'data',
+                                        textFill: '#fff',
+                                        fill: 'blue'
+                                    }
+                                }]
+                            };
+                        },
+                        data: [[121, 333], [29, 312]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'Style merge',
+                        '(1) dataZoom hide a data item, and then show it, ensure the fade in animation normal.',
+                        '(2) click button to setOption merge.'
+                    ],
+                    option: option,
+                    info: {
+                        animationDuration: animationDuration,
+                        animationDurationUpdate: animationDurationUpdate
+                    },
+                    buttons: [{
+                        text: 'merge style: border become blue, but background not changed',
+                        onclick: function () {
+                            chart.setOption({
+                                type: 'custom',
+                                renderItem: function (params, api) {
+                                    return {
+                                        type: 'group',
+                                        children: [{
+                                            type: 'rect',
+                                            style: {
+                                                stroke: 'red',
+                                                lineWidth: 5
+                                            }
+                                        }]
+                                    };
+                                }
+                            });
+                        }
+                    }]
+                });
             });
 
         </script>

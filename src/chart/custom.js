@@ -42,6 +42,10 @@ var LABEL_EMPHASIS = ['emphasis', 'label'];
 // which will cause weird udpate animation.
 var GROUP_DIFF_PREFIX = 'e\0\0';
 
+var IMAGE_TRANSITION_STYLES = ['x', 'y', 'width', 'height', 'opacity'];
+var TEXT_TRANSITION_STYLES = ['x', 'y', 'opacity'];
+var PATH_TRANSITION_STYLES = ['opacity', 'lineWidth'];
+
 /**
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
  * of each coordinate systems are not required by each coordinate systems directly, but
@@ -252,54 +256,78 @@ function createEl(elOption) {
 }
 
 function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot) {
-    var transitionProps = {};
-    var elOptionStyle = elOption.style || {};
+    var elType = el.type;
+    var isGroup = el.isGroup;
+    var isImage = elType === 'image';
+    var isText = elType === 'text';
+    var notCopy = elOption.copy === false;
 
-    elOption.shape && (transitionProps.shape = zrUtil.clone(elOption.shape));
-    elOption.position && (transitionProps.position = elOption.position.slice());
-    elOption.scale && (transitionProps.scale = elOption.scale.slice());
-    elOption.origin && (transitionProps.origin = elOption.origin.slice());
-    elOption.rotation && (transitionProps.rotation = elOption.rotation);
+    var userInitState = elOption.initState;
+    var styleToBeSet = elOption.style;
 
-    if (el.type === 'image' && elOption.style) {
-        var targetStyle = transitionProps.style = {};
-        zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
-            prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
-        });
+    // Make `elOptionValid` and `initStateValid`.
+    var elOptionValid = fetchDisplayableProps(elOption, notCopy);
+    var initStateValid = isInit && userInitState && fetchDisplayableProps(userInitState, notCopy);
+
+    // Prepare `styleTransValues`.
+    var styleTransValues;
+    if (isInit && !userInitState && !isGroup) {
+        // Default init animation.
+        styleTransValues = {opacity: 0};
     }
-
-    if (el.type === 'text' && elOption.style) {
-        var targetStyle = transitionProps.style = {};
-        zrUtil.each(['x', 'y'], function (prop) {
-            prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
-        });
-        // Compatible with previous: both support
-        // textFill and fill, textStroke and stroke in 'text' element.
-        !elOptionStyle.hasOwnProperty('textFill') && elOptionStyle.fill && (
-            elOptionStyle.textFill = elOptionStyle.fill
-        );
-        !elOptionStyle.hasOwnProperty('textStroke') && elOptionStyle.stroke && (
-            elOptionStyle.textStroke = elOptionStyle.stroke
-        );
-    }
-
-    if (el.type !== 'group') {
-        el.useStyle(elOptionStyle);
-
-        // Init animation.
-        if (isInit) {
-            el.style.opacity = 0;
-            var targetOpacity = elOptionStyle.opacity;
-            targetOpacity == null && (targetOpacity = 1);
-            graphicUtil.initProps(el, {style: {opacity: targetOpacity}}, animatableModel, dataIndex);
+    else {
+        var styleTransCandidates = isInit ? (userInitState && userInitState.style) : styleToBeSet;
+        // Enable style transition.
+        var styleTransProps = isImage
+            ? IMAGE_TRANSITION_STYLES
+            : isText
+            ? TEXT_TRANSITION_STYLES
+            : !isGroup
+            ? PATH_TRANSITION_STYLES
+            : null;
+        if (styleTransProps && styleTransCandidates) {
+            for (var i = 0; i < styleTransProps.length; i++) {
+                var prop = styleTransProps[i];
+                if (styleTransCandidates[prop] != null) {
+                    // Condider animation performance, do not give until necessary.
+                    (styleTransValues = styleTransValues || {})[prop] = styleTransCandidates[prop];
+                    !isInit && (styleToBeSet[prop] = el.style[prop]);
+                }
+            }
         }
     }
 
+    // Compatible with previous: both support
+    // textFill and fill, textStroke and stroke in 'text' element.
+    if (isText) {
+        !styleToBeSet.hasOwnProperty('textFill') && styleToBeSet.fill && (
+            styleToBeSet.textFill = styleToBeSet.fill
+        );
+        !styleToBeSet.hasOwnProperty('textStroke') && styleToBeSet.stroke && (
+            styleToBeSet.textStroke = styleToBeSet.stroke
+        );
+    }
+
+    if (!isGroup) {
+        // Follow the convention and consider performance, merge by default.
+        // If `el.merge` is false, here the `el` is a new element just created.
+        (!isInit && elOption.mergeStyle === false)
+            ? el.useStyle(styleToBeSet || {})
+            : (styleToBeSet && el.setStyle(styleToBeSet));
+    }
+
     if (isInit) {
-        el.attr(transitionProps);
+        elOptionValid && el.attr(elOptionValid);
+        styleTransValues && ((initStateValid = initStateValid || {}).style = styleTransValues);
+        // When "init", the current props represents the final state, while the `initState` is a subset of
+        // props. When "update", the current props represents the current state, while the final state is
+        // a subset of props. So we do not use `graphicUtil.initProps`. See the comment of
+        // `graphicUtil.initFromProps` for more details.
+        initStateValid && graphicUtil.initFromProps(el, initStateValid, animatableModel, dataIndex);
     }
     else {
-        graphicUtil.updateProps(el, transitionProps, animatableModel, dataIndex);
+        styleTransValues && ((elOptionValid = elOptionValid || {}).style = styleTransValues);
+        elOptionValid && graphicUtil.updateProps(el, elOptionValid, animatableModel, dataIndex);
     }
 
     // Merge by default.
@@ -313,6 +341,7 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     // Update them only when user specified, otherwise, remain.
     elOption.hasOwnProperty('info') && el.attr('info', elOption.info);
 
+    // Set `styleEmphasis`.
     // If `elOption.styleEmphasis` is `false`, remove hover style. The
     // logic is ensured by `graphicUtil.setElementHoverStyle`.
     var styleEmphasis = elOption.styleEmphasis;
@@ -330,11 +359,19 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     isRoot && graphicUtil.setAsHoverStyleTrigger(el, !disableStyleEmphasis);
 }
 
-function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, isInit) {
-    if (elOptionStyle[prop] != null && !isInit) {
-        targetStyle[prop] = elOptionStyle[prop];
-        elOptionStyle[prop] = oldElStyle[prop];
-    }
+function fetchDisplayableProps(option, notCopy) {
+    // Condider performance of `graphic.initFromProps/updateProps`, do not give until necessary.
+    var props;
+    var v;
+    // Consider performance of large shape, enable user to disable copy.
+    (v = option.shape) && ((props = props || {}).shape = notCopy ? v : zrUtil.clone(v));
+    // Transform attributes will be copied inside `el.attr()` and `graphic.updateProps()`.
+    (v = option.position) && ((props = props || {}).position = v);
+    (v = option.scale) && ((props = props || {}).scale = v);
+    (v = option.origin) && ((props = props || {}).origin = v);
+    (v = option.rotation) != null && ((props = props || {}).rotation = v);
+
+    return props;
 }
 
 function makeRenderItem(customSeries, data, ecModel, api) {
@@ -620,25 +657,25 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
 }
 
 // Usage:
-// (1) By default, `elOption.$mergeChildren` is `'byIndex'`, which indicates that
+// (1) By default, `elOption.mergeChildren` is `'byIndex'`, which indicates that
 //     the existing children will not be removed, and enables the feature that
 //     update some of the props of some of the children simply by construct
 //     the returned children of `renderItem` like:
 //     `var children = group.children = []; children[3] = {opacity: 0.5};`
-// (2) If `elOption.$mergeChildren` is `'byName'`, add/update/remove children
+// (2) If `elOption.mergeChildren` is `'byName'`, add/update/remove children
 //     by child.name. But that might be lower performance.
-// (3) If `elOption.$mergeChildren` is `false`, the existing children will be
+// (3) If `elOption.mergeChildren` is `false`, the existing children will be
 //     replaced totally.
 // (4) If `!elOption.children`, following the "merge" principle, nothing will happen.
 //
 // For implementation simpleness, do not provide a direct way to remove sinlge
 // child (otherwise the total indicies of the children array have to be modified).
 // User can remove a single child by set its `ignore` as `true` or replace
-// it by another element, where its `$merge` can be set as `true` if necessary.
+// it by another element, where its `merge` can be set as `true` if necessary.
 function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
     var newChildren = elOption.children;
     var newLen = newChildren ? newChildren.length : 0;
-    var mergeChildren = elOption.$mergeChildren;
+    var mergeChildren = elOption.mergeChildren;
     // `diffChildrenByName` has been deprecated.
     var byName = mergeChildren === 'byName' || elOption.diffChildrenByName;
     var notMerge = mergeChildren === false;
@@ -678,7 +715,7 @@ function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
     if (__DEV__) {
         zrUtil.assert(
             !notMerge || el.childCount() === index,
-            'MUST NOT contain empty item in children array when `group.$mergeChildren` is `false`.'
+            'MUST NOT contain empty item in children array when `group.mergeChildren` is `false`.'
         );
     }
 }

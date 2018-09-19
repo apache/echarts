@@ -69,7 +69,7 @@ zrUtil.each(
         'extendShape', 'extendPath', 'makePath', 'makeImage',
         'mergePath', 'resizePath', 'createIcon',
         'setHoverStyle', 'setLabelStyle', 'setTextStyle', 'setText',
-        'getFont', 'updateProps', 'initProps', 'getTransform',
+        'getFont', 'updateProps', 'initProps', 'initFromProps', 'getTransform',
         'clipPointsByRect', 'clipRectByRect',
         'Group',
         'Image',

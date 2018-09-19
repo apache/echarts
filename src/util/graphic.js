@@ -886,7 +886,7 @@ export function getFont(opt, ecModel) {
     ].join(' '));
 }
 
-function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) {
+function animateOrSetProps(isUpdate, isFrom, el, props, animatableModel, dataIndex, cb) {
     if (typeof dataIndex === 'function') {
         cb = dataIndex;
         dataIndex = null;
@@ -914,11 +914,14 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
         }
 
         duration > 0
-            ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb, !!cb)
+            ? el[isFrom ? 'animateFrom' : 'animateTo'](
+                props, duration, animationDelay || 0, animationEasing, cb, !!cb
+            )
+            // Consider that the new `props` maybe different from the last `props`,
+            // forward to last to ensure the last settings work.
             : (el.stopAnimation(), el.attr(props), cb && cb());
     }
-    else {
-        el.stopAnimation();
+    else if (!isFrom) {
         el.attr(props);
         cb && cb();
     }
@@ -936,7 +939,7 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  * @param {Object} props
  * @param {module:echarts/model/Model} [animatableModel]
  * @param {number} [dataIndex]
- * @param {Function} [cb]
+ * @param {Function|Object} [cb] Function: done, Object: {done: function, during: function}
  * @example
  *     graphic.updateProps(el, {
  *         position: [100, 100]
@@ -947,7 +950,7 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
 export function updateProps(el, props, animatableModel, dataIndex, cb) {
-    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
+    animateOrSetProps(true, false, el, props, animatableModel, dataIndex, cb);
 }
 
 /**
@@ -962,10 +965,34 @@ export function updateProps(el, props, animatableModel, dataIndex, cb) {
  * @param {Object} props
  * @param {module:echarts/model/Model} [animatableModel]
  * @param {number} [dataIndex]
- * @param {Function} cb
+ * @param {Function|Object} [cb] Function: done, Object: {done: function, during: function}
  */
 export function initProps(el, props, animatableModel, dataIndex, cb) {
-    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
+    animateOrSetProps(false, false, el, props, animatableModel, dataIndex, cb);
+}
+
+/**
+ * Animate from the given props to el current state with "init" animation settings.
+ * The rest definitions are the same as `initPorps`.
+ *
+ * Consider that only props that existing in `initState` can be animated, and sometimes
+ * the target state is the complete set of props but the initial state is just a subset,
+ * using `initFromProps` is simpler. For example:
+ *
+ * Use `initProps` to make init animation:
+ * ```js
+ * var {targetStateNotInInitState, targetStateInInitState} = split(targetState, initState);
+ * el.attr(targetStateNotInInitState);
+ * graphicUtil.initProps(elInInitState, targetStateInInitState);
+ * ```
+ *
+ * Use `initFromProps` to make init animation.
+ * ```js
+ * graphicUtil.initFromProps(elInTargetState, initState, ...)`;
+ * ```
+ */
+export function initFromProps(el, props, animatableModel, dataIndex, cb) {
+    animateOrSetProps(false, true, el, props, animatableModel, dataIndex, cb);
 }
 
 /**
@@ -1066,6 +1093,7 @@ export function groupTransition(g1, g2, animatableModel, cb) {
         if (!el.isGroup && el.anid) {
             var oldEl = elMap1[el.anid];
             if (oldEl) {
+                // ??? animateFrom
                 var newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
                 updateProps(el, newProp, animatableModel, el.dataIndex);

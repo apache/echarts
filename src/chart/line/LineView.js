@@ -733,7 +733,7 @@ export default ChartView.extend({
             shape: {
                 points: next
             }
-        }, seriesModel);
+        }, seriesModel, null, {during: duringAnimation});
 
         if (polygon) {
             polygon.setShape({
@@ -758,19 +758,17 @@ export default ChartView.extend({
                 if (el) {
                     updatedDataInfo.push({
                         el: el,
-                        ptIdx: i    // Index of points
+                        ptIdx: i // Index of points
                     });
                 }
             }
         }
 
-        if (polyline.animators && polyline.animators.length) {
-            polyline.animators[0].during(function () {
-                for (var i = 0; i < updatedDataInfo.length; i++) {
-                    var el = updatedDataInfo[i].el;
-                    el.attr('position', polyline.shape.__points[updatedDataInfo[i].ptIdx]);
-                }
-            });
+        function duringAnimation() {
+            for (var i = 0; i < updatedDataInfo.length; i++) {
+                var el = updatedDataInfo[i].el;
+                el.attr('position', polyline.shape.__points[updatedDataInfo[i].ptIdx]);
+            }
         }
     },
 

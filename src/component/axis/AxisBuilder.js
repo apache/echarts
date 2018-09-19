@@ -612,6 +612,40 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
             z2: 2,
             silent: true
         }));
+
+// if (window.__basesss == null) {
+//     window.__basesss = 1;
+// }
+// (function () {
+//     var uuid = window.__basesss++;
+//     Object.defineProperty(tickEl.shape, 'uuid', {
+//         get() {
+//             return uuid;
+//         },
+//         set() {
+//             debugger;
+//         }
+//     });
+// })();
+
+// Object.defineProperty(tickEl.shape, 'aaaa', {
+//     get() {
+//         return 1;
+//     },
+//     enumerable: true,
+//     set(val) {
+//         console.log(val, '???????????????????????');
+//         debugger;
+//     }
+// });
+// if (!window.__xxx) {
+//     console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+//     window.__xxx = tickEl;
+//     // tickEl.shape.aaaa = 1;
+//     console.log(tickEl.shape.aaaa);
+//     console.log(tickEl.shape.uuid, '=++++++++++++++');
+// }
+
         axisBuilder.group.add(tickEl);
         tickEls.push(tickEl);
     }
