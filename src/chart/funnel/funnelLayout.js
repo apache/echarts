@@ -72,9 +72,19 @@ function labelLayout(data) {
         var linePoints;
 
         if (isLabelInside) {
-            textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
-            textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
-            textAlign = 'center';
+            if (labelPosition === 'insideLeft') {
+                textX = (points[0][0] + points[3][0]) / 2 + 5;
+                textY = (points[0][1] + points[3][1]) / 2;
+                textAlign = 'left';
+            } else if (labelPosition === 'insideRight') {
+                textX = (points[1][0] + points[2][0]) / 2 - 5;
+                textY = (points[1][1] + points[2][1]) / 2;
+                textAlign = 'right';
+            } else {
+                textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
+                textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
+                textAlign = 'center';
+            }
             linePoints = [
                 [textX, textY], [textX, textY]
             ];
