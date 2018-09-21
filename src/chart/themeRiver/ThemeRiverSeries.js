@@ -218,11 +218,9 @@ var ThemeRiverSeries = SeriesModel.extend({
         var timeDim = data.mapDimension('single');
 
         for (var j = 0; j < layerSeries.length; ++j) {
-            layerSeries[j].indices.sort(comparer);
-        }
-
-        function comparer(index1, index2) {
-            return data.get(timeDim, index1) - data.get(timeDim, index2);
+            layerSeries[j].indices.sort(function (index1, index2) {
+                return data.get(timeDim, index1) - data.get(timeDim, index2);
+            });
         }
 
         return layerSeries;
