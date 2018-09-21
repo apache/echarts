@@ -73,7 +73,7 @@ function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation
             .when(200, {
                 position: position
             })
-            .start('bounceOut') 
+            .start('bounceOut')
         : el.attr('position', position);
 }
 
