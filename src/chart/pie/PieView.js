@@ -216,7 +216,7 @@ piePieceProto._getFilterIgnore = function(data, idx) {
     var itemModel = data.getItemModel(idx);
     var valueDim = data.mapDimension('value');
     var sum = data.getSum(valueDim);
-    var filterValue = seriesModel.getModel('filterValue');
+    var filterValue = seriesModel.get('labelDisplayThreshold');
     var filterIgnore = false;
     if (sum * filterValue.option > itemModel.option.value) {
         filterIgnore = true;
