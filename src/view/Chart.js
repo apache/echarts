@@ -22,6 +22,7 @@ import Group from 'zrender/src/container/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
+import * as graphicUtil from '../util/graphic';
 import {createTask} from '../stream/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 
@@ -165,23 +166,27 @@ chartProto.updateView
 
 /**
  * Set state of single element
- * @param  {module:zrender/Element} el
- * @param  {string} state
+ * @param {module:zrender/Element} el
+ * @param  {string} state 'normal'|'emphasis'
  */
 function elSetState(el, state) {
     if (el) {
         el.trigger(state);
-        if (el.type === 'group') {
-            for (var i = 0; i < el.childCount(); i++) {
+        if (el.isGroup
+            // Simple optimize.
+            && !graphicUtil.isHighDownDispatcher(el)
+        ) {
+            for (var i = 0, len = el.childCount(); i < len; i++) {
                 elSetState(el.childAt(i), state);
             }
         }
     }
 }
+
 /**
- * @param  {module:echarts/data/List} data
- * @param  {Object} payload
- * @param  {string} state 'normal'|'emphasis'
+ * @param {module:echarts/data/List} data
+ * @param {Object} payload
+ * @param {string} state 'normal'|'emphasis'
  */
 function toggleHighlight(data, payload, state) {
     var dataIndex = modelUtil.queryDataIndex(data, payload);

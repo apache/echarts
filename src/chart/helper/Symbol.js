@@ -321,10 +321,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
     }
 
-    symbolPath.off('mouseover')
-        .off('mouseout')
-        .off('emphasis')
-        .off('normal');
+    graphic.removeExtraHighDownEffect(symbolPath);
 
     symbolPath.hoverStyle = hoverItemStyle;
 
@@ -335,23 +332,9 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     symbolPath.__symbolOriginalScale = getScale(symbolSize);
 
     if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        // Note: consider `off`, should use static function here.
-        symbolPath.on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
+        graphic.setExtraHighDownEffect(symbolPath, onEmphasis, onNormal);
     }
 };
-
-function onMouseOver() {
-    // see comment in `graphic.isInEmphasis`
-    !graphic.isInEmphasis(this) && onEmphasis.call(this);
-}
-
-function onMouseOut() {
-    // see comment in `graphic.isInEmphasis`
-    !graphic.isInEmphasis(this) && onNormal.call(this);
-}
 
 function onEmphasis() {
     // Do not support this hover animation util some scenario required.
