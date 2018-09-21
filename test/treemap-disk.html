@@ -116,6 +116,7 @@ under the License.
 
             function colorMappingChange(value) {
                 var levelOption = getLevelOption(value);
+
                 chart.setOption({
                     series: [{
                         levels: levelOption
@@ -136,10 +137,8 @@ under the License.
                     {
                         color: ['#d14a61'], // default color
                         itemStyle: {
-                            normal: {
-                                borderWidth: 0,
-                                gapWidth: 5
-                            }
+                            borderWidth: 0,
+                            gapWidth: 5
                         }
                     },
                     {
@@ -150,18 +149,14 @@ under the License.
                         ],
                         colorMappingBy: colorMapping,
                         itemStyle: {
-                            normal: {
-                                gapWidth: 1
-                            }
+                            gapWidth: 1
                         }
                     },
                     {
                         colorSaturation: [0.35, 0.5],
                         itemStyle: {
-                            normal: {
-                                gapWidth: 1,
-                                borderColorSaturation: 0.6
-                            }
+                            gapWidth: 1,
+                            borderColorSaturation: 0.6
                         }
                     }
                 ];

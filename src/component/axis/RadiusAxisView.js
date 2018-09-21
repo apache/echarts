@@ -53,7 +53,7 @@ export default AxisView.extend({
         this.group.add(axisBuilder.getGroup());
 
         zrUtil.each(selfBuilderAttrs, function (name) {
-            if (radiusAxisModel.get(name +'.show') && !radiusAxis.scale.isBlank()) {
+            if (radiusAxisModel.get(name + '.show') && !radiusAxis.scale.isBlank()) {
                 this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords);
             }
         }, this);

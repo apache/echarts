@@ -40,6 +40,9 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <!-- <div id="main1"></div> -->
 
 
         <script>
@@ -82,6 +85,7 @@ under the License.
                                             cx: 0,
                                             cy: 0
                                         },
+                                        info: 0,
                                         style: {
                                             fill: 'red',
                                             text: 'dataIndex: ' + params.dataIndex,
@@ -110,20 +114,344 @@ under the License.
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
                         'Eventful: ',
-                        '+ red shapes trigger events, but green shapes not. ',
+                        '+ red circle and red rect trigger events, but green shapes not. ',
                         '+ Only dataIndex: 1 trigger event',
-                        'events (click, mousedown, mousemove, mouseup) are printed in console log.'
+                        '+ events (click, mousedown, mousemove, mouseup) are printed in console log.',
+                        '+ red circle: params.info = 0, red rect: params.info = undefined'
                     ],
                     option: option
                 });
 
-                echarts.util.each(['click', 'mousedown', 'mousemove', 'mouseup'], function (eventName) {
-                    chart.on(eventName, {dataIndex: 1, target: 'innerGroup'}, function (e) {
-                        console.log(e.type, e);
+                chart && echarts.util.each(['click', 'mousedown', 'mousemove', 'mouseup'], function (eventName) {
+                    chart.on(eventName, {dataIndex: 1, element: 'innerGroup'}, function (params) {
+                        console.log(params.type, params);
+                        console.log('params.info: ', params.info);
                     });
                 });
             });
 
         </script>
+
+
+
+
+        <script>
+
+            // require([
+            //     'echarts'/*, 'map/js/china' */
+            // ], function (echarts) {
+
+            //     // deprecated: this case would be wrong.
+
+            //     var option = {
+            //         xAxis: {
+            //             min: 90,
+            //             max: 120,
+            //             scale: true
+            //         },
+            //         yAxis: {
+            //             min: 50,
+            //             max: 500,
+            //             scale: true
+            //         },
+            //         dataZoom: [{
+            //             type: 'inside'
+            //         }, {
+            //             type: 'slider'
+            //         }],
+            //         series: [{
+            //             type: 'custom',
+            //             renderItem: function (params, api) {
+            //                 var pos = api.coord([api.value(0), api.value(1)]);
+            //                 var rectClipBy = {
+            //                     x: params.coordSys.x - pos[0],
+            //                     y: params.coordSys.y - pos[1],
+            //                     width: params.coordSys.width,
+            //                     height: params.coordSys.height
+            //                 };
+            //                 var points = echarts.graphic.clipPointsByRect([
+            //                     [0, 0],
+            //                     [50, -50],
+            //                     [90, -50],
+            //                     [140, 0],
+            //                     [90, 50]
+            //                 ], rectClipBy);
+
+            //                 return {
+            //                     type: 'polygon',
+            //                     position: pos,
+            //                     shape: {points: points},
+            //                     style: {
+            //                         fill: 'green'
+            //                     }
+            //                 }
+            //             },
+            //             data: [[100, 300]]
+            //         }]
+            //     };
+
+            //     var chart = testHelper.create(echarts, 'main1', {
+            //         title: [
+            //             'Test clipPointsByRect: dataZoom clip should be normal, especially when all clipped',
+            //         ],
+            //         option: option
+            //     });
+
+            // });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                // deprecated: this case would be wrong.
+
+                var option = {
+                    xAxis: {
+                        min: 90,
+                        max: 120,
+                        scale: true
+                    },
+                    yAxis: {
+                        min: 50,
+                        max: 500,
+                        scale: true
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }],
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            return {
+                                type: 'polygon',
+                                position: api.coord([api.value(0), api.value(1)]),
+                                shape: {
+                                    points: [
+                                        [0, 0],
+                                        [50, -50],
+                                        [90, -50],
+                                        [140, 0],
+                                        [90, 50]
+                                    ]
+                                },
+                                clip: {
+                                    x: params.coordSys.x,
+                                    y: params.coordSys.y,
+                                    width: params.coordSys.width,
+                                    height: params.coordSys.height
+                                },
+                                style: {
+                                    fill: 'green'
+                                }
+                            }
+                        },
+                        data: [[100, 300]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Test clip shape',
+                    ],
+                    option: option
+                });
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                // deprecated: this case would be wrong.
+
+                var data = [];
+                var data0 = [];
+                for (var i = 0; i < 100; i++) {
+                    data.push(i);
+                    data0.push([i, 10]);
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'weakFilter',
+                        height: 20,
+                        bottom: 0,
+                        start: -26,
+                        end: 26,
+                        showDetail: false
+                    }, {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        filterMode: 'weakFilter',
+                        start: -26,
+                        end: 26,
+                        zoomOnMouseWheel: false,
+                        moveOnMouseMove: true
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        zoomLock: true,
+                        width: 10,
+                        right: 10,
+                        top: 70,
+                        bottom: 20,
+                        start: 94,
+                        end: 100,
+                        handleSize: 0,
+                        showDetail: false,
+                    }, {
+                        type: 'inside',
+                        yAxisIndex: 0,
+                        start: 94,
+                        end: 100,
+                        zoomOnMouseWheel: false,
+                        moveOnMouseMove: true,
+                        moveOnMouseWheel: true
+                    }],
+                    grid: {
+                        show: true,
+                        top: 70,
+                        bottom: 20,
+                        left: 100,
+                        right: 20,
+                        backgroundColor: '#fff',
+                        borderWidth: 0
+                    },
+                    xAxis: {
+                        type: 'time',
+                        position: 'top',
+                        splitLine: {
+                            lineStyle: {
+                                color: ['#E9EDFF']
+                            }
+                        },
+                        axisLine: {
+                            show: false
+                        },
+                        axisTick: {
+                            lineStyle: {
+                                color: '#929ABA'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#929ABA',
+                            inside: false,
+                            align: 'center'
+                        }
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'scatter',
+                        data: data0,
+                        encode: {x: 1, y: 0}
+                    }, {
+                        type: 'custom',
+                        renderItem: renderAxisLabelItem,
+                        encode: {
+                            x: -1, // Then this series will not controlled by x.
+                            y: 0
+                        },
+                        data: data
+                    }]
+                };
+
+                function renderAxisLabelItem(params, api) {
+                    // Get the heigth corresponds to length 1 on y axis.
+                    var x0 = 0;
+                    var x1 = 30;
+                    var x3 = 90;
+                    var blockHeight = api.size([0, 1])[1] - 26;
+
+                    return {
+                        type: 'group',
+                        position: [
+                            10,
+                            api.coord([0, api.value(0)])[1]
+                            // blockHeight
+                        ],
+                        children: [{
+                            type: 'path',
+                            shape: {
+                                d: 'M0,0 L0,-20 L30,-20 C40,-20 40,-1 50,-1 L90,-1 L90,0 Z',
+                                x: 0,
+                                y: -blockHeight,
+                                width: 90,
+                                height: blockHeight,
+                                layout: 'cover'
+                            },
+                            style: {
+                                fill: '#03b292'
+                            }
+                        }, {
+                            type: 'text',
+                            style: {
+                                x: (x0 + x1) / 2,
+                                y: -blockHeight / 2,
+                                text: api.value(1),
+                                textFill: '#fff'
+                            }
+                        // }, {
+                        //     type: 'text',
+                        //     style: {
+                        //         x: x3 - 5,
+                        //         y: -blockHeight,
+                        //         textAlign: 'right',
+                        //         textVerticalAlign: 'bottom',
+                        //         text: api.value(0),
+                        //         textFill: '#000'
+                        //     }
+                        }]
+                    };
+                }
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Test SVG path data auto fit to rect: ',
+                        'the y axis label (made by custom series) should be align with axis tick',
+                    ],
+                    option: option
+                });
+
+            });
+
+        </script>
+
+
+
+
     </body>
 </html>

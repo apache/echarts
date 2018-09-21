@@ -153,7 +153,10 @@ var roamHandlers = {
      * @this {module:echarts/component/dataZoom/InsideZoomView}
      */
     scrollMove: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e) {
-        return (range[1] - range[0]) * e.scrollDelta;
+        var directionInfo = getDirectionInfo[coordSysName](
+            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordInfo
+        );
+        return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
     })
 };
 

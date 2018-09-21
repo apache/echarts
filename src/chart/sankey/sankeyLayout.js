@@ -134,7 +134,8 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient) {
     }
 
     while (zeroIndegrees.length) {
-        zrUtil.each(zeroIndegrees, function (node) {
+        for (var idx = 0; idx < zeroIndegrees.length; idx++) {
+            var node = zeroIndegrees[idx];
             if (orient === 'vertical') {
                 node.setLayout({y: x}, true);
                 node.setLayout({dy: nodeWidth}, true);
@@ -143,7 +144,8 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient) {
                 node.setLayout({x: x}, true);
                 node.setLayout({dx: nodeWidth}, true);
             }
-            zrUtil.each(node.outEdges, function (edge) {
+            for (var oidx = 0; oidx < node.outEdges.length; oidx++) {
+                var edge = node.outEdges[oidx];
                 var indexEdge = edges.indexOf(edge);
                 remainEdges[indexEdge] = 0;
                 var targetNode = edge.node2;
@@ -151,8 +153,8 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient) {
                 if (--indegreeArr[nodeIndex] === 0) {
                     nextNode.push(targetNode);
                 }
-            });
-        });
+            }
+        }
         ++x;
         zeroIndegrees = nextNode;
         nextNode = [];
@@ -334,6 +336,7 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
         var i;
 
         if (orient === 'vertical') {
+            var nodeX;
             nodes.sort(function (a, b) {
                 return a.getLayout().x - b.getLayout().x;
             });
@@ -341,7 +344,7 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
                 node = nodes[i];
                 dy = y0 - node.getLayout().x;
                 if (dy > 0) {
-                    var nodeX = node.getLayout().x + dy;
+                    nodeX = node.getLayout().x + dy;
                     node.setLayout({x: nodeX}, true);
                 }
                 y0 = node.getLayout().x + node.getLayout().dx + nodeGap;
@@ -364,6 +367,7 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
             }
         }
         else {
+            var nodeY;
             nodes.sort(function (a, b) {
                 return a.getLayout().y - b.getLayout().y;
             });
@@ -371,7 +375,7 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
                 node = nodes[i];
                 dy = y0 - node.getLayout().y;
                 if (dy > 0) {
-                    var nodeY = node.getLayout().y + dy;
+                    nodeY = node.getLayout().y + dy;
                     node.setLayout({y: nodeY}, true);
                 }
                 y0 = node.getLayout().y + node.getLayout().dy + nodeGap;

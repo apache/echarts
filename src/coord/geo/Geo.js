@@ -33,8 +33,9 @@ import geoSourceManager from './geoSourceManager';
  *        Specify the positioned areas by left, top, width, height
  * @param {Object.<string, string>} [nameMap]
  *        Specify name alias
+ * @param {boolean} [invertLongitute=true]
  */
-function Geo(name, map, nameMap) {
+function Geo(name, map, nameMap, invertLongitute) {
 
     View.call(this, name);
 
@@ -48,6 +49,7 @@ function Geo(name, map, nameMap) {
 
     this._nameCoordMap = source.nameCoordMap;
     this._regionsMap = source.nameCoordMap;
+    this._invertLongitute = invertLongitute == null ? true : invertLongitute;
 
     /**
      * @readOnly
@@ -92,14 +94,11 @@ Geo.prototype = {
      */
     transformTo: function (x, y, width, height) {
         var rect = this.getBoundingRect();
-
-        // FIXME
-        // Should not name it as invertLng.
-        var invertLng = this.invertLng;
+        var invertLongitute = this._invertLongitute;
 
         rect = rect.clone();
 
-        if (invertLng) {
+        if (invertLongitute) {
             // Longitute is inverted
             rect.y = -rect.y - rect.height;
         }
@@ -112,7 +111,7 @@ Geo.prototype = {
 
         rawTransformable.decomposeTransform();
 
-        if (invertLng) {
+        if (invertLongitute) {
             var scale = rawTransformable.scale;
             scale[1] = -scale[1];
         }

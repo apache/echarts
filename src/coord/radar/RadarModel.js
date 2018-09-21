@@ -57,7 +57,7 @@ var RadarModel = echarts.extendComponentModel({
                 indicatorOpt.max = 0;
             }
             var iNameTextStyle = nameTextStyle;
-            if(indicatorOpt.color != null) {
+            if (indicatorOpt.color != null) {
                 iNameTextStyle = zrUtil.defaults({color: indicatorOpt.color}, nameTextStyle);
             }
             // Use same configuration

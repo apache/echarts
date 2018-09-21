@@ -122,8 +122,8 @@ function markLineFilter(coordSys, item) {
         //  }
         // }
         if (
-            fromCoord && toCoord &&
-            (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
+            fromCoord && toCoord
+            && (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
             || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
         ) {
             return true;
@@ -352,7 +352,7 @@ function createList(coordSys, seriesModel, mlModel) {
         });
     }
     else {
-        coordDimsInfos =[{
+        coordDimsInfos = [{
             name: 'value',
             type: 'float'
         }];
@@ -375,15 +375,23 @@ function createList(coordSys, seriesModel, mlModel) {
         return item.value;
     };
     fromData.initData(
-        zrUtil.map(optData, function (item) { return item[0]; }),
-        null, dimValueGetter
+        zrUtil.map(optData, function (item) {
+            return item[0];
+        }),
+        null,
+        dimValueGetter
     );
     toData.initData(
-        zrUtil.map(optData, function (item) { return item[1]; }),
-        null, dimValueGetter
+        zrUtil.map(optData, function (item) {
+            return item[1];
+        }),
+        null,
+        dimValueGetter
     );
     lineData.initData(
-        zrUtil.map(optData, function (item) { return item[2]; })
+        zrUtil.map(optData, function (item) {
+            return item[2];
+        })
     );
     lineData.hasItemOption = true;
 

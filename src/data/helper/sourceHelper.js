@@ -18,7 +18,7 @@
 */
 
 import {__DEV__} from '../../config';
-import {makeInner} from '../../util/model';
+import {makeInner, getDataItemValue} from '../../util/model';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
 import {
     createHashMap,
@@ -32,7 +32,6 @@ import {
     extend,
     assert
 } from 'zrender/src/core/util';
-import {getDataItemValue} from '../../util/model';
 import Source from '../Source';
 
 import {

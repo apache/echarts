@@ -54,7 +54,7 @@ export var seriesModelMixin = {
             ordinalMeta = xAxisModel.getOrdinalMeta();
             addOrdinal = true;
         }
-        else if (yAxisType  === 'category') {
+        else if (yAxisType === 'category') {
             option.layout = 'vertical';
             ordinalMeta = yAxisModel.getOrdinalMeta();
             addOrdinal = true;
