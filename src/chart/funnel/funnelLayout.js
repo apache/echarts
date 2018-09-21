@@ -64,7 +64,8 @@ function labelLayout(data) {
         var points = layout.points;
 
         var isLabelInside = labelPosition === 'inner'
-            || labelPosition === 'inside' || labelPosition === 'center';
+            || labelPosition === 'inside' || labelPosition === 'center'
+            || labelPosition === 'insideLeft' || labelPosition === 'insideRight';
 
         var textAlign;
         var textX;
