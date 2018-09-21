@@ -85,7 +85,15 @@ var SankeySeries = SeriesModel.extend({
             }
             return encodeHTML(html);
         }
-
+        else if (dataType === 'node') {
+            var node = this.getGraph().getNodeByIndex(dataIndex);
+            var value = node.getLayout().value;
+            var name = this.getDataParams(dataIndex, dataType).data.name;
+            if (value) {
+                var html = name + ' : ' + value;
+            }
+            return encodeHTML(html);
+        }
         return SankeySeries.superCall(this, 'formatTooltip', dataIndex, multipleSeries);
     },
 
