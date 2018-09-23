@@ -91,7 +91,7 @@ function calculateBase(groupItem) {
             maxDataCount = Math.max(maxDataCount, seriesModel.getData().count());
         });
         extent = baseAxis.getExtent(),
-        Math.abs(extent[1] - extent[0]) / maxDataCount;
+        bandWidth = Math.abs(extent[1] - extent[0]) / maxDataCount;
     }
 
     each(seriesModels, function (seriesModel) {
