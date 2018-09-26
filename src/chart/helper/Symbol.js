@@ -155,7 +155,7 @@ symbolProto.setZ = function (zlevel, z) {
 symbolProto.setDraggable = function (draggable) {
     var symbolPath = this.childAt(0);
     symbolPath.draggable = draggable;
-    symbolPath.cursor = draggable ? 'move' : 'pointer';
+    symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
 };
 
 /**
