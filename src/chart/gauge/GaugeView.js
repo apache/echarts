@@ -119,6 +119,9 @@ var GaugeView = ChartView.extend({
         }
 
         var getColor = function (percent) {
+            if (!clockwise) {
+                percent = 1 - percent
+            }
             // Less than 0
             if (percent <= 0) {
                 return colorList[0][1];
