@@ -31,11 +31,25 @@ export default function (ecModel) {
             var name = categoriesData.getName(idx);
             // Add prefix to avoid conflict with Object.prototype.
             categoryNameIdxMap['ec-' + name] = idx;
-
             var itemModel = categoriesData.getItemModel(idx);
+
             var color = itemModel.get('itemStyle.color')
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
+            var opacity = itemModel.get('itemStyle.opacity')
+                || 1;
+            categoriesData.setItemVisual(idx, 'opacity', opacity);
+            var itemSymbolType = itemModel.getShallow('symbol', true);
+            var itemSymbolSize = itemModel.getShallow('symbolSize',
+                true);
+            if (itemSymbolType != null) {
+                categoriesData.setItemVisual(idx, 'symbol', itemSymbolType);
+            }
+            if (itemSymbolSize != null) {
+                // PENDING Transform symbolSize ?
+                categoriesData.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+            }
+
         });
 
         // Assign category color to visual
@@ -53,6 +67,27 @@ export default function (ecModel) {
                             categoriesData.getItemVisual(category, 'color')
                         );
                     }
+                    if (!data.getItemVisual(idx, 'opacity', true)) {
+                        data.setItemVisual(
+                            idx, 'opacity',
+                            categoriesData.getItemVisual(category, 'opacity')
+                        );
+                    }
+
+                    if (!data.getItemVisual(idx, 'symbol', true)) {
+                        data.setItemVisual(
+                            idx, 'symbol',
+                            categoriesData.getItemVisual(category, 'symbol')
+                        );
+                    }
+
+                    if (!data.getItemVisual(idx, 'symbolSize', true)) {
+                        data.setItemVisual(
+                            idx, 'symbolSize',
+                            categoriesData.getItemVisual(category, 'symbolSize')
+                        );
+                    }
+
                 }
             });
         }
