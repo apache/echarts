@@ -1,0 +1,131 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        数据一是矩形，数据二数据四是圆形，数据三是小鲸鱼
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                // 'echarts/chart/graph',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml',
+
+                'theme/vintage'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), 'vintage');
+                option = {
+                    animationDurationUpdate: 1500,
+                    label: {
+                        normal: {
+                            show: true,
+                            textStyle: {
+                                fontSize: 12
+                            },
+                        }
+                    },
+                    series: [
+                        {
+                            type: 'graph',
+                            layout: 'force',
+                            symbolSize: 50,
+                            roam: true,
+                            categories: [{
+                                name: '类目1',
+                                symbol:'rect',
+                                symbolRotate: Math.PI / 6
+                            }, {
+                                name: '类目2',
+                                symbol:'circle'
+                            }, {
+                                name: '类目3',
+                                symbolKeepAspect: true,
+                                symbolOffset: ['30%', 0],
+                                symbol:'path://M36.2145543,24.477144 C35.7759706,24.3133453 35.3249718,24.2446326 34.8840006,24.2649744 C34.9626687,23.9194004 34.9847531,23.5731168 34.9532381,23.2338109 C34.8413837,22.0030139 34.0384674,20.88457 32.7969674,20.4150529 C31.520013,19.9369025 30.1351436,20.2769179 29.2274161,21.1723118 C29.5873317,21.1753867 29.9524998,21.2425619 30.3059692,21.3766759 C31.932573,21.9858653 32.7489786,23.7868239 32.1347943,25.3982016 C31.9073849,25.9918982 31.5167899,26.4761986 31.0341567,26.82331 C30.2043811,27.4136952 29.1014755,27.5962983 28.0764023,27.2101589 C26.4499179,26.6026252 25.6326766,24.800957 26.2475773,23.1886332 C26.3279166,22.9795384 26.4293854,22.7838078 26.5491185,22.598248 L26.5474473,22.598248 C26.5474473,22.598248 26.5474473,22.598248 26.5474473,22.5999037 C27.071026,21.7894251 27.5197567,20.9111799 27.8780011,19.9759303 C30.6587224,12.7019642 26.9601267,4.568439 19.6154603,1.812717 C12.2700776,-0.942059 4.0634043,2.7221845 1.2819668,9.9969784 C0.5214286,11.9820775 0.2459111,14.029503 0.395488,16.0168491 C0.3985918,16.0823686 0.4049186,16.1494256 0.4112455,16.2164826 C1.0048974,22.9703137 5.3971812,29.1250079 12.2228051,31.684881 C19.165894,34.2876848 26.703351,32.4570414 31.6617111,27.6088345 C32.5096318,26.7936252 33.7896899,26.491928 34.9658918,26.9324698 C36.3814406,27.4636035 37.1820887,28.8956896 36.9617225,30.3199702 C37.4915087,29.9502698 37.9206619,29.4254042 38.1694394,28.7771868 C38.8283894,27.0541658 37.9521769,25.1284363 36.2145543,24.477144 Z',
+                                symbolSize: 100
+                            }],
+                            label: {
+                                normal: {
+                                    show: true,
+                                    textStyle: {
+                                        fontSize: 12
+                                    },
+                                }
+                            },
+                            force: {
+                                repulsion: 1000
+                            },
+                            data: [{
+                                name: '数据一',
+                                category: 0
+                            }, {
+                                name: '数据二',
+                                category: 1
+                            }, {
+                                name: '数据三',
+                                category: 2
+                            }, {
+                                name: '数据四',
+                                category: 1
+                            }],
+                            links: [{
+                                source: 0,
+                                target: 1,
+                                value:"test",
+                                label:{
+                                    normal:{
+                                        show:true,
+                                        formatter:"{c}"
+                                    }
+                                }
+                            }, {
+                                source: 0,
+                                target: 2,
+                            },{
+                                source: 0,
+                                target: 3,
+                            }]
+                        }
+                    ]
+                };
+
+                chart.setOption(option);
+            });
+        </script>
+    </body>
+</html>
