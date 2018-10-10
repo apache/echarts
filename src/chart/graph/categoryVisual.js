@@ -115,7 +115,6 @@ export default function (ecModel) {
                     }
 
                     if (!data.getItemVisual(idx, 'symbolRotate', true)) {
-                        console.log(111);
                         data.setItemVisual(
                             idx, 'symbolRotate',
                             categoriesData.getItemVisual(category, 'symbolRotate')
