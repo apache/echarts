@@ -36,20 +36,32 @@ export default function (ecModel) {
             var color = itemModel.get('itemStyle.color')
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
-            var opacity = itemModel.get('itemStyle.opacity')
-                || 1;
+            var opacity = itemModel.get('itemStyle.opacity') || 1;
             categoriesData.setItemVisual(idx, 'opacity', opacity);
             var itemSymbolType = itemModel.getShallow('symbol', true);
-            var itemSymbolSize = itemModel.getShallow('symbolSize',
-                true);
             if (itemSymbolType != null) {
                 categoriesData.setItemVisual(idx, 'symbol', itemSymbolType);
             }
+
+            var itemSymbolSize = itemModel.getShallow('symbolSize', true);
             if (itemSymbolSize != null) {
-                // PENDING Transform symbolSize ?
                 categoriesData.setItemVisual(idx, 'symbolSize', itemSymbolSize);
             }
 
+            var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect',true);
+            if (itemSymbolKeepAspect != null) {
+                categoriesData.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
+            }
+
+            var itemSymbolOffset = itemModel.getShallow('symbolOffset',true);
+            if (itemSymbolOffset != null) {
+                categoriesData.setItemVisual(idx, 'symbolOffset', itemSymbolOffset);
+            }
+
+            var itemSymbolRotate = itemModel.getShallow('symbolRotate',true) || 0;
+            if (itemSymbolRotate != null) {
+                categoriesData.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
+            }
         });
 
         // Assign category color to visual
@@ -88,6 +100,27 @@ export default function (ecModel) {
                         );
                     }
 
+                    if (!data.getItemVisual(idx, 'symbolKeepAspect', true)) {
+                        data.setItemVisual(
+                            idx, 'symbolKeepAspect',
+                            categoriesData.getItemVisual(category, 'symbolKeepAspect')
+                        );
+                    }
+
+                    if (!data.getItemVisual(idx, 'symbolOffset', true)) {
+                        data.setItemVisual(
+                            idx, 'symbolOffset',
+                            categoriesData.getItemVisual(category, 'symbolOffset')
+                        );
+                    }
+
+                    if (!data.getItemVisual(idx, 'symbolRotate', true)) {
+                        console.log(111);
+                        data.setItemVisual(
+                            idx, 'symbolRotate',
+                            categoriesData.getItemVisual(category, 'symbolRotate')
+                        );
+                    }
                 }
             });
         }
