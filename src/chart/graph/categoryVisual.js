@@ -44,7 +44,6 @@ export default function (ecModel) {
 
             for (var i = 0; i < symbolStyleList.length; i++) {
                 var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
-                console.log(symbolStyleItem);
                 if (symbolStyleItem != null) {
                     categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
                 }
