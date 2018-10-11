@@ -36,32 +36,19 @@ export default function (ecModel) {
             var color = itemModel.get('itemStyle.color')
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
+
             var opacity = itemModel.get('itemStyle.opacity') || 1;
             categoriesData.setItemVisual(idx, 'opacity', opacity);
-            var itemSymbolType = itemModel.getShallow('symbol', true);
-            if (itemSymbolType != null) {
-                categoriesData.setItemVisual(idx, 'symbol', itemSymbolType);
+
+            var symbolStyleList = ['symbol','symbolSize','symbolKeepAspect','symbolOffset','symbolRotate']
+
+            for(var i = 0;i < symbolStyleList.length;i++){
+                var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
+                if (symbolStyleItem != null) {
+                    categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
+                }
             }
 
-            var itemSymbolSize = itemModel.getShallow('symbolSize', true);
-            if (itemSymbolSize != null) {
-                categoriesData.setItemVisual(idx, 'symbolSize', itemSymbolSize);
-            }
-
-            var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect',true);
-            if (itemSymbolKeepAspect != null) {
-                categoriesData.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
-            }
-
-            var itemSymbolOffset = itemModel.getShallow('symbolOffset',true);
-            if (itemSymbolOffset != null) {
-                categoriesData.setItemVisual(idx, 'symbolOffset', itemSymbolOffset);
-            }
-
-            var itemSymbolRotate = itemModel.getShallow('symbolRotate',true) || 0;
-            if (itemSymbolRotate != null) {
-                categoriesData.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
-            }
         });
 
         // Assign category color to visual
@@ -73,52 +60,27 @@ export default function (ecModel) {
                     if (typeof category === 'string') {
                         category = categoryNameIdxMap['ec-' + category];
                     }
-                    if (!data.getItemVisual(idx, 'color', true)) {
-                        data.setItemVisual(
-                            idx, 'color',
-                            categoriesData.getItemVisual(category, 'color')
-                        );
-                    }
-                    if (!data.getItemVisual(idx, 'opacity', true)) {
-                        data.setItemVisual(
-                            idx, 'opacity',
-                            categoriesData.getItemVisual(category, 'opacity')
-                        );
+
+                    var itemStyleList = ['color','opacity'];
+
+                    for(var i =0; i<itemStyleList.length;i++){
+                        if (!data.getItemVisual(idx, itemStyleList[i], true)) {
+                            data.setItemVisual(
+                                idx, itemStyleList[i],
+                                categoriesData.getItemVisual(category,itemStyleList[i])
+                            );
+                        }
                     }
 
-                    if (!data.getItemVisual(idx, 'symbol', true)) {
-                        data.setItemVisual(
-                            idx, 'symbol',
-                            categoriesData.getItemVisual(category, 'symbol')
-                        );
-                    }
+                    var symbolStyleList = ['symbol','symbolSize','symbolKeepAspect','symbolOffset','symbolRotate']
 
-                    if (!data.getItemVisual(idx, 'symbolSize', true)) {
-                        data.setItemVisual(
-                            idx, 'symbolSize',
-                            categoriesData.getItemVisual(category, 'symbolSize')
-                        );
-                    }
-
-                    if (!data.getItemVisual(idx, 'symbolKeepAspect', true)) {
-                        data.setItemVisual(
-                            idx, 'symbolKeepAspect',
-                            categoriesData.getItemVisual(category, 'symbolKeepAspect')
-                        );
-                    }
-
-                    if (!data.getItemVisual(idx, 'symbolOffset', true)) {
-                        data.setItemVisual(
-                            idx, 'symbolOffset',
-                            categoriesData.getItemVisual(category, 'symbolOffset')
-                        );
-                    }
-
-                    if (!data.getItemVisual(idx, 'symbolRotate', true)) {
-                        data.setItemVisual(
-                            idx, 'symbolRotate',
-                            categoriesData.getItemVisual(category, 'symbolRotate')
-                        );
+                    for(var i =0; i<symbolStyleList.length;i++){
+                        if (!data.getItemVisual(idx, symbolStyleList[i], true)) {
+                            data.setItemVisual(
+                                idx, symbolStyleList[i],
+                                categoriesData.getItemVisual(category,symbolStyleList[i])
+                            );
+                        }
                     }
                 }
             });
