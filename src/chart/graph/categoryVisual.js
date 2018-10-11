@@ -72,7 +72,7 @@ export default function (ecModel) {
                         }
                     }
 
-                    var symbolStyleList = ['symbol', 'symbolSize', 'symbolKeepAspect', 'symbolOffset', 'symbolRotate'];
+                    var symbolStyleList = ['symbol', 'symbolSize', 'symbolKeepAspect'];
 
                     for (var i = 0; i < symbolStyleList.length; i++) {
                         if (!data.getItemVisual(idx, symbolStyleList[i], true)) {
