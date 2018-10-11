@@ -40,10 +40,11 @@ export default function (ecModel) {
             var opacity = itemModel.get('itemStyle.opacity') || 1;
             categoriesData.setItemVisual(idx, 'opacity', opacity);
 
-            var symbolStyleList = ['symbol','symbolSize','symbolKeepAspect','symbolOffset','symbolRotate']
+            var symbolStyleList = ['symbol', 'symbolSize', 'symbolKeepAspect', 'symbolOffset', 'symbolRotate'];
 
-            for(var i = 0;i < symbolStyleList.length;i++){
+            for (var i = 0; i < symbolStyleList.length; i++) {
                 var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
+                console.log(symbolStyleItem);
                 if (symbolStyleItem != null) {
                     categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
                 }
@@ -61,24 +62,24 @@ export default function (ecModel) {
                         category = categoryNameIdxMap['ec-' + category];
                     }
 
-                    var itemStyleList = ['color','opacity'];
+                    var itemStyleList = ['color', 'opacity'];
 
-                    for(var i =0; i<itemStyleList.length;i++){
+                    for (var i = 0; i < itemStyleList.length; i++) {
                         if (!data.getItemVisual(idx, itemStyleList[i], true)) {
                             data.setItemVisual(
                                 idx, itemStyleList[i],
-                                categoriesData.getItemVisual(category,itemStyleList[i])
+                                categoriesData.getItemVisual(category, itemStyleList[i])
                             );
                         }
                     }
 
-                    var symbolStyleList = ['symbol','symbolSize','symbolKeepAspect','symbolOffset','symbolRotate']
+                    var symbolStyleList = ['symbol', 'symbolSize', 'symbolKeepAspect', 'symbolOffset', 'symbolRotate'];
 
-                    for(var i =0; i<symbolStyleList.length;i++){
+                    for (var i = 0; i < symbolStyleList.length; i++) {
                         if (!data.getItemVisual(idx, symbolStyleList[i], true)) {
                             data.setItemVisual(
                                 idx, symbolStyleList[i],
-                                categoriesData.getItemVisual(category,symbolStyleList[i])
+                                categoriesData.getItemVisual(category, symbolStyleList[i])
                             );
                         }
                     }
