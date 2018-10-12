@@ -200,6 +200,7 @@ export default echarts.extendChartView({
             && seriesModel.get('circular.rotateLabel');
         var cx = data.getLayout('cx');
         var cy = data.getLayout('cy');
+        var labelRotate = seriesModel.get('label.rotate') === undefined ? 0 : seriesModel.get('label.rotate');
         data.eachItemGraphicEl(function (el, idx) {
             var symbolPath = el.getSymbolPath();
             if (circularRotateLabel) {
@@ -222,7 +223,7 @@ export default echarts.extendChartView({
             }
             else {
                 symbolPath.setStyle({
-                    textRotation: 0
+                    textRotation: labelRotate *= Math.PI / 180
                 });
             }
         });
