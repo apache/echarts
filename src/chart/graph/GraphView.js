@@ -202,8 +202,10 @@ export default echarts.extendChartView({
         var cy = data.getLayout('cy');
         var labelRotate = seriesModel.get('label.rotate') || 0;
         data.eachItemGraphicEl(function (el, idx) {
-            var itemModel = data.getItemModel(idx);
-            labelRotate = itemModel.get('label.rotate') || labelRotate;
+            var itemRotate = itemModel.get('label.rotate');
+            if (itemRotate != undefined) {
+                labelRotate = itemRotate;
+            }
             var symbolPath = el.getSymbolPath();
             if (circularRotateLabel) {
                 var pos = data.getItemLayout(idx);
