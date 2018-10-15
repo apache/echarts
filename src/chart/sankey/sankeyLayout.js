@@ -57,7 +57,9 @@ export default function (ecModel, api, payload) {
 
         var orient = seriesModel.get('orient');
 
-        layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient);
+        var nodeAlign = seriesModel.get('nodeAlign');
+
+        layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign);
     });
 }
 
@@ -77,8 +79,8 @@ function getViewRect(seriesModel, api) {
     );
 }
 
-function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient) {
-    computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient);
+function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign) {
+    computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign);
     computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient);
     computeEdgeDepths(nodes, orient);
 }
@@ -107,7 +109,7 @@ function computeNodeValues(nodes) {
  * @param  {number} nodeWidth  the dx of the node
  * @param  {number} width  the whole width of the area to draw the view
  */
-function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient) {
+function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign) {
     // Used to mark whether the edge is deleted. if it is deleted,
     // the value is 0, otherwise it is 1.
     var remainEdges = [];
@@ -168,7 +170,9 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient) {
         }
     }
 
-    moveSinksRight(nodes, x, orient);
+    if (nodeAlign === 'justify' || nodeAlign === 'right') {
+        moveSinksRight(nodes, x, orient);
+    }
 
     if (orient === 'vertical') {
         kx = (height - nodeWidth) / (x - 1);
