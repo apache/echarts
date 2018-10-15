@@ -49,7 +49,7 @@ export default function (ecModel) {
             function findFirstActualPoint() {
                 return zrUtil.find(points[idx], function (point) {
                     return !isNaN(point[0]) && !isNaN(point[1]);
-                }) || ["NaN", "NaN"];
+                }) || ['NaN', 'NaN'];
             }
         });
     });
