@@ -143,6 +143,11 @@ var SankeySeries = SeriesModel.extend({
             fontSize: 12
         },
 
+        levels: [],
+
+        // Value can be 'left', 'right'
+        nodeAlign: 'justify',
+
         itemStyle: {
             borderWidth: 1,
             borderColor: '#333'
