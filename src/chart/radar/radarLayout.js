@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 
 export default function (ecModel) {
     ecModel.eachSeriesByType('radar', function (seriesModel) {
@@ -38,8 +39,18 @@ export default function (ecModel) {
 
         data.each(function (idx) {
             // Close polygon
-            points[idx][0] && points[idx].push(points[idx][0].slice());
+
+            var firstPoint = findFirstActualPoint();
+  
+            // Copy the first actual point to the end of the array
+            points[idx].push(firstPoint.slice());
             data.setItemLayout(idx, points[idx]);
+
+            function findFirstActualPoint() {
+                return zrUtil.find(points[idx], function (point) {
+                    return !isNaN(point[0]) && !isNaN(point[1]);
+                }) || ['NaN', 'NaN'];
+            }
         });
     });
 }
