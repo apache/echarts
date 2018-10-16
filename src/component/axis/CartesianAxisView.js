@@ -118,7 +118,7 @@ var CartesianAxisView = AxisView.extend({
         // Simple optimization
         // Batching the lines if color are the same
         var lineStyle = lineStyleModel.getLineStyle();
-        for (var i = 1; i < ticksCoords.length; i++) {
+        for (var i = 0; i < ticksCoords.length; i++) {
             var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
             if (isHorizontal) {

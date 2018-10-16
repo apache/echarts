@@ -112,6 +112,9 @@ rules:
     operator-linebreak:
         - 2
         - "before"
+        -
+            overrides:
+                "=": "after"
     quotes:
         - 2
         - "single"

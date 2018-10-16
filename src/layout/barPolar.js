@@ -37,9 +37,6 @@ function getAxisKey(axis) {
  */
 function barLayoutPolar(seriesType, ecModel, api) {
 
-    // var width = api.getWidth();
-    // var height = api.getHeight();
-
     var lastStackCoords = {};
 
     var barWidthAndOffset = calRadialBar(
@@ -54,6 +51,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
     );
 
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+
         // Check series coordinate, do layout for polar only
         if (seriesModel.coordinateSystem.type !== 'polar') {
             return;
