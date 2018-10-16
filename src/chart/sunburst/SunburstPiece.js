@@ -94,6 +94,8 @@ SunburstPieceProto.updateData = function (
 
     var visualColor = getNodeColor(node, seriesModel, ecModel);
 
+    fillDefaultColor(node, seriesModel, visualColor)
+
     var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
     var style;
     if (state === 'normal') {
@@ -410,4 +412,10 @@ function isNodeHighlighted(node, activeNode, policy) {
     else {
         return node === activeNode || node.isDescendantOf(activeNode);
     }
+}
+
+// Fix tooltip callback function params.color incorrect when pick a default color 
+function fillDefaultColor(node, seriesModel, color) {
+    var data = seriesModel.getData();
+    data.setItemVisual(node.dataIndex, 'color', color);
 }
