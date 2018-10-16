@@ -120,7 +120,7 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     //Used to storage the node with indegree is equal to 0.
     var zeroIndegrees = [];
 
-    var nextNode = [];
+    var nextTargetNode = [];
     var x = 0;
     var kx = 0;
 
@@ -146,31 +146,74 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
                 node.setLayout({x: x}, true);
                 node.setLayout({dx: nodeWidth}, true);
             }
-            for (var oidx = 0; oidx < node.outEdges.length; oidx++) {
-                var edge = node.outEdges[oidx];
+            for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
+                var edge = node.outEdges[edgeIdx];
                 var indexEdge = edges.indexOf(edge);
                 remainEdges[indexEdge] = 0;
                 var targetNode = edge.node2;
                 var nodeIndex = nodes.indexOf(targetNode);
-                if (--indegreeArr[nodeIndex] === 0) {
-                    nextNode.push(targetNode);
+                if (--indegreeArr[nodeIndex] === 0 && nextTargetNode.indexOf(targetNode) < 0) {
+                    nextTargetNode.push(targetNode);
                 }
             }
         }
         ++x;
-        zeroIndegrees = nextNode;
-        nextNode = [];
+        zeroIndegrees = nextTargetNode;
+        nextTargetNode = [];
     }
 
+    var nodesCopy = nodes.slice(0);
+
     for (i = 0; i < remainEdges.length; i++) {
-        if (__DEV__) {
-            if (remainEdges[i] === 1) {
+        if (remainEdges[i] === 1) {
+            if (__DEV__) {
                 throw new Error('Sankey is a DAG, the original data has cycle!');
+            }
+            if (nodeAlign === 'right') {
+                var edge = edges[i];
+                var index1 = nodesCopy.indexOf(edge.node1);
+                if (index1 > -1) {
+                    nodesCopy.splice(index1, 1);
+                }
+                var index2 = nodesCopy.indexOf(edge.node2);
+                if (index2 > -1) {
+                    nodesCopy.splice(index2, 1);
+                }
             }
         }
     }
 
-    if (nodeAlign === 'justify' || nodeAlign === 'right') {
+    if (nodeAlign === 'right') {
+        var nextSourceNode = [];
+        var remainNodes = nodesCopy;
+        var nodeHeight = 0;
+        while (remainNodes.length) {
+            for (var i = 0; i < remainNodes.length; i++) {
+                var node = remainNodes[i];
+                node.setLayout({skNodeHeight: nodeHeight}, true);
+                for (var j = 0; j < node.inEdges.length; j++) {
+                    var edge = node.inEdges[j];
+                    if (nextSourceNode.indexOf(edge.node1) < 0) {
+                        nextSourceNode.push(edge.node1);
+                    }
+                }
+            }
+            remainNodes = nextSourceNode;
+            nextSourceNode = [];
+            ++nodeHeight;
+        }
+
+        zrUtil.each(nodesCopy, function (node) {
+            if (orient === 'vertical') {
+                node.setLayout({y: Math.max(0, x - 1 - node.getLayout().skNodeHeight)}, true);
+            }
+            else {
+                node.setLayout({x: Math.max(0, x - 1 - node.getLayout().skNodeHeight)}, true);
+            }
+        });
+    }
+
+    if (nodeAlign === 'justify') {
         moveSinksRight(nodes, x, orient);
     }
 
