@@ -211,7 +211,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     graphic.setHoverStyle(this);
 };
 
-piePieceProto._getLabelDisplayThreshold = function (data, idx) {
+piePieceProto._getLabelDisplayThresholdState = function (data, idx) {
     var seriesModel = data.hostModel;
     var valueDim = data.mapDimension('value');
     var labelDisplayThreshold = seriesModel.get('labelDisplayThreshold');
@@ -228,7 +228,7 @@ piePieceProto._updateLabel = function (data, idx) {
     var layout = data.getItemLayout(idx);
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
-    var filterIgnore = this._getLabelDisplayThreshold(data, idx);
+    var filterLabelIgnore = this._getLabelDisplayThresholdState(data, idx);
 
     graphic.updateProps(labelLine, {
         shape: {
@@ -272,11 +272,11 @@ piePieceProto._updateLabel = function (data, idx) {
         }
     );
 
-    labelText.ignore = labelText.normalIgnore = !labelModel.get('show') || filterIgnore;
-    labelText.hoverIgnore = !labelHoverModel.get('show') || filterIgnore;
+    labelText.ignore = labelText.normalIgnore = !labelModel.get('show') || filterLabelIgnore;
+    labelText.hoverIgnore = !labelHoverModel.get('show') || filterLabelIgnore;
 
-    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show') || filterIgnore;
-    labelLine.hoverIgnore = !labelLineHoverModel.get('show') || filterIgnore;
+    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show') || filterLabelIgnore;
+    labelLine.hoverIgnore = !labelLineHoverModel.get('show') || filterLabelIgnore;
 
     // Default use item visual color
     labelLine.setStyle({
