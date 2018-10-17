@@ -211,20 +211,14 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     graphic.setHoverStyle(this);
 };
 
-piePieceProto._getFilterIgnore = function(data, idx) {
+piePieceProto._getLabelDisplayThreshold = function (data, idx) {
     var seriesModel = data.hostModel;
-    var itemModel = data.getItemModel(idx);
     var valueDim = data.mapDimension('value');
-    var sum = data.getSum(valueDim);
-    var filterValue = seriesModel.get('labelDisplayThreshold');
-    var filterIgnore = false;
-    if (sum * filterValue.option > itemModel.option.value) {
-        filterIgnore = true;
-    }
-    return filterIgnore;
+    var labelDisplayThreshold = seriesModel.get('labelDisplayThreshold');
+    return data._sum * labelDisplayThreshold > data.get(valueDim, idx);
 }
 
-piePieceProto._updateLabel = function(data, idx) {
+piePieceProto._updateLabel = function (data, idx) {
 
     var labelLine = this.childAt(1);
     var labelText = this.childAt(2);
@@ -234,7 +228,7 @@ piePieceProto._updateLabel = function(data, idx) {
     var layout = data.getItemLayout(idx);
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
-    var filterIgnore = this._getFilterIgnore(data, idx);
+    var filterIgnore = this._getLabelDisplayThreshold(data, idx);
 
     graphic.updateProps(labelLine, {
         shape: {
@@ -333,7 +327,7 @@ var PieView = ChartView.extend({
         );
 
         var selectedMode = seriesModel.get('selectedMode');
-
+        data._sum = data.getSum(valueDim) || 0;
         data.diff(oldData)
             .add(function (idx) {
                 var piePiece = new PiePiece(data, idx);
