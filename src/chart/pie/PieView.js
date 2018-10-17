@@ -327,6 +327,7 @@ var PieView = ChartView.extend({
         );
 
         var selectedMode = seriesModel.get('selectedMode');
+        var valueDim = data.mapDimension('value');
         data._sum = data.getSum(valueDim) || 0;
         data.diff(oldData)
             .add(function (idx) {
