@@ -155,7 +155,9 @@ TooltipRichContent.prototype = {
     },
 
     hide: function () {
-        this.el.hide();
+        if (this.el) {
+            this.el.hide();
+        }
         this._show = false;
     },
 
