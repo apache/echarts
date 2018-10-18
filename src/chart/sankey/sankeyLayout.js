@@ -146,6 +146,9 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
                 node.setLayout({x: x}, true);
                 node.setLayout({dx: nodeWidth}, true);
             }
+
+            // node.setLayout({skDepth: x}, true);
+
             for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
                 var edge = node.outEdges[edgeIdx];
                 var indexEdge = edges.indexOf(edge);
@@ -217,11 +220,27 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
         moveSinksRight(nodes, x, orient);
     }
 
+    var maxDepth = x - 1;
+    zrUtil.each(nodesCopy, function (node) {
+        var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+        if (item.depth && !isNaN(item.depth) && item.depth >= 0) {
+            if (item.depth > maxDepth) {
+                maxDepth = item.depth;
+            }
+            if (orient === 'vertical') {
+                node.setLayout({y: item.depth}, true);
+            }
+            else {
+                node.setLayout({x: item.depth}, true);
+            }
+        }
+    });
+
     if (orient === 'vertical') {
-        kx = (height - nodeWidth) / (x - 1);
+        kx = (height - nodeWidth) / maxDepth;
     }
     else {
-        kx = (width - nodeWidth) / (x - 1);
+        kx = (width - nodeWidth) / maxDepth;
     }
     scaleNodeBreadths(nodes, kx, orient);
 }
