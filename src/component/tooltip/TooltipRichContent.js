@@ -155,7 +155,9 @@ TooltipRichContent.prototype = {
     },
 
     hide: function () {
-        this.el.hide();
+        if (this.el) {
+            this.el.hide();
+        }
         this._show = false;
     },
 
@@ -178,7 +180,11 @@ TooltipRichContent.prototype = {
     },
 
     getOuterSize: function () {
-        return this.getSize();
+        const size = this.getSize();
+        return {
+            width: size[0],
+            height: size[1]
+        };
     }
 };
 
