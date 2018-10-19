@@ -80,9 +80,8 @@ function getViewRect(seriesModel, api) {
 }
 
 function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign) {
-    var kx = computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign);
+    computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign);
     computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient);
-    scaleNodeBreadths(nodes, kx, orient);
     computeEdgeDepths(nodes, orient);
 }
 
@@ -147,9 +146,6 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
                 node.setLayout({x: x}, true);
                 node.setLayout({dx: nodeWidth}, true);
             }
-
-            // node.setLayout({skDepth: x}, true);
-
             for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
                 var edge = node.outEdges[edgeIdx];
                 var indexEdge = edges.indexOf(edge);
@@ -228,7 +224,12 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
             if (item.depth > maxDepth) {
                 maxDepth = item.depth;
             }
-            node.setLayout({skDepth: item.depth}, true);
+            if (orient === 'vertical') {
+                node.setLayout({y: item.depth}, true);
+            }
+            else {
+                node.setLayout({x: item.depth}, true);
+            }
         }
     });
 
@@ -238,9 +239,8 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     else {
         kx = (width - nodeWidth) / maxDepth;
     }
-    return kx;
 
-    // scaleNodeBreadths(nodes, kx, orient);
+    scaleNodeBreadths(nodes, kx, orient);
 }
 
 /**
@@ -272,24 +272,13 @@ function moveSinksRight(nodes, x, orient) {
  */
 function scaleNodeBreadths(nodes, kx, orient) {
     zrUtil.each(nodes, function (node) {
-        if (node.getLayout().skDepth) {
-            var depth = node.getLayout().skDepth * kx;
-            if (orient === 'vertical') {
-                node.setLayout({y: depth}, true);
-            }
-            else {
-                node.setLayout({x: depth}, true);
-            }
+        if (orient === 'vertical') {
+            var nodeY = node.getLayout().y * kx;
+            node.setLayout({y: nodeY}, true);
         }
         else {
-            if (orient === 'vertical') {
-                var nodeY = node.getLayout().y * kx;
-                node.setLayout({y: nodeY}, true);
-            }
-            else {
-                var nodeX = node.getLayout().x * kx;
-                node.setLayout({x: nodeX}, true);
-            }
+            var nodeX = node.getLayout().x * kx;
+            node.setLayout({x: nodeX}, true);
         }
     });
 }
