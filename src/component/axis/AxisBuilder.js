@@ -300,14 +300,15 @@ var builders = {
 
         if (isNameLocationCenter(nameLocation)) {
             labelLayout = innerTextLayout(
-                opt.rotation,
+				opt.rotation,
                 nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
-                nameDirection
+				nameDirection,
+				nameAlignment
             );
         }
         else {
             labelLayout = endTextLayout(
-                opt, nameLocation, nameAlignment, nameRotation || 0, extent
+                opt, nameLocation, nameRotation || 0, extent, nameAlignment
             );
 
             axisNameAvailableWidth = opt.axisNameAvailableWidth;
@@ -406,11 +407,11 @@ var builders = {
  *  textVerticalAlign
  * }
  */
-var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, textAlignment, textRotation, direction) {
+var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, textRotation, direction, textAlignment) {
     var rotationDiff = remRadian(textRotation - axisRotation);
     var textAlign;
 	var textVerticalAlign;
-	var fromOptionsTextAlign = textAlignment
+	var fromOptionsTextAlign = textAlignment || 'center';
 
     if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
         textVerticalAlign = direction > 0 ? 'top' : 'bottom';
@@ -438,11 +439,11 @@ var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, text
     };
 };
 
-function endTextLayout(opt, textPosition, textAlignment, textRotate, extent) {
+function endTextLayout(opt, textPosition, textRotate, extent, textAlignment) {
     var rotationDiff = remRadian(textRotate - opt.rotation);
     var textAlign;
 	var textVerticalAlign;
-	var fromOptionsTextAlign = textAlignment
+	var fromOptionsTextAlign = textAlignment || 'center';
     var inverse = extent[0] > extent[1];
     var onLeft = (textPosition === 'start' && !inverse)
         || (textPosition !== 'start' && inverse);
