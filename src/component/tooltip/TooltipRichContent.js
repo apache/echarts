@@ -180,7 +180,7 @@ TooltipRichContent.prototype = {
     },
 
     getOuterSize: function () {
-        const size = this.getSize();
+        var size = this.getSize();
         return {
             width: size[0],
             height: size[1]
