@@ -86,9 +86,9 @@ SunburstPieceProto.updateData = function (
 
     var itemModel = node.getModel();
     var layout = node.getLayout();
-    if (!layout) {
-        console.log(node.getLayout());
-    }
+    // if (!layout) {
+        // console.log(node.getLayout());
+    // }
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
