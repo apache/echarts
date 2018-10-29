@@ -48,7 +48,7 @@ function Geo(name, map, nameMap, invertLongitute) {
     var source = geoSourceManager.load(map, nameMap);
 
     this._nameCoordMap = source.nameCoordMap;
-    this._regionsMap = source.nameCoordMap;
+    this._regionsMap = source.regionsMap;
     this._invertLongitute = invertLongitute == null ? true : invertLongitute;
 
     /**
