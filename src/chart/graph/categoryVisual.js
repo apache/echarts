@@ -40,8 +40,7 @@ export default function (ecModel) {
             var opacity = itemModel.get('itemStyle.opacity') || 1;
             categoriesData.setItemVisual(idx, 'opacity', opacity);
 
-            var symbolStyleList = ['symbol', 'symbolSize', 'symbolKeepAspect', 'symbolOffset', 'symbolRotate'];
-
+            var symbolStyleList = ['symbolSize', 'symbolKeepAspect'];
             for (var i = 0; i < symbolStyleList.length; i++) {
                 var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
                 if (symbolStyleItem != null) {
@@ -54,6 +53,12 @@ export default function (ecModel) {
         // Assign category color to visual
         if (categoriesData.count()) {
             data.each(function (idx) {
+                var itemModel = categoriesData.getItemModel(idx);
+                var symbol = itemModel.getShallow('symbol', true);
+                if (symbol) {
+                    data.setItemVisual(idx, 'symbol', symbol);
+                }
+
                 var model = data.getItemModel(idx);
                 var category = model.getShallow('category');
                 if (category != null) {
@@ -61,24 +66,13 @@ export default function (ecModel) {
                         category = categoryNameIdxMap['ec-' + category];
                     }
 
-                    var itemStyleList = ['color', 'opacity'];
+                    var itemStyleList = ['color', 'opacity', 'symbolSize', 'symbolKeepAspect'];
 
                     for (var i = 0; i < itemStyleList.length; i++) {
                         if (!data.getItemVisual(idx, itemStyleList[i], true)) {
                             data.setItemVisual(
                                 idx, itemStyleList[i],
                                 categoriesData.getItemVisual(category, itemStyleList[i])
-                            );
-                        }
-                    }
-
-                    var symbolStyleList = ['symbol', 'symbolSize', 'symbolKeepAspect'];
-
-                    for (var i = 0; i < symbolStyleList.length; i++) {
-                        if (!data.getItemVisual(idx, symbolStyleList[i], true)) {
-                            data.setItemVisual(
-                                idx, symbolStyleList[i],
-                                categoriesData.getItemVisual(category, symbolStyleList[i])
                             );
                         }
                     }
