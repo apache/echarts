@@ -94,6 +94,9 @@ function PiePiece(data, idx) {
     this.add(sector);
     this.add(polyline);
     this.add(text);
+    
+    var valueDim = data.mapDimension('value');
+    this._sum = data.getSum(valueDim) || 0;
 
     this.updateData(data, idx, true);
 
@@ -215,7 +218,7 @@ piePieceProto._getLabelDisplayThresholdState = function (data, idx) {
     var seriesModel = data.hostModel;
     var valueDim = data.mapDimension('value');
     var labelDisplayThreshold = seriesModel.get('labelDisplayThreshold');
-    return data._sum * labelDisplayThreshold > data.get(valueDim, idx);
+    return this._sum * labelDisplayThreshold > data.get(valueDim, idx);
 }
 
 piePieceProto._updateLabel = function (data, idx) {
@@ -327,8 +330,6 @@ var PieView = ChartView.extend({
         );
 
         var selectedMode = seriesModel.get('selectedMode');
-        var valueDim = data.mapDimension('value');
-        data._sum = data.getSum(valueDim) || 0;
         data.diff(oldData)
             .add(function (idx) {
                 var piePiece = new PiePiece(data, idx);
