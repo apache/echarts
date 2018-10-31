@@ -37,28 +37,21 @@ export default function (ecModel) {
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
 
-            var opacity = itemModel.get('itemStyle.opacity') || 1;
-            categoriesData.setItemVisual(idx, 'opacity', opacity);
+            var opacity = itemModel.get('opacity');
+            if (opacity != undefined) {
+                categoriesData.setItemVisual(idx, 'opacity', opacity);
+            }
 
             var symbolStyleList = ['symbolSize', 'symbolKeepAspect'];
             for (var i = 0; i < symbolStyleList.length; i++) {
                 var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
-                if (symbolStyleItem != null) {
-                    categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
-                }
+                categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
             }
-
         });
 
         // Assign category color to visual
         if (categoriesData.count()) {
             data.each(function (idx) {
-                var itemModel = categoriesData.getItemModel(idx);
-                var symbol = itemModel.getShallow('symbol', true);
-                if (symbol) {
-                    data.setItemVisual(idx, 'symbol', symbol);
-                }
-
                 var model = data.getItemModel(idx);
                 var category = model.getShallow('category');
                 if (category != null) {
@@ -69,7 +62,7 @@ export default function (ecModel) {
                     var itemStyleList = ['color', 'opacity', 'symbolSize', 'symbolKeepAspect'];
 
                     for (var i = 0; i < itemStyleList.length; i++) {
-                        if (!data.getItemVisual(idx, itemStyleList[i], true)) {
+                        if (data.getItemVisual(idx, itemStyleList[i], true) == null) {
                             data.setItemVisual(
                                 idx, itemStyleList[i],
                                 categoriesData.getItemVisual(category, itemStyleList[i])
