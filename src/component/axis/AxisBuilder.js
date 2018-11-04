@@ -273,8 +273,8 @@ var builders = {
 
         var nameLocation = axisModel.get('nameLocation');
         var nameDirection = opt.nameDirection;
-		var textStyleModel = axisModel.getModel('nameTextStyle');
-		var nameAlignment = textStyleModel.get('align') || 'center';
+        var textStyleModel = axisModel.getModel('nameTextStyle');
+        var nameAlignment = textStyleModel.get('align') || 'center';
         var gap = axisModel.get('nameGap') || 0;
 
         var extent = this.axisModel.axis.getExtent();
@@ -300,10 +300,10 @@ var builders = {
 
         if (isNameLocationCenter(nameLocation)) {
             labelLayout = innerTextLayout(
-				opt.rotation,
+                opt.rotation,
                 nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
-				nameDirection,
-				nameAlignment
+                nameDirection,
+                nameAlignment
             );
         }
         else {
@@ -410,8 +410,8 @@ var builders = {
 var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, textRotation, direction, textAlignment) {
     var rotationDiff = remRadian(textRotation - axisRotation);
     var textAlign;
-	var textVerticalAlign;
-	var fromOptionsTextAlign = textAlignment || 'center';
+    var textVerticalAlign;
+    var fromOptionsTextAlign = textAlignment || 'center';
 
     if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
         textVerticalAlign = direction > 0 ? 'top' : 'bottom';
@@ -442,8 +442,8 @@ var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, text
 function endTextLayout(opt, textPosition, textRotate, extent, textAlignment) {
     var rotationDiff = remRadian(textRotate - opt.rotation);
     var textAlign;
-	var textVerticalAlign;
-	var fromOptionsTextAlign = textAlignment || 'center';
+    var textVerticalAlign;
+    var fromOptionsTextAlign = textAlignment || 'center';
     var inverse = extent[0] > extent[1];
     var onLeft = (textPosition === 'start' && !inverse)
         || (textPosition !== 'start' && inverse);
