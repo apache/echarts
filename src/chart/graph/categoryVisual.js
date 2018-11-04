@@ -42,7 +42,7 @@ export default function (ecModel) {
                 categoriesData.setItemVisual(idx, 'opacity', opacity);
             }
 
-            var symbolStyleList = ['symbolSize', 'symbolKeepAspect'];
+            var symbolStyleList = ['symbol','symbolSize', 'symbolKeepAspect'];
             for (var i = 0; i < symbolStyleList.length; i++) {
                 var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
                 categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
@@ -52,12 +52,6 @@ export default function (ecModel) {
         // Assign category color to visual
         if (categoriesData.count()) {
             data.each(function (idx) {
-                var itemModel = categoriesData.getItemModel(idx);
-                var symbol = itemModel.getShallow('symbol', true);
-                if (symbol) {
-                    data.setItemVisual(idx, 'symbol', symbol);
-                }
-
                 var model = data.getItemModel(idx);
                 var category = model.getShallow('category');
                 if (category != null) {
@@ -65,7 +59,7 @@ export default function (ecModel) {
                         category = categoryNameIdxMap['ec-' + category];
                     }
 
-                    var itemStyleList = ['color', 'opacity', 'symbolSize', 'symbolKeepAspect'];
+                    var itemStyleList = ['color', 'opacity','symbol', 'symbolSize', 'symbolKeepAspect'];
 
                     for (var i = 0; i < itemStyleList.length; i++) {
                         if (data.getItemVisual(idx, itemStyleList[i], true) == null) {
