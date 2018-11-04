@@ -38,7 +38,7 @@ export default function (ecModel) {
             categoriesData.setItemVisual(idx, 'color', color);
 
             var opacity = itemModel.get('opacity');
-            if (opacity != undefined) {
+            if (opacity != null) {
                 categoriesData.setItemVisual(idx, 'opacity', opacity);
             }
 
