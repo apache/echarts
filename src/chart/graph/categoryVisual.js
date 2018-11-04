@@ -52,6 +52,12 @@ export default function (ecModel) {
         // Assign category color to visual
         if (categoriesData.count()) {
             data.each(function (idx) {
+                var itemModel = categoriesData.getItemModel(idx);
+                var symbol = itemModel.getShallow('symbol', true);
+                if (symbol) {
+                    data.setItemVisual(idx, 'symbol', symbol);
+                }
+
                 var model = data.getItemModel(idx);
                 var category = model.getShallow('category');
                 if (category != null) {
