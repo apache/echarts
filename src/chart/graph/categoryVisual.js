@@ -37,15 +37,12 @@ export default function (ecModel) {
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
 
-            var opacity = itemModel.get('opacity');
-            if (opacity != null) {
-                categoriesData.setItemVisual(idx, 'opacity', opacity);
-            }
-
-            var symbolStyleList = ['symbol','symbolSize', 'symbolKeepAspect'];
-            for (var i = 0; i < symbolStyleList.length; i++) {
-                var symbolStyleItem = itemModel.getShallow(symbolStyleList[i], true);
-                categoriesData.setItemVisual(idx, symbolStyleList[i], symbolStyleItem);
+            var itemStyleList = ['opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'];
+            for (var i = 0; i < itemStyleList.length; i++) {
+                var itemStyle = itemModel.getShallow(itemStyleList[i], true);
+                if (itemStyle != null) {
+                    categoriesData.setItemVisual(idx, itemStyleList[i], itemStyle);
+                }
             }
         });
 
@@ -59,7 +56,7 @@ export default function (ecModel) {
                         category = categoryNameIdxMap['ec-' + category];
                     }
 
-                    var itemStyleList = ['color', 'opacity','symbol', 'symbolSize', 'symbolKeepAspect'];
+                    var itemStyleList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'];
 
                     for (var i = 0; i < itemStyleList.length; i++) {
                         if (data.getItemVisual(idx, itemStyleList[i], true) == null) {
