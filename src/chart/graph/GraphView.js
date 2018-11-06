@@ -53,7 +53,7 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 }
 
 function fadeInItem(item, opacityPath) {
-    var opacity = item.getModel('emphasis.lineStyle').getItemStyle().opacity || item.getVisual('opacity');
+    var opacity = item.getModel('emphasis.lineStyle').getItemStyle().opacity;
     var el = item.getGraphicEl();
 
     el.highlight && el.highlight();
@@ -138,7 +138,7 @@ export default echarts.extendChartView({
                     if (forceLayout) {
                         forceLayout.warmUp();
                         !this._layouting
-                            && this._startForceLayoutIteration(forceLayout, layoutAnimation);
+                        && this._startForceLayoutIteration(forceLayout, layoutAnimation);
                         forceLayout.setFixed(idx);
                         // Write position back to layout
                         data.setItemLayout(idx, el.position);
