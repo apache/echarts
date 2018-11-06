@@ -138,7 +138,7 @@ export default echarts.extendChartView({
                     if (forceLayout) {
                         forceLayout.warmUp();
                         !this._layouting
-                        && this._startForceLayoutIteration(forceLayout, layoutAnimation);
+                            && this._startForceLayoutIteration(forceLayout, layoutAnimation);
                         forceLayout.setFixed(idx);
                         // Write position back to layout
                         data.setItemLayout(idx, el.position);
