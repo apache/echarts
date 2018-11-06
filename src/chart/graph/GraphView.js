@@ -53,7 +53,7 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 }
 
 function fadeInItem(item, opacityPath) {
-    var opacity = getItemOpacity(item, opacityPath);
+    var opacity = item.getModel('emphasis.lineStyle').getItemStyle().opacity || item.getVisual('opacity');
     var el = item.getGraphicEl();
 
     el.highlight && el.highlight();
