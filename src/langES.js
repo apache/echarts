@@ -54,6 +54,6 @@ toolbox: {
     saveAsImage: {
         title: 'Guardar como imagen',
         lang: ['Clic derecho para guardar imagen']
+         }
     }
-}
 };
