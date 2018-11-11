@@ -141,6 +141,8 @@ function createController(api, newRecord) {
             var batch = [];
 
             zrUtil.each(newRecord.dataZoomInfos, function (info) {
+                // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
+                // moveOnMouseWheel, ...) enabled.
                 if (!event.isAvailableBehavior(info.dataZoomModel.option)) {
                     return;
                 }
@@ -207,6 +209,7 @@ function mergeControllerParams(dataZoomInfos) {
         if (typePriority[prefix + oneType] > typePriority[prefix + controlType]) {
             controlType = oneType;
         }
+
         // Prevent default move event by default. If one false, do not prevent. Otherwise
         // users may be confused why it does not work when multiple insideZooms exist.
         preventDefaultMouseMove &= dataZoomModel.get('preventDefaultMouseMove', true);
@@ -215,6 +218,9 @@ function mergeControllerParams(dataZoomInfos) {
     return {
         controlType: controlType,
         opt: {
+            // RoamController will enable all of these functionalities,
+            // and the final behavior is determined by its event listener
+            // provided by each inside zoom.
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
             moveOnMouseWheel: true,

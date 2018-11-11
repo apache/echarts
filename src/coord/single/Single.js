@@ -167,7 +167,7 @@ Single.prototype = {
 
         var isHorizontal = axis.isHorizontal();
         var extent = isHorizontal ? [0, rect.width] : [0, rect.height];
-        var idx =  axis.reverse ? 1 : 0;
+        var idx = axis.reverse ? 1 : 0;
 
         axis.setExtent(extent[idx], extent[1 - idx]);
 

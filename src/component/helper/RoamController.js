@@ -195,7 +195,11 @@ function mousewheel(e) {
     if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
         return;
     }
-    // console.log(wheelDelta);
+
+    // If both `shouldZoom` and `shouldMove` is true, trigger
+    // their event both, and the final behavior is determined
+    // by event listener themselves.
+
     if (shouldZoom) {
         // Convenience:
         // Mac and VM Windows on Mac: scroll up: zoom out.
@@ -212,7 +216,7 @@ function mousewheel(e) {
             scale: scale, originX: originX, originY: originY
         });
     }
-    // console.log(shouldMove);
+
     if (shouldMove) {
         // FIXME: Should do more test in different environment.
         var absDelta = Math.abs(wheelDelta);

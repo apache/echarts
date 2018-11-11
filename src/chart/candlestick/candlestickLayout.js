@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Float32Array */
+
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
 import {parsePercent} from '../../util/number';

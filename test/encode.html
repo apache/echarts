@@ -50,6 +50,8 @@ under the License.
         <h1>define which dim on x or y. encode: {x: 2, y: 1, label: 4}</h1>
         <div class="chart" id="dimXY"></div>
 
+        <div class="chart" id="ignoreX"></div>
+
 
 
 
@@ -371,6 +373,112 @@ under the License.
 
                 testHelper.createChart(echarts, 'dimXY', option);
             });
+        </script>
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    title: {
+                        text: 'deafault (filter)'
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0
+                    }, {
+                        type: 'slider',
+                        xAxisIndex: 0
+                    }, {
+                        type: 'inside',
+                        yAxisIndex: 0
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 0
+                    }],
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            var y = api.coord([0, api.value(0)])[1];
+                            var x = 100;
+                            return {
+                                type: 'circle',
+                                shape: {
+                                    cx: x,
+                                    cy: y,
+                                    r: 30
+                                },
+                                style: {
+                                    fill: 'blue'
+                                }
+                            };
+                        },
+                        encode: {
+                            x: -1,
+                            y: 0
+                        },
+                        data: [
+                            [122, null],
+                            [333, null]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        data: [[21, 43], [55, 66]]
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'ignoreX', {
+                    option: option,
+                    title: [
+                        'series not controlled by xAxis but only by yAxis',
+                        'x axis can not filter blue circle, but y axis can do'
+                    ],
+                    info: option.series[0].encode,
+                    buttons: [{
+                        text: 'filterMode: weakFitler',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = 'weakFilter';
+                            option.title.text = 'filterMode: weakFilter';
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'filterMode: deafault (filter)',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = void 0;
+                            option.title.text = 'deafault (filter)'
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'filterMode: empty',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = 'empty';
+                            option.title.text = 'filterMode: empty';
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'filterMode: none',
+                        onclick: function () {
+                            option.dataZoom[0].filterMode = option.dataZoom[1].filterMode = 'none'
+                            option.title.text = 'filterMode: none';
+                            chart.setOption(option, true);
+                        }
+                    }]
+                });
+            });
+
         </script>
 
 

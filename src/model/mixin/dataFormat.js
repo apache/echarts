@@ -41,14 +41,17 @@ export default {
         var tooltipModel = this.ecModel.getComponent('tooltip');
         var renderModeOption = tooltipModel && tooltipModel.get('renderMode');
         var renderMode = getTooltipRenderMode(renderModeOption);
+        var mainType = this.mainType;
+        var isSeries = mainType === 'series';
 
         return {
-            componentType: this.mainType,
+            componentType: mainType,
             componentSubType: this.subType,
-            seriesType: this.mainType === 'series' ? this.subType : null,
+            componentIndex: this.componentIndex,
+            seriesType: isSeries ? this.subType : null,
             seriesIndex: this.seriesIndex,
-            seriesId: this.id,
-            seriesName: this.name,
+            seriesId: isSeries ? this.id : null,
+            seriesName: isSeries ? this.name : null,
             name: name,
             dataIndex: rawDataIndex,
             data: itemOpt,

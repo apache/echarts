@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Float32Array */
+
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';

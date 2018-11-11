@@ -21,7 +21,7 @@
  * @module echarts/stream/Scheduler
  */
 
-import {each, map, isArray, isFunction, createHashMap, noop} from 'zrender/src/core/util';
+import {each, map, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
@@ -114,7 +114,7 @@ proto.getPerformArgs = function (task, isBlock) {
 
     var step = incremental ? pipeline.step : null;
     var modDataCount = pCtx && pCtx.modDataCount;
-    var modBy = modDataCount != null ? Math.ceil(modDataCount / step): null;
+    var modBy = modDataCount != null ? Math.ceil(modDataCount / step) : null;
 
     return {step: step, modBy: modBy, modDataCount: modDataCount};
 };
@@ -552,10 +552,12 @@ ecModelMock.eachComponent = function (cond) {
 };
 
 function mockMethods(target, Clz) {
+    /* eslint-disable */
     for (var name in Clz.prototype) {
         // Do not use hasOwnProperty
         target[name] = noop;
     }
+    /* eslint-enable */
 }
 
 export default Scheduler;

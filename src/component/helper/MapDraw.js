@@ -322,6 +322,7 @@ MapDraw.prototype = {
                 // Package custom mouse event for geo component
                 compoundPath.eventData = {
                     componentType: 'geo',
+                    componentIndex: mapOrGeoModel.componentIndex,
                     geoIndex: mapOrGeoModel.componentIndex,
                     name: region.name,
                     region: (regionModel && regionModel.option) || {}

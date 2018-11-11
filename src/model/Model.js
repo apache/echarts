@@ -160,7 +160,7 @@ Model.prototype = {
     },
 
     // If path is null/undefined, return null/undefined.
-    parsePath: function(path) {
+    parsePath: function (path) {
         if (typeof path === 'string') {
             path = path.split('.');
         }

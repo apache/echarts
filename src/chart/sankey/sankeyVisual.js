@@ -41,7 +41,7 @@ export default function (ecModel, payload) {
                     maxValue = nodeValue;
                 }
             });
-            
+
             zrUtil.each(nodes, function (node) {
                 var mapping = new VisualMapping({
                     type: 'color',
@@ -49,7 +49,7 @@ export default function (ecModel, payload) {
                     dataExtent: [minValue, maxValue],
                     visual: seriesModel.get('color')
                 });
-    
+
                 var mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
                 node.setVisual('color', mapValueToColor);
                 // If set itemStyle.normal.color

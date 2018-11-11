@@ -26,10 +26,8 @@ import Text from 'zrender/src/graphic/Text';
  * @constructor
  */
 function TooltipRichContent(api) {
-    // this.el = new Group();
 
-    // var zr = this._zr = api.getZr();
-    // zr.add(this.el);
+    this._zr = api.getZr();
 
     this._show = false;
 
@@ -157,7 +155,9 @@ TooltipRichContent.prototype = {
     },
 
     hide: function () {
-        this.el.hide();
+        if (this.el) {
+            this.el.hide();
+        }
         this._show = false;
     },
 
@@ -180,7 +180,11 @@ TooltipRichContent.prototype = {
     },
 
     getOuterSize: function () {
-        return this.getSize();
+        var size = this.getSize();
+        return {
+            width: size[0],
+            height: size[1]
+        };
     }
 };
 

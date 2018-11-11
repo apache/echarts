@@ -211,7 +211,7 @@ export default echarts.extendComponentView({
                     needPutOnTop = true;
                 }
                 var topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
-                if (offsetX + rect.width /  2 > api.getWidth()) {
+                if (offsetX + rect.width / 2 > api.getWidth()) {
                     hoverStyle.textPosition = ['100%', topOffset];
                     hoverStyle.textAlign = 'right';
                 }

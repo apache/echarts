@@ -18,8 +18,6 @@
 * under the License.
 */
 
-var quantile = require("./quantile");
-
 var numberUtil = require("../../lib/util/number");
 
 /*
@@ -78,9 +76,9 @@ function _default(rawData, opt) {
   for (var i = 0; i < rawData.length; i++) {
     axisData.push(i + '');
     var ascList = numberUtil.asc(rawData[i].slice());
-    var Q1 = quantile(ascList, 0.25);
-    var Q2 = quantile(ascList, 0.5);
-    var Q3 = quantile(ascList, 0.75);
+    var Q1 = numberUtil.quantile(ascList, 0.25);
+    var Q2 = numberUtil.quantile(ascList, 0.5);
+    var Q3 = numberUtil.quantile(ascList, 0.75);
     var min = ascList[0];
     var max = ascList[ascList.length - 1];
     var bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);

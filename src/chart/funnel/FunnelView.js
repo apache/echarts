@@ -74,7 +74,7 @@ funnelPieceProto.updateData = function (data, idx, firstCreate) {
         polygon.setShape({
             points: layout.points
         });
-        polygon.setStyle({ opacity : 0 });
+        polygon.setStyle({opacity: 0});
         graphic.initProps(polygon, {
             style: {
                 opacity: opacity

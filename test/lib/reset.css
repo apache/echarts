@@ -45,6 +45,13 @@ body > .main {
     zoom: 1;
     text-align: left;
 }
+.test-title strong {
+    color: yellow;
+    font-weight: 700;
+    text-shadow: -1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000;
+    padding-left: 2px;
+    padding-right: 2px;
+}
 .test-buttons button {
     margin: 10px 5px;
 }

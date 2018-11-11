@@ -197,13 +197,9 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
             }
         }, 300, 'elasticOut');
     }
-    sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
+    graphic.removeExtraHighDownEffect(sector);
     if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
-        sector
-            .on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
+        graphic.setExtraHighDownEffect(sector, onEmphasis, onNormal);
     }
 
     this._updateLabel(data, idx);

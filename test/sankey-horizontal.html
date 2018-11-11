@@ -44,75 +44,6 @@ under the License.
                     chart.resize();
                 };
 
-                // var data = {
-                //     nodes: [
-                //         {name: 'Brazil'},
-                //         {name: 'Canada'},
-                //         {name: 'Mexico'},
-                //         {name: 'USA'},
-                //         {name: 'Portugal'},
-                //         {name: 'France'},
-                //         {name: 'Spain'},
-                //         {name: 'England'},
-                //         {name: 'Angola'},
-                //         {name: 'Senegal'},
-                //         {name: 'Morocco'},
-                //         {name: 'South Africa'},
-                //         {name: 'Mali'},
-                //         {name: 'China'},
-                //         {name: 'India'},
-                //         {name: 'Japan'}
-                //     ],
-                //     links: [
-                //         {source: 'Brazil', target: 'Portugal', value: 5},
-                //         {source: 'Brazil', target: 'France', value: 1},
-                //         {source: 'Brazil', target: 'Spain', value: 1},
-                //         {source: 'Brazil', target: 'England', value: 1},
-                //         {source: 'Canada', target: 'Portugal', value: 1},
-                //         {source: 'Canada', target: 'France', value: 5},
-                //         {source: 'Canada', target: 'England', value: 1},
-                //         {source: 'Mexico', target: 'Portugal', value: 1},
-                //         {source: 'Mexico', target: 'France', value: 1},
-                //         {source: 'Mexico', target: 'Spain', value: 5},
-                //         {source: 'Mexico', target: 'England', value: 1},
-                //         {source: 'USA', target: 'Portugal', value: 1},
-                //         {source: 'USA', target: 'France', value: 1},
-                //         {source: 'USA', target: 'Spain', value: 1},
-                //         {source: 'USA', target: 'England', value: 5},
-                //         {source: 'Portugal', target: 'Angola', value: 2},
-                //         {source: 'Portugal', target: 'Senegal', value: 1},
-                //         {source:'Portugal', target: 'Morocco', value: 1},
-                //         {source: 'Portugal', target: 'South Africa', value: 3},
-                //         {source: 'France', target: 'Angola', value: 1},
-                //         {source: 'France', target: 'Senegal', value: 3},
-                //         {source: 'France', target: 'Mali', value: 3},
-                //         {source: 'France', target: 'Morocco', value: 3},
-                //         {source: 'France', target: 'South Africa', value: 1},
-                //         {source: 'Spain', target: 'Senegal', value: 1},
-                //         {source: 'Spain', target: 'Morocco', value: 3},
-                //         {source: 'Spain', target: 'South Africa', value: 1},
-                //         {source: 'England', target: 'Angola', value: 1},
-                //         {source: 'England', target: 'Senegal', value: 1},
-                //         {source: 'England', target: 'Morocco', value: 2},
-                //         {source: 'England', target: 'South Africa', value: 7},
-                //         {source: 'South Africa', target: 'China', value: 5},
-                //         {source: 'South Africa', target: 'India', value: 1},
-                //         {source: 'South Africa', target: 'Japan', value: 3},
-                //         {source: 'Angola', target: 'China', value: 5},
-                //         {source: 'Angola', target: 'India', value: 1},
-                //         {source: 'Angola', target: 'Japan', value: 3},
-                //         {source: 'Senegal', target: 'China', value: 5},
-                //         {source: 'Senegal', target: 'India', value: 1},
-                //         {source: 'Senegal', target: 'Japan', value: 3},
-                //         {source: 'Mali', target: 'China', value: 5},
-                //         {source: 'Mali', target: 'India', value: 1},
-                //         {source: 'Mali', target: 'Japan', value: 3},
-                //         {source: 'Morocco', target: 'China', value: 5},
-                //         {source: 'Morocco', target: 'India', value: 1},
-                //         {source: 'Morocco', target: 'Japan', value: 3}
-                //     ]
-                // };
-
                 var testData =  {
                     nodes: [
                         {
@@ -178,12 +109,10 @@ under the License.
                     series: [
                         {
                             type: 'sankey',
-                            layout:'none',
                             bottom: '10%',
-                            // focusNodeAdjacency: 'allEdges',
+                            focusNodeAdjacency: true,
                             data: testData.nodes,
                             links: testData.links,
-                            orient: 'horizontal',
                             label: {
                                 position: 'left'
                             },

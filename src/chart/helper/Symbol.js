@@ -155,7 +155,7 @@ symbolProto.setZ = function (zlevel, z) {
 symbolProto.setDraggable = function (draggable) {
     var symbolPath = this.childAt(0);
     symbolPath.draggable = draggable;
-    symbolPath.cursor = draggable ? 'move' : 'pointer';
+    symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
 };
 
 /**
@@ -321,10 +321,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
     }
 
-    symbolPath.off('mouseover')
-        .off('mouseout')
-        .off('emphasis')
-        .off('normal');
+    graphic.removeExtraHighDownEffect(symbolPath);
 
     symbolPath.hoverStyle = hoverItemStyle;
 
@@ -335,17 +332,14 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     symbolPath.__symbolOriginalScale = getScale(symbolSize);
 
     if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        symbolPath.on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
+        graphic.setExtraHighDownEffect(symbolPath, onEmphasis, onNormal);
     }
 };
 
 function onEmphasis() {
     // Do not support this hover animation util some scenario required.
     // Animation can only be supported in hover layer when using `el.incremetal`.
-    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
+    if (this.incremental || this.useHoverLayer) {
         return;
     }
     var scale = this.__symbolOriginalScale;
@@ -359,7 +353,7 @@ function onEmphasis() {
 }
 
 function onNormal() {
-    if (this.incremental || this.useHoverLayer || graphic.isInEmphasis(this)) {
+    if (this.incremental || this.useHoverLayer) {
         return;
     }
     this.animateTo({

@@ -86,7 +86,7 @@ function setLinePoints(targetShape, points) {
     }
 }
 
-function updateSymbolAndLabelBeforeLineUpdate () {
+function updateSymbolAndLabelBeforeLineUpdate() {
     var lineGroup = this;
     var symbolFrom = lineGroup.childOfName('fromSymbol');
     var symbolTo = lineGroup.childOfName('toSymbol');

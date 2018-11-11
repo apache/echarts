@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 
 export default function (ecModel) {
     ecModel.eachSeriesByType('radar', function (seriesModel) {
@@ -27,18 +28,26 @@ export default function (ecModel) {
             return;
         }
 
-        function pointsConverter(val, idx) {
-            points[idx] = points[idx] || [];
-            points[idx][i] = coordSys.dataToPoint(val, i);
-        }
         var axes = coordSys.getIndicatorAxes();
-        for (var i = 0; i < axes.length; i++) {
-            data.each(data.mapDimension(axes[i].dim), pointsConverter);
-        }
 
+        zrUtil.each(axes, function (axis, axisIndex) {
+            data.each(data.mapDimension(axes[axisIndex].dim), function (val, dataIndex) {
+                points[dataIndex] = points[dataIndex] || [];
+                points[dataIndex][axisIndex] = coordSys.dataToPoint(val, axisIndex);
+            });
+        });
+
+        // Close polygon
         data.each(function (idx) {
-            // Close polygon
-            points[idx][0] && points[idx].push(points[idx][0].slice());
+            // TODO
+            // Is it appropriate to connect to the next data when some data is missing?
+            // Or, should trade it like `connectNull` in line chart?
+            var firstPoint = zrUtil.find(points[idx], function (point) {
+                return !isNaN(point[0]) && !isNaN(point[1]);
+            }) || [NaN, NaN];
+
+            // Copy the first actual point to the end of the array
+            points[idx].push(firstPoint.slice());
             data.setItemLayout(idx, points[idx]);
         });
     });

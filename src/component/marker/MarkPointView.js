@@ -153,7 +153,7 @@ function createList(coordSys, seriesModel, mpModel) {
         });
     }
     else {
-        coordDimsInfos =[{
+        coordDimsInfos = [{
             name: 'value',
             type: 'float'
         }];

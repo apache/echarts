@@ -546,7 +546,7 @@ var GlobalModel = Model.extend({
      * After filtering, series may be different.
      * frome raw series.
      *
-     * @parma {string} subType
+     * @param {string} subType.
      * @param {Function} cb
      * @param {*} context
      */

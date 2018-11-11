@@ -249,7 +249,7 @@ var VisualMapModel = echarts.extendComponentModel({
      * @return {string}
      * @protected
      */
-    formatValueText: function(value, isCategory, edgeSymbols) {
+    formatValueText: function (value, isCategory, edgeSymbols) {
         var option = this.option;
         var precision = option.precision;
         var dataBound = this.dataBound;
