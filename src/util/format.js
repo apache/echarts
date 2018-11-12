@@ -103,6 +103,9 @@ export function formatTpl(tpl, paramsList, encode) {
     for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
         for (var k = 0; k < $vars.length; k++) {
             var val = paramsList[seriesIdx][$vars[k]];
+            if (zrUtil.isObject(val)) {
+                val = val[$vars[k]];
+            }
             tpl = tpl.replace(
                 wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
                 encode ? encodeHTML(val) : val
