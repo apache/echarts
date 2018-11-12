@@ -320,7 +320,7 @@ listProto.hasItemOption = true;
  * @return {string} Concrete dim name.
  */
 listProto.getDimension = function (dim) {
-    if (!isNaN(dim)) {
+    if (!isNaN(dim) && typeof dim === 'number' ) {
         dim = this.dimensions[dim] || dim;
     }
     return dim;
