@@ -380,6 +380,9 @@ function doSingleRestoreHoverStyle(el) {
         if (normalStl) {
             rollbackDefaultTextStyle(style);
 
+            if (style.text !== normalStl.text) {
+                normalStl.text = style.text
+            }
             // Consider null/undefined value, should use
             // `setStyle` but not `extendFrom(stl, true)`.
             el.setStyle(normalStl);
