@@ -146,6 +146,7 @@ var ScrollableLegendView = LegendView.extend({
         var hw = WH[1 - orientIdx];
         var yx = XY[1 - orientIdx];
 
+        // layout controllerGroup first to get correct boundingRect next
         layoutUtil.box(
             // Buttons in controller are layout always horizontally.
             'horizontal',
