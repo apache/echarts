@@ -112,7 +112,7 @@ export default echarts.extendComponentView({
 
         this._initGlobalListener();
 
-        this._keepShow();
+        // this._keepShow();
     },
 
     _initGlobalListener: function () {
