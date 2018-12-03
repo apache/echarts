@@ -136,7 +136,7 @@ var ScrollableLegendView = LegendView.extend({
     /**
      * @override
      */
-    layoutInner: function (legendModel, itemAlign, maxSize) {
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender) {
         var contentGroup = this.getContentGroup();
         var containerGroup = this._containerGroup;
         var controllerGroup = this._controllerGroup;
@@ -168,7 +168,11 @@ var ScrollableLegendView = LegendView.extend({
 
         var contentPos = [-contentRect.x, -contentRect.y];
         // Remain contentPos when scroll animation perfroming.
-        contentPos[orientIdx] = contentGroup.position[orientIdx];
+        // If first rendering, `contentGroup.position` is [0, 0], which
+        // does not make sense and may cause unexepcted animation if adopted.
+        if (!isFirstRender) {
+            contentPos[orientIdx] = contentGroup.position[orientIdx];
+        }
 
         // Layout container group based on 0.
         var containerPos = [0, 0];
@@ -324,10 +328,12 @@ var ScrollableLegendView = LegendView.extend({
 
         if (targetItemGroup) {
             var itemRect = targetItemGroup.getBoundingRect();
-            var itemLoc = targetItemGroup.position[orientIdx];
-            contentPos[orientIdx] = -itemLoc - contentRect[xy];
+            var itemLoc = targetItemGroup.position[orientIdx] + itemRect[xy];
+            contentPos[orientIdx] = -itemLoc;
+            // Consider that item size probably be different, we have calculate pageIndex by size
+            // rather than item index. Here we get pageIndx according to the center of the window.
             pageIndex = Math.floor(
-                pageCount * (itemLoc + itemRect[xy] + containerRectSize / 2) / contentRect[wh]
+                pageCount * (itemLoc + containerRectSize / 2) / contentRect[wh]
             );
             pageIndex = (contentRect[wh] && pageCount)
                 ? Math.max(0, Math.min(pageCount - 1, pageIndex))
@@ -336,7 +342,7 @@ var ScrollableLegendView = LegendView.extend({
             var winRect = {x: 0, y: 0};
             winRect[wh] = containerRectSize;
             winRect[hw] = contentRect[hw];
-            winRect[xy] = -contentPos[orientIdx] - contentRect[xy];
+            winRect[xy] = -contentPos[orientIdx];
 
             var startIdx;
             var children = contentGroup.children();
