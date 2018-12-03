@@ -324,7 +324,7 @@ var ScrollableLegendView = LegendView.extend({
 
         if (targetItemGroup) {
             var itemRect = targetItemGroup.getBoundingRect();
-            var itemLoc = targetItemGroup.position[orientIdx] + itemRect[xy];
+            var itemLoc = targetItemGroup.position[orientIdx];
             contentPos[orientIdx] = -itemLoc - contentRect[xy];
             pageIndex = Math.floor(
                 pageCount * (itemLoc + itemRect[xy] + containerRectSize / 2) / contentRect[wh]
