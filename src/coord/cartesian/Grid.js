@@ -423,9 +423,7 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
                 if (axisPosition !== 'top' && axisPosition !== 'bottom') {
                     // Default bottom of X
                     axisPosition = 'bottom';
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
-                    }
+                    axisPosition = axisPositionUsed[axisPosition] ? 'top' : 'bottom';
                 }
             }
             else {
@@ -433,9 +431,7 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
                 if (axisPosition !== 'left' && axisPosition !== 'right') {
                     // Default left of Y
                     axisPosition = 'left';
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'left' ? 'right' : 'left';
-                    }
+                    axisPosition = axisPositionUsed[axisPosition] ? 'right' : 'left';
                 }
             }
             axisPositionUsed[axisPosition] = true;
