@@ -62,7 +62,7 @@ function Grid(gridModel, ecModel, api) {
     this._coordsList = [];
 
     /**
-     * @type {Object.<string, module:echarts/coord/cartesian/Axis2D>}
+     * @type {Object.<string, Array.<module:echarts/coord/cartesian/Axis2D>>}
      * @private
      */
     this._axesMap = {};
