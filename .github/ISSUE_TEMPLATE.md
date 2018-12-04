@@ -19,11 +19,12 @@ To check the option, add x in [ ], e.g.: [x] I am ...
 
 <!-- BEGINNING OF REQUIRED FIELDS 必填项开始 -->
 
-
+<!--
 PLEASE MAKE SURE OF ALL THE FOLLOWING OPTIONS IN REQUIRED FIELDS ARE TICKED (with x)!
 Otherwise, the issue will not be answered.
 And think before you tick. :)
 请确保以下每项都打上勾了！并且确保都做了这些事哦~ 这将大量简化我们的工作流程，使你的问题更快速得到解答。
+-->
 
 - [ ] Required: I have read the document and examples and tried to solve it by myself. （必填）我读过了文档和教程，并且曾试图自己解决问题。
 - [ ] Required: I have searched for similar issues and that didn't help. （必填）我搜索过 issue 但是没有帮助。
@@ -57,33 +58,35 @@ In this issue, I have provided information with: 在这个 issue 中我提供了
 
 <!-- Use one sentence to describe what you want and what's wrong. 一句话描述问题。 -->
 
-{DESCRIBE_HERE}
+<!-- DESCRIBE_HERE} -->
 
 
 ### Expected Behavior
 
 <!-- Add screenshots to demo if necessary. 期望的效果。 -->
 
-{DESCRIBE_HERE}
+<!-- {DESCRIBE_HERE} -->
 
 
 ### Current Behavior
 
 <!-- Add screenshots to demo if necessary. Otherwise, replace the following line with N/A. 现在的效果。 -->
 
-{DESCRIBE_HERE}
+<!-- {DESCRIBE_HERE} -->
 
 
 ### Online Example
 
 <!-- Please use jsfiddle.net or gallery.echartsjs.com to provide a simplest demo to show the problem. And do not upload zip demos. 请使用 gallery.echartsjs.com 提供最简单可运行的代码，请不要上传 zip 文件。 -->
+<!--
 THIS IS REQUIRED FOR ALL BUG REPORTS AND QUESTIONS!!! 如果是提问或报 bug 一定要提供这一项！
+-->
 
-{ADD_LINK_OF_DEMO_HERE}
+<!-- {ADD_LINK_OF_DEMO_HERE} -->
 
 <!-- Please make your demo as simple as possible to help locate the problem. And paste only necessary part of code here. 提供必要的代码，不要全部粘贴。 -->
 
-{PASTE_RELATED_CODE_HERE}
+<!-- {PASTE_RELATED_CODE_HERE} -->
 
 
 ## Topics
@@ -103,7 +106,7 @@ THIS IS REQUIRED FOR ALL BUG REPORTS AND QUESTIONS!!! 如果是提问或报 bug 
 
 <!-- You may reference other issues here. Otherwise, replace the following line with N/A.  其他我们需要知道的东西，比如引用其他 issue。 -->
 
-{DESCRIBE_HERE}
+<!-- {DESCRIBE_HERE} -->
 
 
 ## Environment
