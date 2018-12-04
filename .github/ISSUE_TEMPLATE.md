@@ -19,11 +19,12 @@ To check the option, add x in [ ], e.g.: [x] I am ...
 
 <!-- BEGINNING OF REQUIRED FIELDS 必填项开始 -->
 
-
+<!--
 PLEASE MAKE SURE OF ALL THE FOLLOWING OPTIONS IN REQUIRED FIELDS ARE TICKED (with x)!
 Otherwise, the issue will not be answered.
 And think before you tick. :)
 请确保以下每项都打上勾了！并且确保都做了这些事哦~ 这将大量简化我们的工作流程，使你的问题更快速得到解答。
+-->
 
 - [ ] Required: I have read the document and examples and tried to solve it by myself. （必填）我读过了文档和教程，并且曾试图自己解决问题。
 - [ ] Required: I have searched for similar issues and that didn't help. （必填）我搜索过 issue 但是没有帮助。
