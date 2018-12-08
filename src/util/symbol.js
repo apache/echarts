@@ -54,7 +54,7 @@ var Dashed = graphic.extendShape({
             x2 = x1 * (1 - percent) + x2 * percent;
         }
 
-        var dashNum = (x2-x1) / 15;
+        var dashNum = (x2 - x1) / 15;
         for (var i = 0; i < 15; i++) {
             path.arc(x1 + dashNum * i, y1, 0.5, 0, Math.PI * 2, true);
         }
