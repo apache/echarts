@@ -107,3 +107,19 @@ td.test-data-table-key {
     font-size: 12px;
     color: rgb(69, 162, 238)
 }
+
+.record-canvas .content-area {
+    display: none;
+    position: absolute;
+    background: #fff;
+    left: 10px;
+    top: 20px;
+    border: 2px solid #000;
+    padding: 10px;
+    z-index: 9999;
+    box-shadow: 0 0 3px #000;
+}
+.record-canvas textarea {
+    width: 300px;
+    height: 500px;
+}
