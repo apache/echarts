@@ -162,7 +162,7 @@ function ECharts(dom, theme, opts) {
     });
 
     /**
-     * Expect 60 pfs.
+     * Expect 60 fps.
      * @type {Function}
      * @private
      */
