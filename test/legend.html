@@ -68,8 +68,10 @@ under the License.
         <div class="chart" id="scroll-v2"></div>
 
         <div id="legendHoverLink"></div>
-
         <div id="multi-pie"></div>
+        <div id="icon-circle"></div>
+        <div id="only-single-item"></div>
+        <div id="vary-size"></div>
 
         <script>
 
@@ -932,5 +934,169 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 30; i++) {
+                    data.push({name: i + '', value: Math.random()});
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        type: 'scroll',
+                        top: 10,
+                        left: 0,
+                        data: echarts.util.map(data, function (item) {
+                            return {
+                                name: item.name,
+                                icon: 'circle'
+                            };
+                        })
+                    },
+                    series: [{
+                        type: 'pie',
+                        data: data
+                    }]
+                };
+
+                testHelper.create(echarts, 'icon-circle', {
+                    title: 'The first icon should not be overflow',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 6; i++) {
+                    data.push({name: i + '哈哈哈嘿嘿嘿', value: Math.random()});
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        type: 'scroll',
+                        top: 10,
+                        left: 50,
+                        width: 105,
+                        data: echarts.util.map(data, function (item) {
+                            return {
+                                name: item.name,
+                                icon: 'circle'
+                            };
+                        })
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: 20,
+                        label: {show: false},
+                        labelLine: {show: false},
+                        data: data
+                    }]
+                };
+
+                testHelper.create(echarts, 'only-single-item', {
+                    title: 'Page up/down should be normal when only single item displayed',
+                    option: option,
+                    draggable: true
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 26; i++) {
+                    var name = '';
+                    var nameNumber = Math.floor(Math.random() * 10);
+                    for (var j = 0; j < nameNumber; j++) {
+                        name += j;
+                    }
+                    data.push({
+                        name: name,
+                        value: Math.random()
+                    });
+                }
+
+                var seriesInfo = makeSeries(50, 3);
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        itemGap: 30,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    }],
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    series: {
+                        type: 'pie',
+                        label: {show: false},
+                        labelLine: {show: false},
+                        radius: 30,
+                        data: data
+                    }
+                };
+
+                testHelper.create(echarts, 'vary-size', {
+                    option: option,
+                    draggable: true
+                });
+            })
+        </script>
+
+
+
     </body>
 </html>
