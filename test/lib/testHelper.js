@@ -55,6 +55,7 @@
      * @param {boolean} [opt.notMerge]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
+     * @param {boolean} [opt.recordCanvas] 'ut/lib/canteen.js' is required.
      */
     testHelper.create = function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
@@ -69,6 +70,7 @@
         var buttonsContainer = document.createElement('div');
         var dataTableContainer = document.createElement('div');
         var infoContainer = document.createElement('div');
+        var recordCanvasContainer = document.createElement('div');
 
         title.setAttribute('title', dom.getAttribute('id'));
 
@@ -79,12 +81,14 @@
         buttonsContainer.className = 'test-buttons';
         dataTableContainer.className = 'test-data-table';
         infoContainer.className = 'test-info';
+        recordCanvasContainer.className = 'record-canvas';
 
         if (opt.info) {
             dom.className += ' test-chart-block-has-right';
             infoContainer.className += ' test-chart-block-right';
         }
 
+        left.appendChild(recordCanvasContainer);
         left.appendChild(buttonsContainer);
         left.appendChild(dataTableContainer);
         left.appendChild(chartContainer);
@@ -142,11 +146,70 @@
             infoContainer.innerHTML = createObjectHTML(opt.info, opt.infoKey || 'option');
         }
 
+        if (opt.recordCanvas) {
+            recordCanvasContainer.innerHTML = ''
+                + '<button>Show Canvas Record</button>'
+                + '<button>Clear Canvas Record</button>'
+                + '<div class="content-area"><textarea></textarea><br><button>Close</button></div>';
+            var buttons = recordCanvasContainer.getElementsByTagName('button');
+            var canvasRecordButton = buttons[0];
+            var clearButton = buttons[1];
+            var closeButton = buttons[2];
+            var recordArea = recordCanvasContainer.getElementsByTagName('textarea')[0];
+            var contentAraa = recordArea.parentNode;
+            canvasRecordButton.addEventListener('click', function () {
+                var content = [];
+                eachCtx(function (zlevel, ctx) {
+                    content.push('Layer zlevel: ' + zlevel, '\n\n');
+                    if (typeof ctx.stack !== 'function') {
+                        alert('Missing: <script src="ut/lib/canteen.js"></script>');
+                        return;
+                    }
+                    var stack = ctx.stack();
+                    for (var i = 0; i < stack.length; i++) {
+                        var line = stack[i];
+                        content.push(JSON.stringify(line), '\n');
+                    }
+                });
+                contentAraa.style.display = 'block';
+                recordArea.value = content.join('');
+            });
+            clearButton.addEventListener('click', function () {
+                eachCtx(function (zlevel, ctx) {
+                    ctx.clear();
+                });
+                recordArea.value = 'Cleared.';
+            });
+            closeButton.addEventListener('click', function () {
+                contentAraa.style.display = 'none';
+            });
+        }
+
+        function eachCtx(cb) {
+            var layers = chart.getZr().painter.getLayers();
+            for (var zlevel in layers) {
+                if (layers.hasOwnProperty(zlevel)) {
+                    var layer = layers[zlevel];
+                    var canvas = layer.dom;
+                    var ctx = canvas.getContext('2d');
+                    cb(zlevel, ctx);
+                }
+            }
+        }
+
         return chart;
     };
 
     /**
-     * opt: {boolean}: lazyUpdate, {boolean}: notMerge, {number}: height, {Object}: {width, height, draggable}
+     * @param {ECharts} echarts
+     * @param {HTMLElement|string} domOrId
+     * @param {Object} option
+     * @param {boolean|number} opt If number, means height
+     * @param {boolean} opt.lazyUpdate
+     * @param {boolean} opt.notMerge
+     * @param {number} opt.width
+     * @param {number} opt.height
+     * @param {boolean} opt.draggable
      */
     testHelper.createChart = function (echarts, domOrId, option, opt) {
         if (typeof opt === 'number') {
