@@ -75,7 +75,7 @@ function setLinePoints(targetShape, points, lineWidth) {
             y2: points[1][1]
         },
         style: {
-            lineWidth: lineWidth
+            lineWidth: lineWidth == null ? 1 : lineWidth
         }
     });
 
