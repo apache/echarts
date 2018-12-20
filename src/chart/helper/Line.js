@@ -217,8 +217,9 @@ lineProto.beforeUpdate = updateSymbolAndLabelBeforeLineUpdate;
 lineProto._createLine = function (lineData, idx, seriesScope) {
     var seriesModel = lineData.hostModel;
     var linePoints = lineData.getItemLayout(idx);
-    var lineStyle = seriesScope && seriesScope.lineStyle;
-    var line = createLine(linePoints, lineStyle.lineWidth);
+    var lineStyle = seriesScope.lineStyle;
+    var lineWidth = lineStyle && lineStyle.lineWidth;
+    var line = createLine(linePoints, lineWidth);
     line.shape.percent = 0;
     graphic.initProps(line, {
         shape: {
@@ -253,9 +254,10 @@ lineProto.updateData = function (lineData, idx, seriesScope) {
     var target = {
         shape: {}
     };
-    var lineStyle = seriesScope && seriesScope.lineStyle;
+    var lineStyle = seriesScope.lineStyle;
+    var lineWidth = lineStyle && lineStyle.lineWidth;
 
-    setLinePoints(target.shape, linePoints, lineStyle.lineWidth);
+    setLinePoints(target.shape, linePoints, lineWidth);
     graphic.updateProps(line, target, seriesModel, idx);
 
     zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
