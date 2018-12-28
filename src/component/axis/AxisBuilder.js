@@ -169,10 +169,10 @@ var builders = {
             axisModel.getModel('axisLine.lineStyle').getLineStyle()
         );
 
-        this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+        this.group.add(new graphic.Line({
             // Id for animation
             anid: 'line',
-
+            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -183,7 +183,7 @@ var builders = {
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
-        })));
+        }));
 
         var arrows = axisModel.get('axisLine.symbol');
         var arrowSize = axisModel.get('axisLine.symbolSize');
@@ -598,10 +598,10 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
             v2ApplyTransform(pt2, pt2, matrix);
         }
         // Tick line, Not use group transform to have better line draw
-        var tickEl = new graphic.Line(graphic.subPixelOptimizeLine({
+        var tickEl = new graphic.Line({
             // Id for animation
             anid: 'tick_' + ticksCoords[i].tickValue,
-
+            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -616,7 +616,7 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
             ),
             z2: 2,
             silent: true
-        }));
+        });
         axisBuilder.group.add(tickEl);
         tickEls.push(tickEl);
     }

@@ -222,9 +222,9 @@ echarts.extendComponentView({
                 r: titleModel.get('borderRadius')
             },
             style: style,
+            subPixelOptimize: true,
             silent: true
         });
-        graphic.subPixelOptimizeRect(rect);
 
         group.add(rect);
     }

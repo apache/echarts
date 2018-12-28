@@ -100,19 +100,19 @@ var SingleAxisView = AxisView.extend({
             }
             var colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
-            splitLines[colorIndex].push(new graphic.Line(
-                graphic.subPixelOptimizeLine({
-                    shape: {
-                        x1: p1[0],
-                        y1: p1[1],
-                        x2: p2[0],
-                        y2: p2[1]
-                    },
-                    style: {
-                        lineWidth: lineWidth
-                    },
-                    silent: true
-                })));
+            splitLines[colorIndex].push(new graphic.Line({
+                subPixelOptimize: true,
+                shape: {
+                    x1: p1[0],
+                    y1: p1[1],
+                    x2: p2[0],
+                    y2: p2[1]
+                },
+                style: {
+                    lineWidth: lineWidth
+                },
+                silent: true
+            }));
         }
 
         for (var i = 0; i < splitLines.length; ++i) {

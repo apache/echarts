@@ -58,35 +58,23 @@ function createSymbol(name, lineData, idx) {
     return symbolPath;
 }
 
-function createLine(points, lineWidth) {
+function createLine(points) {
     var line = new LinePath({
-        name: 'line'
+        name: 'line',
+        subPixelOptimize: true
     });
-    setLinePoints(line.shape, points, lineWidth);
+    setLinePoints(line.shape, points);
     return line;
 }
 
-function setLinePoints(targetShape, points, lineWidth) {
-    var subPixelParam = graphic.subPixelOptimizeLine({
-        shape: {
-            x1: points[0][0],
-            y1: points[0][1],
-            x2: points[1][0],
-            y2: points[1][1]
-        },
-        style: {
-            lineWidth: lineWidth == null ? 1 : lineWidth
-        }
-    });
-
-    var shape = subPixelParam.shape;
-    var cp1 = points[2];
-    targetShape.x1 = shape.x1;
-    targetShape.y1 = shape.y1;
-    targetShape.x2 = shape.x2;
-    targetShape.y2 = shape.y2;
+function setLinePoints(targetShape, points) {
+    targetShape.x1 = points[0][0];
+    targetShape.y1 = points[0][1];
+    targetShape.x2 = points[1][0];
+    targetShape.y2 = points[1][1];
     targetShape.percent = 1;
 
+    var cp1 = points[2];
     if (cp1) {
         targetShape.cpx1 = cp1[0];
         targetShape.cpy1 = cp1[1];
@@ -217,9 +205,7 @@ lineProto.beforeUpdate = updateSymbolAndLabelBeforeLineUpdate;
 lineProto._createLine = function (lineData, idx, seriesScope) {
     var seriesModel = lineData.hostModel;
     var linePoints = lineData.getItemLayout(idx);
-    var lineStyle = seriesScope.lineStyle;
-    var lineWidth = lineStyle && lineStyle.lineWidth;
-    var line = createLine(linePoints, lineWidth);
+    var line = createLine(linePoints);
     line.shape.percent = 0;
     graphic.initProps(line, {
         shape: {
@@ -254,10 +240,8 @@ lineProto.updateData = function (lineData, idx, seriesScope) {
     var target = {
         shape: {}
     };
-    var lineStyle = seriesScope.lineStyle;
-    var lineWidth = lineStyle && lineStyle.lineWidth;
 
-    setLinePoints(target.shape, linePoints, lineWidth);
+    setLinePoints(target.shape, linePoints);
     graphic.updateProps(line, target, seriesModel, idx);
 
     zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
@@ -409,7 +393,7 @@ lineProto.updateLayout = function (lineData, idx) {
 
 lineProto.setLinePoints = function (points) {
     var linePath = this.childOfName('line');
-    setLinePoints(linePath.shape, points, linePath.style.lineWidth);
+    setLinePoints(linePath.shape, points);
     linePath.dirty();
 };
 
