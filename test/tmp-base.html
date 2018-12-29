@@ -44,8 +44,6 @@ under the License.
 
         <script>
 
-            var chart;
-            var myChart;
             var option;
 
             require([
@@ -55,7 +53,7 @@ under the License.
                 // $.getJSON('./data/nutrients.json', function (data) {
                 // });
 
-                chart = myChart = testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main0', {
                     option: option
                 });
             });
