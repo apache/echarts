@@ -29,13 +29,13 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
         reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
-            var symbolType = seriesModel.get('symbol') || defaultSymbolType;
+            var symbolType = seriesModel.get('symbol');
             var symbolSize = seriesModel.get('symbolSize');
             var keepAspect = seriesModel.get('symbolKeepAspect');
 
             data.setVisual({
-                legendSymbol: legendSymbol || symbolType,
-                symbol: symbolType,
+                legendSymbol: legendSymbol || symbolType || defaultSymbolType,
+                symbol: symbolType || defaultSymbolType,
                 symbolSize: symbolSize,
                 symbolKeepAspect: keepAspect
             });
@@ -45,9 +45,15 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 return;
             }
 
-            var hasCallback = typeof symbolSize === 'function';
+            var hasCallback = typeof symbolType === 'function' || typeof symbolSize === 'function';
 
             function dataEach(data, idx) {
+                if (typeof symbolType === 'function') {
+                    var rawValue = seriesModel.getRawValue(idx);
+
+                    var params = seriesModel.getDataParams(idx);
+                    data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
+                }
                 if (typeof symbolSize === 'function') {
                     var rawValue = seriesModel.getRawValue(idx);
                     // FIXME
