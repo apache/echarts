@@ -120,14 +120,16 @@ under the License.
                 opt.buttons = buttons = genHoverLayerBtns().concat(buttons);
                 var chart = originalCreate.call(this, echarts, dom, opt);
 
-                var zr = chart.getZr();
-                var originalRefreshImmediately = zr.refreshImmediately;
-                zr.refreshImmediately = function () {
-                    var result = originalRefreshImmediately.apply(this, arguments);
-                    // Make sure refreshImmediately is not called when `useHoverLayer`.
-                    genInfo(+new Date());
-                    return result;
-                };
+                if (chart) {
+                    var zr = chart.getZr();
+                    var originalRefreshImmediately = zr.refreshImmediately;
+                    zr.refreshImmediately = function () {
+                        var result = originalRefreshImmediately.apply(this, arguments);
+                        // Make sure refreshImmediately is not called when `useHoverLayer`.
+                        genInfo(+new Date());
+                        return result;
+                    };
+                }
 
                 return chart;
             }
@@ -223,7 +225,7 @@ under the License.
                     height: 200
                 });
 
-                chart.on('click', function () {
+                chart && chart.on('click', function () {
                     chart.setOption({
                         color: ['blue']
                     });

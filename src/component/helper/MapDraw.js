@@ -332,11 +332,8 @@ MapDraw.prototype = {
             var groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
             groupRegions.push(region);
 
-            graphic.setHoverStyle(
-                regionGroup,
-                hoverItemStyle,
-                {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')}
-            );
+            regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
+            graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
             regionsGroup.add(regionGroup);
         });

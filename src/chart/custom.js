@@ -327,7 +327,9 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
         graphicUtil.setElementHoverStyle(el, styleEmphasis);
         el.__cusHasEmphStl = !disableStyleEmphasis;
     }
-    isRoot && graphicUtil.setAsHighDownDispatcher(el, !disableStyleEmphasis);
+    if (isRoot) {
+        graphicUtil.setAsHighDownDispatcher(el, !disableStyleEmphasis);
+    }
 }
 
 function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, isInit) {

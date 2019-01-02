@@ -377,13 +377,12 @@ function traverseCall(el, method) {
  * to the `el`. See the reason on `setHoverStyle`.
  *
  * @param {module:zrender/Element} el Should not be `zrender/container/Group`.
+ * @param {Function} [el.highDownTransition] Called when transit.
  * @param {Object|boolean} [hoverStl] The specified hover style.
  *        If set as `false`, disable the hover style.
  *        Similarly, The `el.hoverStyle` can alse be set
  *        as `false` to disable the hover style.
  *        Otherwise, use the default hover style if not provided.
- * @param {Object} [opt]
- * @param {boolean} [opt.hoverSilentOnTouch=false] See `graphic.setAsHighDownDispatcher`
  */
 export function setElementHoverStyle(el, hoverStl) {
     // For performance consideration, it might be better to make the "hover style" only the
@@ -446,30 +445,30 @@ export function removeExtraHighDownEffect(el) {
 }
 
 function onElementMouseOver(e) {
-    if (this.__hoverSilentOnTouch && e.zrByTouch) {
-        return;
-    }
-
-    // API highlight has higher priority than mouse highlight.
-    !this.__doesEmphasisEnteredByAPI && traverseCall(this, singleEnterEmphasis);
+    !shouldSilent(this, e)
+        // API highlight has higher priority than mouse highlight.
+        && !this.__emphasisEnteredByAPI
+        && traverseCall(this, singleEnterEmphasis);
 }
 
 function onElementMouseOut(e) {
-    if (this.__hoverSilentOnTouch && e.zrByTouch) {
-        return;
-    }
+    !shouldSilent(this, e)
+        // API highlight has higher priority than mouse highlight.
+        && !this.__emphasisEnteredByAPI
+        && traverseCall(this, singleEnterNormal);
+}
 
-    // API highlight has higher priority than mouse highlight.
-    !this.__doesEmphasisEnteredByAPI && traverseCall(this, singleEnterNormal);
+function shouldSilent(el, e) {
+    return el.__highDownSilentOnTouch && e.zrByTouch;
 }
 
 function onEnterEmphasisByAPI() {
-    this.__doesEmphasisEnteredByAPI = true;
+    this.__emphasisEnteredByAPI = true;
     traverseCall(this, singleEnterEmphasis);
 }
 
 function onEnterNormalByAPI() {
-    this.__doesEmphasisEnteredByAPI = false;
+    this.__emphasisEnteredByAPI = false;
     traverseCall(this, singleEnterNormal);
 }
 
@@ -502,12 +501,16 @@ function onEnterNormalByAPI() {
  * root group, we can simply mount the style on `el.hoverStyle` for them, but should
  * not call this method for them.
  *
+ * (3) These input parameters can be set directly on `el`:
+ *
  * @param {module:zrender/Element} el
+ * @param {Object} [el.hoverStyle] Can be set on el or its descendants,
+ *                 e.g., `el.hoverStyle = ...; graphic.setHoverStyle(el); `.
+ * @param {boolean} [el.highDownSilentOnTouch=false] See `graphic.setAsHighDownDispatcher`.
+ * @param {Function} [el.highDownTransition] See `graphic.setElementHoverStyle`.
  * @param {Object|boolean} [hoverStyle] See `graphic.setElementHoverStyle`.
- * @param {Object} [opt]
- * @param {boolean} [opt.hoverSilentOnTouch=false] See `graphic.setAsHighDownDispatcher`.
  */
-export function setHoverStyle(el, hoverStyle, opt) {
+export function setHoverStyle(el, hoverStyle) {
     el.isGroup
         ? el.traverse(function (child) {
             // If element has sepcified hoverStyle, then use it instead of given hoverStyle
@@ -516,25 +519,28 @@ export function setHoverStyle(el, hoverStyle, opt) {
         })
         : setElementHoverStyle(el, el.hoverStyle || hoverStyle);
 
-    setAsHighDownDispatcher(el, opt);
+    setAsHighDownDispatcher(el, true);
 }
 
 /**
- * @param {Object|boolean} [opt] If `false`, means disable trigger.
- * @param {boolean} [opt.hoverSilentOnTouch=false]
- *        In touch device, mouseover event will be trigger on touchstart event
- *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
- *        conveniently use hoverStyle when tap on touch screen without additional
- *        code for compatibility.
- *        But if the chart/component has select feature, which usually also use
- *        hoverStyle, there might be conflict between 'select-highlight' and
- *        'hover-highlight' especially when roam is enabled (see geo for example).
- *        In this case, hoverSilentOnTouch should be used to disable hover-highlight
- *        on touch device.
+ * @param {module:zrender/Element} el
+ * @param {boolean} [el.highDownSilentOnTouch=false]
+ *      In touch device, mouseover event will be trigger on touchstart event
+ *      (see module:zrender/dom/HandlerProxy). By this mechanism, we can
+ *      conveniently use hoverStyle when tap on touch screen without additional
+ *      code for compatibility.
+ *      But if the chart/component has select feature, which usually also use
+ *      hoverStyle, there might be conflict between 'select-highlight' and
+ *      'hover-highlight' especially when roam is enabled (see geo for example).
+ *      In this case, `highDownSilentOnTouch` should be used to disable
+ *      hover-highlight on touch device.
+ * @param {boolean} [asDispatcher=true] If `false`, do not set as "highDownDispatcher".
  */
-export function setAsHighDownDispatcher(el, opt) {
-    var disable = opt === false;
-    el.__hoverSilentOnTouch = opt != null && opt.hoverSilentOnTouch;
+export function setAsHighDownDispatcher(el, asDispatcher) {
+    var disable = asDispatcher === false;
+    // Make `highDownSilentOnTouch` only work after `setAsHighDownDispatcher`
+    // called. Avoid it is modified by user unexpectedly.
+    el.__highDownSilentOnTouch = el.highDownSilentOnTouch;
 
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
