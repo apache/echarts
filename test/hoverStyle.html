@@ -53,6 +53,10 @@ under the License.
         <br>
 
         <div id="info"></div>
+
+        <div id="mainb1"></div>
+        <div id="mainb2"></div>
+
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
@@ -60,6 +64,8 @@ under the License.
         <div id="main4"></div>
         <div id="main5"></div>
         <div id="main6"></div>
+
+
 
 
         <script>
@@ -103,6 +109,10 @@ under the License.
 
             var originalCreate = testHelper.create;
             testHelper.create = function (echarts, dom, opt) {
+                if (opt.option.hoverLayerThreshold === void 0) {
+                    throw new Error('"hoverLayerThreshold" should be set');
+                }
+
                 var buttons = opt.buttons || [];
                 opt.buttons = buttons = genHoverLayerBtns().concat(buttons);
                 var chart = originalCreate.call(this, echarts, dom, opt);
@@ -124,6 +134,99 @@ under the License.
 
 
 
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    grid: {
+                        right: 120
+                    },
+                    visualMap: {
+                        min: 100,
+                        max: 800,
+                        top: 10,
+                        right: 10,
+                        splitNumber: 3,
+                        type: 'piecewise',
+                        // demension: 1,
+                        // hoverLink: true,
+                        inRange: {
+                            color: ['blue', 'red']
+                        },
+                        outOfRange: {
+                            color: 'black'
+                        }
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        data: [
+                            [12, 331],
+                            [55, 131],
+                            [55, 531]
+                        ]
+                    }]
+                };
+
+                testHelper.create(echarts, 'mainb1', {
+                    title: [
+                        'visualMap should be normal (and hoverLink should be normal)',
+                        '(inRange: has color, outOfRange: "black")'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        data: [
+                            [12, 131],
+                            [55, 431],
+                            [55, 331]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb2', {
+                    title: [
+                        'setOption onclick and hover animation should be normal:',
+                        'click any symbol, all symbols should become blue'
+                    ],
+                    option: option,
+                    height: 200
+                });
+
+                chart.on('click', function () {
+                    chart.setOption({
+                        color: ['blue']
+                    });
+                });
+            });
+        </script>
 
 
 
