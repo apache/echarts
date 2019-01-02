@@ -349,15 +349,13 @@ function singleEnterNormal(el) {
             // `setStyle` but not `extendFrom(stl, true)`.
             el.setStyle(normalStl);
             applyDefaultTextStyle(style);
-            el.__cachedNormalStl = null;
         }
         // `__cachedNormalZ2` will not be reset if calling `setElementHoverStyle`
         // when `el` is on emphasis state. So here by comparing with 1, we try
         // hard to make the bug case rare.
         var normalZ2 = el.__cachedNormalZ2;
-        if (el.z2 - normalZ2 === Z2_LIFT_VALUE) {
+        if (normalZ2 != null && el.z2 - normalZ2 === Z2_LIFT_VALUE) {
             el.z2 = normalZ2;
-            el.__cachedNormalZ2 = null;
         }
     }
 

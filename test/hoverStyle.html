@@ -56,6 +56,7 @@ under the License.
 
         <div id="mainb1"></div>
         <div id="mainb2"></div>
+        <div id="mainb3"></div>
 
         <div id="main0"></div>
         <div id="main1"></div>
@@ -85,7 +86,9 @@ under the License.
 
             function genInfo(zrRefreshTimestamp) {
                 infoEl.innerHTML = [
-                    useHoverLayer ? 'Using HoverLayer' : 'NOT using HoverLayer',
+                    '<span style="color:yellow">'
+                        + (useHoverLayer ? 'Using HoverLayer' : 'NOT using HoverLayer')
+                    + '</span>',
                     'hoverLayerThreshold: ' + hoverLayerThreshold,
                     'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
                 ].join('<br>');
@@ -229,6 +232,37 @@ under the License.
         </script>
 
 
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 100,
+                        data: [
+                            {value: [0, 0], itemStyle: {color: 'blue'}},
+                            {value: [0, 1], itemStyle: {color: 'red'}}
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb3', {
+                    title: [
+                        'hover the blue symbol, the z2 can be top',
+                        'unhover, **z2 should be back** to bottom'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
 
 
 
