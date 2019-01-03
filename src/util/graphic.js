@@ -53,6 +53,10 @@ var Z2_LIFT_VALUE = 1;
 var EMPHASIS = 'emphasis';
 var NORMAL = 'normal';
 
+// Reserve 0 as default.
+var _highlightNextDigit = 1;
+var _highlightKeyMap = {};
+
 
 /**
  * Extend shape with parameters
@@ -429,26 +433,26 @@ export function setElementHoverStyle(el, hoverStl) {
 
 function onElementMouseOver(e) {
     !shouldSilent(this, e)
-        // API highlight has higher priority than mouse highlight.
-        && !this.__emphasisEnteredByAPI
+        // "emphasis" event highlight has higher priority than mouse highlight.
+        && !this.__highByOuter
         && traverseUpdate(this, singleEnterEmphasis);
 }
 
 function onElementMouseOut(e) {
     !shouldSilent(this, e)
-        // API highlight has higher priority than mouse highlight.
-        && !this.__emphasisEnteredByAPI
+        // "emphasis" event highlight has higher priority than mouse highlight.
+        && !this.__highByOuter
         && traverseUpdate(this, singleEnterNormal);
 }
 
-function onEnterEmphasisByAPI() {
-    this.__emphasisEnteredByAPI = true;
+function onElementEmphasisEvent(highlightDigit) {
+    this.__highByOuter |= 1 << (highlightDigit || 0);
     traverseUpdate(this, singleEnterEmphasis);
 }
 
-function onEnterNormalByAPI() {
-    this.__emphasisEnteredByAPI = false;
-    traverseUpdate(this, singleEnterNormal);
+function onElementNormalEvent(highlightDigit) {
+    !(this.__highByOuter &= ~(1 << (highlightDigit || 0)))
+        && traverseUpdate(this, singleEnterNormal);
 }
 
 function shouldSilent(el, e) {
@@ -537,8 +541,10 @@ export function setAsHighDownDispatcher(el, asDispatcher) {
 
         // Duplicated function will be auto-ignored, see Eventful.js.
         el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
-        // Emphasis, normal can be triggered manually
-        el[method]('emphasis', onEnterEmphasisByAPI)[method]('normal', onEnterNormalByAPI);
+        // Emphasis, normal can be triggered manually by API or other components like hover link.
+        el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
+        // Also keep previous record.
+        el.__highByOuter = el.__highByOuter || 0;
 
         el.__highDownDispatcher = !disable;
     }
@@ -550,6 +556,22 @@ export function setAsHighDownDispatcher(el, asDispatcher) {
  */
 export function isHighDownDispatcher(el) {
     return !!(el && el.__highDownDispatcher);
+}
+
+/**
+ * Support hightlight/downplay record on each elements.
+ * For the case: hover highlight/downplay (legend, visualMap, ...) and
+ * user triggerred hightlight/downplay should not conflict.
+ * Only all of the highlightDigit cleared, return to normal.
+ * @param {string} highlightKey
+ * @return {number} highlightDigit
+ */
+export function getHighlightDigit(highlightKey) {
+    var highlightDigit = _highlightKeyMap[highlightKey];
+    if (highlightDigit == null && _highlightNextDigit <= 32) {
+        highlightDigit = _highlightKeyMap[highlightKey] = _highlightNextDigit++;
+    }
+    return highlightDigit;
 }
 
 /**

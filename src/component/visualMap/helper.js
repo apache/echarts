@@ -64,12 +64,13 @@ export function getItemAlign(visualMapModel, api, itemSize) {
  * Prepare dataIndex for outside usage, where dataIndex means rawIndex, and
  * dataIndexInside means filtered index.
  */
-export function convertDataIndex(batch) {
+export function makeHighDownBatch(batch, visualMapModel) {
     zrUtil.each(batch || [], function (batchItem) {
-        if (batch.dataIndex != null) {
-            batch.dataIndexInside = batch.dataIndex;
-            batch.dataIndex = null;
+        if (batchItem.dataIndex != null) {
+            batchItem.dataIndexInside = batchItem.dataIndex;
+            batchItem.dataIndex = null;
         }
+        batchItem.highlightKey = 'visualMap' + (visualMapModel ? visualMapModel.componentIndex : '');
     });
     return batch;
 }
