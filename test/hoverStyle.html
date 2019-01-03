@@ -133,8 +133,15 @@ under the License.
 
                 return chart;
             }
-
         </script>
+
+
+
+
+
+
+
+
 
 
 
@@ -160,8 +167,8 @@ under the License.
                         right: 10,
                         splitNumber: 3,
                         type: 'piecewise',
-                        // demension: 1,
-                        // hoverLink: true,
+                        demension: 1,
+                        hoverLink: true,
                         inRange: {
                             color: ['blue', 'red']
                         },
@@ -173,20 +180,70 @@ under the License.
                         type: 'scatter',
                         symbolSize: 30,
                         data: [
-                            [12, 331],
-                            [55, 131],
-                            [55, 531]
+                            [12, 331], [55, 131], [55, 531]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbol: 'rect',
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            formatter: 'label inside\nhover red\n{c}'
+                        },
+                        emphasis: {
+                            label: {
+                                color: 'red'
+                            }
+                        },
+                        data: [
+                            [112, 331], [115, 131], [165, 531]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbol: 'triangle',
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            formatter: 'label inside\n{c}'
+                        },
+                        emphasis: {
+                            label: {
+                                position: 'top',
+                                formatter: 'hover become top\n{c}'
+                            }
+                        },
+                        data: [
+                            [212, 331], [215, 131], [265, 531]
                         ]
                     }]
                 };
 
-                testHelper.create(echarts, 'mainb1', {
+                var chart = testHelper.create(echarts, 'mainb1', {
                     title: [
-                        'visualMap should be normal (and hoverLink should be normal)',
-                        '(inRange: has color, outOfRange: "black")'
+                        'visualMap should be normal (and hoverLink should **scale circles**)',
+                        '(inRange: has color, outOfRange: "black")',
+                        'Click visualMap when hoverlink, circle color should be changed, but **keep scaled**.',
+                        'Click the buttons check correct.'
                     ],
                     option: option,
-                    height: 200
+                    height: 300,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                dataIndex: 0
+                            });
+                        }
+                    }]
                 });
             });
         </script>
@@ -643,9 +700,9 @@ under the License.
                     series: [{
                         type: 'pie',
                         data: [
-                            {value: 12, name: 'qwer'},
-                            {value: 15, name: 'asdf'},
-                            {value: 17, name: 'zxcv'}
+                            {value: 12, name: 'Click this sector:\nit keep color-lifted and scaled'},
+                            {value: 15, name: 'zxcv'},
+                            {value: 17, name: 'Click this sector:\nit becomes yellow, keep color-lifted and scaled'}
                         ]
                     }]
                 };
@@ -653,9 +710,11 @@ under the License.
                 var chart = testHelper.create(echarts, 'main6', {
                     title: [
                         'Pie **hightlight priority** of API and mouse:',
-                        'Hover on sector, **should scaled and highlighted**.',
-                        'trigger hover by API: **should scaled and highlighted**.',
+                        'Hover on sector, **should scaled and color lifted**.',
+                        'trigger hover by API: **should scaled and color-lifted**.',
                         'Test mouse hover and leave, should NOT return to normal.',
+                        'Only click downplay to return normal',
+                        'Click the red sector, it **keep scaled and color-lifted**',
                         'Only click downplay to return normal'
                     ],
                     option: option,
@@ -679,6 +738,20 @@ under the License.
                             });
                         }
                     }]
+                });
+
+                chart && chart.on('click', function (e) {
+                    if (e.dataIndex === 0) {
+                        chart.dispatchAction({
+                            type: 'highlight',
+                            seriesIndex: 0,
+                            dataIndex: 0
+                        });
+                    }
+                    else if (e.dataIndex === 2) {
+                        option.series[0].data[2].itemStyle = {color: 'yellow'};
+                        chart.setOption(option);
+                    }
                 });
             });
         </script>

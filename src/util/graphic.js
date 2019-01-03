@@ -50,6 +50,10 @@ var mathMin = Math.min;
 var EMPTY_OBJ = {};
 var Z2_LIFT_VALUE = 1;
 
+var EMPHASIS = 'emphasis';
+var NORMAL = 'normal';
+
+
 /**
  * Extend shape with parameters
  */
@@ -269,7 +273,7 @@ function singleEnterEmphasis(el) {
     el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     var zr = el.__zr;
-    if (!zr && useHoverLayer) {
+    if (el.isGroup || (!zr && useHoverLayer)) {
         return;
     }
 
@@ -317,8 +321,6 @@ function singleEnterEmphasis(el) {
         el.dirty(false);
         el.z2 += Z2_LIFT_VALUE;
     }
-
-    el.__extraOnEmphasis && el.__extraOnEmphasis();
 }
 
 function setDefaultHoverFillStroke(targetStyle, hoverStyle, prop) {
@@ -336,10 +338,14 @@ function singleEnterNormal(el) {
 
     el.__highlighted = false;
 
+    if (el.isGroup) {
+        return;
+    }
+
     if (highlighted === 'layer') {
         el.__zr && el.__zr.removeHover(el);
     }
-    else if (highlighted) {
+    else {
         var style = el.style;
 
         var normalStl = el.__cachedNormalStl;
@@ -358,16 +364,23 @@ function singleEnterNormal(el) {
             el.z2 = normalZ2;
         }
     }
-
-    el.__extraOnNormal && el.__extraOnNormal();
 }
 
-function traverseCall(el, method) {
-    el.isGroup
-        ? el.traverse(function (child) {
-            !child.isGroup && method(child);
-        })
-        : method(el);
+function traverseUpdate(el, updater, commonParam) {
+    // If root is group, also enter updater for `highDownOnUpdate`.
+    var fromState = NORMAL;
+    var toState = NORMAL;
+    var trigger;
+    // See the rule of `highDownOnUpdate` on `graphic.setAsHighDownDispatcher`.
+    el.__highlighted && (fromState = EMPHASIS, trigger = true);
+    updater(el, commonParam);
+    el.__highlighted && (toState = EMPHASIS, trigger = true);
+
+    el.isGroup && el.traverse(function (child) {
+        !child.isGroup && updater(child, commonParam);
+    });
+
+    trigger && el.__highDownOnUpdate && el.__highDownOnUpdate(fromState, toState);
 }
 
 /**
@@ -377,7 +390,9 @@ function traverseCall(el, method) {
  * to the `el`. See the reason on `setHoverStyle`.
  *
  * @param {module:zrender/Element} el Should not be `zrender/container/Group`.
- * @param {Function} [el.highDownTransition] Called when transit.
+ * @param {Object} [el.hoverStyle] Can be set on el or its descendants,
+ *        e.g., `el.hoverStyle = ...; graphic.setHoverStyle(el); `.
+ *        Often used when item group has a label element and it's hoverStyle is different.
  * @param {Object|boolean} [hoverStl] The specified hover style.
  *        If set as `false`, disable the hover style.
  *        Similarly, The `el.hoverStyle` can alse be set
@@ -387,7 +402,7 @@ function traverseCall(el, method) {
 export function setElementHoverStyle(el, hoverStl) {
     // For performance consideration, it might be better to make the "hover style" only the
     // difference properties from the "normal style", but not a entire copy of all styles.
-    hoverStl = el.__hoverStl = hoverStl !== false && (hoverStl || {});
+    hoverStl = el.__hoverStl = hoverStl !== false && (el.hoverStyle || hoverStl || {});
     el.__hoverStlDirty = true;
 
     // FIXME
@@ -412,64 +427,32 @@ export function setElementHoverStyle(el, hoverStl) {
     }
 }
 
-/**
- * Set customized emphasis effect like scale, animation.
- * If calling this method more than once with the same
- * `onEmphasis` and `onNormal` function, it will not
- * add but do nothing.
- *
- * Highlight that triggered by API (
- *     `chart.dispatchAction({type: 'highlight'});`
- *     or `el.trigger('emphasis');`
- * ) has higher priority than that triggered by `mouseover`.
- * When element has been called to be entered emphasis, mouse over
- * should not trigger the highlight effect (for example, animation
- * scale) again, and `mouseout` should not downplay the highlight
- * effect. So the listener of `mouseover` and `mouseout` should
- * check `isInEmphasis`.
- *
- * @param {module:zrender/src/Element} el element that will take the effect.
- * @param {Function} onEmphasis
- * @param {Function} onNormal
- */
-export function setExtraHighDownEffect(el, onEmphasis, onNormal) {
-    el.__extraOnEmphasis = onEmphasis;
-    el.__extraOnNormal = onNormal;
-}
-
-/**
- * @param {module:zrender/src/Element} el element that will take the effect.
- */
-export function removeExtraHighDownEffect(el) {
-    el.__extraOnEmphasis = el.__extraOnNormal = null;
-}
-
 function onElementMouseOver(e) {
     !shouldSilent(this, e)
         // API highlight has higher priority than mouse highlight.
         && !this.__emphasisEnteredByAPI
-        && traverseCall(this, singleEnterEmphasis);
+        && traverseUpdate(this, singleEnterEmphasis);
 }
 
 function onElementMouseOut(e) {
     !shouldSilent(this, e)
         // API highlight has higher priority than mouse highlight.
         && !this.__emphasisEnteredByAPI
-        && traverseCall(this, singleEnterNormal);
-}
-
-function shouldSilent(el, e) {
-    return el.__highDownSilentOnTouch && e.zrByTouch;
+        && traverseUpdate(this, singleEnterNormal);
 }
 
 function onEnterEmphasisByAPI() {
     this.__emphasisEnteredByAPI = true;
-    traverseCall(this, singleEnterEmphasis);
+    traverseUpdate(this, singleEnterEmphasis);
 }
 
 function onEnterNormalByAPI() {
     this.__emphasisEnteredByAPI = false;
-    traverseCall(this, singleEnterNormal);
+    traverseUpdate(this, singleEnterNormal);
+}
+
+function shouldSilent(el, e) {
+    return el.__highDownSilentOnTouch && e.zrByTouch;
 }
 
 /**
@@ -504,43 +487,48 @@ function onEnterNormalByAPI() {
  * (3) These input parameters can be set directly on `el`:
  *
  * @param {module:zrender/Element} el
- * @param {Object} [el.hoverStyle] Can be set on el or its descendants,
- *                 e.g., `el.hoverStyle = ...; graphic.setHoverStyle(el); `.
+ * @param {Object} [el.hoverStyle] See `graphic.setElementHoverStyle`.
  * @param {boolean} [el.highDownSilentOnTouch=false] See `graphic.setAsHighDownDispatcher`.
- * @param {Function} [el.highDownTransition] See `graphic.setElementHoverStyle`.
+ * @param {Function} [el.highDownOnUpdate] See `graphic.setAsHighDownDispatcher`.
  * @param {Object|boolean} [hoverStyle] See `graphic.setElementHoverStyle`.
  */
 export function setHoverStyle(el, hoverStyle) {
-    el.isGroup
-        ? el.traverse(function (child) {
-            // If element has sepcified hoverStyle, then use it instead of given hoverStyle
-            // Often used when item group has a label element and it's hoverStyle is different
-            !child.isGroup && setElementHoverStyle(child, child.hoverStyle || hoverStyle);
-        })
-        : setElementHoverStyle(el, el.hoverStyle || hoverStyle);
-
     setAsHighDownDispatcher(el, true);
+    traverseUpdate(el, setElementHoverStyle, hoverStyle);
 }
 
 /**
  * @param {module:zrender/Element} el
+ * @param {Function} [el.highDownOnUpdate] Called when state updated.
+ *        Since `setHoverStyle` has the constraint that it must be called after
+ *        all of the normal style updated, `highDownOnUpdate` is not needed to
+ *        trigger if both `fromState` and `toState` is 'normal', and needed to
+ *        trigger if both `fromState` and `toState` is 'emphasis', which enables
+ *        to sync outside style settings to "emphasis" state.
+ *        @this {string} This dispatcher `el`.
+ *        @param {string} fromState Can be "normal" or "emphasis".
+ *               `fromState` might equal to `toState`,
+ *               for example, when this method is called when `el` is
+ *               on "emphasis" state.
+ *        @param {string} toState Can be "normal" or "emphasis".
  * @param {boolean} [el.highDownSilentOnTouch=false]
- *      In touch device, mouseover event will be trigger on touchstart event
- *      (see module:zrender/dom/HandlerProxy). By this mechanism, we can
- *      conveniently use hoverStyle when tap on touch screen without additional
- *      code for compatibility.
- *      But if the chart/component has select feature, which usually also use
- *      hoverStyle, there might be conflict between 'select-highlight' and
- *      'hover-highlight' especially when roam is enabled (see geo for example).
- *      In this case, `highDownSilentOnTouch` should be used to disable
- *      hover-highlight on touch device.
+ *        In touch device, mouseover event will be trigger on touchstart event
+ *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
+ *        conveniently use hoverStyle when tap on touch screen without additional
+ *        code for compatibility.
+ *        But if the chart/component has select feature, which usually also use
+ *        hoverStyle, there might be conflict between 'select-highlight' and
+ *        'hover-highlight' especially when roam is enabled (see geo for example).
+ *        In this case, `highDownSilentOnTouch` should be used to disable
+ *        hover-highlight on touch device.
  * @param {boolean} [asDispatcher=true] If `false`, do not set as "highDownDispatcher".
  */
 export function setAsHighDownDispatcher(el, asDispatcher) {
     var disable = asDispatcher === false;
-    // Make `highDownSilentOnTouch` only work after `setAsHighDownDispatcher`
-    // called. Avoid it is modified by user unexpectedly.
+    // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
+    // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
     el.__highDownSilentOnTouch = el.highDownSilentOnTouch;
+    el.__highDownOnUpdate = el.highDownOnUpdate;
 
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.

@@ -179,30 +179,30 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
         seriesModel.get('animation')
     );
 
-    function onEmphasis() {
-        // Sector may has animation of updating data. Force to move to the last frame
-        // Or it may stopped on the wrong shape
-        sector.stopAnimation(true);
-        sector.animateTo({
-            shape: {
-                r: layout.r + seriesModel.get('hoverOffset')
-            }
-        }, 300, 'elasticOut');
-    }
-    function onNormal() {
-        sector.stopAnimation(true);
-        sector.animateTo({
-            shape: {
-                r: layout.r
-            }
-        }, 300, 'elasticOut');
-    }
-    graphic.removeExtraHighDownEffect(sector);
-    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
-        graphic.setExtraHighDownEffect(sector, onEmphasis, onNormal);
-    }
-
     this._updateLabel(data, idx);
+
+    this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+        ? function (fromState, toState) {
+            if (toState === 'emphasis') {
+                // Sector may has animation of updating data. Force to move to the last frame
+                // Or it may stopped on the wrong shape
+                sector.stopAnimation(true);
+                sector.animateTo({
+                    shape: {
+                        r: layout.r + seriesModel.get('hoverOffset')
+                    }
+                }, 300, 'elasticOut');
+            }
+            else {
+                sector.stopAnimation(true);
+                sector.animateTo({
+                    shape: {
+                        r: layout.r
+                    }
+                }, 300, 'elasticOut');
+            }
+        }
+        : null;
 
     graphic.setHoverStyle(this);
 };
