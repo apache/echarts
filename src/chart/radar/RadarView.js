@@ -207,20 +207,9 @@ export default echarts.extendChartView({
                 );
             });
 
-            function onEmphasis() {
-                polygon.attr('ignore', hoverPolygonIgnore);
-            }
-
-            function onNormal() {
-                polygon.attr('ignore', polygonIgnore);
-            }
-
-            itemGroup.off('mouseover').off('mouseout').off('normal').off('emphasis');
-            itemGroup.on('emphasis', onEmphasis)
-                .on('mouseover', onEmphasis)
-                .on('normal', onNormal)
-                .on('mouseout', onNormal);
-
+            itemGroup.highDownOnUpdate = function (fromState, toState) {
+                polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
+            };
             graphic.setHoverStyle(itemGroup);
         });
 
