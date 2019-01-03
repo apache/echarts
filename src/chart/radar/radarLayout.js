@@ -33,7 +33,9 @@ export default function (ecModel) {
         zrUtil.each(axes, function (axis, axisIndex) {
             data.each(data.mapDimension(axes[axisIndex].dim), function (val, dataIndex) {
                 points[dataIndex] = points[dataIndex] || [];
-                points[dataIndex][axisIndex] = coordSys.dataToPoint(val, axisIndex);
+                var point = coordSys.dataToPoint(val, axisIndex);
+                points[dataIndex][axisIndex] = isValidPoint(point)
+                    ? point : getValueMissingPoint(coordSys);
             });
         });
 
@@ -43,12 +45,22 @@ export default function (ecModel) {
             // Is it appropriate to connect to the next data when some data is missing?
             // Or, should trade it like `connectNull` in line chart?
             var firstPoint = zrUtil.find(points[idx], function (point) {
-                return !isNaN(point[0]) && !isNaN(point[1]);
-            }) || [NaN, NaN];
+                return isValidPoint(point);
+            }) || getValueMissingPoint(coordSys);
 
             // Copy the first actual point to the end of the array
             points[idx].push(firstPoint.slice());
             data.setItemLayout(idx, points[idx]);
         });
     });
+}
+
+function isValidPoint(point) {
+    return !isNaN(point[0]) && !isNaN(point[1]);
+}
+
+function getValueMissingPoint(coordSys) {
+    // It is error-prone to input [NaN, NaN] into polygon, polygon.
+    // (probably cause problem when refreshing or animating)
+    return [coordSys.cx, coordSys.cy];
 }
