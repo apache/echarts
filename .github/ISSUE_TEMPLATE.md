@@ -10,9 +10,10 @@ Please check the following questions to let our bot help.
 
 To check the option, add x in [ ], e.g.: [x] I am ...
 勾选的方式：在 [ ] 中加入 x，变成：[x] I am ... 的形式。
--->
 
 - [ ] I am using English in this issue. 在这个 Issue 中我使用了英文（强烈建议）。
+
+-->
 
 
 ## General Questions
@@ -24,7 +25,6 @@ PLEASE MAKE SURE OF ALL THE FOLLOWING OPTIONS IN REQUIRED FIELDS ARE TICKED (wit
 Otherwise, the issue will not be answered.
 And think before you tick. :)
 请确保以下每项都打上勾了！并且确保都做了这些事哦~ 这将大量简化我们的工作流程，使你的问题更快速得到解答。
--->
 
 - [ ] Required: I have read the document and examples and tried to solve it by myself. （必填）我读过了文档和教程，并且曾试图自己解决问题。
 - [ ] Required: I have searched for similar issues and that didn't help. （必填）我搜索过 issue 但是没有帮助。
@@ -36,10 +36,9 @@ In this issue, I have provided information with: 在这个 issue 中我提供了
 - [ ] Required: demo；（必填）能反映问题的例子（如果你想提问或报 bug）
 - [ ] Required: ECharts version；ECharts 版本
 
+-->
+
 <!-- END OF REQUIRED FIELDS 必填项结束 -->
-
-
-
 
 
 ## Issue Type
@@ -91,7 +90,7 @@ THIS IS REQUIRED FOR ALL BUG REPORTS AND QUESTIONS!!! 如果是提问或报 bug 
 
 ## Topics
 
-<!-- Check those topics that are related. 选择相关主题。 -->
+<!-- Check those topics that are related. 选择相关主题。
 - [ ] Legend
 - [ ] Tooltip
 - [ ] Event
@@ -100,7 +99,7 @@ THIS IS REQUIRED FOR ALL BUG REPORTS AND QUESTIONS!!! 如果是提问或报 bug 
 - [ ] Map
 - [ ] ECharts GL
 - [ ] Third-party libraries, e.g.: Vue.js, React
-
+-->
 
 ## Anything Else We Need to Know
 
