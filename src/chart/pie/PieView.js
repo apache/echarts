@@ -94,9 +94,6 @@ function PiePiece(data, idx) {
     this.add(sector);
     this.add(polyline);
     this.add(text);
-    
-    var valueDim = data.mapDimension('value');
-    this._sum = data.getSum(valueDim) || 0;
 
     this.updateData(data, idx, true);
 }
@@ -204,13 +201,6 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     graphic.setHoverStyle(this);
 };
 
-piePieceProto._getLabelDisplayThresholdState = function (data, idx) {
-    var seriesModel = data.hostModel;
-    var valueDim = data.mapDimension('value');
-    var labelDisplayThreshold = seriesModel.get('labelDisplayThreshold');
-    return this._sum * labelDisplayThreshold > data.get(valueDim, idx);
-}
-
 piePieceProto._updateLabel = function (data, idx) {
 
     var labelLine = this.childAt(1);
@@ -221,7 +211,12 @@ piePieceProto._updateLabel = function (data, idx) {
     var layout = data.getItemLayout(idx);
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
-    var filterLabelIgnore = this._getLabelDisplayThresholdState(data, idx);
+
+    if (!labelLayout) {
+        labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
+        labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
+        return;
+    }
 
     graphic.updateProps(labelLine, {
         shape: {
@@ -265,11 +260,11 @@ piePieceProto._updateLabel = function (data, idx) {
         }
     );
 
-    labelText.ignore = labelText.normalIgnore = !labelModel.get('show') || filterLabelIgnore;
-    labelText.hoverIgnore = !labelHoverModel.get('show') || filterLabelIgnore;
+    labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
+    labelText.hoverIgnore = !labelHoverModel.get('show');
 
-    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show') || filterLabelIgnore;
-    labelLine.hoverIgnore = !labelLineHoverModel.get('show') || filterLabelIgnore;
+    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
+    labelLine.hoverIgnore = !labelLineHoverModel.get('show');
 
     // Default use item visual color
     labelLine.setStyle({
