@@ -35,6 +35,7 @@ import {summarizeDimensions} from './helper/dimensionHelper';
 var isObject = zrUtil.isObject;
 
 var UNDEFINED = 'undefined';
+var INDEX_NOT_FOUND = -1;
 
 // Use prefix to avoid index to be the same as otherIdList[idx],
 // which will cause weird udpate animation.
@@ -54,6 +55,7 @@ var dataCtors = {
 // Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
 // different from the Ctor of typed array.
 var CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
+var CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
 var CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
 
 function getIndicesCtor(list) {
@@ -599,13 +601,13 @@ function prepareInvertedIndex(list) {
         // Currently, only dimensions that has ordinalMeta can create inverted indices.
         var ordinalMeta = dimInfo.ordinalMeta;
         if (ordinalMeta) {
-            invertedIndices = invertedIndicesMap[dim] = new CtorUint32Array(
+            invertedIndices = invertedIndicesMap[dim] = new CtorInt32Array(
                 ordinalMeta.categories.length
             );
             // The default value of TypedArray is 0. To avoid miss
-            // mapping to 0, we should set it as NaN.
+            // mapping to 0, we should set it as INDEX_NOT_FOUND.
             for (var i = 0; i < invertedIndices.length; i++) {
-                invertedIndices[i] = NaN;
+                invertedIndices[i] = INDEX_NOT_FOUND;
             }
             for (var i = 0; i < list._count; i++) {
                 // Only support the case that all values are distinct.
@@ -970,7 +972,7 @@ listProto.rawIndexOf = function (dim, value) {
     }
     var rawIndex = invertedIndices[value];
     if (rawIndex == null || isNaN(rawIndex)) {
-        return -1;
+        return INDEX_NOT_FOUND;
     }
     return rawIndex;
 };
