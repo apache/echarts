@@ -224,6 +224,8 @@ function enterRegionHighDown(highDownRecord, toHighOrDown) {
             text: labelModel.get('show') ? normalText : null,
             textPosition: labelModel.getShallow('position') || 'bottom'
         }, {isRectText: true, useInsideStyle: false});
+        // Trigger normalize style like padding.
+        circle.dirty(false);
 
         if (circle.__mapOriginalZ2 != null) {
             circle.z2 = circle.__mapOriginalZ2;

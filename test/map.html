@@ -32,7 +32,7 @@ under the License.
     </head>
     <body>
 
-        <!-- <div id="main0"></div> -->
+        <div id="main0"></div>
         <div id="main1"></div>
 
 
@@ -61,8 +61,7 @@ under the License.
                     var option = {
                         tooltip: {},
                         title : {
-                            text: '内蒙古和青海没数据也要能被选中',
-                            subtext: '纯属虚构',
+                            text: '内蒙古 青海 没数据也要能被选中',
                             left: 'center'
                         },
                         legend: {
@@ -182,7 +181,7 @@ under the License.
                                     {name: '浙江',value: Math.round(Math.random()*1000)},
                                     {name: '江西',value: Math.round(Math.random()*1000)},
                                     {name: '山西',value: Math.round(Math.random()*1000)},
-                                    {name: '内蒙古',value: Math.round(Math.random()*1000)},
+                                    // {name: '内蒙古',value: 891},
                                     {name: '吉林',value: Math.round(Math.random()*1000)},
                                     {name: '福建',value: Math.round(Math.random()*1000)},
                                     {name: '广东',value: Math.round(Math.random()*1000)},
@@ -316,8 +315,11 @@ under the License.
                                     },
                                 },
                                 data:[
-                                    {name: '北京',value: 234},
-                                    {name: '天津',value: 432}
+                                    {name: '北京', value: 234},
+                                    {name: '天津', value: 432},
+                                    {name: '新疆', value: 100},
+                                    {name: '陕西', value: 77},
+                                    {name: '西藏', value: 101},
                                 ]
                             },
                             {
@@ -346,12 +348,15 @@ under the License.
                                 emphasis: {
                                     label: {
                                         show: true,
-                                        backgroundColor: '#ccc'
+                                        backgroundColor: '#fcf'
                                     }
                                 },
                                 data:[
                                     {name: '北京',value: 567},
-                                    {name: '河北',value: 321}
+                                    {name: '河北',value: 321},
+                                    {name: '新疆', value: 100},
+                                    {name: '内蒙古', value: 99},
+                                    {name: '西藏', value: 101}
                                 ]
                             }
                         ]
