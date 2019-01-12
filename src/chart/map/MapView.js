@@ -85,12 +85,12 @@ export default echarts.extendChartView({
         var originalData = mapModel.originalData;
         var group = this.group;
 
-        originalData.each(originalData.mapDimension('value'), function (value, idx) {
+        originalData.each(originalData.mapDimension('value'), function (value, originalDataIndex) {
             if (isNaN(value)) {
                 return;
             }
 
-            var layout = originalData.getItemLayout(idx);
+            var layout = originalData.getItemLayout(originalDataIndex);
 
             if (!layout || !layout.point) {
                 // Not exists in map
@@ -116,28 +116,44 @@ export default echarts.extendChartView({
                 },
                 silent: true,
                 // Do not overlap the first series, on which labels are displayed.
-                z2: !offset ? 10 : 8
+                z2: 8 + (!offset ? graphic.Z2_EMPHASIS_LIFT + 1 : 0)
             });
 
-            // First data on the same region
+            // Only the series that has the first value on the same region is in charge of rendering the label.
+            // But consider the case:
+            // series: [
+            //     {id: 'X', type: 'map', map: 'm', {data: [{name: 'A', value: 11}, {name: 'B', {value: 22}]},
+            //     {id: 'Y', type: 'map', map: 'm', {data: [{name: 'A', value: 21}, {name: 'C', {value: 33}]}
+            // ]
+            // The offset `0` of item `A` is at series `X`, but of item `C` is at series `Y`.
+            // For backward compatibility, we follow the rule that render label `A` by the
+            // settings on series `X` but render label `C` by the settings on series `Y`.
             if (!offset) {
+
                 var fullData = mapModel.mainSeries.getData();
-                var name = originalData.getName(idx);
+                var name = originalData.getName(originalDataIndex);
 
                 var fullIndex = fullData.indexOfName(name);
 
-                var itemModel = originalData.getItemModel(idx);
+                var itemModel = originalData.getItemModel(originalDataIndex);
                 var labelModel = itemModel.getModel('label');
                 var hoverLabelModel = itemModel.getModel('emphasis.label');
 
                 var polygonGroups = fullData.getItemGraphicEl(fullIndex);
 
+                // `getFormattedLabel` needs to use `getData` inside. Here
+                // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
+                // FIXME
+                // If this is not the `mainSeries`, the item model (like label formatter)
+                // set on original data item will never get. But it has been working
+                // like that from the begining, and this scenario is rarely encountered.
+                // So it won't be fixed until have to.
                 var normalText = zrUtil.retrieve2(
-                    mapModel.getFormattedLabel(idx, 'normal'),
+                    mapModel.getFormattedLabel(fullIndex, 'normal'),
                     name
                 );
                 var emphasisText = zrUtil.retrieve2(
-                    mapModel.getFormattedLabel(idx, 'emphasis'),
+                    mapModel.getFormattedLabel(fullIndex, 'emphasis'),
                     normalText
                 );
 
@@ -148,7 +164,7 @@ export default echarts.extendChartView({
                     circle.style.extendFrom(hoverStyle);
                     // Make label upper than others if overlaps.
                     circle.__mapOriginalZ2 = circle.z2;
-                    circle.z2 += 1;
+                    circle.z2 += graphic.Z2_EMPHASIS_LIFT;
                 };
 
                 var onNormal = function () {
