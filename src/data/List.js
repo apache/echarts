@@ -416,10 +416,10 @@ listProto.initData = function (data, nameList, dimValueGetter) {
     this.defaultDimValueGetter = defaultDimValueGetters[
         this._rawData.getSource().sourceFormat
     ];
-
     // Default dim value getter
     this._dimValueGetter = dimValueGetter = dimValueGetter
         || this.defaultDimValueGetter;
+    this._dimValueGetterArrayRows = defaultDimValueGetters.arrayRows;
 
     // Reset raw extent.
     this._rawExtent = {};
@@ -436,6 +436,9 @@ listProto.getProvider = function () {
     return this._rawData;
 };
 
+/**
+ * Caution: Can be only called on raw data (before `this._indices` created).
+ */
 listProto.appendData = function (data) {
     if (__DEV__) {
         zrUtil.assert(!this._indices, 'appendData can only be called on raw data.');
@@ -449,6 +452,71 @@ listProto.appendData = function (data) {
         end += start;
     }
     this._initDataFromProvider(start, end);
+};
+
+/**
+ * Caution: Can be only called on raw data (before `this._indices` created).
+ * This method does not modify `rawData` (`dataProvider`), but only
+ * add values to storage.
+ *
+ * The final count will be increased by `Math.max(values.length, names.length)`.
+ *
+ * @param {Array.<Array.<*>>} values That is the SourceType: 'arrayRows', like
+ *        [
+ *            [12, 33, 44],
+ *            [NaN, 43, 1],
+ *            ['-', 'asdf', 0]
+ *        ]
+ *        Each item is exaclty cooresponding to a dimension.
+ * @param {Array.<string>} [names]
+ */
+listProto.appendValues = function (values, names) {
+    var chunkSize = this._chunkSize;
+    var storage = this._storage;
+    var dimensions = this.dimensions;
+    var dimLen = dimensions.length;
+    var rawExtent = this._rawExtent;
+
+    var start = this.count();
+    var end = start + Math.max(values.length, names ? names.length : 0);
+    var originalChunkCount = this._chunkCount;
+
+    for (var i = 0; i < dimLen; i++) {
+        var dim = dimensions[i];
+        prepareChunks(storage, this._dimensionInfos[dim], chunkSize, originalChunkCount, end);
+        this._chunkCount = storage[dim].length;
+    }
+
+    var emptyDataItem = new Array(dimLen);
+    for (var idx = start; idx < end; idx++) {
+        var sourceIdx = idx - start;
+        var chunkIndex = Math.floor(idx / chunkSize);
+        var chunkOffset = idx % chunkSize;
+
+        // Store the data by dimensions
+        for (var k = 0; k < dimLen; k++) {
+            var dim = dimensions[k];
+            var val = this._dimValueGetterArrayRows(
+                values[sourceIdx] || emptyDataItem, dim, sourceIdx, k
+            );
+            storage[dim][chunkIndex][chunkOffset] = val;
+
+            var dimRawExtent = rawExtent[dim];
+            val < dimRawExtent[0] && (dimRawExtent[0] = val);
+            val > dimRawExtent[1] && (dimRawExtent[1] = val);
+        }
+
+        if (names) {
+            this._nameList[idx] = names[sourceIdx];
+        }
+    }
+
+    this._rawCount = this._count = end;
+
+    // Reset data extent
+    this._extent = {};
+
+    prepareInvertedIndex(this);
 };
 
 listProto._initDataFromProvider = function (start, end) {
@@ -469,8 +537,7 @@ listProto._initDataFromProvider = function (start, end) {
     var nameRepeatCount = this._nameRepeatCount = {};
     var nameDimIdx;
 
-    var chunkCount = this._chunkCount;
-    var lastChunkIndex = chunkCount - 1;
+    var originalChunkCount = this._chunkCount;
     for (var i = 0; i < dimLen; i++) {
         var dim = dimensions[i];
         if (!rawExtent[dim]) {
@@ -484,26 +551,13 @@ listProto._initDataFromProvider = function (start, end) {
         if (dimInfo.otherDims.itemId === 0) {
             this._idDimIdx = i;
         }
-        var DataCtor = dataCtors[dimInfo.type];
 
         if (!storage[dim]) {
             storage[dim] = [];
         }
-        var resizeChunkArray = storage[dim][lastChunkIndex];
-        if (resizeChunkArray && resizeChunkArray.length < chunkSize) {
-            var newStore = new DataCtor(Math.min(end - lastChunkIndex * chunkSize, chunkSize));
-            // The cost of the copy is probably inconsiderable
-            // within the initial chunkSize.
-            for (var j = 0; j < resizeChunkArray.length; j++) {
-                newStore[j] = resizeChunkArray[j];
-            }
-            storage[dim][lastChunkIndex] = newStore;
-        }
 
-        // Create new chunks.
-        for (var k = chunkCount * chunkSize; k < end; k += chunkSize) {
-            storage[dim].push(new DataCtor(Math.min(end - k, chunkSize)));
-        }
+        prepareChunks(storage, dimInfo, chunkSize, originalChunkCount, end);
+
         this._chunkCount = storage[dim].length;
     }
 
@@ -529,12 +583,8 @@ listProto._initDataFromProvider = function (start, end) {
             dimStorage[chunkOffset] = val;
 
             var dimRawExtent = rawExtent[dim];
-            if (val < dimRawExtent[0]) {
-                dimRawExtent[0] = val;
-            }
-            if (val > dimRawExtent[1]) {
-                dimRawExtent[1] = val;
-            }
+            val < dimRawExtent[0] && (dimRawExtent[0] = val);
+            val > dimRawExtent[1] && (dimRawExtent[1] = val);
         }
 
         // ??? FIXME not check by pure but sourceFormat?
@@ -592,6 +642,27 @@ listProto._initDataFromProvider = function (start, end) {
 
     prepareInvertedIndex(this);
 };
+
+function prepareChunks(storage, dimInfo, chunkSize, chunkCount, end) {
+    var DataCtor = dataCtors[dimInfo.type];
+    var lastChunkIndex = chunkCount - 1;
+    var dim = dimInfo.name;
+    var resizeChunkArray = storage[dim][lastChunkIndex];
+    if (resizeChunkArray && resizeChunkArray.length < chunkSize) {
+        var newStore = new DataCtor(Math.min(end - lastChunkIndex * chunkSize, chunkSize));
+        // The cost of the copy is probably inconsiderable
+        // within the initial chunkSize.
+        for (var j = 0; j < resizeChunkArray.length; j++) {
+            newStore[j] = resizeChunkArray[j];
+        }
+        storage[dim][lastChunkIndex] = newStore;
+    }
+
+    // Create new chunks.
+    for (var k = chunkCount * chunkSize; k < end; k += chunkSize) {
+        storage[dim].push(new DataCtor(Math.min(end - k, chunkSize)));
+    }
+}
 
 function prepareInvertedIndex(list) {
     var invertedIndicesMap = list._invertedIndicesMap;

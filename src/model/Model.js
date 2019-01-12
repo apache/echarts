@@ -37,7 +37,7 @@ var inner = makeInner();
 /**
  * @alias module:echarts/model/Model
  * @constructor
- * @param {Object} option
+ * @param {Object} [option]
  * @param {module:echarts/model/Model} [parentModel]
  * @param {module:echarts/model/Global} [ecModel]
  */
