@@ -310,7 +310,10 @@ under the License.
                                     }
                                 },
                                 emphasis: {
-                                    label: {show: true}
+                                    label: {
+                                        show: true,
+                                        backgroundColor: '#fcf'
+                                    },
                                 },
                                 data:[
                                     {name: '北京',value: 234},
@@ -341,7 +344,10 @@ under the License.
                                     }
                                 },
                                 emphasis: {
-                                    label: {show: true}
+                                    label: {
+                                        show: true,
+                                        backgroundColor: '#ccc'
+                                    }
                                 },
                                 data:[
                                     {name: '北京',value: 567},
@@ -357,6 +363,7 @@ under the License.
                         title: [
                             '1. 北京、天津、河北 rich text 正常倾斜（河北竖直）（其他 region 都没数据，显示 NaN）',
                             '2. selectedMode: "multiple"',
+                            '3. hover 时标签底色变红',
                             '所有 label 样式一致（例外：没数据的 label 并不 rotate，因为这还没支持）'
                         ]
                     });
