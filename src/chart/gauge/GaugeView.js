@@ -120,6 +120,9 @@ var GaugeView = ChartView.extend({
         }
 
         var getColor = function (percent) {
+            if (!clockwise) {
+                percent = 1 - percent;
+            }
             // Less than 0
             if (percent <= 0) {
                 return colorList[0][1];
@@ -152,10 +155,10 @@ var GaugeView = ChartView.extend({
         );
 
         this._renderTitle(
-            seriesModel, ecModel, api, getColor, posInfo
+            seriesModel, ecModel, api, getColor, posInfo, clockwise
         );
         this._renderDetail(
-            seriesModel, ecModel, api, getColor, posInfo
+            seriesModel, ecModel, api, getColor, posInfo, clockwise
         );
     },
 
@@ -168,8 +171,8 @@ var GaugeView = ChartView.extend({
         var cy = posInfo.cy;
         var r = posInfo.r;
 
-        var minVal = +seriesModel.get('min');
-        var maxVal = +seriesModel.get('max');
+        var minVal = clockwise ? +seriesModel.get('min') : +seriesModel.get('max');
+        var maxVal = clockwise ? +seriesModel.get('max') : +seriesModel.get('min');
 
         var splitLineModel = seriesModel.getModel('splitLine');
         var tickModel = seriesModel.getModel('axisTick');
@@ -286,7 +289,7 @@ var GaugeView = ChartView.extend({
             return;
         }
 
-        var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
+        var valueExtent = [clockwise ? +seriesModel.get('min') : +seriesModel.get('max'), clockwise ? +seriesModel.get('max') : +seriesModel.get('min')];
         var angleExtent = [startAngle, endAngle];
 
         var data = seriesModel.getData();
@@ -357,7 +360,7 @@ var GaugeView = ChartView.extend({
     },
 
     _renderTitle: function (
-        seriesModel, ecModel, api, getColor, posInfo
+        seriesModel, ecModel, api, getColor, posInfo, clockwise
     ) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
@@ -367,8 +370,8 @@ var GaugeView = ChartView.extend({
             var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
             var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
 
-            var minVal = +seriesModel.get('min');
-            var maxVal = +seriesModel.get('max');
+            var minVal = clockwise ? +seriesModel.get('min') : +seriesModel.get('max');
+            var maxVal = clockwise ? +seriesModel.get('max') : +seriesModel.get('min');
             var value = seriesModel.getData().get(valueDim, 0);
             var autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
@@ -389,11 +392,11 @@ var GaugeView = ChartView.extend({
     },
 
     _renderDetail: function (
-        seriesModel, ecModel, api, getColor, posInfo
+        seriesModel, ecModel, api, getColor, posInfo, clockwise
     ) {
         var detailModel = seriesModel.getModel('detail');
-        var minVal = +seriesModel.get('min');
-        var maxVal = +seriesModel.get('max');
+        var minVal = clockwise ? +seriesModel.get('min') : +seriesModel.get('max');
+        var maxVal = clockwise ? +seriesModel.get('max') : +seriesModel.get('min');
         if (detailModel.get('show')) {
             var offsetCenter = detailModel.get('offsetCenter');
             var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
