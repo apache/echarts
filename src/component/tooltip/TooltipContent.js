@@ -291,10 +291,8 @@ TooltipContent.prototype = {
         if (document.defaultView && document.defaultView.getComputedStyle) {
             var stl = document.defaultView.getComputedStyle(this.el);
             if (stl) {
-                width += parseInt(stl.paddingLeft, 10) + parseInt(stl.paddingRight, 10)
-                    + parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
-                height += parseInt(stl.paddingTop, 10) + parseInt(stl.paddingBottom, 10)
-                    + parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
+                width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
+                height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
             }
         }
 
