@@ -30,15 +30,6 @@ import {shouldShowAllLabels} from '../../coord/axisHelper';
 
 var PI = Math.PI;
 
-function makeAxisEventDataBase(axisModel) {
-    var eventData = {
-        componentType: axisModel.mainType,
-        componentIndex: axisModel.componentIndex
-    };
-    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
-    return eventData;
-}
-
 /**
  * A final axis is translated and rotated from a "standard axis".
  * So opt.position and opt.rotation is required.
@@ -354,7 +345,7 @@ var builders = {
 
             position: pos,
             rotation: labelLayout.rotation,
-            silent: isSilent(axisModel),
+            silent: isLabelSilent(axisModel),
             z2: 1,
             tooltip: (tooltipOpt && tooltipOpt.show)
                 ? extend({
@@ -391,6 +382,15 @@ var builders = {
         textEl.decomposeTransform();
     }
 
+};
+
+var makeAxisEventDataBase = AxisBuilder.makeAxisEventDataBase = function (axisModel) {
+    var eventData = {
+        componentType: axisModel.mainType,
+        componentIndex: axisModel.componentIndex
+    };
+    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
+    return eventData;
 };
 
 /**
@@ -470,14 +470,14 @@ function endTextLayout(opt, textPosition, textRotate, extent) {
     };
 }
 
-function isSilent(axisModel) {
+var isLabelSilent = AxisBuilder.isLabelSilent = function (axisModel) {
     var tooltipOpt = axisModel.get('tooltip');
     return axisModel.get('silent')
         // Consider mouse cursor, add these restrictions.
         || !(
             axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
         );
-}
+};
 
 function fixMinMaxLabelShow(axisModel, labelEls, tickEls) {
     if (shouldShowAllLabels(axisModel.axis)) {
@@ -645,7 +645,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     var rawCategoryData = axisModel.getCategories(true);
 
     var labelEls = [];
-    var silent = isSilent(axisModel);
+    var silent = isLabelSilent(axisModel);
     var triggerEvent = axisModel.get('triggerEvent');
 
     each(labels, function (labelItem, index) {
