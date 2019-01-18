@@ -49,7 +49,11 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
     el.downplay && el.downplay();
     el.traverse(function (child) {
         if (child.type !== 'group') {
-            child.setStyle('opacity', opacity);
+            var opct = child.lineLabelOriginalOpacity;
+            if (opct == null || opacityRatio != null) {
+                opct = opacity;
+            }
+            child.setStyle('opacity', opct);
         }
     });
 }
