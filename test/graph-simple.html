@@ -70,9 +70,6 @@ under the License.
                                         }
                                     }
                                 },
-                                lineStyle: {
-                                    width: 10
-                                },
                                 focusNodeAdjacency: focusNodeAdjacency,
                                 data: [{
                                     name: '节点1',
@@ -92,7 +89,13 @@ under the License.
                                     x: 550,
                                     y: 500
                                 }],
-                                // links: [],
+                                lineStyle: {
+                                    normal: {
+                                        width: 3,
+                                        color: '#184029',
+                                        curveness: 0
+                                    }
+                                },
                                 links: [{
                                     source: 0,
                                     target: 1,
@@ -149,12 +152,7 @@ under the License.
                                 }, {
                                     source: '节点1',
                                     target: '节点4'
-                                }],
-                                lineStyle: {
-                                    normal: {
-                                        curveness: 0
-                                    }
-                                }
+                                }]
                             }
                         ]
                     };
