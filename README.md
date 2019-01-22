@@ -161,6 +161,10 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 
 ECharts is available under the Apache License V2.
 
+## Code of Conduct
+
+Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
+
 ## Reference Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
