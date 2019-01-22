@@ -230,7 +230,8 @@ var builders = {
                     symbol.attr({
                         rotation: point.rotate,
                         position: pos,
-                        silent: true
+                        silent: true,
+                        z2: 11
                     });
                     this.group.add(symbol);
                 }
