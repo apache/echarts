@@ -32,6 +32,10 @@ under the License.
     </head>
     <body>
         <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
         </style>
 
 
@@ -110,10 +114,10 @@ under the License.
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
                         'Eventful: ',
-                        'Only this el trigger events: **red circle** and **red rect** of **dataIndex: 1**',
-                        '   Others not (green rect not)',
-                        'Events (click, mousedown, mousemove, mouseup) are printed in console log.',
-                        'red circle: params.info = 0, red rect: params.info = undefined'
+                        '+ red circle and red rect trigger events, but green shapes not. ',
+                        '+ Only dataIndex: 1 trigger event',
+                        '+ events (click, mousedown, mousemove, mouseup) are printed in console log.',
+                        '+ red circle: params.info = 0, red rect: params.info = undefined'
                     ],
                     option: option
                 });
@@ -125,7 +129,85 @@ under the License.
                     });
                 });
             });
+
         </script>
+
+
+
+
+        <script>
+
+            // require([
+            //     'echarts'/*, 'map/js/china' */
+            // ], function (echarts) {
+
+            //     // deprecated: this case would be wrong.
+
+            //     var option = {
+            //         xAxis: {
+            //             min: 90,
+            //             max: 120,
+            //             scale: true
+            //         },
+            //         yAxis: {
+            //             min: 50,
+            //             max: 500,
+            //             scale: true
+            //         },
+            //         dataZoom: [{
+            //             type: 'inside'
+            //         }, {
+            //             type: 'slider'
+            //         }],
+            //         series: [{
+            //             type: 'custom',
+            //             renderItem: function (params, api) {
+            //                 var pos = api.coord([api.value(0), api.value(1)]);
+            //                 var rectClipBy = {
+            //                     x: params.coordSys.x - pos[0],
+            //                     y: params.coordSys.y - pos[1],
+            //                     width: params.coordSys.width,
+            //                     height: params.coordSys.height
+            //                 };
+            //                 var points = echarts.graphic.clipPointsByRect([
+            //                     [0, 0],
+            //                     [50, -50],
+            //                     [90, -50],
+            //                     [140, 0],
+            //                     [90, 50]
+            //                 ], rectClipBy);
+
+            //                 return {
+            //                     type: 'polygon',
+            //                     position: pos,
+            //                     shape: {points: points},
+            //                     style: {
+            //                         fill: 'green'
+            //                     }
+            //                 }
+            //             },
+            //             data: [[100, 300]]
+            //         }]
+            //     };
+
+            //     var chart = testHelper.create(echarts, 'main1', {
+            //         title: [
+            //             'Test clipPointsByRect: dataZoom clip should be normal, especially when all clipped',
+            //         ],
+            //         option: option
+            //     });
+
+            // });
+
+        </script>
+
+
+
+
+
+
+
+
 
 
 
@@ -152,11 +234,9 @@ under the License.
                         scale: true
                     },
                     dataZoom: [{
-                        type: 'inside',
-                        filterMode: 'none'
+                        type: 'inside'
                     }, {
-                        type: 'slider',
-                        filterMode: 'none'
+                        type: 'slider'
                     }],
                     series: [{
                         type: 'custom',
@@ -190,7 +270,7 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        'The shape should be **clipped** by the grid. (TODO)',
+                        'Test clip shape',
                     ],
                     option: option
                 });
@@ -342,10 +422,18 @@ under the License.
                                 x: (x0 + x1) / 2,
                                 y: -blockHeight / 2,
                                 text: api.value(1),
-                                textFill: '#fff',
-                                textAlign: 'center',
-                                textVerticalAlign: 'middle'
+                                textFill: '#fff'
                             }
+                        // }, {
+                        //     type: 'text',
+                        //     style: {
+                        //         x: x3 - 5,
+                        //         y: -blockHeight,
+                        //         textAlign: 'right',
+                        //         textVerticalAlign: 'bottom',
+                        //         text: api.value(0),
+                        //         textFill: '#000'
+                        //     }
                         }]
                     };
                 }
@@ -353,7 +441,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main3', {
                     title: [
                         'Test SVG path data auto fit to rect: ',
-                        'the y axis label (made by custom series) should be center',
+                        'the y axis label (made by custom series) should be align with axis tick',
                     ],
                     option: option
                 });
