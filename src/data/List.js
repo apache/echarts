@@ -483,12 +483,6 @@ listProto.appendValues = function (values, names) {
 
     for (var i = 0; i < dimLen; i++) {
         var dim = dimensions[i];
-        if (!rawExtent[dim]) {
-            rawExtent[dim] = getInitialExtent();
-        }
-        if (!storage[dim]) {
-            storage[dim] = [];
-        }
         prepareChunks(storage, this._dimensionInfos[dim], chunkSize, originalChunkCount, end);
         this._chunkCount = storage[dim].length;
     }
