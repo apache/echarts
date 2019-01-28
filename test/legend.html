@@ -72,6 +72,7 @@ under the License.
         <div id="icon-circle"></div>
         <div id="only-single-item"></div>
         <div id="vary-size"></div>
+        <div id="index-to-no-name"></div>
 
         <script>
 
@@ -1067,8 +1068,6 @@ under the License.
                     });
                 }
 
-                var seriesInfo = makeSeries(50, 3);
-
                 var option = {
                     legend: [{
                         type: 'scroll',
@@ -1091,6 +1090,50 @@ under the License.
 
                 testHelper.create(echarts, 'vary-size', {
                     option: option,
+                    draggable: true
+                });
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var seriesInfo = makeSeries(50, 3);
+                var series = seriesInfo.series.slice();
+                series.shift();
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        data: seriesInfo.legendData
+                    }],
+                    tooltip: {
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                    },
+                    series: series
+                };
+
+                testHelper.create(echarts, 'index-to-no-name', {
+                    option: option,
+                    title: [
+                        'Pager should be OK when legend 0 (legendData index 0) is not be displayed.',
+                        'should be at **page 1** at the beginning'
+                    ],
                     draggable: true
                 });
             })
