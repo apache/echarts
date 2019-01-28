@@ -35,6 +35,6 @@
     "rollup": "0.50.0",
     "rollup-plugin-node-resolve": "3.0.0",
     "rollup-plugin-uglify": "2.0.1",
-    "zrender": "4.0.6"
+    "zrender": "4.0.5"
   }
 }
