@@ -216,7 +216,11 @@ lineProto._createLine = function (lineData, idx, seriesScope) {
     this.add(line);
 
     var label = new graphic.Text({
-        name: 'label'
+        name: 'label',
+        // FIXME
+        // Temporary solution for `focusNodeAdjacency`.
+        // line label do not use the opacity of lineStyle.
+        lineLabelOriginalOpacity: 1
     });
     this.add(label);
 

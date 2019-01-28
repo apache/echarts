@@ -32,12 +32,11 @@ body > .main {
 
 .test-title {
     padding: 20px;
-    background: #0a6d01;
-    /* background: rgb(182, 120, 7); */
-    color: #fff;
+    background: #242424;
+    color: #ddd;
     font-weight: normal;
     text-align: center;
-    font-size: 14px;
+    font-size: 16px;
 }
 .test-title-inner {
     display: inline-block;

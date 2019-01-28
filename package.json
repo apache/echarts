@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "4.2.0-rc.2",
+  "version": "4.2.1-rc.1",
   "description": "A powerful charting and visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -16,7 +16,7 @@
     "prepublish": "node build/build.js --prepublish"
   },
   "dependencies": {
-    "zrender": "4.0.5"
+    "zrender": "4.0.6"
   },
   "devDependencies": {
     "@babel/core": "7.0.0-beta.31",
