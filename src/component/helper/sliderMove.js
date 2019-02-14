@@ -75,7 +75,7 @@ export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpa
     if (minSpan != null && (
         currDistSign.sign !== originalDistSign.sign || currDistSign.span < minSpan
     )) {
-        // If minSpan exists, 'cross' is forbinden.
+        // If minSpan exists, 'cross' is forbidden.
         handleEnds[1 - handleIndex] = handleEnds[handleIndex] + originalDistSign.sign * minSpan;
     }
 

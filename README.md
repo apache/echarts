@@ -13,10 +13,12 @@ Please check its incubator status [here](http://incubator.apache.org/projects/ec
 
 ## Get ECharts
 
-+ Download [中文](http://echarts.baidu.com/download.html)
-+ Download [English](https://echarts.apache.org/download.html)
+You may choose one of the following methods:
 
++ Download from Official Website in [中文下载页](http://echarts.baidu.com/download.html)
++ Download from Official Website in [English](https://ecomfe.github.io/echarts-doc/public/en/download.html)
 + `npm install echarts --save`
++ CDN: [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
 
 ## Get ECharts GL
 
@@ -123,6 +125,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [recharts](https://github.com/taiyun/recharts) by taiyun
 + [recharts](https://github.com/yihui/recharts) by yihui
 + [ECharts2Shiny](https://github.com/XD-DENG/ECharts2Shiny) by XD-DENG
++ [echarts4r](https://github.com/JohnCoene/echarts4r) by JohnCoene
 
 #### Julia
 
