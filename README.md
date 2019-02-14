@@ -9,7 +9,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 Now ECharts is an incubator project of Apache Software Foundation.
 Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
 
-**[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](http://ecomfe.github.io/echarts-doc/public/en/index.html)**
+**[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
 
 ## Get ECharts
 
@@ -66,6 +66,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ### Developers Contributions
 
+
 #### GIS
 
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
@@ -74,6 +75,14 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [echarts-leaflet](https://github.com/gnijuohz/echarts-leaflet) by gnijuohz
 
 + [ol3Echarts](https://github.com/sakitam-fdd/ol3Echarts) by sakitam-fdd
+
+#### Map Data and Tools
+
++ [echarts-mapmaker](https://github.com/echarts-maps/echarts-mapmaker) by chfw
++ [echarts-cities-js](https://github.com/echarts-maps/echarts-cities-js) by chfw
++ [echarts-china-cities-js](https://github.com/echarts-maps/echarts-china-cities-js) by chfw
++ [echarts-countries-js](https://github.com/echarts-maps/echarts-countries-js) by chfw
+
 
 #### AngularJS Binding
 
@@ -88,6 +97,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 #### Vue Component
 
++ [vue-echarts](https://github.com/ecomfe/vue-echarts) by ecomfe
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
 + [vue-echarts-v3](https://github.com/xlsdg/vue-echarts-v3) by xlsdg
 
@@ -115,6 +125,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [recharts](https://github.com/taiyun/recharts) by taiyun
 + [recharts](https://github.com/yihui/recharts) by yihui
 + [ECharts2Shiny](https://github.com/XD-DENG/ECharts2Shiny) by XD-DENG
++ [echarts4r](https://github.com/JohnCoene/echarts4r) by JohnCoene
 
 #### Julia
 
@@ -153,9 +164,13 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 
 ECharts is available under the Apache License V2.
 
+## Code of Conduct
+
+Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
+
 ## Reference Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
-[ECharts: A Declarative Framework for Rapid Construction of Wed-based Visualization](http://www.cad.zju.edu.cn/home/vagblog/VAG_Work/echarts.pdf).
+[ECharts: A Declarative Framework for Rapid Construction of Wed-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).
 Visual Informatics, 2018.
 

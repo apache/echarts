@@ -85,8 +85,23 @@ var SankeySeries = SeriesModel.extend({
             }
             return encodeHTML(html);
         }
-
+        else if (dataType === 'node') {
+            var node = this.getGraph().getNodeByIndex(dataIndex);
+            var value = node.getLayout().value;
+            var name = this.getDataParams(dataIndex, dataType).data.name;
+            if (value) {
+                var html = name + ' : ' + value;
+            }
+            return encodeHTML(html);
+        }
         return SankeySeries.superCall(this, 'formatTooltip', dataIndex, multipleSeries);
+    },
+
+    optionUpdated: function () {
+        var option = this.option;
+        if (option.focusNodeAdjacency === true) {
+            option.focusNodeAdjacency = 'allEdges';
+        }
     },
 
     defaultOption: {
@@ -97,24 +112,28 @@ var SankeySeries = SeriesModel.extend({
 
         layout: null,
 
-        // the position of the whole view
+        // The position of the whole view
         left: '5%',
         top: '5%',
         right: '20%',
         bottom: '5%',
 
-        // the dx of the node
+        // Value can be 'vertical'
+        orient: 'horizontal',
+
+        // The dx of the node
         nodeWidth: 20,
 
-        // the vertical distance between two nodes
+        // The vertical distance between two nodes
         nodeGap: 8,
 
-        // control if the node can move or not
+        // Control if the node can move or not
         draggable: true,
-       
+
+        // Value can be 'inEdges', 'outEdges', 'allEdges', true (the same as 'allEdges').
         focusNodeAdjacency: false,
 
-        // the number of iterations to change the position of the node
+        // The number of iterations to change the position of the node
         layoutIterations: 32,
 
         label: {
@@ -123,6 +142,11 @@ var SankeySeries = SeriesModel.extend({
             color: '#000',
             fontSize: 12
         },
+
+        levels: [],
+
+        // Value can be 'left', 'right'
+        nodeAlign: 'justify',
 
         itemStyle: {
             borderWidth: 1,

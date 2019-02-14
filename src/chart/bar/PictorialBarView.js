@@ -629,12 +629,12 @@ function updateHoverAnimation(path, symbolMeta) {
     var scale = symbolMeta.symbolScale.slice();
 
     symbolMeta.hoverAnimation && path
-        .on('emphasis', function() {
+        .on('emphasis', function () {
             this.animateTo({
                 scale: [scale[0] * 1.1, scale[1] * 1.1]
             }, 400, 'elasticOut');
         })
-        .on('normal', function() {
+        .on('normal', function () {
             this.animateTo({
                 scale: scale.slice()
             }, 400, 'elasticOut');

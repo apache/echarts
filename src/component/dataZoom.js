@@ -17,20 +17,8 @@
 * under the License.
 */
 
-/**
- * DataZoom component entry
- */
+import './dataZoomSlider';
+import './dataZoomInside';
 
-import './dataZoom/typeDefaulter';
-
-import './dataZoom/DataZoomModel';
-import './dataZoom/DataZoomView';
-
-import './dataZoom/SliderZoomModel';
-import './dataZoom/SliderZoomView';
-
-import './dataZoom/InsideZoomModel';
-import './dataZoom/InsideZoomView';
-
-import './dataZoom/dataZoomProcessor';
-import './dataZoom/dataZoomAction';
+// Do not include './dataZoomSelect',
+// since it only work for toolbox dataZoom.

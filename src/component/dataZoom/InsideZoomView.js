@@ -47,7 +47,7 @@ var InsideZoomView = DataZoomView.extend({
     render: function (dataZoomModel, ecModel, api, payload) {
         InsideZoomView.superApply(this, 'render', arguments);
 
-        // Hance the `throttle` util ensures to preserve command order,
+        // Hence the `throttle` util ensures to preserve command order,
         // here simply updating range all the time will not cause missing
         // any of the the roam change.
         this._range = dataZoomModel.getPercentRange();
@@ -153,7 +153,10 @@ var roamHandlers = {
      * @this {module:echarts/component/dataZoom/InsideZoomView}
      */
     scrollMove: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e) {
-        return (range[1] - range[0]) * e.scrollDelta;
+        var directionInfo = getDirectionInfo[coordSysName](
+            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordInfo
+        );
+        return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
     })
 };
 

@@ -124,7 +124,7 @@ export default function (graph, scale) {
             vec2.copy(pts[0], originalPoints[0]);
             vec2.copy(pts[1], originalPoints[2]);
             vec2.copy(pts[2], originalPoints[1]);
-            if (fromSymbol && fromSymbol != 'none') {
+            if (fromSymbol && fromSymbol !== 'none') {
                 var symbolSize = getSymbolSize(edge.node1);
 
                 var t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
@@ -136,7 +136,7 @@ export default function (graph, scale) {
                 pts[0][1] = tmp0[3];
                 pts[1][1] = tmp0[4];
             }
-            if (toSymbol && toSymbol != 'none') {
+            if (toSymbol && toSymbol !== 'none') {
                 var symbolSize = getSymbolSize(edge.node2);
 
                 var t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
@@ -160,13 +160,13 @@ export default function (graph, scale) {
 
             vec2.sub(v, pts2[1], pts2[0]);
             vec2.normalize(v, v);
-            if (fromSymbol && fromSymbol != 'none') {
+            if (fromSymbol && fromSymbol !== 'none') {
 
                 var symbolSize = getSymbolSize(edge.node1);
 
                 vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
             }
-            if (toSymbol && toSymbol != 'none') {
+            if (toSymbol && toSymbol !== 'none') {
                 var symbolSize = getSymbolSize(edge.node2);
 
                 vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);

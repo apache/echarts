@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Uint8ClampedArray */
+
 /**
  * @file defines echarts Heatmap Chart
  * @author Ovilia (me@zhangwenli.com)
@@ -54,7 +56,7 @@ Heatmap.prototype = {
      * @param {number} width canvas width
      * @param {number} height canvas height
      */
-    update: function(data, width, height, normalize, colorFunc, isInRange) {
+    update: function (data, width, height, normalize, colorFunc, isInRange) {
         var brush = this._getBrush();
         var gradientInRange = this._getGradient(data, colorFunc, 'inRange');
         var gradientOutOfRange = this._getGradient(data, colorFunc, 'outOfRange');
@@ -95,7 +97,7 @@ Heatmap.prototype = {
         var maxOpacity = this.maxOpacity;
         var diffOpacity = maxOpacity - minOpacity;
 
-        while(offset < pixelLen) {
+        while (offset < pixelLen) {
             var alpha = pixels[offset + 3] / 256;
             var gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
             // Simple optimize to ignore the empty data
@@ -122,7 +124,7 @@ Heatmap.prototype = {
      * @private
      * @returns {Object} circle brush canvas
      */
-    _getBrush: function() {
+    _getBrush: function () {
         var brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
         // set brush size
         var r = this.pointSize + this.blurSize;

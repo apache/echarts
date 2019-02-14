@@ -164,7 +164,7 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
  *  rotation, position, labelOffset, labelDirection, labelMargin
  * }
  */
-export function getTransformedPosition (axis, value, layoutInfo) {
+export function getTransformedPosition(axis, value, layoutInfo) {
     var transform = matrix.create();
     matrix.rotate(transform, transform, layoutInfo.rotation);
     matrix.translate(transform, transform, layoutInfo.position);

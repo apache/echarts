@@ -28,7 +28,7 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
-import nest from '../../util/array/nest';
+import nest from '../../util/nest';
 
 var DATA_NAME_INDEX = 2;
 
@@ -48,6 +48,7 @@ var ThemeRiverSeries = SeriesModel.extend({
      * @override
      */
     init: function (option) {
+        // eslint-disable-next-line
         ThemeRiverSeries.superApply(this, 'init', arguments);
 
         // Put this function here is for the sake of consistency of code style.
@@ -217,11 +218,9 @@ var ThemeRiverSeries = SeriesModel.extend({
         var timeDim = data.mapDimension('single');
 
         for (var j = 0; j < layerSeries.length; ++j) {
-            layerSeries[j].indices.sort(comparer);
-        }
-
-        function comparer(index1, index2) {
-            return data.get(timeDim, index1) - data.get(timeDim, index2);
+            layerSeries[j].indices.sort(function (index1, index2) {
+                return data.get(timeDim, index1) - data.get(timeDim, index2);
+            });
         }
 
         return layerSeries;
@@ -229,7 +228,7 @@ var ThemeRiverSeries = SeriesModel.extend({
 
     /**
      * Get data indices for show tooltip content
-     *
+
      * @param {Array.<string>|string} dim  single coordinate dimension
      * @param {number} value axis value
      * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used

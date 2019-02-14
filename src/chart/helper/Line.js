@@ -60,22 +60,21 @@ function createSymbol(name, lineData, idx) {
 
 function createLine(points) {
     var line = new LinePath({
-        name: 'line'
+        name: 'line',
+        subPixelOptimize: true
     });
     setLinePoints(line.shape, points);
     return line;
 }
 
 function setLinePoints(targetShape, points) {
-    var p1 = points[0];
-    var p2 = points[1];
-    var cp1 = points[2];
-    targetShape.x1 = p1[0];
-    targetShape.y1 = p1[1];
-    targetShape.x2 = p2[0];
-    targetShape.y2 = p2[1];
+    targetShape.x1 = points[0][0];
+    targetShape.y1 = points[0][1];
+    targetShape.x2 = points[1][0];
+    targetShape.y2 = points[1][1];
     targetShape.percent = 1;
 
+    var cp1 = points[2];
     if (cp1) {
         targetShape.cpx1 = cp1[0];
         targetShape.cpy1 = cp1[1];
@@ -86,7 +85,7 @@ function setLinePoints(targetShape, points) {
     }
 }
 
-function updateSymbolAndLabelBeforeLineUpdate () {
+function updateSymbolAndLabelBeforeLineUpdate() {
     var lineGroup = this;
     var symbolFrom = lineGroup.childOfName('fromSymbol');
     var symbolTo = lineGroup.childOfName('toSymbol');
@@ -206,7 +205,6 @@ lineProto.beforeUpdate = updateSymbolAndLabelBeforeLineUpdate;
 lineProto._createLine = function (lineData, idx, seriesScope) {
     var seriesModel = lineData.hostModel;
     var linePoints = lineData.getItemLayout(idx);
-
     var line = createLine(linePoints);
     line.shape.percent = 0;
     graphic.initProps(line, {
@@ -218,7 +216,11 @@ lineProto._createLine = function (lineData, idx, seriesScope) {
     this.add(line);
 
     var label = new graphic.Text({
-        name: 'label'
+        name: 'label',
+        // FIXME
+        // Temporary solution for `focusNodeAdjacency`.
+        // line label do not use the opacity of lineStyle.
+        lineLabelOriginalOpacity: 1
     });
     this.add(label);
 
@@ -242,6 +244,7 @@ lineProto.updateData = function (lineData, idx, seriesScope) {
     var target = {
         shape: {}
     };
+
     setLinePoints(target.shape, linePoints);
     graphic.updateProps(line, target, seriesModel, idx);
 

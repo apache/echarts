@@ -1,45 +1,22 @@
 {
   "name": "echarts",
-  "version": "4.1.0",
+  "version": "4.2.1-rc.1",
   "description": "A powerful charting and visualization library for browser",
+  "license": "Apache-2.0",
   "keywords": [
     "visualization",
     "canvas"
   ],
-  "homepage": "http://echarts.baidu.com/",
-  "author": [
-    {
-      "name": "Kenner",
-      "email": "kener.linfeng@gmail.com"
-    },
-    {
-      "name": "Yi Shen",
-      "url": "https://github.com/pissang"
-    },
-    {
-      "name": "Shuang Su",
-      "url": "https://github.com/100pah"
-    },
-    {
-      "name": "Ovilia",
-      "url": "https://github.com/Ovilia"
-    }
-  ],
-  "contributors": [
-    {
-      "name": "erik",
-      "email": "errorrik@gmail.com"
-    }
-  ],
+  "homepage": "http://echarts.apache.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ecomfe/echarts.git"
+    "url": "https://github.com/apache/incubator-echarts.git"
   },
   "scripts": {
     "prepublish": "node build/build.js --prepublish"
   },
   "dependencies": {
-    "zrender": "4.0.4"
+    "zrender": "4.0.6"
   },
   "devDependencies": {
     "@babel/core": "7.0.0-beta.31",
@@ -57,7 +34,6 @@
     "glob": "7.0.0",
     "rollup": "0.50.0",
     "rollup-plugin-node-resolve": "3.0.0",
-    "rollup-plugin-uglify": "2.0.1",
-    "zrender": "4.0.4"
+    "rollup-plugin-uglify": "2.0.1"
   }
 }

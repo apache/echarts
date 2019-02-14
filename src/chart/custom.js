@@ -18,13 +18,14 @@
 */
 
 import {__DEV__} from '../config';
-import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
-import { getLayoutOnAxis } from '../layout/barGrid';
+import {getLayoutOnAxis} from '../layout/barGrid';
 import DataDiffer from '../data/DataDiffer';
+import SeriesModel from '../model/Series';
+import ChartView from '../view/Chart';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
 import prepareGeo from '../coord/geo/prepareCustom';
@@ -60,11 +61,12 @@ var prepareCustoms = {
     calendar: prepareCalendar
 };
 
+
 // ------
 // Model
 // ------
 
-echarts.extendSeriesModel({
+SeriesModel.extend({
 
     type: 'series.custom',
 
@@ -74,7 +76,9 @@ echarts.extendSeriesModel({
         coordinateSystem: 'cartesian2d', // Can be set as 'none'
         zlevel: 0,
         z: 2,
-        legendHoverLink: true
+        legendHoverLink: true,
+
+        useTransform: true
 
         // Cartesian coordinate system
         // xAxisIndex: 0,
@@ -90,8 +94,20 @@ echarts.extendSeriesModel({
         // itemStyle: {}
     },
 
+    /**
+     * @override
+     */
     getInitialData: function (option, ecModel) {
         return createListFromArray(this.getSource(), this);
+    },
+
+    /**
+     * @override
+     */
+    getDataParams: function (dataIndex, dataType, el) {
+        var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
+        el && (params.info = el.info);
+        return params;
     }
 });
 
@@ -99,7 +115,7 @@ echarts.extendSeriesModel({
 // View
 // -----
 
-echarts.extendChartView({
+ChartView.extend({
 
     type: 'custom',
 
@@ -112,24 +128,27 @@ echarts.extendChartView({
     /**
      * @override
      */
-    render: function (customSeries, ecModel, api) {
+    render: function (customSeries, ecModel, api, payload) {
         var oldData = this._data;
         var data = customSeries.getData();
         var group = this.group;
         var renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
-        this.group.removeAll();
-
+        // By default, merge mode is applied. In most cases, custom series is
+        // used in the scenario that data amount is not large but graphic elements
+        // is complicated, where merge mode is probably necessary for optimization.
+        // For example, reuse graphic elements and only update the transform when
+        // roam or data zoom according to `actionType`.
         data.diff(oldData)
             .add(function (newIdx) {
                 createOrUpdate(
-                    null, newIdx, renderItem(newIdx), customSeries, group, data
+                    null, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .update(function (newIdx, oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
                 createOrUpdate(
-                    el, newIdx, renderItem(newIdx), customSeries, group, data
+                    el, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .remove(function (oldIdx) {
@@ -146,7 +165,7 @@ echarts.extendChartView({
         this._data = null;
     },
 
-    incrementalRender: function (params, customSeries, ecModel, api) {
+    incrementalRender: function (params, customSeries, ecModel, api, payload) {
         var data = customSeries.getData();
         var renderItem = makeRenderItem(customSeries, data, ecModel, api);
         function setIncrementalAndHoverLayer(el) {
@@ -156,7 +175,7 @@ echarts.extendChartView({
             }
         }
         for (var idx = params.start; idx < params.end; idx++) {
-            var el = createOrUpdate(null, idx, renderItem(idx), customSeries, this.group, data);
+            var el = createOrUpdate(null, idx, renderItem(idx, payload), customSeries, this.group, data);
             el.traverse(setIncrementalAndHoverLayer);
         }
     },
@@ -164,7 +183,27 @@ echarts.extendChartView({
     /**
      * @override
      */
-    dispose: zrUtil.noop
+    dispose: zrUtil.noop,
+
+    /**
+     * @override
+     */
+    filterForExposedEvent: function (eventType, query, targetEl, packedEvent) {
+        var elementName = query.element;
+        if (elementName == null || targetEl.name === elementName) {
+            return true;
+        }
+
+        // Enable to give a name on a group made by `renderItem`, and listen
+        // events that triggerd by its descendents.
+        while ((targetEl = targetEl.parent) && targetEl !== this.group) {
+            if (targetEl.name === elementName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 });
 
 
@@ -174,27 +213,26 @@ function createEl(elOption) {
 
     if (graphicType === 'path') {
         var shape = elOption.shape;
-        el = graphicUtil.makePath(
-            shape.pathData,
-            null,
-            {
+        // Using pathRect brings convenience to users sacle svg path.
+        var pathRect = (shape.width != null && shape.height != null)
+            ? {
                 x: shape.x || 0,
                 y: shape.y || 0,
-                width: shape.width || 0,
-                height: shape.height || 0
-            },
-            'center'
-        );
-        el.__customPathData = elOption.pathData;
+                width: shape.width,
+                height: shape.height
+            }
+            : null;
+        var pathData = getPathData(shape);
+        // Path is also used for icon, so layout 'center' by default.
+        el = graphicUtil.makePath(pathData, null, pathRect, shape.layout || 'center');
+        el.__customPathData = pathData;
     }
     else if (graphicType === 'image') {
-        el = new graphicUtil.Image({
-        });
+        el = new graphicUtil.Image({});
         el.__customImagePath = elOption.style.image;
     }
     else if (graphicType === 'text') {
-        el = new graphicUtil.Text({
-        });
+        el = new graphicUtil.Text({});
         el.__customText = elOption.style.text;
     }
     else {
@@ -213,25 +251,25 @@ function createEl(elOption) {
     return el;
 }
 
-function updateEl(el, dataIndex, elOption, animatableModel, data, isInit) {
-    var targetProps = {};
+function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot) {
+    var transitionProps = {};
     var elOptionStyle = elOption.style || {};
 
-    elOption.shape && (targetProps.shape = zrUtil.clone(elOption.shape));
-    elOption.position && (targetProps.position = elOption.position.slice());
-    elOption.scale && (targetProps.scale = elOption.scale.slice());
-    elOption.origin && (targetProps.origin = elOption.origin.slice());
-    elOption.rotation && (targetProps.rotation = elOption.rotation);
+    elOption.shape && (transitionProps.shape = zrUtil.clone(elOption.shape));
+    elOption.position && (transitionProps.position = elOption.position.slice());
+    elOption.scale && (transitionProps.scale = elOption.scale.slice());
+    elOption.origin && (transitionProps.origin = elOption.origin.slice());
+    elOption.rotation && (transitionProps.rotation = elOption.rotation);
 
     if (el.type === 'image' && elOption.style) {
-        var targetStyle = targetProps.style = {};
+        var targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
     }
 
     if (el.type === 'text' && elOption.style) {
-        var targetStyle = targetProps.style = {};
+        var targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
@@ -258,16 +296,40 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit) {
     }
 
     if (isInit) {
-        el.attr(targetProps);
+        el.attr(transitionProps);
     }
     else {
-        graphicUtil.updateProps(el, targetProps, animatableModel, dataIndex);
+        graphicUtil.updateProps(el, transitionProps, animatableModel, dataIndex);
     }
 
+    // Merge by default.
     // z2 must not be null/undefined, otherwise sort error may occur.
-    el.attr({z2: elOption.z2 || 0, silent: elOption.silent});
+    elOption.hasOwnProperty('z2') && el.attr('z2', elOption.z2 || 0);
+    elOption.hasOwnProperty('silent') && el.attr('silent', elOption.silent);
+    elOption.hasOwnProperty('invisible') && el.attr('invisible', elOption.invisible);
+    elOption.hasOwnProperty('ignore') && el.attr('ignore', elOption.ignore);
+    // `elOption.info` enables user to mount some info on
+    // elements and use them in event handlers.
+    // Update them only when user specified, otherwise, remain.
+    elOption.hasOwnProperty('info') && el.attr('info', elOption.info);
 
-    elOption.styleEmphasis !== false && graphicUtil.setHoverStyle(el, elOption.styleEmphasis);
+    // If `elOption.styleEmphasis` is `false`, remove hover style. The
+    // logic is ensured by `graphicUtil.setElementHoverStyle`.
+    var styleEmphasis = elOption.styleEmphasis;
+    var disableStyleEmphasis = styleEmphasis === false;
+    if (!(
+        // Try to escapse setting hover style for performance.
+        (el.__cusHasEmphStl && styleEmphasis == null)
+        || (!el.__cusHasEmphStl && disableStyleEmphasis)
+    )) {
+        // Should not use graphicUtil.setHoverStyle, since the styleEmphasis
+        // should not be share by group and its descendants.
+        graphicUtil.setElementHoverStyle(el, styleEmphasis);
+        el.__cusHasEmphStl = !disableStyleEmphasis;
+    }
+    if (isRoot) {
+        graphicUtil.setAsHighDownDispatcher(el, !disableStyleEmphasis);
+    }
 }
 
 function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, isInit) {
@@ -311,6 +373,9 @@ function makeRenderItem(customSeries, data, ecModel, api) {
     }, prepareResult.api || {});
 
     var userParams = {
+        // The life cycle of context: current round of rendering.
+        // The global life cycle is probably not necessary, because
+        // user can store global status by themselves.
         context: {},
         seriesId: customSeries.id,
         seriesName: customSeries.name,
@@ -328,16 +393,19 @@ function makeRenderItem(customSeries, data, ecModel, api) {
     var currLabelEmphasisModel;
     var currVisualColor;
 
-    return function (dataIndexInside) {
+    return function (dataIndexInside, payload) {
         currDataIndexInside = dataIndexInside;
         currDirty = true;
+
         return renderItem && renderItem(
             zrUtil.defaults({
                 dataIndexInside: dataIndexInside,
-                dataIndex: data.getRawIndex(dataIndexInside)
+                dataIndex: data.getRawIndex(dataIndexInside),
+                // Can be used for optimization when zoom or roam.
+                actionType: payload ? payload.type : null
             }, userParams),
             userAPI
-        ) || {};
+        );
     };
 
     // Do not update cache until api called.
@@ -488,70 +556,133 @@ function wrapEncodeDef(data) {
 }
 
 function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
-    el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data);
+    el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
     return el;
 }
 
-function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
+function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, isRoot) {
+
+    // [Rule]
+    // By default, follow merge mode.
+    //     (It probably brings benifit for performance in some cases of large data, where
+    //     user program can be optimized to that only updated props needed to be re-calculated,
+    //     or according to `actionType` some calculation can be skipped.)
+    // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.
+    //     (It seems that violate the "merge" principle, but most of users probably intuitively
+    //     regard "return;" as "show nothing element whatever", so make a exception to meet the
+    //     most cases.)
+
+    var simplyRemove = !elOption; // `null`/`undefined`/`false`
+    elOption = elOption || {};
     var elOptionType = elOption.type;
-    if (el
-        && elOptionType !== el.__customGraphicType
-        && (elOptionType !== 'path' || elOption.pathData !== el.__customPathData)
-        && (elOptionType !== 'image' || elOption.style.image !== el.__customImagePath)
-        && (elOptionType !== 'text' || elOption.style.text !== el.__customText)
-    ) {
+    var elOptionShape = elOption.shape;
+    var elOptionStyle = elOption.style;
+
+    if (el && (
+        simplyRemove
+        // || elOption.$merge === false
+        // If `elOptionType` is `null`, follow the merge principle.
+        || (elOptionType != null
+            && elOptionType !== el.__customGraphicType
+        )
+        || (elOptionType === 'path'
+            && hasOwnPathData(elOptionShape) && getPathData(elOptionShape) !== el.__customPathData
+        )
+        || (elOptionType === 'image'
+            && hasOwn(elOptionStyle, 'image') && elOptionStyle.image !== el.__customImagePath
+        )
+        // FIXME test and remove this restriction?
+        || (elOptionType === 'text'
+            && hasOwn(elOptionShape, 'text') && elOptionStyle.text !== el.__customText
+        )
+    )) {
         group.remove(el);
         el = null;
     }
 
     // `elOption.type` is undefined when `renderItem` returns nothing.
-    if (elOptionType == null) {
+    if (simplyRemove) {
         return;
     }
 
     var isInit = !el;
     !el && (el = createEl(elOption));
-    updateEl(el, dataIndex, elOption, animatableModel, data, isInit);
+    updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot);
 
     if (elOptionType === 'group') {
-        var oldChildren = el.children() || [];
-        var newChildren = elOption.children || [];
-
-        if (elOption.diffChildrenByName) {
-            // lower performance.
-            diffGroupChildren({
-                oldChildren: oldChildren,
-                newChildren: newChildren,
-                dataIndex: dataIndex,
-                animatableModel: animatableModel,
-                group: el,
-                data: data
-            });
-        }
-        else {
-            // better performance.
-            var index = 0;
-            for (; index < newChildren.length; index++) {
-                doCreateOrUpdate(
-                    el.childAt(index),
-                    dataIndex,
-                    newChildren[index],
-                    animatableModel,
-                    el,
-                    data
-                );
-            }
-            for (; index < oldChildren.length; index++) {
-                oldChildren[index] && el.remove(oldChildren[index]);
-            }
-        }
+        mergeChildren(el, dataIndex, elOption, animatableModel, data);
     }
 
+    // Always add whatever already added to ensure sequence.
     group.add(el);
 
     return el;
+}
+
+// Usage:
+// (1) By default, `elOption.$mergeChildren` is `'byIndex'`, which indicates that
+//     the existing children will not be removed, and enables the feature that
+//     update some of the props of some of the children simply by construct
+//     the returned children of `renderItem` like:
+//     `var children = group.children = []; children[3] = {opacity: 0.5};`
+// (2) If `elOption.$mergeChildren` is `'byName'`, add/update/remove children
+//     by child.name. But that might be lower performance.
+// (3) If `elOption.$mergeChildren` is `false`, the existing children will be
+//     replaced totally.
+// (4) If `!elOption.children`, following the "merge" principle, nothing will happen.
+//
+// For implementation simpleness, do not provide a direct way to remove sinlge
+// child (otherwise the total indicies of the children array have to be modified).
+// User can remove a single child by set its `ignore` as `true` or replace
+// it by another element, where its `$merge` can be set as `true` if necessary.
+function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
+    var newChildren = elOption.children;
+    var newLen = newChildren ? newChildren.length : 0;
+    var mergeChildren = elOption.$mergeChildren;
+    // `diffChildrenByName` has been deprecated.
+    var byName = mergeChildren === 'byName' || elOption.diffChildrenByName;
+    var notMerge = mergeChildren === false;
+
+    // For better performance on roam update, only enter if necessary.
+    if (!newLen && !byName && !notMerge) {
+        return;
+    }
+
+    if (byName) {
+        diffGroupChildren({
+            oldChildren: el.children() || [],
+            newChildren: newChildren || [],
+            dataIndex: dataIndex,
+            animatableModel: animatableModel,
+            group: el,
+            data: data
+        });
+        return;
+    }
+
+    notMerge && el.removeAll();
+
+    // Mapping children of a group simply by index, which
+    // might be better performance.
+    var index = 0;
+    for (; index < newLen; index++) {
+        newChildren[index] && doCreateOrUpdate(
+            el.childAt(index),
+            dataIndex,
+            newChildren[index],
+            animatableModel,
+            el,
+            data
+        );
+    }
+    if (__DEV__) {
+        zrUtil.assert(
+            !notMerge || el.childCount() === index,
+            'MUST NOT contain empty item in children array when `group.$mergeChildren` is `false`.'
+        );
+    }
 }
 
 function diffGroupChildren(context) {
@@ -592,4 +723,17 @@ function processRemove(oldIndex) {
     var context = this.context;
     var child = context.oldChildren[oldIndex];
     child && context.group.remove(child);
+}
+
+function getPathData(shape) {
+    // "d" follows the SVG convention.
+    return shape && (shape.pathData || shape.d);
+}
+
+function hasOwnPathData(shape) {
+    return shape && (shape.hasOwnProperty('pathData') || shape.hasOwnProperty('d'));
+}
+
+function hasOwn(host, prop) {
+    return host && host.hasOwnProperty(prop);
 }

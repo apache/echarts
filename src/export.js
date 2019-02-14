@@ -26,7 +26,7 @@ import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
 import * as colorTool from 'zrender/src/tool/color';
-import * as graphic from './util/graphic';
+import * as graphicUtil from './util/graphic';
 import * as numberUtil from './util/number';
 import * as formatUtil from './util/format';
 import {throttle} from './util/throttle';
@@ -38,7 +38,6 @@ export {zrender};
 export {default as List} from './data/List';
 export {default as Model} from './model/Model';
 export {default as Axis} from './coord/Axis';
-export {graphic};
 export {numberUtil as number};
 export {formatUtil as format};
 export {throttle};
@@ -52,7 +51,8 @@ export {parseGeoJSON};
 export var parseGeoJson = parseGeoJSON;
 
 var ecUtil = {};
-zrUtil.each([
+zrUtil.each(
+    [
         'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
         'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction',
         'extend', 'defaults', 'clone', 'merge'
@@ -62,3 +62,35 @@ zrUtil.each([
     }
 );
 export {ecUtil as util};
+
+var graphic = {};
+zrUtil.each(
+    [
+        'extendShape', 'extendPath', 'makePath', 'makeImage',
+        'mergePath', 'resizePath', 'createIcon',
+        'setHoverStyle', 'setLabelStyle', 'setTextStyle', 'setText',
+        'getFont', 'updateProps', 'initProps', 'getTransform',
+        'clipPointsByRect', 'clipRectByRect',
+        'Group',
+        'Image',
+        'Text',
+        'Circle',
+        'Sector',
+        'Ring',
+        'Polygon',
+        'Polyline',
+        'Rect',
+        'Line',
+        'BezierCurve',
+        'Arc',
+        'IncrementalDisplayable',
+        'CompoundPath',
+        'LinearGradient',
+        'RadialGradient',
+        'BoundingRect'
+    ],
+    function (name) {
+        graphic[name] = graphicUtil[name];
+    }
+);
+export {graphic};

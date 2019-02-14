@@ -26,6 +26,8 @@ under the License.
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="ut/lib/canteen.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css">
     </head>
@@ -41,6 +43,7 @@ under the License.
         <div class="chart" id="main1"></div>
         <div class="chart" id="main2"></div>
         <div class="chart" id="main3"></div>
+        <div class="chart" id="main4"></div>
 
 
 
@@ -257,7 +260,11 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-                var chart = echarts.init(document.getElementById('main3'));
+                var el = document.getElementById('main3');
+                if (!el) {
+                    return;
+                }
+                var chart = echarts.init(el);
                 var rotate = 30;
 
                 option = {
@@ -301,6 +308,76 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    backgroundColor: '#eee',
+                    "xAxis": {
+                        "type": "category",
+                        "data": [
+                            "2018-10-08",
+                            "2018-10-09"
+                        ]
+                    },
+                    "yAxis": {
+                        "type": "value",
+                        "axisLabel": {
+                            "color": "red",
+                            formatter: function (value, index) {
+                                if (index === 0){
+                                    // Used to make yAxis label not show (a bug).
+                                    return '';
+                                } else {
+                                    return value + '';
+                                }
+                            }
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        "z": 3
+                    },
+                    animation: false,
+                    "tooltip": {
+                        "trigger": "axis"
+                    },
+                    "series": [
+                        {
+                            "type": "line",
+                            "data": [
+                                1231212,
+                                32341323
+                            ]
+                        }
+                    ]
+                }
+
+                testHelper.create(echarts, 'main4', {
+                    title: 'Label of yAxis should be RED, but 0 label does not display',
+                    option: option,
+                    recordCanvas: true
+                });
+            });
+
+        </script>
+
+
 
     </body>
 </html>

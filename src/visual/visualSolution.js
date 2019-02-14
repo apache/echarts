@@ -28,7 +28,7 @@ var each = zrUtil.each;
 
 function hasKeys(obj) {
     if (obj) {
-        for (var name in obj){
+        for (var name in obj) {
             if (obj.hasOwnProperty(name)) {
                 return true;
             }
@@ -195,7 +195,7 @@ export function incrementalApplyVisual(stateList, visualMappings, getValueState,
 
             // Consider performance
             if (rawDataItem && rawDataItem.visualMap === false) {
-                return;
+                continue;
             }
 
             var value = dim != null

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: [{
+                        type: 'category',
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: {
+                            rotate: 45,
+                            margin: 12,
+                        },
+                        data: ['asd','bb','cc'],
+                    }],
+
+                    yAxis: {
+                        nameTextStyle: {
+                        color: '#aaa',
+                        },
+                        nameGap: 35,
+                        type: 'value',
+                        axisTick: { show: false },
+                        axisLine: { show: false }
+                    },
+
+                    grid: {
+                        left: 40,
+                        right: 10,
+                        bottom: 50,
+                        top: 10,
+                        containLabel: true,
+                        show: true,
+                        borderWidth: 0,
+                    },
+
+                    series: [{
+                        type: 'bar',
+                        data: [
+                            12, 44, 53
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: 'drag and minimize y, check dynamic splitNumber',
+                    option: option
+                });
+
+                draggable.init(
+                    document.querySelector('#main0 .test-chart'),
+                    chart,
+                    {throttle: 70, onDrag: onDrag}
+                );
+
+                function onDrag() {
+                    var height = chart.getHeight();
+                    var splitNumber = height < 200
+                        ? 2
+                        : height < 300
+                        ? 4
+                        : null;
+                    console.log(height, splitNumber);
+                    chart.setOption({
+                        yAxis: {splitNumber: splitNumber}
+                    });
+                    chart.resize();
+                }
+            });
+
+        </script>
+    </body>
+</html>

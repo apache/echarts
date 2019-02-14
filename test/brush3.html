@@ -39,7 +39,66 @@ under the License.
         </style>
 
 
+        <div id="main1"></div>
         <div id="main0"></div>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [];
+                for (var i = 0; i < 10; i++) {
+                    data.push([
+                        Math.random() * 10,
+                        Math.random() * 10
+                    ]);
+                }
+
+                var option = {
+                    toolbox: {
+                        left: 10
+                    },
+                    brush: {
+                        xAxisIndex: 'all',
+                        removeOnClick: true,
+                        brushMode: 'single'
+                    },
+                    xAxis: {
+                        min: 0,
+                        max: 10
+                    },
+                    yAxis: {
+                        min: 0,
+                        max: 10
+                    },
+                    series: {
+                        type: 'bar',
+                        data: data
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: 'removeOnClick',
+                    height: 200,
+                    option: option
+                });
+
+                chart && chart.on('brushSelected', function () {
+                    console.log('brushSelecteddd');
+                });
+            });
+
+        </script>
+
 
 
         <script>
@@ -108,5 +167,13 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+
+
+
     </body>
 </html>

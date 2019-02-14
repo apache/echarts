@@ -28,7 +28,7 @@ export default echarts.extendComponentModel({
     defaultOption: {
         zlevel: 0,
 
-        z: 8,
+        z: 60,
 
         show: true,
 
@@ -45,6 +45,11 @@ export default echarts.extendComponentModel({
         alwaysShowContent: false,
 
         displayMode: 'single', // 'single' | 'multipleByCoordSys'
+
+        renderMode: 'auto', // 'auto' | 'html' | 'richText'
+        // 'auto': use html by default, and use non-html if `document` is not defined
+        // 'html': use html for tooltip
+        // 'richText': use canvas, svg, and etc. for tooltip
 
         // 位置 {Array} | {Function}
         // position: null

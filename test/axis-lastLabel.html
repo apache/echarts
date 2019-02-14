@@ -47,6 +47,7 @@ under the License.
         <div class="chart" id="chart0"></div>
         <div class="chart" id="chart1"></div>
         <div class="chart" id="chart2"></div>
+        <div class="chart" id="chart3"></div>
 
 
 
@@ -353,6 +354,108 @@ under the License.
 
         </script>
 
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/rainfall.json',
+                'echarts'
+            ], function (rainfallData, echarts) {
+
+                var chart = echarts.init(document.getElementById('chart1'), null, {
+
+                });
+
+                var option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                            type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                    },
+                    legend: {
+                        data: ['直接访问', '邮件营销','联盟广告','视频广告','搜索引擎']
+                    },
+                    grid: [{
+                        height: 80,
+                        width: '40%',
+                        containLabel: true
+                    }, {
+                        height: 80,
+                        right: 10,
+                        width: '40%',
+                        containLabel: true
+                    }],
+                    xAxis: [{
+                        type: 'value'
+                    }, {
+                        type: 'value',
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
+                        axisLabel: {
+                            interval: 0,
+                            textStyle: {
+                                fontSize: 18
+                            }
+                        },
+                        type: 'category',
+                        data: ['周 A','周 B','周 C','周 D','周 E','周 F','周 G']
+                    }, {
+                        gridIndex: 1,
+                        axisLabel: {
+                            interval: 0,
+                            textStyle: {
+                                fontSize: 18
+                            },
+                            showMinLabel: false,
+                            showMaxLabel: false
+                        },
+                        type: 'category',
+                        data: ['周 A','周 B','周 C','周 D','周 E','周 F','周 G']
+                    }],
+                    series: [{
+                        type: 'bar',
+                        data: [320, 302, 301, 334, 390, 330, 320]
+                    }, {
+                        type: 'bar',
+                        data: [325, 102, 201, 84, 190, 230, 120],
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'chart3', {
+                    title: [
+                        'category yAxis: all Label should be displayed.',
+                        'axisLabel.interval is 0, showMaxLabel/showMinLabel should be ignored.'
+                    ],
+                    option: option,
+                    info: {
+                        yAxis0: {
+                            axisLabel: option.xAxis[0].axisLabel,
+                            axisTick: option.xAxis[0].axisTick
+                        },
+                        yAxis1: {
+                            axisLabel: option.xAxis[1].axisLabel,
+                            axisTick: option.xAxis[1].axisTick
+                        }
+                    },
+                    infoKey: 'xAxis'
+                });
+            })
+
+        </script>
 
 
 

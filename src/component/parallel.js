@@ -123,7 +123,7 @@ var handlers = {
                 : {
                     axisExpandWindow: result.axisExpandWindow,
                     // Jumping uses animation, and sliding suppresses animation.
-                    animation: behavior === 'jump'  ? null : false
+                    animation: behavior === 'jump' ? null : false
                 }
         );
     }

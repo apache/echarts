@@ -48,6 +48,7 @@ under the License.
         <div id="category"></div>
         <div id="two-value-axes"></div>
         <div id="empty-data"></div>
+        <div id="empty-source"></div>
         <div id="dynamic-category"></div>
         <div id="dynamic-time"></div>
         <div id="dimension-but-no-column1"></div>
@@ -694,6 +695,42 @@ under the License.
 
                 testHelper.create(echarts, 'empty-data', {
                     title: 'data and dataset undefined, only axis shown.',
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: [
+                        {
+                            type:'line'
+                        }
+                    ],
+                    dataset: {
+                        source: []
+                    }
+                };
+
+                testHelper.create(echarts, 'empty-source', {
+                    title: 'data.source = [], only axis shown.',
                     option: option
                 });
             });
