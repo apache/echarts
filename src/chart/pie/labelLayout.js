@@ -176,7 +176,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         var labelLineLen = labelLineModel.get('length');
         var labelLineLen2 = labelLineModel.get('length2');
 
-        if (layout.angle < minShowLabelRadian || !data.hasValue(idx)) {
+        if (layout.angle < minShowLabelRadian) {
             return;
         }
 

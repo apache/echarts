@@ -80,7 +80,19 @@ export default function (seriesType, ecModel, api, payload) {
         data.each(valueDim, function (value, idx) {
             var angle;
             if (isNaN(value)) {
-                value = 0;
+                data.setItemLayout(idx, {
+                    angle: NaN,
+                    startAngle: NaN,
+                    endAngle: NaN,
+                    clockwise: clockwise,
+                    cx: cx,
+                    cy: cy,
+                    r0: r0,
+                    r: roseType
+                        ? NaN
+                        : r
+                });
+                return;
             }
 
             // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？

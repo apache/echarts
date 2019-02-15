@@ -353,6 +353,10 @@ var PieView = ChartView.extend({
             && animationType !== 'scale'
         ) {
             var shape = data.getItemLayout(0);
+            for (let s = 1; isNaN(shape.endAngle) && s < data.count(); ++s) {
+                shape = data.getItemLayout(s);
+            }
+
             var r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
             var removeClipPath = zrUtil.bind(group.removeClipPath, group);
