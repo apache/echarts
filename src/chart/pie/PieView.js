@@ -353,7 +353,7 @@ var PieView = ChartView.extend({
             && animationType !== 'scale'
         ) {
             var shape = data.getItemLayout(0);
-            for (let s = 1; isNaN(shape.endAngle) && s < data.count(); ++s) {
+            for (var s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
                 shape = data.getItemLayout(s);
             }
 
