@@ -212,6 +212,12 @@ piePieceProto._updateLabel = function (data, idx) {
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
 
+    if (!labelLayout) {
+        labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
+        labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
+        return;
+    }
+
     graphic.updateProps(labelLine, {
         shape: {
             points: labelLayout.linePoints || [
@@ -309,7 +315,6 @@ var PieView = ChartView.extend({
         );
 
         var selectedMode = seriesModel.get('selectedMode');
-
         data.diff(oldData)
             .add(function (idx) {
                 var piePiece = new PiePiece(data, idx);
@@ -348,6 +353,10 @@ var PieView = ChartView.extend({
             && animationType !== 'scale'
         ) {
             var shape = data.getItemLayout(0);
+            for (var s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
+                shape = data.getItemLayout(s);
+            }
+
             var r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
             var removeClipPath = zrUtil.bind(group.removeClipPath, group);

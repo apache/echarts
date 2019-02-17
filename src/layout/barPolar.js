@@ -26,8 +26,8 @@ function getSeriesStackId(seriesModel) {
         || '__ec_stack_' + seriesModel.seriesIndex;
 }
 
-function getAxisKey(axis) {
-    return axis.dim;
+function getAxisKey(polar, axis) {
+    return axis.dim + polar.model.componentIndex;
 }
 
 /**
@@ -60,10 +60,11 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var data = seriesModel.getData();
         var polar = seriesModel.coordinateSystem;
         var baseAxis = polar.getBaseAxis();
+        var axisKey = getAxisKey(polar, baseAxis);
 
         var stackId = getSeriesStackId(seriesModel);
         var columnLayoutInfo
-            = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+            = barWidthAndOffset[axisKey][stackId];
         var columnOffset = columnLayoutInfo.offset;
         var columnWidth = columnLayoutInfo.width;
         var valueAxis = polar.getOtherAxis(baseAxis);
@@ -185,13 +186,14 @@ function calRadialBar(barSeries, api) {
         var polar = seriesModel.coordinateSystem;
 
         var baseAxis = polar.getBaseAxis();
+        var axisKey = getAxisKey(polar, baseAxis);
 
         var axisExtent = baseAxis.getExtent();
         var bandWidth = baseAxis.type === 'category'
             ? baseAxis.getBandWidth()
             : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
 
-        var columnsOnAxis = columnsMap[getAxisKey(baseAxis)] || {
+        var columnsOnAxis = columnsMap[axisKey] || {
             bandWidth: bandWidth,
             remainedWidth: bandWidth,
             autoWidthCount: 0,
@@ -200,7 +202,7 @@ function calRadialBar(barSeries, api) {
             stacks: {}
         };
         var stacks = columnsOnAxis.stacks;
-        columnsMap[getAxisKey(baseAxis)] = columnsOnAxis;
+        columnsMap[axisKey] = columnsOnAxis;
 
         var stackId = getSeriesStackId(seriesModel);
 

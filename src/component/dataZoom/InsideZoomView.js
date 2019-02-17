@@ -47,7 +47,7 @@ var InsideZoomView = DataZoomView.extend({
     render: function (dataZoomModel, ecModel, api, payload) {
         InsideZoomView.superApply(this, 'render', arguments);
 
-        // Hance the `throttle` util ensures to preserve command order,
+        // Hence the `throttle` util ensures to preserve command order,
         // here simply updating range all the time will not cause missing
         // any of the the roam change.
         this._range = dataZoomModel.getPercentRange();

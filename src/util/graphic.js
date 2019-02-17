@@ -48,7 +48,8 @@ var mathMax = Math.max;
 var mathMin = Math.min;
 
 var EMPTY_OBJ = {};
-var Z2_LIFT_VALUE = 1;
+
+export var Z2_EMPHASIS_LIFT = 1;
 
 var EMPHASIS = 'emphasis';
 var NORMAL = 'normal';
@@ -323,7 +324,7 @@ function singleEnterEmphasis(el) {
 
     if (!useHoverLayer) {
         el.dirty(false);
-        el.z2 += Z2_LIFT_VALUE;
+        el.z2 += Z2_EMPHASIS_LIFT;
     }
 }
 
@@ -364,7 +365,7 @@ function singleEnterNormal(el) {
         // when `el` is on emphasis state. So here by comparing with 1, we try
         // hard to make the bug case rare.
         var normalZ2 = el.__cachedNormalZ2;
-        if (normalZ2 != null && el.z2 - normalZ2 === Z2_LIFT_VALUE) {
+        if (normalZ2 != null && el.z2 - normalZ2 === Z2_EMPHASIS_LIFT) {
             el.z2 = normalZ2;
         }
     }
@@ -515,6 +516,14 @@ export function setHoverStyle(el, hoverStyle) {
  *               for example, when this method is called when `el` is
  *               on "emphasis" state.
  *        @param {string} toState Can be "normal" or "emphasis".
+ *
+ *        FIXME
+ *        CAUTION: Do not expose `highDownOnUpdate` outside echarts.
+ *        Because it is not a complete solution. The update
+ *        listener should not have been mount in element,
+ *        and the normal/emphasis state should not have
+ *        mantained on elements.
+ *
  * @param {boolean} [el.highDownSilentOnTouch=false]
  *        In touch device, mouseover event will be trigger on touchstart event
  *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
