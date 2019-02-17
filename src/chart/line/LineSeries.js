@@ -25,6 +25,8 @@ export default SeriesModel.extend({
 
     type: 'series.line',
 
+    visualColorAccessPath: 'lineStyle.color',
+
     dependencies: ['grid', 'polar'],
 
     getInitialData: function (option, ecModel) {
