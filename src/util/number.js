@@ -18,8 +18,8 @@
 */
 
 /*
-* A third-party license is included for some of the code in this file:
-* The method "quantile" copied from "d3.js".
+* A third-party license is embeded for some of the code in this file:
+* The method "quantile" was copied from "d3.js".
 * (See more details in the comment of the method below.)
 * The use of the source code of this file is also subject to the terms
 * and consitions of the license of "d3.js" (BSD-3Clause, see
@@ -441,7 +441,7 @@ export function nice(val, round) {
 }
 
 /**
- * This code is copied from "d3.js"
+ * This code was copied from "d3.js"
  * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.
  * See the license statement at the head of this file.
  * @param {Array.<number>} ascArr

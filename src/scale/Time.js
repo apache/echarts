@@ -18,9 +18,9 @@
 */
 
 /*
-* A third-party license is included for some of the code in this file:
-* The "scaleLevels" is originally copied from "d3.js" and made some
-* modifications for this project.
+* A third-party license is embeded for some of the code in this file:
+* The "scaleLevels" was originally copied from "d3.js" with some
+* modifications made for this project.
 * (See more details in the comment on the definition of "scaleLevels" below.)
 * The use of the source code of this file is also subject to the terms
 * and consitions of the license of "d3.js" (BSD-3Clause, see
@@ -177,9 +177,9 @@ zrUtil.each(['contain', 'normalize'], function (methodName) {
 });
 
 /**
- * This implementation is originally copied from "d3.js"
+ * This implementation was originally copied from "d3.js"
  * <https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/time/scale.js>
- * and made some modifications for this program.
+ * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
 var scaleLevels = [
