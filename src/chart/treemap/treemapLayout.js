@@ -18,10 +18,12 @@
 */
 
 /*
-* The treemap layout implementation references to the treemap
-* layout of d3.js (d3/src/layout/treemap.js in v3). The use of
-* the source code of this file is also subject to the terms
-* and consitions of its license (BSD-3Clause, see
+* A third-party license is included for some of the code in this file:
+* The treemap layout implementation is originally copied from
+* the "d3.js" and made many modifications for this project.
+* See more details in the comment of the method "squarify" below.
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
 * <echarts/src/licenses/LICENSE-d3>).
 */
 
@@ -150,10 +152,13 @@ export default {
 };
 
 /**
- * Layout treemap with squarify algorithm.
- * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
- * The implementation references to the treemap layout of d3.js.
- * See the license statement at the head of this file.
+ * Layout treemap with squarify algorithm. The original presentation of this algorithm
+ * is made by Mark Bruls, Kees Huizing, and Jarke J. van Wijk
+ * <https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf>.
+ * The implementation of this algorithm is originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/layout/treemap.js>
+ * and made many modifications for this program.
+ * So see the license statement at the head of this file.
  *
  * @protected
  * @param {module:echarts/data/Tree~TreeNode} node
