@@ -38,13 +38,14 @@ function normalizeSymbolSize(symbolSize) {
 }
 
 function updateRipplePath(rippleGroup, effectCfg) {
+    const color = effectCfg.rippleEffectColor || effectCfg.color
     rippleGroup.eachChild(function (ripplePath) {
         ripplePath.attr({
             z: effectCfg.z,
             zlevel: effectCfg.zlevel,
             style: {
-                stroke: effectCfg.brushType === 'stroke' ? effectCfg.color : null,
-                fill: effectCfg.brushType === 'fill' ? effectCfg.color : null
+                stroke: effectCfg.brushType === 'stroke' ? color : null,
+                fill: effectCfg.brushType === 'fill' ? color : null
             }
         });
     });
@@ -81,9 +82,6 @@ effectSymbolProto.startEffectAnimation = function (effectCfg) {
     var rippleGroup = this.childAt(1);
 
     for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
-        // var ripplePath = createSymbol(
-        //     symbolType, -0.5, -0.5, 1, 1, color
-        // );
         // If width/height are set too small (e.g., set to 1) on ios10
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4136.
@@ -198,6 +196,7 @@ effectSymbolProto.updateData = function (data, idx) {
     effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
     effectCfg.symbolType = symbolType;
     effectCfg.color = color;
+    effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color')
 
     this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
