@@ -11,6 +11,8 @@ Please check its incubator status [here](http://incubator.apache.org/projects/ec
 
 **[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
 
+[![Build Status](https://travis-ci.org/apache/incubator-echarts.svg?branch=master)](https://travis-ci.org/apache/incubator-echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) ![Commits Since 4.0.0](https://img.shields.io/github/commits-since/apache/incubator-echarts/4.0.0.svg?colorB=%234c1&style=flat)
+
 ## Get ECharts
 
 You may choose one of the following methods:
