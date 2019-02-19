@@ -24,7 +24,7 @@
 * (See more details in the comment on the definition of "scaleLevels" below.)
 * The use of the source code of this file is also subject to the terms
 * and consitions of the license of "d3.js" (BSD-3Clause, see
-* <echarts/src/licenses/LICENSE-d3>).
+* </licenses/LICENSE-d3>).
 */
 
 

@@ -23,7 +23,7 @@
 * (See more details in the comment of the method below.)
 * The use of the source code of this file is also subject to the terms
 * and consitions of the license of "d3.js" (BSD-3Clause, see
-* <echarts/src/licenses/LICENSE-d3>).
+* </licenses/LICENSE-d3>).
 */
 
 import * as zrUtil from 'zrender/src/core/util';

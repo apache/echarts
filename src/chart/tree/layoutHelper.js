@@ -21,7 +21,7 @@
 * The tree layout implementation references to d3.js
 * (https://github.com/d3/d3-hierarchy). The use of the source
 * code of this file is also subject to the terms and consitions
-* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+* of its license (BSD-3Clause, see </licenses/LICENSE-d3>).
 */
 
 /**
