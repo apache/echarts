@@ -25,7 +25,7 @@
 * (see more details in the comment of the specific method below.)
 * The use of the source code of this file is also subject to the terms
 * and consitions of the licence of "d3.js" (BSD-3Clause, see
-* <echarts/licenses/LICENSE-d3>).
+* </licenses/LICENSE-d3>).
 */
 
 /**
@@ -80,7 +80,7 @@ export function init(root) {
 
 /**
  * The implementation of this function was originally copied from "d3.js"
- * <https://github.com/d3/d3-hierarchy/blob/master/src/tree.js>
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  *
@@ -121,7 +121,7 @@ export function firstWalk(node, separation) {
 
 /**
  * The implementation of this function was originally copied from "d3.js"
- * <https://github.com/d3/d3-hierarchy/blob/master/src/tree.js>
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  *
@@ -176,7 +176,7 @@ export function getViewRect(seriesModel, api) {
  * performed by this function.
  *
  * The implementation of this function was originally copied from "d3.js"
- * <https://github.com/d3/d3-hierarchy/blob/master/src/tree.js>
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  *
@@ -198,7 +198,7 @@ function executeShifts(node) {
 
 /**
  * The implementation of this function was originally copied from "d3.js"
- * <https://github.com/d3/d3-hierarchy/blob/master/src/tree.js>
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  *
@@ -301,7 +301,7 @@ function nextAncestor(nodeInLeft, node, ancestor) {
 
 /**
  * The implementation of this function was originally copied from "d3.js"
- * <https://github.com/d3/d3-hierarchy/blob/master/src/tree.js>
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  *
@@ -323,7 +323,7 @@ function moveSubtree(wl, wr, shift) {
 
 /**
  * The implementation of this function was originally copied from "d3.js"
- * <https://github.com/d3/d3-hierarchy/blob/master/src/tree.js>
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
