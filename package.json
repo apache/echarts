@@ -13,7 +13,8 @@
     "url": "https://github.com/apache/incubator-echarts.git"
   },
   "scripts": {
-    "prepublish": "node build/build.js --prepublish"
+    "prepublish": "node build/build.js --prepublish",
+    "test": "node build/build.js"
   },
   "dependencies": {
     "zrender": "4.0.6"
