@@ -145,7 +145,7 @@ var SankeySeries = SeriesModel.extend({
 
         levels: [],
 
-        // Value can be 'left', 'right'
+        // Value can be 'left' or 'right'
         nodeAlign: 'justify',
 
         itemStyle: {
