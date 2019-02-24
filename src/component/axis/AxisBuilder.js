@@ -636,6 +636,13 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     var labelModel = axisModel.getModel('axisLabel');
     var labelMargin = labelModel.get('margin');
     var labels = axis.getViewLabels();
+    var hideDuplicates = retrieve(opt.axisLabelHideDuplicates, axisModel.get('axisLabel.hideDuplicates'));
+
+    if (hideDuplicates) {
+        labels = filter(labels, function (labelItem, index) {
+            return index === 0 || labels[index - 1].formattedLabel !== labelItem.formattedLabel;
+        });
+    }
 
     // Special label rotate.
     var labelRotation = (
