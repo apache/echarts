@@ -45,20 +45,16 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 return;
             }
 
-            var hasCallback = typeof symbolType === 'function' || typeof symbolSize === 'function';
+            var hasSymbolTypeCallback = typeof symbolType === 'function';
+            var hasSymbolSizeCallback = typeof symbolSize === 'function';
+            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
 
             function dataEach(data, idx) {
-                if (typeof symbolType === 'function') {
+                if (hasCallback) {
                     var rawValue = seriesModel.getRawValue(idx);
-
                     var params = seriesModel.getDataParams(idx);
-                    data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
-                }
-                if (typeof symbolSize === 'function') {
-                    var rawValue = seriesModel.getRawValue(idx);
-                    // FIXME
-                    var params = seriesModel.getDataParams(idx);
-                    data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
+                    hasSymbolTypeCallback && data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
+                    hasSymbolSizeCallback && data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
                 }
 
                 if (data.hasItemOption) {
@@ -66,8 +62,8 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                     var itemSymbolType = itemModel.getShallow('symbol', true);
                     var itemSymbolSize = itemModel.getShallow('symbolSize',
                         true);
-                    var itemSymbolKeepAspect
-                        = itemModel.getShallow('symbolKeepAspect', true);
+                    var itemSymbolKeepAspect =
+                        itemModel.getShallow('symbolKeepAspect', true);
 
                     // If has item symbol
                     if (itemSymbolType != null) {
