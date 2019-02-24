@@ -776,6 +776,10 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
                 // Cascade is supported in rich.
                 var richTextStyle = textStyleModel.getModel(['rich', name]);
                 // In rich, never `disableBox`.
+                // FIXME: consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
+                // the default color `'blue'` will not be adopted if no color declared in `rich`.
+                // That might confuses users. So probably we should put `textStyleModel` as the
+                // root ancestor of the `richTextStyle`. But that would be a break change.
                 setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis);
             }
         }
