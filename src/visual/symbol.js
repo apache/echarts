@@ -29,13 +29,13 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
         reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
-            var symbolType = seriesModel.get('symbol') || defaultSymbolType;
+            var symbolType = seriesModel.get('symbol');
             var symbolSize = seriesModel.get('symbolSize');
             var keepAspect = seriesModel.get('symbolKeepAspect');
 
             data.setVisual({
-                legendSymbol: legendSymbol || symbolType,
-                symbol: symbolType,
+                legendSymbol: legendSymbol || symbolType || defaultSymbolType,
+                symbol: symbolType || defaultSymbolType,
                 symbolSize: symbolSize,
                 symbolKeepAspect: keepAspect
             });
@@ -45,14 +45,16 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 return;
             }
 
-            var hasCallback = typeof symbolSize === 'function';
+            var hasSymbolTypeCallback = typeof symbolType === 'function';
+            var hasSymbolSizeCallback = typeof symbolSize === 'function';
+            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
 
             function dataEach(data, idx) {
-                if (typeof symbolSize === 'function') {
+                if (hasCallback) {
                     var rawValue = seriesModel.getRawValue(idx);
-                    // FIXME
                     var params = seriesModel.getDataParams(idx);
-                    data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
+                    hasSymbolTypeCallback && data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
+                    hasSymbolSizeCallback && data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
                 }
 
                 if (data.hasItemOption) {
@@ -60,8 +62,8 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                     var itemSymbolType = itemModel.getShallow('symbol', true);
                     var itemSymbolSize = itemModel.getShallow('symbolSize',
                         true);
-                    var itemSymbolKeepAspect
-                        = itemModel.getShallow('symbolKeepAspect', true);
+                    var itemSymbolKeepAspect =
+                        itemModel.getShallow('symbolKeepAspect', true);
 
                     // If has item symbol
                     if (itemSymbolType != null) {
