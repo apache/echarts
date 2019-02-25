@@ -7510,7 +7510,7 @@ function getWidth(text, font) {
  */
 function getBoundingRect(text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate) {
     return rich
-        ? getRichTextRect(text, font, textAlign, textVerticalAlign, textPadding, rich, textLineHeight, truncate)
+        ? getRichTextRect(text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate)
         : getPlainTextRect(text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, truncate);
 }
 
@@ -10880,7 +10880,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.0.6';
+var version$1 = '4.0.7';
 
 /**
  * Initializing a zrender instance
@@ -11845,6 +11845,31 @@ function getTooltipRenderMode(renderModeOption) {
     else {
         return renderModeOption || 'html';
     }
+}
+
+/**
+ * Group a list by key.
+ *
+ * @param {Array} array
+ * @param {Function} getKey
+ *        param {*} Array item
+ *        return {string} key
+ * @return {Object} Result
+ *        {Array}: keys,
+ *        {module:zrender/core/util/HashMap} buckets: {key -> Array}
+ */
+function groupData(array, getKey) {
+    var buckets = createHashMap();
+    var keys = [];
+
+    each$1(array, function (item) {
+        var key = getKey(item);
+        (buckets.get(key)
+            || (keys.push(key), buckets.set(key, []))
+        ).push(item);
+    });
+
+    return {keys: keys, buckets: buckets};
 }
 
 /*
@@ -15303,6 +15328,7 @@ Text.prototype = {
                 style.textAlign,
                 style.textVerticalAlign,
                 style.textPadding,
+                style.textLineHeight,
                 style.rich
             );
 
@@ -18240,6 +18266,15 @@ function enableTopologicalTravel(entity, dependencyGetter) {
 * under the License.
 */
 
+/*
+* A third-party license is embeded for some of the code in this file:
+* The method "quantile" was copied from "d3.js".
+* (See more details in the comment of the method below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
+*/
+
 var RADIAN_EPSILON = 1e-4;
 
 function _trim(str) {
@@ -18653,39 +18688,9 @@ function nice(val, round) {
 }
 
 /**
- * BSD 3-Clause
- *
- * Copyright (c) 2010-2015, Michael Bostock
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * * The name Michael Bostock may not be used to endorse or promote products
- *   derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL MICHAEL BOSTOCK BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * @see <https://github.com/mbostock/d3/blob/master/src/arrays/quantile.js>
- * @see <http://en.wikipedia.org/wiki/Quantile>
+ * This code was copied from "d3.js"
+ * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.
+ * See the license statement at the head of this file.
  * @param {Array.<number>} ascArr
  */
 function quantile(ascArr, p) {
@@ -33160,10 +33165,15 @@ function getValueAxisStart(baseAxis, valueAxis, stacked) {
 */
 
 /*
-* The `scaleLevels` references to d3.js. The use of the source
-* code of this file is also subject to the terms and consitions
-* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+* A third-party license is embeded for some of the code in this file:
+* The "scaleLevels" was originally copied from "d3.js" with some
+* modifications made for this project.
+* (See more details in the comment on the definition of "scaleLevels" below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
 */
+
 
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
@@ -33307,7 +33317,12 @@ each$1(['contain', 'normalize'], function (methodName) {
     };
 });
 
-// Steps from d3, see the license statement at the top of this file.
+/**
+ * This implementation was originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/time/scale.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ */
 var scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s
@@ -48671,21 +48686,25 @@ SeriesModel.extend({
 */
 
 /*
-* The tree layout implementation references to d3.js
-* (https://github.com/d3/d3-hierarchy). The use of the source
-* code of this file is also subject to the terms and consitions
-* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+* A third-party license is embeded for some of the code in this file:
+* The tree layoutHelper implementation was originally copied from
+* "d3.js"(https://github.com/d3/d3-hierarchy) with
+* some modifications made for this project.
+* (see more details in the comment of the specific method below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the licence of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
 */
 
 /**
  * @file The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
  *       the tree.
- * @see https://github.com/d3/d3-hierarchy
  */
 
 /**
- * Initialize all computational message for following algorithm
- * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
+ * Initialize all computational message for following algorithm.
+ *
+ * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree.
  */
 function init$2(root) {
     root.hierNode = {
@@ -48726,10 +48745,16 @@ function init$2(root) {
 }
 
 /**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * Computes a preliminary x coordinate for node. Before that, this function is
  * applied recursively to the children of node, as well as the function
  * apportion(). After spacing out the children by calling executeShifts(), the
  * node is placed to the midpoint of its outermost children.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @param {Function} separation
  */
@@ -48761,7 +48786,13 @@ function firstWalk(node, separation) {
 
 
 /**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * Computes all real x-coordinates by summing up the modifiers recursively.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  */
 function secondWalk(node) {
@@ -48776,7 +48807,8 @@ function separation(cb) {
 }
 
 /**
- * Transform the common coordinate to radial coordinate
+ * Transform the common coordinate to radial coordinate.
+ *
  * @param  {number} x
  * @param  {number} y
  * @return {Object}
@@ -48790,7 +48822,8 @@ function radialCoordinate(x, y) {
 }
 
 /**
- * Get the layout position of the whole view
+ * Get the layout position of the whole view.
+ *
  * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
  * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
  * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
@@ -48807,6 +48840,12 @@ function getViewRect(seriesModel, api) {
 /**
  * All other shifts, applied to the smaller subtrees between w- and w+, are
  * performed by this function.
+ *
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  */
 function executeShifts(node) {
@@ -48824,6 +48863,11 @@ function executeShifts(node) {
 }
 
 /**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * The core of the algorithm. Here, a new subtree is combined with the
  * previous subtrees. Threads are used to traverse the inside and outside
  * contours of the left and right subtree up to the highest common level.
@@ -48831,6 +48875,7 @@ function executeShifts(node) {
  * one of the greatest uncommon ancestors using the function nextAncestor()
  * and call moveSubtree() to shift the subtree and prepare the shifts of
  * smaller subtrees. Finally, we add a new thread (if necessary).
+ *
  * @param  {module:echarts/data/Tree~TreeNode} subtreeV
  * @param  {module:echarts/data/Tree~TreeNode} subtreeW
  * @param  {module:echarts/data/Tree~TreeNode} ancestor
@@ -48884,6 +48929,7 @@ function apportion(subtreeV, subtreeW, ancestor, separation) {
  * This function is used to traverse the right contour of a subtree.
  * It returns the rightmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @return {module:echarts/data/Tree~TreeNode}
  */
@@ -48896,6 +48942,7 @@ function nextRight(node) {
  * This function is used to traverse the left contour of a subtree (or a subforest).
  * It returns the leftmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @return {module:echarts/data/Tree~TreeNode}
  */
@@ -48907,6 +48954,7 @@ function nextLeft(node) {
 /**
  * If nodeInLeft’s ancestor is a sibling of node, returns nodeInLeft’s ancestor.
  * Otherwise, returns the specified ancestor.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} nodeInLeft
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @param  {module:echarts/data/Tree~TreeNode} ancestor
@@ -48918,7 +48966,14 @@ function nextAncestor(nodeInLeft, node, ancestor) {
 }
 
 /**
- * Shifts the current subtree rooted at wr. This is done by increasing prelim(w+) and modifier(w+) by shift.
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
+ * Shifts the current subtree rooted at wr.
+ * This is done by increasing prelim(w+) and modifier(w+) by shift.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} wl
  * @param  {module:echarts/data/Tree~TreeNode} wr
  * @param  {number} shift [description]
@@ -48932,6 +48987,12 @@ function moveSubtree(wl, wr, shift) {
     wl.hierNode.change += change;
 }
 
+/**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ */
 function defaultSeparation(node1, node2) {
     return node1.parentNode === node2.parentNode ? 1 : 2;
 }
@@ -52306,11 +52367,13 @@ function mapVisual$1(nodeModel, visuals, child, index, mapping, seriesModel) {
 */
 
 /*
-* The treemap layout implementation references to the treemap
-* layout of d3.js (d3/src/layout/treemap.js in v3). The use of
-* the source code of this file is also subject to the terms
-* and consitions of its license (BSD-3Clause, see
-* <echarts/src/licenses/LICENSE-d3>).
+* A third-party license is embeded for some of the code in this file:
+* The treemap layout implementation was originally copied from
+* "d3.js" with some modifications made for this project.
+* (See more details in the comment of the method "squarify" below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
 */
 
 var mathMax$4 = Math.max;
@@ -52432,8 +52495,12 @@ var treemapLayout = {
 
 /**
  * Layout treemap with squarify algorithm.
- * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
- * The implementation references to the treemap layout of d3.js.
+ * The original presentation of this algorithm
+ * was made by Mark Bruls, Kees Huizing, and Jarke J. van Wijk
+ * <https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf>.
+ * The implementation of this algorithm was originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/layout/treemap.js>
+ * with some modifications made for this program.
  * See the license statement at the head of this file.
  *
  * @protected
@@ -55504,10 +55571,13 @@ var circularLayout = function (ecModel) {
 */
 
 /*
-* The layout implementation references to d3.js. The use of
-* the source code of this file is also subject to the terms
-* and consitions of its license (BSD-3Clause, see
-* <echarts/src/licenses/LICENSE-d3>).
+* A third-party license is embeded for some of the code in this file:
+* Some formulas were originally copied from "d3.js" with some
+* modifications made for this project.
+* (See more details in the comment of the method "step" below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
 */
 
 var scaleAndAdd$2 = scaleAndAdd;
@@ -55537,26 +55607,10 @@ function forceLayout$1(nodes, edges, opts) {
     for (var i = 0; i < nodes.length; i++) {
         var n = nodes[i];
         if (!n.p) {
-            // Use the position from first adjecent node with defined position
-            // Or use a random position
-            // From d3
-            // if (n.edges) {
-            //     var j = -1;
-            //     while (++j < n.edges.length) {
-            //         var e = n.edges[j];
-            //         var other = adjacentNode(n, e);
-            //         if (other.p) {
-            //             n.p = vec2.clone(other.p);
-            //             break;
-            //         }
-            //     }
-            // }
-            // if (!n.p) {
-                n.p = create(
-                    width * (Math.random() - 0.5) + center[0],
-                    height * (Math.random() - 0.5) + center[1]
-                );
-            // }
+            n.p = create(
+                width * (Math.random() - 0.5) + center[0],
+                height * (Math.random() - 0.5) + center[1]
+            );
         }
         n.pp = clone$1(n.p);
         n.edges = null;
@@ -55581,6 +55635,12 @@ function forceLayout$1(nodes, edges, opts) {
             nodes[idx].fixed = false;
         },
 
+        /**
+         * Some formulas were originally copied from "d3.js"
+         * https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/layout/force.js
+         * with some modifications made for this project.
+         * See the license statement at the head of this file.
+         */
         step: function (cb) {
             var v12 = [];
             var nLen = nodes.length;
@@ -60764,132 +60824,6 @@ registerAction({
 * under the License.
 */
 
-/*
-* The implementation references to d3.js. The use of the source
-* code of this file is also subject to the terms and consitions
-* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
-*/
-
-
-/**
- * nest helper used to group by the array.
- * can specified the keys and sort the keys.
- */
-function nest() {
-
-    var keysFunction = [];
-    var sortKeysFunction = [];
-
-    /**
-     * map an Array into the mapObject.
-     * @param {Array} array
-     * @param {number} depth
-     */
-    function map$$1(array, depth) {
-        if (depth >= keysFunction.length) {
-            return array;
-        }
-        var i = -1;
-        var n = array.length;
-        var keyFunction = keysFunction[depth++];
-        var mapObject = {};
-        var valuesByKey = {};
-
-        while (++i < n) {
-            var keyValue = keyFunction(array[i]);
-            var values = valuesByKey[keyValue];
-
-            if (values) {
-                values.push(array[i]);
-            }
-            else {
-                valuesByKey[keyValue] = [array[i]];
-            }
-        }
-
-        each$1(valuesByKey, function (value, key) {
-            mapObject[key] = map$$1(value, depth);
-        });
-
-        return mapObject;
-    }
-
-    /**
-     * transform the Map Object to multidimensional Array
-     * @param {Object} map
-     * @param {number} depth
-     */
-    function entriesMap(mapObject, depth) {
-        if (depth >= keysFunction.length) {
-            return mapObject;
-        }
-        var array = [];
-        var sortKeyFunction = sortKeysFunction[depth++];
-
-        each$1(mapObject, function (value, key) {
-            array.push({
-                key: key, values: entriesMap(value, depth)
-            });
-        });
-
-        if (sortKeyFunction) {
-            return array.sort(function (a, b) {
-                return sortKeyFunction(a.key, b.key);
-            });
-        }
-
-        return array;
-    }
-
-    return {
-        /**
-         * specified the key to groupby the arrays.
-         * users can specified one more keys.
-         * @param {Function} d
-         */
-        key: function (d) {
-            keysFunction.push(d);
-            return this;
-        },
-
-        /**
-         * specified the comparator to sort the keys
-         * @param {Function} order
-         */
-        sortKeys: function (order) {
-            sortKeysFunction[keysFunction.length - 1] = order;
-            return this;
-        },
-
-        /**
-         * the array to be grouped by.
-         * @param {Array} array
-         */
-        entries: function (array) {
-            return entriesMap(map$$1(array, 0), 0);
-        }
-    };
-}
-
-/*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
-
 /**
  * @file The layout algorithm of sankey view
  * @author Deqing Li(annong035@gmail.com)
@@ -61098,15 +61032,7 @@ function scaleNodeBreadths(nodes, kx, orient) {
  * @param {number} iterations  the number of iterations for the algorithm
  */
 function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient) {
-    var nodesByBreadth = nest()
-        .key(getKeyFunction(orient))
-        .sortKeys(function (a, b) {
-            return a - b;
-        })
-        .entries(nodes)
-        .map(function (d) {
-            return d.values;
-        });
+    var nodesByBreadth = prepareNodesByBreadth(nodes, orient);
 
     initializeNodeDepth(nodes, nodesByBreadth, edges, height, width, nodeGap, orient);
     resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
@@ -61122,15 +61048,21 @@ function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, ori
     }
 }
 
-function getKeyFunction(orient) {
-    if (orient === 'vertical') {
-        return function (d) {
-            return d.getLayout().y;
-        };
-    }
-    return function (d) {
-        return d.getLayout().x;
-    };
+function prepareNodesByBreadth(nodes, orient) {
+    var nodesByBreadth = [];
+    var keyAttr = orient === 'vertical' ? 'y' : 'x';
+
+    var groupResult = groupData(nodes, function (node) {
+        return node.getLayout()[keyAttr];
+    });
+    groupResult.keys.sort(function (a, b) {
+        return a - b;
+    });
+    each$1(groupResult.keys, function (key) {
+        nodesByBreadth.push(groupResult.buckets.get(key));
+    });
+
+    return nodesByBreadth;
 }
 
 /**
@@ -68777,18 +68709,12 @@ var ThemeRiverSeries = SeriesModel.extend({
         var rawDataLength = data.length;
 
         // grouped data by name
-        var dataByName = nest()
-            .key(function (dataItem) {
-                return dataItem[2];
-            })
-            .entries(data);
-
-        // data group in each layer
-        var layData = map(dataByName, function (d) {
-            return {
-                name: d.key,
-                dataList: d.values
-            };
+        var groupResult = groupData(data, function (item) {
+            return item[2];
+        });
+        var layData = [];
+        groupResult.buckets.each(function (items, key) {
+            layData.push({name: key, dataList: items});
         });
 
         var layerNum = layData.length;
@@ -68909,29 +68835,20 @@ var ThemeRiverSeries = SeriesModel.extend({
         for (var i = 0; i < lenCount; ++i) {
             indexArr[i] = i;
         }
-        // data group by name
-        var dataByName = nest()
-            .key(function (index) {
-                return data.get('name', index);
-            })
-            .entries(indexArr);
-
-        var layerSeries = map(dataByName, function (d) {
-            return {
-                name: d.key,
-                indices: d.values
-            };
-        });
 
         var timeDim = data.mapDimension('single');
 
-        for (var j = 0; j < layerSeries.length; ++j) {
-            layerSeries[j].indices.sort(comparer);
-        }
-
-        function comparer(index1, index2) {
-            return data.get(timeDim, index1) - data.get(timeDim, index2);
-        }
+        // data group by name
+        var groupResult = groupData(indexArr, function (index) {
+            return data.get('name', index);
+        });
+        var layerSeries = [];
+        groupResult.buckets.each(function (items, key) {
+            items.sort(function (index1, index2) {
+                return data.get(timeDim, index1) - data.get(timeDim, index2);
+            });
+            layerSeries.push({name: key, indices: items});
+        });
 
         return layerSeries;
     },
@@ -91555,7 +91472,9 @@ if (!env$1.canvasSupported) {
         var font = fontStyle.style + ' ' + fontStyle.variant + ' ' + fontStyle.weight + ' '
             + fontStyle.size + 'px "' + fontStyle.family + '"';
 
-        textRect = textRect || getBoundingRect(text, font, align, verticalAlign, style.textPadding, style.textLineHeight);
+        textRect = textRect || getBoundingRect(
+            text, font, align, verticalAlign, style.textPadding, style.textLineHeight
+        );
 
         // Transform rect to view space
         var m = this.transform;
@@ -92328,8 +92247,10 @@ var svgTextDrawRectText = function (el, rect, textRect) {
 
     var verticalAlign = getVerticalAlignForSvg(style.textVerticalAlign);
 
-    textRect = getBoundingRect(text, font, align,
-        verticalAlign, style.textPadding, style.textLineHeight);
+    textRect = getBoundingRect(
+        text, font, align,
+        verticalAlign, style.textPadding, style.textLineHeight
+    );
 
     var lineHeight = textRect.lineHeight;
     // Text position represented by coord
