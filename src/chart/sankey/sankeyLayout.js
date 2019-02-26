@@ -18,14 +18,13 @@
 */
 
 /**
- * @file The layout algorithm of sankey view
+ * @file The layout algorithm of sankey diagram.
  * @author Deqing Li(annong035@gmail.com)
  */
 
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
-import { __DEV__ } from '../../config';
 
 export default function (ecModel, api, payload) {
 
@@ -135,6 +134,9 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
         }
     }
 
+    // Traversing nodes using topological sorting to calculate the
+    // horizontal(if orient === 'horizontal') or vertical(if orient === 'vertical')
+    // position of the nodes.
     while (zeroIndegrees.length) {
         for (var idx = 0; idx < zeroIndegrees.length; idx++) {
             var node = zeroIndegrees[idx];
@@ -162,30 +164,15 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
         nextTargetNode = [];
     }
 
-    var nodesCopy = nodes.slice(0);
-
     for (i = 0; i < remainEdges.length; i++) {
         if (remainEdges[i] === 1) {
-            if (__DEV__) {
-                throw new Error('Sankey is a DAG, the original data has cycle!');
-            }
-            if (nodeAlign === 'right') {
-                var edge = edges[i];
-                var index1 = nodesCopy.indexOf(edge.node1);
-                if (index1 > -1) {
-                    nodesCopy.splice(index1, 1);
-                }
-                var index2 = nodesCopy.indexOf(edge.node2);
-                if (index2 > -1) {
-                    nodesCopy.splice(index2, 1);
-                }
-            }
+            throw new Error('Sankey is a DAG, the original data has cycle!');
         }
     }
 
     if (nodeAlign === 'right') {
         var nextSourceNode = [];
-        var remainNodes = nodesCopy;
+        var remainNodes = nodes;
         var nodeHeight = 0;
         while (remainNodes.length) {
             for (var i = 0; i < remainNodes.length; i++) {
@@ -203,7 +190,7 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
             ++nodeHeight;
         }
 
-        zrUtil.each(nodesCopy, function (node) {
+        zrUtil.each(nodes, function (node) {
             if (orient === 'vertical') {
                 node.setLayout({y: Math.max(0, x - 1 - node.getLayout().skNodeHeight)}, true);
             }
@@ -212,13 +199,12 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
             }
         });
     }
-
-    if (nodeAlign === 'justify') {
+    else if (nodeAlign === 'justify') {
         moveSinksRight(nodes, x, orient);
     }
 
     var maxDepth = x - 1;
-    zrUtil.each(nodesCopy, function (node) {
+    zrUtil.each(nodes, function (node) {
         var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
         if (item.depth && !isNaN(item.depth) && item.depth >= 0) {
             if (item.depth > maxDepth) {
