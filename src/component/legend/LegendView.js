@@ -157,7 +157,10 @@ export default echarts.extendComponentView({
             // Series legend
             if (seriesModel) {
                 var data = seriesModel.getData();
-                var color = itemModel.get('color') || data.getVisual('color');
+                // check if color is string, cause the default color is array
+                var color = typeof itemModel.get('color') === 'string' 
+                  ? itemModel.get('color') 
+                  : data.getVisual('color');
 
                 // If color is a callback function
                 if (typeof color === 'function') {
