@@ -203,7 +203,7 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
 
     var text = zrUtil.retrieve(
         seriesModel.getFormattedLabel(
-            this.node.dataIndex, status, null, null, 'label'
+            this.node.dataIndex, state, null, null, 'label'
         ),
         this.node.name
     );
