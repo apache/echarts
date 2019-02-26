@@ -534,3 +534,28 @@ export function getTooltipRenderMode(renderModeOption) {
         return renderModeOption || 'html';
     }
 }
+
+/**
+ * Group a list by key.
+ *
+ * @param {Array} array
+ * @param {Function} getKey
+ *        param {*} Array item
+ *        return {string} key
+ * @return {Object} Result
+ *        {Array}: keys,
+ *        {module:zrender/core/util/HashMap} buckets: {key -> Array}
+ */
+export function groupData(array, getKey) {
+    var buckets = zrUtil.createHashMap();
+    var keys = [];
+
+    zrUtil.each(array, function (item) {
+        var key = getKey(item);
+        (buckets.get(key)
+            || (keys.push(key), buckets.set(key, []))
+        ).push(item);
+    });
+
+    return {keys: keys, buckets: buckets};
+}
