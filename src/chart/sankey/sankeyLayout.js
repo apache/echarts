@@ -112,13 +112,10 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     // Used to mark whether the edge is deleted. if it is deleted,
     // the value is 0, otherwise it is 1.
     var remainEdges = [];
-
     // Storage each node's indegree.
     var indegreeArr = [];
-
     //Used to storage the node with indegree is equal to 0.
     var zeroIndegrees = [];
-
     var nextTargetNode = [];
     var x = 0;
     var kx = 0;
@@ -126,26 +123,30 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     for (var i = 0; i < edges.length; i++) {
         remainEdges[i] = 1;
     }
-
     for (i = 0; i < nodes.length; i++) {
         indegreeArr[i] = nodes[i].inEdges.length;
         if (indegreeArr[i] === 0) {
             zeroIndegrees.push(nodes[i]);
         }
     }
-
+    var maxNodeDepth = -1;
     // Traversing nodes using topological sorting to calculate the
     // horizontal(if orient === 'horizontal') or vertical(if orient === 'vertical')
     // position of the nodes.
     while (zeroIndegrees.length) {
         for (var idx = 0; idx < zeroIndegrees.length; idx++) {
             var node = zeroIndegrees[idx];
+            var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+            var isItemDepth = item.depth && !isNaN(item.depth) && item.depth >= 0;
+            if (isItemDepth && item.depth > maxNodeDepth) {
+                maxNodeDepth = item.depth;
+            }
             if (orient === 'vertical') {
-                node.setLayout({y: x}, true);
+                node.setLayout({y: isItemDepth ? item.depth : x}, true);
                 node.setLayout({dy: nodeWidth}, true);
             }
             else {
-                node.setLayout({x: x}, true);
+                node.setLayout({x: isItemDepth ? item.depth : x}, true);
                 node.setLayout({dx: nodeWidth}, true);
             }
             for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
@@ -170,6 +171,20 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
         }
     }
 
+    var maxDepth = maxNodeDepth > x - 1 ? maxNodeDepth : x - 1;
+    if (nodeAlign && nodeAlign !== 'left') {
+        adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth);
+    }
+    var kx = orient === 'vertical' ? (height - nodeWidth) / maxDepth : (width - nodeWidth) / maxDepth;
+    scaleNodeBreadths(nodes, kx, orient);
+}
+
+function isNodeDepth(node) {
+    var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+    return item.depth && !isNaN(item.depth) && item.depth >= 0;
+}
+
+function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
     if (nodeAlign === 'right') {
         var nextSourceNode = [];
         var remainNodes = nodes;
@@ -191,42 +206,19 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
         }
 
         zrUtil.each(nodes, function (node) {
-            if (orient === 'vertical') {
-                node.setLayout({y: Math.max(0, x - 1 - node.getLayout().skNodeHeight)}, true);
-            }
-            else {
-                node.setLayout({x: Math.max(0, x - 1 - node.getLayout().skNodeHeight)}, true);
+            if (!isNodeDepth(node)) {
+                if (orient === 'vertical') {
+                    node.setLayout({y: Math.max(0, maxDepth - node.getLayout().skNodeHeight)}, true);
+                }
+                else {
+                    node.setLayout({x: Math.max(0, maxDepth - node.getLayout().skNodeHeight)}, true);
+                }
             }
         });
     }
     else if (nodeAlign === 'justify') {
-        moveSinksRight(nodes, x, orient);
+        moveSinksRight(nodes, maxDepth, orient);
     }
-
-    var maxDepth = x - 1;
-    zrUtil.each(nodes, function (node) {
-        var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
-        if (item.depth && !isNaN(item.depth) && item.depth >= 0) {
-            if (item.depth > maxDepth) {
-                maxDepth = item.depth;
-            }
-            if (orient === 'vertical') {
-                node.setLayout({y: item.depth}, true);
-            }
-            else {
-                node.setLayout({x: item.depth}, true);
-            }
-        }
-    });
-
-    if (orient === 'vertical') {
-        kx = (height - nodeWidth) / maxDepth;
-    }
-    else {
-        kx = (width - nodeWidth) / maxDepth;
-    }
-
-    scaleNodeBreadths(nodes, kx, orient);
 }
 
 /**
@@ -237,14 +229,14 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
  * @param {number} x  value (x-1) use to assign to node without outEdges
  *     as x-position
  */
-function moveSinksRight(nodes, x, orient) {
+function moveSinksRight(nodes, maxDepth, orient) {
     zrUtil.each(nodes, function (node) {
-        if (!node.outEdges.length) {
+        if (!isNodeDepth(node) && !node.outEdges.length) {
             if (orient === 'vertical') {
-                node.setLayout({y: x - 1}, true);
+                node.setLayout({y: maxDepth}, true);
             }
             else {
-                node.setLayout({x: x - 1}, true);
+                node.setLayout({x: maxDepth}, true);
             }
         }
     });
