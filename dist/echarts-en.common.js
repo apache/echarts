@@ -17740,6 +17740,7 @@ var textStyleMixin = {
             this.getShallow('align'),
             this.getShallow('verticalAlign') || this.getShallow('baseline'),
             this.getShallow('padding'),
+            this.getShallow('lineHeight'),
             this.getShallow('rich'),
             this.getShallow('truncateText')
         );
@@ -18977,7 +18978,45 @@ function capitalFirst(str) {
 
 var truncateText$1 = truncateText;
 
-var getTextRect = getBoundingRect;
+/**
+ * @public
+ * @param {Object} opt
+ * @param {string} opt.text
+ * @param {string} opt.font
+ * @param {string} [opt.textAlign='left']
+ * @param {string} [opt.textVerticalAlign='top']
+ * @param {Array.<number>} [opt.textPadding]
+ * @param {number} [opt.textLineHeight]
+ * @param {Object} [opt.rich]
+ * @param {Object} [opt.truncate]
+ * @return {Object} {x, y, width, height, lineHeight}
+ */
+function getTextBoundingRect(opt) {
+    return getBoundingRect(
+        opt.text,
+        opt.font,
+        opt.textAlign,
+        opt.textVerticalAlign,
+        opt.textPadding,
+        opt.textLineHeight,
+        opt.rich,
+        opt.truncate
+    );
+}
+
+/**
+ * @deprecated
+ * the `textLineHeight` was added later.
+ * For backward compatiblility, put it as the last parameter.
+ * But deprecated this interface. Please use `getTextBoundingRect` instead.
+ */
+function getTextRect(
+    text, font, textAlign, textVerticalAlign, textPadding, rich, truncate, textLineHeight
+) {
+    return getBoundingRect(
+        text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate
+    );
+}
 
 
 var format = (Object.freeze || Object)({
@@ -18991,6 +19030,7 @@ var format = (Object.freeze || Object)({
 	formatTime: formatTime,
 	capitalFirst: capitalFirst,
 	truncateText: truncateText$1,
+	getTextBoundingRect: getTextBoundingRect,
 	getTextRect: getTextRect
 });
 
