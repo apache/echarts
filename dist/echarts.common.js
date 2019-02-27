@@ -17740,6 +17740,7 @@ var textStyleMixin = {
             this.getShallow('align'),
             this.getShallow('verticalAlign') || this.getShallow('baseline'),
             this.getShallow('padding'),
+            this.getShallow('lineHeight'),
             this.getShallow('rich'),
             this.getShallow('truncateText')
         );
@@ -18977,7 +18978,45 @@ function capitalFirst(str) {
 
 var truncateText$1 = truncateText;
 
-var getTextRect = getBoundingRect;
+/**
+ * @public
+ * @param {Object} opt
+ * @param {string} opt.text
+ * @param {string} opt.font
+ * @param {string} [opt.textAlign='left']
+ * @param {string} [opt.textVerticalAlign='top']
+ * @param {Array.<number>} [opt.textPadding]
+ * @param {number} [opt.textLineHeight]
+ * @param {Object} [opt.rich]
+ * @param {Object} [opt.truncate]
+ * @return {Object} {x, y, width, height, lineHeight}
+ */
+function getTextBoundingRect(opt) {
+    return getBoundingRect(
+        opt.text,
+        opt.font,
+        opt.textAlign,
+        opt.textVerticalAlign,
+        opt.textPadding,
+        opt.textLineHeight,
+        opt.rich,
+        opt.truncate
+    );
+}
+
+/**
+ * @deprecated
+ * the `textLineHeight` was added later.
+ * For backward compatiblility, put it as the last parameter.
+ * But deprecated this interface. Please use `getTextBoundingRect` instead.
+ */
+function getTextRect(
+    text, font, textAlign, textVerticalAlign, textPadding, rich, truncate, textLineHeight
+) {
+    return getBoundingRect(
+        text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate
+    );
+}
 
 
 var format = (Object.freeze || Object)({
@@ -18991,6 +19030,7 @@ var format = (Object.freeze || Object)({
 	formatTime: formatTime,
 	capitalFirst: capitalFirst,
 	truncateText: truncateText$1,
+	getTextBoundingRect: getTextBoundingRect,
 	getTextRect: getTextRect
 });
 
@@ -59157,26 +59197,6 @@ function bindStyle(svgEl, style, isText, el) {
     if (pathHasFill(style, isText)) {
         var fill = isText ? style.textFill : style.fill;
         fill = fill === 'transparent' ? NONE : fill;
-
-        /**
-         * FIXME:
-         * This is a temporary fix for Chrome's clipping bug
-         * that happens when a clip-path is referring another one.
-         * This fix should be used before Chrome's bug is fixed.
-         * For an element that has clip-path, and fill is none,
-         * set it to be "rgba(0, 0, 0, 0.002)" will hide the element.
-         * Otherwise, it will show black fill color.
-         * 0.002 is used because this won't work for alpha values smaller
-         * than 0.002.
-         *
-         * See
-         * https://bugs.chromium.org/p/chromium/issues/detail?id=659790
-         * for more information.
-         */
-        if (svgEl.getAttribute('clip-path') !== 'none' && fill === NONE) {
-            fill = 'rgba(0, 0, 0, 0.002)';
-        }
-
         attr(svgEl, 'fill', fill);
         attr(svgEl, 'fill-opacity', style.fillOpacity != null ? style.fillOpacity * style.opacity : style.opacity);
     }
@@ -59459,12 +59479,10 @@ var svgTextDrawRectText = function (el, rect, textRect) {
         ].join(' ')
         || DEFAULT_FONT$1;
 
-    var verticalAlign = getVerticalAlignForSvg(style.textVerticalAlign);
+    var verticalAlign = style.textVerticalAlign;
 
-    textRect = getBoundingRect(
-        text, font, align,
-        verticalAlign, style.textPadding, style.textLineHeight
-    );
+    textRect = getBoundingRect(text, font, align,
+        verticalAlign, style.textPadding, style.textLineHeight);
 
     var lineHeight = textRect.lineHeight;
     // Text position represented by coord
@@ -59478,11 +59496,11 @@ var svgTextDrawRectText = function (el, rect, textRect) {
         );
         x = newPos.x;
         y = newPos.y;
-        verticalAlign = getVerticalAlignForSvg(newPos.textVerticalAlign);
+        verticalAlign = newPos.textVerticalAlign;
         align = newPos.textAlign;
     }
 
-    attr(textSvgEl, 'alignment-baseline', verticalAlign);
+    setVerticalAlign(textSvgEl, verticalAlign);
 
     if (font) {
         textSvgEl.style.font = font;
@@ -59550,7 +59568,7 @@ var svgTextDrawRectText = function (el, rect, textRect) {
     }
 
     var dy = 0;
-    if (verticalAlign === 'after-edge') {
+    if (verticalAlign === 'bottom') {
         dy = -textRect.height + lineHeight;
         textPadding && (dy -= textPadding[2]);
     }
@@ -59572,7 +59590,7 @@ var svgTextDrawRectText = function (el, rect, textRect) {
             if (!tspan) {
                 tspan = tspanList[i] = createElement('tspan');
                 textSvgEl.appendChild(tspan);
-                attr(tspan, 'alignment-baseline', verticalAlign);
+                setVerticalAlign(tspan, verticalAlign);
                 attr(tspan, 'text-anchor', textAnchor);
             }
             else {
@@ -59604,15 +59622,21 @@ var svgTextDrawRectText = function (el, rect, textRect) {
     }
 };
 
-function getVerticalAlignForSvg(verticalAlign) {
-    if (verticalAlign === 'middle') {
-        return 'middle';
-    }
-    else if (verticalAlign === 'bottom') {
-        return 'after-edge';
-    }
-    else {
-        return 'hanging';
+function setVerticalAlign(textSvgEl, verticalAlign) {
+    switch (verticalAlign) {
+        case 'middle':
+            attr(textSvgEl, 'dominant-baseline', 'middle');
+            attr(textSvgEl, 'alignment-baseline', 'middle');
+            break;
+
+        case 'bottom':
+            attr(textSvgEl, 'dominant-baseline', 'ideographic');
+            attr(textSvgEl, 'alignment-baseline', 'ideographic');
+            break;
+
+        default:
+            attr(textSvgEl, 'dominant-baseline', 'hanging');
+            attr(textSvgEl, 'alignment-baseline', 'hanging');
     }
 }
 
