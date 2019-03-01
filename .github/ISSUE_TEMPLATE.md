@@ -7,5 +7,5 @@ Questions in the form of *How to use ...* should be at Stack Overflow rather tha
 Issues 中不要问「如何使用 ECharts 实现……功能」的问题，相关问题请到 SegmentFault 或 Stack Overflow 提问，详见上面的链接。
 -->
 
-Please use the [echarts issue helper form](https://ecomfe.github.io/echarts-issue-helper) to file bug reports.
-Issues created directly on GitHub will not be seen and will be automatically closed.
+- Please use the [echarts issue helper form](https://ecomfe.github.io/echarts-issue-helper) to file bug reports or feature requests.
+- Issues created directly on GitHub will not be seen and will be automatically closed.
