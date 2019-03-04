@@ -141,12 +141,11 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
             if (isItemDepth && item.depth > maxNodeDepth) {
                 maxNodeDepth = item.depth;
             }
+            node.setLayout({depth: isItemDepth ? item.depth : x}, true);
             if (orient === 'vertical') {
-                node.setLayout({y: isItemDepth ? item.depth : x}, true);
                 node.setLayout({dy: nodeWidth}, true);
             }
             else {
-                node.setLayout({x: isItemDepth ? item.depth : x}, true);
                 node.setLayout({dx: nodeWidth}, true);
             }
             for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
@@ -207,12 +206,7 @@ function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
 
         zrUtil.each(nodes, function (node) {
             if (!isNodeDepth(node)) {
-                if (orient === 'vertical') {
-                    node.setLayout({y: Math.max(0, maxDepth - node.getLayout().skNodeHeight)}, true);
-                }
-                else {
-                    node.setLayout({x: Math.max(0, maxDepth - node.getLayout().skNodeHeight)}, true);
-                }
+                node.setLayout({depth: Math.max(0, maxDepth - node.getLayout().skNodeHeight)}, true);
             }
         });
     }
@@ -232,12 +226,7 @@ function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
 function moveSinksRight(nodes, maxDepth, orient) {
     zrUtil.each(nodes, function (node) {
         if (!isNodeDepth(node) && !node.outEdges.length) {
-            if (orient === 'vertical') {
-                node.setLayout({y: maxDepth}, true);
-            }
-            else {
-                node.setLayout({x: maxDepth}, true);
-            }
+            node.setLayout({depth: maxDepth}, true);
         }
     });
 }
@@ -250,13 +239,12 @@ function moveSinksRight(nodes, maxDepth, orient) {
  */
 function scaleNodeBreadths(nodes, kx, orient) {
     zrUtil.each(nodes, function (node) {
+        var nodeDepth = node.getLayout().depth * kx;
         if (orient === 'vertical') {
-            var nodeY = node.getLayout().y * kx;
-            node.setLayout({y: nodeY}, true);
+            node.setLayout({y: nodeDepth}, true);
         }
         else {
-            var nodeX = node.getLayout().x * kx;
-            node.setLayout({x: nodeX}, true);
+            node.setLayout({x: nodeDepth}, true);
         }
     });
 }
@@ -274,7 +262,7 @@ function scaleNodeBreadths(nodes, kx, orient) {
 function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient) {
     var nodesByBreadth = prepareNodesByBreadth(nodes, orient);
 
-    initializeNodeDepth(nodes, nodesByBreadth, edges, height, width, nodeGap, orient);
+    initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient);
     resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
 
     for (var alpha = 1; iterations > 0; iterations--) {
@@ -315,7 +303,7 @@ function prepareNodesByBreadth(nodes, orient) {
  * @param {number} height  the whole height of the area to draw the view
  * @param {number} nodeGap  the vertical distance between two nodes
  */
-function initializeNodeDepth(nodes, nodesByBreadth, edges, height, width, nodeGap, orient) {
+function initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient) {
     var kyArray = [];
     zrUtil.each(nodesByBreadth, function (nodes) {
         var n = nodes.length;
