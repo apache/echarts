@@ -50,7 +50,8 @@ export default function (seriesType, actionInfos) {
             );
             return {
                 name: payload.name,
-                selected: selected
+                selected: selected,
+                seriesId: payload.seriesId
             };
         });
     });
