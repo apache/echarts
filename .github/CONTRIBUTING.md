@@ -47,7 +47,7 @@ cd ~/workspace/zrender
 npm install
 ```
 
-Sometimes, we need to change the code of ZRender project to fix a problem in ECharts. So we need to make sure we are importing the ZRender in our local project, rather than latest released npm version. To do this, we use an npm feature called `npm link`.
+Sometimes, in order to fix an issue within echarts, changes have to be made inside the codebase of zrender. To test any changes to zrender locally you can use npm's [npm link](https://docs.npmjs.com/cli/link.html) feature, for example: 
 
 ```bash
 cd ~/workspace/zrender
