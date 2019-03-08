@@ -6,7 +6,7 @@ Please check out the [Apache Code of Conduct](https://www.apache.org/foundation/
 
 ## Issues
 
-Please use [ECharts issue helper](https://ecomfe.github.io/echarts-issue-helper/) to create issues. Otherwise, they will be closed by our robot.
+When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our robot to close them automatically
 
 And before you do so, please search for similar questions in [issues list](https://github.com/apache/incubator-echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If a closed issue have new problems in your environment, please create a new issue and reference the previous one.
 
