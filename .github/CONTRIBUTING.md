@@ -10,7 +10,7 @@ Please use [ECharts issue helper](https://ecomfe.github.io/echarts-issue-helper/
 
 And before you do so, please search for similar questions in [issues list](https://github.com/apache/incubator-echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If a closed issue have new problems in your environment, please create a new issue and reference the previous one.
 
-Please read [documents](http://echarts.apache.org/option.html) carefully before asking any questions.
+Please read the [documentation](http://echarts.apache.org/option.html) carefully before asking any questions.
 
 Questions in the form on *how to use ECharts to ...* should be at http://stackoverflow.com and will be closed in GitHub issues.
 
