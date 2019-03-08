@@ -2,7 +2,7 @@
 
 👍🎉 First off, thanks for taking the time to contribute! 🎉👍
 
-Please checkout [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html) first.
+Please check out the [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
 
 ## Issues
 
