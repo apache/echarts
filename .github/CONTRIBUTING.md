@@ -56,7 +56,7 @@ cd ~/workspace/echarts
 npm link
 ```
 
-And then, you can see `~/workspace/echarts/node_modules/zrender` is a link to `~/workspace/zrender`.
+With this, you can see that `~/workspace/echarts/node_modules/zrender` is a link to `~/workspace/zrender`.
 
 ### 3. Run and debug
 
