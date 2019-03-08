@@ -16,7 +16,7 @@ Any questions in the form of *how can I  use echarts to* or *how to use echarts 
 
 ## Pull Requests
 
-If you wish to fix a bug or add some new features, please discuss with us in the issue first. If there's no such issue, please create an issue using [ECharts issue helper](https://ecomfe.github.io/echarts-issue-helper/).
+If you wish to fix a bug or add new features, please discuss it with us in an issue first. If there's no issue, please create one using the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/).
 
 ## How to Debug ECharts
 
