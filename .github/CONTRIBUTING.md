@@ -83,4 +83,4 @@ Fork ECharts project into your own project. Checkout a branch from master branch
 
 If you are a committer of apache/incubator-echarts project, which means you have the write access to the project, you still need to push to a new branch (by `git push origin HEAD:refs/heads/fix-xxxx`) and use pull request to push your code. You cannot push code directly to `master` branch, otherwise it will be rejected by GitHub.
 
-Once your PR is merged, you will be asked to assign a PDF file called [Apache ICLA](https://www.apache.org/licenses/icla.pdf). This is required for all non-trival commits of apache/incubator-echarts project, which means you don't have to sign it if you only changed some spelling in `README.md`.
+Once your PR is merged, you will be asked to sign a PDF file called [Apache ICLA](https://www.apache.org/licenses/icla.pdf). This is required for all non-trival commits of the apache/incubator-echarts project, which means you don't have to sign it if you only changed some spelling in `README.md`.
