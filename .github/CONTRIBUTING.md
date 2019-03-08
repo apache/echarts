@@ -12,7 +12,7 @@ And before you do so, please search for similar questions in [issues list](https
 
 Please read the [documentation](http://echarts.apache.org/option.html) carefully before asking any questions.
 
-Questions in the form on *how to use ECharts to ...* should be at http://stackoverflow.com and will be closed in GitHub issues.
+Any questions in the form of *how can I  use echarts to* or *how to use echarts x feature to* belong to [Stack Overflow](http://stackoverflow.com), issues with questions like that in the issue tracker will be closed.
 
 ## Pull Requests
 
