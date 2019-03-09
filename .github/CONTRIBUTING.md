@@ -47,7 +47,7 @@ cd ~/workspace/zrender
 npm install
 ```
 
-Sometimes, in order to fix an issue within echarts, changes have to be made inside the codebase of zrender. To test any changes to zrender locally you can use npm's [npm link](https://docs.npmjs.com/cli/link.html) feature, for example: 
+Sometimes, in order to fix an issue within echarts, changes have to be made inside the codebase of zrender. To test any changes to zrender locally you can use npm's [npm link](https://docs.npmjs.com/cli/link.html) feature, for example:
 
 ```bash
 cd ~/workspace/zrender
@@ -68,7 +68,7 @@ node build/build.js --watch
 ```
 
 To build once:
-contributing-inspect.png
+
 ```bash
 node build/build.js
 ```
