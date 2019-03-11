@@ -25,6 +25,7 @@
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import {encodeHTML} from '../../util/format';
+import Model from '../../model/Model';
 
 var SankeySeries = SeriesModel.extend({
 
@@ -32,18 +33,46 @@ var SankeySeries = SeriesModel.extend({
 
     layoutInfo: null,
 
+    levelModels: null,
+
     /**
      * Init a graph data structure from data in option series
      *
      * @param  {Object} option  the object used to config echarts view
      * @return {module:echarts/data/List} storage initial data
      */
-    getInitialData: function (option) {
+    getInitialData: function (option, ecModel) {
         var links = option.edges || option.links;
         var nodes = option.data || option.nodes;
+        var levels = option.levels;
+        var levelModels = this.levelModels = {};
+
+        for (var i = 0; i < levels.length; i++) {
+            levelModels[levels[i].depth] = new Model(levels[i], this, ecModel);
+        }
         if (nodes && links) {
-            var graph = createGraphFromNodeEdge(nodes, links, this, true);
+            var graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
             return graph.data;
+        }
+        function beforeLink(nodeData, edgeData) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                model.customizeGetParent(function (path) {
+                    var nodeDepth = this.parentModel.getData().getItemLayout(idx).depth;
+                    var levelModel = this.parentModel.levelModels[nodeDepth];
+                    return levelModel ? levelModel : this.parentModel;
+                });
+                return model;
+            });
+
+            edgeData.wrapMethod('getItemModel', function (model, idx) {
+                model.customizeGetParent(function (path) {
+                    var edge = this.parentModel.getGraph().getEdgeByIndex(idx);
+                    var depth = edge.node1.getLayout().depth;
+                    var levelModel = this.parentModel.levelModels[depth];
+                    return levelModel ? levelModel : this.parentModel;
+                });
+                return model;
+            });
         }
     },
 

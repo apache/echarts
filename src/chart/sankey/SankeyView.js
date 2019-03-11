@@ -18,7 +18,7 @@
 */
 
 /**
- * @file  The file used to draw sankey view
+ * @file  The file used to draw sankey diagram.
  * @author  Deqing Li(annong035@gmail.com)
  */
 
@@ -74,14 +74,13 @@ var SankeyShape = graphic.extendShape({
 
     buildPath: function (ctx, shape) {
         var extent = shape.extent;
-        var orient = shape.orient;
-        if (orient === 'vertical') {
-            ctx.moveTo(shape.x1, shape.y1);
-            ctx.bezierCurveTo(
-                shape.cpx1, shape.cpy1,
-                shape.cpx2, shape.cpy2,
-                shape.x2, shape.y2
-            );
+        ctx.moveTo(shape.x1, shape.y1);
+        ctx.bezierCurveTo(
+            shape.cpx1, shape.cpy1,
+            shape.cpx2, shape.cpy2,
+            shape.x2, shape.y2
+        );
+        if (shape.orient === 'vertical') {
             ctx.lineTo(shape.x2 + extent, shape.y2);
             ctx.bezierCurveTo(
                 shape.cpx2 + extent, shape.cpy2,
@@ -90,12 +89,6 @@ var SankeyShape = graphic.extendShape({
             );
         }
         else {
-            ctx.moveTo(shape.x1, shape.y1);
-            ctx.bezierCurveTo(
-                shape.cpx1, shape.cpy1,
-                shape.cpx2, shape.cpy2,
-                shape.x2, shape.y2
-            );
             ctx.lineTo(shape.x2, shape.y2 + extent);
             ctx.bezierCurveTo(
                 shape.cpx2, shape.cpy2 + extent,
@@ -207,10 +200,10 @@ export default echarts.extendChartView({
             // Special color, use source node color or target node color
             switch (curve.style.fill) {
                 case 'source':
-                    curve.style.fill = edge.node1.getVisual('color');
+                    curve.style.fill = node1Model.get('itemStyle.color') || edge.node1.getVisual('color');
                     break;
                 case 'target':
-                    curve.style.fill = edge.node2.getVisual('color');
+                    curve.style.fill = node2Model.get('itemStyle.color') || edge.node2.getVisual('color');
                     break;
             }
 
@@ -252,7 +245,7 @@ export default echarts.extendChartView({
                 }
             );
 
-            rect.setStyle('fill', node.getVisual('color'));
+            rect.setStyle('fill', itemModel.get('itemStyle.color') || node.getVisual('color'));
 
             graphic.setHoverStyle(rect, hoverStyle);
 
