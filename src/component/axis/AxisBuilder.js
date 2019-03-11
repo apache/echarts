@@ -364,8 +364,10 @@ var builders = {
             textFont: textFont,
             textFill: textStyleModel.getTextColor()
                 || axisModel.get('axisLine.lineStyle.color'),
-            textAlign: labelLayout.textAlign,
-            textVerticalAlign: labelLayout.textVerticalAlign
+            textAlign: textStyleModel.get('align')
+                || labelLayout.textAlign,
+            textVerticalAlign: textStyleModel.get('verticalAlign')
+                || labelLayout.textVerticalAlign
         });
 
         if (axisModel.get('triggerEvent')) {
