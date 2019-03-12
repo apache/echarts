@@ -200,10 +200,10 @@ export default echarts.extendChartView({
             // Special color, use source node color or target node color
             switch (curve.style.fill) {
                 case 'source':
-                    curve.style.fill = node1Model.get('itemStyle.color') || edge.node1.getVisual('color');
+                    curve.style.fill = edge.node1.getVisual('color');
                     break;
                 case 'target':
-                    curve.style.fill = node2Model.get('itemStyle.color') || edge.node2.getVisual('color');
+                    curve.style.fill = edge.node2.getVisual('color');
                     break;
             }
 
@@ -245,7 +245,7 @@ export default echarts.extendChartView({
                 }
             );
 
-            rect.setStyle('fill', itemModel.get('itemStyle.color') || node.getVisual('color'));
+            rect.setStyle('fill', node.getVisual('color'));
 
             graphic.setHoverStyle(rect, hoverStyle);
 

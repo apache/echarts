@@ -51,8 +51,7 @@ export default function (ecModel, api, payload) {
             return node.getLayout().value === 0;
         });
 
-        var iterations = filteredNodes.length !== 0
-            ? 0 : seriesModel.get('layoutIterations');
+        var iterations = filteredNodes.length !== 0 ? 0 : seriesModel.get('layoutIterations');
 
         var orient = seriesModel.get('orient');
 
@@ -137,13 +136,14 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
         for (var idx = 0; idx < zeroIndegrees.length; idx++) {
             var node = zeroIndegrees[idx];
             var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
-            var isItemDepth = item.depth && !isNaN(item.depth) && item.depth >= 0;
+            var isItemDepth = item.depth != null && item.depth >= 0;
             if (isItemDepth && item.depth > maxNodeDepth) {
                 maxNodeDepth = item.depth;
             }
             node.setLayout({depth: isItemDepth ? item.depth : x}, true);
-            orient === 'vertical' ? node.setLayout({dy: nodeWidth}, true)
-                    : node.setLayout({dx: nodeWidth}, true);
+            orient === 'vertical'
+                ? node.setLayout({dy: nodeWidth}, true)
+                : node.setLayout({dx: nodeWidth}, true);
 
             for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
                 var edge = node.outEdges[edgeIdx];
@@ -171,14 +171,16 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     if (nodeAlign && nodeAlign !== 'left') {
         adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth);
     }
-    var kx = orient === 'vertical' ? (height - nodeWidth) / maxDepth
+    var kx = orient === 'vertical'
+                ? (height - nodeWidth) / maxDepth
                 : (width - nodeWidth) / maxDepth;
+
     scaleNodeBreadths(nodes, kx, orient);
 }
 
 function isNodeDepth(node) {
     var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
-    return item.depth && !isNaN(item.depth) && item.depth >= 0;
+    return item.depth != null && item.depth >= 0;
 }
 
 function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
@@ -237,8 +239,9 @@ function moveSinksRight(nodes, maxDepth) {
 function scaleNodeBreadths(nodes, kx, orient) {
     zrUtil.each(nodes, function (node) {
         var nodeDepth = node.getLayout().depth * kx;
-        orient === 'vertical' ? node.setLayout({y: nodeDepth}, true)
-                : node.setLayout({x: nodeDepth}, true);
+        orient === 'vertical'
+            ? node.setLayout({y: nodeDepth}, true)
+            : node.setLayout({x: nodeDepth}, true);
     });
 }
 
@@ -304,8 +307,10 @@ function initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orie
         zrUtil.each(nodes, function (node) {
             sum += node.getLayout().value;
         });
-        var ky = orient === 'vertical' ? (width - (n - 1) * nodeGap) / sum
-                : (height - (n - 1) * nodeGap) / sum;
+        var ky = orient === 'vertical'
+                    ? (width - (n - 1) * nodeGap) / sum
+                    : (height - (n - 1) * nodeGap) / sum;
+
         if (ky < minKy) {
             minKy = ky;
         }
@@ -356,8 +361,9 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
             dy = y0 - node.getLayout()[keyAttr];
             if (dy > 0) {
                 nodeX = node.getLayout()[keyAttr] + dy;
-                orient === 'vertical' ? node.setLayout({x: nodeX}, true)
-                        : node.setLayout({y: nodeX}, true);
+                orient === 'vertical'
+                    ? node.setLayout({x: nodeX}, true)
+                    : node.setLayout({y: nodeX}, true);
             }
             y0 = node.getLayout()[keyAttr] + node.getLayout()[nodeDyAttr] + nodeGap;
         }
@@ -366,16 +372,19 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
         dy = y0 - nodeGap - viewWidth;
         if (dy > 0) {
             nodeX = node.getLayout()[keyAttr] - dy;
-            orient === 'vertical' ? node.setLayout({x: nodeX}, true)
-                    : node.setLayout({y: nodeX}, true);
+            orient === 'vertical'
+                ? node.setLayout({x: nodeX}, true)
+                : node.setLayout({y: nodeX}, true);
+
             y0 = nodeX;
             for (i = n - 2; i >= 0; --i) {
                 node = nodes[i];
                 dy = node.getLayout()[keyAttr] + node.getLayout()[nodeDyAttr] + nodeGap - y0;
                 if (dy > 0) {
                     nodeX = node.getLayout()[keyAttr] - dy;
-                    orient === 'vertical' ? node.setLayout({x: nodeX}, true)
-                            : node.setLayout({y: nodeX}, true);
+                    orient === 'vertical'
+                        ? node.setLayout({x: nodeX}, true)
+                        : node.setLayout({y: nodeX}, true);
                 }
                 y0 = node.getLayout()[keyAttr];
             }
@@ -418,7 +427,8 @@ function weightedSource(edge, orient) {
 }
 
 function center(node, orient) {
-    return orient === 'vertical' ? node.getLayout().x + node.getLayout().dx / 2
+    return orient === 'vertical'
+            ? node.getLayout().x + node.getLayout().dx / 2
             : node.getLayout().y + node.getLayout().dy / 2;
 }
 

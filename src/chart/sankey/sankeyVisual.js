@@ -51,12 +51,10 @@ export default function (ecModel, payload) {
                 });
 
                 var mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
-
-                // Here we remove the judgment of node.getModel().get('itemStyle.color'),
-                // because we first use it in the render process with
-                // rect.setStyle('fill', itemModel.get('itemStyle.color') || node.getVisual('color')) in
-                // SankeyView.js.
-                node.setVisual('color', mapValueToColor);
+                var customColor = node.getModel().get('itemStyle.color');
+                customColor != null
+                    ? node.setVisual('color', customColor)
+                    : node.setVisual('color', mapValueToColor);
             });
         }
     });

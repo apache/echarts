@@ -26,6 +26,7 @@ import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import {encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
+import { __DEV__ } from '../../config';
 
 var SankeySeries = SeriesModel.extend({
 
@@ -48,7 +49,14 @@ var SankeySeries = SeriesModel.extend({
         var levelModels = this.levelModels = {};
 
         for (var i = 0; i < levels.length; i++) {
-            levelModels[levels[i].depth] = new Model(levels[i], this, ecModel);
+            if (levels[i].depth != null && levels[i].depth >= 0) {
+                levelModels[levels[i].depth] = new Model(levels[i], this, ecModel);
+            }
+            else {
+                if (__DEV__) {
+                    throw new Error('levels[i].depth is mandatory and should be natural number');
+                }
+            }
         }
         if (nodes && links) {
             var graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
@@ -57,19 +65,21 @@ var SankeySeries = SeriesModel.extend({
         function beforeLink(nodeData, edgeData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 model.customizeGetParent(function (path) {
-                    var nodeDepth = this.parentModel.getData().getItemLayout(idx).depth;
-                    var levelModel = this.parentModel.levelModels[nodeDepth];
-                    return levelModel ? levelModel : this.parentModel;
+                    var parentModel = this.parentModel;
+                    var nodeDepth = parentModel.getData().getItemLayout(idx).depth;
+                    var levelModel = parentModel.levelModels[nodeDepth];
+                    return levelModel || this.parentModel;
                 });
                 return model;
             });
 
             edgeData.wrapMethod('getItemModel', function (model, idx) {
                 model.customizeGetParent(function (path) {
-                    var edge = this.parentModel.getGraph().getEdgeByIndex(idx);
+                    var parentModel = this.parentModel;
+                    var edge = parentModel.getGraph().getEdgeByIndex(idx);
                     var depth = edge.node1.getLayout().depth;
-                    var levelModel = this.parentModel.levelModels[depth];
-                    return levelModel ? levelModel : this.parentModel;
+                    var levelModel = parentModel.levelModels[depth];
+                    return levelModel || this.parentModel;
                 });
                 return model;
             });
