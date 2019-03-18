@@ -212,7 +212,7 @@ piePieceProto._updateLabel = function (data, idx) {
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
 
-    if (!labelLayout) {
+    if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
         labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
         labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
         return;
