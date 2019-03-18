@@ -6,13 +6,13 @@ Please check out the [Apache Code of Conduct](https://www.apache.org/foundation/
 
 ## Issues
 
-When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our robot to close them automatically
+When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our bot to close them automatically.
 
-And before you do so, please search for similar questions in [issues list](https://github.com/apache/incubator-echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If a closed issue have new problems in your environment, please create a new issue and reference the previous one.
+And before doing so, please search for similar questions in our [issues list](https://github.com/apache/incubator-echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
 
 Please read the [documentation](http://echarts.apache.org/option.html) carefully before asking any questions.
 
-Any questions in the form of *how can I  use echarts to* or *how to use echarts x feature to* belong to [Stack Overflow](http://stackoverflow.com), issues with questions like that in the issue tracker will be closed.
+Any questions in the form of *how can I use echarts to* or *how to use echarts x feature to* belong in [Stack Overflow](http://stackoverflow.com), issues with questions like that in the issue tracker will be closed.
 
 ## Pull Requests
 
@@ -82,5 +82,3 @@ Then, open the test cases under `~/workspace/echarts/test` in Web browser. You c
 Fork ECharts project into your own project. Checkout a branch from master branch named `fix-xxxx`, where xxxx is the issue id related. If there's no related issue, you need to create one in most cases to describe what's wrong or what new feature is required.
 
 If you are a committer of apache/incubator-echarts project, which means you have the write access to the project, you still need to push to a new branch (by `git push origin HEAD:refs/heads/fix-xxxx`) and use pull request to push your code. You cannot push code directly to `master` branch, otherwise it will be rejected by GitHub.
-
-Once your PR is merged, you will be asked to sign a PDF file called [Apache ICLA](https://www.apache.org/licenses/icla.pdf). This is required for all non-trival commits of the apache/incubator-echarts project, which means you don't have to sign it if you only changed some spelling in `README.md`.
