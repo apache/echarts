@@ -46,7 +46,7 @@ export default {
         var lineType = this.get('type');
         var dotSize = Math.max(lineWidth, 2);
         var dashSize = lineWidth * 4;
-        return (lineType === 'solid' || lineType == null) ? null
+        return (lineType === 'solid' || lineType == null) ? [0, 0]
             : (lineType === 'dashed' ? [dashSize, dashSize] : [dotSize, dotSize]);
     }
 };
