@@ -49,10 +49,7 @@ var proto = SaveAsImage.prototype;
 proto.onclick = function (ecModel, api) {
     var model = this.model;
     var title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-    var $a = document.createElement('a');
     var type = model.get('type', true) || 'png';
-    $a.download = title + '.' + type;
-    $a.target = '_blank';
     var url = api.getConnectedDataURL({
         type: type,
         backgroundColor: model.get('backgroundColor', true)
@@ -60,9 +57,12 @@ proto.onclick = function (ecModel, api) {
         excludeComponents: model.get('excludeComponents'),
         pixelRatio: model.get('pixelRatio')
     });
-    $a.href = url;
     // Chrome and Firefox
     if (typeof MouseEvent === 'function' && !env.browser.ie && !env.browser.edge) {
+        var $a = document.createElement('a');
+        $a.download = title + '.' + type;
+        $a.target = '_blank';
+        $a.href = url;
         var evt = new MouseEvent('click', {
             view: window,
             bubbles: true,
