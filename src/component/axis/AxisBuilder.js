@@ -645,7 +645,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     ) * PI / 180;
 
     var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
-    var rawCategoryData = axisModel.getCategories(true);
+    var rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
 
     var labelEls = [];
     var silent = isLabelSilent(axisModel);
