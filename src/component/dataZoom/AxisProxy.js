@@ -390,7 +390,7 @@ AxisProxy.prototype = {
                 each(dataDims, function (dim) {
                     if (filterMode === 'empty') {
                         seriesModel.setData(
-                            seriesData.map(dim, function (value) {
+                            seriesData = seriesData.map(dim, function (value) {
                                 return !isInWindow(value) ? NaN : value;
                             })
                         );
