@@ -214,6 +214,7 @@ MapDraw.prototype = {
                 || nameMap.set(region.name, new graphic.Group());
 
             var compoundPath = new graphic.CompoundPath({
+                segmentIgnoreThreshold: 1,
                 shape: {
                     paths: []
                 }
@@ -249,6 +250,7 @@ MapDraw.prototype = {
                     return;
                 }
                 compoundPath.shape.paths.push(new graphic.Polygon({
+                    segmentIgnoreThreshold: 1,
                     shape: {
                         points: geometry.exterior
                     }
@@ -256,6 +258,7 @@ MapDraw.prototype = {
 
                 for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); i++) {
                     compoundPath.shape.paths.push(new graphic.Polygon({
+                        segmentIgnoreThreshold: 1,
                         shape: {
                             points: geometry.interiors[i]
                         }
