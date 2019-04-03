@@ -567,6 +567,21 @@ echartsProto.getConnectedDataURL = function (opts) {
         targetCanvas.height = height;
         var zr = zrender.init(targetCanvas);
 
+        // Background between the charts
+        if (opts.connectedBackgroundColor) {
+            zr.add(new graphic.Rect({
+                shape: {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height
+                },
+                style: {
+                    fill: opts.connectedBackgroundColor
+                }
+            }));
+        }
+
         each(canvasList, function (item) {
             var img = new graphic.Image({
                 style: {
