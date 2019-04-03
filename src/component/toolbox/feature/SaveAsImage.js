@@ -36,6 +36,7 @@ SaveAsImage.defaultOption = {
     type: 'png',
     // Default use option.backgroundColor
     // backgroundColor: '#fff',
+    connectedBackgroundColor: '#fff',
     name: '',
     excludeComponents: ['toolbox'],
     pixelRatio: 1,
@@ -54,6 +55,7 @@ proto.onclick = function (ecModel, api) {
         type: type,
         backgroundColor: model.get('backgroundColor', true)
             || ecModel.get('backgroundColor') || '#fff',
+        connectedBackgroundColor: model.get('connectedBackgroundColor'),
         excludeComponents: model.get('excludeComponents'),
         pixelRatio: model.get('pixelRatio')
     });
