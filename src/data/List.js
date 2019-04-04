@@ -128,7 +128,7 @@ var List = function (dimensions, hostModel) {
         }
 
         var dimensionName = dimensionInfo.name;
-        dimensionInfo.type = dimensionInfo.type || 'float';
+        dimensionInfo.type = dimensionInfo.type || 'ordinal';
         if (!dimensionInfo.coordDim) {
             dimensionInfo.coordDim = dimensionName;
             dimensionInfo.coordDimIndex = 0;
