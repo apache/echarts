@@ -22,6 +22,7 @@ import * as modelUtil from '../../util/model';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
 import selectableMixin from '../../component/helper/selectableMixin';
+import dataFormatMixin from '../../model/mixin/dataFormat';
 import geoCreator from './geoCreator';
 
 var GeoModel = ComponentModel.extend({
@@ -147,17 +148,60 @@ var GeoModel = ComponentModel.extend({
      * @return {string}
      */
     getFormattedLabel: function (name, status) {
+        var params = [];
+        var formatterData = null;
+        var formatterDataIndex = -1;
+        this.getModel().ecModel.eachSeriesByType('map', function (mapSeries) {
+            // getData() is come from currentTask which is not the real data of the series
+            var dataIndex = mapSeries.getData().indexOfName(name);
+            // get param shape
+            var dataParam = mapSeries.getDataParams(dataIndex);
+
+            var realData = mapSeries.dataTask.context.data;
+            var realDataIndex = realData.indexOfName(name);
+            // use for getStringFormattedLabel
+            formatterData = mapSeries.getData();
+            formatterDataIndex = dataIndex;
+
+            // set the truly data
+            dataParam.data = realData.getRawDataItem(realDataIndex);
+            // check if data is undefined
+            dataParam.dataIndex = dataParam.data ? realDataIndex : -1;
+            params.push(
+                dataParam
+            );
+        });
         var regionModel = this.getRegionModel(name);
-        var formatter = regionModel.get(['label', status === 'normal' ? '' : status, 'formatter'].join('.'));
-        var params = {
-            name: name
-        };
-        if (typeof formatter === 'function') {
-            params.status = status;
+        var formatter = regionModel.get(
+            status === 'normal'
+            ? ['label', 'formatter']
+            : [status, 'label', 'formatter']
+        );
+        if (params.length === 0) {
+            params = [{
+                name: name
+            }];
+        }
+        if (zrUtil.isFunction(formatter)) {
+            params.forEach(function (param) {
+                param.status = status;
+            });
+        }
+
+        if (params.length === 1) {
+            params = params[0];
+        }
+
+        if (zrUtil.isFunction(formatter)) {
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
-            return formatter.replace('{a}', name != null ? name : '');
+            return dataFormatMixin.getStringFormattedLabel(
+                formatterData,
+                formatterDataIndex, 
+                formatter, 
+                params
+            );
         }
     },
 

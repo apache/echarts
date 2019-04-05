@@ -98,18 +98,28 @@ export default {
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
-            var str = formatTpl(formatter, params);
-
-            // Support 'aaa{@[3]}bbb{@product}ccc'.
-            // Do not support '}' in dim name util have to.
-            return str.replace(DIMENSION_LABEL_REG, function (origin, dim) {
-                var len = dim.length;
-                if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
-                    dim = +dim.slice(1, len - 1); // Also: '[]' => 0
-                }
-                return retrieveRawValue(data, dataIndex, dim);
-            });
+            return this.getStringFormattedLabel(data, dataIndex, formatter, params)
         }
+    },
+    /**
+     * Get Format Label by formatter of string
+     * @param {object} data 
+     * @param {number} dataIndex 
+     * @param {string} formatter 
+     * @param {object} params 
+     */
+    getStringFormattedLabel: function (data, dataIndex, formatter, params) {
+        var str = formatTpl(formatter, params);
+
+        // Support 'aaa{@[3]}bbb{@product}ccc'.
+        // Do not support '}' in dim name util have to.
+        return str.replace(DIMENSION_LABEL_REG, function (origin, dim) {
+            var len = dim.length;
+            if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
+                dim = +dim.slice(1, len - 1); // Also: '[]' => 0
+            }
+            return retrieveRawValue(data, dataIndex, dim);
+        });
     },
 
     /**
