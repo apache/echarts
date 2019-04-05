@@ -573,13 +573,12 @@ function doGuessOrdinal(
     }
 
     function detectValue(val) {
-        // Consider usage convenience, '1', '2' will be treated as "number".
-        // `isFinit('')` get `true`.
-        if (val != null && isFinite(val) && val !== '') {
-            return false;
-        }
-        else if (isString(val) && val !== '-') {
+        // For string, assign its type to 'ordinal'
+        if (isString(val)) {
             return true;
+        }
+        else if (val != null && isNaN(val)) {
+            return false;
         }
     }
 
