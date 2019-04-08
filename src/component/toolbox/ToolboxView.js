@@ -166,14 +166,18 @@ export default echarts.extendComponentView({
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
                             path.setStyle({
                                 text: titles[iconName],
-                                textPosition: hoverStyle.textPosition || 'bottom',
-                                textFill: hoverStyle.fill || hoverStyle.stroke || '#000',
-                                textAlign: hoverStyle.textAlign || 'center'
+                                textPosition: iconStyleEmphasisModel.get('textPosition') || 'bottom',
+                                textFill: iconStyleEmphasisModel.get('textFill') || hoverStyle.fill || hoverStyle.stroke || '#000',
+                                textAlign: iconStyleEmphasisModel.get('textAlign') || 'center',
+                                textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
+                                textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
+                                textPadding: iconStyleEmphasisModel.get('textPadding')
                             });
                         })
                         .on('mouseout', function () {
                             path.setStyle({
-                                textFill: null
+                                textFill: null,
+                                textBackgroundColor: null
                             });
                         });
                 }
