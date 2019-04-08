@@ -67,7 +67,8 @@ under the License.
                             }
                         },
                         restore: {
-                            show: true
+                            show: true,
+                            title: 'Restore'
                         }
                     },
                     left: '50%',
@@ -78,7 +79,7 @@ under the License.
                             textFill: '#ddd',
                             textBorderRadius: 3,
                             textPadding: [5, 8],
-                            // textPosition: 'top'
+                            textPosition: 'top'
                         }
                     }
                 },
@@ -142,40 +143,6 @@ under the License.
             }
             chart.setOption(option, true);
 
-            // setTimeout(function () {
-            //     chart.setOption({
-            //         series: [
-            //             {
-            //                 name:'访问来源',
-            //                 type:'pie',
-            //                 radius: ['50%', '70%'],
-            //                 avoidLabelOverlap: false,
-            //                 label: {
-            //                     normal: {
-            //                         // show: false,
-            //                         // position: 'center'
-            //                     },
-            //                     emphasis: {
-            //                         show: true,
-            //                         textStyle: {
-            //                             fontSize: '30',
-            //                             fontWeight: 'bold'
-            //                         }
-            //                     }
-            //                 },
-            //                 labelLine: {
-            //                     normal: {
-            //                         // show: false
-            //                     }
-            //                 },
-            //                 data:[
-            //                     {value:'-', name:'直接访问'},
-            //                     {value:20, name:'邮件营销'}
-            //                 ]
-            //             }
-            //         ]
-            //     });
-            // }, 1000);
             window.onresize = chart.resize;
         });
     </script>
