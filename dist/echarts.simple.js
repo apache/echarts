@@ -17383,6 +17383,7 @@ var textStyleMixin = {
             this.getShallow('align'),
             this.getShallow('verticalAlign') || this.getShallow('baseline'),
             this.getShallow('padding'),
+            this.getShallow('lineHeight'),
             this.getShallow('rich'),
             this.getShallow('truncateText')
         );
@@ -18508,6 +18509,28 @@ function formatTime(tpl, value, isUTC) {
 
 
 var truncateText$1 = truncateText;
+
+/**
+ * @public
+ * @param {Object} opt
+ * @param {string} opt.text
+ * @param {string} opt.font
+ * @param {string} [opt.textAlign='left']
+ * @param {string} [opt.textVerticalAlign='top']
+ * @param {Array.<number>} [opt.textPadding]
+ * @param {number} [opt.textLineHeight]
+ * @param {Object} [opt.rich]
+ * @param {Object} [opt.truncate]
+ * @return {Object} {x, y, width, height, lineHeight}
+ */
+
+
+/**
+ * @deprecated
+ * the `textLineHeight` was added later.
+ * For backward compatiblility, put it as the last parameter.
+ * But deprecated this interface. Please use `getTextBoundingRect` instead.
+ */
 
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
