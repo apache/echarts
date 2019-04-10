@@ -80,10 +80,14 @@ var ToolboxModel = echarts.extendComponentModel({
             iconStyle: {
                 borderColor: '#3E98C5'
             }
-        }
+        },
         // textStyle: {},
 
         // feature
+
+        tooltip: {
+            show: false
+        }
     }
 });
 
