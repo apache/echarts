@@ -94,6 +94,12 @@ export default {
         );
 
         if (typeof formatter === 'function') {
+            if ((params.value instanceof Array) && dimIndex == null) {
+              let labelDims = data.mapDimension('defaultedLabel', true)
+              if (labelDims instanceof Array) {
+                params.value = labelDims.map(i => retrieveRawValue(data, dataIndex, i))
+              }
+            }
             params.status = status;
             return formatter(params);
         }
