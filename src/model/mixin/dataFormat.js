@@ -20,6 +20,7 @@
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl} from '../../util/format';
 import { getTooltipRenderMode } from '../../util/model';
+import * as zrUtil from 'zrender/src/core/util';
 
 var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -94,10 +95,12 @@ export default {
         );
 
         if (typeof formatter === 'function') {
-            if ((params.value instanceof Array) && dimIndex == null) {
-              let labelDims = data.mapDimension('defaultedLabel', true)
-              if (labelDims instanceof Array) {
-                params.value = labelDims.map(i => retrieveRawValue(data, dataIndex, i))
+            if (zrUtil.isArray(params.value) && dimIndex == null) {
+              var labelDims = data.mapDimension('defaultedLabel', true);
+              if (zrUtil.isArray(labelDims)) {
+                params.value = labelDims.map(function(i) {
+                  return retrieveRawValue(data, dataIndex, i);
+                });
               }
             }
             params.status = status;
