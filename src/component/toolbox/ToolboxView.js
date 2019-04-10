@@ -157,6 +157,23 @@ export default echarts.extendComponentView({
                 path.setStyle(iconStyleModel.getItemStyle());
                 path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
 
+                var tooltipModel = toolboxModel.getModel('tooltip');
+                if (tooltipModel && tooltipModel.get('show')) {
+                    path.attr('tooltip', zrUtil.extend({
+                        content: titles[iconName],
+                        formatter: tooltipModel.get('formatter', true)
+                            || function () {
+                                return titles[iconName];
+                            },
+                        formatterParams: {
+                            componentType: 'toolbox',
+                            name: iconName,
+                            title: titles[iconName],
+                            $vars: ['name', 'title']
+                        }
+                    }, tooltipModel.option));
+                }
+
                 graphic.setHoverStyle(path);
 
                 if (toolboxModel.get('showTitle')) {
