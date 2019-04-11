@@ -110,6 +110,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [re-echarts](https://github.com/liekkas/re-echarts) by liekkas
 + [react-echarts-v3](https://github.com/xlsdg/react-echarts-v3) by xlsdg
 + [d2recharts](https://github.com/leungwensen/d2recharts) by leungwensen
++ [react-component-echarts](https://github.com/dawiwt/react-component-echarts) by dawiwt
 
 #### React Native Component
 

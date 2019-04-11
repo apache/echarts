@@ -56,6 +56,7 @@ export default {
             this.getShallow('align'),
             this.getShallow('verticalAlign') || this.getShallow('baseline'),
             this.getShallow('padding'),
+            this.getShallow('lineHeight'),
             this.getShallow('rich'),
             this.getShallow('truncateText')
         );
