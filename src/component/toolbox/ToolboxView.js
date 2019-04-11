@@ -170,7 +170,8 @@ export default echarts.extendComponentView({
                             name: iconName,
                             title: titles[iconName],
                             $vars: ['name', 'title']
-                        }
+                        },
+                        position: tooltipModel.get('position', true) || 'bottom'
                     }, tooltipModel.option));
                 }
 
