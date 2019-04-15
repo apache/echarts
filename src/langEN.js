@@ -79,7 +79,7 @@ export default {
         },
         data: {
             allData: 'The data is -',
-            partialData: 'The first {displayCnt} item is ——',
+            partialData: 'The first {displayCnt} items are ——',
             withName: 'The data for {name} is {value}',
             withoutName: '{value}',
             separator: {
