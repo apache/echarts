@@ -55,5 +55,37 @@ export default {
             title: 'Save as Image',
             lang: ['Right Click to Save Image']
         }
+    },
+    aria: {
+        general: {
+            withTitle: 'This is a chart about "{title}"',
+            withoutTitle: 'This is a chart，'
+        },
+        series: {
+            single: {
+                prefix: '',
+                withName: 'This is a chart with type {seriesType} named {seriesName}.',
+                withoutName: 'This is a chart with type {seriesType}.'
+            },
+            multiple: {
+                prefix: 'This chart consists of {seriesCount} series count.',
+                withName: 'The {seriesId} series is a {seriesType} representing {seriesName}，',
+                withoutName: 'The {seriesId} series is a {seriesType}，',
+                separator: {
+                    middle: '；',
+                    end: '。'
+                }
+            }
+        },
+        data: {
+            allData: 'The data is -',
+            partialData: 'The first {displayCnt} item is ——',
+            withName: 'The data for {name} is {value}',
+            withoutName: '{value}',
+            separator: {
+                middle: '，',
+                end: ''
+            }
+        }
     }
 };
