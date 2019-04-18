@@ -322,7 +322,7 @@ function makeLabelsByNumericCategoryInterval(axis, categoryInterval, onlyTick) {
         addItem(tickValue);
     }
 
-    if (includeMaxLabel && tickValue !== ordinalExtent[1]) {
+    if (includeMaxLabel && tickValue - step !== ordinalExtent[1]) {
         addItem(ordinalExtent[1]);
     }
 
