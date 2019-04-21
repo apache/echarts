@@ -57,6 +57,7 @@ under the License.
         <div id="mainb1"></div>
         <div id="mainb2"></div>
         <div id="mainb3"></div>
+        <div id="mainb4"></div>
 
         <div id="main0"></div>
         <div id="main1"></div>
@@ -319,6 +320,56 @@ under the License.
                     title: [
                         'hover the blue symbol, the z2 can be top',
                         'unhover, **z2 should be back** to bottom'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    series: [{
+                        type: 'graph',
+                        symbolSize: 20,
+                        focusNodeAdjacency: true,
+                        data: [
+                            {value: 100, name: 'aa', x: 100, y: 200},
+                            {value: 150, name: 'bb', x: 450, y: 300},
+                            {value: 200, name: 'cc', x: 200, y: 100},
+                            {value: 250, name: 'dd', x: 450, y: 250}
+                        ],
+                        links: [
+                            {source: 'aa', target: 'bb'},
+                            {source: 'aa', target: 'dd'},
+                            {source: 'cc', target: 'bb'}
+                        ],
+                        lineStyle: {
+                            color: 'green',
+                            type: 'dashed', // [4, 6],
+                            width: 3
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                color: 'orange',
+                                type: 'solid',
+                                width: 8
+                                // opacity: .8
+                            }
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb4', {
+                    title: [
+                        'normal line is **green dashed width 3**,', 
+                        'should become **orange solid width 8** when hovered'
                     ],
                     option: option,
                     height: 200
