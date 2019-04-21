@@ -343,7 +343,13 @@ under the License.
                             {value: 100, name: 'aa', x: 100, y: 200},
                             {value: 150, name: 'bb', x: 450, y: 300},
                             {value: 200, name: 'cc', x: 200, y: 100},
-                            {value: 250, name: 'dd', x: 450, y: 250}
+                            {value: 250, name: 'dd', x: 450, y: 250, 
+                                emphasis: {
+                                    itemStyle: {
+                                        color: 'blue'
+                                    }
+                                }
+                            }
                         ],
                         links: [
                             {source: 'aa', target: 'bb'},
@@ -360,7 +366,6 @@ under the License.
                                 color: 'orange',
                                 type: 'solid',
                                 width: 8
-                                // opacity: .8
                             }
                         }
                     }]
@@ -368,8 +373,8 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'mainb4', {
                     title: [
-                        'normal line is **green dashed width 3**,', 
-                        'should become **orange solid width 8** when hovered'
+                        'normal style is **line: green dashed width 3, node: red**,', 
+                        'should become **line: orange solid width 8, node: only "dd" blue** when hovered'
                     ],
                     option: option,
                     height: 200

@@ -34,13 +34,14 @@ var nodeOpacityPath = ['itemStyle', 'opacity'];
 var lineOpacityPath = ['lineStyle', 'opacity'];
 
 function getItemOpacity(item, opacityPath) {
-    return item.getVisual('opacity') || item.getModel().get(opacityPath);
+    var opacity = item.getVisual('opacity');
+    return opacity != null ? opacity : item.getModel().get(opacityPath);
 }
 
 function fadeOutItem(item, opacityPath, opacityRatio) {
     var el = item.getGraphicEl();
-
     var opacity = getItemOpacity(item, opacityPath);
+
     if (opacityRatio != null) {
         opacity == null && (opacity = 1);
         opacity *= opacityRatio;
@@ -48,7 +49,7 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 
     el.downplay && el.downplay();
     el.traverse(function (child) {
-        if (child.type !== 'group') {
+        if (!child.isGroup) {
             var opct = child.lineLabelOriginalOpacity;
             if (opct == null || opacityRatio != null) {
                 opct = opacity;
@@ -61,13 +62,13 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 function fadeInItem(item, opacityPath) {
     var opacity = getItemOpacity(item, opacityPath);
     var el = item.getGraphicEl();
-
-    el.highlight && el.highlight();
+    // Should go back to normal opacity first, consider hoverLayer, 
+    // where current state is copied to elMirror, and support
+    // emphasis opacity here.
     el.traverse(function (child) {
-        if (child.type !== 'group') {
-            child.setStyle('opacity', opacity);
-        }
+        !child.isGroup && child.setStyle('opacity', opacity);
     });
+    el.highlight && el.highlight();
 }
 
 export default echarts.extendChartView({
