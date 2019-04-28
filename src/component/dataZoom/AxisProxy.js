@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 import * as helper from './helper';
 import sliderMove from '../helper/sliderMove';
+import dataStack from '../../processor/dataStack';
 
 var each = zrUtil.each;
 var asc = numberUtil.asc;
