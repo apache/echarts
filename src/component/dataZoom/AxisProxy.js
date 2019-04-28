@@ -282,6 +282,8 @@ AxisProxy.prototype = {
         }
 
         var targetSeries = this.getTargetSeriesModels();
+        // Calcule stack value before data extend caclulation
+        dataStack(this.ecModel);
         // Culculate data window and data extent, and record them.
         this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
 
