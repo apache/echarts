@@ -328,7 +328,12 @@ export function retrieveRawValue(data, dataIndex, dim) {
     }
 
     // Consider data may be not persistent.
-    var dataItem = data.getRawDataItem(dataIndex);
+    // For dataset, retrive value by mapDimension like getDataParams() did
+    var valueList = [];
+    data.each(data.mapDimension('value'), function (value) {
+        valueList.push(value);
+    });
+    var dataItem = valueList[dataIndex];
 
     if (dataItem == null) {
         return;
