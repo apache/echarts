@@ -329,8 +329,16 @@ export function retrieveRawValue(data, dataIndex, dim) {
 
     // Consider data may be not persistent.
     // For dataset, retrive value by mapDimension like getDataParams() did
+    // For chart with axis, need to find which axis is value axis
     var valueList = [];
-    data.each(data.mapDimension('value'), function (value) {
+    var valueDim = 'value';
+    if (data.hostModel.coordinateSystem) {
+        var cartesian = data.hostModel.coordinateSystem;
+        var baseAxis = cartesian.getBaseAxis();
+        var valueAxis = cartesian.getOtherAxis(baseAxis);
+        valueDim = valueAxis.dim;
+    }
+    data.each(data.mapDimension(valueDim), function (value) {
         valueList.push(value);
     });
     var dataItem = valueList[dataIndex];
@@ -339,17 +347,7 @@ export function retrieveRawValue(data, dataIndex, dim) {
         return;
     }
 
-    var sourceFormat = data.getProvider().getSource().sourceFormat;
-    var dimName;
-    var dimIndex;
-
-    var dimInfo = data.getDimensionInfo(dim);
-    if (dimInfo) {
-        dimName = dimInfo.name;
-        dimIndex = dimInfo.index;
-    }
-
-    return rawValueGetters[sourceFormat](dataItem, dataIndex, dimIndex, dimName);
+    return dataItem;
 }
 
 /**
