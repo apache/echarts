@@ -59,32 +59,32 @@ export default {
     aria: {
         general: {
             withTitle: 'This is a chart about "{title}"',
-            withoutTitle: 'This is a chart,'
+            withoutTitle: 'This is a chart'
         },
         series: {
             single: {
                 prefix: '',
-                withName: ', and this is a chart with type {seriesType} named {seriesName}.',
-                withoutName: 'This is a chart with type {seriesType}.'
+                withName: ' with type {seriesType} named {seriesName}.',
+                withoutName: ' with type {seriesType}.'
             },
             multiple: {
-                prefix: 'This chart consists of {seriesCount} series count.',
-                withName: ', and the {seriesId} series is a {seriesType} representing {seriesName}，',
-                withoutName: 'The {seriesId} series is a {seriesType}，',
+                prefix: '. It consists of {seriesCount} series count.',
+                withName: ' The {seriesId} series is a {seriesType} representing {seriesName}.',
+                withoutName: ' The {seriesId} series is a {seriesType}.',
                 separator: {
-                    middle: ';',
-                    end: '.'
+                    middle: '',
+                    end: ''
                 }
             }
         },
         data: {
-            allData: 'The data is -',
-            partialData: 'The first {displayCnt} items are ——',
-            withName: 'The data for {name} is {value}',
+            allData: 'The data is as follows: ',
+            partialData: 'The first {displayCnt} items are: ',
+            withName: 'the data for {name} is {value}',
             withoutName: '{value}',
             separator: {
                 middle: ',',
-                end: ''
+                end: '.'
             }
         }
     }
