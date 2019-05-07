@@ -326,28 +326,41 @@ export function retrieveRawValue(data, dataIndex, dim) {
     if (!data) {
         return;
     }
-
     // Consider data may be not persistent.
     // For dataset, retrive value by mapDimension like getDataParams() did
     // For chart with axis, need to find which axis is value axis
-    var valueList = [];
-    var valueDim = dim;
-    if (data.hostModel.coordinateSystem) {
+    if (data.hostModel.coordinateSystem && data.hostModel.coordinateSystem.getBaseAxis) {
+        var valueList = [];
+        var valueDim = dim;
         var cartesian = data.hostModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();
         var valueAxis = cartesian.getOtherAxis(baseAxis);
         valueDim = valueAxis.dim;
+        data.each(data.mapDimension(valueDim), function (value) {
+            valueList.push(value);
+        });
+        var dataItem = valueList[dataIndex];
+        return dataItem;
+    } else {
+        // Chart like Geo don't have getBaseAxis, so use old way to get value
+        var dataItem = data.getRawDataItem(dataIndex);
+    
+        if (dataItem == null) {
+            return;
+        }
+    
+        var sourceFormat = data.getProvider().getSource().sourceFormat;
+        var dimName;
+        var dimIndex;
+    
+        var dimInfo = data.getDimensionInfo(dim);
+        if (dimInfo) {
+            dimName = dimInfo.name;
+            dimIndex = dimInfo.index;
+        }
+    
+        return rawValueGetters[sourceFormat](dataItem, dataIndex, dimIndex, dimName);
     }
-    data.each(data.mapDimension(valueDim), function (value) {
-        valueList.push(value);
-    });
-    var dataItem = valueList[dataIndex];
-
-    if (dataItem == null) {
-        return;
-    }
-
-    return dataItem;
 }
 
 /**
