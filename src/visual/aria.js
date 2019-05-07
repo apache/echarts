@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import lang from '../lang';
-import { retrieveRawValue } from '../data/helper/dataProvider';
+import { getDefaultLabel } from '../chart/helper/labelHelper';
 
 export default function (dom, ecModel) {
     var ariaModel = ecModel.getModel('aria');
@@ -95,7 +95,7 @@ export default function (dom, ecModel) {
                 for (var i = 0; i < data.count(); i++) {
                     if (i < maxDataCnt) {
                         var name = data.getName(i);
-                        var value = retrieveRawValue(data, i);
+                        var value = getDefaultLabel(data, i);
                         dataLabels.push(
                             replace(
                                 name

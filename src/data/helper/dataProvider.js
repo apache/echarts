@@ -331,7 +331,7 @@ export function retrieveRawValue(data, dataIndex, dim) {
     // For dataset, retrive value by mapDimension like getDataParams() did
     // For chart with axis, need to find which axis is value axis
     var valueList = [];
-    var valueDim = 'value';
+    var valueDim = dim;
     if (data.hostModel.coordinateSystem) {
         var cartesian = data.hostModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();

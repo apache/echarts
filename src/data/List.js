@@ -361,7 +361,8 @@ listProto.mapDimension = function (coordDim, idx) {
     var dimensionsSummary = this._dimensionsSummary;
 
     if (idx == null) {
-        return dimensionsSummary.encodeFirstDimNotExtra[coordDim];
+        // Not using dimension option in dataset will return 'undefined', so add a defalut value
+        return dimensionsSummary.encodeFirstDimNotExtra[coordDim] || dimensionsSummary.encodeFirstDimNotExtra.value;
     }
 
     var dims = dimensionsSummary.encode[coordDim];

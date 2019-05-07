@@ -119,7 +119,7 @@ export default {
      * @return {Array|number|string}
      */
     getRawValue: function (idx, dataType) {
-        return retrieveRawValue(this.getData(dataType), idx);
+        return getDefaultLabel(this.getData(dataType), idx);
     },
 
     /**
