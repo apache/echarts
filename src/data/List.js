@@ -313,7 +313,7 @@ listProto.type = 'list';
 listProto.hasItemOption = true;
 
 /**
- * The means of the input parameter `dim`:
+ * The meanings of the input parameter `dim`:
  *
  * + If dim is a number (e.g., `1`), it means the index of the dimension.
  *   For example, `getDimension(0)` will return 'x' or 'lng' or 'radius'.
