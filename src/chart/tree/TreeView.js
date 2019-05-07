@@ -66,6 +66,8 @@ export default echarts.extendChartView({
         this._controllerHost = {target: this.group};
 
         this.group.add(this._mainGroup);
+
+        this._points = [];
     },
 
     render: function (seriesModel, ecModel, api, payload) {
@@ -150,16 +152,15 @@ export default echarts.extendChartView({
 
     _updateViewCoordSys: function (seriesModel) {
         var data = seriesModel.getData();
-        var points = [];
-        data.each(function (idx) {
+        this._points.length && data.each(idx => {
             var layout = data.getItemLayout(idx);
             if (layout && !isNaN(layout.x) && !isNaN(layout.y)) {
-                points.push([+layout.x, +layout.y]);
+                this._points.push([+layout.x, +layout.y]);
             }
         });
         var min = [];
         var max = [];
-        bbox.fromPoints(points, min, max);
+        bbox.fromPoints(this._points, min, max);
         // If width or height is 0
         if (max[0] - min[0] === 0) {
             max[0] += 1;
