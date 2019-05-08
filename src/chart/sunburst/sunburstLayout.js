@@ -79,6 +79,62 @@ export default function (seriesType, ecModel, api, payload) {
 
         var dir = clockwise ? 1 : -1;
 
+        // Object to store angle for each node
+        var angleObj = {
+            '0': {
+                value: Math.PI * 2,
+                parent: null,
+                // isSmallThanMin: false,
+                diff: 0
+            }
+        };
+
+        /**
+         * Calcule angle for each node
+         * @param {TreeNode} node TreeNode
+         */
+        function calculateAngle(node) {
+            if (!node) {
+                return;
+            }
+
+            if (node !== virtualRoot) {
+                var value = node.getValue();
+
+                var angle = (sum === 0 && stillShowZeroSum) ? unitRadian : (value * unitRadian);
+                angleObj[node.dataIndex.toString()] = {
+                    value: angle,
+                    parent: node.parentNode.dataIndex.toString(),
+                    // isSmallThanMin: false,
+                    diff: 0
+                };
+            }
+
+            if (!angleObj['0'].childLen) {
+                angleObj['0'].childLen = node.children.length;
+            } else if (node.children && node.children.length) {
+                angleObj[node.dataIndex.toString()].childLen = node.children.length;
+            }
+
+
+            if (node.children && node.children.length) {
+                each$1(node.children, function (node) {
+                    calculateAngle(node);
+                });
+            }
+        };
+
+        // To check if some angle if lower than minAngle
+        function angleCheck() {
+            for (var i in angleObj) {
+                if (angleObj[i].value < minAngle) {
+                    angleObj[angleObj[i].parent].diff += minAngle - angleObj[i].value;
+                    angleObj[i].value = minAngle;
+                    // angleObj[i].isSmallThanMin = true;
+                }
+            }
+        }
+
         /**
          * Render a tree
          * @return increased angle
@@ -93,17 +149,7 @@ export default function (seriesType, ecModel, api, payload) {
             // Render self
             if (node !== virtualRoot) {
                 // Tree node is virtual, so it doesn't need to be drawn
-                var value = node.getValue();
-
-                var angle = (sum === 0 && stillShowZeroSum)
-                    ? unitRadian : (value * unitRadian);
-                if (angle < minAngle) {
-                    angle = minAngle;
-                    restAngle -= minAngle;
-                }
-                else {
-                    valueSumLargerThanMinAngle += value;
-                }
+                var angle = angleObj[node.dataIndex].value + angleObj[node.dataIndex].diff;
 
                 endAngle = startAngle + dir * angle;
 
@@ -162,6 +208,8 @@ export default function (seriesType, ecModel, api, payload) {
             });
         }
 
+        calculateAngle(treeRoot);
+        angleCheck();
         renderNode(treeRoot, startAngle);
     });
 }
