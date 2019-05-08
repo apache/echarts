@@ -152,7 +152,7 @@ export default echarts.extendChartView({
 
     _updateViewCoordSys: function (seriesModel) {
         var data = seriesModel.getData();
-        this._points.length && data.each(idx => {
+        !this._points.length && data.each(idx => {
             var layout = data.getItemLayout(idx);
             if (layout && !isNaN(layout.x) && !isNaN(layout.y)) {
                 this._points.push([+layout.x, +layout.y]);
