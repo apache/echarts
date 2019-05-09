@@ -95,6 +95,7 @@ export default {
 
         if (typeof formatter === 'function') {
             params.status = status;
+            params.dimIndex = dimIndex;
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
