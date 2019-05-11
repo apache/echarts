@@ -109,6 +109,7 @@ echarts.extendComponentView({
         var subtextStyleModel = titleModel.getModel('subtextStyle');
 
         var textAlign = titleModel.get('textAlign');
+        var subtextAlign = subtextStyleModel.get('align');
         var textVerticalAlign = zrUtil.retrieve2(
             titleModel.get('textBaseline'), titleModel.get('textVerticalAlign')
         );
@@ -127,6 +128,7 @@ echarts.extendComponentView({
         var subTextEl = new graphic.Text({
             style: graphic.setTextStyle({}, subtextStyleModel, {
                 text: subText,
+                x: subtextStyleModel.get('x'),
                 textFill: subtextStyleModel.getTextColor(),
                 y: textRect.height + titleModel.get('itemGap'),
                 textVerticalAlign: 'top'
@@ -209,7 +211,9 @@ echarts.extendComponentView({
             textVerticalAlign: textVerticalAlign
         };
         textEl.setStyle(alignStyle);
-        subTextEl.setStyle(alignStyle);
+        subTextEl.setStyle({
+            textAlign: subtextAlign || textAlign
+        });
 
         // Render background
         // Get groupRect again because textAlign has been changed
