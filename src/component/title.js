@@ -130,7 +130,7 @@ echarts.extendComponentView({
                 text: subText,
                 x: subtextStyleModel.get('x'),
                 textFill: subtextStyleModel.getTextColor(),
-                y: textRect.height + titleModel.get('itemGap'),
+                y: textRect.height + titleModel.get('itemGap') + (subtextStyleModel.get('y') || 0),
                 textVerticalAlign: 'top'
             }, {disableBox: true}),
             z2: 10
