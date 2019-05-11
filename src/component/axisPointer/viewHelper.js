@@ -137,6 +137,7 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
     if (formatter) {
         var params = {
             value: axisHelper.getAxisRawValue(axis, value),
+            axis: axis,
             seriesData: []
         };
         zrUtil.each(seriesDataIndices, function (idxItem) {
