@@ -473,7 +473,7 @@ function fixExtentByAxis(axisProxy, dataExtent) {
         dataExtent[1] = axisDataLen > 0 ? axisDataLen - 1 : NaN;
     }
 
-    if (!axisModel.get('scale', true) && !(max || min)) {
+    if (!axisModel.get('scale', true) && !(max != null || min != null)) {
         dataExtent[0] > 0 && (dataExtent[0] = 0);
         dataExtent[1] < 0 && (dataExtent[1] = 0);
     }
