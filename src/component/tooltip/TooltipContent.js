@@ -149,6 +149,10 @@ function TooltipContent(container, api) {
      */
     this._hideTimeout;
 
+    // FIXME
+    // Is it needed to trigger zr event manually if
+    // the browser do not support `pointer-events: none`.
+
     var self = this;
     el.onmouseenter = function () {
         // clear the timeout in hideLater and keep showing tooltip
@@ -161,6 +165,10 @@ function TooltipContent(container, api) {
     el.onmousemove = function (e) {
         e = e || window.event;
         if (!self._enterable) {
+            // `pointer-events: none` is set to tooltip content div
+            // if `enterable` is set as `false`, and `el.onmousemove`
+            // can not be triggered. But in browser that do not
+            // support `pointer-events`, we need to do this:
             // Try trigger zrender event to avoid mouse
             // in and out shape too frequently
             var handler = zr.handler;
