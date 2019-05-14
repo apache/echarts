@@ -25,6 +25,7 @@ import createListFromArray from './helper/createListFromArray';
 import {getLayoutOnAxis} from '../layout/barGrid';
 import DataDiffer from '../data/DataDiffer';
 import SeriesModel from '../model/Series';
+import Model from '../model/Model';
 import ChartView from '../view/Chart';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -33,7 +34,7 @@ import prepareSingleAxis from '../coord/single/prepareCustom';
 import preparePolar from '../coord/polar/prepareCustom';
 import prepareCalendar from '../coord/calendar/prepareCustom';
 
-
+var CACHED_LABEL_STYLE_PROPERTIES = graphicUtil.CACHED_LABEL_STYLE_PROPERTIES;
 var ITEM_STYLE_NORMAL_PATH = ['itemStyle'];
 var ITEM_STYLE_EMPHASIS_PATH = ['emphasis', 'itemStyle'];
 var LABEL_NORMAL = ['label'];
@@ -41,6 +42,7 @@ var LABEL_EMPHASIS = ['emphasis', 'label'];
 // Use prefix to avoid index to be the same as el.name,
 // which will cause weird udpate animation.
 var GROUP_DIFF_PREFIX = 'e\0\0';
+
 
 /**
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
@@ -451,19 +453,24 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         var opacity = data.getItemVisual(dataIndexInside, 'opacity');
         opacity != null && (itemStyle.opacity = opacity);
 
-        graphicUtil.setTextStyle(itemStyle, currLabelNormalModel, null, {
+        var labelModel = extra
+            ? applyExtraBefore(extra, currLabelNormalModel)
+            : currLabelNormalModel;
+
+        graphicUtil.setTextStyle(itemStyle, labelModel, null, {
             autoColor: currVisualColor,
             isRectText: true
         });
 
-        itemStyle.text = currLabelNormalModel.getShallow('show')
+        itemStyle.text = labelModel.getShallow('show')
             ? zrUtil.retrieve2(
                 customSeries.getFormattedLabel(dataIndexInside, 'normal'),
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
 
-        extra && zrUtil.extend(itemStyle, extra);
+        extra && applyExtraAfter(itemStyle, extra);
+
         return itemStyle;
     }
 
@@ -478,11 +485,15 @@ function makeRenderItem(customSeries, data, ecModel, api) {
 
         var itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
 
-        graphicUtil.setTextStyle(itemStyle, currLabelEmphasisModel, null, {
+        var labelModel = extra
+            ? applyExtraBefore(extra, currLabelEmphasisModel)
+            : currLabelEmphasisModel;
+
+        graphicUtil.setTextStyle(itemStyle, labelModel, null, {
             isRectText: true
         }, true);
 
-        itemStyle.text = currLabelEmphasisModel.getShallow('show')
+        itemStyle.text = labelModel.getShallow('show')
             ? zrUtil.retrieve3(
                 customSeries.getFormattedLabel(dataIndexInside, 'emphasis'),
                 customSeries.getFormattedLabel(dataIndexInside, 'normal'),
@@ -490,7 +501,8 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             )
             : null;
 
-        extra && zrUtil.extend(itemStyle, extra);
+        extra && applyExtraAfter(itemStyle, extra);
+
         return itemStyle;
     }
 
@@ -717,6 +729,29 @@ function processAddUpdate(newIndex, oldIndex) {
         context.group,
         context.data
     );
+}
+
+// `graphic#applyDefaultTextStyle` will cache
+// textFill, textStroke, textStrokeWidth.
+// We have to do this trick.
+function applyExtraBefore(extra, model) {
+    var dummyModel = new Model({}, model);
+    zrUtil.each(CACHED_LABEL_STYLE_PROPERTIES, function (stylePropName, modelPropName) {
+        if (extra.hasOwnProperty(stylePropName)) {
+            dummyModel.option[modelPropName] = extra[stylePropName];
+        }
+    });
+    return dummyModel;
+}
+
+function applyExtraAfter(itemStyle, extra) {
+    for (var key in extra) {
+        if (extra.hasOwnProperty(key)
+            || !CACHED_LABEL_STYLE_PROPERTIES.hasOwnProperty(key)
+        ) {
+            itemStyle[key] = extra[key];
+        }
+    }
 }
 
 function processRemove(oldIndex) {

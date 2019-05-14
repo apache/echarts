@@ -218,6 +218,51 @@ under the License.
                         data: [
                             [212, 331], [215, 131], [265, 531]
                         ]
+                    }, {
+                        type: 'scatter',
+                        symbol: 'rect',
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            formatter: 'label stroke orange hover blue\n{c}',
+                            textBorderWidth: 3,
+                            textBorderColor: 'orange'
+                        },
+                        emphasis: {
+                            label: {
+                                formatter: 'hover become stroke blue',
+                                textBorderColor: 'blue'
+                            }
+                        },
+                        data: [
+                            [312, 51]
+                        ]
+                    }, {
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            var coords = api.coord([312, 351]);
+                            return {
+                                type: 'rect',
+                                shape: {
+                                    x: coords[0],
+                                    y: coords[1],
+                                    width: 50,
+                                    height: 50
+                                },
+                                // check api.style
+                                style: api.style({
+                                    text: 'label stroke orange hover blue',
+                                    textStrokeWidth: 2,
+                                    textStroke: 'orange'
+                                }),
+                                styleEmphasis: api.styleEmphasis({
+                                    textStroke: 'blue'
+                                })
+                            };
+                        },
+                        data: [
+                            [312, 151]
+                        ]
                     }]
                 };
 
@@ -343,7 +388,7 @@ under the License.
                             {value: 100, name: 'aa', x: 100, y: 200},
                             {value: 150, name: 'bb', x: 450, y: 300},
                             {value: 200, name: 'cc', x: 200, y: 100},
-                            {value: 250, name: 'dd', x: 450, y: 250, 
+                            {value: 250, name: 'dd', x: 450, y: 250,
                                 emphasis: {
                                     itemStyle: {
                                         color: 'blue'
@@ -373,7 +418,7 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'mainb4', {
                     title: [
-                        'normal style is **line: green dashed width 3, node: red**,', 
+                        'normal style is **line: green dashed width 3, node: red**,',
                         'should become **line: orange solid width 8, node: only "dd" blue** when hovered'
                     ],
                     option: option,

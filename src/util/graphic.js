@@ -312,12 +312,12 @@ function singleEnterEmphasis(el) {
     // where properties of `emphasis` may not appear in `normal`. We previously use
     // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
     // But consider rich text and setOption in merge mode, it is impossible to cover
-    // all properties in merge. So we use merge mode when setting style here. 
+    // all properties in merge. So we use merge mode when setting style here.
     // But we choose the merge strategy that only properties that is not `null/undefined`.
-    // Because when making a textStyle (espacially rich text), it is not easy to distinguish 
+    // Because when making a textStyle (espacially rich text), it is not easy to distinguish
     // `hasOwnProperty` and `null/undefined` in code, so we trade them as the same for simplicity.
-    // But this strategy brings a trouble that `null/undefined` can not be used to remove 
-    // style any more in `emphasis`. Users can both set properties directly on normal and 
+    // But this strategy brings a trouble that `null/undefined` can not be used to remove
+    // style any more in `emphasis`. Users can both set properties directly on normal and
     // emphasis to avoid this issue, or we might support `'none'` for this case if required.
     targetStyle.extendFrom(hoverStl);
 
@@ -902,6 +902,13 @@ function getAutoColor(color, opt) {
     return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
 }
 
+// key: label model property nane, value: style property name.
+export var CACHED_LABEL_STYLE_PROPERTIES = {
+    color: 'textFill',
+    textBorderColor: 'textStroke',
+    textBorderWidth: 'textStrokeWidth'
+};
+
 /**
  * Give some default value to the input `textStyle` object, based on the current settings
  * in this `textStyle` object.
@@ -943,6 +950,8 @@ function applyDefaultTextStyle(textStyle) {
             )
         )
     ) {
+        // If intend to cache more properties here, modify the
+        // `CACHED_LABEL_STYLE_PROPERTIES`.
         insideRollback = {
             textFill: null,
             textStroke: textStyle.textStroke,
