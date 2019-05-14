@@ -104,7 +104,47 @@ function labelLayout(data) {
                 x2 = x1 - labelLineLen;
                 textX = x2 - 5;
                 textAlign = 'right';
-            }
+            } 
+            else if (labelPosition === 'right') {
+                // Right side
+                x1 = (points[1][0] + points[2][0]) / 2;
+                y1 = (points[1][1] + points[2][1]) / 2;
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'left';
+            } 
+            else if (labelPosition === 'rightTop') {
+                // RightTop side
+                x1 = points[1][0];
+                y1 = points[1][1];
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'top';
+            } 
+            else if (labelPosition === 'rightBottom') {
+                // RightBottom side
+                x1 = points[2][0];
+                y1 = points[2][1];
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'bottom';
+            } 
+            else if (labelPosition === 'leftTop') {
+                // LeftTop side
+                x1 = points[0][0];
+                y1 = points[1][1];
+                x2 = x1 - labelLineLen;
+                textX = x2 - 5;
+                textAlign = 'right';
+            } 
+            else if (labelPosition === 'leftBottom') {
+                // LeftBottom side
+                x1 = points[3][0];
+                y1 = points[2][1];
+                x2 = x1 - labelLineLen;
+                textX = x2 - 5;
+                textAlign = 'right';
+            } 
             else {
                 // Right side
                 x1 = (points[1][0] + points[2][0]) / 2;
