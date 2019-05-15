@@ -221,8 +221,16 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         }
         var font = labelModel.getFont();
 
-        var labelRotate = labelModel.get('rotate')
-            ? (dx < 0 ? -midAngle + Math.PI : -midAngle) : 0;
+        var labelRotate;
+        var rotate = labelModel.get('rotate');
+        if (typeof rotate === 'number') {
+            labelRotate = rotate * (Math.PI / 180);
+        }
+        else {
+            labelRotate = rotate
+                ? (dx < 0 ? -midAngle + Math.PI : -midAngle)
+                : 0;
+        }
         var text = seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx);
         var textRect = textContain.getBoundingRect(
