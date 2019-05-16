@@ -102,6 +102,10 @@ export default MarkerView.extend({
 
         mpData.each(function (idx) {
             var itemModel = mpData.getItemModel(idx);
+            var symbol = itemModel.getShallow('symbol');
+            if (typeof symbol === 'function') {
+                symbol = symbol(mpModel.getRawValue(idx), mpModel.getDataParams(idx));
+            }
             var symbolSize = itemModel.getShallow('symbolSize');
             if (typeof symbolSize === 'function') {
                 // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
@@ -113,7 +117,7 @@ export default MarkerView.extend({
                 symbolSize: symbolSize,
                 color: itemModel.get('itemStyle.color')
                     || seriesData.getVisual('color'),
-                symbol: itemModel.getShallow('symbol')
+                symbol: symbol
             });
         });
 
