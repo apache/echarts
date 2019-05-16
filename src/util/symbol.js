@@ -332,11 +332,15 @@ function symbolPathSetColor(color, innerColor) {
 export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
     // TODO Support image object, DynamicImage.
 
+    var isFunction = typeof symbolType === 'function'
+    if (isFunction) {
+        symbolType = symbolType();
+    }
+    var symbolPath;
     var isEmpty = symbolType.indexOf('empty') === 0;
     if (isEmpty) {
         symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
     }
-    var symbolPath;
 
     if (symbolType.indexOf('image://') === 0) {
         symbolPath = graphic.makeImage(
