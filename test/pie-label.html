@@ -42,6 +42,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
 
         <script>
@@ -225,6 +226,90 @@ under the License.
 
 
 
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var count = 5;
+
+                function makeData(sign) {
+                    var data = [];
+                    for (var i = 0; i < count; i++) {
+                        var value = Math.random() * 50 * sign;
+                        value = +value.toFixed(2);
+
+                        if (i >= 2
+                            && i <= count - 2
+                            && i % 10 !== 0
+                            // Test the case that the bottom label is normal to display.
+                            && Math.abs(i - Math.round(count / 2)) > 2
+                        ) {
+                            value = sign > 0
+                                ? value - Math.floor(value)
+                                : value - Math.ceil(value);
+                            value = +value.toFixed(2);
+                        }
+
+                        data.push({
+                            name: value,
+                            value: value
+                        });
+                    }
+                    return data;
+                }
+
+                var pos = ['25%', '75%'];
+
+                var option = {
+                    title: [{
+                        text: 'label.rotate: true, label should be in redical direction.',
+                        textAlign: 'center',
+                        left: pos[0]
+                    }, {
+                        text: 'label.rotate: 20',
+                        textAlign: 'center',
+                        left: pos[1]
+                    }],
+                    series: [{
+                        type: 'pie',
+                        center: [pos[0], '50%'],
+                        minShowLabelAngle: 10,
+                        label: {
+                            show: true,
+                            rotate: true
+                        },
+                        labelLine: {
+                            length2: 0
+                        },
+                        radius: '30%',
+                        data: makeData(1)
+                    }, {
+                        type: 'pie',
+                        center: [pos[1], '50%'],
+                        minShowLabelAngle: 2,
+                        label: {
+                            show: true,
+                            rotate: 20
+                        },
+                        radius: '30%',
+                        data: makeData(-1)
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'label should be rotated'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
 
 
     </body>
