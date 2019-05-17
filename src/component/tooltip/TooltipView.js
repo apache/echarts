@@ -155,7 +155,7 @@ export default echarts.extendComponentView({
                 // Show tip next tick after other charts are rendered
                 // In case highlight action has wrong result
                 // FIXME
-                self.manuallyShowTip(tooltipModel, ecModel, api, {
+                !api.isDisposed() && self.manuallyShowTip(tooltipModel, ecModel, api, {
                     x: self._lastX,
                     y: self._lastY
                 });
