@@ -1,0 +1,184 @@
+<!doctype html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <script src="lib/testHelper.js"></script>
+    <script src="../dist/echarts.js"></script>
+</head>
+
+<body>
+    <style>
+        html,
+        body {
+            background: #111;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    symbolSize: 20,
+                    data: [
+                        [10.0, 8.04],
+                        [8.0, 6.95],
+                        [13.0, 7.58],
+                        [9.0, 8.81],
+                        [11.0, 8.33],
+                        [14.0, 9.96],
+                        [6.0, 7.24],
+                        [4.0, 4.26],
+                        [12.0, 10.84],
+                        [7.0, 4.82],
+                        [5.0, 5.68]
+                    ],
+                    type: 'scatter',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter(params) {
+                            return params.value[1];
+                        },
+                        color: function (index) {
+                            return index === 0 ?
+                                'black' :
+                                index === 1 ?
+                                'red' :
+                                index === 2 ?
+                                'yellow' :
+                                index === 3 ?
+                                'green' :
+                                index === 4 ?
+                                'orange' :
+                                index === 5 ?
+                                'pink' :
+                                index === 6 ?
+                                'red' :
+                                'gray'
+                        }
+                    }
+                }]
+            };
+    
+            var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Label color should set as user designated'
+                    ],
+                    option: option
+            });
+        });
+
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    symbolSize: 20,
+                    data: [
+                        [10.0, 8.04],
+                        [8.0, 6.95],
+                        [13.0, 7.58],
+                        [9.0, 8.81],
+                        [11.0, 8.33],
+                        [14.0, 9.96],
+                        [6.0, 7.24],
+                        [4.0, 4.26],
+                        [12.0, 10.84],
+                        [7.0, 4.82],
+                        [5.0, 5.68]
+                    ],
+                    type: 'scatter',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter(params) {
+                            return params.value[1];
+                        },
+                        color: 'black'
+                    }
+                }]
+            };
+    
+            var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Label color should be black'
+                    ],
+                    option: option
+            });
+        });
+
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    symbolSize: 20,
+                    data: [
+                        [10.0, 8.04],
+                        [8.0, 6.95],
+                        [13.0, 7.58],
+                        [9.0, 8.81],
+                        [11.0, 8.33],
+                        [14.0, 9.96],
+                        [6.0, 7.24],
+                        [4.0, 4.26],
+                        [12.0, 10.84],
+                        [7.0, 4.82],
+                        [5.0, 5.68]
+                    ],
+                    type: 'scatter',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter(params) {
+                            return params.value[1];
+                        }
+                    }
+                }]
+            };
+    
+            var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Label color should be same as point color'
+                    ],
+                    option: option
+            });
+        });
+
+    </script>
+</body>
+
+</html>
