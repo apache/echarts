@@ -44,7 +44,7 @@ var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
         var value;
 
         if (item.yAxis != null || item.xAxis != null) {
-            valueDataDim = seriesModel.get('stack') != null ? '_\0ecstackresult' : item.yAxis != null ? 'y' : 'x';
+            valueDataDim = seriesModel.get('stack') != null ? '__\0ecstackresult' : item.yAxis != null ? 'y' : 'x';
             valueAxis = coordSys.getAxis(valueDataDim);
 
             value = zrUtil.retrieve(item.yAxis, item.xAxis);
