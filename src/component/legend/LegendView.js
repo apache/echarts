@@ -342,8 +342,12 @@ export default echarts.extendComponentView({
 
         itemGroup.__legendDataIndex = dataIndex;
 
-        if (legendModel.get('rotate')) {
-            itemGroup.rotation = legendModel.get('rotate') * Math.PI / 180;
+        var rotation = legendModel.get('rotate');
+        if (rotation != null) {
+            if (typeof rotation === 'string') {
+                rotation = +rotation;
+            }
+            itemGroup.rotation = rotation * Math.PI / 180;
         }
 
         return itemGroup;
