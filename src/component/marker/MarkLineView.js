@@ -23,6 +23,7 @@ import * as numberUtil from '../../util/number';
 import * as markerHelper from './markerHelper';
 import LineDraw from '../../chart/helper/LineDraw';
 import MarkerView from './MarkerView';
+import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
 var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
     var data = seriesModel.getData();
@@ -44,18 +45,16 @@ var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
         var value;
 
         if (item.yAxis != null || item.xAxis != null) {
-            valueDataDim = seriesModel.get('stack') != null ? '__\0ecstackresult' : item.yAxis != null ? 'y' : 'x';
-            valueAxis = coordSys.getAxis(valueDataDim);
-
+            valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
             value = zrUtil.retrieve(item.yAxis, item.xAxis);
         }
         else {
             var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
-            valueDataDim = seriesModel.get('stack') == null ? axisInfo.valueDataDim : '__\0ecstackresult';
+            valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
             valueAxis = axisInfo.valueAxis;
             value = markerHelper.numCalculate(data, valueDataDim, mlType);
         }
-        var valueIndex = valueDataDim === 'x' ? 0 : 1;
+        var valueIndex = valueAxis.dim === 'x' ? 0 : 1;
         var baseIndex = 1 - valueIndex;
 
         var mlFrom = zrUtil.clone(item);
