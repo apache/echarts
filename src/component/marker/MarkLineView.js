@@ -41,7 +41,6 @@ var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
         )
     ) {
         var valueAxis;
-        var valueDataDim;
         var value;
 
         if (item.yAxis != null || item.xAxis != null) {
@@ -50,8 +49,8 @@ var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
         }
         else {
             var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
-            valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
             valueAxis = axisInfo.valueAxis;
+            var valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
             value = markerHelper.numCalculate(data, valueDataDim, mlType);
         }
         var valueIndex = valueAxis.dim === 'x' ? 0 : 1;
