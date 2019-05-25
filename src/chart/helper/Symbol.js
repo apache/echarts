@@ -245,6 +245,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
     var hoverAnimation = seriesScope && seriesScope.hoverAnimation;
     var cursorStyle = seriesScope && seriesScope.cursorStyle;
+    symbolPath.hoverScale = seriesModel.get('hoverScale');
 
     if (!seriesScope || data.hasItemOption) {
         var itemModel = (seriesScope && seriesScope.itemModel)
@@ -342,8 +343,8 @@ function highDownOnUpdate(fromState, toState) {
         var ratio = scale[1] / scale[0];
         var emphasisOpt = {
             scale: [
-                Math.max(scale[0] * 1.1, scale[0] + 3),
-                Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
+                Math.max(scale[0] * (this.hoverScale || 1.1), scale[0] + 3),
+                Math.max(scale[1] * (this.hoverScale || 1.1), scale[1] + 3 * ratio)
             ]
         };
         // FIXME
