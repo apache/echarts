@@ -32,6 +32,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 
 import '../scale/Time';
 import '../scale/Log';
+import '../scale/NaturalLog';
 
 /**
  * Get axis scale extent before niced.

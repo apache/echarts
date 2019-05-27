@@ -190,4 +190,9 @@ axisDefault.logAxis = zrUtil.defaults({
     logBase: 10
 }, axisDefault.valueAxis);
 
+axisDefault.naturallogAxis = zrUtil.defaults({
+    scale: true,
+    logBase: 10
+}, axisDefault.valueAxis);
+
 export default axisDefault;

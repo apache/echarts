@@ -28,7 +28,7 @@ import OrdinalMeta from '../data/OrdinalMeta';
 
 
 // FIXME axisType is fixed ?
-var AXIS_TYPES = ['value', 'category', 'time', 'log'];
+var AXIS_TYPES = ['value', 'category', 'time', 'log', 'naturallog'];
 
 /**
  * Generate sub axis model class
