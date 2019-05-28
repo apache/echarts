@@ -70,7 +70,7 @@ var NaturalLogScale = Scale.extend({
             var stepSize = mathPow(this.base, logStep);
             var cancel = false;
             for (var stepIndex = 1; stepIndex < this.base; stepIndex++) {
-                stepValue = (stepIndex * stepSize);
+                var stepValue = (stepIndex * stepSize);
                 cancel = false;
 
                 if (stepValue <= min) {
