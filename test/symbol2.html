@@ -101,7 +101,10 @@ under the License.
                 var option = {
                     xAxis: {},
                     yAxis: {},
+                    legend: {},
                     series: [{
+                        name: 'aa',
+                        type: 'scatter',
                         symbolSize: 30,
                         symbol: function (rawValue, params) {
                             return ['rect', 'diamond', 'circle'][params.dataIndex];
@@ -116,13 +119,33 @@ under the License.
                             [10.0, 8.04],
                             [8.0, 6.95],
                             [13.0, 7.58]
-                        ],
-                        type: 'scatter'
+                        ]
+                    }, {
+                        name: 'bb',
+                        type: 'scatter',
+                        markPoint: {
+                            data: [{
+                                type: 'min',
+                                symbol: function () {
+                                    return 'diamond';
+                                },
+                                symbolSize: function () {
+                                    return 50;
+                                }
+                            }]
+                        },
+                        data: [
+                            [10, 3]
+                        ]
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main1', {
-                    title: 'symbol function make it display 0: "rect", 1: "diamond", 2: "circle"',
+                    title: [
+                        'symbol function make it display 0: "rect", 1: "diamond", 2: "circle"',
+                        'legend should be displayed',
+                        'diamond markPoint should be displayed'
+                    ],
                     option: option
                 });
             });
