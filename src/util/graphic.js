@@ -653,10 +653,6 @@ export function setLabelStyle(
         setTextStyle(emphasisStyle, emphasisModel, emphasisSpecified, opt, true);
     }
 
-    if (typeof normalModel.get('color') === 'function') {
-        normalStyle.textFill = normalModel.get('color')(labelDataIndex);
-    }
-
     normalStyle.text = normalStyleText;
     emphasisStyle.text = emphasisStyleText;
 }
