@@ -93,6 +93,7 @@ export function buildLabelElOption(
             textFont: font,
             textFill: labelModel.getTextColor(),
             textPosition: 'inside',
+            textPadding: paddings,
             fill: bgColor,
             stroke: labelModel.get('borderColor') || 'transparent',
             lineWidth: labelModel.get('borderWidth') || 0,
