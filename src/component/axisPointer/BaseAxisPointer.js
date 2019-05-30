@@ -238,7 +238,7 @@ BaseAxisPointer.prototype = {
      */
     updatePointerEl: function (group, elOption, updateProps) {
         var pointerEl = inner(group).pointerEl;
-        if (pointerEl) {
+        if (pointerEl && elOption.pointer) {
             pointerEl.setStyle(elOption.pointer.style);
             updateProps(pointerEl, {shape: elOption.pointer.shape});
         }
