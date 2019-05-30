@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import {isFunction} from 'zrender/src/core/util';
 
 export default function (seriesType, defaultSymbolType, legendSymbol) {
     // Encoding visual for all series include which is filtered for legend drawing
@@ -33,10 +34,20 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
             var symbolSize = seriesModel.get('symbolSize');
             var keepAspect = seriesModel.get('symbolKeepAspect');
 
+            var hasSymbolTypeCallback = isFunction(symbolType);
+            var hasSymbolSizeCallback = isFunction(symbolSize);
+            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
+            var seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : defaultSymbolType;
+            var seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
+
             data.setVisual({
-                legendSymbol: legendSymbol || symbolType || defaultSymbolType,
-                symbol: symbolType || defaultSymbolType,
-                symbolSize: symbolSize,
+                legendSymbol: legendSymbol || seriesSymbol,
+                // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
+                // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
+                // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in
+                // some cases but generally it is not recommanded.
+                symbol: seriesSymbol,
+                symbolSize: seriesSymbolSize,
                 symbolKeepAspect: keepAspect
             });
 
@@ -44,10 +55,6 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
             if (ecModel.isSeriesFiltered(seriesModel)) {
                 return;
             }
-
-            var hasSymbolTypeCallback = typeof symbolType === 'function';
-            var hasSymbolSizeCallback = typeof symbolSize === 'function';
-            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
 
             function dataEach(data, idx) {
                 if (hasCallback) {
@@ -60,10 +67,8 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 if (data.hasItemOption) {
                     var itemModel = data.getItemModel(idx);
                     var itemSymbolType = itemModel.getShallow('symbol', true);
-                    var itemSymbolSize = itemModel.getShallow('symbolSize',
-                        true);
-                    var itemSymbolKeepAspect =
-                        itemModel.getShallow('symbolKeepAspect', true);
+                    var itemSymbolSize = itemModel.getShallow('symbolSize', true);
+                    var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
 
                     // If has item symbol
                     if (itemSymbolType != null) {
@@ -74,8 +79,7 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                         data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
                     }
                     if (itemSymbolKeepAspect != null) {
-                        data.setItemVisual(idx, 'symbolKeepAspect',
-                            itemSymbolKeepAspect);
+                        data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
                     }
                 }
             }
