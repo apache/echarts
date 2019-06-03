@@ -1176,7 +1176,10 @@ function getRawIndexWithoutIndices(idx) {
 }
 
 function getRawIndexWithIndices(idx) {
-    return this._indices[idx];
+    if (idx >= 0) {
+        return this._indices[idx];
+    }
+    return -1;
 }
 
 /**
