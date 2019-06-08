@@ -67,7 +67,7 @@ export default {
 
     animationThreshold: 2000,
     // Configuration for progressive/incremental rendering
-    progressiveThreshold: 3000,
+    progressiveThreshold: Infinity,
     progressive: 400,
 
     // Threshold of if use single hover layer to optimize.
@@ -75,7 +75,7 @@ export default {
     // `progressiveThreshold`, otherwise hover will cause restart of progressive,
     // which is unexpected.
     // see example <echarts/test/heatmap-large.html>.
-    hoverLayerThreshold: 3000,
+    hoverLayerThreshold: Infinity,
 
     // See: module:echarts/scale/Time
     useUTC: false
