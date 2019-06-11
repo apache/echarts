@@ -31,7 +31,7 @@ export default function (ecModel) {
         var axes = coordSys.getIndicatorAxes();
 
         zrUtil.each(axes, function (axis, axisIndex) {
-            data.each(data.mapDimension(axes[axisIndex].dim), function (val, dataIndex) {
+            data.each(data.mapDimension(axes[axisIndex].type, axisIndex), function (val, dataIndex) {
                 points[dataIndex] = points[dataIndex] || [];
                 var point = coordSys.dataToPoint(val, axisIndex);
                 points[dataIndex][axisIndex] = isValidPoint(point)
