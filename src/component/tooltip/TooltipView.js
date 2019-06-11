@@ -493,9 +493,9 @@ export default echarts.extendComponentView({
         }
 
         var params = dataModel.getDataParams(dataIndex, dataType);
-        if (this._html !== params.value) {
+        if (this._value !== params.value) {
             this._dirty = true;
-            this.value = params;
+            this._value = params.value;
         }
         var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
         var defaultHtml;
