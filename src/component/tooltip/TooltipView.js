@@ -65,6 +65,7 @@ export default echarts.extendComponentView({
         }
 
         this._tooltipContent = tooltipContent;
+        this._dirty = true;
     },
 
     render: function (tooltipModel, ecModel, api) {
@@ -492,6 +493,10 @@ export default echarts.extendComponentView({
         }
 
         var params = dataModel.getDataParams(dataIndex, dataType);
+        if (this._html !== params.value) {
+            this._dirty = true;
+            this.value = params;
+        }
         var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
         var defaultHtml;
         var markers;
@@ -576,16 +581,23 @@ export default echarts.extendComponentView({
             html = formatUtil.formatTpl(formatter, params, true);
         }
         else if (typeof formatter === 'function') {
-            var callback = bind(function (cbTicket, html) {
-                if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html, markers, tooltipModel);
-                    this._updatePosition(
-                        tooltipModel, positionExpr, x, y, tooltipContent, params, el
-                    );
-                }
-            }, this);
-            this._ticket = asyncTicket;
-            html = formatter(params, asyncTicket, callback);
+            if (this._dirty) {
+                this._dirty = false;
+                var callback = bind(function (cbTicket, html) {
+                    if (cbTicket === this._ticket) {
+                        tooltipContent.setContent(html, markers, tooltipModel);
+                        this._updatePosition(
+                            tooltipModel, positionExpr, x, y, tooltipContent, params, el
+                        );
+                    }
+                }, this);
+                this._ticket = asyncTicket;
+                html = formatter(params, asyncTicket, callback);
+                this._html = html;
+            }
+            else {
+                html = this._html;
+            }
         }
 
         tooltipContent.setContent(html, markers, tooltipModel);
