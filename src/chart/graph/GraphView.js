@@ -62,7 +62,7 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 function fadeInItem(item, opacityPath) {
     var opacity = getItemOpacity(item, opacityPath);
     var el = item.getGraphicEl();
-    // Should go back to normal opacity first, consider hoverLayer, 
+    // Should go back to normal opacity first, consider hoverLayer,
     // where current state is copied to elMirror, and support
     // emphasis opacity here.
     el.traverse(function (child) {
@@ -221,17 +221,25 @@ export default echarts.extendChartView({
                     rad = rad - Math.PI;
                 }
                 var textPosition = isLeft ? 'left' : 'right';
-                symbolPath.setStyle({
-                    textRotation: -rad,
-                    textPosition: textPosition,
-                    textOrigin: 'center'
-                });
-                symbolPath.hoverStyle && (symbolPath.hoverStyle.textPosition = textPosition);
+                graphic.modifyLabelStyle(
+                    symbolPath,
+                    {
+                        textRotation: -rad,
+                        textPosition: textPosition,
+                        textOrigin: 'center'
+                    },
+                    {
+                        textPosition: textPosition
+                    }
+                );
             }
             else {
-                symbolPath.setStyle({
-                    textRotation: labelRotate *= Math.PI / 180
-                });
+                graphic.modifyLabelStyle(
+                    symbolPath,
+                    {
+                        textRotation: labelRotate *= Math.PI / 180
+                    }
+                );
             }
         });
 
