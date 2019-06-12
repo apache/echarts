@@ -335,7 +335,7 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
     }
 
     function littleThan(a, b) {
-        return inverse ? a > b : a < b;
+        return inverse ? (a - b) > 1e-12 : b - a > 1e-12;
     }
 }
 
