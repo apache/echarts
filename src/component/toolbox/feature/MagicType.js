@@ -111,6 +111,13 @@ var radioTypes = [
 ];
 
 proto.onclick = function (ecModel, api, type) {
+    if (this.type === type && radioTypes[1].includes(type)) {
+        type = this.type === 'stack' ? 'tiled' : 'stack';
+    }
+    else if (this.type === type && radioTypes[0].includes(type)) {
+        type = this.type === 'line' ? 'bar' : 'line';
+    }
+    this.type = type;
     var model = this.model;
     var seriesIndex = model.get('seriesIndex.' + type);
     // Not supported magicType
