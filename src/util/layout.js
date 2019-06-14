@@ -361,6 +361,7 @@ export function positionElement(el, positionInfo, containerRect, margin, opt) {
     // (see zrender/core/Transformable#getLocalTransform),
     // we can just only modify el.position to get final result.
     var elPos = el.position;
+    rect.x = el.__ecComponentInfo && el.__ecComponentInfo.mainType === 'toolbox' ? 0 : rect.x;
     var dx = h ? positionInfo.x - rect.x : 0;
     var dy = v ? positionInfo.y - rect.y : 0;
 
