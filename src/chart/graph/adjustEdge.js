@@ -19,6 +19,7 @@
 
 import * as curveTool from 'zrender/src/core/curve';
 import * as vec2 from 'zrender/src/core/vector';
+import {getSymbolSize} from './graphHelper';
 
 var v1 = [];
 var v2 = [];
@@ -97,13 +98,6 @@ export default function (graph, scale) {
     var v = [];
     scale /= 2;
 
-    function getSymbolSize(node) {
-        var symbolSize = node.getVisual('symbolSize');
-        if (symbolSize instanceof Array) {
-            symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
-        }
-        return symbolSize;
-    }
     graph.eachEdge(function (edge, idx) {
         var linePoints = edge.getLayout();
         var fromSymbol = edge.getVisual('fromSymbol');

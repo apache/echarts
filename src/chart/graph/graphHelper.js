@@ -17,12 +17,28 @@
 * under the License.
 */
 
-import {circularLayout} from './circularLayoutHelper';
+export function getNodeGlobalScale(seriesModel) {
+    var coordSys = seriesModel.coordinateSystem;
+    if (coordSys.type !== 'view') {
+        return 1;
+    }
 
-export default function (ecModel) {
-    ecModel.eachSeriesByType('graph', function (seriesModel) {
-        if (seriesModel.get('layout') === 'circular') {
-            circularLayout(seriesModel, 'symbolSize');
-        }
-    });
+    var nodeScaleRatio = seriesModel.option.nodeScaleRatio;
+
+    var groupScale = coordSys.scale;
+    var groupZoom = (groupScale && groupScale[0]) || 1;
+    // Scale node when zoom changes
+    var roamZoom = coordSys.getZoom();
+    var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
+
+    return nodeScale / groupZoom;
 }
+
+export function getSymbolSize(node) {
+    var symbolSize = node.getVisual('symbolSize');
+    if (symbolSize instanceof Array) {
+        symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
+    }
+    return +symbolSize;
+}
+
