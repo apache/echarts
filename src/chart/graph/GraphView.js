@@ -26,6 +26,7 @@ import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
+import {getNodeGlobalScale} from './graphHelper';
 
 var FOCUS_ADJACENCY = '__focusNodeAdjacency';
 var UNFOCUS_ADJACENCY = '__unfocusNodeAdjacency';
@@ -96,7 +97,6 @@ export default echarts.extendChartView({
         var coordSys = seriesModel.coordinateSystem;
 
         this._model = seriesModel;
-        this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
 
         var symbolDraw = this._symbolDraw;
         var lineDraw = this._lineDraw;
@@ -116,7 +116,7 @@ export default echarts.extendChartView({
             }
         }
         // Fix edge contact point with node
-        adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         var data = seriesModel.getData();
         symbolDraw.updateData(data);
@@ -356,7 +356,7 @@ export default echarts.extendChartView({
                     originY: e.originY
                 });
                 this._updateNodeAndLinkScale();
-                adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+                adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
                 this._lineDraw.updateLayout();
             }, this);
     },
@@ -365,7 +365,7 @@ export default echarts.extendChartView({
         var seriesModel = this._model;
         var data = seriesModel.getData();
 
-        var nodeScale = this._getNodeGlobalScale(seriesModel);
+        var nodeScale = getNodeGlobalScale(seriesModel);
         var invScale = [nodeScale, nodeScale];
 
         data.eachItemGraphicEl(function (el, idx) {
@@ -373,25 +373,8 @@ export default echarts.extendChartView({
         });
     },
 
-    _getNodeGlobalScale: function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys.type !== 'view') {
-            return 1;
-        }
-
-        var nodeScaleRatio = this._nodeScaleRatio;
-
-        var groupScale = coordSys.scale;
-        var groupZoom = (groupScale && groupScale[0]) || 1;
-        // Scale node when zoom changes
-        var roamZoom = coordSys.getZoom();
-        var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
-
-        return nodeScale / groupZoom;
-    },
-
     updateLayout: function (seriesModel) {
-        adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         this._symbolDraw.updateLayout();
         this._lineDraw.updateLayout();
