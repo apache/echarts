@@ -304,6 +304,21 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._calculationInfo = {};
+
+    /**
+     * User output info of this data.
+     * DO NOT use it in other places!
+     *
+     * When preparing user params for user callbacks, we have
+     * to clone these inner data structures to prevent users
+     * from modifying them to effect built-in logic. And for
+     * performance consideration we make this `userOutput` to
+     * avoid clone them too many times.
+     *
+     * @type {Object}
+     * @readOnly
+     */
+    this.userOutput = this._dimensionsSummary.userOutput;
 };
 
 var listProto = List.prototype;
