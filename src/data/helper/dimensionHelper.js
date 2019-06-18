@@ -31,6 +31,12 @@ export function summarizeDimensions(data) {
     var defaultedLabel = [];
     var defaultedTooltip = [];
 
+    // See the comment of `List.js#userOutput`.
+    var userOutput = summary.userOutput = {
+        dimensionNames: data.dimensions.slice(),
+        encode: {}
+    };
+
     each(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
 
@@ -39,11 +45,9 @@ export function summarizeDimensions(data) {
             if (__DEV__) {
                 assert(OTHER_DIMENSIONS.get(coordDim) == null);
             }
-            var coordDimArr = encode[coordDim];
-            if (!encode.hasOwnProperty(coordDim)) {
-                coordDimArr = encode[coordDim] = [];
-            }
-            coordDimArr[dimItem.coordDimIndex] = dimName;
+
+            var coordDimIndex = dimItem.coordDimIndex;
+            getOrCreateEncodeArr(encode, coordDim)[coordDimIndex] = dimName;
 
             if (!dimItem.isExtraCoord) {
                 notExtraCoordDimMap.set(coordDim, 1);
@@ -55,6 +59,10 @@ export function summarizeDimensions(data) {
                 if (mayLabelDimType(dimItem.type)) {
                     defaultedLabel[0] = dimName;
                 }
+
+                // User output encode do not contain generated coords.
+                // And it only has index. User can use index to retrieve value from the raw item array.
+                getOrCreateEncodeArr(userOutput.encode, coordDim)[coordDimIndex] = dimItem.index;
             }
             if (dimItem.defaultTooltip) {
                 defaultedTooltip.push(dimName);
@@ -62,14 +70,11 @@ export function summarizeDimensions(data) {
         }
 
         OTHER_DIMENSIONS.each(function (v, otherDim) {
-            var otherDimArr = encode[otherDim];
-            if (!encode.hasOwnProperty(otherDim)) {
-                otherDimArr = encode[otherDim] = [];
-            }
+            var encodeArr = getOrCreateEncodeArr(encode, otherDim);
 
             var dimIndex = dimItem.otherDims[otherDim];
             if (dimIndex != null && dimIndex !== false) {
-                otherDimArr[dimIndex] = dimItem.name;
+                encodeArr[dimIndex] = dimItem.name;
             }
         });
     });
@@ -110,6 +115,13 @@ export function summarizeDimensions(data) {
     encode.defaultedTooltip = defaultedTooltip;
 
     return summary;
+}
+
+function getOrCreateEncodeArr(encode, dim) {
+    if (!encode.hasOwnProperty(dim)) {
+        encode[dim] = [];
+    }
+    return encode[dim];
 }
 
 export function getDimensionTypeByAxis(axisType) {

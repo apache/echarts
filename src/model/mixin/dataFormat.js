@@ -43,6 +43,7 @@ export default {
         var renderMode = getTooltipRenderMode(renderModeOption);
         var mainType = this.mainType;
         var isSeries = mainType === 'series';
+        var userOutput = data.userOutput;
 
         return {
             componentType: mainType,
@@ -58,8 +59,8 @@ export default {
             dataType: dataType,
             value: rawValue,
             color: color,
-            dimensions: data.userOutput.dimensions,
-            encode: data.userOutput.encode,            
+            dimensionNames: userOutput ? userOutput.dimensionNames : null,
+            encode: userOutput ? userOutput.encode : null,
             marker: getTooltipMarker({
                 color: color,
                 renderMode: renderMode
@@ -75,7 +76,8 @@ export default {
      * @param {number} dataIndex
      * @param {string} [status='normal'] 'normal' or 'emphasis'
      * @param {string} [dataType]
-     * @param {number} [dimIndex]
+     * @param {number} [dimIndex] Only used in some chart that
+     *        use formatter in different dimensions, like radar.
      * @param {string} [labelProp='label']
      * @return {string} If not formatter, return null/undefined
      */
