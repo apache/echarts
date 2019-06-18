@@ -58,6 +58,8 @@ export default {
             dataType: dataType,
             value: rawValue,
             color: color,
+            dimensions: data.userOutput.dimensions,
+            encode: data.userOutput.encode,            
             marker: getTooltipMarker({
                 color: color,
                 renderMode: renderMode
