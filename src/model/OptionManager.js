@@ -168,7 +168,7 @@ OptionManager.prototype = {
         // Caution: some series modify option data, if do not clone,
         // it should ensure that the repeat modify correctly
         // (create a new object when modify itself).
-        rawOption = clone(rawOption, true);
+        rawOption = clone(rawOption);
 
         // FIXME
         // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。

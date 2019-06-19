@@ -1,27 +1,84 @@
-如果你想帮助 **ECharts** 的话，请首先阅读指导原则：
+# Contributing
 
-- 如果你希望提 bug：
+👍🎉 First off, thanks for taking the time to contribute! 🎉👍
 
-  - 清楚地描述问题，注意：**别人是否能通过你的描述理解这是什么问题**。
-  - 说明版本（ECharts 版本，浏览器版本，设备、操作系统版本等）
-  - 最好提供完整的ECharts option，截图或线上实例（可以使用JSFiddle/JSBin/Codepen）。
+Please check out the [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
 
-- 如果你想问问题：
+## Issues
 
-  - 首先是否在这些文档中寻找过问题的答案：[option文档](http://echarts.baidu.com/option.html)，[API文档](http://echarts.baidu.com/api.html)，[教程](http://echarts.baidu.com/tutorial.html)
-  - 简单的问题，可以在QQ群中求助（群号：465958031）
+When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our bot to close them automatically.
 
-- 如何取得能运行的 `ECharts option` 
+And before doing so, please search for similar questions in our [issues list](https://github.com/apache/incubator-echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
 
-  一个参考方式：
-  在你的程序的 
-  ```javascript 
-  chart.setOption(option); 
-  ``` 
-  前加入这句话 
-  ```javascript 
-  console.log(JSON.stringify(option, null, 4));
-  ```
-  
-  然后打开浏览器的调试工具（如 `Chrome Deverloper Tool`）的 `控制台(console)`，可以得到option输出。
+Please read the [documentation](http://echarts.apache.org/option.html) carefully before asking any questions.
 
+Any questions in the form of *how can I use echarts to* or *how to use echarts x feature to* belong in [Stack Overflow](http://stackoverflow.com), issues with questions like that in the issue tracker will be closed.
+
+## Pull Requests
+
+If you wish to fix a bug or add new features, please discuss it with us in an issue first. If there's no issue, please create one using the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/).
+
+## How to Debug ECharts
+
+The following steps help you to set up a developing environment for ECharts.
+
+### 1. Clone ECharts project
+
+If you wish to make pull requests, you should fork the ECharts project first. Otherwise, just clone it locally.
+
+```bash
+git clone git@github.com:apache/incubator-echarts.git
+```
+
+[ZRender](https://github.com/ecomfe/zrender) is the rendering library under the hood. You need to clone it along with ECharts.
+
+```bash
+git clone git@github.com:ecomfe/zrender.git
+```
+
+We assume these projects are downloaded at `~/workspace/echarts` and `~/workspace/zrender`. But their locations can be arbitrary.
+
+### 2. Install dependencies
+
+```bash
+cd ~/workspace/echarts
+npm install
+cd ~/workspace/zrender
+npm install
+```
+
+Sometimes, in order to fix an issue within echarts, changes have to be made inside the codebase of zrender. To test any changes to zrender locally you can use npm's [npm link](https://docs.npmjs.com/cli/link.html) feature, for example:
+
+```bash
+cd ~/workspace/zrender
+npm link
+cd ~/workspace/echarts
+npm link
+```
+
+With this, you can see that `~/workspace/echarts/node_modules/zrender` is a link to `~/workspace/zrender`.
+
+### 3. Run and debug
+
+To build the ECharts project and watch source file changes (including ZRender project) to rebuild:
+
+```bash
+cd ~/workspace/echarts
+node build/build.js --watch
+```
+
+To build once:
+
+```bash
+node build/build.js
+```
+
+Then, open the test cases under `~/workspace/echarts/test` in Web browser. You can add breakpoints under `src` directory. For example, in Chrome Inspect, it looks like:
+
+![Chrome inspect](../asset/contributing-inspect.png)
+
+### 4. Make a pull request
+
+Fork ECharts project into your own project. Checkout a branch from master branch named `fix-xxxx`, where xxxx is the issue id related. If there's no related issue, you need to create one in most cases to describe what's wrong or what new feature is required.
+
+If you are a committer of apache/incubator-echarts project, which means you have the write access to the project, you still need to push to a new branch (by `git push origin HEAD:refs/heads/fix-xxxx`) and use pull request to push your code. You cannot push code directly to `master` branch, otherwise it will be rejected by GitHub.

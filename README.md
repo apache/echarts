@@ -11,12 +11,16 @@ Please check its incubator status [here](http://incubator.apache.org/projects/ec
 
 **[中文官网](http://echarts.baidu.com)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
 
+[![Build Status](https://travis-ci.org/apache/incubator-echarts.svg?branch=master)](https://travis-ci.org/apache/incubator-echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) ![Commits Since 4.0.0](https://img.shields.io/github/commits-since/apache/incubator-echarts/4.0.0.svg?colorB=%234c1&style=flat)
+
 ## Get ECharts
 
-+ Download [中文](http://echarts.baidu.com/download.html)
-+ Download [English](https://echarts.apache.org/download.html)
+You may choose one of the following methods:
 
++ Download from Official Website in [中文下载页](http://echarts.baidu.com/download.html)
++ Download from Official Website in [English](https://ecomfe.github.io/echarts-doc/public/en/download.html)
 + `npm install echarts --save`
++ CDN: [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
 
 ## Get ECharts GL
 
@@ -95,6 +99,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 #### Vue Component
 
++ [vue-echarts](https://github.com/ecomfe/vue-echarts) by ecomfe
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
 + [vue-echarts-v3](https://github.com/xlsdg/vue-echarts-v3) by xlsdg
 
@@ -105,6 +110,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [re-echarts](https://github.com/liekkas/re-echarts) by liekkas
 + [react-echarts-v3](https://github.com/xlsdg/react-echarts-v3) by xlsdg
 + [d2recharts](https://github.com/leungwensen/d2recharts) by leungwensen
++ [react-component-echarts](https://github.com/dawiwt/react-component-echarts) by dawiwt
 
 #### React Native Component
 
@@ -122,6 +128,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 + [recharts](https://github.com/taiyun/recharts) by taiyun
 + [recharts](https://github.com/yihui/recharts) by yihui
 + [ECharts2Shiny](https://github.com/XD-DENG/ECharts2Shiny) by XD-DENG
++ [echarts4r](https://github.com/JohnCoene/echarts4r) by JohnCoene
 
 #### Julia
 
@@ -159,6 +166,10 @@ Check this tutorial [Create Custom Build of ECharts](https://ecomfe.github.io/ec
 ## License
 
 ECharts is available under the Apache License V2.
+
+## Code of Conduct
+
+Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
 
 ## Reference Paper
 

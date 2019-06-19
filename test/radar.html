@@ -49,7 +49,7 @@ under the License.
                     },
                     tooltip: {},
                     legend: {
-                        data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）']
+                        data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）含有 "-" 数据', '第一个元素是 null']
                     },
                     radar: {
                         radius: [50, '70%'],
@@ -83,8 +83,12 @@ under the License.
                                 name : '预算分配（Allocated Budget）'
                             },
                              {
-                                value : [50, 14000, 28000, 31000, 42000, 21000],
-                                name : '实际开销（Actual Spending）'
+                                value : [50, 14000, 28000, 31000, '-', 21000],
+                                name : '实际开销（Actual Spending）含有 "-" 数据'
+                            },
+                            {
+                                value: ['-', 8000, 20000, 20000, 40000, 10000],
+                                name: '第一个元素是 null'
                             }
                         ]
                     }]

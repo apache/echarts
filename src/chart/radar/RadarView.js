@@ -103,6 +103,7 @@ export default echarts.extendChartView({
                         points: points
                     }
                 };
+
                 polygon.shape.points = getInitialPoints(points);
                 polyline.shape.points = getInitialPoints(points);
                 graphic.initProps(polygon, target, seriesModel, idx);
@@ -130,6 +131,7 @@ export default echarts.extendChartView({
                         points: data.getItemLayout(newIdx)
                     }
                 };
+
                 if (!target.shape.points) {
                     return;
                 }
@@ -193,6 +195,8 @@ export default echarts.extendChartView({
             symbolGroup.eachChild(function (symbolPath) {
                 symbolPath.setStyle(itemStyle);
                 symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);
+                var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
+                (defaultText == null || isNaN(defaultText)) && (defaultText = '');
 
                 graphic.setLabelStyle(
                     symbolPath.style, symbolPath.hoverStyle, labelModel, labelHoverModel,
@@ -200,27 +204,16 @@ export default echarts.extendChartView({
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
-                        defaultText: data.get(data.dimensions[symbolPath.__dimIdx], idx),
+                        defaultText: defaultText,
                         autoColor: color,
                         isRectText: true
                     }
                 );
             });
 
-            function onEmphasis() {
-                polygon.attr('ignore', hoverPolygonIgnore);
-            }
-
-            function onNormal() {
-                polygon.attr('ignore', polygonIgnore);
-            }
-
-            itemGroup.off('mouseover').off('mouseout').off('normal').off('emphasis');
-            itemGroup.on('emphasis', onEmphasis)
-                .on('mouseover', onEmphasis)
-                .on('normal', onNormal)
-                .on('mouseout', onNormal);
-
+            itemGroup.highDownOnUpdate = function (fromState, toState) {
+                polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
+            };
             graphic.setHoverStyle(itemGroup);
         });
 

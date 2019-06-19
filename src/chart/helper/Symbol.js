@@ -155,7 +155,7 @@ symbolProto.setZ = function (zlevel, z) {
 symbolProto.setDraggable = function (draggable) {
     var symbolPath = this.childAt(0);
     symbolPath.draggable = draggable;
-    symbolPath.cursor = draggable ? 'move' : 'pointer';
+    symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
 };
 
 /**
@@ -321,63 +321,43 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
     }
 
-    symbolPath.off('mouseover')
-        .off('mouseout')
-        .off('emphasis')
-        .off('normal');
-
-    symbolPath.hoverStyle = hoverItemStyle;
-
-    // FIXME
-    // Do not use symbol.trigger('emphasis'), but use symbol.highlight() instead.
-    graphic.setHoverStyle(symbolPath);
-
     symbolPath.__symbolOriginalScale = getScale(symbolSize);
+    symbolPath.hoverStyle = hoverItemStyle;
+    symbolPath.highDownOnUpdate = (
+        hoverAnimation && seriesModel.isAnimationEnabled()
+    ) ? highDownOnUpdate : null;
 
-    if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        // Note: consider `off`, should use static function here.
-        symbolPath.on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
-    }
+    graphic.setHoverStyle(symbolPath);
 };
 
-function onMouseOver() {
-    // see comment in `graphic.isInEmphasis`
-    !graphic.isInEmphasis(this) && onEmphasis.call(this);
-}
-
-function onMouseOut() {
-    // see comment in `graphic.isInEmphasis`
-    !graphic.isInEmphasis(this) && onNormal.call(this);
-}
-
-function onEmphasis() {
+function highDownOnUpdate(fromState, toState) {
     // Do not support this hover animation util some scenario required.
     // Animation can only be supported in hover layer when using `el.incremetal`.
     if (this.incremental || this.useHoverLayer) {
         return;
     }
-    var scale = this.__symbolOriginalScale;
-    var ratio = scale[1] / scale[0];
-    this.animateTo({
-        scale: [
-            Math.max(scale[0] * 1.1, scale[0] + 3),
-            Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-        ]
-    }, 400, 'elasticOut');
-}
 
-function onNormal() {
-    if (this.incremental || this.useHoverLayer) {
-        return;
+    if (toState === 'emphasis') {
+        var scale = this.__symbolOriginalScale;
+        var ratio = scale[1] / scale[0];
+        var emphasisOpt = {
+            scale: [
+                Math.max(scale[0] * 1.1, scale[0] + 3),
+                Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
+            ]
+        };
+        // FIXME
+        // modify it after support stop specified animation.
+        // toState === fromState
+        //     ? (this.stopAnimation(), this.attr(emphasisOpt))
+        this.animateTo(emphasisOpt, 400, 'elasticOut');
     }
-    this.animateTo({
-        scale: this.__symbolOriginalScale
-    }, 400, 'elasticOut');
+    else if (toState === 'normal') {
+        this.animateTo({
+            scale: this.__symbolOriginalScale
+        }, 400, 'elasticOut');
+    }
 }
-
 
 /**
  * @param {Function} cb

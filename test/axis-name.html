@@ -1,0 +1,134 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <style>
+        .chart {
+            display: inline-block;
+            width: 45%;
+            height: 300px;
+        }
+
+        #main {
+            background: #fff;
+        }
+    </style>
+        <h2>nameLocation: end</h2>
+        <div class="chart" id="main0-0"></div>
+        <div class="chart" id="main0-1"></div>
+        <div class="chart" id="main0-2"></div>
+        <div class="chart" id="main0-3"></div>
+        <div class="chart" id="main0-4"></div>
+        <div class="chart" id="main0-5"></div>
+        <div class="chart" id="main0-6"></div>
+        <div class="chart" id="main0-7"></div>
+
+        <h2>nameLocation: middle</h2>
+        <div class="chart" id="main1-0"></div>
+        <div class="chart" id="main1-1"></div>
+        <div class="chart" id="main1-2"></div>
+        <div class="chart" id="main1-3"></div>
+        <div class="chart" id="main1-4"></div>
+        <div class="chart" id="main1-5"></div>
+        <div class="chart" id="main1-6"></div>
+        <div class="chart" id="main1-7"></div>
+
+        <h2>nameLocation: start</h2>
+        <div class="chart" id="main2-0"></div>
+        <div class="chart" id="main2-1"></div>
+        <div class="chart" id="main2-2"></div>
+        <div class="chart" id="main2-3"></div>
+        <div class="chart" id="main2-4"></div>
+        <div class="chart" id="main2-5"></div>
+        <div class="chart" id="main2-6"></div>
+        <div class="chart" id="main2-7"></div>
+    <script>
+
+        require([
+            'echarts'
+            // 'echarts/chart/bar',
+            // 'echarts/component/polar',
+            // 'zrender/vml/vml'
+        ], function (echarts) {
+
+            var nameLocations = ['end', 'middle', 'start'];
+
+            for (var locationId = 0; locationId < nameLocations.length; ++locationId) {
+                var location = nameLocations[locationId];
+                var aligns = [undefined, 'left', 'center', 'right'];
+                var verticalAligns = [undefined, 'top', 'middle', 'bottom'];
+
+                for (var i = 0; i < aligns.length * 2; ++i) {
+                    var chart = echarts.init(document.getElementById('main' + locationId + '-' + i), null, {
+                        // renderer: 'svg'
+                    });
+
+                    var id = i >= aligns.length ? i - aligns.length : i;
+                    var aAxis = {
+                        type: 'category',
+                        name: 'align: ' + aligns[id],
+                        nameGap: 35,
+                        nameLocation: location,
+                        nameTextStyle: {
+                            color: '#00f',
+                            align: aligns[id]
+                        },
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    };
+                    var bAxis = {
+                        type: 'value',
+                        name: 'verticalAlign: ' + verticalAligns[id],
+                        nameGap: 35,
+                        nameLocation: location,
+                        nameTextStyle: {
+                            color: '#f00',
+                            verticalAlign: verticalAligns[id]
+                        }
+                    };
+
+                    var option = {
+                        grid: {
+                            left: 200,
+                            right: 200
+                        },
+                        xAxis: i >= aligns.length ? aAxis : bAxis,
+                        yAxis: i >= aligns.length ? bAxis : aAxis,
+                        series: [{
+                            data: [820, 932, 901, 934, 1290, 1330, 1320],
+                            type: 'line',
+                            smooth: true
+                        }]
+                    };
+                    chart.setOption(option, true);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

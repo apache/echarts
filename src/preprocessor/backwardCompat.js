@@ -88,7 +88,7 @@ export default function (option, isTheme) {
         if (seriesType === 'gauge') {
             var pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
-                && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
+                && set(seriesOpt, 'itemStyle.color', pointerColor);
         }
 
         compatLayoutProperties(seriesOpt);

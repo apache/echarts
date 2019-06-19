@@ -304,6 +304,21 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._calculationInfo = {};
+
+    /**
+     * User output info of this data.
+     * DO NOT use it in other places!
+     *
+     * When preparing user params for user callbacks, we have
+     * to clone these inner data structures to prevent users
+     * from modifying them to effect built-in logic. And for
+     * performance consideration we make this `userOutput` to
+     * avoid clone them too many times.
+     *
+     * @type {Object}
+     * @readOnly
+     */
+    this.userOutput = this._dimensionsSummary.userOutput;
 };
 
 var listProto = List.prototype;
@@ -317,15 +332,31 @@ listProto.type = 'list';
 listProto.hasItemOption = true;
 
 /**
+ * The meanings of the input parameter `dim`:
+ *
+ * + If dim is a number (e.g., `1`), it means the index of the dimension.
+ *   For example, `getDimension(0)` will return 'x' or 'lng' or 'radius'.
+ * + If dim is a number-like string (e.g., `"1"`):
+ *     + If there is the same concrete dim name defined in `this.dimensions`, it means that concrete name.
+ *     + If not, it will be converted to a number, which means the index of the dimension.
+ *        (why? because of the backward compatbility. We have been tolerating number-like string in
+ *        dimension setting, although now it seems that it is not a good idea.)
+ *     For example, `visualMap[i].dimension: "1"` is the same meaning as `visualMap[i].dimension: 1`,
+ *     if no dimension name is defined as `"1"`.
+ * + If dim is a not-number-like string, it means the concrete dim name.
+ *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
+ *   or customized in `dimensions` property of option like `"age"`.
+ *
  * Get dimension name
- * @param {string|number} dim
- *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
- *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
+ * @param {string|number} dim See above.
  * @return {string} Concrete dim name.
  */
 listProto.getDimension = function (dim) {
-    if (!isNaN(dim)) {
-        dim = this.dimensions[dim] || dim;
+    if (typeof dim === 'number'
+        // If being a number-like string but not being defined a dimension name.
+        || (!isNaN(dim) && !this._dimensionInfos.hasOwnProperty(dim))
+    ) {
+        dim = this.dimensions[dim];
     }
     return dim;
 };
@@ -859,14 +890,11 @@ listProto.getValues = function (dimensions, idx /*, stack */) {
  */
 listProto.hasValue = function (idx) {
     var dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
-    var dimensionInfos = this._dimensionInfos;
     for (var i = 0, len = dataDimsOnCoord.length; i < len; i++) {
-        if (
-            // Ordinal type can be string or number
-            dimensionInfos[dataDimsOnCoord[i]].type !== 'ordinal'
-            // FIXME check ordinal when using index?
-            && isNaN(this.get(dataDimsOnCoord[i], idx))
-        ) {
+        // Ordinal type originally can be string or number.
+        // But when an ordinal type is used on coord, it can
+        // not be string but only number. So we can also use isNaN.
+        if (isNaN(this.get(dataDimsOnCoord[i], idx))) {
             return false;
         }
     }

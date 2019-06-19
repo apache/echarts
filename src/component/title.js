@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 import * as echarts from '../echarts';
 import * as graphic from '../util/graphic';
 import {getLayoutRect} from '../util/layout';
@@ -62,7 +63,8 @@ echarts.extendComponentModel({
         // 垂直对齐
         // 'auto' | 'top' | 'bottom' | 'middle'
         // 默认根据 top 位置判断是上对齐还是下对齐
-        // textBaseline: null
+        // textVerticalAlign: null
+        // textBaseline: null // The same as textVerticalAlign.
 
         backgroundColor: 'rgba(0,0,0,0)',
 
@@ -107,7 +109,9 @@ echarts.extendComponentView({
         var subtextStyleModel = titleModel.getModel('subtextStyle');
 
         var textAlign = titleModel.get('textAlign');
-        var textBaseline = titleModel.get('textBaseline');
+        var textVerticalAlign = zrUtil.retrieve2(
+            titleModel.get('textBaseline'), titleModel.get('textVerticalAlign')
+        );
 
         var textEl = new graphic.Text({
             style: graphic.setTextStyle({}, textStyleModel, {
@@ -184,25 +188,25 @@ echarts.extendComponentView({
                 layoutRect.x += layoutRect.width / 2;
             }
         }
-        if (!textBaseline) {
-            textBaseline = titleModel.get('top') || titleModel.get('bottom');
-            if (textBaseline === 'center') {
-                textBaseline = 'middle';
+        if (!textVerticalAlign) {
+            textVerticalAlign = titleModel.get('top') || titleModel.get('bottom');
+            if (textVerticalAlign === 'center') {
+                textVerticalAlign = 'middle';
             }
-            if (textBaseline === 'bottom') {
+            if (textVerticalAlign === 'bottom') {
                 layoutRect.y += layoutRect.height;
             }
-            else if (textBaseline === 'middle') {
+            else if (textVerticalAlign === 'middle') {
                 layoutRect.y += layoutRect.height / 2;
             }
 
-            textBaseline = textBaseline || 'top';
+            textVerticalAlign = textVerticalAlign || 'top';
         }
 
         group.attr('position', [layoutRect.x, layoutRect.y]);
         var alignStyle = {
             textAlign: textAlign,
-            textVerticalAlign: textBaseline
+            textVerticalAlign: textVerticalAlign
         };
         textEl.setStyle(alignStyle);
         subTextEl.setStyle(alignStyle);
@@ -222,9 +226,9 @@ echarts.extendComponentView({
                 r: titleModel.get('borderRadius')
             },
             style: style,
+            subPixelOptimize: true,
             silent: true
         });
-        graphic.subPixelOptimizeRect(rect);
 
         group.add(rect);
     }

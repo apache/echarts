@@ -215,7 +215,7 @@ var ThemeRiverSeries = SeriesModel.extend({
 
     /**
      * Get data indices for show tooltip content
-     *
+
      * @param {Array.<string>|string} dim  single coordinate dimension
      * @param {number} value axis value
      * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used

@@ -63,7 +63,7 @@ var defaultOption = {
     axisLine: {
         show: true,
         lineStyle: {
-            width: 2,
+            width: 1,
             type: 'solid'
         }
     },
@@ -79,7 +79,7 @@ var defaultOption = {
         show: true,
         length: 6,
         lineStyle: {
-            width: 2
+            width: 1
         }
     },
 

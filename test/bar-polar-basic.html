@@ -36,6 +36,7 @@ under the License.
                 background: #fff;
             }
         </style>
+        <h3>click axis labe should console log</h3>
         <div id="main"></div>
         <script>
 
@@ -50,11 +51,13 @@ under the License.
 
                 chart.setOption({
                     angleAxis: {
+                        triggerEvent: true
                     },
                     radiusAxis: {
                         type: 'category',
                         data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-                        z: 10
+                        z: 10,
+                        triggerEvent: true
                     },
                     polar: {
                     },

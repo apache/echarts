@@ -63,8 +63,10 @@ var PRIORITY_PROCESSOR_FILTER = 1000;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
 
 var PRIORITY_VISUAL_LAYOUT = 1000;
+var PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
 var PRIORITY_VISUAL_GLOBAL = 2000;
 var PRIORITY_VISUAL_CHART = 3000;
+var PRIORITY_VISUAL_POST_CHART_LAYOUT = 3500;
 var PRIORITY_VISUAL_COMPONENT = 4000;
 // FIXME
 // necessary?
@@ -77,8 +79,10 @@ export var PRIORITY = {
     },
     VISUAL: {
         LAYOUT: PRIORITY_VISUAL_LAYOUT,
+        PROGRESSIVE_LAYOUT: PRIORITY_VISUAL_PROGRESSIVE_LAYOUT,
         GLOBAL: PRIORITY_VISUAL_GLOBAL,
         CHART: PRIORITY_VISUAL_CHART,
+        POST_CHART_LAYOUT: PRIORITY_VISUAL_POST_CHART_LAYOUT,
         COMPONENT: PRIORITY_VISUAL_COMPONENT,
         BRUSH: PRIORITY_VISUAL_BRUSH
     }
@@ -160,7 +164,7 @@ function ECharts(dom, theme, opts) {
     });
 
     /**
-     * Expect 60 pfs.
+     * Expect 60 fps.
      * @type {Function}
      * @private
      */
@@ -359,7 +363,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
     if (!this._model || notMerge) {
         var optionManager = new OptionManager(this._api);
         var theme = this._theme;
-        var ecModel = this._model = new GlobalModel(null, null, theme, optionManager);
+        var ecModel = this._model = new GlobalModel();
         ecModel.scheduler = this._scheduler;
         ecModel.init(null, null, theme, optionManager);
     }
@@ -564,6 +568,21 @@ echartsProto.getConnectedDataURL = function (opts) {
         targetCanvas.width = width;
         targetCanvas.height = height;
         var zr = zrender.init(targetCanvas);
+
+        // Background between the charts
+        if (opts.connectedBackgroundColor) {
+            zr.add(new graphic.Rect({
+                shape: {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height
+                },
+                style: {
+                    fill: opts.connectedBackgroundColor
+                }
+            }));
+        }
 
         each(canvasList, function (item) {
             var img = new graphic.Image({
@@ -1483,7 +1502,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtyMap) {
     scheduler.unfinished |= unfinished;
 
     // If use hover layer
-    updateHoverLayerStatus(ecIns._zr, ecModel);
+    updateHoverLayerStatus(ecIns, ecModel);
 
     // Add aria
     aria(ecIns._zr.dom, ecModel);
@@ -1638,19 +1657,26 @@ echartsProto.dispose = function () {
 
 zrUtil.mixin(ECharts, Eventful);
 
-function updateHoverLayerStatus(zr, ecModel) {
+function updateHoverLayerStatus(ecIns, ecModel) {
+    var zr = ecIns._zr;
     var storage = zr.storage;
     var elCount = 0;
+
     storage.traverse(function (el) {
-        if (!el.isGroup) {
-            elCount++;
-        }
+        elCount++;
     });
+
     if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
-        storage.traverse(function (el) {
-            if (!el.isGroup) {
-                // Don't switch back.
-                el.useHoverLayer = true;
+        ecModel.eachSeries(function (seriesModel) {
+            if (seriesModel.preventUsingHoverLayer) {
+                return;
+            }
+            var chartView = ecIns._chartsMap[seriesModel.__viewId];
+            if (chartView.__alive) {
+                chartView.group.traverse(function (el) {
+                    // Don't switch back.
+                    el.useHoverLayer = true;
+                });
             }
         });
     }
@@ -1940,7 +1966,7 @@ function enableConnect(chart) {
  * @param {Object} [theme]
  * @param {Object} opts
  * @param {number} [opts.devicePixelRatio] Use window.devicePixelRatio by default
- * @param {string} [opts.renderer] Currently only 'canvas' is supported.
+ * @param {string} [opts.renderer] Can choose 'canvas' or 'svg' to render the chart.
  * @param {number} [opts.width] Use clientWidth of the input `dom` by default.
  *                              Can be 'auto' (the same as null/undefined)
  * @param {number} [opts.height] Use clientHeight of the input `dom` by default.
@@ -1979,7 +2005,10 @@ export function init(dom, theme, opts) {
                 || (!dom.clientHeight && (!opts || opts.height == null))
             )
         ) {
-            console.warn('Can\'t get dom width or height');
+            console.warn('Can\'t get DOM width or height. Please check '
+                + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
+                + 'For example, you may need to call this in the callback '
+                + 'of window.onload.');
         }
     }
 

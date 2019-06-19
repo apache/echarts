@@ -2,6 +2,7 @@
   "name": "echarts",
   "version": "4.2.1",
   "description": "A powerful charting and visualization library for browser",
+  "license": "Apache-2.0",
   "keywords": [
     "visualization",
     "canvas"
@@ -12,13 +13,14 @@
     "url": "https://github.com/apache/incubator-echarts.git"
   },
   "scripts": {
-    "prepublish": "node build/build.js --prepublish"
+    "prepublish": "node build/build.js --prepublish",
+    "test": "node build/build.js"
   },
   "dependencies": {
     "zrender": "4.0.7"
   },
   "devDependencies": {
-    "@babel/core": "7.0.0-beta.31",
+    "@babel/core": "7.3.4",
     "@babel/helper-module-transforms": "7.0.0-beta.31",
     "@babel/helper-simple-access": "7.0.0-beta.31",
     "@babel/template": "7.0.0-beta.31",

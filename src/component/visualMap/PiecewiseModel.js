@@ -271,7 +271,7 @@ var PiecewiseModel = VisualMapModel.extend({
     /**
      * @public
      * @params {number} pieceIndex piece index in visualMapModel.getPieceList()
-     * @return {Array.<Object>} [{seriesId, dataIndices: <Array.<number>>}, ...]
+     * @return {Array.<Object>} [{seriesId, dataIndex: <Array.<number>>}, ...]
      */
     findTargetDataIndices: function (pieceIndex) {
         var result = [];

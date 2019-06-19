@@ -1,0 +1,16 @@
+language: node_js
+
+node_js:
+  - "node"
+
+branches:
+  only:
+    - release
+    - master
+
+before_script:
+ - npm install -g jshint
+
+script:
+ - jshint
+ - node build/build.js

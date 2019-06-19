@@ -54,7 +54,6 @@ under the License.
                         console.log(params, params.data);
                     });
 
-
                     $.getJSON('./data/energy.json')
                     .done(function(data) {
 
@@ -72,8 +71,7 @@ under the License.
                             series: [
                                 {
                                     type: 'sankey',
-                                    layout:'none',
-                                    focusNodeAdjacency: 'allEdges',
+                                    focusNodeAdjacency: true,
                                     data: data.nodes,
                                     links: data.links,
                                     lineStyle: {
