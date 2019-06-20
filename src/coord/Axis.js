@@ -138,6 +138,21 @@ Axis.prototype = {
         return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
     },
 
+    dataToCoordStacked: function (data, valueDim, idx, clamp) {
+        var extent = this._extent;
+        var value = data.get(valueDim, idx);
+        var stackValue = data.get('__\0ecstackresult', idx);
+        var scale = this.scale;
+        data = scale.normalizeStacked(value, stackValue);
+
+        if (this.onBand && scale.type === 'ordinal') {
+            extent = extent.slice();
+            fixExtentWithBands(extent, scale.count());
+        }
+
+        return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
+    },
+
     /**
      * Convert coord to data. Data is the rank if it has an ordinal scale
      * @param {number} coord

@@ -82,6 +82,24 @@ Scale.prototype.normalize = function (val) {
     return (val - extent[0]) / (extent[1] - extent[0]);
 };
 
+Scale.prototype.normalizeStacked = function (value, stackValue) {
+    var extent = this._extent;
+    if (stackValue < extent[0]) {
+        // value axis min is bigger than stack value
+        value = 0;
+    }
+    else if (extent[0] > 0
+        && extent[0] - (stackValue - value) > 0
+    ) {
+        // value axis min is cutting through block
+        value = stackValue - extent[0]; 
+    }
+    if (extent[1] === extent[0]) {
+        return 0.5;
+    }
+    return value / (extent[1] - extent[0]);
+}
+
 /**
  * Scale normalized value
  * @param {number} val

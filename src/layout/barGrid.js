@@ -302,6 +302,7 @@ export function layout(seriesType, ecModel) {
 
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
+            var coord;
 
             // Because of the barMinHeight, we can not use the value in
             // stackResultDimension directly.
@@ -315,6 +316,7 @@ export function layout(seriesType, ecModel) {
                 }
                 // Should also consider #4243
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
+                coord = cartesian.dataToPointStacked(data, valueDim, idx);
             }
 
             var x;
@@ -323,7 +325,9 @@ export function layout(seriesType, ecModel) {
             var height;
 
             if (isValueAxisH) {
-                var coord = cartesian.dataToPoint([value, baseValue]);
+                if (!coord) {
+                    coord = cartesian.dataToPoint([value, baseValue]);
+                }
                 x = baseCoord;
                 y = coord[1] + columnOffset;
                 width = coord[0] - valueAxisStart;
@@ -335,7 +339,9 @@ export function layout(seriesType, ecModel) {
                 stacked && (lastStackCoords[stackId][baseValue][sign] += width);
             }
             else {
-                var coord = cartesian.dataToPoint([baseValue, value]);
+                if (!coord) {
+                    coord = cartesian.dataToPoint([baseValue, value]);
+                }
                 x = coord[0] + columnOffset;
                 y = baseCoord;
                 width = columnWidth;

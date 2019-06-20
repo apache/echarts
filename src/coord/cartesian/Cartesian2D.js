@@ -85,6 +85,15 @@ Cartesian2D.prototype = {
         return out;
     },
 
+    dataToPointStacked: function (data, valueDim, idx) {
+        var xAxis = this.getAxis('x');
+        var yAxis = this.getAxis('y');
+        var out = [];
+        out[0] = xAxis.toGlobalCoord(xAxis.dataToCoordStacked(data, valueDim, idx));
+        out[1] = yAxis.toGlobalCoord(yAxis.dataToCoordStacked(data, valueDim, idx));
+        return out;
+    },
+
     /**
      * @param {Array.<number>} data
      * @param {Array.<number>} out
