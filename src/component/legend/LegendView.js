@@ -28,6 +28,8 @@ import * as layoutUtil from '../../util/layout';
 var curry = zrUtil.curry;
 var each = zrUtil.each;
 var Group = graphic.Group;
+var isArray = zrUtil.isArray;
+var retrieve2 = zrUtil.retrieve2;
 
 export default echarts.extendComponentView({
 
@@ -53,6 +55,12 @@ export default echarts.extendComponentView({
         this._backgroundEl;
 
         /**
+         * @private
+         * @type {module:zrender/container/Group}
+         */
+        this._selectorGroup;
+
+        /**
          * If first rendering, `contentGroup.position` is [0, 0], which
          * does not make sense and may cause unexepcted animation if adopted.
          * @private
@@ -69,6 +77,13 @@ export default echarts.extendComponentView({
     },
 
     /**
+     * @protected
+     */
+    getSelectorGroup: function () {
+        return this._selectorGroup;
+    },
+
+    /**
      * @override
      */
     render: function (legendModel, ecModel, api) {
@@ -82,14 +97,23 @@ export default echarts.extendComponentView({
         }
 
         var itemAlign = legendModel.get('align');
+        var orient = legendModel.get('orient');
         if (!itemAlign || itemAlign === 'auto') {
             itemAlign = (
                 legendModel.get('left') === 'right'
-                && legendModel.get('orient') === 'vertical'
+                && orient === 'vertical'
             ) ? 'right' : 'left';
         }
 
-        this.renderInner(itemAlign, legendModel, ecModel, api);
+        var selector = legendModel.get('selector', true);
+        if (selector) {
+            var selectorPosition = legendModel.get('selectorPosition', true);
+            if (!selectorPosition || selectorPosition === 'auto') {
+                selectorPosition = orient === 'horizontal' ? 'end' : 'start';
+            }
+        }
+
+        this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         // Perform layout.
         var positionInfo = legendModel.getBoxLayoutParams();
@@ -98,7 +122,7 @@ export default echarts.extendComponentView({
 
         var maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
 
-        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender);
+        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selectorPosition);
 
         // Place mainGroup, based on the calculated `mainRect`.
         var layoutRect = layoutUtil.getLayoutRect(
@@ -120,12 +144,13 @@ export default echarts.extendComponentView({
     resetInner: function () {
         this.getContentGroup().removeAll();
         this._backgroundEl && this.group.remove(this._backgroundEl);
+        this._selectorGroup && this._selectorGroup.removeAll();
     },
 
     /**
      * @protected
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api) {
+    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition, viewportSize) {
         var contentGroup = this.getContentGroup();
         var legendDrawnMap = zrUtil.createHashMap();
         var selectMode = legendModel.get('selectedMode');
@@ -229,6 +254,71 @@ export default echarts.extendComponentView({
                 }
             }
         }, this);
+
+        if (selector) {
+            this._createSelector(selector, legendModel, api, orient, selectorPosition, viewportSize);
+        }
+    },
+
+    _createSelector: function (selector, legendModel, api, orient, selectorPosition, viewportSize) {
+        this.group.add(this._selectorGroup = new Group());
+        var selectorGroup = this._selectorGroup;
+
+        var iconSize = legendModel.get('selectorIconSize', true);
+        if (!isArray(iconSize)) {
+            iconSize = [iconSize, iconSize];
+        }
+
+        each(selector, function (selectorItem) {
+            createSelectorButton(selectorItem);
+        });
+
+        function createSelectorButton(selectorItem) {
+            var type = selectorItem.type;
+            var icon = graphic.createIcon(
+                selectorItem.icon,
+                {
+                    onclick: type === 'all'
+                        ? curry(dispatchAllSelectorAction, api)
+                        : curry(dispatchInverseSelectorAction, api)
+                },
+                {
+                    x: -iconSize[0] / 2,
+                    y: -iconSize[1] / 2,
+                    width: iconSize[0],
+                    height: iconSize[1]
+                }
+            );
+            selectorGroup.add(icon);
+            icon.name = type;
+
+            var normalStyle = legendModel.getModel('selectorIconStyle').getItemStyle();
+            icon.setStyle(normalStyle);
+            var hoverStyle = icon.hoverStyle = legendModel.getModel('emphasis.selectorIconStyle').getItemStyle();
+
+            var normalTextStyleModel = legendModel.getModel('selectorTextStyle');
+            var emphasisTextStyleModel = legendModel.getModel('emphasis.selectorTextStyle');
+            graphic.setLabelStyle(
+                icon.style, hoverStyle, normalTextStyleModel, emphasisTextStyleModel,
+                {
+                    defaultText: selectorItem.title,
+                    isRectText: true,
+                    getTextPosition: function (textStyleModel) {
+                        var textPosition = textStyleModel.getShallow('position');
+                        if (textPosition == null || textPosition === 'auto') {
+                            if (orient === 'horizontal') {
+                                textPosition = selectorPosition === 'end' ? 'left' : 'right';
+                            }
+                            else if (orient === 'vertical') {
+                                textPosition = selectorPosition === 'start' ? 'bottom' : 'top';
+                            }
+                        }
+                        return textPosition;
+                    }
+                }
+            );
+            graphic.setHoverStyle(icon, hoverStyle);
+        }
     },
 
     _createItem: function (
@@ -348,8 +438,9 @@ export default echarts.extendComponentView({
     /**
      * @protected
      */
-    layoutInner: function (legendModel, itemAlign, maxSize) {
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selectorPosition) {
         var contentGroup = this.getContentGroup();
+        var selectorGroup = this._selectorGroup;
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -361,9 +452,52 @@ export default echarts.extendComponentView({
         );
 
         var contentRect = contentGroup.getBoundingRect();
-        contentGroup.attr('position', [-contentRect.x, -contentRect.y]);
+        var contentPos = [-contentRect.x, -contentRect.y];
 
-        return this.group.getBoundingRect();
+        if (selectorGroup) {
+            // Place buttons in selectorGroup
+            selectorGroup && layoutUtil.box(
+                // Buttons in selectorGroup always layout horizontally
+                'horizontal',
+                selectorGroup,
+                legendModel.get('selectorItemGap', true)
+            );
+
+            var selectorRect = selectorGroup.getBoundingRect();
+            var selectorPos = [-selectorRect.x, -selectorRect.y];
+
+            var selectorLegendGap = retrieve2(
+                legendModel.get('selectorLegendGap', true), legendModel.get('itemGap', true)
+            );
+
+            var orientIdx = legendModel.getOrient().index;
+            var WH = orientIdx === 0 ? 'width' : 'height';
+            var HW = orientIdx === 0 ? 'height' : 'width';
+            var YX = orientIdx === 0 ? 'y' : 'x';
+            var selectorBoundaryGap = legendModel.get('selectorBoundaryGap', true);
+
+            if (selectorPosition === 'end') {
+                selectorPos[orientIdx] += contentRect[WH] + selectorLegendGap;
+            }
+            else {
+                contentPos[orientIdx] += selectorRect[WH] + selectorLegendGap;
+            }
+
+            //Always align selector to content as 'middle'
+            selectorPos[1 - orientIdx] += contentRect[HW] / 2 - selectorRect[HW] / 2;
+            selectorGroup.attr('position', selectorPos);
+            contentGroup.attr('position', contentPos);
+
+            var mainRect = {x: 0, y: 0};
+            mainRect[WH] = contentRect[WH] + selectorLegendGap + selectorRect[WH] + selectorBoundaryGap;
+            mainRect[HW] = Math.max(contentRect[HW], selectorRect[HW]);
+            mainRect[YX] = Math.min(0, selectorRect[YX] + selectorPos[1 - orientIdx]);
+            return mainRect;
+        }
+        else {
+            contentGroup.attr('position', contentPos);
+            return this.group.getBoundingRect();
+        }
     },
 
     /**
@@ -375,6 +509,18 @@ export default echarts.extendComponentView({
     }
 
 });
+
+function dispatchAllSelectorAction(api) {
+    api.dispatchAction({
+        type: 'legendAllSelect'
+    });
+}
+
+function dispatchInverseSelectorAction(api) {
+    api.dispatchAction({
+        type: 'legendInverseSelect'
+    });
+}
 
 function dispatchSelectAction(name, api) {
     api.dispatchAction({
