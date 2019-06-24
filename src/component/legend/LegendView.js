@@ -29,7 +29,6 @@ var curry = zrUtil.curry;
 var each = zrUtil.each;
 var Group = graphic.Group;
 var isArray = zrUtil.isArray;
-var retrieve2 = zrUtil.retrieve2;
 
 export default echarts.extendComponentView({
 
@@ -122,7 +121,7 @@ export default echarts.extendComponentView({
 
         var maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
 
-        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selectorPosition);
+        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
         // Place mainGroup, based on the calculated `mainRect`.
         var layoutRect = layoutUtil.getLayoutRect(
@@ -150,7 +149,7 @@ export default echarts.extendComponentView({
     /**
      * @protected
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition, viewportSize) {
+    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
         var contentGroup = this.getContentGroup();
         var legendDrawnMap = zrUtil.createHashMap();
         var selectMode = legendModel.get('selectedMode');
@@ -256,19 +255,18 @@ export default echarts.extendComponentView({
         }, this);
 
         if (selector) {
-            this._createSelector(selector, legendModel, api, orient, selectorPosition, viewportSize);
+            this._createSelector(selector, legendModel, api, orient, selectorPosition);
         }
     },
 
-    _createSelector: function (selector, legendModel, api, orient, selectorPosition, viewportSize) {
-        this.group.add(this._selectorGroup = new Group());
+    _createSelector: function (selector, legendModel, api, orient, selectorPosition) {
+        !this._selectorGroup && this.group.add(this._selectorGroup = new Group());
         var selectorGroup = this._selectorGroup;
 
         var iconSize = legendModel.get('selectorIconSize', true);
         if (!isArray(iconSize)) {
             iconSize = [iconSize, iconSize];
         }
-
         each(selector, function (selectorItem) {
             createSelectorButton(selectorItem);
         });
@@ -438,7 +436,7 @@ export default echarts.extendComponentView({
     /**
      * @protected
      */
-    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selectorPosition) {
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
         var contentGroup = this.getContentGroup();
         var selectorGroup = this._selectorGroup;
 
@@ -454,7 +452,7 @@ export default echarts.extendComponentView({
         var contentRect = contentGroup.getBoundingRect();
         var contentPos = [-contentRect.x, -contentRect.y];
 
-        if (selectorGroup) {
+        if (selector && selectorGroup) {
             // Place buttons in selectorGroup
             selectorGroup && layoutUtil.box(
                 // Buttons in selectorGroup always layout horizontally
@@ -465,22 +463,19 @@ export default echarts.extendComponentView({
 
             var selectorRect = selectorGroup.getBoundingRect();
             var selectorPos = [-selectorRect.x, -selectorRect.y];
-
-            var selectorLegendGap = retrieve2(
-                legendModel.get('selectorLegendGap', true), legendModel.get('itemGap', true)
-            );
+            var selectorLegendContentGap = legendModel.get('selectorLegendContentGap', true);
 
             var orientIdx = legendModel.getOrient().index;
             var WH = orientIdx === 0 ? 'width' : 'height';
             var HW = orientIdx === 0 ? 'height' : 'width';
             var YX = orientIdx === 0 ? 'y' : 'x';
-            var selectorBoundaryGap = legendModel.get('selectorBoundaryGap', true);
+            var selectorBorderGap = legendModel.get('selectorBorderGap', true);
 
             if (selectorPosition === 'end') {
-                selectorPos[orientIdx] += contentRect[WH] + selectorLegendGap;
+                selectorPos[orientIdx] += contentRect[WH] + selectorLegendContentGap;
             }
             else {
-                contentPos[orientIdx] += selectorRect[WH] + selectorLegendGap;
+                contentPos[orientIdx] += selectorRect[WH] + selectorLegendContentGap;
             }
 
             //Always align selector to content as 'middle'
@@ -489,7 +484,7 @@ export default echarts.extendComponentView({
             contentGroup.attr('position', contentPos);
 
             var mainRect = {x: 0, y: 0};
-            mainRect[WH] = contentRect[WH] + selectorLegendGap + selectorRect[WH] + selectorBoundaryGap;
+            mainRect[WH] = contentRect[WH] + selectorLegendContentGap + selectorRect[WH] + selectorBorderGap;
             mainRect[HW] = Math.max(contentRect[HW], selectorRect[HW]);
             mainRect[YX] = Math.min(0, selectorRect[YX] + selectorPos[1 - orientIdx]);
             return mainRect;
