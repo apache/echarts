@@ -573,13 +573,13 @@ function doGuessOrdinal(
     }
 
     function detectValue(val) {
-        // Consider usage convenience, '1', '2' will be treated as "number".
-        // `isFinit('')` get `true`.
-        if (val != null && isFinite(val) && val !== '') {
-            return false;
-        }
-        else if (isString(val) && val !== '-') {
+		// `isFinit('')` get `true`.
+		// '1','2',true,false is not number.
+		if ((isString(val) && val !== '-') || typeof val === 'boolean') {
             return true;
+        }
+        else if (val != null && isFinite(val) && val !== '') {
+            return false;
         }
     }
 
