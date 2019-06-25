@@ -344,9 +344,7 @@ var LegendModel = echarts.extendComponentModel({
 
         selectorItemGap: 7,
 
-        selectorLegendContentGap: 10,
-
-        selectorBorderGap: 1,
+        selectorButtonGap: 10,
 
         // Tooltip 相关配置
         tooltip: {

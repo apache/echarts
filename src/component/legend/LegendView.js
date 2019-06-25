@@ -57,7 +57,7 @@ export default echarts.extendComponentView({
          * @private
          * @type {module:zrender/container/Group}
          */
-        this._selectorGroup;
+        this.group.add(this._selectorGroup = new Group());
 
         /**
          * If first rendering, `contentGroup.position` is [0, 0], which
@@ -143,7 +143,7 @@ export default echarts.extendComponentView({
     resetInner: function () {
         this.getContentGroup().removeAll();
         this._backgroundEl && this.group.remove(this._backgroundEl);
-        this._selectorGroup && this._selectorGroup.removeAll();
+        this.getSelectorGroup().removeAll();
     },
 
     /**
@@ -260,8 +260,7 @@ export default echarts.extendComponentView({
     },
 
     _createSelector: function (selector, legendModel, api, orient, selectorPosition) {
-        !this._selectorGroup && this.group.add(this._selectorGroup = new Group());
-        var selectorGroup = this._selectorGroup;
+        var selectorGroup = this.getSelectorGroup();
 
         var iconSize = legendModel.get('selectorIconSize', true);
         if (!isArray(iconSize)) {
@@ -438,7 +437,7 @@ export default echarts.extendComponentView({
      */
     layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
         var contentGroup = this.getContentGroup();
-        var selectorGroup = this._selectorGroup;
+        var selectorGroup = this.getSelectorGroup();
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -452,9 +451,9 @@ export default echarts.extendComponentView({
         var contentRect = contentGroup.getBoundingRect();
         var contentPos = [-contentRect.x, -contentRect.y];
 
-        if (selector && selectorGroup) {
+        if (selector) {
             // Place buttons in selectorGroup
-            selectorGroup && layoutUtil.box(
+            layoutUtil.box(
                 // Buttons in selectorGroup always layout horizontally
                 'horizontal',
                 selectorGroup,
@@ -463,30 +462,29 @@ export default echarts.extendComponentView({
 
             var selectorRect = selectorGroup.getBoundingRect();
             var selectorPos = [-selectorRect.x, -selectorRect.y];
-            var selectorLegendContentGap = legendModel.get('selectorLegendContentGap', true);
+            var selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
             var orientIdx = legendModel.getOrient().index;
-            var WH = orientIdx === 0 ? 'width' : 'height';
-            var HW = orientIdx === 0 ? 'height' : 'width';
-            var YX = orientIdx === 0 ? 'y' : 'x';
-            var selectorBorderGap = legendModel.get('selectorBorderGap', true);
+            var wh = orientIdx === 0 ? 'width' : 'height';
+            var hw = orientIdx === 0 ? 'height' : 'width';
+            var yx = orientIdx === 0 ? 'y' : 'x';
 
             if (selectorPosition === 'end') {
-                selectorPos[orientIdx] += contentRect[WH] + selectorLegendContentGap;
+                selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
             }
             else {
-                contentPos[orientIdx] += selectorRect[WH] + selectorLegendContentGap;
+                contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
             }
 
             //Always align selector to content as 'middle'
-            selectorPos[1 - orientIdx] += contentRect[HW] / 2 - selectorRect[HW] / 2;
+            selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
             selectorGroup.attr('position', selectorPos);
             contentGroup.attr('position', contentPos);
 
             var mainRect = {x: 0, y: 0};
-            mainRect[WH] = contentRect[WH] + selectorLegendContentGap + selectorRect[WH] + selectorBorderGap;
-            mainRect[HW] = Math.max(contentRect[HW], selectorRect[HW]);
-            mainRect[YX] = Math.min(0, selectorRect[YX] + selectorPos[1 - orientIdx]);
+            mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
+            mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
+            mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
             return mainRect;
         }
         else {
