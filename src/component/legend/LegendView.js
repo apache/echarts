@@ -260,59 +260,40 @@ export default echarts.extendComponentView({
     _createSelector: function (selector, legendModel, api, orient, selectorPosition) {
         var selectorGroup = this.getSelectorGroup();
 
-        var iconSize = legendModel.get('selectorIconSize', true);
-        if (!isArray(iconSize)) {
-            iconSize = [iconSize, iconSize];
-        }
         each(selector, function (selectorItem) {
             createSelectorButton(selectorItem);
         });
 
         function createSelectorButton(selectorItem) {
             var type = selectorItem.type;
-            var icon = graphic.createIcon(
-                selectorItem.icon,
-                {
-                    onclick: type === 'all'
-                        ? curry(dispatchAllSelectorAction, api)
-                        : curry(dispatchInverseSelectorAction, api)
+
+            var labelText = new graphic.Text({
+                style: {
+                    x: 0,
+                    y: 0,
+                    align: 'center',
+                    verticalAlign: 'middle'
                 },
-                {
-                    x: -iconSize[0] / 2,
-                    y: -iconSize[1] / 2,
-                    width: iconSize[0],
-                    height: iconSize[1]
+                onclick: function () {
+                    api.dispatchAction({
+                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect'
+                    });
                 }
-            );
-            selectorGroup.add(icon);
-            icon.name = type;
+            });
 
-            var normalStyle = legendModel.getModel('selectorIconStyle').getItemStyle();
-            icon.setStyle(normalStyle);
-            var hoverStyle = icon.hoverStyle = legendModel.getModel('emphasis.selectorIconStyle').getItemStyle();
+            selectorGroup.add(labelText);
 
-            var normalTextStyleModel = legendModel.getModel('selectorTextStyle');
-            var emphasisTextStyleModel = legendModel.getModel('emphasis.selectorTextStyle');
+            var labelModel = legendModel.getModel('selectorLabel');
+            var emphasisLabelModel = legendModel.getModel('emphasis.selectorLabel');
+
             graphic.setLabelStyle(
-                icon.style, hoverStyle, normalTextStyleModel, emphasisTextStyleModel,
+                labelText.style, labelText.hoverStyle = {}, labelModel, emphasisLabelModel,
                 {
                     defaultText: selectorItem.title,
-                    isRectText: true,
-                    getTextPosition: function (textStyleModel) {
-                        var textPosition = textStyleModel.getShallow('position');
-                        if (textPosition == null || textPosition === 'auto') {
-                            if (orient === 'horizontal') {
-                                textPosition = selectorPosition === 'end' ? 'left' : 'right';
-                            }
-                            else if (orient === 'vertical') {
-                                textPosition = selectorPosition === 'start' ? 'bottom' : 'top';
-                            }
-                        }
-                        return textPosition;
-                    }
+                    isRectText: false
                 }
             );
-            graphic.setHoverStyle(icon, hoverStyle);
+            graphic.setHoverStyle(labelText);
         }
     },
 
@@ -500,18 +481,6 @@ export default echarts.extendComponentView({
     }
 
 });
-
-function dispatchAllSelectorAction(api) {
-    api.dispatchAction({
-        type: 'legendAllSelect'
-    });
-}
-
-function dispatchInverseSelectorAction(api) {
-    api.dispatchAction({
-        type: 'legendInverseSelect'
-    });
-}
 
 function dispatchSelectAction(name, api) {
     api.dispatchAction({
