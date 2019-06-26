@@ -24,6 +24,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import * as graphicUtil from '../util/graphic';
 import * as layoutUtil from '../util/layout';
+import {parsePercent} from '../util/number';
 
 // -------------
 // Preprocessor
@@ -266,7 +267,7 @@ echarts.extendComponentView({
         }
         this._lastGraphicModel = graphicModel;
 
-        this._updateElements(graphicModel);
+        this._updateElements(graphicModel, api);
         this._relocate(graphicModel, api);
     },
 
@@ -276,7 +277,7 @@ echarts.extendComponentView({
      * @private
      * @param {Object} graphicModel graphic model
      */
-    _updateElements: function (graphicModel) {
+    _updateElements: function (graphicModel, api) {
         var elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
 
         if (!elOptionsToUpdate) {
@@ -293,6 +294,7 @@ echarts.extendComponentView({
             var existEl = elMap.get(id);
             var parentId = elOption.parentId;
             var targetElParent = parentId != null ? elMap.get(parentId) : rootGroup;
+            console.log('tagetParent', targetElParent);
 
             var elOptionStyle = elOption.style;
             if (elOption.type === 'text' && elOptionStyle) {
@@ -338,8 +340,24 @@ echarts.extendComponentView({
 
             var el = elMap.get(id);
             if (el) {
-                el.__ecGraphicWidth = elOption.width;
-                el.__ecGraphicHeight = elOption.height;
+                var isParentRoot = targetElParent === rootGroup;
+                var parentWidth = isParentRoot
+                    ? api.getWidth()
+                    // Like 'position:absolute' in css, default 0.
+                    : (targetElParent.__ecGraphicWidth || 0);
+                var parentHeight = isParentRoot
+                    ? api.getHeight()
+                    : (targetElParent.__ecGraphicHeight || 0);
+
+                var isGroup = el.type === 'group';
+                el.__ecGraphicWidth = isGroup
+                    ? parsePercent(elOption.width, parentWidth)
+                    : parentWidth;
+                el.__ecGraphicHeight = isGroup
+                    ? parsePercent(elOption.height, parentHeight)
+                    : parentHeight;
+
+                console.log(el.type, el.__ecGraphicWidth, el.__ecGraphicHeight);
                 setEventData(el, graphicModel, elOption);
             }
         });
@@ -354,7 +372,6 @@ echarts.extendComponentView({
      */
     _relocate: function (graphicModel, api) {
         var elOptions = graphicModel.option.elements;
-        var rootGroup = this.group;
         var elMap = this._elMap;
 
         // Bottom-up tranvese all elements (consider ec resize) to locate elements.
@@ -366,16 +383,10 @@ echarts.extendComponentView({
                 continue;
             }
 
-            var parentEl = el.parent;
-            var containerInfo = parentEl === rootGroup
-                ? {
-                    width: api.getWidth(),
-                    height: api.getHeight()
-                }
-                : { // Like 'position:absolut' in css, default 0.
-                    width: parentEl.__ecGraphicWidth || 0,
-                    height: parentEl.__ecGraphicHeight || 0
-                };
+            var containerInfo = {
+                width: el.__ecGraphicWidth,
+                height: el.__ecGraphicHeight
+            };
 
             layoutUtil.positionElement(
                 el, elOption, containerInfo, null,
