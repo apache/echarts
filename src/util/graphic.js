@@ -658,6 +658,29 @@ export function setLabelStyle(
 }
 
 /**
+ * Modify label style manually.
+ * Only works after `setLabelStyle` and `setElementHoverStyle` called.
+ *
+ * @param {module:zrender/src/Element} el
+ * @param {Object} [normalStyleProps] optional
+ * @param {Object} [emphasisStyleProps] optional
+ */
+export function modifyLabelStyle(el, normalStyleProps, emphasisStyleProps) {
+    var elStyle = el.style;
+    if (normalStyleProps) {
+        rollbackDefaultTextStyle(elStyle);
+        el.setStyle(normalStyleProps);
+        applyDefaultTextStyle(elStyle);
+    }
+    elStyle = el.__hoverStl;
+    if (emphasisStyleProps && elStyle) {
+        rollbackDefaultTextStyle(elStyle);
+        zrUtil.extend(elStyle, emphasisStyleProps);
+        applyDefaultTextStyle(elStyle);
+    }
+}
+
+/**
  * Set basic textStyle properties.
  * See more info in `setTextStyleCommon`.
  * @param {Object|module:zrender/graphic/Style} textStyle
@@ -842,10 +865,6 @@ function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEm
         globalTextStyle.textBorderWidth
     );
 
-    // Save original textPosition, because style.textPosition will be repalced by
-    // real location (like [10, 30]) in zrender.
-    textStyle.insideRawTextPosition = textStyle.textPosition;
-
     if (!isEmphasis) {
         if (isBlock) {
             textStyle.insideRollbackOpt = opt;
@@ -936,7 +955,7 @@ function applyDefaultTextStyle(textStyle) {
     }
 
     var useInsideStyle = opt.useInsideStyle;
-    var textPosition = textStyle.insideRawTextPosition;
+    var textPosition = textStyle.textPosition;
     var insideRollback;
     var autoColor = opt.autoColor;
 
