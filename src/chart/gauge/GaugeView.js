@@ -86,7 +86,7 @@ var GaugeView = ChartView.extend({
         var prevEndAngle = startAngle;
         var axisLineWidth = lineStyleModel.get('width');
         var showAxis = axisLineModel.get('show');
-        
+
         for (var i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
             var percent = Math.min(Math.max(colorList[i][0], 0), 1);

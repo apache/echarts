@@ -140,15 +140,57 @@ var ScrollableLegendView = LegendView.extend({
      * @override
      */
     layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
-        var contentGroup = this.getContentGroup();
-        var containerGroup = this._containerGroup;
-        var controllerGroup = this._controllerGroup;
         var selectorGroup = this.getSelectorGroup();
 
         var orientIdx = legendModel.getOrient().index;
         var wh = WH[orientIdx];
+        var xy = XY[orientIdx];
         var hw = WH[1 - orientIdx];
         var yx = XY[1 - orientIdx];
+
+        selector && layoutUtil.box(
+            // Buttons in selectorGroup always layout horizontally
+            'horizontal',
+            selectorGroup,
+            legendModel.get('selectorItemGap', true)
+        );
+
+        var selectorButtonGap = legendModel.get('selectorButtonGap', true);
+        var selectorRect = selectorGroup.getBoundingRect();
+        var selectorPos = [-selectorRect.x, -selectorRect.y];
+
+        var processMaxSize = zrUtil.clone(maxSize);
+        selector && (processMaxSize[wh] = maxSize[wh] - selectorRect[wh] - selectorButtonGap);
+
+        var mainRect = this._layoutContentAndController(legendModel, isFirstRender,
+            processMaxSize, orientIdx, wh, hw, yx
+        );
+
+        if (selector) {
+            if (selectorPosition === 'end') {
+                selectorPos[orientIdx] += mainRect[wh] + selectorButtonGap;
+            }
+            else {
+                var offset = selectorRect[wh] + selectorButtonGap;
+                selectorPos[orientIdx] -= offset;
+                mainRect[xy] -= offset;
+            }
+            mainRect[wh] += selectorRect[wh] + selectorButtonGap;
+
+            selectorPos[1 - orientIdx] += mainRect[yx] + mainRect[hw] / 2 - selectorRect[hw] / 2;
+            mainRect[hw] = Math.max(mainRect[hw], selectorRect[hw]);
+            mainRect[yx] = Math.min(mainRect[yx], selectorRect[yx] + selectorPos[1 - orientIdx]);
+
+            selectorGroup.attr('position', selectorPos);
+        }
+
+        return mainRect;
+    },
+
+    _layoutContentAndController: function (legendModel, isFirstRender, maxSize, orientIdx, wh, hw, yx) {
+        var contentGroup = this.getContentGroup();
+        var containerGroup = this._containerGroup;
+        var controllerGroup = this._controllerGroup;
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -158,18 +200,6 @@ var ScrollableLegendView = LegendView.extend({
             !orientIdx ? null : maxSize.width,
             orientIdx ? null : maxSize.height
         );
-
-        selector && layoutUtil.box(
-            // Buttons in selectorGroup always layout horizontally
-            'horizontal',
-            selectorGroup,
-            legendModel.get('selectorItemGap', true)
-        );
-
-        var selectorButtonGap = selector ? legendModel.get('selectorButtonGap', true) : 0;
-
-        var selectorRect = selector ? selectorGroup.getBoundingRect() : {x: 0, y: 0, width: 0, height: 0};
-        var selectorPos = [-selectorRect.x, -selectorRect.y];
 
         layoutUtil.box(
             // Buttons in controller are layout always horizontally.
@@ -202,55 +232,17 @@ var ScrollableLegendView = LegendView.extend({
             var pageButtonPosition = legendModel.get('pageButtonPosition', true);
             // controller is on the right / bottom.
             if (pageButtonPosition === 'end') {
-                if (selector) {
-                    if (selectorPosition === 'end') {
-                        selectorPos[orientIdx] += maxSize[wh] - selectorRect[wh];
-                        controllerPos[orientIdx] += maxSize[wh] - selectorRect[wh]
-                            - selectorButtonGap - controllerRect[wh];
-                    }
-                    else {
-                        controllerPos[orientIdx] += maxSize[wh] - controllerRect[wh];
-                        containerPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
-                    }
-                }
-                else {
-                    controllerPos[orientIdx] += maxSize[wh] - controllerRect[wh];
-                }
+                controllerPos[orientIdx] += maxSize[wh] - controllerRect[wh];
             }
             // controller is on the left / top.
             else {
-                if (selector) {
-                    if (selectorPosition === 'start') {
-                        controllerPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
-                        containerPos[orientIdx] += selectorRect[wh] + selectorButtonGap
-                            + controllerRect[wh] + pageButtonGap;
-                    }
-                    else {
-                        selectorPos[orientIdx] += maxSize[wh] - selectorRect[wh];
-                        containerPos[orientIdx] += controllerRect[wh] + pageButtonGap;
-                    }
-                }
-                else {
-                    containerPos[orientIdx] += controllerRect[wh] + pageButtonGap;
-                }
-            }
-        }
-        else if (selector) {
-            if (selectorPosition === 'end') {
-                selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
-            }
-            else {
-                containerPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
+                containerPos[orientIdx] += controllerRect[wh] + pageButtonGap;
             }
         }
 
         // Always align controller to content as 'middle'.
         controllerPos[1 - orientIdx] += contentRect[hw] / 2 - controllerRect[hw] / 2;
 
-        if (selector) {
-            selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
-            selectorGroup.attr('position', selectorPos);
-        }
         contentGroup.attr('position', contentPos);
         containerGroup.attr('position', containerPos);
         controllerGroup.attr('position', controllerPos);
@@ -259,20 +251,18 @@ var ScrollableLegendView = LegendView.extend({
         // mainRect should not be calculated by `this.group.getBoundingRect()`
         // for sake of the overflow.
         var mainRect = {x: 0, y: 0};
-        // Consider content may be overflow (should be clipped).
-        mainRect[wh] = showController ? maxSize[wh]
-            : contentRect[wh] + selectorButtonGap + selectorRect[wh];
 
-        mainRect[hw] = Math.max(contentRect[hw], controllerRect[hw], selectorRect[hw]);
+        // Consider content may be overflow (should be clipped).
+        mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];
+        mainRect[hw] = Math.max(contentRect[hw], controllerRect[hw]);
+
         // `containerRect[yx] + containerPos[1 - orientIdx]` is 0.
-        mainRect[yx] = Math.min(0, controllerRect[yx] + controllerPos[1 - orientIdx],
-            selectorRect[yx] + selectorPos[1 - orientIdx]);
+        mainRect[yx] = Math.min(0, controllerRect[yx] + controllerPos[1 - orientIdx]);
 
         containerGroup.__rectSize = maxSize[wh];
         if (showController) {
             var clipShape = {x: 0, y: 0};
-            clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap
-                - selectorRect[wh] - selectorButtonGap, 0);
+            clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0);
             clipShape[hw] = mainRect[hw];
             containerGroup.setClipPath(new graphic.Rect({shape: clipShape}));
             // Consider content may be larger than container, container rect

@@ -105,11 +105,9 @@ export default echarts.extendComponentView({
         }
 
         var selector = legendModel.get('selector', true);
-        if (selector) {
-            var selectorPosition = legendModel.get('selectorPosition', true);
-            if (!selectorPosition || selectorPosition === 'auto') {
-                selectorPosition = orient === 'horizontal' ? 'end' : 'start';
-            }
+        var selectorPosition = legendModel.get('selectorPosition', true);
+        if (selector && (!selectorPosition || selectorPosition === 'auto')) {
+            selectorPosition = orient === 'horizontal' ? 'end' : 'start';
         }
 
         this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
