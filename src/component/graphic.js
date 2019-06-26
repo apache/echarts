@@ -294,7 +294,6 @@ echarts.extendComponentView({
             var existEl = elMap.get(id);
             var parentId = elOption.parentId;
             var targetElParent = parentId != null ? elMap.get(parentId) : rootGroup;
-            console.log('tagetParent', targetElParent);
 
             var elOptionStyle = elOption.style;
             if (elOption.type === 'text' && elOptionStyle) {
@@ -357,7 +356,6 @@ echarts.extendComponentView({
                     ? parsePercent(elOption.height, parentHeight)
                     : parentHeight;
 
-                console.log(el.type, el.__ecGraphicWidth, el.__ecGraphicHeight);
                 setEventData(el, graphicModel, elOption);
             }
         });
