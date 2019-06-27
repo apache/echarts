@@ -28,7 +28,6 @@ import * as layoutUtil from '../../util/layout';
 var curry = zrUtil.curry;
 var each = zrUtil.each;
 var Group = graphic.Group;
-var isArray = zrUtil.isArray;
 
 export default echarts.extendComponentView({
 
