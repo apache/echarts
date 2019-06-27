@@ -191,10 +191,15 @@ export default echarts.extendComponentView({
                     }
 
                     if (seriesModel.legendDataProvider) {
-                        var data = seriesModel.legendDataProvider();
+                        // pie/funnel legend can use visualMap color.
+						var data = seriesModel.getData();
                         var idx = data.indexOfName(name);
                         if (idx < 0) {
-                            return;
+							var rawData = seriesModel.legendDataProvider();
+                            idx = rawData.indexOfName(name);
+                            if (idx < 0) {
+                                return;
+                            }
                         }
 
                         var color = data.getItemVisual(idx, 'color');
