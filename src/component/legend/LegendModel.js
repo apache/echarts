@@ -21,6 +21,20 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
 import {isNameSpecified} from '../../util/model';
+import lang from '../../lang';
+
+var langTitle = lang.legendSelector.title;
+
+var defaultSelectorOption = {
+    all: {
+        type: 'all',
+        title: zrUtil.clone(langTitle.all)
+    },
+    inverse: {
+        type: 'inverse',
+        title: zrUtil.clone(langTitle.inverse)
+    }
+};
 
 var LegendModel = echarts.extendComponentModel({
 
@@ -44,10 +58,25 @@ var LegendModel = echarts.extendComponentModel({
         this.mergeDefaultAndTheme(option, ecModel);
 
         option.selected = option.selected || {};
+        this._updateSelector(option);
     },
 
     mergeOption: function (option) {
         LegendModel.superCall(this, 'mergeOption', option);
+        this._updateSelector(option);
+    },
+
+    _updateSelector: function (option) {
+        var selector = option.selector;
+        if (selector === true) {
+            selector = option.selector = ['all', 'inverse'];
+        }
+        if (zrUtil.isArray(selector)) {
+            zrUtil.each(selector, function (item, index) {
+                zrUtil.isString(item) && (item = {type: item});
+                selector[index] = zrUtil.merge(item, defaultSelectorOption[item.type]);
+            });
+        }
     },
 
     optionUpdated: function () {
@@ -176,6 +205,27 @@ var LegendModel = echarts.extendComponentModel({
         this[selected[name] ? 'unSelect' : 'select'](name);
     },
 
+    allSelect: function () {
+        var data = this._data;
+        var selected = this.option.selected;
+        zrUtil.each(data, function (dataItem) {
+            selected[dataItem.get('name', true)] = true;
+        });
+    },
+
+    inverseSelect: function () {
+        var data = this._data;
+        var selected = this.option.selected;
+        zrUtil.each(data, function (dataItem) {
+            var name = dataItem.get('name', true);
+            // Initially, default value is true
+            if (!selected.hasOwnProperty(name)) {
+                selected[name] = true;
+            }
+            selected[name] = !selected[name];
+        });
+    },
+
     /**
      * @param {string} name
      */
@@ -183,6 +233,12 @@ var LegendModel = echarts.extendComponentModel({
         var selected = this.option.selected;
         return !(selected.hasOwnProperty(name) && !selected[name])
             && zrUtil.indexOf(this._availableNames, name) >= 0;
+    },
+
+    getOrient: function () {
+        return this.get('orient') === 'vertical'
+            ? {index: 1, name: 'vertical'}
+            : {index: 0, name: 'horizontal'};
     },
 
     defaultOption: {
@@ -238,6 +294,42 @@ var LegendModel = echarts.extendComponentModel({
         // selected: null,
         // 图例内容（详见legend.data，数组中每一项代表一个item
         // data: [],
+
+        // Usage:
+        // selector: [{type: 'all or inverse', icon: 'xxx', title: xxx}]
+        // or
+        // selector: true
+        // or
+        // selector: ['all', 'inverse']
+        selector: false,
+
+        selectorIconSize: 14,
+
+        selectorLabel: {
+            show: true,
+            borderRadius: 10,
+            padding: [3, 5, 3, 5],
+            fontSize: 12,
+            fontFamily: ' sans-serif',
+            color: '#666',
+            borderWidth: 1,
+            borderColor: '#666'
+        },
+
+        emphasis: {
+            selectorLabel: {
+                show: true,
+                color: '#eee',
+                backgroundColor: '#666'
+            }
+        },
+
+        // Value can be 'start' or 'end'
+        selectorPosition: 'auto',
+
+        selectorItemGap: 7,
+
+        selectorButtonGap: 10,
 
         // Tooltip 相关配置
         tooltip: {

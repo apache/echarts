@@ -1145,7 +1145,7 @@ echartsProto.makeActionFromEvent = function (eventObj) {
  * @param {boolean} [opt.flush=undefined]
  *                  true: Flush immediately, and then pixel in canvas can be fetched
  *                      immediately. Caution: it might affect performance.
- *                  false: Not not flush.
+ *                  false: Not flush.
  *                  undefined: Auto decide whether perform flush.
  */
 echartsProto.dispatchAction = function (payload, opt) {

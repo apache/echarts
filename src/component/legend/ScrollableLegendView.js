@@ -81,11 +81,12 @@ var ScrollableLegendView = LegendView.extend({
     /**
      * @override
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api) {
+    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
         var me = this;
 
         // Render content items.
-        ScrollableLegendView.superCall(this, 'renderInner', itemAlign, legendModel, ecModel, api);
+        ScrollableLegendView.superCall(this, 'renderInner', itemAlign,
+            legendModel, ecModel, api, selector, orient, selectorPosition);
 
         var controllerGroup = this._controllerGroup;
 
@@ -138,15 +139,58 @@ var ScrollableLegendView = LegendView.extend({
     /**
      * @override
      */
-    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender) {
-        var contentGroup = this.getContentGroup();
-        var containerGroup = this._containerGroup;
-        var controllerGroup = this._controllerGroup;
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
+        var selectorGroup = this.getSelectorGroup();
 
         var orientIdx = legendModel.getOrient().index;
         var wh = WH[orientIdx];
+        var xy = XY[orientIdx];
         var hw = WH[1 - orientIdx];
         var yx = XY[1 - orientIdx];
+
+        selector && layoutUtil.box(
+            // Buttons in selectorGroup always layout horizontally
+            'horizontal',
+            selectorGroup,
+            legendModel.get('selectorItemGap', true)
+        );
+
+        var selectorButtonGap = legendModel.get('selectorButtonGap', true);
+        var selectorRect = selectorGroup.getBoundingRect();
+        var selectorPos = [-selectorRect.x, -selectorRect.y];
+
+        var processMaxSize = zrUtil.clone(maxSize);
+        selector && (processMaxSize[wh] = maxSize[wh] - selectorRect[wh] - selectorButtonGap);
+
+        var mainRect = this._layoutContentAndController(legendModel, isFirstRender,
+            processMaxSize, orientIdx, wh, hw, yx
+        );
+
+        if (selector) {
+            if (selectorPosition === 'end') {
+                selectorPos[orientIdx] += mainRect[wh] + selectorButtonGap;
+            }
+            else {
+                var offset = selectorRect[wh] + selectorButtonGap;
+                selectorPos[orientIdx] -= offset;
+                mainRect[xy] -= offset;
+            }
+            mainRect[wh] += selectorRect[wh] + selectorButtonGap;
+
+            selectorPos[1 - orientIdx] += mainRect[yx] + mainRect[hw] / 2 - selectorRect[hw] / 2;
+            mainRect[hw] = Math.max(mainRect[hw], selectorRect[hw]);
+            mainRect[yx] = Math.min(mainRect[yx], selectorRect[yx] + selectorPos[1 - orientIdx]);
+
+            selectorGroup.attr('position', selectorPos);
+        }
+
+        return mainRect;
+    },
+
+    _layoutContentAndController: function (legendModel, isFirstRender, maxSize, orientIdx, wh, hw, yx) {
+        var contentGroup = this.getContentGroup();
+        var containerGroup = this._containerGroup;
+        var controllerGroup = this._controllerGroup;
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -206,11 +250,12 @@ var ScrollableLegendView = LegendView.extend({
         // Calculate `mainRect` and set `clipPath`.
         // mainRect should not be calculated by `this.group.getBoundingRect()`
         // for sake of the overflow.
-        var mainRect = this.group.getBoundingRect();
         var mainRect = {x: 0, y: 0};
+
         // Consider content may be overflow (should be clipped).
         mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];
         mainRect[hw] = Math.max(contentRect[hw], controllerRect[hw]);
+
         // `containerRect[yx] + containerPos[1 - orientIdx]` is 0.
         mainRect[yx] = Math.min(0, controllerRect[yx] + controllerPos[1 - orientIdx]);
 
@@ -225,7 +270,7 @@ var ScrollableLegendView = LegendView.extend({
             containerGroup.__rectSize = clipShape[wh];
         }
         else {
-            // Do not remove or ignore controller. Keep them set as place holders.
+            // Do not remove or ignore controller. Keep them set as placeholders.
             controllerGroup.eachChild(function (child) {
                 child.attr({invisible: true, silent: true});
             });
@@ -237,7 +282,7 @@ var ScrollableLegendView = LegendView.extend({
             contentGroup,
             {position: pageInfo.contentPosition},
             // When switch from "show controller" to "not show controller", view should be
-            // updated immediately without animation, otherwise causes weird efffect.
+            // updated immediately without animation, otherwise causes weird effect.
             showController ? legendModel : false
         );
 
@@ -293,8 +338,8 @@ var ScrollableLegendView = LegendView.extend({
      *  contentPosition: Array.<number>, null when data item not found.
      *  pageIndex: number, null when data item not found.
      *  pageCount: number, always be a number, can be 0.
-     *  pagePrevDataIndex: number, null when no next page.
-     *  pageNextDataIndex: number, null when no previous page.
+     *  pagePrevDataIndex: number, null when no previous page.
+     *  pageNextDataIndex: number, null when no next page.
      * }
      */
     _getPageInfo: function (legendModel) {

@@ -760,11 +760,18 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
     opt = opt || EMPTY_OBJ;
 
     if (opt.isRectText) {
-        var textPosition = textStyleModel.getShallow('position')
-            || (isEmphasis ? null : 'inside');
-        // 'outside' is not a valid zr textPostion value, but used
-        // in bar series, and magric type should be considered.
-        textPosition === 'outside' && (textPosition = 'top');
+        var textPosition;
+        if (opt.getTextPosition) {
+            textPosition = opt.getTextPosition(textStyleModel, isEmphasis);
+        }
+        else {
+            textPosition = textStyleModel.getShallow('position')
+                || (isEmphasis ? null : 'inside');
+            // 'outside' is not a valid zr textPostion value, but used
+            // in bar series, and magric type should be considered.
+            textPosition === 'outside' && (textPosition = 'top');
+        }
+
         textStyle.textPosition = textPosition;
         textStyle.textOffset = textStyleModel.getShallow('offset');
         var labelRotate = textStyleModel.getShallow('rotate');
