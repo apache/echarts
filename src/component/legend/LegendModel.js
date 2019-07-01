@@ -198,9 +198,9 @@ var LegendModel = echarts.extendComponentModel({
      */
     toggleSelected: function (name) {
         var selected = this.option.selected;
-        // Default is true
+        // Default is false
         if (!selected.hasOwnProperty(name)) {
-            selected[name] = true;
+            selected[name] = false;
         }
         this[selected[name] ? 'unSelect' : 'select'](name);
     },
