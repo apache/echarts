@@ -174,6 +174,6 @@ Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/polic
 ## Reference Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
-[ECharts: A Declarative Framework for Rapid Construction of Wed-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).
+[ECharts: A Declarative Framework for Rapid Construction of Web-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).
 Visual Informatics, 2018.
 
