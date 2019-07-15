@@ -160,7 +160,7 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ## Build
 
-Check this tutorial [Create Custom Build of ECharts](https://echarts.apache.org/en/builder.html)
+Check this tutorial [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts)
  please.
 
 ## License
