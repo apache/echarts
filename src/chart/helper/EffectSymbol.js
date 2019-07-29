@@ -38,7 +38,7 @@ function normalizeSymbolSize(symbolSize) {
 }
 
 function updateRipplePath(rippleGroup, effectCfg) {
-    const color = effectCfg.rippleEffectColor || effectCfg.color
+    const color = effectCfg.rippleEffectColor || effectCfg.color;
     rippleGroup.eachChild(function (ripplePath) {
         ripplePath.attr({
             z: effectCfg.z,
@@ -196,7 +196,7 @@ effectSymbolProto.updateData = function (data, idx) {
     effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
     effectCfg.symbolType = symbolType;
     effectCfg.color = color;
-    effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color')
+    effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color');
 
     this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
