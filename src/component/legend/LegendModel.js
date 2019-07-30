@@ -175,7 +175,7 @@ var LegendModel = echarts.extendComponentModel({
         if (!selected.hasOwnProperty(name)) {
             selected[name] = true;
         }
-        if (!disabled.hasOwnProperty(name) && disabled[name] === true) {
+        if (disabled.hasOwnProperty(name) && disabled[name] === true) {
             return;
         }
         this[selected[name] ? 'unSelect' : 'select'](name);
