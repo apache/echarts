@@ -99,12 +99,12 @@ var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
 
 function createRegisterEventWithLowercaseName(method, ignoreDisposed) {
-    if (!ignoreDisposed && this._disposed) {
-        disposedWarning(this.id);
-        return;
-    }
-
     return function (eventName, handler, context) {
+        if (!ignoreDisposed && this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
         // Event name is all lowercase
         eventName = eventName && eventName.toLowerCase();
         Eventful.prototype[method].call(this, eventName, handler, context);
