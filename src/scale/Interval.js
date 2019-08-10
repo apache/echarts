@@ -149,6 +149,22 @@ var IntervalScale = Scale.extend({
     },
 
     /**
+     * Normalize value to linear [0, 1], return 0.5 if extent span is 0
+     * value need in the extent
+     * @param {number} val
+     * @return {number}
+     */
+    normalize: function(val) {
+        var extent = this._extent;
+        if (extent[1] === extent[0]) {
+            return 0.5;
+        }
+        val = Math.min(extent[1], Math.max(extent[0], val))
+
+        return (val - extent[0]) / (extent[1] - extent[0]);
+    },
+
+    /**
      * Nice extent.
      * @param {Object} opt
      * @param {number} [opt.splitNumber = 5] Given approx tick number
