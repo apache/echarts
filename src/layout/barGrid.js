@@ -260,6 +260,7 @@ export function layout(seriesType, ecModel) {
     var barWidthAndOffset = makeColumnLayout(seriesModels);
 
     var lastStackCoords = {};
+    var lastStackValues = {};
     var lastStackCoordsOrigin = {};
 
     zrUtil.each(seriesModels, function (seriesModel) {
@@ -277,6 +278,7 @@ export function layout(seriesType, ecModel) {
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+        lastStackValues[stackId] = lastStackValues[stackId] || [];
         lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
         data.setLayout({
@@ -290,6 +292,7 @@ export function layout(seriesType, ecModel) {
         var isValueAxisH = valueAxis.isHorizontal();
 
         var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
+        var valueAxisExtent = getValueAxisExtent(valueAxis)
 
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
@@ -302,6 +305,7 @@ export function layout(seriesType, ecModel) {
 
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
+            var baseStackValue = 0
 
             // Because of the barMinHeight, we can not use the value in
             // stackResultDimension directly.
@@ -313,8 +317,15 @@ export function layout(seriesType, ecModel) {
                         n: valueAxisStart  // Negative stack
                     };
                 }
+                if (!lastStackValues[stackId][baseValue]) {
+                    lastStackValues[stackId][baseValue] = {
+                        p: 0,
+                        n: 0,
+                    }
+                }
                 // Should also consider #4243
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
+                baseStackValue = lastStackValues[stackId][baseValue][sign];
             }
 
             var x;
@@ -323,29 +334,59 @@ export function layout(seriesType, ecModel) {
             var height;
 
             if (isValueAxisH) {
-                var coord = cartesian.dataToPoint([value, baseValue]);
+                var coord = cartesian.dataToPoint([value + baseStackValue, baseValue]);
                 x = baseCoord;
                 y = coord[1] + columnOffset;
-                width = coord[0] - valueAxisStart;
+                width = coord[0] - baseCoord;
                 height = columnWidth;
+
+                stacked && (lastStackCoords[stackId][baseValue][sign] += width);
+                stacked && (lastStackValues[stackId][baseValue][sign] += value);
+
+                width = width <= 0 ? Math.min(Math.max(valueAxisExtent.min - baseCoord, width), 0) :
+                    Math.max(Math.min(valueAxisExtent.max - baseCoord, width), 0)
+
+                var offset = 0
+                if (x < valueAxisExtent.min) {
+                    offset = valueAxisExtent.min - x
+                    x = valueAxisExtent.min
+                } else if (x > valueAxisExtent.max) {
+                    offset = valueAxisExtent.max - x
+                    x = valueAxisExtent.max
+                }
+                width = width > 0 ? Math.max(0, width - offset) : Math.min(0, width - offset)
 
                 if (Math.abs(width) < barMinHeight) {
                     width = (width < 0 ? -1 : 1) * barMinHeight;
                 }
-                stacked && (lastStackCoords[stackId][baseValue][sign] += width);
             }
             else {
-                var coord = cartesian.dataToPoint([baseValue, value]);
+                var coord = cartesian.dataToPoint([baseValue, value + baseStackValue]);
                 x = coord[0] + columnOffset;
                 y = baseCoord;
                 width = columnWidth;
-                height = coord[1] - valueAxisStart;
+                height = coord[1] - baseCoord;
+
+                stacked && (lastStackCoords[stackId][baseValue][sign] += height);
+                stacked && (lastStackValues[stackId][baseValue][sign] += value);
+
+                height = height <= 0 ? Math.min(Math.max(valueAxisExtent.min - baseCoord, height), 0) :
+                    Math.max(Math.min(valueAxisExtent.max - baseCoord, height), 0)
+
+                var offset = 0
+                if (y < valueAxisExtent.min) {
+                    offset = valueAxisExtent.min - y
+                    y = valueAxisExtent.min
+                } else if (y > valueAxisExtent.max) {
+                    offset = valueAxisExtent.max - y
+                    y = valueAxisExtent.max
+                }
+                height = height > 0 ? Math.max(0, height - offset) : Math.min(0, height - offset)
 
                 if (Math.abs(height) < barMinHeight) {
                     // Include zero to has a positive bar
                     height = (height <= 0 ? -1 : 1) * barMinHeight;
                 }
-                stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
 
             data.setItemLayout(idx, {
@@ -425,6 +466,19 @@ function isInLargeMode(seriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis, valueAxis, stacked) {
+    var valueAxisExtent = getValueAxisExtent(valueAxis)
+
+    var min = valueAxisExtent.min;
+    var max = valueAxisExtent.max;
+
+    var valueStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    valueStart < min && (valueStart = min);
+    valueStart > max && (valueStart = max);
+
+    return valueStart;
+}
+
+function getValueAxisExtent(valueAxis) {
     var extent = valueAxis.getGlobalExtent();
     var min;
     var max;
@@ -437,9 +491,8 @@ function getValueAxisStart(baseAxis, valueAxis, stacked) {
         max = extent[1];
     }
 
-    var valueStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
-    valueStart < min && (valueStart = min);
-    valueStart > max && (valueStart = max);
-
-    return valueStart;
+    return {
+        min: min,
+        max: max,
+    }
 }
