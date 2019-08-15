@@ -51,6 +51,13 @@ var EMPTY_OBJ = {};
 
 export var Z2_EMPHASIS_LIFT = 1;
 
+// key: label model property nane, value: style property name.
+export var CACHED_LABEL_STYLE_PROPERTIES = {
+    color: 'textFill',
+    textBorderColor: 'textStroke',
+    textBorderWidth: 'textStrokeWidth'
+};
+
 var EMPHASIS = 'emphasis';
 var NORMAL = 'normal';
 
@@ -921,13 +928,6 @@ function getAutoColor(color, opt) {
     return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
 }
 
-// key: label model property nane, value: style property name.
-export var CACHED_LABEL_STYLE_PROPERTIES = {
-    color: 'textFill',
-    textBorderColor: 'textStroke',
-    textBorderWidth: 'textStrokeWidth'
-};
-
 /**
  * Give some default value to the input `textStyle` object, based on the current settings
  * in this `textStyle` object.
@@ -946,52 +946,49 @@ export var CACHED_LABEL_STYLE_PROPERTIES = {
  * does, `rollbackDefaultTextStyle` is not needed to be called).
  */
 function applyDefaultTextStyle(textStyle) {
-    var opt = textStyle.insideRollbackOpt;
-
-    // Only `insideRollbackOpt` created (in `setTextStyleCommon`),
-    // applyDefaultTextStyle works.
-    if (!opt || textStyle.textFill != null) {
-        return;
-    }
-
-    var useInsideStyle = opt.useInsideStyle;
     var textPosition = textStyle.textPosition;
+    var opt = textStyle.insideRollbackOpt;
     var insideRollback;
-    var autoColor = opt.autoColor;
 
-    if (useInsideStyle !== false
-        && (useInsideStyle === true
-            || (opt.isRectText
-                && textPosition
-                // textPosition can be [10, 30]
-                && typeof textPosition === 'string'
-                && textPosition.indexOf('inside') >= 0
-            )
-        )
-    ) {
-        // If intend to cache more properties here, modify the
-        // `CACHED_LABEL_STYLE_PROPERTIES`.
-        insideRollback = {
-            textFill: null,
-            textStroke: textStyle.textStroke,
-            textStrokeWidth: textStyle.textStrokeWidth
-        };
-        textStyle.textFill = '#fff';
-        // Consider text with #fff overflow its container.
-        if (textStyle.textStroke == null) {
-            textStyle.textStroke = autoColor;
-            textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
+    if (opt) {
+        var autoColor = opt.autoColor;
+        var isRectText = opt.isRectText;
+        var useInsideStyle = opt.useInsideStyle;
+
+        var useInsideStyleCache = useInsideStyle !== false
+            && (useInsideStyle === true
+                || (isRectText
+                    && textPosition
+                    // textPosition can be [10, 30]
+                    && typeof textPosition === 'string'
+                    && textPosition.indexOf('inside') >= 0
+                )
+            );
+        var useAutoColorCache = !useInsideStyleCache && autoColor != null;
+
+        // All of the props declared in `CACHED_LABEL_STYLE_PROPERTIES` are to be cached.
+        if (useInsideStyleCache || useAutoColorCache) {
+            insideRollback = {
+                textFill: textStyle.textFill,
+                textStroke: textStyle.textStroke,
+                textStrokeWidth: textStyle.textStrokeWidth
+            };
+        }
+        if (useInsideStyleCache) {
+            textStyle.textFill = '#fff';
+            // Consider text with #fff overflow its container.
+            if (textStyle.textStroke == null) {
+                textStyle.textStroke = autoColor;
+                textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
+            }
+        }
+        if (useAutoColorCache) {
+            textStyle.textFill = autoColor;
         }
     }
-    else if (autoColor != null) {
-        insideRollback = {textFill: null};
-        textStyle.textFill = autoColor;
-    }
 
-    // Always set `insideRollback`, for clearing previous.
-    if (insideRollback) {
-        textStyle.insideRollback = insideRollback;
-    }
+    // Always set `insideRollback`, so that the previous one can be cleared.
+    textStyle.insideRollback = insideRollback;
 }
 
 /**
@@ -1007,6 +1004,7 @@ function applyDefaultTextStyle(textStyle) {
 function rollbackDefaultTextStyle(style) {
     var insideRollback = style.insideRollback;
     if (insideRollback) {
+        // Reset all of the props in `CACHED_LABEL_STYLE_PROPERTIES`.
         style.textFill = insideRollback.textFill;
         style.textStroke = insideRollback.textStroke;
         style.textStrokeWidth = insideRollback.textStrokeWidth;
