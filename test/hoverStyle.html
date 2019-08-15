@@ -54,6 +54,7 @@ under the License.
 
         <div id="info"></div>
 
+        <div id="maina1"></div>
         <div id="mainb1"></div>
         <div id="mainb2"></div>
         <div id="mainb3"></div>
@@ -146,6 +147,57 @@ under the License.
 
 
 
+
+
+
+
+
+        <script>
+
+
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false},
+                        axisLabel: {show: false}
+                    },
+                    yAxis: {
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false},
+                        axisLabel: {show: false}
+                    },
+                    series: {
+                        type: 'line',
+                        markPoint: {
+                            data: [{
+                                type: 'max',
+                                name: 'a'
+                            }]
+                        },
+                        data: [[12,34]]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'maina1', {
+                    option: option,
+                    height: 150,
+                    title: [
+                        'Only a pin displayed',
+                        'The text of the "pin" should be **inside**',
+                        'Hover "pin", should be normal'
+                    ]
+                });
+            });
+        </script>
 
 
 
@@ -965,6 +1017,12 @@ under the License.
                 });
             });
         </script>
+
+
+
+
+
+
 
 
 
