@@ -22,7 +22,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from './graphic';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import {interpretTextPosition} from 'zrender/src/contain/text';
+import {calculateTextPosition} from 'zrender/src/contain/text';
 
 /**
  * Triangle shape
@@ -270,8 +270,8 @@ var SymbolClz = graphic.extendShape({
         height: 0
     },
 
-    interpretTextPosition(out, style, rect) {
-        var res = interpretTextPosition(out, style, rect);
+    calculateTextPosition(out, style, rect) {
+        var res = calculateTextPosition(out, style, rect);
         var shape = this.shape;
         if (shape && shape.symbolType === 'pin' && style.textPosition === 'inside') {
             res.y = rect.y + rect.height * 0.4;
