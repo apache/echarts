@@ -32,17 +32,17 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ## Docs
 
-+ [Tutorial](http://echarts.baidu.com/tutorial.html)
-    + [中文](http://echarts.baidu.com/tutorial.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/en/tutorial.html)
++ Tutorial
+    + [中文](https://echarts.apache.org/zh/tutorial.html)
+    + [English](https://echarts.apache.org/en/tutorial.html)
 
-+ [API](http://echarts.baidu.com/api.html)
-    + [中文](http://echarts.baidu.com/api.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/en/api.html)
++ API
+    + [中文](https://echarts.apache.org/zh/api.html)
+    + [English](https://echarts.apache.org/en/api.html)
 
-+ [Option Manual](http://echarts.baidu.com/option.html)
-    + [中文](http://echarts.baidu.com/option.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/en/option.html)
++ Option Manual
+    + [中文](https://echarts.apache.org/zh/option.html)
+    + [English](https://echarts.apache.org/en/option.html)
 
 ## Resources
 
