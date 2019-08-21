@@ -950,7 +950,7 @@ function applyDefaultTextStyle(textStyle) {
     var opt = textStyle.insideRollbackOpt;
     var insideRollback;
 
-    if (opt) {
+    if (opt && textStyle.textFill == null) {
         var autoColor = opt.autoColor;
         var isRectText = opt.isRectText;
         var useInsideStyle = opt.useInsideStyle;
