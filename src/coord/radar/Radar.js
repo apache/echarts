@@ -120,7 +120,7 @@ Radar.prototype.pointToData = function (pt) {
         }
     }
 
-    return [closestAxisIdx, +(closestAxis && closestAxis.coodToData(radius))];
+    return [closestAxisIdx, +(closestAxis && closestAxis.coordToData(radius))];
 };
 
 Radar.prototype.resize = function (radarModel, api) {
