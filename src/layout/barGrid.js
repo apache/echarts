@@ -275,7 +275,6 @@ export function layout(seriesType, ecModel) {
         var valueAxis = cartesian.getOtherAxis(baseAxis);
 
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
-
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
         lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
@@ -290,7 +289,7 @@ export function layout(seriesType, ecModel) {
         var isValueAxisH = valueAxis.isHorizontal();
 
         var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
-
+        var valueAxisBase = getValueAxisBase(valueAxis)
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
@@ -302,7 +301,7 @@ export function layout(seriesType, ecModel) {
 
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
-
+            var isStackFull = lastStackCoords[stackId].length === len
             // Because of the barMinHeight, we can not use the value in
             // stackResultDimension directly.
             if (stacked) {
@@ -326,7 +325,7 @@ export function layout(seriesType, ecModel) {
                 var coord = cartesian.dataToPoint([value, baseValue]);
                 x = baseCoord;
                 y = coord[1] + columnOffset;
-                width = coord[0] - valueAxisStart;
+                width = isStackFull ? coord[0] - valueAxisBase : coord[0] - valueAxisStart
                 height = columnWidth;
 
                 if (Math.abs(width) < barMinHeight) {
@@ -339,7 +338,7 @@ export function layout(seriesType, ecModel) {
                 x = coord[0] + columnOffset;
                 y = baseCoord;
                 width = columnWidth;
-                height = coord[1] - valueAxisStart;
+                height = isStackFull ?coord[1] - valueAxisBase : coord[1] - valueAxisStart;
 
                 if (Math.abs(height) < barMinHeight) {
                     // Include zero to has a positive bar
@@ -442,4 +441,9 @@ function getValueAxisStart(baseAxis, valueAxis, stacked) {
     valueStart > max && (valueStart = max);
 
     return valueStart;
+}
+
+function getValueAxisBase(valueAxis){
+    var valueBase = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    return valueBase;
 }
