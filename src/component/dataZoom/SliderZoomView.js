@@ -795,7 +795,7 @@ var SliderZoomView = DataZoomView.extend({
 
         // don't zoom in too much, so sliders won't switch places
         // and then mouse wheel will invert
-        if (this._range[1] - this._range[0] <= STEP_SIZE / 2) {
+        if (this._range[1] - this._range[0] <= STEP_SIZE) {
             if (e.wheelDelta > 0) {
                     return;
             }
