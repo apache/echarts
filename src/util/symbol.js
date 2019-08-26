@@ -270,7 +270,7 @@ var SymbolClz = graphic.extendShape({
         height: 0
     },
 
-    calculateTextPosition(out, style, rect) {
+    calculateTextPosition: function (out, style, rect) {
         var res = calculateTextPosition(out, style, rect);
         var shape = this.shape;
         if (shape && shape.symbolType === 'pin' && style.textPosition === 'inside') {
