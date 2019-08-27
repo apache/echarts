@@ -296,14 +296,12 @@ var LegendModel = echarts.extendComponentModel({
         // data: [],
 
         // Usage:
-        // selector: [{type: 'all or inverse', icon: 'xxx', title: xxx}]
+        // selector: [{type: 'all or inverse', title: xxx}]
         // or
         // selector: true
         // or
         // selector: ['all', 'inverse']
         selector: false,
-
-        selectorIconSize: 14,
 
         selectorLabel: {
             show: true,
