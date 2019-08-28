@@ -1503,21 +1503,138 @@ function on(eventful, event, query, handler, context, isOnce) {
 }
 
 /**
- * 事件辅助类
- * @module zrender/core/event
- * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
+ * The algoritm is learnt from
+ * https://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
+ * And we made some optimization for matrix inversion.
+ * Other similar approaches:
+ * "cv::getPerspectiveTransform", "Direct Linear Transformation".
+ */
+
+var LN2 = Math.log(2);
+
+function determinant(rows, rank, rowStart, rowMask, colMask, detCache) {
+    var cacheKey = rowMask + '-' + colMask;
+    var fullRank = rows.length;
+
+    if (detCache.hasOwnProperty(cacheKey)) {
+        return detCache[cacheKey];
+    }
+
+    if (rank === 1) {
+        // In this case the colMask must be like: `11101111`. We can find the place of `0`.
+        var colStart = Math.round(Math.log(((1 << fullRank) - 1) & ~colMask) / LN2);
+        return rows[rowStart][colStart];
+    }
+
+    var subRowMask = rowMask | (1 << rowStart);
+    var subRowStart = rowStart + 1;
+    while (rowMask & (1 << subRowStart)) {
+        subRowStart++;
+    }
+
+    var sum = 0;
+    for (var j = 0, colLocalIdx = 0; j < fullRank; j++) {
+        var colTag = 1 << j;
+        if (!(colTag & colMask)) {
+            sum += (colLocalIdx % 2 ? -1 : 1) * rows[rowStart][j]
+                // det(subMatrix(0, j))
+                * determinant(rows, rank - 1, subRowStart, subRowMask, colMask | colTag, detCache);
+            colLocalIdx++;
+        }
+    }
+
+    detCache[cacheKey] = sum;
+
+    return sum;
+}
+
+/**
+ * Usage:
+ * ```js
+ * var transformer = buildTransformer(
+ *     [10, 44, 100, 44, 100, 300, 10, 300],
+ *     [50, 54, 130, 14, 140, 330, 14, 220]
+ * );
+ * var out = [];
+ * transformer && transformer([11, 33], out);
+ * ```
+ *
+ * Notice: `buildTransformer` may take more than 10ms in some Android device.
+ *
+ * @param {Array.<number>} src source four points, [x0, y0, x1, y1, x2, y2, x3, y3]
+ * @param {Array.<number>} dest destination four points, [x0, y0, x1, y1, x2, y2, x3, y3]
+ * @return {Function} transformer If fail, return null/undefined.
+ */
+function buildTransformer(src, dest) {
+    var mA = [
+        [src[0], src[1], 1, 0, 0, 0, -dest[0] * src[0], -dest[0] * src[1]],
+        [0, 0, 0, src[0], src[1], 1, -dest[1] * src[0], -dest[1] * src[1]],
+        [src[2], src[3], 1, 0, 0, 0, -dest[2] * src[2], -dest[2] * src[3]],
+        [0, 0, 0, src[2], src[3], 1, -dest[3] * src[2], -dest[3] * src[3]],
+        [src[4], src[5], 1, 0, 0, 0, -dest[4] * src[4], -dest[4] * src[5]],
+        [0, 0, 0, src[4], src[5], 1, -dest[5] * src[4], -dest[5] * src[5]],
+        [src[6], src[7], 1, 0, 0, 0, -dest[6] * src[6], -dest[6] * src[7]],
+        [0, 0, 0, src[6], src[7], 1, -dest[7] * src[6], -dest[7] * src[7]]
+    ];
+
+    var detCache = {};
+    var det = determinant(mA, 8, 0, 0, 0, detCache);
+    if (det === 0) {
+        return;
+    }
+
+    // `invert(mA) * dest`, that is, `adj(mA) / det * dest`.
+    var vh = [];
+    for (var i = 0; i < 8; i++) {
+        for (var j = 0; j < 8; j++) {
+            vh[j] == null && (vh[j] = 0);
+            vh[j] += ((i + j) % 2 ? -1 : 1)
+                // det(subMatrix(i, j))
+                * determinant(mA, 7, i === 0 ? 1 : 0, 1 << i, 1 << j, detCache)
+                / det * dest[i];
+        }
+    }
+
+    return function (out, srcPointX, srcPointY) {
+        var pk = srcPointX * vh[6] + srcPointY * vh[7] + 1;
+        out[0] = (srcPointX * vh[0] + srcPointY * vh[1] + vh[2]) / pk;
+        out[1] = (srcPointX * vh[3] + srcPointY * vh[4] + vh[5]) / pk;
+    };
+}
+
+/**
+ * Utilities for mouse or touch events.
  */
 
 var isDomLevel2 = (typeof window !== 'undefined') && !!window.addEventListener;
 
 var MOUSE_EVENT_REG = /^(?:mouse|pointer|contextmenu|drag|drop)|click/;
+var EVENT_SAVED_PROP = '___zrEVENTSAVED';
+var _calcOut = [];
 
-function getBoundingClientRect(el) {
-    // BlackBerry 5, iOS 3 (original iPhone) don't have getBoundingRect
-    return el.getBoundingClientRect ? el.getBoundingClientRect() : {left: 0, top: 0};
-}
-
-// `calculate` is optional, default false
+/**
+ * Get the `zrX` and `zrY`, which are relative to the top-left of
+ * the input `el`.
+ * CSS transform (2D & 3D) is supported.
+ *
+ * The strategy to fetch the coords:
+ * + If `calculate` is not set as `true`, users of this method should
+ * ensure that `el` is the same or the same size & location as `e.target`.
+ * Otherwise the result coords are probably not expected. Because we
+ * firstly try to get coords from e.offsetX/e.offsetY.
+ * + If `calculate` is set as `true`, the input `el` can be any element
+ * and we force to calculate the coords based on `el`.
+ * + The input `el` should be positionable (not position:static).
+ *
+ * The force `calculate` can be used in case like:
+ * When mousemove event triggered on ec tooltip, `e.target` is not `el`(zr painter.dom).
+ *
+ * @param {HTMLElement} el DOM element.
+ * @param {Event} e Mouse event or touch event.
+ * @param {Object} out Get `out.zrX` and `out.zrY` as the result.
+ * @param {boolean} [calculate=false] Whether to force calculate
+ *        the coordinates but not use ones provided by browser.
+ */
 function clientToLocal(el, e, out, calculate) {
     out = out || {};
 
@@ -1528,12 +1645,8 @@ function clientToLocal(el, e, out, calculate) {
     // (see http://www.jacklmoore.com/notes/mouse-position/)
     // In zr painter.dom, padding edge equals to border edge.
 
-    // FIXME
-    // When mousemove event triggered on ec tooltip, target is not zr painter.dom, and
-    // offsetX/Y is relative to e.target, where the calculation of zrX/Y via offsetX/Y
-    // is too complex. So css-transfrom dont support in this case temporarily.
     if (calculate || !env$1.canvasSupported) {
-        defaultGetZrXY(el, e, out);
+        calculateZrXY(el, e, out);
     }
     // Caution: In FireFox, layerX/layerY Mouse position relative to the closest positioned
     // ancestor element, so we should make sure el is positioned (e.g., not position:static).
@@ -1553,22 +1666,125 @@ function clientToLocal(el, e, out, calculate) {
     }
     // For some other device, e.g., IOS safari.
     else {
-        defaultGetZrXY(el, e, out);
+        calculateZrXY(el, e, out);
     }
 
     return out;
 }
 
-function defaultGetZrXY(el, e, out) {
-    // This well-known method below does not support css transform.
-    var box = getBoundingClientRect(el);
-    out.zrX = e.clientX - box.left;
-    out.zrY = e.clientY - box.top;
+function calculateZrXY(el, e, out) {
+    // BlackBerry 5, iOS 3 (original iPhone) don't have getBoundingRect.
+    if (el.getBoundingClientRect && env$1.domSupported) {
+        var ex = e.clientX;
+        var ey = e.clientY;
+
+        if (el.nodeName.toUpperCase() === 'CANVAS') {
+            // Original approach, which do not support CSS transform.
+            // marker can not be locationed in a canvas container
+            // (getBoundingClientRect is always 0). We do not support
+            // that input a pre-created canvas to zr while using css
+            // transform in iOS.
+            var box = el.getBoundingClientRect();
+            out.zrX = ex - box.left;
+            out.zrY = ey - box.top;
+            return;
+        }
+        else {
+            var saved = el[EVENT_SAVED_PROP] || (el[EVENT_SAVED_PROP] = {});
+            var transformer = preparePointerTransformer(prepareCoordMarkers(el, saved), saved);
+            if (transformer) {
+                transformer(_calcOut, ex, ey);
+                out.zrX = _calcOut[0];
+                out.zrY = _calcOut[1];
+                return;
+            }
+        }
+    }
+    out.zrX = out.zrY = 0;
+}
+
+function prepareCoordMarkers(el, saved) {
+    var markers = saved.markers;
+    if (markers) {
+        return markers;
+    }
+
+    markers = saved.markers = [];
+    var propLR = ['left', 'right'];
+    var propTB = ['top', 'bottom'];
+
+    for (var i = 0; i < 4; i++) {
+        var marker = document.createElement('div');
+        var stl = marker.style;
+        var idxLR = i % 2;
+        var idxTB = (i >> 1) % 2;
+        stl.cssText = [
+            'position:absolute',
+            'visibility: hidden',
+            'padding: 0',
+            'margin: 0',
+            'border-width: 0',
+            'width:0',
+            'height:0',
+            // 'width: 5px',
+            // 'height: 5px',
+            propLR[idxLR] + ':0',
+            propTB[idxTB] + ':0',
+            propLR[1 - idxLR] + ':auto',
+            propTB[1 - idxTB] + ':auto',
+            ''
+        ].join('!important;');
+        el.appendChild(marker);
+        markers.push(marker);
+    }
+
+    return markers;
+}
+
+function preparePointerTransformer(markers, saved) {
+    var transformer = saved.transformer;
+    var oldSrcCoords = saved.srcCoords;
+    var useOld = true;
+    var srcCoords = [];
+    var destCoords = [];
+
+    for (var i = 0; i < 4; i++) {
+        var rect = markers[i].getBoundingClientRect();
+        var ii = 2 * i;
+        var x = rect.left;
+        var y = rect.top;
+        srcCoords.push(x, y);
+        useOld &= oldSrcCoords && x === oldSrcCoords[ii] && y === oldSrcCoords[ii + 1];
+        destCoords.push(markers[i].offsetLeft, markers[i].offsetTop);
+    }
+
+    // Cache to avoid time consuming of `buildTransformer`.
+    return useOld
+        ? transformer
+        : (
+            saved.srcCoords = srcCoords,
+            saved.transformer = buildTransformer(srcCoords, destCoords)
+        );
 }
 
 /**
- * 如果存在第三方嵌入的一些dom触发的事件，或touch事件，需要转换一下事件坐标.
- * `calculate` is optional, default false.
+ * Normalize the coordinates of the input event.
+ *
+ * Get the `e.zrX` and `e.zrY`, which are relative to the top-left of
+ * the input `el`.
+ * Get `e.zrDelta` if using mouse wheel.
+ * Get `e.which`, see the comment inside this function.
+ *
+ * Do not calculate repeatly if `zrX` and `zrY` already exist.
+ *
+ * Notice: see comments in `clientToLocal`. check the relationship
+ * between the result coords and the parameters `el` and `calculate`.
+ *
+ * @param {HTMLElement} el DOM element.
+ * @param {Event} [e] Mouse event or touch event. For lagency IE,
+ *        do not need to input it and `window.event` is used.
+ * @param {boolean} [calculate=false] Whether to force calculate
+ *        the coordinates but not use ones provided by browser.
  */
 function normalizeEvent(el, e, calculate) {
 
@@ -1594,7 +1810,7 @@ function normalizeEvent(el, e, calculate) {
 
     // Add which for click: 1 === left; 2 === middle; 3 === right; otherwise: 0;
     // See jQuery: https://github.com/jquery/jquery/blob/master/src/event.js
-    // If e.which has been defined, if may be readonly,
+    // If e.which has been defined, it may be readonly,
     // see: https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/which
     var button = e.button;
     if (e.which == null && button !== undefined && MOUSE_EVENT_REG.test(e.type)) {
@@ -1654,12 +1870,10 @@ function removeEventListener(el, name, handler) {
 
 /**
  * preventDefault and stopPropagation.
- * Notice: do not do that in zrender. Upper application
- * do that if necessary.
+ * Notice: do not use this method in zrender. It can only be
+ * used by upper applications if necessary.
  *
- * @memberOf module:zrender/core/event
- * @method
- * @param {Event} e : event对象
+ * @param {Event} e A mouse or touch event.
  */
 var stop = isDomLevel2
     ? function (e) {
@@ -6408,7 +6622,12 @@ Style.prototype = {
     strokeOpacity: null,
 
     /**
-     * @type {Array.<number>}
+     * `true` is not supported.
+     * `false`/`null`/`undefined` are the same.
+     * `false` is used to remove lineDash in some 
+     * case that `null`/`undefined` can not be set. 
+     * (e.g., emphasis.lineStyle in echarts)
+     * @type {Array.<number>|boolean}
      */
     lineDash: null,
 
@@ -7286,13 +7505,16 @@ function adjustTextY(y, height, textVerticalAlign) {
 }
 
 /**
+ * Follow same interface to `Displayable.prototype.calculateTextPosition`.
  * @public
- * @param {stirng} textPosition
- * @param {Object} rect {x, y, width, height}
- * @param {number} distance
- * @return {Object} {x, y, textAlign, textVerticalAlign}
+ * @param {Obejct} [out] Prepared out object. If not input, auto created in the method.
+ * @param {module:zrender/graphic/Style} style where `textPosition` and `textDistance` are visited.
+ * @param {Object} rect {x, y, width, height} Rect of the host elment, according to which the text positioned.
+ * @return {Object} The input `out`. Set: {x, y, textAlign, textVerticalAlign}
  */
-function adjustTextPositionOnRect(textPosition, rect, distance) {
+function calculateTextPosition(out, style, rect) {
+    var textPosition = style.textPosition;
+    var distance = style.textDistance;
 
     var x = rect.x;
     var y = rect.y;
@@ -7377,13 +7599,25 @@ function adjustTextPositionOnRect(textPosition, rect, distance) {
             break;
     }
 
-    return {
-        x: x,
-        y: y,
-        textAlign: textAlign,
-        textVerticalAlign: textVerticalAlign
-    };
+    out = out || {};
+    out.x = x;
+    out.y = y;
+    out.textAlign = textAlign;
+    out.textVerticalAlign = textVerticalAlign;
+
+    return out;
 }
+
+/**
+ * To be removed. But still do not remove in case that some one has imported it.
+ * @deprecated
+ * @public
+ * @param {stirng} textPosition
+ * @param {Object} rect {x, y, width, height}
+ * @param {number} distance
+ * @return {Object} {x, y, textAlign, textVerticalAlign}
+ */
+
 
 /**
  * Show ellipsis if overflow.
@@ -7928,6 +8162,8 @@ var SHADOW_STYLE_COMMON_PROPS = [
     ['textShadowOffsetY', 'shadowOffsetY', 0],
     ['textShadowColor', 'shadowColor', 'transparent']
 ];
+var _tmpTextPositionResult = {};
+var _tmpBoxPositionResult = {};
 
 /**
  * @param {module:zrender/graphic/Style} style
@@ -8046,7 +8282,7 @@ function renderPlainText(hostEl, ctx, text, style, rect, prevEl) {
     var textLines = contentBlock.lines;
     var lineHeight = contentBlock.lineHeight;
 
-    var boxPos = getBoxPosition(outerHeight, style, rect);
+    var boxPos = getBoxPosition(_tmpBoxPositionResult, hostEl, style, rect);
     var baseX = boxPos.baseX;
     var baseY = boxPos.baseY;
     var textAlign = boxPos.textAlign || 'left';
@@ -8157,7 +8393,7 @@ function drawRichText(hostEl, ctx, contentBlock, style, rect) {
     var outerHeight = contentBlock.outerHeight;
     var textPadding = style.textPadding;
 
-    var boxPos = getBoxPosition(outerHeight, style, rect);
+    var boxPos = getBoxPosition(_tmpBoxPositionResult, hostEl, style, rect);
     var baseX = boxPos.baseX;
     var baseY = boxPos.baseY;
     var textAlign = boxPos.textAlign;
@@ -8390,7 +8626,7 @@ function onBgImageLoaded(image, textBackgroundColor) {
     textBackgroundColor.image = image;
 }
 
-function getBoxPosition(blockHeiht, style, rect) {
+function getBoxPosition(out, hostEl, style, rect) {
     var baseX = style.x || 0;
     var baseY = style.y || 0;
     var textAlign = style.textAlign;
@@ -8405,9 +8641,9 @@ function getBoxPosition(blockHeiht, style, rect) {
             baseY = rect.y + parsePercent(textPosition[1], rect.height);
         }
         else {
-            var res = adjustTextPositionOnRect(
-                textPosition, rect, style.textDistance
-            );
+            var res = (hostEl && hostEl.calculateTextPosition)
+                ? hostEl.calculateTextPosition(_tmpTextPositionResult, style, rect)
+                : calculateTextPosition(_tmpTextPositionResult, style, rect);
             baseX = res.x;
             baseY = res.y;
             // Default align and baseline when has textPosition
@@ -8424,13 +8660,15 @@ function getBoxPosition(blockHeiht, style, rect) {
         }
     }
 
-    return {
-        baseX: baseX,
-        baseY: baseY,
-        textAlign: textAlign,
-        textVerticalAlign: textVerticalAlign
-    };
+    out = out || {};
+    out.baseX = baseX;
+    out.baseY = baseY;
+    out.textAlign = textAlign;
+    out.textVerticalAlign = textVerticalAlign;
+
+    return out;
 }
+
 
 function setCtx(ctx, prop, value) {
     ctx[prop] = fixShadow(ctx, prop, value);
@@ -8588,7 +8826,9 @@ function Displayable(opts) {
 
     this._rect = null;
     // Shapes for cascade clipping.
-    this.__clipPaths = [];
+    // Can only be `null`/`undefined` or an non-empty array, MUST NOT be an empty array.
+    // because it is easy to only using null to check whether clipPaths changed.
+    this.__clipPaths = null;
 
     // FIXME Stateful must be mixined after style is setted
     // Stateful.call(this, opts);
@@ -8813,7 +9053,28 @@ Displayable.prototype = {
         this.style = new Style(obj, this);
         this.dirty(false);
         return this;
-    }
+    },
+
+    /**
+     * The string value of `textPosition` needs to be calculated to a real postion.
+     * For example, `'inside'` is calculated to `[rect.width/2, rect.height/2]`
+     * by default. See `contain/text.js#calculateTextPosition` for more details.
+     * But some coutom shapes like "pin", "flag" have center that is not exactly
+     * `[width/2, height/2]`. So we provide this hook to customize the calculation
+     * for those shapes. It will be called if the `style.textPosition` is a string.
+     * @param {Obejct} [out] Prepared out object. If not provided, this method should
+     *        be responsible for creating one.
+     * @param {module:zrender/graphic/Style} style
+     * @param {Object} rect {x, y, width, height}
+     * @return {Obejct} out The same as the input out.
+     *         {
+     *             x: number. mandatory.
+     *             y: number. mandatory.
+     *             textAlign: string. optional. use style.textAlign by default.
+     *             textVerticalAlign: string. optional. use style.textVerticalAlign by default.
+     *         }
+     */
+    calculateTextPosition: null
 };
 
 inherits(Displayable, Element);
@@ -8968,10 +9229,10 @@ function isDisplayableCulled(el, width, height) {
 }
 
 function isClipPathChanged(clipPaths, prevClipPaths) {
-    if (clipPaths === prevClipPaths) { // Can both be null or undefined
+    // displayable.__clipPaths can only be `null`/`undefined` or an non-empty array.
+    if (clipPaths === prevClipPaths) { 
         return false;
     }
-
     if (!clipPaths || !prevClipPaths || (clipPaths.length !== prevClipPaths.length)) {
         return true;
     }
@@ -8980,6 +9241,7 @@ function isClipPathChanged(clipPaths, prevClipPaths) {
             return true;
         }
     }
+    return false;
 }
 
 function doClip(clipPaths, ctx) {
@@ -9425,16 +9687,14 @@ Painter.prototype = {
         ) {
 
             var clipPaths = el.__clipPaths;
+            var prevElClipPaths = scope.prevElClipPaths;
 
             // Optimize when clipping on group with several elements
-            if (!scope.prevElClipPaths
-                || isClipPathChanged(clipPaths, scope.prevElClipPaths)
-            ) {
+            if (!prevElClipPaths || isClipPathChanged(clipPaths, prevElClipPaths)) {
                 // If has previous clipping state, restore from it
-                if (scope.prevElClipPaths) {
-                    currentLayer.ctx.restore();
+                if (prevElClipPaths) {
+                    ctx.restore();
                     scope.prevElClipPaths = null;
-
                     // Reset prevEl since context has been restored
                     scope.prevEl = null;
                 }
@@ -10579,7 +10839,7 @@ var painterCtors = {
 /**
  * @type {string}
  */
-var version$1 = '4.0.7';
+var version$1 = '4.1.0';
 
 /**
  * Initializing a zrender instance
@@ -10755,14 +11015,14 @@ ZRender.prototype = {
      */
     refreshImmediately: function () {
         // var start = new Date();
+
         // Clear needsRefresh ahead to avoid something wrong happens in refresh
         // Or it will cause zrender refreshes again and again.
-        this._needsRefresh = false;
+        this._needsRefresh = this._needsRefreshHover = false;
         this.painter.refresh();
-        /**
-         * Avoid trigger zr.refresh in Element#beforeUpdate hook
-         */
-        this._needsRefresh = false;
+        // Avoid trigger zr.refresh in Element#beforeUpdate hook
+        this._needsRefresh = this._needsRefreshHover = false;
+
         // var end = new Date();
         // var log = document.getElementById('log');
         // if (log) {
@@ -11816,8 +12076,9 @@ var getLineStyle = makeStyleMapper(
 var lineStyleMixin = {
     getLineStyle: function (excludes) {
         var style = getLineStyle(this, excludes);
-        var lineDash = this.getLineDash(style.lineWidth);
-        lineDash && (style.lineDash = lineDash);
+        // Always set lineDash whether dashed, otherwise we can not 
+        // erase the previous style when assigning to el.style.
+        style.lineDash = this.getLineDash(style.lineWidth);
         return style;
     },
 
@@ -11828,8 +12089,16 @@ var lineStyleMixin = {
         var lineType = this.get('type');
         var dotSize = Math.max(lineWidth, 2);
         var dashSize = lineWidth * 4;
-        return (lineType === 'solid' || lineType == null) ? null
-            : (lineType === 'dashed' ? [dashSize, dashSize] : [dotSize, dotSize]);
+        return (lineType === 'solid' || lineType == null) 
+            // Use `false` but not `null` for the solid line here, because `null` might be 
+            // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as 
+            // `'dashed'` and `emphasis.lineStyle.type` as `'solid'` in graph series, the 
+            // `lineDash` gotten form the latter one is not able to erase that from the former 
+            // one if using `null` here according to the emhpsis strategy in `util/graphic.js`.
+            ? false
+            : lineType === 'dashed' 
+            ? [dashSize, dashSize] 
+            : [dotSize, dotSize];
     }
 };
 
@@ -12670,9 +12939,11 @@ PathProxy.prototype = {
     /**
      * @readOnly
      */
-    setScale: function (sx, sy) {
-        this._ux = mathAbs(1 / devicePixelRatio / sx) || 0;
-        this._uy = mathAbs(1 / devicePixelRatio / sy) || 0;
+    setScale: function (sx, sy, segmentIgnoreThreshold) {
+        // Compat. Previously there is no segmentIgnoreThreshold.
+        segmentIgnoreThreshold = segmentIgnoreThreshold || 0;
+        this._ux = mathAbs(segmentIgnoreThreshold / devicePixelRatio / sx) || 0;
+        this._uy = mathAbs(segmentIgnoreThreshold / devicePixelRatio / sy) || 0;
     },
 
     getContext: function () {
@@ -13973,6 +14244,11 @@ Path.prototype = {
 
     strokeContainThreshold: 5,
 
+    // This item default to be false. But in map series in echarts,
+    // in order to improve performance, it should be set to true,
+    // so the shorty segment won't draw.
+    segmentIgnoreThreshold: 0,
+
     /**
      * See `module:zrender/src/graphic/helper/subPixelOptimize`.
      * @type {boolean}
@@ -14028,7 +14304,7 @@ Path.prototype = {
 
         // Update path sx, sy
         var scale = this.getGlobalScale();
-        path.setScale(scale[0], scale[1]);
+        path.setScale(scale[0], scale[1], this.segmentIgnoreThreshold);
 
         // Proxy context
         // Rebuild path in following 2 cases
@@ -15376,7 +15652,7 @@ var Polyline = Path.extend({
  * when rendering a thin vertical/horizontal line.
  */
 
-var round$1 = Math.round;
+var round = Math.round;
 
 /**
  * Sub pixel optimize line for canvas
@@ -15405,14 +15681,14 @@ function subPixelOptimizeLine$1(outputShape, inputShape, style) {
     var y1 = inputShape.y1;
     var y2 = inputShape.y2;
 
-    if (round$1(x1 * 2) === round$1(x2 * 2)) {
+    if (round(x1 * 2) === round(x2 * 2)) {
         outputShape.x1 = outputShape.x2 = subPixelOptimize$1(x1, lineWidth, true);
     }
     else {
         outputShape.x1 = x1;
         outputShape.x2 = x2;
     }
-    if (round$1(y1 * 2) === round$1(y2 * 2)) {
+    if (round(y1 * 2) === round(y2 * 2)) {
         outputShape.y1 = outputShape.y2 = subPixelOptimize$1(y1, lineWidth, true);
     }
     else {
@@ -15471,8 +15747,8 @@ function subPixelOptimizeRect$1(outputShape, inputShape, style) {
 function subPixelOptimize$1(position, lineWidth, positiveOrNegative) {
     // Assure that (position + lineWidth / 2) is near integer edge,
     // otherwise line will be fuzzy in canvas.
-    var doubledPosition = round$1(position * 2);
-    return (doubledPosition + round$1(lineWidth)) % 2 === 0
+    var doubledPosition = round(position * 2);
+    return (doubledPosition + round(lineWidth)) % 2 === 0
         ? doubledPosition / 2
         : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
 }
@@ -15817,7 +16093,7 @@ var CompoundPath = Path.extend({
             if (!paths[i].path) {
                 paths[i].createPathProxy();
             }
-            paths[i].path.setScale(scale[0], scale[1]);
+            paths[i].path.setScale(scale[0], scale[1], paths[i].segmentIgnoreThreshold);
         }
     },
 
@@ -16089,13 +16365,27 @@ inherits(IncrementalDisplayble, Displayable);
 * under the License.
 */
 
-var round = Math.round;
 var mathMax$1 = Math.max;
 var mathMin$1 = Math.min;
 
 var EMPTY_OBJ = {};
 
 var Z2_EMPHASIS_LIFT = 1;
+
+// key: label model property nane, value: style property name.
+var CACHED_LABEL_STYLE_PROPERTIES = {
+    color: 'textFill',
+    textBorderColor: 'textStroke',
+    textBorderWidth: 'textStrokeWidth'
+};
+
+var EMPHASIS = 'emphasis';
+var NORMAL = 'normal';
+
+// Reserve 0 as default.
+var _highlightNextDigit = 1;
+var _highlightKeyMap = {};
+
 
 /**
  * Extend shape with parameters
@@ -16221,15 +16511,7 @@ function resizePath(path, rect) {
  * @return {Object} Modified param
  */
 function subPixelOptimizeLine(param) {
-    var shape = param.shape;
-    var lineWidth = param.style.lineWidth;
-
-    if (round(shape.x1 * 2) === round(shape.x2 * 2)) {
-        shape.x1 = shape.x2 = subPixelOptimize(shape.x1, lineWidth, true);
-    }
-    if (round(shape.y1 * 2) === round(shape.y2 * 2)) {
-        shape.y1 = shape.y2 = subPixelOptimize(shape.y1, lineWidth, true);
-    }
+    subPixelOptimizeLine$1(param.shape, param.shape, param.style);
     return param;
 }
 
@@ -16247,22 +16529,7 @@ function subPixelOptimizeLine(param) {
  * @return {Object} Modified param
  */
 function subPixelOptimizeRect(param) {
-    var shape = param.shape;
-    var lineWidth = param.style.lineWidth;
-    var originX = shape.x;
-    var originY = shape.y;
-    var originWidth = shape.width;
-    var originHeight = shape.height;
-    shape.x = subPixelOptimize(shape.x, lineWidth, true);
-    shape.y = subPixelOptimize(shape.y, lineWidth, true);
-    shape.width = Math.max(
-        subPixelOptimize(originX + originWidth, lineWidth, false) - shape.x,
-        originWidth === 0 ? 0 : 1
-    );
-    shape.height = Math.max(
-        subPixelOptimize(originY + originHeight, lineWidth, false) - shape.y,
-        originHeight === 0 ? 0 : 1
-    );
+    subPixelOptimizeRect$1(param.shape, param.shape, param.style);
     return param;
 }
 
@@ -16274,14 +16541,8 @@ function subPixelOptimizeRect(param) {
  * @param {boolean=} positiveOrNegative Default false (negative).
  * @return {number} Optimized position.
  */
-function subPixelOptimize(position, lineWidth, positiveOrNegative) {
-    // Assure that (position + lineWidth / 2) is near integer edge,
-    // otherwise line will be fuzzy in canvas.
-    var doubledPosition = round(position * 2);
-    return (doubledPosition + round(lineWidth)) % 2 === 0
-        ? doubledPosition / 2
-        : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
-}
+var subPixelOptimize = subPixelOptimize$1;
+
 
 function hasFillOrStroke(fillOrStroke) {
     return fillOrStroke != null && fillOrStroke !== 'none';
@@ -16323,7 +16584,7 @@ function cacheElementStl(el) {
     var elStyle = el.style;
 
     for (var name in hoverStyle) {
-        // See comment in `doSingleEnterHover`.
+        // See comment in `singleEnterEmphasis`.
         if (hoverStyle[name] != null) {
             normalStyle[name] = elStyle[name];
         }
@@ -16334,7 +16595,7 @@ function cacheElementStl(el) {
     normalStyle.stroke = elStyle.stroke;
 }
 
-function doSingleEnterHover(el) {
+function singleEnterEmphasis(el) {
     var hoverStl = el.__hoverStl;
 
     if (!hoverStl || el.__highlighted) {
@@ -16345,7 +16606,7 @@ function doSingleEnterHover(el) {
     el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     var zr = el.__zr;
-    if (!zr && useHoverLayer) {
+    if (el.isGroup || (!zr && useHoverLayer)) {
         return;
     }
 
@@ -16379,9 +16640,13 @@ function doSingleEnterHover(el) {
     // where properties of `emphasis` may not appear in `normal`. We previously use
     // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
     // But consider rich text and setOption in merge mode, it is impossible to cover
-    // all properties in merge. So we use merge mode when setting style here, where
-    // only properties that is not `null/undefined` can be set. The disadventage:
-    // null/undefined can not be used to remove style any more in `emphasis`.
+    // all properties in merge. So we use merge mode when setting style here.
+    // But we choose the merge strategy that only properties that is not `null/undefined`.
+    // Because when making a textStyle (espacially rich text), it is not easy to distinguish
+    // `hasOwnProperty` and `null/undefined` in code, so we trade them as the same for simplicity.
+    // But this strategy brings a trouble that `null/undefined` can not be used to remove
+    // style any more in `emphasis`. Users can both set properties directly on normal and
+    // emphasis to avoid this issue, or we might support `'none'` for this case if required.
     targetStyle.extendFrom(hoverStl);
 
     setDefaultHoverFillStroke(targetStyle, hoverStl, 'fill');
@@ -16401,7 +16666,7 @@ function setDefaultHoverFillStroke(targetStyle, hoverStyle, prop) {
     }
 }
 
-function doSingleLeaveHover(el) {
+function singleEnterNormal(el) {
     var highlighted = el.__highlighted;
 
     if (!highlighted) {
@@ -16410,17 +16675,19 @@ function doSingleLeaveHover(el) {
 
     el.__highlighted = false;
 
+    if (el.isGroup) {
+        return;
+    }
+
     if (highlighted === 'layer') {
         el.__zr && el.__zr.removeHover(el);
     }
-    else if (highlighted) {
+    else {
         var style = el.style;
 
         var normalStl = el.__cachedNormalStl;
         if (normalStl) {
             rollbackDefaultTextStyle(style);
-            // Consider null/undefined value, should use
-            // `setStyle` but not `extendFrom(stl, true)`.
             el.setStyle(normalStl);
             applyDefaultTextStyle(style);
         }
@@ -16434,12 +16701,21 @@ function doSingleLeaveHover(el) {
     }
 }
 
-function traverseCall(el, method) {
-    el.isGroup
-        ? el.traverse(function (child) {
-            !child.isGroup && method(child);
-        })
-        : method(el);
+function traverseUpdate(el, updater, commonParam) {
+    // If root is group, also enter updater for `highDownOnUpdate`.
+    var fromState = NORMAL;
+    var toState = NORMAL;
+    var trigger;
+    // See the rule of `highDownOnUpdate` on `graphic.setAsHighDownDispatcher`.
+    el.__highlighted && (fromState = EMPHASIS, trigger = true);
+    updater(el, commonParam);
+    el.__highlighted && (toState = EMPHASIS, trigger = true);
+
+    el.isGroup && el.traverse(function (child) {
+        !child.isGroup && updater(child, commonParam);
+    });
+
+    trigger && el.__highDownOnUpdate && el.__highDownOnUpdate(fromState, toState);
 }
 
 /**
@@ -16449,18 +16725,19 @@ function traverseCall(el, method) {
  * to the `el`. See the reason on `setHoverStyle`.
  *
  * @param {module:zrender/Element} el Should not be `zrender/container/Group`.
+ * @param {Object} [el.hoverStyle] Can be set on el or its descendants,
+ *        e.g., `el.hoverStyle = ...; graphic.setHoverStyle(el); `.
+ *        Often used when item group has a label element and it's hoverStyle is different.
  * @param {Object|boolean} [hoverStl] The specified hover style.
  *        If set as `false`, disable the hover style.
  *        Similarly, The `el.hoverStyle` can alse be set
  *        as `false` to disable the hover style.
  *        Otherwise, use the default hover style if not provided.
- * @param {Object} [opt]
- * @param {boolean} [opt.hoverSilentOnTouch=false] See `graphic.setAsHoverStyleTrigger`
  */
 function setElementHoverStyle(el, hoverStl) {
     // For performance consideration, it might be better to make the "hover style" only the
     // difference properties from the "normal style", but not a entire copy of all styles.
-    hoverStl = el.__hoverStl = hoverStl !== false && (hoverStl || {});
+    hoverStl = el.__hoverStl = hoverStl !== false && (el.hoverStyle || hoverStl || {});
     el.__hoverStlDirty = true;
 
     // FIXME
@@ -16479,53 +16756,38 @@ function setElementHoverStyle(el, hoverStl) {
         // of this method. In most cases, `z2` is not set and hover style should be able
         // to rollback. Of course, that would bring bug, but only in a rare case, see
         // `doSingleLeaveHover` for details.
-        doSingleLeaveHover(el);
+        singleEnterNormal(el);
 
-        doSingleEnterHover(el);
+        singleEnterEmphasis(el);
     }
-}
-
-/**
- * Emphasis (called by API) has higher priority than `mouseover`.
- * When element has been called to be entered emphasis, mouse over
- * should not trigger the highlight effect (for example, animation
- * scale) again, and `mouseout` should not downplay the highlight
- * effect. So the listener of `mouseover` and `mouseout` should
- * check `isInEmphasis`.
- *
- * @param {module:zrender/Element} el
- * @return {boolean}
- */
-function isInEmphasis(el) {
-    return el && el.__isEmphasisEntered;
 }
 
 function onElementMouseOver(e) {
-    if (this.__hoverSilentOnTouch && e.zrByTouch) {
-        return;
-    }
-
-    // Only if element is not in emphasis status
-    !this.__isEmphasisEntered && traverseCall(this, doSingleEnterHover);
+    !shouldSilent(this, e)
+        // "emphasis" event highlight has higher priority than mouse highlight.
+        && !this.__highByOuter
+        && traverseUpdate(this, singleEnterEmphasis);
 }
 
 function onElementMouseOut(e) {
-    if (this.__hoverSilentOnTouch && e.zrByTouch) {
-        return;
-    }
-
-    // Only if element is not in emphasis status
-    !this.__isEmphasisEntered && traverseCall(this, doSingleLeaveHover);
+    !shouldSilent(this, e)
+        // "emphasis" event highlight has higher priority than mouse highlight.
+        && !this.__highByOuter
+        && traverseUpdate(this, singleEnterNormal);
 }
 
-function enterEmphasis() {
-    this.__isEmphasisEntered = true;
-    traverseCall(this, doSingleEnterHover);
+function onElementEmphasisEvent(highlightDigit) {
+    this.__highByOuter |= 1 << (highlightDigit || 0);
+    traverseUpdate(this, singleEnterEmphasis);
 }
 
-function leaveEmphasis() {
-    this.__isEmphasisEntered = false;
-    traverseCall(this, doSingleLeaveHover);
+function onElementNormalEvent(highlightDigit) {
+    !(this.__highByOuter &= ~(1 << (highlightDigit || 0)))
+        && traverseUpdate(this, singleEnterNormal);
+}
+
+function shouldSilent(el, e) {
+    return el.__highDownSilentOnTouch && e.zrByTouch;
 }
 
 /**
@@ -16557,26 +16819,42 @@ function leaveEmphasis() {
  * root group, we can simply mount the style on `el.hoverStyle` for them, but should
  * not call this method for them.
  *
+ * (3) These input parameters can be set directly on `el`:
+ *
  * @param {module:zrender/Element} el
+ * @param {Object} [el.hoverStyle] See `graphic.setElementHoverStyle`.
+ * @param {boolean} [el.highDownSilentOnTouch=false] See `graphic.setAsHighDownDispatcher`.
+ * @param {Function} [el.highDownOnUpdate] See `graphic.setAsHighDownDispatcher`.
  * @param {Object|boolean} [hoverStyle] See `graphic.setElementHoverStyle`.
- * @param {Object} [opt]
- * @param {boolean} [opt.hoverSilentOnTouch=false] See `graphic.setAsHoverStyleTrigger`.
  */
-function setHoverStyle(el, hoverStyle, opt) {
-    el.isGroup
-        ? el.traverse(function (child) {
-            // If element has sepcified hoverStyle, then use it instead of given hoverStyle
-            // Often used when item group has a label element and it's hoverStyle is different
-            !child.isGroup && setElementHoverStyle(child, child.hoverStyle || hoverStyle);
-        })
-        : setElementHoverStyle(el, el.hoverStyle || hoverStyle);
-
-    setAsHoverStyleTrigger(el, opt);
+function setHoverStyle(el, hoverStyle) {
+    setAsHighDownDispatcher(el, true);
+    traverseUpdate(el, setElementHoverStyle, hoverStyle);
 }
 
 /**
- * @param {Object|boolean} [opt] If `false`, means disable trigger.
- * @param {boolean} [opt.hoverSilentOnTouch=false]
+ * @param {module:zrender/Element} el
+ * @param {Function} [el.highDownOnUpdate] Called when state updated.
+ *        Since `setHoverStyle` has the constraint that it must be called after
+ *        all of the normal style updated, `highDownOnUpdate` is not needed to
+ *        trigger if both `fromState` and `toState` is 'normal', and needed to
+ *        trigger if both `fromState` and `toState` is 'emphasis', which enables
+ *        to sync outside style settings to "emphasis" state.
+ *        @this {string} This dispatcher `el`.
+ *        @param {string} fromState Can be "normal" or "emphasis".
+ *               `fromState` might equal to `toState`,
+ *               for example, when this method is called when `el` is
+ *               on "emphasis" state.
+ *        @param {string} toState Can be "normal" or "emphasis".
+ *
+ *        FIXME
+ *        CAUTION: Do not expose `highDownOnUpdate` outside echarts.
+ *        Because it is not a complete solution. The update
+ *        listener should not have been mount in element,
+ *        and the normal/emphasis state should not have
+ *        mantained on elements.
+ *
+ * @param {boolean} [el.highDownSilentOnTouch=false]
  *        In touch device, mouseover event will be trigger on touchstart event
  *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
  *        conveniently use hoverStyle when tap on touch screen without additional
@@ -16584,25 +16862,55 @@ function setHoverStyle(el, hoverStyle, opt) {
  *        But if the chart/component has select feature, which usually also use
  *        hoverStyle, there might be conflict between 'select-highlight' and
  *        'hover-highlight' especially when roam is enabled (see geo for example).
- *        In this case, hoverSilentOnTouch should be used to disable hover-highlight
- *        on touch device.
+ *        In this case, `highDownSilentOnTouch` should be used to disable
+ *        hover-highlight on touch device.
+ * @param {boolean} [asDispatcher=true] If `false`, do not set as "highDownDispatcher".
  */
-function setAsHoverStyleTrigger(el, opt) {
-    var disable = opt === false;
-    el.__hoverSilentOnTouch = opt != null && opt.hoverSilentOnTouch;
+function setAsHighDownDispatcher(el, asDispatcher) {
+    var disable = asDispatcher === false;
+    // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
+    // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
+    el.__highDownSilentOnTouch = el.highDownSilentOnTouch;
+    el.__highDownOnUpdate = el.highDownOnUpdate;
 
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
-    if (!disable || el.__hoverStyleTrigger) {
+    if (!disable || el.__highDownDispatcher) {
         var method = disable ? 'off' : 'on';
 
         // Duplicated function will be auto-ignored, see Eventful.js.
         el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
-        // Emphasis, normal can be triggered manually
-        el[method]('emphasis', enterEmphasis)[method]('normal', leaveEmphasis);
+        // Emphasis, normal can be triggered manually by API or other components like hover link.
+        el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
+        // Also keep previous record.
+        el.__highByOuter = el.__highByOuter || 0;
 
-        el.__hoverStyleTrigger = !disable;
+        el.__highDownDispatcher = !disable;
     }
+}
+
+/**
+ * @param {module:zrender/src/Element} el
+ * @return {boolean}
+ */
+function isHighDownDispatcher(el) {
+    return !!(el && el.__highDownDispatcher);
+}
+
+/**
+ * Support hightlight/downplay record on each elements.
+ * For the case: hover highlight/downplay (legend, visualMap, ...) and
+ * user triggerred hightlight/downplay should not conflict.
+ * Only all of the highlightDigit cleared, return to normal.
+ * @param {string} highlightKey
+ * @return {number} highlightDigit
+ */
+function getHighlightDigit(highlightKey) {
+    var highlightDigit = _highlightKeyMap[highlightKey];
+    if (highlightDigit == null && _highlightNextDigit <= 32) {
+        highlightDigit = _highlightKeyMap[highlightKey] = _highlightNextDigit++;
+    }
+    return highlightDigit;
 }
 
 /**
@@ -16675,6 +16983,29 @@ function setLabelStyle(
 
     normalStyle.text = normalStyleText;
     emphasisStyle.text = emphasisStyleText;
+}
+
+/**
+ * Modify label style manually.
+ * Only works after `setLabelStyle` and `setElementHoverStyle` called.
+ *
+ * @param {module:zrender/src/Element} el
+ * @param {Object} [normalStyleProps] optional
+ * @param {Object} [emphasisStyleProps] optional
+ */
+function modifyLabelStyle(el, normalStyleProps, emphasisStyleProps) {
+    var elStyle = el.style;
+    if (normalStyleProps) {
+        rollbackDefaultTextStyle(elStyle);
+        el.setStyle(normalStyleProps);
+        applyDefaultTextStyle(elStyle);
+    }
+    elStyle = el.__hoverStl;
+    if (emphasisStyleProps && elStyle) {
+        rollbackDefaultTextStyle(elStyle);
+        extend(elStyle, emphasisStyleProps);
+        applyDefaultTextStyle(elStyle);
+    }
 }
 
 /**
@@ -16798,6 +17129,10 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
                 // Cascade is supported in rich.
                 var richTextStyle = textStyleModel.getModel(['rich', name]);
                 // In rich, never `disableBox`.
+                // FIXME: consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
+                // the default color `'blue'` will not be adopted if no color declared in `rich`.
+                // That might confuses users. So probably we should put `textStyleModel` as the
+                // root ancestor of the `richTextStyle`. But that would be a break change.
                 setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis);
             }
         }
@@ -16857,10 +17192,6 @@ function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEm
         textStyleModel.getShallow('textBorderWidth'),
         globalTextStyle.textBorderWidth
     );
-
-    // Save original textPosition, because style.textPosition will be repalced by
-    // real location (like [10, 30]) in zrender.
-    textStyle.insideRawTextPosition = textStyle.textPosition;
 
     if (!isEmphasis) {
         if (isBlock) {
@@ -16936,50 +17267,49 @@ function getAutoColor(color, opt) {
  * does, `rollbackDefaultTextStyle` is not needed to be called).
  */
 function applyDefaultTextStyle(textStyle) {
+    var textPosition = textStyle.textPosition;
     var opt = textStyle.insideRollbackOpt;
-
-    // Only `insideRollbackOpt` created (in `setTextStyleCommon`),
-    // applyDefaultTextStyle works.
-    if (!opt || textStyle.textFill != null) {
-        return;
-    }
-
-    var useInsideStyle = opt.useInsideStyle;
-    var textPosition = textStyle.insideRawTextPosition;
     var insideRollback;
-    var autoColor = opt.autoColor;
 
-    if (useInsideStyle !== false
-        && (useInsideStyle === true
-            || (opt.isRectText
-                && textPosition
-                // textPosition can be [10, 30]
-                && typeof textPosition === 'string'
-                && textPosition.indexOf('inside') >= 0
-            )
-        )
-    ) {
-        insideRollback = {
-            textFill: null,
-            textStroke: textStyle.textStroke,
-            textStrokeWidth: textStyle.textStrokeWidth
-        };
-        textStyle.textFill = '#fff';
-        // Consider text with #fff overflow its container.
-        if (textStyle.textStroke == null) {
-            textStyle.textStroke = autoColor;
-            textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
+    if (opt && textStyle.textFill == null) {
+        var autoColor = opt.autoColor;
+        var isRectText = opt.isRectText;
+        var useInsideStyle = opt.useInsideStyle;
+
+        var useInsideStyleCache = useInsideStyle !== false
+            && (useInsideStyle === true
+                || (isRectText
+                    && textPosition
+                    // textPosition can be [10, 30]
+                    && typeof textPosition === 'string'
+                    && textPosition.indexOf('inside') >= 0
+                )
+            );
+        var useAutoColorCache = !useInsideStyleCache && autoColor != null;
+
+        // All of the props declared in `CACHED_LABEL_STYLE_PROPERTIES` are to be cached.
+        if (useInsideStyleCache || useAutoColorCache) {
+            insideRollback = {
+                textFill: textStyle.textFill,
+                textStroke: textStyle.textStroke,
+                textStrokeWidth: textStyle.textStrokeWidth
+            };
+        }
+        if (useInsideStyleCache) {
+            textStyle.textFill = '#fff';
+            // Consider text with #fff overflow its container.
+            if (textStyle.textStroke == null) {
+                textStyle.textStroke = autoColor;
+                textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
+            }
+        }
+        if (useAutoColorCache) {
+            textStyle.textFill = autoColor;
         }
     }
-    else if (autoColor != null) {
-        insideRollback = {textFill: null};
-        textStyle.textFill = autoColor;
-    }
 
-    // Always set `insideRollback`, for clearing previous.
-    if (insideRollback) {
-        textStyle.insideRollback = insideRollback;
-    }
+    // Always set `insideRollback`, so that the previous one can be cleared.
+    textStyle.insideRollback = insideRollback;
 }
 
 /**
@@ -16995,6 +17325,7 @@ function applyDefaultTextStyle(textStyle) {
 function rollbackDefaultTextStyle(style) {
     var insideRollback = style.insideRollback;
     if (insideRollback) {
+        // Reset all of the props in `CACHED_LABEL_STYLE_PROPERTIES`.
         style.textFill = insideRollback.textFill;
         style.textStroke = insideRollback.textStroke;
         style.textStrokeWidth = insideRollback.textStrokeWidth;
@@ -17283,6 +17614,7 @@ function createIcon(iconStr, opt, rect) {
 
 var graphic = (Object.freeze || Object)({
 	Z2_EMPHASIS_LIFT: Z2_EMPHASIS_LIFT,
+	CACHED_LABEL_STYLE_PROPERTIES: CACHED_LABEL_STYLE_PROPERTIES,
 	extendShape: extendShape,
 	extendPath: extendPath,
 	makePath: makePath,
@@ -17293,10 +17625,12 @@ var graphic = (Object.freeze || Object)({
 	subPixelOptimizeRect: subPixelOptimizeRect,
 	subPixelOptimize: subPixelOptimize,
 	setElementHoverStyle: setElementHoverStyle,
-	isInEmphasis: isInEmphasis,
 	setHoverStyle: setHoverStyle,
-	setAsHoverStyleTrigger: setAsHoverStyleTrigger,
+	setAsHighDownDispatcher: setAsHighDownDispatcher,
+	isHighDownDispatcher: isHighDownDispatcher,
+	getHighlightDigit: getHighlightDigit,
 	setLabelStyle: setLabelStyle,
+	modifyLabelStyle: modifyLabelStyle,
 	setTextStyle: setTextStyle,
 	setText: setText,
 	getFont: getFont,
@@ -17966,7 +18300,7 @@ function parsePercent$1(percent, all) {
  * @param {boolean} [returnStr]
  * @return {number|string}
  */
-function round$2(x, precision, returnStr) {
+function round$1(x, precision, returnStr) {
     if (precision == null) {
         precision = 10;
     }
@@ -17976,6 +18310,13 @@ function round$2(x, precision, returnStr) {
     return returnStr ? x : +x;
 }
 
+/**
+ * asc sort arr.
+ * The input arr will be modified.
+ *
+ * @param {Array} arr
+ * @return {Array} The input arr.
+ */
 
 
 /**
@@ -20814,7 +21155,7 @@ var GlobalModel = Model.extend({
      * After filtering, series may be different.
      * frome raw series.
      *
-     * @parma {string} subType
+     * @param {string} subType.
      * @param {Function} cb
      * @param {*} context
      */
@@ -21292,7 +21633,7 @@ OptionManager.prototype = {
         // Caution: some series modify option data, if do not clone,
         // it should ensure that the repeat modify correctly
         // (create a new object when modify itself).
-        rawOption = clone$3(rawOption, true);
+        rawOption = clone$3(rawOption);
 
         // FIXME
         // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
@@ -21664,6 +22005,7 @@ function convertNormalEmphasis(opt, optType, useExtend) {
         }
     }
 }
+
 function removeEC3NormalStatus(opt) {
     convertNormalEmphasis(opt, 'itemStyle');
     convertNormalEmphasis(opt, 'lineStyle');
@@ -21968,7 +22310,7 @@ var backwardCompat = function (option, isTheme) {
         if (seriesType === 'gauge') {
             var pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
-                && set$1(seriesOpt, 'itemStyle.normal.color', pointerColor);
+                && set$1(seriesOpt, 'itemStyle.color', pointerColor);
         }
 
         compatLayoutProperties(seriesOpt);
@@ -22532,6 +22874,7 @@ var dataFormatMixin = {
         var renderMode = getTooltipRenderMode(renderModeOption);
         var mainType = this.mainType;
         var isSeries = mainType === 'series';
+        var userOutput = data.userOutput;
 
         return {
             componentType: mainType,
@@ -22547,6 +22890,8 @@ var dataFormatMixin = {
             dataType: dataType,
             value: rawValue,
             color: color,
+            dimensionNames: userOutput ? userOutput.dimensionNames : null,
+            encode: userOutput ? userOutput.encode : null,
             marker: getTooltipMarker({
                 color: color,
                 renderMode: renderMode
@@ -22562,7 +22907,8 @@ var dataFormatMixin = {
      * @param {number} dataIndex
      * @param {string} [status='normal'] 'normal' or 'emphasis'
      * @param {string} [dataType]
-     * @param {number} [dimIndex]
+     * @param {number} [dimIndex] Only used in some chart that
+     *        use formatter in different dimensions, like radar.
      * @param {string} [labelProp='label']
      * @return {string} If not formatter, return null/undefined
      */
@@ -22584,6 +22930,7 @@ var dataFormatMixin = {
 
         if (typeof formatter === 'function') {
             params.status = status;
+            params.dimensionIndex = dimIndex;
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
@@ -23820,44 +24167,53 @@ Chart.prototype = {
 };
 
 var chartProto = Chart.prototype;
-chartProto.updateView
-    = chartProto.updateLayout
-    = chartProto.updateVisual
-    = function (seriesModel, ecModel, api, payload) {
+chartProto.updateView =
+chartProto.updateLayout =
+chartProto.updateVisual =
+    function (seriesModel, ecModel, api, payload) {
         this.render(seriesModel, ecModel, api, payload);
     };
 
 /**
  * Set state of single element
- * @param  {module:zrender/Element} el
- * @param  {string} state
+ * @param {module:zrender/Element} el
+ * @param {string} state 'normal'|'emphasis'
+ * @param {number} highlightDigit
  */
-function elSetState(el, state) {
+function elSetState(el, state, highlightDigit) {
     if (el) {
-        el.trigger(state);
-        if (el.type === 'group') {
-            for (var i = 0; i < el.childCount(); i++) {
-                elSetState(el.childAt(i), state);
+        el.trigger(state, highlightDigit);
+        if (el.isGroup
+            // Simple optimize.
+            && !isHighDownDispatcher(el)
+        ) {
+            for (var i = 0, len = el.childCount(); i < len; i++) {
+                elSetState(el.childAt(i), state, highlightDigit);
             }
         }
     }
 }
+
 /**
- * @param  {module:echarts/data/List} data
- * @param  {Object} payload
- * @param  {string} state 'normal'|'emphasis'
+ * @param {module:echarts/data/List} data
+ * @param {Object} payload
+ * @param {string} state 'normal'|'emphasis'
  */
 function toggleHighlight(data, payload, state) {
     var dataIndex = queryDataIndex(data, payload);
 
+    var highlightDigit = (payload && payload.highlightKey != null)
+        ? getHighlightDigit(payload.highlightKey)
+        : null;
+
     if (dataIndex != null) {
         each$1(normalizeToArray(dataIndex), function (dataIdx) {
-            elSetState(data.getItemGraphicEl(dataIdx), state);
+            elSetState(data.getItemGraphicEl(dataIdx), state, highlightDigit);
         });
     }
     else {
         data.eachItemGraphicEl(function (el) {
-            elSetState(el, state);
+            elSetState(el, state, highlightDigit);
         });
     }
 }
@@ -24177,6 +24533,38 @@ var lang = {
         saveAsImage: {
             title: 'Save as Image',
             lang: ['Right Click to Save Image']
+        }
+    },
+    aria: {
+        general: {
+            withTitle: 'This is a chart about "{title}"',
+            withoutTitle: 'This is a chart'
+        },
+        series: {
+            single: {
+                prefix: '',
+                withName: ' with type {seriesType} named {seriesName}.',
+                withoutName: ' with type {seriesType}.'
+            },
+            multiple: {
+                prefix: '. It consists of {seriesCount} series count.',
+                withName: ' The {seriesId} series is a {seriesType} representing {seriesName}.',
+                withoutName: ' The {seriesId} series is a {seriesType}.',
+                separator: {
+                    middle: '',
+                    end: ''
+                }
+            }
+        },
+        data: {
+            allData: 'The data is as follows: ',
+            partialData: 'The first {displayCnt} items are: ',
+            withName: 'the data for {name} is {value}',
+            withoutName: '{value}',
+            separator: {
+                middle: ',',
+                end: '.'
+            }
         }
     }
 };
@@ -26086,10 +26474,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.2.1';
+var version = '4.3.0';
 
 var dependencies = {
-    zrender: '4.0.6'
+    zrender: '4.1.0'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -26098,8 +26486,10 @@ var PRIORITY_PROCESSOR_FILTER = 1000;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
 
 var PRIORITY_VISUAL_LAYOUT = 1000;
+var PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
 var PRIORITY_VISUAL_GLOBAL = 2000;
 var PRIORITY_VISUAL_CHART = 3000;
+var PRIORITY_VISUAL_POST_CHART_LAYOUT = 3500;
 var PRIORITY_VISUAL_COMPONENT = 4000;
 // FIXME
 // necessary?
@@ -26112,8 +26502,10 @@ var PRIORITY = {
     },
     VISUAL: {
         LAYOUT: PRIORITY_VISUAL_LAYOUT,
+        PROGRESSIVE_LAYOUT: PRIORITY_VISUAL_PROGRESSIVE_LAYOUT,
         GLOBAL: PRIORITY_VISUAL_GLOBAL,
         CHART: PRIORITY_VISUAL_CHART,
+        POST_CHART_LAYOUT: PRIORITY_VISUAL_POST_CHART_LAYOUT,
         COMPONENT: PRIORITY_VISUAL_COMPONENT,
         BRUSH: PRIORITY_VISUAL_BRUSH
     }
@@ -26195,7 +26587,7 @@ function ECharts(dom, theme$$1, opts) {
     });
 
     /**
-     * Expect 60 pfs.
+     * Expect 60 fps.
      * @type {Function}
      * @private
      */
@@ -26394,7 +26786,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
     if (!this._model || notMerge) {
         var optionManager = new OptionManager(this._api);
         var theme$$1 = this._theme;
-        var ecModel = this._model = new GlobalModel(null, null, theme$$1, optionManager);
+        var ecModel = this._model = new GlobalModel();
         ecModel.scheduler = this._scheduler;
         ecModel.init(null, null, theme$$1, optionManager);
     }
@@ -26599,6 +26991,21 @@ echartsProto.getConnectedDataURL = function (opts) {
         targetCanvas.width = width;
         targetCanvas.height = height;
         var zr = init$1(targetCanvas);
+
+        // Background between the charts
+        if (opts.connectedBackgroundColor) {
+            zr.add(new Rect({
+                shape: {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height
+                },
+                style: {
+                    fill: opts.connectedBackgroundColor
+                }
+            }));
+        }
 
         each(canvasList, function (item) {
             var img = new ZImage({
@@ -27518,7 +27925,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtyMap) {
     scheduler.unfinished |= unfinished;
 
     // If use hover layer
-    updateHoverLayerStatus(ecIns._zr, ecModel);
+    updateHoverLayerStatus(ecIns, ecModel);
 
     // Add aria
     aria(ecIns._zr.dom, ecModel);
@@ -27673,19 +28080,26 @@ echartsProto.dispose = function () {
 
 mixin(ECharts, Eventful);
 
-function updateHoverLayerStatus(zr, ecModel) {
+function updateHoverLayerStatus(ecIns, ecModel) {
+    var zr = ecIns._zr;
     var storage = zr.storage;
     var elCount = 0;
+
     storage.traverse(function (el) {
-        if (!el.isGroup) {
-            elCount++;
-        }
+        elCount++;
     });
+
     if (elCount > ecModel.get('hoverLayerThreshold') && !env$1.node) {
-        storage.traverse(function (el) {
-            if (!el.isGroup) {
-                // Don't switch back.
-                el.useHoverLayer = true;
+        ecModel.eachSeries(function (seriesModel) {
+            if (seriesModel.preventUsingHoverLayer) {
+                return;
+            }
+            var chartView = ecIns._chartsMap[seriesModel.__viewId];
+            if (chartView.__alive) {
+                chartView.group.traverse(function (el) {
+                    // Don't switch back.
+                    el.useHoverLayer = true;
+                });
             }
         });
     }
@@ -27975,7 +28389,7 @@ function enableConnect(chart) {
  * @param {Object} [theme]
  * @param {Object} opts
  * @param {number} [opts.devicePixelRatio] Use window.devicePixelRatio by default
- * @param {string} [opts.renderer] Currently only 'canvas' is supported.
+ * @param {string} [opts.renderer] Can choose 'canvas' or 'svg' to render the chart.
  * @param {number} [opts.width] Use clientWidth of the input `dom` by default.
  *                              Can be 'auto' (the same as null/undefined)
  * @param {number} [opts.height] Use clientHeight of the input `dom` by default.
@@ -28014,7 +28428,10 @@ function init(dom, theme$$1, opts) {
                 || (!dom.clientHeight && (!opts || opts.height == null))
             )
         ) {
-            console.warn('Can\'t get dom width or height');
+            console.warn('Can\'t get DOM width or height. Please check '
+                + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
+                + 'For example, you may need to call this in the callback '
+                + 'of window.onload.');
         }
     }
 
@@ -28567,6 +28984,12 @@ function summarizeDimensions(data) {
     var defaultedLabel = [];
     var defaultedTooltip = [];
 
+    // See the comment of `List.js#userOutput`.
+    var userOutput = summary.userOutput = {
+        dimensionNames: data.dimensions.slice(),
+        encode: {}
+    };
+
     each$1(data.dimensions, function (dimName) {
         var dimItem = data.getDimensionInfo(dimName);
 
@@ -28575,11 +28998,9 @@ function summarizeDimensions(data) {
             if (__DEV__) {
                 assert$1(OTHER_DIMENSIONS.get(coordDim) == null);
             }
-            var coordDimArr = encode[coordDim];
-            if (!encode.hasOwnProperty(coordDim)) {
-                coordDimArr = encode[coordDim] = [];
-            }
-            coordDimArr[dimItem.coordDimIndex] = dimName;
+
+            var coordDimIndex = dimItem.coordDimIndex;
+            getOrCreateEncodeArr(encode, coordDim)[coordDimIndex] = dimName;
 
             if (!dimItem.isExtraCoord) {
                 notExtraCoordDimMap.set(coordDim, 1);
@@ -28591,6 +29012,10 @@ function summarizeDimensions(data) {
                 if (mayLabelDimType(dimItem.type)) {
                     defaultedLabel[0] = dimName;
                 }
+
+                // User output encode do not contain generated coords.
+                // And it only has index. User can use index to retrieve value from the raw item array.
+                getOrCreateEncodeArr(userOutput.encode, coordDim)[coordDimIndex] = dimItem.index;
             }
             if (dimItem.defaultTooltip) {
                 defaultedTooltip.push(dimName);
@@ -28598,14 +29023,11 @@ function summarizeDimensions(data) {
         }
 
         OTHER_DIMENSIONS.each(function (v, otherDim) {
-            var otherDimArr = encode[otherDim];
-            if (!encode.hasOwnProperty(otherDim)) {
-                otherDimArr = encode[otherDim] = [];
-            }
+            var encodeArr = getOrCreateEncodeArr(encode, otherDim);
 
             var dimIndex = dimItem.otherDims[otherDim];
             if (dimIndex != null && dimIndex !== false) {
-                otherDimArr[dimIndex] = dimItem.name;
+                encodeArr[dimIndex] = dimItem.name;
             }
         });
     });
@@ -28646,6 +29068,13 @@ function summarizeDimensions(data) {
     encode.defaultedTooltip = defaultedTooltip;
 
     return summary;
+}
+
+function getOrCreateEncodeArr(encode, dim) {
+    if (!encode.hasOwnProperty(dim)) {
+        encode[dim] = [];
+    }
+    return encode[dim];
 }
 
 function getDimensionTypeByAxis(axisType) {
@@ -28973,6 +29402,21 @@ var List = function (dimensions, hostModel) {
      * @private
      */
     this._calculationInfo = {};
+
+    /**
+     * User output info of this data.
+     * DO NOT use it in other places!
+     *
+     * When preparing user params for user callbacks, we have
+     * to clone these inner data structures to prevent users
+     * from modifying them to effect built-in logic. And for
+     * performance consideration we make this `userOutput` to
+     * avoid clone them too many times.
+     *
+     * @type {Object}
+     * @readOnly
+     */
+    this.userOutput = this._dimensionsSummary.userOutput;
 };
 
 var listProto = List.prototype;
@@ -28986,15 +29430,31 @@ listProto.type = 'list';
 listProto.hasItemOption = true;
 
 /**
+ * The meanings of the input parameter `dim`:
+ *
+ * + If dim is a number (e.g., `1`), it means the index of the dimension.
+ *   For example, `getDimension(0)` will return 'x' or 'lng' or 'radius'.
+ * + If dim is a number-like string (e.g., `"1"`):
+ *     + If there is the same concrete dim name defined in `this.dimensions`, it means that concrete name.
+ *     + If not, it will be converted to a number, which means the index of the dimension.
+ *        (why? because of the backward compatbility. We have been tolerating number-like string in
+ *        dimension setting, although now it seems that it is not a good idea.)
+ *     For example, `visualMap[i].dimension: "1"` is the same meaning as `visualMap[i].dimension: 1`,
+ *     if no dimension name is defined as `"1"`.
+ * + If dim is a not-number-like string, it means the concrete dim name.
+ *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
+ *   or customized in `dimensions` property of option like `"age"`.
+ *
  * Get dimension name
- * @param {string|number} dim
- *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
- *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
+ * @param {string|number} dim See above.
  * @return {string} Concrete dim name.
  */
 listProto.getDimension = function (dim) {
-    if (!isNaN(dim)) {
-        dim = this.dimensions[dim] || dim;
+    if (typeof dim === 'number'
+        // If being a number-like string but not being defined a dimension name.
+        || (!isNaN(dim) && !this._dimensionInfos.hasOwnProperty(dim))
+    ) {
+        dim = this.dimensions[dim];
     }
     return dim;
 };
@@ -29528,14 +29988,11 @@ listProto.getValues = function (dimensions, idx /*, stack */) {
  */
 listProto.hasValue = function (idx) {
     var dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
-    var dimensionInfos = this._dimensionInfos;
     for (var i = 0, len = dataDimsOnCoord.length; i < len; i++) {
-        if (
-            // Ordinal type can be string or number
-            dimensionInfos[dataDimsOnCoord[i]].type !== 'ordinal'
-            // FIXME check ordinal when using index?
-            && isNaN(this.get(dataDimsOnCoord[i], idx))
-        ) {
+        // Ordinal type originally can be string or number.
+        // But when an ordinal type is used on coord, it can
+        // not be string but only number. So we can also use isNaN.
+        if (isNaN(this.get(dataDimsOnCoord[i], idx))) {
             return false;
         }
     }
@@ -30776,7 +31233,7 @@ function completeDimensions(sysDims, source, opt) {
         // Note: It is allowed that `dataDims.length` is `0`, e.g., options is
         // `{encode: {x: -1, y: 1}}`. Should not filter anything in
         // this case.
-        if (dataDims.length === 1 && dataDims[0] < 0) {
+        if (dataDims.length === 1 && !isString(dataDims[0]) && dataDims[0] < 0) {
             encodeDef.set(coordDim, false);
             return;
         }
@@ -31630,21 +32087,19 @@ var SymbolClz$2 = extendShape({
         height: 0
     },
 
-    beforeBrush: function () {
-        var style = this.style;
+    calculateTextPosition: function (out, style, rect) {
+        var res = calculateTextPosition(out, style, rect);
         var shape = this.shape;
-        // FIXME
-        if (shape.symbolType === 'pin' && style.textPosition === 'inside') {
-            style.textPosition = ['50%', '40%'];
-            style.textAlign = 'center';
-            style.textVerticalAlign = 'middle';
+        if (shape && shape.symbolType === 'pin' && style.textPosition === 'inside') {
+            res.y = rect.y + rect.height * 0.4;
         }
+        return res;
     },
 
     buildPath: function (ctx, shape, inBundle) {
         var symbolType = shape.symbolType;
-        var proxySymbol = symbolBuildProxies[symbolType];
-        if (shape.symbolType !== 'none') {
+        if (symbolType !== 'none') {
+            var proxySymbol = symbolBuildProxies[symbolType];
             if (!proxySymbol) {
                 // Default rect
                 symbolType = 'rect';
@@ -31927,7 +32382,7 @@ symbolProto.setZ = function (zlevel, z) {
 symbolProto.setDraggable = function (draggable) {
     var symbolPath = this.childAt(0);
     symbolPath.draggable = draggable;
-    symbolPath.cursor = draggable ? 'move' : 'pointer';
+    symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
 };
 
 /**
@@ -32093,63 +32548,43 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
     }
 
-    symbolPath.off('mouseover')
-        .off('mouseout')
-        .off('emphasis')
-        .off('normal');
-
-    symbolPath.hoverStyle = hoverItemStyle;
-
-    // FIXME
-    // Do not use symbol.trigger('emphasis'), but use symbol.highlight() instead.
-    setHoverStyle(symbolPath);
-
     symbolPath.__symbolOriginalScale = getScale(symbolSize);
+    symbolPath.hoverStyle = hoverItemStyle;
+    symbolPath.highDownOnUpdate = (
+        hoverAnimation && seriesModel.isAnimationEnabled()
+    ) ? highDownOnUpdate : null;
 
-    if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        // Note: consider `off`, should use static function here.
-        symbolPath.on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
-    }
+    setHoverStyle(symbolPath);
 };
 
-function onMouseOver() {
-    // see comment in `graphic.isInEmphasis`
-    !isInEmphasis(this) && onEmphasis.call(this);
-}
-
-function onMouseOut() {
-    // see comment in `graphic.isInEmphasis`
-    !isInEmphasis(this) && onNormal.call(this);
-}
-
-function onEmphasis() {
+function highDownOnUpdate(fromState, toState) {
     // Do not support this hover animation util some scenario required.
     // Animation can only be supported in hover layer when using `el.incremetal`.
     if (this.incremental || this.useHoverLayer) {
         return;
     }
-    var scale = this.__symbolOriginalScale;
-    var ratio = scale[1] / scale[0];
-    this.animateTo({
-        scale: [
-            Math.max(scale[0] * 1.1, scale[0] + 3),
-            Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-        ]
-    }, 400, 'elasticOut');
-}
 
-function onNormal() {
-    if (this.incremental || this.useHoverLayer) {
-        return;
+    if (toState === 'emphasis') {
+        var scale = this.__symbolOriginalScale;
+        var ratio = scale[1] / scale[0];
+        var emphasisOpt = {
+            scale: [
+                Math.max(scale[0] * 1.1, scale[0] + 3),
+                Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
+            ]
+        };
+        // FIXME
+        // modify it after support stop specified animation.
+        // toState === fromState
+        //     ? (this.stopAnimation(), this.attr(emphasisOpt))
+        this.animateTo(emphasisOpt, 400, 'elasticOut');
     }
-    this.animateTo({
-        scale: this.__symbolOriginalScale
-    }, 400, 'elasticOut');
+    else if (toState === 'normal') {
+        this.animateTo({
+            scale: this.__symbolOriginalScale
+        }, 400, 'elasticOut');
+    }
 }
-
 
 /**
  * @param {Function} cb
@@ -33224,10 +33659,10 @@ function createPolarClipShape(polar, hasAnimation, forSymbol, seriesModel) {
 
     var clipPath = new Sector({
         shape: {
-            cx: round$2(polar.cx, 1),
-            cy: round$2(polar.cy, 1),
-            r0: round$2(radiusExtent[0], 1),
-            r: round$2(radiusExtent[1], 1),
+            cx: round$1(polar.cx, 1),
+            cy: round$1(polar.cy, 1),
+            r0: round$1(radiusExtent[0], 1),
+            r: round$1(radiusExtent[1], 1),
             startAngle: -angleExtent[0] * RADIAN,
             endAngle: -angleExtent[1] * RADIAN,
             clockwise: angleAxis.inverse
@@ -33887,7 +34322,6 @@ Chart.extend({
 * under the License.
 */
 
-
 var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
     // Encoding visual for all series include which is filtered for legend drawing
     return {
@@ -33899,14 +34333,24 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
         reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
-            var symbolType = seriesModel.get('symbol') || defaultSymbolType;
+            var symbolType = seriesModel.get('symbol');
             var symbolSize = seriesModel.get('symbolSize');
             var keepAspect = seriesModel.get('symbolKeepAspect');
 
+            var hasSymbolTypeCallback = isFunction$1(symbolType);
+            var hasSymbolSizeCallback = isFunction$1(symbolSize);
+            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
+            var seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : defaultSymbolType;
+            var seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
+
             data.setVisual({
-                legendSymbol: legendSymbol || symbolType,
-                symbol: symbolType,
-                symbolSize: symbolSize,
+                legendSymbol: legendSymbol || seriesSymbol,
+                // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
+                // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
+                // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in
+                // some cases but generally it is not recommanded.
+                symbol: seriesSymbol,
+                symbolSize: seriesSymbolSize,
                 symbolKeepAspect: keepAspect
             });
 
@@ -33915,23 +34359,19 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
                 return;
             }
 
-            var hasCallback = typeof symbolSize === 'function';
-
             function dataEach(data, idx) {
-                if (typeof symbolSize === 'function') {
+                if (hasCallback) {
                     var rawValue = seriesModel.getRawValue(idx);
-                    // FIXME
                     var params = seriesModel.getDataParams(idx);
-                    data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
+                    hasSymbolTypeCallback && data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
+                    hasSymbolSizeCallback && data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
                 }
 
                 if (data.hasItemOption) {
                     var itemModel = data.getItemModel(idx);
                     var itemSymbolType = itemModel.getShallow('symbol', true);
-                    var itemSymbolSize = itemModel.getShallow('symbolSize',
-                        true);
-                    var itemSymbolKeepAspect
-                        = itemModel.getShallow('symbolKeepAspect', true);
+                    var itemSymbolSize = itemModel.getShallow('symbolSize', true);
+                    var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
 
                     // If has item symbol
                     if (itemSymbolType != null) {
@@ -33942,8 +34382,7 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
                         data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
                     }
                     if (itemSymbolKeepAspect != null) {
-                        data.setItemVisual(idx, 'symbolKeepAspect',
-                            itemSymbolKeepAspect);
+                        data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
                     }
                 }
             }
@@ -34607,7 +35046,7 @@ OrdinalScale.create = function () {
  * For testable.
  */
 
-var roundNumber$1 = round$2;
+var roundNumber$1 = round$1;
 
 /**
  * @param {Array.<number>} extent Both extent[0] and extent[1] should be valid number.
@@ -34728,7 +35167,7 @@ function intervalScaleGetTicks(interval, extent, niceTickExtent, intervalPrecisi
  */
 
 
-var roundNumber = round$2;
+var roundNumber = round$1;
 
 /**
  * @alias module:echarts/coord/scale/Interval
@@ -35170,7 +35609,8 @@ function layout(seriesType, ecModel) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
 
-            if (isNaN(value)) {
+            // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
+            if (isNaN(value) || isNaN(baseValue)) {
                 continue;
             }
 
@@ -35264,23 +35704,29 @@ var largeLayout = {
         return {progress: progress};
 
         function progress(params, data) {
-            var largePoints = new LargeArr(params.count * 2);
+            var count = params.count;
+            var largePoints = new LargeArr(count * 2);
+            var largeDataIndices = new LargeArr(count);
             var dataIndex;
             var coord = [];
             var valuePair = [];
-            var offset = 0;
+            var pointsOffset = 0;
+            var idxOffset = 0;
 
             while ((dataIndex = params.next()) != null) {
                 valuePair[valueDimIdx] = data.get(valueDim, dataIndex);
                 valuePair[1 - valueDimIdx] = data.get(baseDim, dataIndex);
 
                 coord = cartesian.dataToPoint(valuePair, null, coord);
-                largePoints[offset++] = coord[0];
-                largePoints[offset++] = coord[1];
+                // Data index might not be in order, depends on `progressiveChunkMode`.
+                largePoints[pointsOffset++] = coord[0];
+                largePoints[pointsOffset++] = coord[1];
+                largeDataIndices[idxOffset++] = dataIndex;
             }
 
             data.setLayout({
                 largePoints: largePoints,
+                largeDataIndices: largeDataIndices,
                 barWidth: barWidth,
                 valueAxisStart: getValueAxisStart(baseAxis, valueAxis, false),
                 valueAxisHorizontal: valueAxisHorizontal
@@ -35423,10 +35869,10 @@ var TimeScale = IntervalScale.extend({
         var interval = this._interval;
 
         if (!opt.fixMin) {
-            extent[0] = round$2(mathFloor(extent[0] / interval) * interval);
+            extent[0] = round$1(mathFloor(extent[0] / interval) * interval);
         }
         if (!opt.fixMax) {
-            extent[1] = round$2(mathCeil(extent[1] / interval) * interval);
+            extent[1] = round$1(mathCeil(extent[1] / interval) * interval);
         }
     },
 
@@ -35572,7 +36018,7 @@ var scaleProto$1 = Scale.prototype;
 var intervalScaleProto$1 = IntervalScale.prototype;
 
 var getPrecisionSafe$1 = getPrecisionSafe;
-var roundingErrorFix = round$2;
+var roundingErrorFix = round$1;
 
 var mathFloor$1 = Math.floor;
 var mathCeil$1 = Math.ceil;
@@ -35600,7 +36046,7 @@ var LogScale = Scale.extend({
         var originalExtent = originalScale.getExtent();
 
         return map(intervalScaleProto$1.getTicks.call(this), function (val) {
-            var powVal = round$2(mathPow$1(this.base, val));
+            var powVal = round$1(mathPow$1(this.base, val));
 
             // Fix #4158
             powVal = (val === extent[0] && originalScale.__fixMin)
@@ -35705,8 +36151,8 @@ var LogScale = Scale.extend({
         }
 
         var niceExtent = [
-            round$2(mathCeil$1(extent[0] / interval) * interval),
-            round$2(mathFloor$1(extent[1] / interval) * interval)
+            round$1(mathCeil$1(extent[0] / interval) * interval),
+            round$1(mathFloor$1(extent[1] / interval) * interval)
         ];
 
         this._interval = interval;
@@ -36711,7 +37157,7 @@ function makeLabelsByNumericCategoryInterval(axis, categoryInterval, onlyTick) {
         addItem(tickValue);
     }
 
-    if (includeMaxLabel && tickValue !== ordinalExtent[1]) {
+    if (includeMaxLabel && tickValue - step !== ordinalExtent[1]) {
         addItem(ordinalExtent[1]);
     }
 
@@ -37786,7 +38232,7 @@ function Grid(gridModel, ecModel, api) {
     this._coordsList = [];
 
     /**
-     * @type {Object.<string, module:echarts/coord/cartesian/Axis2D>}
+     * @type {Object.<string, Array.<module:echarts/coord/cartesian/Axis2D>>}
      * @private
      */
     this._axesMap = {};
@@ -38146,20 +38592,14 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
                 // Fix position
                 if (axisPosition !== 'top' && axisPosition !== 'bottom') {
                     // Default bottom of X
-                    axisPosition = 'bottom';
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
-                    }
+                    axisPosition = axisPositionUsed.bottom ? 'top' : 'bottom';
                 }
             }
             else {
                 // Fix position
                 if (axisPosition !== 'left' && axisPosition !== 'right') {
                     // Default left of Y
-                    axisPosition = 'left';
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'left' ? 'right' : 'left';
-                    }
+                    axisPosition = axisPositionUsed.left ? 'right' : 'left';
                 }
             }
             axisPositionUsed[axisPosition] = true;
@@ -38391,15 +38831,6 @@ CoordinateSystemManager.register('cartesian2d', Grid);
 
 var PI$2 = Math.PI;
 
-function makeAxisEventDataBase(axisModel) {
-    var eventData = {
-        componentType: axisModel.mainType,
-        componentIndex: axisModel.componentIndex
-    };
-    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
-    return eventData;
-}
-
 /**
  * A final axis is translated and rotated from a "standard axis".
  * So opt.position and opt.rotation is required.
@@ -38530,10 +38961,10 @@ var builders = {
             axisModel.getModel('axisLine.lineStyle').getLineStyle()
         );
 
-        this.group.add(new Line(subPixelOptimizeLine({
+        this.group.add(new Line({
             // Id for animation
             anid: 'line',
-
+            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -38544,7 +38975,7 @@ var builders = {
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
-        })));
+        }));
 
         var arrows = axisModel.get('axisLine.symbol');
         var arrowSize = axisModel.get('axisLine.symbolSize');
@@ -38716,7 +39147,7 @@ var builders = {
 
             position: pos,
             rotation: labelLayout.rotation,
-            silent: isSilent(axisModel),
+            silent: isLabelSilent(axisModel),
             z2: 1,
             tooltip: (tooltipOpt && tooltipOpt.show)
                 ? extend({
@@ -38734,8 +39165,10 @@ var builders = {
             textFont: textFont,
             textFill: textStyleModel.getTextColor()
                 || axisModel.get('axisLine.lineStyle.color'),
-            textAlign: labelLayout.textAlign,
-            textVerticalAlign: labelLayout.textVerticalAlign
+            textAlign: textStyleModel.get('align')
+                || labelLayout.textAlign,
+            textVerticalAlign: textStyleModel.get('verticalAlign')
+                || labelLayout.textVerticalAlign
         });
 
         if (axisModel.get('triggerEvent')) {
@@ -38753,6 +39186,15 @@ var builders = {
         textEl.decomposeTransform();
     }
 
+};
+
+var makeAxisEventDataBase = AxisBuilder.makeAxisEventDataBase = function (axisModel) {
+    var eventData = {
+        componentType: axisModel.mainType,
+        componentIndex: axisModel.componentIndex
+    };
+    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
+    return eventData;
 };
 
 /**
@@ -38832,14 +39274,14 @@ function endTextLayout(opt, textPosition, textRotate, extent) {
     };
 }
 
-function isSilent(axisModel) {
+var isLabelSilent = AxisBuilder.isLabelSilent = function (axisModel) {
     var tooltipOpt = axisModel.get('tooltip');
     return axisModel.get('silent')
         // Consider mouse cursor, add these restrictions.
         || !(
             axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
         );
-}
+};
 
 function fixMinMaxLabelShow(axisModel, labelEls, tickEls) {
     if (shouldShowAllLabels(axisModel.axis)) {
@@ -38960,10 +39402,10 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
             applyTransform(pt2, pt2, matrix);
         }
         // Tick line, Not use group transform to have better line draw
-        var tickEl = new Line(subPixelOptimizeLine({
+        var tickEl = new Line({
             // Id for animation
             anid: 'tick_' + ticksCoords[i].tickValue,
-
+            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -38978,7 +39420,7 @@ function buildAxisTick(axisBuilder, axisModel, opt) {
             ),
             z2: 2,
             silent: true
-        }));
+        });
         axisBuilder.group.add(tickEl);
         tickEls.push(tickEl);
     }
@@ -39004,10 +39446,10 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     ) * PI$2 / 180;
 
     var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
-    var rawCategoryData = axisModel.getCategories(true);
+    var rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
 
     var labelEls = [];
-    var silent = isSilent(axisModel);
+    var silent = isLabelSilent(axisModel);
     var triggerEvent = axisModel.get('triggerEvent');
 
     each$1(labels, function (labelItem, index) {
@@ -39514,8 +39956,9 @@ var CartesianAxisView = AxisView.extend({
 
             var colorIndex = (lineCount++) % lineColors.length;
             var tickValue = ticksCoords[i].tickValue;
-            this._axisGroup.add(new Line(subPixelOptimizeLine({
+            this._axisGroup.add(new Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
+                subPixelOptimize: true,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -39526,7 +39969,7 @@ var CartesianAxisView = AxisView.extend({
                     stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
-            })));
+            }));
         }
     },
 
@@ -39969,6 +40412,7 @@ var barItemStyle = {
 */
 
 var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
+var _eventPos = [0, 0];
 
 // FIXME
 // Just for compatible with ec2.
@@ -40291,10 +40735,10 @@ var LargePath = Path.extend({
         // a whole line or drawing rects.
         var points = shape.points;
         var startPoint = this.__startPoint;
-        var valueIdx = this.__valueIdx;
+        var baseDimIdx = this.__baseDimIdx;
 
         for (var i = 0; i < points.length; i += 2) {
-            startPoint[this.__valueIdx] = points[i + valueIdx];
+            startPoint[baseDimIdx] = points[i + baseDimIdx];
             ctx.moveTo(startPoint[0], startPoint[1]);
             ctx.lineTo(points[i], points[i + 1]);
         }
@@ -40305,17 +40749,68 @@ function createLarge(seriesModel, group, incremental) {
     // TODO support polar
     var data = seriesModel.getData();
     var startPoint = [];
-    var valueIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
-    startPoint[1 - valueIdx] = data.getLayout('valueAxisStart');
+    var baseDimIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
+    startPoint[1 - baseDimIdx] = data.getLayout('valueAxisStart');
 
     var el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
         incremental: !!incremental,
         __startPoint: startPoint,
-        __valueIdx: valueIdx
+        __baseDimIdx: baseDimIdx,
+        __largeDataIndices: data.getLayout('largeDataIndices'),
+        __barWidth: data.getLayout('barWidth')
     });
     group.add(el);
     setLargeStyle(el, seriesModel, data);
+
+    // Enable tooltip and user mouse/touch event handlers.
+    el.seriesIndex = seriesModel.seriesIndex;
+
+    if (!seriesModel.get('silent')) {
+        el.on('mousedown', largePathUpdateDataIndex);
+        el.on('mousemove', largePathUpdateDataIndex);
+    }
+}
+
+// Use throttle to avoid frequently traverse to find dataIndex.
+var largePathUpdateDataIndex = throttle(function (event) {
+    var largePath = this;
+    var dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
+    largePath.dataIndex = dataIndex >= 0 ? dataIndex : null;
+}, 30, false);
+
+function largePathFindDataIndex(largePath, x, y) {
+    var baseDimIdx = largePath.__baseDimIdx;
+    var valueDimIdx = 1 - baseDimIdx;
+    var points = largePath.shape.points;
+    var largeDataIndices = largePath.__largeDataIndices;
+    var barWidthHalf = Math.abs(largePath.__barWidth / 2);
+    var startValueVal = largePath.__startPoint[valueDimIdx];
+
+    _eventPos[0] = x;
+    _eventPos[1] = y;
+    var pointerBaseVal = _eventPos[baseDimIdx];
+    var pointerValueVal = _eventPos[1 - baseDimIdx];
+    var baseLowerBound = pointerBaseVal - barWidthHalf;
+    var baseUpperBound = pointerBaseVal + barWidthHalf;
+
+    for (var i = 0, len = points.length / 2; i < len; i++) {
+        var ii = i * 2;
+        var barBaseVal = points[ii + baseDimIdx];
+        var barValueVal = points[ii + valueDimIdx];
+        if (
+            barBaseVal >= baseLowerBound && barBaseVal <= baseUpperBound
+            && (
+                startValueVal <= barValueVal
+                    ? (pointerValueVal >= startValueVal && pointerValueVal <= barValueVal)
+                    : (pointerValueVal >= barValueVal && pointerValueVal <= startValueVal)
+            )
+        ) {
+            return largeDataIndices[i];
+        }
+    }
+
+    return -1;
 }
 
 function setLargeStyle(el, seriesModel, data) {
@@ -40348,9 +40843,10 @@ function setLargeStyle(el, seriesModel, data) {
 */
 
 // In case developer forget to include grid component
-registerLayout(curry(layout, 'bar'));
-// Should after normal bar layout, otherwise it is blocked by normal bar layout.
-registerLayout(largeLayout);
+registerLayout(PRIORITY.VISUAL.LAYOUT, curry(layout, 'bar'));
+// Use higher prority to avoid to be blocked by other overall layout, which do not
+// only exist in this module, but probably also exist in other modules, like `barPolar`.
+registerLayout(PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, largeLayout);
 
 registerVisual({
     seriesType: 'bar',
@@ -40630,6 +41126,11 @@ var PieSeries = extendSeriesModel({
         startAngle: 90,
         // 最小角度改为0
         minAngle: 0,
+
+        // If the angle of a sector less than `minShowLabelAngle`,
+        // the label will not be displayed.
+        minShowLabelAngle: 0,
+
         // 选中时扇区偏移量
         selectedOffset: 10,
         // 高亮扇区偏移量
@@ -40780,20 +41281,6 @@ function PiePiece(data, idx) {
     this.add(text);
 
     this.updateData(data, idx, true);
-
-    // Hover to change label and labelLine
-    function onEmphasis() {
-        polyline.ignore = polyline.hoverIgnore;
-        text.ignore = text.hoverIgnore;
-    }
-    function onNormal() {
-        polyline.ignore = polyline.normalIgnore;
-        text.ignore = text.normalIgnore;
-    }
-    this.on('emphasis', onEmphasis)
-        .on('normal', onNormal)
-        .on('mouseover', onEmphasis)
-        .on('mouseout', onNormal);
 }
 
 var piePieceProto = PiePiece.prototype;
@@ -40801,6 +41288,8 @@ var piePieceProto = PiePiece.prototype;
 piePieceProto.updateData = function (data, idx, firstCreate) {
 
     var sector = this.childAt(0);
+    var labelLine = this.childAt(1);
+    var labelText = this.childAt(2);
 
     var seriesModel = data.hostModel;
     var itemModel = data.getItemModel(idx);
@@ -40863,34 +41352,36 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
         seriesModel.get('animation')
     );
 
-    function onEmphasis() {
-        // Sector may has animation of updating data. Force to move to the last frame
-        // Or it may stopped on the wrong shape
-        sector.stopAnimation(true);
-        sector.animateTo({
-            shape: {
-                r: layout.r + seriesModel.get('hoverOffset')
-            }
-        }, 300, 'elasticOut');
-    }
-    function onNormal() {
-        sector.stopAnimation(true);
-        sector.animateTo({
-            shape: {
-                r: layout.r
-            }
-        }, 300, 'elasticOut');
-    }
-    sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-    if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
-        sector
-            .on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
-    }
-
     this._updateLabel(data, idx);
+
+    this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+        ? function (fromState, toState) {
+            if (toState === 'emphasis') {
+                labelLine.ignore = labelLine.hoverIgnore;
+                labelText.ignore = labelText.hoverIgnore;
+
+                // Sector may has animation of updating data. Force to move to the last frame
+                // Or it may stopped on the wrong shape
+                sector.stopAnimation(true);
+                sector.animateTo({
+                    shape: {
+                        r: layout.r + seriesModel.get('hoverOffset')
+                    }
+                }, 300, 'elasticOut');
+            }
+            else {
+                labelLine.ignore = labelLine.normalIgnore;
+                labelText.ignore = labelText.normalIgnore;
+
+                sector.stopAnimation(true);
+                sector.animateTo({
+                    shape: {
+                        r: layout.r
+                    }
+                }, 300, 'elasticOut');
+            }
+        }
+        : null;
 
     setHoverStyle(this);
 };
@@ -40905,6 +41396,12 @@ piePieceProto._updateLabel = function (data, idx) {
     var layout = data.getItemLayout(idx);
     var labelLayout = layout.label;
     var visualColor = data.getItemVisual(idx, 'color');
+
+    if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
+        labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
+        labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
+        return;
+    }
 
     updateProps(labelLine, {
         shape: {
@@ -41003,7 +41500,6 @@ var PieView = Chart.extend({
         );
 
         var selectedMode = seriesModel.get('selectedMode');
-
         data.diff(oldData)
             .add(function (idx) {
                 var piePiece = new PiePiece(data, idx);
@@ -41042,6 +41538,10 @@ var PieView = Chart.extend({
             && animationType !== 'scale'
         ) {
             var shape = data.getItemLayout(0);
+            for (var s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
+                shape = data.getItemLayout(s);
+            }
+
             var r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
             var removeClipPath = bind(group.removeClipPath, group);
@@ -41148,7 +41648,8 @@ var createDataSelectAction = function (seriesType, actionInfos) {
             );
             return {
                 name: payload.name,
-                selected: selected
+                selected: selected,
+                seriesId: payload.seriesId
             };
         });
     });
@@ -41253,6 +41754,8 @@ var dataColor = function (seriesType) {
 */
 
 // FIXME emphasis label position is not same with normal label position
+
+var RADIAN$1 = Math.PI / 180;
 
 function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
     list.sort(function (a, b) {
@@ -41387,12 +41890,13 @@ function isPositionCenter(layout) {
     return layout.position === 'center';
 }
 
-var labelLayout = function (seriesModel, r, viewWidth, viewHeight) {
+var labelLayout = function (seriesModel, r, viewWidth, viewHeight, sum) {
     var data = seriesModel.getData();
     var labelLayoutList = [];
     var cx;
     var cy;
     var hasLabelRotate = false;
+    var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN$1;
 
     data.each(function (idx) {
         var layout = data.getItemLayout(idx);
@@ -41405,6 +41909,10 @@ var labelLayout = function (seriesModel, r, viewWidth, viewHeight) {
         var labelLineModel = itemModel.getModel('labelLine');
         var labelLineLen = labelLineModel.get('length');
         var labelLineLen2 = labelLineModel.get('length2');
+
+        if (layout.angle < minShowLabelRadian) {
+            return;
+        }
 
         var midAngle = (layout.startAngle + layout.endAngle) / 2;
         var dx = Math.cos(midAngle);
@@ -41447,8 +41955,16 @@ var labelLayout = function (seriesModel, r, viewWidth, viewHeight) {
         }
         var font = labelModel.getFont();
 
-        var labelRotate = labelModel.get('rotate')
-            ? (dx < 0 ? -midAngle + Math.PI : -midAngle) : 0;
+        var labelRotate;
+        var rotate = labelModel.get('rotate');
+        if (typeof rotate === 'number') {
+            labelRotate = rotate * (Math.PI / 180);
+        }
+        else {
+            labelRotate = rotate
+                ? (dx < 0 ? -midAngle + Math.PI : -midAngle)
+                : 0;
+        }
         var text = seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx);
         var textRect = getBoundingRect(
