@@ -44,7 +44,11 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
     + [中文](https://echarts.apache.org/zh/option.html)
     + [English](https://echarts.apache.org/en/option.html)
 
-## Get Helped
+## Debug
+
+If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/.github/CONTRIBUTING.md) document.
+
+## Get Help
 
 + [GitHub Issues](https://github.com/apache/incubator-echarts/issues) for bug report and feature requests
 + Email [dev@echarts.apache.org](dev@echarts.apache.org) for general questions
