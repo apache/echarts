@@ -1,0 +1,26 @@
+#main {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+* {
+    font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+}
+
+.menu-link {
+    display: block;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.test-screenshots {
+    margin-top: 50px;
+}
+
+.test-screenshots img {
+    /* height: 200px; */
+    width: 100%;
+}

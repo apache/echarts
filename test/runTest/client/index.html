@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body>
+<div id="app" style="display: none">
+    <el-container id="main">
+        <el-header>
+            <h1>Visual Regression Test</h1>
+        </el-header>
+        <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
+            <el-aside width="250px">
+                <el-menu class="test-list">
+                    <el-menu-item v-for="test in tests">
+                        <a :href="'#' + test.name" class="menu-link">{{test.name}}</a>
+                    </el-menu-item>
+                </el-menu>
+            </el-aside>
+            <el-main>
+                <div v-if="selectedTest">
+                    <div class="test-screenshots" v-for="result in selectedTest.results">
+                        <h4 class="md-title">{{result.name}}</h4>
+                        <el-row :gutter="20">
+                            <el-col :span="8">
+                                <el-card>
+                                    <div slot="header" class="clearfix">
+                                        <span>Expected</span>
+                                    </div>
+                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
+                                </el-card>
+                            </el-col>
+
+                            <el-col :span="8">
+                                <el-card>
+                                    <div slot="header" class="clearfix">
+                                        <span>Actual</span>
+                                    </div>
+                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
+                                </el-card>
+                            </el-col>
+
+                            <el-col :span="8">
+                                <el-card>
+                                    <div slot="header" class="clearfix">
+                                        <span>Diff({{result.diffRatio.toFixed(4)}})</span>
+                                    </div>
+                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
+                                </el-card>
+                            </el-col>
+                        </el-row>
+                    </div>
+                </div>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+
+<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
+
+<!-- Element UI -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui@2.11.1/lib/index.js"></script>
+
+<script src="client.js"></script>
+
+<link rel="stylesheet" href="client.css">
+
+</body>
+</html>
