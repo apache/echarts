@@ -8,22 +8,58 @@
 <body>
 <div id="app" style="display: none">
     <el-container id="main">
-        <el-header>
-            <h1>Visual Regression Test</h1>
+        <el-header class="header" height="50">
+            <div id="logo">
+                <img src="https://echarts.apache.org/zh/images/logo.png" />
+                <h1>Visual Regression Test</h1>
+            </div>
         </el-header>
         <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
-            <el-aside width="250px">
-                <el-menu class="test-list">
-                    <el-menu-item v-for="test in tests">
+            <el-aside width="300px">
+                <div class="nav-toolbar">
+                    <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
+                    <div class="controls">
+                        <el-checkbox :indeterminate="isSelectAllIndeterminate" v-model="allSelected" @change="handleSelectAllChange"></el-checkbox>
+                        <el-button
+                            style="margin-left: 10px"
+                            title="Sort By Failue Percentage" @click="toggleSort" circle size="mini" type="primary" icon="el-icon-sort"
+                        ></el-button>
+                        <!-- <el-button-group>
+                            <el-button title="Select All" @click="selectAllTests" circle size="mini" type="primary" icon="el-icon-check"></el-button>
+                            <el-button title="Unselect All" @click="unselectAllTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group> -->
+                        <el-button-group>
+                            <el-button title="Run Selected" @click="runSelectedTests" :loading="running" circle size="mini" type="primary" icon="el-icon-caret-right"></el-button>
+                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group>
+                    </div>
+                </div>
+                <ul class="test-list">
+                    <li v-for="test in tests"
+                        :title="test.name"
+                        :class="{active: currentTest && currentTest.name === test.name}"
+                        @click.self="goto(test.name)"
+                    >
+                        <el-checkbox v-model="test.selected"></el-checkbox>
+                        <i class="el-icon-loading" v-if="test.status === 'pending' && running"></i>
+                        <el-progress
+                            v-if="test.status === 'finished'"
+                            type="circle"
+                            :width="20"
+                            :stroke-width="2"
+                            :percentage="test.percentage"
+                            :status="test.summary"
+                        ></el-progress>
                         <a :href="'#' + test.name" class="menu-link">{{test.name}}</a>
-                    </el-menu-item>
-                </el-menu>
+
+                    </li>
+                </ul>
             </el-aside>
             <el-main>
-                <div v-if="selectedTest">
-                    <div class="test-screenshots" v-for="result in selectedTest.results">
-                        <h4 class="md-title">{{result.name}}</h4>
-                        <el-row :gutter="20">
+                <div v-if="currentTest">
+                    <div class="test-result" v-for="result in currentTest.results">
+                        <h4>{{result.desc || result.name}}</h4>
+                        <el-row :gutter="40" class="screenshots">
                             <el-col :span="8">
                                 <el-card>
                                     <div slot="header" class="clearfix">
@@ -51,6 +87,10 @@
                                 </el-card>
                             </el-col>
                         </el-row>
+                    </div>
+
+                    <div class="test-result-nav">
+
                     </div>
                 </div>
             </el-main>

@@ -140,7 +140,6 @@ async function takeScreenshot(page, elementQuery, fileUrl, desc, version) {
 }
 
 async function runTestPage(browser, fileUrl, version) {
-
     const {keepWait, waitTimeout} = createWaitTimeout(3200);
     const testResults = [];
     let screenshotPromises = [];
@@ -176,10 +175,16 @@ async function runTestPage(browser, fileUrl, version) {
 
     let pageFinishPromise = waitPageForFinish(page);
 
-    await page.goto(`${origin}/test/${fileUrl}`, {
-        waitUntil: 'networkidle2',
-        timeout: 10000
-    });
+    try {
+        await page.goto(`${origin}/test/${fileUrl}`, {
+            waitUntil: 'networkidle2',
+            timeout: 10000
+        });
+    }
+    catch(e) {
+        // TODO Timeout Error
+        console.error(e);
+    }
 
     // Do auto screenshot for every 1 second.
     let count = 1;
@@ -213,6 +218,7 @@ async function runTestPage(browser, fileUrl, version) {
 }
 
 async function runTest(browser, testOpt) {
+    testOpt.status === 'running';
     const fileUrl = testOpt.fileUrl;
     const expectedShots = await runTestPage(browser, fileUrl, '4.2.1');
     const actualShots = await runTestPage(browser, fileUrl);
@@ -238,6 +244,7 @@ async function runTest(browser, testOpt) {
             expected: getClientRelativePath(expected.screenshotPath),
             diff: getClientRelativePath(diffPath),
             name: actual.testName,
+            desc: actual.desc,
             diffRatio
         });
     });
@@ -292,21 +299,37 @@ async function start() {
 
     io.on('connect', socket => {
         broadcast({tests});
+        // TODO Stop previous?
+        socket.on('run', async testsNameList => {
+            console.log(testsNameList);
+
+            const pendingTests = tests.filter(testOpt => {
+                return testsNameList.includes(testOpt.name);
+            });
+
+            for (let testOpt of pendingTests) {
+                // Reset all tests results
+                testOpt.status = 'pending';
+                testOpt.results = [];
+            }
+
+            broadcast({tests});
+
+            try {
+                for (let testOpt of pendingTests) {
+                    await runTest(browser, testOpt);
+                    broadcast({tests});
+                    writeTestsToCache(tests);
+                }
+            }
+            catch(e) {
+                console.log(e);
+            }
+        });
     });
 
-    for (let testOpt of tests) {
-        if (testOpt.status === 'finished') {
-            continue;
-        }
-        console.log(`Running test ${testOpt.fileUrl}`)
-        await runTest(browser, testOpt);
-        broadcast({tests});
-        writeTestsToCache(tests);
-    }
 
+    // runTests(browser, tests, tests);
 }
 
-start().catch(e => {
-    console.log('Error during test');
-    console.log(e);
-})
+start()
