@@ -19,9 +19,6 @@ function serve() {
 
     const io = require('socket.io')(server);
     return {
-        broadcast(data) {
-            io.emit('broadcast', data);
-        },
         io
     }
 }

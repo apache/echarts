@@ -1,8 +1,9 @@
 const socket = io();
 
-function processTestsData(tests) {
-    tests.forEach(test => {
+function processTestsData(tests, oldTestsData) {
+    tests.forEach((test, idx) => {
         let passed = 0;
+        test.index = idx;
         test.results.forEach(result => {
             // Threshold?
             if (result.diffRatio < 0.001) {
@@ -19,7 +20,14 @@ function processTestsData(tests) {
         else {
             test.summary = 'warning'
         }
-        test.selected = false;
+
+        // Keep select status not change.
+        if (oldTestsData && oldTestsData[idx]) {
+            test.selected = oldTestsData[idx].selected;
+        }
+        else {
+            test.selected = false;
+        }
     });
     return tests;
 }
@@ -35,7 +43,8 @@ socket.on('connect', () => {
             searchString: '',
             running: false,
 
-            allSelected: false
+            allSelected: false,
+            lastSelectedIndex: -1
         },
         computed: {
             tests() {
@@ -60,13 +69,16 @@ socket.on('connect', () => {
                 return currentTest;
             },
 
-            isSelectAllIndeterminate() {
-                if (!this.tests.length) {
-                    return true;
-                }
-                return this.tests.some(test => {
-                    return test.selected !== this.tests[0].selected;
-                });
+            isSelectAllIndeterminate: {
+                get() {
+                    if (!this.tests.length) {
+                        return true;
+                    }
+                    return this.tests.some(test => {
+                        return test.selected !== this.tests[0].selected;
+                    });
+                },
+                set() {}
             }
         },
         methods: {
@@ -83,14 +95,33 @@ socket.on('connect', () => {
                 });
                 this.isSelectAllIndeterminate = false;
             },
+            handleSelect(idx) {
+                Vue.nextTick(() => {
+                    this.lastSelectedIndex = idx;
+                });
+            },
+            handleShiftSelect(idx) {
+                if (this.lastSelectedIndex < 0) {
+                    return;
+                }
+                let start = Math.min(this.lastSelectedIndex, idx);
+                let end = Math.max(this.lastSelectedIndex, idx);
+                let selected = !this.tests[idx].selected;   // Will change
+                for (let i = start; i < end; i++) {
+                    this.tests[i].selected = selected;
+                }
+            },
+            refreshList() {
+
+            },
             runSelectedTests() {
-                this.running = true;
                 const tests = this.fullTests.filter(test => {
                     return test.selected;
                 }).map(test => {
                     return test.name
                 });
                 if (tests.length > 0) {
+                    this.running = true;
                     socket.emit('run', tests);
                 }
             },
@@ -102,8 +133,11 @@ socket.on('connect', () => {
     });
     app.$el.style.display = 'block';
 
-    socket.on('broadcast', msg => {
-        app.fullTests = processTestsData(msg.tests);
+    socket.on('update', msg => {
+        app.fullTests = processTestsData(msg.tests, app.fullTests);
+    });
+    socket.on('finish', () => {
+        app.running = false;
     });
 
     function updateTestHash() {

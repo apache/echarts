@@ -32,15 +32,18 @@
                             <el-button title="Run Selected" @click="runSelectedTests" :loading="running" circle size="mini" type="primary" icon="el-icon-caret-right"></el-button>
                             <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
                         </el-button-group>
+                        <el-button title="Refresh List" @click="refreshList" circle size="mini" type="primary" icon="el-icon-refresh"></el-button>
                     </div>
                 </div>
                 <ul class="test-list">
-                    <li v-for="test in tests"
+                    <li v-for="(test, index) in tests"
                         :title="test.name"
                         :class="{active: currentTest && currentTest.name === test.name}"
                         @click.self="goto(test.name)"
                     >
-                        <el-checkbox v-model="test.selected"></el-checkbox>
+                        <span @mouseup="handleSelect(index)" @mouseup.shift="handleShiftSelect(index)">
+                            <el-checkbox v-model="test.selected"></el-checkbox>
+                        </span>
                         <i class="el-icon-loading" v-if="test.status === 'pending' && running"></i>
                         <el-progress
                             v-if="test.status === 'finished'"

@@ -227,14 +227,14 @@ async function runTest(browser, testOpt) {
     sortScreenshots(actualShots);
 
     const results = [];
-    expectedShots.forEach(async (shot, idx) => {
+    let idx = 0;
+    for (let shot of expectedShots) {
         let expected = shot;
-        let actual = actualShots[idx];
+        let actual = actualShots[idx++];
         let {diffRatio, diffPNG} = await compareScreenshot(
             expected.screenshotPath,
             actual.screenshotPath
         );
-
 
         let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.testName}-diff.png`;
         diffPNG.pack().pipe(fs.createWriteStream(diffPath));
@@ -247,7 +247,7 @@ async function runTest(browser, testOpt) {
             desc: actual.desc,
             diffRatio
         });
-    });
+    }
 
     testOpt.results = results;
     testOpt.status = 'finished';
@@ -289,19 +289,15 @@ async function start() {
     // Start a static server for puppeteer open the html test cases.
     let {broadcast, io} = serve();
 
-    open(`${origin}/test/runTest/client/index.html`);
-
     const browser = await puppeteer.launch({ /* headless: false */ });
 
     const tests = await getTestsList();
 
-    broadcast({tests});
-
     io.on('connect', socket => {
-        broadcast({tests});
+        socket.emit('update', {tests});
         // TODO Stop previous?
         socket.on('run', async testsNameList => {
-            console.log(testsNameList);
+            console.log(testsNameList.join(','));
 
             const pendingTests = tests.filter(testOpt => {
                 return testsNameList.includes(testOpt.name);
@@ -313,21 +309,26 @@ async function start() {
                 testOpt.results = [];
             }
 
-            broadcast({tests});
+            socket.emit('update', {tests});
 
             try {
                 for (let testOpt of pendingTests) {
+                    console.log('Running Test', testOpt.name);
                     await runTest(browser, testOpt);
-                    broadcast({tests});
+                    socket.emit('update', {tests});
                     writeTestsToCache(tests);
                 }
             }
             catch(e) {
                 console.log(e);
             }
+
+            socket.emit('finish');
         });
     });
 
+    console.log(`Dashboard: ${origin}/test/runTest/client/index.html`);
+    // open(`${origin}/test/runTest/client/index.html`);
 
     // runTests(browser, tests, tests);
 }
