@@ -13,6 +13,7 @@ onlyLabels: []
 # Issues or Pull Requests with these labels will never be considered stale. Set to `[]` to disable
 exemptLabels:
   - "maybe-later"
+  - "priority: high"
 
 # Set to true to ignore issues in a project (defaults to false)
 exemptProjects: true
@@ -33,8 +34,8 @@ markComment: >
   for your contributions.
 
 # Comment to post when removing the stale label.
-# unmarkComment: >
-#   Your comment here.
+unmarkComment: >
+  This issue is marked to be `stale` and is going to be closed within a week. If you think it shouldn't be closed, please leave a comment.
 
 # Comment to post when closing a stale Issue or Pull Request.
 # closeComment: >
