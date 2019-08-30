@@ -20,7 +20,7 @@ Any questions in the form of *how can I use echarts to* or *how to use echarts x
 
 You may use [difficulty: easy](https://github.com/apache/incubator-echarts/labels/difficulty%3A%20easy) label to filter issues that we think is easier to fix. These are issues that should be fixed using less time than the average. So if you wish to make some pull requests, this is where you can start with.
 
-You may also filter with [en](https://github.com/apache/incubator-echarts/issues?q=is%3Aopen+label%3A%22difficulty%3A+easy%22+label%3Aen) label if you only understand English.
+You may also filter with [en](https://github.com/apache/incubator-echarts/issues?q=is%3Aopen+label%3A%22difficulty%3A+easy%22+label%3Aen) label for English issues only.
 
 ### Coding Standard
 
