@@ -16,7 +16,21 @@ Any questions in the form of *how can I use echarts to* or *how to use echarts x
 
 ## Pull Requests
 
-If you wish to fix a bug or add new features, please discuss it with us in an issue first. If there's no issue, please create one using the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/).
+### Finding Easy Issues to Fix
+
+[Issues for Beginners](https://github.com/apache/incubator-echarts/projects/3) has a selections of issues that we think is easier to fix. So if you wish to make some pull requests, this is where you can start with.
+
+### Coding Standard
+
+Please follow the [coding standard](https://echarts.apache.org/en/coding-standard.html) before you make any changes.
+
+### Git Message Standard
+
+(TBD)
+
+### Contact Us
+
+If you wish to fix a bug or add new features but don't know how, please discuss it with us in the [mailing list](dev@echarts.apache.org).
 
 ## How to Debug ECharts
 
@@ -24,7 +38,7 @@ The following steps help you to set up a developing environment for ECharts.
 
 ### 1. Clone ECharts project
 
-If you wish to make pull requests, you should fork the ECharts project first. Otherwise, just clone it locally.
+If you wish to make pull requests, you should **fork the ECharts project** first. Otherwise, just clone it locally.
 
 ```bash
 git clone git@github.com:apache/incubator-echarts.git
