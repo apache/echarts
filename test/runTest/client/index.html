@@ -25,7 +25,6 @@
                             <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
                         </el-button-group>
 
-
                         <el-button
                             style="margin-left: 10px"
                             title="Sort By Failue Percentage" @click="toggleSort" circle size="mini" type="primary" icon="el-icon-sort"
@@ -62,6 +61,13 @@
             </el-aside>
             <el-main>
                 <div v-if="currentTest">
+
+                    <div class="toolbar">
+                        <h3>
+                            <a target="_blank" :href="currentTestUrl">{{currentTest.name}}</a>
+                        </h3>
+                    </div>
+
                     <div class="test-result" v-for="result in currentTest.results">
                         <h4>{{result.desc || result.name}}</h4>
                         <el-row :gutter="40" class="screenshots">

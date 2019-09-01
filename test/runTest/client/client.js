@@ -18,7 +18,7 @@ function processTestsData(tests, oldTestsData) {
             test.summary = 'exception';
         }
         else {
-            test.summary = 'warning'
+            test.summary = 'warning';
         }
 
         // Keep select status not change.
@@ -55,10 +55,11 @@ socket.on('connect', () => {
                             return a.name.localeCompare(b.name);
                         }
                         return a.percentage - b.percentage;
-                    }
+                    };
 
                 if (!this.searchString) {
-                    return this.fullTests.sort(sortFunc);
+                    // Not modify the original tests data.
+                    return this.fullTests.slice().sort(sortFunc);
                 }
 
                 return this.fullTests.filter(test => {
@@ -72,6 +73,10 @@ socket.on('connect', () => {
                     currentTest = this.fullTests[0];
                 }
                 return currentTest;
+            },
+
+            currentTestUrl() {
+                return window.location.origin + '/test/' + this.currentTest.fileUrl;
             },
 
             isSelectAllIndeterminate: {
@@ -123,7 +128,7 @@ socket.on('connect', () => {
                 const tests = this.fullTests.filter(test => {
                     return test.selected;
                 }).map(test => {
-                    return test.name
+                    return test.name;
                 });
                 if (tests.length > 0) {
                     this.running = true;
@@ -142,7 +147,7 @@ socket.on('connect', () => {
     socket.on('update', msg => {
         let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
         if (!hasFinishedTest && firstUpdate) {
-            app.$confirm("It seems you haven't run any test yet!<br />Do you want to start now?", 'Tip', {
+            app.$confirm('It seems you haven\'t run any test yet!<br />Do you want to start now?', 'Tip', {
                 confirmButtonText: 'Yes',
                 cancelButtonText: 'No',
                 dangerouslyUseHTMLString: true,
@@ -150,7 +155,7 @@ socket.on('connect', () => {
             }).then(value => {
                 app.running = true;
                 socket.emit('run', msg.tests.map(test => test.name));
-            }).catch(() => {})
+            }).catch(() => {});
         }
         // TODO
         // app.running = !!msg.running;
@@ -162,7 +167,7 @@ socket.on('connect', () => {
         app.$notify({
             title: 'Test Complete',
             position: 'bottom-right'
-        })
+        });
         app.running = false;
     });
 

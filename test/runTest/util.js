@@ -2,6 +2,9 @@ const path = require('path');
 const fse = require('fs-extra');
 const https = require('https');
 const fs = require('fs');
+const rollup = require('rollup');
+const resolve = require('rollup-plugin-node-resolve');
+const commonjs = require('rollup-plugin-commonjs');
 
 module.exports.getTestName = function(fileUrl) {
     return path.basename(fileUrl, '.html');
@@ -42,4 +45,22 @@ module.exports.prepareEChartsVersion = function (version) {
             resolve();
         }
     });
-}
+};
+
+module.exports.buildRuntimeCode = async function () {
+    const bundle = await rollup.rollup({
+        input: path.join(__dirname, 'runtime/main.js'),
+        plugins: [
+            resolve(),
+            commonjs()
+        ]
+    });
+    const output = await bundle.generate({
+        format: 'iife',
+        name: 'autorun'
+    });
+
+    // seedrandom use crypto as external module. Set it to null to avoid not defined error.
+    // TODO
+    return 'window.crypto = null\n' + output.code;
+};

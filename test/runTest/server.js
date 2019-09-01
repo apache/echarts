@@ -1,15 +1,12 @@
 const handler = require('serve-handler');
 const http = require('http');
-const rollup = require('rollup');
-const resolve = require('rollup-plugin-node-resolve');
-const commonjs = require('rollup-plugin-commonjs');
 const path = require('path');
 const open = require('open');
 const fse = require('fs-extra');
 const {fork} = require('child_process');
 const {port, origin} = require('./config');
 const {getTestsList, prepareTestsList, saveTestsList, mergeTestsResults} = require('./store');
-const {prepareEChartsVersion} = require('./util');
+const {prepareEChartsVersion, buildRuntimeCode} = require('./util');
 
 function serve() {
     const server = http.createServer((request, response) => {
@@ -31,51 +28,53 @@ function serve() {
     };
 };
 
-async function buildRuntimeCode() {
-    const bundle = await rollup.rollup({
-        input: path.join(__dirname, 'runtime/main.js'),
-        plugins: [
-            resolve(),
-            commonjs()
-        ]
-    });
-    const output = await bundle.generate({
-        format: 'iife',
-        name: 'autorun'
-    });
+let testProcess;
+let pendingTests;
 
-    return output.code;
+function stopRunningTests() {
+    if (testProcess) {
+        testProcess.kill();
+        testProcess = null;
+    }
+    if (pendingTests) {
+        pendingTests.forEach(testOpt => {
+            if (testOpt.status === 'pending') {
+                testOpt.status = 'unsettled';
+            }
+        });
+        pendingTests = null;
+    }
 }
-
 
 function startTests(testsNameList, socket) {
     console.log(testsNameList.join(','));
 
+    stopRunningTests();
+
     return new Promise(resolve => {
-        const pendingTests = getTestsList().filter(testOpt => {
+        pendingTests = getTestsList().filter(testOpt => {
             return testsNameList.includes(testOpt.name);
         });
-
-        for (let testOpt of pendingTests) {
+        pendingTests.forEach(testOpt => {
             // Reset all tests results
             testOpt.status = 'pending';
             testOpt.results = [];
-        }
+        });
 
         socket.emit('update', {tests: getTestsList()});
 
-        let childProcess = fork(path.join(__dirname, 'cli.js'), [
+        testProcess = fork(path.join(__dirname, 'cli.js'), [
             pendingTests.map(testOpt => testOpt.fileUrl)
         ]);
         // Finished one test
-        childProcess.on('message', testOpt => {
+        testProcess.on('message', testOpt => {
             mergeTestsResults([testOpt]);
             // Merge tests.
             socket.emit('update', {tests: getTestsList(), running: true});
             saveTestsList();
         });
         // Finished all
-        childProcess.on('exit', () => {
+        testProcess.on('exit', () => {
             resolve();
         });
     });
@@ -86,9 +85,6 @@ async function start() {
     await prepareEChartsVersion(); // Version to test
 
     let runtimeCode = await buildRuntimeCode();
-    // seedrandom use crypto as external module. Set it to null to avoid not defined error.
-    // TODO
-    runtimeCode = 'window.crypto = null\n' + runtimeCode;
     fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
 
     // Start a static server for puppeteer open the html test cases.
@@ -102,6 +98,9 @@ async function start() {
         socket.on('run', async testsNameList => {
             await startTests(testsNameList, socket);
             socket.emit('finish');
+        });
+        socket.on('stop', () => {
+            stopRunningTests();
         });
     });
 

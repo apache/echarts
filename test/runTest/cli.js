@@ -4,7 +4,7 @@ const fse = require('fs-extra');
 const fs = require('fs');
 const path = require('path');
 const compareScreenshot = require('./compareScreenshot');
-const {getTestName, getVersionDir} = require('./util');
+const {getTestName, getVersionDir, buildRuntimeCode} = require('./util');
 const {origin} = require('./config');
 
 function getScreenshotDir() {
@@ -63,7 +63,7 @@ function createWaitTimeout(maxTime) {
         });
     }
 
-    return {keepWait, waitTimeout}
+    return {keepWait, waitTimeout};
 }
 
 async function takeScreenshot(page, elementQuery, fileUrl, desc, version) {
@@ -149,12 +149,14 @@ async function runTestPage(browser, fileUrl, version, runtimeCode) {
     //     screenshotPromises.push(promise);
     // }, 100);
 
+    console.log('1111');
 
     // Wait for puppeteerFinishTest() is called
     // Or compare the whole page if nothing happened after 10 seconds.
     await Promise.race([
         pageFinishPromise,
         waitTimeout().then(() => {
+            console.log('2222');
             // console.warn('Test timeout after 3 seconds.');
             // Final shot.
             let desc = 'Final Shot';
@@ -179,6 +181,14 @@ async function runTestPage(browser, fileUrl, version, runtimeCode) {
     };
 }
 
+async function writePNG(diffPNG, diffPath) {
+    return new Promise(resolve => {
+        let writer = fs.createWriteStream(diffPath);
+        diffPNG.pack().pipe(writer);
+        writer.on('finish', () => {resolve();});
+    });
+};
+
 async function runTest(browser, testOpt, runtimeCode) {
     testOpt.status === 'running';
     const fileUrl = testOpt.fileUrl;
@@ -199,7 +209,7 @@ async function runTest(browser, testOpt, runtimeCode) {
         );
 
         let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.testName}-diff.png`;
-        diffPNG.pack().pipe(fs.createWriteStream(diffPath));
+        await writePNG(diffPNG, diffPath);
 
         screenshots.push({
             actual: getClientRelativePath(actual.screenshotPath),
@@ -221,9 +231,10 @@ async function runTest(browser, testOpt, runtimeCode) {
 }
 
 async function runTests(pendingTests) {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: false });
     // TODO Not hardcoded.
-    let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
+    // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
+    let runtimeCode = await buildRuntimeCode();
 
     try {
         for (let testOpt of pendingTests) {
@@ -243,6 +254,8 @@ async function runTests(pendingTests) {
     catch(e) {
         console.log(e);
     }
+
+    await browser.close();
 }
 
 // Handling input arguments.
@@ -252,6 +265,6 @@ runTests(testsFileUrlList.split(',').map(fileUrl => {
         fileUrl,
         name: getTestName(fileUrl),
         results: [],
-        status: 'pending'
+        status: 'unsettled'
     };
 }));

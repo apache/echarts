@@ -30,6 +30,11 @@ module.exports.prepareTestsList = async function () {
         let cachedStr = fs.readFileSync(getCacheFilePath(), 'utf-8');
         _tests = JSON.parse(cachedStr);
         _tests.forEach(test => {
+            // In somehow tests are stopped and leave the status pending.
+            // Set the status to unsettled again.
+            if (test.status === 'pending') {
+                test.status = 'unsettled';
+            }
             _testsMap[test.fileUrl] = test;
         });
     }
@@ -49,7 +54,8 @@ module.exports.prepareTestsList = async function () {
         let test = {
             fileUrl,
             name: getTestName(fileUrl),
-            status: 'pending',
+            // Default status should be unkown
+            // status: 'pending',
             results: []
         };
 
