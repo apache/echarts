@@ -50,7 +50,12 @@ socket.on('connect', () => {
             tests() {
                 let sortFunc = this.sortBy === 'name'
                     ? (a, b) => a.name.localeCompare(b.name)
-                    : (a, b) => a.percentage - b.percentage;
+                    : (a, b) => {
+                        if (a.percentage === b.percentage) {
+                            return a.name.localeCompare(b.name);
+                        }
+                        return a.percentage - b.percentage;
+                    }
 
                 if (!this.searchString) {
                     return this.fullTests.sort(sortFunc);
@@ -133,10 +138,31 @@ socket.on('connect', () => {
     });
     app.$el.style.display = 'block';
 
+    let firstUpdate = true;
     socket.on('update', msg => {
+        let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
+        if (!hasFinishedTest && firstUpdate) {
+            app.$confirm("It seems you haven't run any test yet!<br />Do you want to start now?", 'Tip', {
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                dangerouslyUseHTMLString: true,
+                center: true
+            }).then(value => {
+                app.running = true;
+                socket.emit('run', msg.tests.map(test => test.name));
+            }).catch(() => {})
+        }
+        // TODO
+        // app.running = !!msg.running;
         app.fullTests = processTestsData(msg.tests, app.fullTests);
+
+        firstUpdate = false;
     });
     socket.on('finish', () => {
+        app.$notify({
+            title: 'Test Complete',
+            position: 'bottom-right'
+        })
         app.running = false;
     });
 

@@ -96,6 +96,21 @@
     margin-left: -20px;
 }
 
+.test-errors, .test-logs {
+    margin-top: 20px;
+    padding: 0 50px;
+}
+
+.test-logs .log-item {
+    margin: 10px 20px;
+    color: #909399;
+}
+
+.test-errors .error-item {
+    margin: 10px 20px;
+    color: #f56c6c
+}
+
 
 ::-webkit-scrollbar {
     height:8px;

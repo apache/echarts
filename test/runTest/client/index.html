@@ -20,6 +20,12 @@
                     <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
                     <div class="controls">
                         <el-checkbox :indeterminate="isSelectAllIndeterminate" v-model="allSelected" @change="handleSelectAllChange"></el-checkbox>
+                        <el-button-group>
+                            <el-button title="Run Selected" @click="runSelectedTests" :loading="running" circle size="mini" type="primary" icon="el-icon-caret-right"></el-button>
+                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group>
+
+
                         <el-button
                             style="margin-left: 10px"
                             title="Sort By Failue Percentage" @click="toggleSort" circle size="mini" type="primary" icon="el-icon-sort"
@@ -28,10 +34,6 @@
                             <el-button title="Select All" @click="selectAllTests" circle size="mini" type="primary" icon="el-icon-check"></el-button>
                             <el-button title="Unselect All" @click="unselectAllTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
                         </el-button-group> -->
-                        <el-button-group>
-                            <el-button title="Run Selected" @click="runSelectedTests" :loading="running" circle size="mini" type="primary" icon="el-icon-caret-right"></el-button>
-                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
-                        </el-button-group>
                         <el-button title="Refresh List" @click="refreshList" circle size="mini" type="primary" icon="el-icon-refresh"></el-button>
                     </div>
                 </div>
@@ -92,6 +94,48 @@
                         </el-row>
                     </div>
 
+                    <div class="test-errors">
+                        <el-row :gutter="40">
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Expected Errors"
+                                    type="error"
+                                    show-icon>
+                                </el-alert>
+                                <div class="error-item" v-for="error in currentTest.expectedErrors">{{error}}</div>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Actual Errors"
+                                    type="error"
+                                    show-icon>
+                                </el-alert>
+                                <div class="error-item"  v-for="error in currentTest.actualErrors">{{error}}</div>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="test-logs">
+                        <el-row :gutter="40">
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Expected Logs"
+                                    type="info"
+                                    show-icon>
+                                </el-alert>
+                                <div class="log-item"  v-for="log in currentTest.expectedLogs">{{log}}</div>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Actual Logs"
+                                    type="info"
+                                    show-icon>
+                                </el-alert>
+                                <div class="log-item"  v-for="log in currentTest.actualLogs">{{log}}</div>
+                            </el-col>
+                        </el-row>
+                    </div>
+
                     <div class="test-result-nav">
 
                     </div>
@@ -99,6 +143,9 @@
             </el-main>
         </el-container>
     </el-container>
+
+
+
 </div>
 
 <script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
@@ -111,6 +158,7 @@
 <script src="client.js"></script>
 
 <link rel="stylesheet" href="client.css">
+<link rel="stylesheet" href="">
 
 </body>
 </html>
