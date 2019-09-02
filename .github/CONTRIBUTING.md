@@ -14,6 +14,16 @@ Please read the [documentation](http://echarts.apache.org/option.html) carefully
 
 Any questions in the form of *how can I use echarts to* or *how to use echarts x feature to* belong in [Stack Overflow](http://stackoverflow.com), issues with questions like that in the issue tracker will be closed.
 
+## Release Milestone Discussion
+
+We will start the discussion about the bugs to fix and features of each release in the [mailing list](https://echarts.apache.org/en/maillist.html). You may subscribe our [mailing list](https://echarts.apache.org/en/maillist.html) to give your valuable advice in the milestone dicussion.
+
+About our release plan, we will release a mior version at the end of every month. Here is some detail.
+
+1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
+2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/incubator-echarts/milestone/14)
+3. Vote in the mailing list for the 4.4.0 release at the end of this month.
+
 ## Pull Requests
 
 ### Finding Easy Issues to Fix
