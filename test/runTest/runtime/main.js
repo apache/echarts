@@ -1,22 +1,22 @@
 import seedrandom from 'seedrandom';
 import lolex from 'lolex';
 
-const NativeDate = window.Date;
+// const NativeDate = window.Date;
 
-const fixedTimestamp = 1566458693300;
-const actualTimestamp = NativeDate.now();
-function MockDate(params) {
-    if (!params) {
-        const elapsedTime = NativeDate.now() - actualTimestamp;
-        return new NativeDate(fixedTimestamp + elapsedTime);
-    }
-    else {
-        return new NativeDate(params);
-    }
-}
-MockDate.prototype = new Date();
-// Fixed date
-window.Date = MockDate;
+// const fixedTimestamp = 1566458693300;
+// const actualTimestamp = NativeDate.now();
+// function MockDate(params) {
+//     if (!params) {
+//         const elapsedTime = NativeDate.now() - actualTimestamp;
+//         return new NativeDate(fixedTimestamp + elapsedTime);
+//     }
+//     else {
+//         return new NativeDate(params);
+//     }
+// }
+// MockDate.prototype = new Date();
+// // Fixed date
+// window.Date = MockDate;
 
 export function createScreenshotTest (desc, elementQuery, waitTime) {
 

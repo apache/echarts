@@ -126,6 +126,10 @@ async function runTestPage(browser, fileUrl, version, runtimeCode) {
     let pageFinishPromise = waitPageForFinish(page);
 
     try {
+        await page.setViewport({
+            width: 800,
+            height: 600
+        });
         await page.goto(`${origin}/test/${fileUrl}`, {
             waitUntil: 'networkidle2',
             // waitUntil: 'domcontentloaded',
@@ -149,14 +153,11 @@ async function runTestPage(browser, fileUrl, version, runtimeCode) {
     //     screenshotPromises.push(promise);
     // }, 100);
 
-    console.log('1111');
-
     // Wait for puppeteerFinishTest() is called
     // Or compare the whole page if nothing happened after 10 seconds.
     await Promise.race([
         pageFinishPromise,
         waitTimeout().then(() => {
-            console.log('2222');
             // console.warn('Test timeout after 3 seconds.');
             // Final shot.
             let desc = 'Final Shot';
@@ -231,7 +232,7 @@ async function runTest(browser, testOpt, runtimeCode) {
 }
 
 async function runTests(pendingTests) {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     // TODO Not hardcoded.
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();

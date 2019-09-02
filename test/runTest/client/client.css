@@ -86,19 +86,41 @@
     font-size: 12px!important;
 }
 
-.test-result {
+.test-result h3 {
+    font-size: 40px;
+    font-weight: 200;
+    padding: 0;
+    margin: 0;
+}
+
+.test-result .title>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+.test-result .title a {
+    margin-left: 10px;
+    font-size: 20px;
+    font-weight: 200;
+    text-decoration: none;
+}
+.test-result .title a:hover {
+    text-decoration: underline;
+}
+
+.test-screenshots {
     margin-top: 80px;
     padding: 0 20px;
 }
 
-.test-result img {
+.test-screenshots img {
     /* height: 200px; */
     width: 100%;
 }
-.test-result h4 {
+.test-screenshots h4 {
     font-size: 30px;
     font-weight: 200;
     margin-left: -20px;
+    color: #162436;
 }
 
 .test-errors, .test-logs {
