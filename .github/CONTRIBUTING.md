@@ -69,7 +69,7 @@ Sometimes, in order to fix an issue within echarts, changes have to be made insi
 cd ~/workspace/zrender
 npm link
 cd ~/workspace/echarts
-npm link
+npm link zrender
 ```
 
 With this, you can see that `~/workspace/echarts/node_modules/zrender` is a link to `~/workspace/zrender`.
