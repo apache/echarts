@@ -278,7 +278,7 @@ function singleEnterEmphasis(el) {
     el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     var zr = el.__zr;
-    if (el.isGroup || (!zr && useHoverLayer)) {
+    if (el.isGroup || (!zr && useHoverLayer) || (zr.painter.type !== 'canvas')) {
         return;
     }
 
@@ -287,12 +287,6 @@ function singleEnterEmphasis(el) {
 
     if (useHoverLayer) {
         elTarget = zr.addHover(el);
-
-        if (elTarget == null) {
-            // Ignore renderers like SVG which doesn't implement addHover
-            return;
-        }
-
         targetStyle = elTarget.style;
     }
 
