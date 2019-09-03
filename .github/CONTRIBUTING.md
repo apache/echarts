@@ -103,7 +103,15 @@ Then, open the test cases under `~/workspace/echarts/test` in Web browser. You c
 
 ![Chrome inspect](../asset/contributing-inspect.png)
 
-### 4. Make a pull request
+### 4. Run test
+
+```bash
+node test/runTest/cli.js
+```
+
+It will run all the test cases under `~/workspace/echarts/test` automatically to compare with the previous version. You can use this to check if your code bring some breaking change.
+
+### 5. Make a pull request
 
 Fork ECharts project into your own project. Checkout a branch from master branch named `fix-xxxx`, where xxxx is the issue id related. If there's no related issue, you need to create one in most cases to describe what's wrong or what new feature is required.
 

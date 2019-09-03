@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body>
+<div id="app" style="display: none">
+    <el-container id="main">
+        <el-header class="header" height="50">
+            <div id="logo">
+                <img src="https://echarts.apache.org/zh/images/logo.png" />
+                <h1>Visual Regression Test</h1>
+            </div>
+        </el-header>
+        <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
+            <el-aside width="300px">
+                <div class="nav-toolbar">
+                    <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
+                    <div class="controls">
+                        <el-checkbox :indeterminate="isSelectAllIndeterminate" v-model="allSelected" @change="handleSelectAllChange"></el-checkbox>
+                        <el-button-group>
+                            <el-button title="Run Selected" @click="runSelectedTests" :loading="running" circle size="mini" type="primary" icon="el-icon-caret-right"></el-button>
+                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group>
+
+                        <el-button
+                            style="margin-left: 10px"
+                            title="Sort By Failue Percentage" @click="toggleSort" circle size="mini" type="primary" icon="el-icon-sort"
+                        ></el-button>
+                        <!-- <el-button-group>
+                            <el-button title="Select All" @click="selectAllTests" circle size="mini" type="primary" icon="el-icon-check"></el-button>
+                            <el-button title="Unselect All" @click="unselectAllTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group> -->
+                        <!-- <el-button title="Refresh List" @click="refreshList" circle size="mini" type="primary" icon="el-icon-refresh"></el-button> -->
+                    </div>
+                </div>
+                <ul class="test-list">
+                    <li v-for="(test, index) in tests"
+                        :title="test.name"
+                        :class="{active: currentTest && currentTest.name === test.name}"
+                        @click.self="goto(test.name)"
+                    >
+                        <span @mouseup="handleSelect(index)" @mouseup.shift="handleShiftSelect(index)">
+                            <el-checkbox v-model="test.selected"></el-checkbox>
+                        </span>
+                        <i class="el-icon-loading" v-if="test.status === 'pending' && running"></i>
+                        <el-progress
+                            v-if="test.status === 'finished'"
+                            type="circle"
+                            :width="20"
+                            :stroke-width="2"
+                            :percentage="test.percentage"
+                            :status="test.summary"
+                        ></el-progress>
+                        <a :href="'#' + test.name" class="menu-link">{{test.name}}</a>
+
+                    </li>
+                </ul>
+            </el-aside>
+            <el-main>
+                <div v-if="currentTest" class="test-result">
+                    <div class="title">
+                        <h3>{{currentTest.name}}</h3>
+                        <a target="_blank" :href="currentTestUrl"><i class="el-icon-link"></i>Open Demo</a>
+                    </div>
+
+                    <div class="test-screenshots" v-for="result in currentTest.results">
+                        <h4>{{result.desc || result.name}}</h4>
+                        <el-row :gutter="40" class="screenshots">
+                            <el-col :span="8">
+                                <el-card>
+                                    <div slot="header" class="clearfix">
+                                        <span>Expected</span>
+                                    </div>
+                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
+                                </el-card>
+                            </el-col>
+
+                            <el-col :span="8">
+                                <el-card>
+                                    <div slot="header" class="clearfix">
+                                        <span>Actual</span>
+                                    </div>
+                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
+                                </el-card>
+                            </el-col>
+
+                            <el-col :span="8">
+                                <el-card>
+                                    <div slot="header" class="clearfix">
+                                        <span>Diff({{result.diffRatio.toFixed(4)}})</span>
+                                    </div>
+                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
+                                </el-card>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="test-errors">
+                        <el-row :gutter="40">
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Expected Errors"
+                                    type="error"
+                                    show-icon>
+                                </el-alert>
+                                <div class="error-item" v-for="error in currentTest.expectedErrors">{{error}}</div>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Actual Errors"
+                                    type="error"
+                                    show-icon>
+                                </el-alert>
+                                <div class="error-item"  v-for="error in currentTest.actualErrors">{{error}}</div>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="test-logs">
+                        <el-row :gutter="40">
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Expected Logs"
+                                    type="info"
+                                    show-icon>
+                                </el-alert>
+                                <div class="log-item"  v-for="log in currentTest.expectedLogs">{{log}}</div>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-alert
+                                    title="Actual Logs"
+                                    type="info"
+                                    show-icon>
+                                </el-alert>
+                                <div class="log-item"  v-for="log in currentTest.actualLogs">{{log}}</div>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="test-result-nav">
+
+                    </div>
+                </div>
+            </el-main>
+        </el-container>
+    </el-container>
+
+
+
+</div>
+
+<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
+
+<!-- Element UI -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui@2.11.1/lib/index.js"></script>
+
+<script src="client.js"></script>
+
+<link rel="stylesheet" href="client.css">
+<link rel="stylesheet" href="">
+
+</body>
+</html>
