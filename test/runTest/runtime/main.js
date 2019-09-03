@@ -18,9 +18,9 @@ import lolex from 'lolex';
 // // Fixed date
 // window.Date = MockDate;
 
-export function createScreenshotTest (desc, elementQuery, waitTime) {
+// export function createScreenshotTest (desc, elementQuery, waitTime) {
 
-}
+// };
 
 /**
  * Take screenshot immediately.
