@@ -80,7 +80,22 @@ function startTests(testsNameList, socket) {
     });
 }
 
+function checkPuppeteer() {
+    try {
+        return require('puppeteer');
+    }
+    catch (e) {
+        return null;
+    }
+}
+
 async function start() {
+    if (!checkPuppeteer()) {
+        // TODO Check version.
+        console.error(`Can't find puppeteer, use 'npm install puppeteer' to install`);
+        return;
+    }
+
     await prepareEChartsVersion('4.2.1'); // Expected version.
     await prepareEChartsVersion(); // Version to test
 

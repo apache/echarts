@@ -38,7 +38,6 @@
     "open": "^6.4.0",
     "pixelmatch": "^5.0.2",
     "pngjs": "^3.4.0",
-    "puppeteer": "^1.19.0",
     "rollup": "0.50.0",
     "rollup-plugin-commonjs": "^8.4.1",
     "rollup-plugin-node-resolve": "3.0.0",
