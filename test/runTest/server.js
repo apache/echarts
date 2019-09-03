@@ -1,7 +1,7 @@
 const handler = require('serve-handler');
 const http = require('http');
 const path = require('path');
-const open = require('open');
+// const open = require('open');
 const fse = require('fs-extra');
 const {fork} = require('child_process');
 const {port, origin} = require('./config');
