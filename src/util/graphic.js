@@ -287,6 +287,12 @@ function singleEnterEmphasis(el) {
 
     if (useHoverLayer) {
         elTarget = zr.addHover(el);
+
+        if (elTarget == null) {
+            // Ignore renderers like SVG which doesn't implement addHover
+            return;
+        }
+
         targetStyle = elTarget.style;
     }
 
