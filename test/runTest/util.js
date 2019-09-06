@@ -17,6 +17,10 @@ function getVersionDir(version) {
 };
 module.exports.getVersionDir = getVersionDir;
 
+module.exports.getActionsFullPath = function (testName) {
+    return path.join(__dirname, 'actions', testName + '.json');
+};
+
 
 module.exports.prepareEChartsVersion = function (version) {
     let versionFolder = path.join(__dirname, getVersionDir(version));

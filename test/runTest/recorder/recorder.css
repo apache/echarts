@@ -1,0 +1,110 @@
+* {
+    font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+}
+
+iframe {
+    border: none;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+
+    width: 800px;
+    height: 600px;
+    margin-left: -400px;
+
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    overflow-x: hidden;
+}
+
+#recording-status {
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    border-radius: 20px;
+    text-align: center;
+}
+
+#recording-status .recording-button {
+    width: 80px;;
+    height: 80px;;
+    border-radius: 50px;
+    font-size: 50px;
+}
+
+#recording-status .hint {
+    font-size: 26px;
+    font-weight: 200;
+    margin: 20px;
+}
+
+#recording-status .hint .emphasis {
+    color: #F56C6C;
+    font-weight: 400;
+    margin: 0 10px;
+}
+
+#actions {
+    position: fixed;
+    right: 10px;
+    width: 300px;
+}
+
+#actions .action-item {
+    line-height: 40px;
+    padding: 0 20px;
+    margin: 0 -20px;
+    cursor: pointer;
+}
+
+
+#actions .action-item:hover {
+    background: #eee;
+}
+
+#actions .action-item.active {
+    background: #409Eff;
+    color: #ffffff;
+}
+
+#actions .action-item .operations {
+    height: 30px;
+    font-size: 14px;
+}
+#actions .action-item .operations>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#actions .action-item .operations .el-icon-delete {
+    color: #F56C6C;
+    margin-left: 10px;
+}
+
+
+
+::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -webkit-border-radius: 2px;
+    border-radius: 2px
+}
+
+::-webkit-scrollbar-button {
+    display: none
+}
+
+::-webkit-scrollbar-thumb {
+    width: 8px;
+    min-height: 15px;
+    background: rgba(50,50,50,0.6) !important;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -webkit-border-radius: 2px;
+    border-radius: 2px
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.5) !important
+}

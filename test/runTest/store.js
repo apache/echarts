@@ -21,7 +21,7 @@ module.exports.getTestByFileUrl = function (url) {
     return _testsMap[url];
 };
 
-module.exports.prepareTestsList = async function () {
+module.exports.updateTestsList = async function () {
     let tmpFolder = path.join(__dirname, 'tmp');
     fse.ensureDirSync(tmpFolder);
     _tests = [];

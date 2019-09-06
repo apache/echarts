@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('/client');
 
 function processTestsData(tests, oldTestsData) {
     tests.forEach((test, idx) => {
@@ -44,7 +44,9 @@ socket.on('connect', () => {
             running: false,
 
             allSelected: false,
-            lastSelectedIndex: -1
+            lastSelectedIndex: -1,
+
+            noHeadless: false,
         },
         computed: {
             tests() {
@@ -76,7 +78,11 @@ socket.on('connect', () => {
             },
 
             currentTestUrl() {
-                return window.location.origin + '/test/' + this.currentTest.fileUrl;
+                return window.location.origin + '/test/' + this.currentTestName + '.html';
+            },
+
+            currentTestRecordUrl() {
+                return window.location.origin + '/test/runTest/recorder/index.html#' + this.currentTestName;
             },
 
             isSelectAllIndeterminate: {
@@ -132,7 +138,7 @@ socket.on('connect', () => {
                 });
                 if (tests.length > 0) {
                     this.running = true;
-                    socket.emit('run', tests);
+                    socket.emit('run', {tests, noHeadless: this.noHeadless});
                 }
             },
             stopTests() {
@@ -154,7 +160,10 @@ socket.on('connect', () => {
                 center: true
             }).then(value => {
                 app.running = true;
-                socket.emit('run', msg.tests.map(test => test.name));
+                socket.emit('run', {
+                    tests: msg.tests.map(test => test.name),
+                    noHeadless: this.noHeadless
+                });
             }).catch(() => {});
         }
         // TODO
@@ -172,8 +181,7 @@ socket.on('connect', () => {
     });
 
     function updateTestHash() {
-        let testName = window.location.hash.slice(1);
-        app.currentTestName = testName;
+        app.currentTestName = window.location.hash.slice(1);
     }
 
     updateTestHash();

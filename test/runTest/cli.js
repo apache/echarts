@@ -6,6 +6,8 @@ const path = require('path');
 const compareScreenshot = require('./compareScreenshot');
 const {getTestName, getVersionDir, buildRuntimeCode} = require('./util');
 const {origin} = require('./config');
+const program = require('commander');
+
 
 function getScreenshotDir() {
     return 'tmp/__screenshot__';
@@ -231,8 +233,8 @@ async function runTest(browser, testOpt, runtimeCode) {
 
 }
 
-async function runTests(pendingTests) {
-    const browser = await puppeteer.launch({ headless: true });
+async function runTests(pendingTests, headless) {
+    const browser = await puppeteer.launch({ headless: headless });
     // TODO Not hardcoded.
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();
@@ -260,12 +262,21 @@ async function runTests(pendingTests) {
 }
 
 // Handling input arguments.
-const testsFileUrlList = process.argv[2] || '';
-runTests(testsFileUrlList.split(',').map(fileUrl => {
+program
+    .option('-t, --tests <tests>', 'Tests names list')
+    .option('--no-headless', 'Not headless');
+
+program.parse(process.argv);
+
+if (!program.tests) {
+    throw new Error('Tests are required');
+}
+
+runTests(program.tests.split(',').map(fileUrl => {
     return {
         fileUrl,
         name: getTestName(fileUrl),
         results: [],
         status: 'unsettled'
     };
-}));
+}), program.headless);

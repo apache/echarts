@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body>
+<div id="app" style="display: none">
+    <iframe :src="url"></iframe>
+    <div id="recording-status" v-if="currentAction">
+        <el-button
+            :icon="recordingAction ? 'el-icon-video-camera' : 'el-icon-video-camera'"
+            class="recording-button" circle :type="recordingAction ? 'danger' : 'info'"
+        >
+        </el-button>
+        <div class="hint"><span class="emphasis">SHIFT + R</span>to {{recordingAction ? 'stop' : 'start'}} recording</div>
+    </div>
+    <div id="actions">
+        <el-card class="box-card">
+            <div slot="header" class="clearfix">
+                <span>Actions</span>
+                <el-button style="float: right;" type="primary" size="mini" icon="el-icon-circle-plus" @click="newAction">New</el-button>
+            </div>
+            <div v-for="action in actions" :class="{'action-item': true, 'active': action.name === currentAction.name}" @click.self="select(action.name)">
+                {{action.name}}
+
+                <div style="float:right" class="operations">
+                    <span>Data ({{action.ops.length}})</span>
+                    <el-popover>
+                        <div style="text-align: center">{ scrollX: {{action.scrollX}}, scrollY: {{action.scrollY}} }</div>
+                        <div v-for="op in action.ops" style="text-align: center">{{op}}</div>
+                        <!-- <el-button slot="reference" size="mini">OP ({{action.ops.length}})</el-button> -->
+                        <i slot="reference" class="el-icon-caret-bottom"></i>
+                    </el-popover>
+                    <i slot="reference" class="el-icon-delete" @click="doDelete(action.name)"></i>
+                </div>
+            </div>
+        </el-card>
+
+    </div>
+</div>
+
+<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
+
+<!-- Element UI -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui@2.11.1/lib/index.js"></script>
+<script src="https://unpkg.com/lodash@4.17.15/lodash.js"></script>
+
+<script src="recorder.js"></script>
+
+<link rel="stylesheet" href="recorder.css">
+
+</body>
+</html>

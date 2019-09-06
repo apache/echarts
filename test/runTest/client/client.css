@@ -140,24 +140,28 @@
 
 
 ::-webkit-scrollbar {
-    height:8px;
-    width:8px;
-    transition:all 0.3s ease-in-out;
-    border-radius:2px;
-    background: transparent;
+    height: 8px;
+    width: 8px;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -webkit-border-radius: 2px;
+    border-radius: 2px
 }
 
 ::-webkit-scrollbar-button {
-    display:none;
+    display: none
 }
 
 ::-webkit-scrollbar-thumb {
-    width:8px;
-    min-height:15px;
-    background:rgba(50, 50, 50, 0.6) !important;
-    transition:all 0.3s ease-in-out;border-radius:2px;
+    width: 8px;
+    min-height: 15px;
+    background: rgba(50,50,50,0.6) !important;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -webkit-border-radius: 2px;
+    border-radius: 2px
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background:rgba(0, 0, 0, 0.5) !important;
+    background: rgba(0,0,0,0.5) !important
 }

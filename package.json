@@ -42,6 +42,7 @@
     "rollup-plugin-node-resolve": "3.0.0",
     "rollup-plugin-uglify": "2.0.1",
     "seedrandom": "^3.0.3",
+    "semver": "^6.3.0",
     "serve-handler": "^6.1.1",
     "slugify": "^1.3.4",
     "socket.io": "^2.2.0"
