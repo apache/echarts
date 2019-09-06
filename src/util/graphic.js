@@ -274,13 +274,13 @@ function singleEnterEmphasis(el) {
         return;
     }
 
-    var useHoverLayer = el.useHoverLayer;
-    el.__highlighted = useHoverLayer ? 'layer' : 'plain';
-
     var zr = el.__zr;
-    if (el.isGroup || (!zr && useHoverLayer)) {
+    if (el.isGroup || (!zr && el.useHoverLayer)) {
         return;
     }
+
+    var useHoverLayer = el.useHoverLayer && zr.painter.type === 'canvas';
+    el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     var elTarget = el;
     var targetStyle = el.style;
