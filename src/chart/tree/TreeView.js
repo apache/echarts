@@ -84,7 +84,7 @@ export default echarts.extendChartView({
             group.attr('position', [layoutInfo.x, layoutInfo.y]);
         }
 
-        this._updateViewCoordSys(seriesModel);
+        this._updateViewCoordSys(seriesModel, layoutInfo, layout);
         this._updateController(seriesModel, ecModel, api);
 
         var oldData = this._data;
@@ -148,7 +148,7 @@ export default echarts.extendChartView({
         this._data = data;
     },
 
-    _updateViewCoordSys: function (seriesModel) {
+    _updateViewCoordSys: function (seriesModel, layoutInfo, layout) {
         var data = seriesModel.getData();
         var points = [];
         data.each(function (idx) {
@@ -160,14 +160,15 @@ export default echarts.extendChartView({
         var min = [];
         var max = [];
         bbox.fromPoints(points, min, max);
+        var isRadial = layout === 'radial';
         // If width or height is 0
         if (max[0] - min[0] === 0) {
-            max[0] += 1;
-            min[0] -= 1;
+            min[0] = isRadial ? min[0] - 1 : layoutInfo.x;
+            max[0] = isRadial ? max[0] + 1 : min[0] + layoutInfo.width;
         }
         if (max[1] - min[1] === 0) {
-            max[1] += 1;
-            min[1] -= 1;
+            min[1] = isRadial ? min[1] - 1 : layoutInfo.y;
+            max[1] = isRadial ? max[1] + 1 : min[1] + layoutInfo.height;
         }
 
         var viewCoordSys = seriesModel.coordinateSystem = new View();
