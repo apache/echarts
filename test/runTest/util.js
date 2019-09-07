@@ -6,10 +6,13 @@ const rollup = require('rollup');
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 
-module.exports.getTestName = function(fileUrl) {
-    return path.basename(fileUrl, '.html');
+module.exports.testNameFromFile = function(fileName) {
+    return path.basename(fileName, '.html');
 };
 
+module.exports.fileNameFromTest = function (testName) {
+    return testName + '.html';
+};
 
 function getVersionDir(version) {
     version = version || 'developing';

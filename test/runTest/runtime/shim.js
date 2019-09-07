@@ -3,7 +3,4 @@
         return;
     }
     var autorun = {};
-    autorun.createScreenshotTest = function () {};
-    autorun.compareScreenshot = function () {};
-    autorun.finish = function () {};
 })();

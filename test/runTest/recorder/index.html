@@ -20,25 +20,41 @@
         <el-card class="box-card">
             <div slot="header" class="clearfix">
                 <span>Actions</span>
-                <el-button style="float: right;" type="primary" size="mini" icon="el-icon-circle-plus" @click="newAction">New</el-button>
+                <div style="float:right">
+                    <el-button type="primary" size="mini" icon="el-icon-caret-right" circle @click="run"></el-button>
+                    <el-button type="primary" size="mini" icon="el-icon-circle-plus" @click="newAction">New</el-button>
+                </div>
             </div>
             <div v-for="action in actions" :class="{'action-item': true, 'active': action.name === currentAction.name}" @click.self="select(action.name)">
                 {{action.name}}
 
                 <div style="float:right" class="operations">
-                    <span>Data ({{action.ops.length}})</span>
                     <el-popover>
                         <div style="text-align: center">{ scrollX: {{action.scrollX}}, scrollY: {{action.scrollY}} }</div>
                         <div v-for="op in action.ops" style="text-align: center">{{op}}</div>
                         <!-- <el-button slot="reference" size="mini">OP ({{action.ops.length}})</el-button> -->
-                        <i slot="reference" class="el-icon-caret-bottom"></i>
+                        <div slot="reference">
+                            <span>Data ({{action.ops.length}})</span>
+                            <i slot="reference" class="el-icon-caret-bottom"></i>
+                        </div>
                     </el-popover>
                     <i slot="reference" class="el-icon-delete" @click="doDelete(action.name)"></i>
                 </div>
             </div>
         </el-card>
-
     </div>
+    <div
+        id="tests-nav"
+        v-show="drawerVisible"
+    >
+        <ul>
+            <li v-for="testName in tests">
+                <a :href="'#' + testName" :class="{active: testName === currentTestName}">{{testName}}</a>
+            </li>
+        </ul>
+        <i class="el-icon-circle-close" @click="drawerVisible=false"></i>
+    </div>
+    <el-button icon="el-icon-menu" type="info" plain id="open-nav" @click="drawerVisible=true"></el-button>
 </div>
 
 <script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>

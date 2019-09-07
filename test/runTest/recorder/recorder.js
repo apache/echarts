@@ -3,12 +3,15 @@ const socket = io('/recorder');
 const app = new Vue({
     el: '#app',
     data: {
+        tests: [],
+
         currentTestName: '',
         actions: [],
         currentAction: null,
         recordingAction: null,
 
-        deletePopoverVisible: false
+
+        drawerVisible: true
     },
     computed: {
         url() {
@@ -45,6 +48,12 @@ const app = new Vue({
                     saveData();
                 }
             }).catch(e => {});
+        },
+
+        run() {
+            socket.emit('runSingle', {
+                testName: app.currentTestName
+            });
         }
     }
 });
@@ -52,57 +61,60 @@ const app = new Vue({
 function saveData() {
     // Save
     if (app.currentTestName) {
-        socket.emit('save', {
+        socket.emit('saveActions', {
             testName: app.currentTestName,
             actions: app.actions
         });
     }
 }
 
+function keyboardRecordingHandler(e) {
+    if (e.key.toLowerCase() === 'r' && e.shiftKey) {
+        if (!app.recordingAction) {
+            app.recordingAction = app.currentAction;
+            if (app.recordingAction) {
+                let $iframe = document.body.querySelector('iframe');
+                app.recordingAction.ops = [];
+                app.recordingAction.scrollY = $iframe.contentWindow.scrollY;
+                app.recordingAction.scrollX = $iframe.contentWindow.scrollX;
+                app.recordingAction.timestamp = Date.now();
+            }
+        }
+        else {
+            app.recordingAction = null;
+            saveData();
+        }
+        // Get scroll
+    }
+}
+
 function recordIframeEvents(iframe, app) {
     let innerDocument = iframe.contentWindow.document;
-
-    let startTime;
-    innerDocument.addEventListener('keyup', e => {
-        if (e.key.toLowerCase() === 'r' && e.shiftKey) {
-            if (!app.recordingAction) {
-                app.recordingAction = app.currentAction;
-                if (app.recordingAction) {
-                    app.recordingAction.ops = [];
-                    app.recordingAction.scrollY = iframe.contentWindow.scrollY;
-                    app.recordingAction.scrollX = iframe.contentWindow.scrollX;
-                    startTime = app.recordingAction.timestamp = Date.now();
-                }
-            }
-            else {
-                app.recordingAction = null;
-                saveData();
-            }
-            // Get scroll
-        }
-    });
 
     function addMouseOp(type, e) {
         if (app.recordingAction) {
             app.recordingAction.ops.push({
                 type,
-                time: Date.now() - startTime,
+                time: Date.now() - app.recordingAction.timestamp,
                 x: e.clientX,
                 y: e.clientY
             });
             app.$notify.info({
                 title: type,
-                message: `{x: ${e.clientX}, y: ${e.clientY}}`,
-                position: 'top-left'
+                message: `(x: ${e.clientX}, y: ${e.clientY})`,
+                position: 'top-left',
+                customClass: 'op-notice'
             });
         }
     }
+
+    innerDocument.addEventListener('keyup', keyboardRecordingHandler);
 
     innerDocument.body.addEventListener('mousemove', _.throttle(e => {
         addMouseOp('mousemove', e);
     }, 200), true);
 
-    ['mouseup', 'mousedown', 'click'].forEach(eventType => {
+    ['mouseup', 'mousedown'].forEach(eventType => {
         innerDocument.body.addEventListener(eventType, e => {
             addMouseOp(eventType, e);
         }, true);
@@ -112,13 +124,18 @@ function recordIframeEvents(iframe, app) {
 function init() {
     app.$el.style.display = 'block';
 
-    socket.on('update', data => {
+    document.addEventListener('keyup', keyboardRecordingHandler);
+
+    socket.on('updateActions', data => {
         if (data.testName === app.currentTestName) {
             app.actions = data.actions;
             if (!app.currentAction) {
                 app.currentAction = app.actions[0];
             }
         }
+    });
+    socket.on('getTests', ({tests}) => {
+        app.tests = tests;
     });
 
     let $iframe = document.body.querySelector('iframe');
@@ -129,6 +146,11 @@ function init() {
 
     function updateTestHash() {
         app.currentTestName = window.location.hash.slice(1);
+        // Reset
+        app.actions = [];
+        app.currentAction = null;
+        app.recordingAction = null;
+
         socket.emit('changeTest', {testName: app.currentTestName});
 
     }

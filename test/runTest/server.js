@@ -67,7 +67,9 @@ function startTests(testsNameList, socket, noHeadless) {
 
         testProcess = fork(path.join(__dirname, 'cli.js'), [
             '--tests',
-            pendingTests.map(testOpt => testOpt.fileUrl).join(','),
+            pendingTests.map(testOpt => testOpt.name).join(','),
+            '--speed',
+            5,
             ...(noHeadless ? ['--no-headless'] : [])
         ]);
         // Finished one test
@@ -118,12 +120,10 @@ async function start() {
         socket.on('run', async data => {
             // TODO Should broadcast to all sockets.
             try {
-                console.log(data);
                 await startTests(data.tests, socket, data.noHeadless);
             }
-            catch (e) {
-                console.error(e);
-            }
+            catch (e) { console.error(e); }
+            console.log('Finished');
             socket.emit('finish');
         });
         socket.on('stop', () => {
@@ -132,12 +132,12 @@ async function start() {
     });
 
     io.of('/recorder').on('connect', async socket => {
-        // await updateTestsList();
-        socket.on('save', data => {
+        await updateTestsList();
+        socket.on('saveActions', data => {
             if (data.testName) {
                 fse.outputFile(
                     getActionsFullPath(data.testName),
-                    JSON.stringify(data.actions, null, 2),
+                    JSON.stringify(data.actions),
                     'utf-8'
                 );
             }
@@ -146,7 +146,7 @@ async function start() {
         socket.on('changeTest', data => {
             try {
                 const actionData = fs.readFileSync(getActionsFullPath(data.testName), 'utf-8');
-                socket.emit('update', {
+                socket.emit('updateActions', {
                     testName: data.testName,
                     actions: JSON.parse(actionData)
                 });
@@ -155,6 +155,16 @@ async function start() {
                 // Can't find file.
             }
         });
+        socket.on('runSingle', async data => {
+            try {
+                await startTests([data.testName], socket, true);
+            }
+            catch (e) { console.error(e); }
+            console.log('Finished');
+            socket.emit('finish');
+        });
+
+        socket.emit('getTests', {tests: getTestsList().map(test => test.name)});
     });
 
     console.log(`Dashboard: ${origin}/test/runTest/client/index.html`);

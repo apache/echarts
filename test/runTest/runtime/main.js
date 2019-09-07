@@ -18,27 +18,6 @@ import lolex from 'lolex';
 // // Fixed date
 // window.Date = MockDate;
 
-// export function createScreenshotTest (desc, elementQuery, waitTime) {
-
-// };
-
-/**
- * Take screenshot immediately.
- * @param {string} desc
- * @param {string} [elementQuery] If only screenshot specifed element. Will do full page screenshot if it's not give.
- */
-export function compareScreenshot (desc, elementQuery) {
-    return puppeteerScreenshot(desc, elementQuery);
-};
-
-/**
- * Finish the test.
- */
-export function finish() {
-    return puppeteerFinishTest();
-};
-
-
 let myRandom = new seedrandom('echarts-test');
 // Fixed random generator
 Math.random = function () {
