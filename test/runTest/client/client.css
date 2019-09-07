@@ -108,8 +108,12 @@
 }
 
 .test-screenshots {
-    margin-top: 80px;
+    margin-top: 20px;
     padding: 0 20px;
+}
+
+.test-screenshots h4 {
+    margin-top: 60px;
 }
 
 .test-screenshots img {

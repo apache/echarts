@@ -69,11 +69,14 @@
                         <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>Record Interaction</a>
                     </div>
 
-                    <div class="test-screenshots" v-for="result in currentTest.results">
-                        <h4>{{result.desc || result.name}}</h4>
+                    <div class="test-screenshots" v-for="(result, idx) in currentTest.results">
+                        <!-- Not display title if it's same with previous -->
+                        <h4 v-if="result.desc !== (currentTest.results[idx - 1] && currentTest.results[idx - 1].desc)">
+                            {{result.desc || result.name}}
+                        </h4>
                         <el-row :gutter="40" class="screenshots">
                             <el-col :span="8">
-                                <el-card>
+                                <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Expected</span>
                                     </div>
@@ -82,7 +85,7 @@
                             </el-col>
 
                             <el-col :span="8">
-                                <el-card>
+                                <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Actual</span>
                                     </div>
@@ -91,7 +94,7 @@
                             </el-col>
 
                             <el-col :span="8">
-                                <el-card>
+                                <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Diff({{result.diffRatio.toFixed(4)}})</span>
                                     </div>

@@ -104,6 +104,25 @@ iframe {
     width: 300px;
 }
 
+#actions .toolbar {
+    float: right;
+    margin-top: -5px;
+}
+
+#actions .toolbar>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+#actions .toolbar i.el-icon-setting {
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#actions .toolbar .config-item {
+    margin: 5px 0;
+}
+
 #actions .action-item {
     line-height: 40px;
     padding: 0 20px;
@@ -111,7 +130,7 @@ iframe {
     cursor: pointer;
 }
 
-
+\
 #actions .action-item:hover {
     background: #eee;
 }
@@ -128,6 +147,10 @@ iframe {
 #actions .action-item .operations>* {
     display: inline-block;
     vertical-align: middle;
+}
+#actions .action-item .operations i {
+    margin-left: 5px;
+    font-size: 18px;
 }
 
 #actions .action-item .operations .el-icon-delete {

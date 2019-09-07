@@ -71,3 +71,11 @@ module.exports.buildRuntimeCode = async function () {
     // TODO
     return 'window.crypto = null\n' + output.code;
 };
+
+module.exports.waitTime = function (time) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+}

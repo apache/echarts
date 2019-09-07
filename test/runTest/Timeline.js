@@ -1,3 +1,5 @@
+const {waitTime} = require('./util');
+
 module.exports = class Timeline {
 
     constructor(page) {
@@ -17,7 +19,7 @@ module.exports = class Timeline {
     }
 
 
-    async runAction(action, playbackSpeed) {
+    async runAction(action, takeScreenshot, playbackSpeed) {
         this.stop();
 
         playbackSpeed = playbackSpeed || 1;
@@ -45,7 +47,7 @@ module.exports = class Timeline {
                 self._elapsedTime += dTime * playbackSpeed;
                 self._current = current;
 
-                await self._update();
+                await self._update(takeScreenshot);
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
                     resolve();
@@ -66,7 +68,7 @@ module.exports = class Timeline {
         }
     }
 
-    async _update() {
+    async _update(takeScreenshot) {
         let op = this._ops[this._currentOpIndex];
 
         if (op.time > this._elapsedTime) {
@@ -85,11 +87,25 @@ module.exports = class Timeline {
                 await page.mouse.up();
                 break;
             case 'mousemove':
-                page.mouse.move(op.x, op.y);
+                await page.mouse.move(op.x, op.y);
+                break;
+            case 'screenshot':
+                await takeScreenshot();
                 break;
         }
 
         this._currentOpIndex++;
 
+        // If next op is an auto screenshot
+        let nextOp = this._ops[this._currentOpIndex];
+        console.log(nextOp.type);
+        if (nextOp && nextOp.type === 'screenshot-auto') {
+            // TODO Configuration time
+            await waitTime(300);
+            console.log(Date.now());
+            await takeScreenshot();
+            console.log(Date.now());
+            this._currentOpIndex++;
+        }
     }
 };

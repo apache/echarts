@@ -8,7 +8,7 @@
 <body>
 <div id="app" style="display: none">
     <iframe :src="url"></iframe>
-    <div id="recording-status" v-if="currentAction">
+    <div id="recording-status">
         <el-button
             :icon="recordingAction ? 'el-icon-video-camera' : 'el-icon-video-camera'"
             class="recording-button" circle :type="recordingAction ? 'danger' : 'info'"
@@ -20,25 +20,31 @@
         <el-card class="box-card">
             <div slot="header" class="clearfix">
                 <span>Actions</span>
-                <div style="float:right">
+                <div class="toolbar">
                     <el-button type="primary" size="mini" icon="el-icon-caret-right" circle @click="run"></el-button>
                     <el-button type="primary" size="mini" icon="el-icon-circle-plus" @click="newAction">New</el-button>
+
+                    <el-popover title="Configuration" class="configuration">
+                        <div class="config-item">
+                            <el-checkbox v-model="config.screenshotAfterMouseUp">Auto screenshot after mouse up</el-checkbox>
+                        </div>
+                        <i slot="reference" class="el-icon-setting"></i>
+                    </el-popover>
                 </div>
             </div>
             <div v-for="action in actions" :class="{'action-item': true, 'active': action.name === currentAction.name}" @click.self="select(action.name)">
                 {{action.name}}
-
                 <div style="float:right" class="operations">
                     <el-popover>
                         <div style="text-align: center">{ scrollX: {{action.scrollX}}, scrollY: {{action.scrollY}} }</div>
                         <div v-for="op in action.ops" style="text-align: center">{{op}}</div>
-                        <!-- <el-button slot="reference" size="mini">OP ({{action.ops.length}})</el-button> -->
                         <div slot="reference">
                             <span>Data ({{action.ops.length}})</span>
                             <i slot="reference" class="el-icon-caret-bottom"></i>
                         </div>
                     </el-popover>
-                    <i slot="reference" class="el-icon-delete" @click="doDelete(action.name)"></i>
+                    <i class="el-icon-delete" @click="doDelete(action.name)"></i>
+                    <i class="el-icon-refresh-left" @click="clearOps(action.name)"></i>
                 </div>
             </div>
         </el-card>

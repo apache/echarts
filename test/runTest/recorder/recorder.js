@@ -10,6 +10,9 @@ const app = new Vue({
         currentAction: null,
         recordingAction: null,
 
+        config: {
+            screenshotAfterMouseUp: true
+        },
 
         drawerVisible: true
     },
@@ -50,6 +53,20 @@ const app = new Vue({
             }).catch(e => {});
         },
 
+        clearOps(actionName) {
+            app.$confirm('Aure you sure?', 'Clear this action', {
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+                type: 'warning'
+            }).then(() => {
+                this.deletePopoverVisible = false;
+                let action = this.actions.find(action => action.name === actionName);
+                if (action) {
+                    action.ops = [];
+                }
+            }).catch(e => {});
+        },
+
         run() {
             socket.emit('runSingle', {
                 testName: app.currentTestName
@@ -71,10 +88,14 @@ function saveData() {
 function keyboardRecordingHandler(e) {
     if (e.key.toLowerCase() === 'r' && e.shiftKey) {
         if (!app.recordingAction) {
+            // Create a new action if currentAction has ops.
+            if (!app.currentAction || app.currentAction.ops.length > 0) {
+                app.newAction();
+            }
+
             app.recordingAction = app.currentAction;
             if (app.recordingAction) {
                 let $iframe = document.body.querySelector('iframe');
-                app.recordingAction.ops = [];
                 app.recordingAction.scrollY = $iframe.contentWindow.scrollY;
                 app.recordingAction.scrollX = $iframe.contentWindow.scrollX;
                 app.recordingAction.timestamp = Date.now();
@@ -93,12 +114,19 @@ function recordIframeEvents(iframe, app) {
 
     function addMouseOp(type, e) {
         if (app.recordingAction) {
+            let time = Date.now() - app.recordingAction.timestamp;
             app.recordingAction.ops.push({
                 type,
-                time: Date.now() - app.recordingAction.timestamp,
+                time: time,
                 x: e.clientX,
                 y: e.clientY
             });
+            if (type === 'mouseup' && app.config.screenshotAfterMouseUp) {
+                app.recordingAction.ops.push({
+                    time: time + 1, // TODO, Add delay time?
+                    type: 'screenshot-auto'
+                });
+            }
             app.$notify.info({
                 title: type,
                 message: `(x: ${e.clientX}, y: ${e.clientY})`,

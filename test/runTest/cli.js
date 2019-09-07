@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
-const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode} = require('./util');
+const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime} = require('./util');
 const {origin} = require('./config');
 const Timeline = require('./Timeline');
 
@@ -48,18 +48,13 @@ function replaceEChartsVersion(interceptedRequest, version) {
     }
 }
 
-function waitTime(time) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve();
-        }, time);
-    });
-}
-
-async function takeScreenshot(page, fullPage, fileUrl, desc, version) {
+async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
     let screenshotName = testNameFromFile(fileUrl);
     if (desc) {
         screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
+    }
+    if (minor) {
+        screenshotName += '-' + minor;
     }
     let screenshotPrefix = version ? 'expected' : 'actual';
     fse.ensureDirSync(path.join(__dirname, getScreenshotDir()));
@@ -91,14 +86,23 @@ async function runActions(page, testOpt, version, screenshots) {
             window.scrollTo(x, y);
         }, action.scrollX, action.scrollY);
 
-        await timeline.runAction(action, playbackSpeed);
-        // Wait for animation finished
-        // TODO Configuration.
-        await waitTime(action.wait == null ? 200 : action.wait);
+        let count = 0;
+        async function _innerTakeScreenshot() {
+            const desc = action.desc || action.name;
+            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version, count++);
+            screenshots.push({screenshotName, desc, screenshotPath});
+        }
+        await timeline.runAction(action, _innerTakeScreenshot,  playbackSpeed);
 
-        const desc = action.desc || action.name;
-        const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version);
-        screenshots.push({screenshotName, desc, screenshotPath});
+        if (count === 0) {
+            // TODO Configuration time
+            await waitTime(300);
+            await _innerTakeScreenshot();
+        }
+
+        // const desc = action.desc || action.name;
+        // const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version);
+        // screenshots.push({screenshotName, desc, screenshotPath});
     }
     timeline.stop();
 }
@@ -132,17 +136,13 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
         console.error(e);
     }
 
+    await waitTime(500);  // Wait for animation or something else.
     // Final shot.
     let desc = 'Full Shot';
     const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
-
     screenshots.push({screenshotName, desc, screenshotPath});
 
     await runActions(page, testOpt, version, screenshots);
-
-    if (!screenshots.length) {
-        waitTime(500);  // Wait for animation or something else.
-    }
 
     await page.close();
 
