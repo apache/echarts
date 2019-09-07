@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file  Define the themeRiver view's series model
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import SeriesModel from '../../model/Series';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
