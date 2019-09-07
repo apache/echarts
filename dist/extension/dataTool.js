@@ -317,8 +317,12 @@ function map(obj, cb, context) {
 * under the License.
 */
 
-// GEXF File Parser
-// http://gexf.net/1.2draft/gexf-12draft-primer.pdf
+/**
+ * This is a parse of GEXF.
+ *
+ * The spec of GEXF:
+ * https://gephi.org/gexf/1.2draft/gexf-12draft-primer.pdf
+ */
 
 function parse(xml) {
     var doc;
