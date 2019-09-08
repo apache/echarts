@@ -5,7 +5,7 @@
 iframe {
     border: none;
     position: absolute;
-    top: 50px;
+    top: 20px;
     left: 50%;
 
     width: 800px;
@@ -73,29 +73,36 @@ iframe {
 
 #recording-status {
     position: absolute;
-    bottom: 30px;
+    top: 650px;
     width: 100%;
     border-radius: 20px;
     text-align: center;
 }
 
 #recording-status .recording-button {
-    width: 80px;;
-    height: 80px;;
+    width: 60px;
+    height: 60px;
     border-radius: 50px;
-    font-size: 50px;
+    font-size: 35px;
 }
 
 #recording-status .hint {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 200;
-    margin: 20px;
+    margin-top: 10px;
+}
+
+#recording-status .recording-time {
+    font-size: 50px;
+    font-weight: 200;
+    margin-top: 10px;
+    color: #F56C6C;
 }
 
 #recording-status .hint .emphasis {
-    color: #F56C6C;
     font-weight: 400;
     margin: 0 10px;
+    color: #409eff;
 }
 
 #actions {

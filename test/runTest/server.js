@@ -115,7 +115,6 @@ function startTests(testsNameList, socket, {noHeadless, threadsCount}) {
             // Merge tests.
             socket.emit('update', {tests: getTestsList(), running: true});
         }
-
         threadsCount = Math.min(threadsCount, pendingTests.length);
         // Assigning tests to threads
         runningThreads = new Array(threadsCount).fill(0).map(a => new Thread() );
@@ -215,7 +214,10 @@ async function start() {
         });
         socket.on('runSingle', async data => {
             try {
-                await startTests([data.testName], socket, true);
+                await startTests([data.testName], socket, {
+                    noHeadless: true,
+                    threadsCount: 1
+                });
             }
             catch (e) { console.error(e); }
             console.log('Finished');

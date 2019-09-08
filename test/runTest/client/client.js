@@ -158,7 +158,7 @@ function runTests(tests) {
     else {
         app.$notify({
             title: 'No test selected.',
-            position: 'bottom-right'
+            position: 'top-right'
         });
     }
 }

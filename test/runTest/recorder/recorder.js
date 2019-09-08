@@ -10,6 +10,8 @@ const app = new Vue({
         currentAction: null,
         recordingAction: null,
 
+        recordingTimeElapsed: 0,
+
         config: {
             screenshotAfterMouseUp: true,
             screenshotDelay: 400
@@ -76,6 +78,17 @@ const app = new Vue({
     }
 });
 
+let time = Date.now();
+function updateTime() {
+    let dTime = Date.now() - time;
+    time += dTime;
+    if (app.recordingAction) {
+        app.recordingTimeElapsed += dTime;
+    }
+    requestAnimationFrame(updateTime);
+}
+requestAnimationFrame(updateTime);
+
 function saveData() {
     // Save
     if (app.currentTestName) {
@@ -100,6 +113,8 @@ function keyboardRecordingHandler(e) {
                 app.recordingAction.scrollY = $iframe.contentWindow.scrollY;
                 app.recordingAction.scrollX = $iframe.contentWindow.scrollX;
                 app.recordingAction.timestamp = Date.now();
+
+                app.recordingTimeElapsed = 0;
             }
         }
         else {
@@ -107,6 +122,19 @@ function keyboardRecordingHandler(e) {
             saveData();
         }
         // Get scroll
+    }
+    else if (e.key.toLowerCase() === 's' && e.shiftKey) {
+        if (app.recordingAction) {
+            app.recordingAction.ops.push({
+                type: 'screenshot',
+                time: Date.now() - app.recordingAction.timestamp
+            });
+            app.$notify.info({
+                title: 'screenshot',
+                position: 'top-left',
+                customClass: 'op-notice'
+            });
+        }
     }
 }
 
