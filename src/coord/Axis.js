@@ -342,7 +342,6 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
         ticksCoords.push({coord: axisExtent[1]});
     }
 
-    console.log('end');
     function littleThan(a, b) {
         return inverse ? a > b : a < b;
     }
