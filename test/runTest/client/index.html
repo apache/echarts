@@ -29,7 +29,17 @@
                             <el-button v-if="running" title="Run Selected" @click="stopTests" circle size="mini" type="primary" icon="el-icon-close"></el-button>
                         </el-button-group>
 
-                        <el-checkbox v-model="noHeadless" label="Playback"></el-checkbox>
+
+                        <el-popover title="Configuration" class="run-configuration">
+                            <div class="config-item">
+                                    <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
+                            </div>
+                            <div class="run-config-item">
+                                <span>Threads</span>
+                                <el-slider style="width: 140px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
+                            </div>
+                            <i slot="reference" class="el-icon-setting"></i>
+                        </el-popover>
 
 
                         <!-- <el-button-group>

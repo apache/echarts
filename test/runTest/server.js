@@ -30,13 +30,13 @@ function serve() {
     };
 };
 
-let testProcess;
+let runningThreads = [];
 let pendingTests;
 
 function stopRunningTests() {
-    if (testProcess) {
-        testProcess.kill();
-        testProcess = null;
+    if (runningThreads) {
+        runningThreads.forEach(thread => thread.kill());
+        runningThreads = [];
     }
     if (pendingTests) {
         pendingTests.forEach(testOpt => {
@@ -48,9 +48,48 @@ function stopRunningTests() {
     }
 }
 
-function startTests(testsNameList, socket, noHeadless) {
+class Thread {
+    constructor() {
+        this.tests = [];
+
+        this.onExit;
+        this.onUpdate;
+    }
+
+    fork(noHeadless) {
+        let p = fork(path.join(__dirname, 'cli.js'), [
+            '--tests',
+            this.tests.map(testOpt => testOpt.name).join(','),
+            '--speed',
+            5,
+            ...(noHeadless ? ['--no-headless'] : [])
+        ]);
+        this.p = p;
+
+        // Finished one test
+        p.on('message', testOpt => {
+            mergeTestsResults([testOpt]);
+            saveTestsList();
+            this.onUpdate();
+        });
+        // Finished all
+        p.on('exit', () => {
+            this.p = null;
+            setTimeout(this.onExit);
+        });
+    }
+
+    kill() {
+        if (this.p) {
+            this.p.kill();
+        }
+    }
+}
+
+function startTests(testsNameList, socket, {noHeadless, threadsCount}) {
     console.log(testsNameList.join(','));
 
+    threadsCount = threadsCount || 1;
     stopRunningTests();
 
     return new Promise(resolve => {
@@ -65,24 +104,34 @@ function startTests(testsNameList, socket, noHeadless) {
 
         socket.emit('update', {tests: getTestsList()});
 
-        testProcess = fork(path.join(__dirname, 'cli.js'), [
-            '--tests',
-            pendingTests.map(testOpt => testOpt.name).join(','),
-            '--speed',
-            5,
-            ...(noHeadless ? ['--no-headless'] : [])
-        ]);
-        // Finished one test
-        testProcess.on('message', testOpt => {
-            mergeTestsResults([testOpt]);
+        let runningCount = 0;
+        function onExit() {
+            runningCount--;
+            if (runningCount === 0) {
+                resolve();
+            }
+        }
+        function onUpdate() {
             // Merge tests.
             socket.emit('update', {tests: getTestsList(), running: true});
-            saveTestsList();
-        });
-        // Finished all
-        testProcess.on('exit', () => {
+        }
+
+        threadsCount = Math.min(threadsCount, pendingTests.length);
+        // Assigning tests to threads
+        runningThreads = new Array(threadsCount).fill(0).map(a => new Thread() );
+        for (let i = 0; i < pendingTests.length; i++) {
+            runningThreads[i % threadsCount].tests.push(pendingTests[i]);
+        }
+        for (let i = 0; i < threadsCount; i++) {
+            runningThreads[i].onExit = onExit;
+            runningThreads[i].onUpdate = onUpdate;
+            runningThreads[i].fork(noHeadless, onExit);
+            runningCount++;
+        }
+        // If something bad happens and no proccess are started successfully
+        if (runningCount === 0) {
             resolve();
-        });
+        }
     });
 }
 
@@ -118,13 +167,22 @@ async function start() {
         socket.emit('update', {tests: getTestsList()});
 
         socket.on('run', async data => {
+            let startTime = Date.now();
             // TODO Should broadcast to all sockets.
             try {
-                await startTests(data.tests, socket, data.noHeadless);
+                await startTests(
+                    data.tests,
+                    socket,
+                    { noHeadless: data.noHeadless, threadsCount: data.threads }
+                );
             }
             catch (e) { console.error(e); }
             console.log('Finished');
-            socket.emit('finish');
+            socket.emit('finish', {
+                time: Date.now() - startTime,
+                count: data.tests.length,
+                threads: data.threads
+            });
         });
         socket.on('stop', () => {
             stopRunningTests();

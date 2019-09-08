@@ -47,6 +47,27 @@
 .nav-toolbar .controls {
     margin-top: 10px;
 }
+.nav-toolbar .controls>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+.nav-toolbar .controls .el-checkbox {
+    margin-right: 2px;
+}
+.nav-toolbar .el-icon-setting {
+    color: #f3f3f3;
+    font-size: 20px;
+    margin-left: 5px;
+}
+.run-config-item {
+    margin: 5px 0;
+}
+.run-config-item>* {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
 
 .test-list {
     overflow-x: hidden;

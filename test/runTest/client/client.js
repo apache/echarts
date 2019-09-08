@@ -32,121 +32,141 @@ function processTestsData(tests, oldTestsData) {
     return tests;
 }
 
+const app = new Vue({
+    el: '#app',
+    data: {
+        fullTests: [],
+        currentTestName: '',
+        sortBy: 'name',
+        searchString: '',
+        running: false,
+
+        allSelected: false,
+        lastSelectedIndex: -1,
+
+        runConfig: {
+            noHeadless: false,
+            threads: 1
+        }
+    },
+    computed: {
+        tests() {
+            let sortFunc = this.sortBy === 'name'
+                ? (a, b) => a.name.localeCompare(b.name)
+                : (a, b) => {
+                    if (a.percentage === b.percentage) {
+                        return a.name.localeCompare(b.name);
+                    }
+                    return a.percentage - b.percentage;
+                };
+
+            if (!this.searchString) {
+                // Not modify the original tests data.
+                return this.fullTests.slice().sort(sortFunc);
+            }
+
+            return this.fullTests.filter(test => {
+                return test.name.match(this.searchString);
+            }).sort(sortFunc);
+        },
+
+        currentTest() {
+            let currentTest = this.fullTests.find(item => item.name === this.currentTestName);
+            if (!currentTest) {
+                currentTest = this.fullTests[0];
+            }
+            return currentTest;
+        },
+
+        currentTestUrl() {
+            return window.location.origin + '/test/' + this.currentTestName + '.html';
+        },
+
+        currentTestRecordUrl() {
+            return window.location.origin + '/test/runTest/recorder/index.html#' + this.currentTestName;
+        },
+
+        isSelectAllIndeterminate: {
+            get() {
+                if (!this.tests.length) {
+                    return true;
+                }
+                return this.tests.some(test => {
+                    return test.selected !== this.tests[0].selected;
+                });
+            },
+            set() {}
+        }
+    },
+    methods: {
+        goto(url) {
+            window.location.hash = '#' + url;
+        },
+        toggleSort() {
+            this.sortBy = this.sortBy === 'name' ? 'percentage' : 'name';
+        },
+        handleSelectAllChange(val) {
+            // Only select filtered tests.
+            this.tests.forEach(test => {
+                test.selected = val;
+            });
+            this.isSelectAllIndeterminate = false;
+        },
+        handleSelect(idx) {
+            Vue.nextTick(() => {
+                this.lastSelectedIndex = idx;
+            });
+        },
+        handleShiftSelect(idx) {
+            if (this.lastSelectedIndex < 0) {
+                return;
+            }
+            let start = Math.min(this.lastSelectedIndex, idx);
+            let end = Math.max(this.lastSelectedIndex, idx);
+            let selected = !this.tests[idx].selected;   // Will change
+            for (let i = start; i < end; i++) {
+                this.tests[i].selected = selected;
+            }
+        },
+        refreshList() {
+
+        },
+        runSelectedTests() {
+            const tests = this.fullTests.filter(test => {
+                return test.selected;
+            }).map(test => {
+                return test.name;
+            });
+            runTests(tests);
+        },
+        stopTests() {
+            this.running = false;
+            socket.emit('stop');
+        }
+    }
+});
+
+function runTests(tests) {
+    if (tests.length > 0) {
+        app.running = true;
+        socket.emit('run', {
+            tests,
+            threads: app.runConfig.threads,
+            noHeadless: app.runConfig.noHeadless
+        });
+    }
+    else {
+        app.$notify({
+            title: 'No test selected.',
+            position: 'bottom-right'
+        });
+    }
+}
+
+
 socket.on('connect', () => {
     console.log('Connected');
-    const app = new Vue({
-        el: '#app',
-        data: {
-            fullTests: [],
-            currentTestName: '',
-            sortBy: 'name',
-            searchString: '',
-            running: false,
 
-            allSelected: false,
-            lastSelectedIndex: -1,
-
-            noHeadless: false,
-        },
-        computed: {
-            tests() {
-                let sortFunc = this.sortBy === 'name'
-                    ? (a, b) => a.name.localeCompare(b.name)
-                    : (a, b) => {
-                        if (a.percentage === b.percentage) {
-                            return a.name.localeCompare(b.name);
-                        }
-                        return a.percentage - b.percentage;
-                    };
-
-                if (!this.searchString) {
-                    // Not modify the original tests data.
-                    return this.fullTests.slice().sort(sortFunc);
-                }
-
-                return this.fullTests.filter(test => {
-                    return test.name.match(this.searchString);
-                }).sort(sortFunc);
-            },
-
-            currentTest() {
-                let currentTest = this.fullTests.find(item => item.name === this.currentTestName);
-                if (!currentTest) {
-                    currentTest = this.fullTests[0];
-                }
-                return currentTest;
-            },
-
-            currentTestUrl() {
-                return window.location.origin + '/test/' + this.currentTestName + '.html';
-            },
-
-            currentTestRecordUrl() {
-                return window.location.origin + '/test/runTest/recorder/index.html#' + this.currentTestName;
-            },
-
-            isSelectAllIndeterminate: {
-                get() {
-                    if (!this.tests.length) {
-                        return true;
-                    }
-                    return this.tests.some(test => {
-                        return test.selected !== this.tests[0].selected;
-                    });
-                },
-                set() {}
-            }
-        },
-        methods: {
-            goto(url) {
-                window.location.hash = '#' + url;
-            },
-            toggleSort() {
-                this.sortBy = this.sortBy === 'name' ? 'percentage' : 'name';
-            },
-            handleSelectAllChange(val) {
-                // Only select filtered tests.
-                this.tests.forEach(test => {
-                    test.selected = val;
-                });
-                this.isSelectAllIndeterminate = false;
-            },
-            handleSelect(idx) {
-                Vue.nextTick(() => {
-                    this.lastSelectedIndex = idx;
-                });
-            },
-            handleShiftSelect(idx) {
-                if (this.lastSelectedIndex < 0) {
-                    return;
-                }
-                let start = Math.min(this.lastSelectedIndex, idx);
-                let end = Math.max(this.lastSelectedIndex, idx);
-                let selected = !this.tests[idx].selected;   // Will change
-                for (let i = start; i < end; i++) {
-                    this.tests[i].selected = selected;
-                }
-            },
-            refreshList() {
-
-            },
-            runSelectedTests() {
-                const tests = this.fullTests.filter(test => {
-                    return test.selected;
-                }).map(test => {
-                    return test.name;
-                });
-                if (tests.length > 0) {
-                    this.running = true;
-                    socket.emit('run', {tests, noHeadless: this.noHeadless});
-                }
-            },
-            stopTests() {
-                this.running = false;
-                socket.emit('stop');
-            }
-        }
-    });
     app.$el.style.display = 'block';
 
     let firstUpdate = true;
@@ -159,11 +179,7 @@ socket.on('connect', () => {
                 dangerouslyUseHTMLString: true,
                 center: true
             }).then(value => {
-                app.running = true;
-                socket.emit('run', {
-                    tests: msg.tests.map(test => test.name),
-                    noHeadless: this.noHeadless
-                });
+                runTests(msg.tests.map(test => test.name));
             }).catch(() => {});
         }
         // TODO
@@ -172,10 +188,13 @@ socket.on('connect', () => {
 
         firstUpdate = false;
     });
-    socket.on('finish', () => {
+    socket.on('finish', res => {
         app.$notify({
-            title: 'Test Complete',
-            position: 'bottom-right'
+            type: 'success',
+            title: `${res.count} test complete`,
+            message: `Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`,
+            position: 'top-right',
+            duration: 8000
         });
         app.running = false;
     });
