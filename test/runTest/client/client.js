@@ -196,6 +196,7 @@ socket.on('connect', () => {
             position: 'top-right',
             duration: 8000
         });
+        console.log(`${res.count} test complete, Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`);
         app.running = false;
     });
 

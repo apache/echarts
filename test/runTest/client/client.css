@@ -58,6 +58,7 @@
     color: #f3f3f3;
     font-size: 20px;
     margin-left: 5px;
+    cursor: pointer;
 }
 .run-config-item {
     margin: 5px 0;
@@ -90,6 +91,10 @@
     color: #f3f3f3;
     margin-left: 3px;
     cursor: pointer;
+}
+.test-list li a.menu-link i {
+    font-size: 16px;
+    margin-left: 10px;
 }
 
 .test-list li.active {

@@ -62,6 +62,18 @@ module.exports.updateTestsList = async function () {
         _tests.push(test);
         _testsMap[fileUrl] = test;
     });
+    let statAsync = util.promisify(fs.stat);
+    // Find if file has actions.
+    await Promise.all(_tests.map(testOpt => {
+        return statAsync(path.join(__dirname, 'actions', testOpt.name + '.json'))
+            .then(() => {
+                testOpt.hasActions = true;
+            })
+            .catch(() => {
+                testOpt.hasActions = false;
+            });
+    }));
+
     return _tests;
 };
 

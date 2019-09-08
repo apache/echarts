@@ -222,7 +222,14 @@ async function start() {
             socket.emit('finish');
         });
 
-        socket.emit('getTests', {tests: getTestsList().map(test => test.name)});
+        socket.emit('getTests', {
+            tests: getTestsList().map(test => {
+                return {
+                    name: test.name,
+                    hasActions: test.hasActions
+                };
+            })
+        });
     });
 
     console.log(`Dashboard: ${origin}/test/runTest/client/index.html`);

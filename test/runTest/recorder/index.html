@@ -58,8 +58,11 @@
         v-show="drawerVisible"
     >
         <ul>
-            <li v-for="testName in tests">
-                <a :href="'#' + testName" :class="{active: testName === currentTestName}">{{testName}}</a>
+            <li v-for="test in tests">
+                <a :href="'#' + test.name" :class="{active: test.name === currentTestName}">
+                    {{test.name}}
+                    <i v-if="test.hasActions" class="el-icon-video-camera-solid"></i>
+                </a>
             </li>
         </ul>
         <i class="el-icon-circle-close" @click="drawerVisible=false"></i>
