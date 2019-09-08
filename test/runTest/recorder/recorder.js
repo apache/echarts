@@ -11,7 +11,8 @@ const app = new Vue({
         recordingAction: null,
 
         config: {
-            screenshotAfterMouseUp: true
+            screenshotAfterMouseUp: true,
+            screenshotDelay: 400
         },
 
         drawerVisible: true
@@ -124,6 +125,7 @@ function recordIframeEvents(iframe, app) {
             if (type === 'mouseup' && app.config.screenshotAfterMouseUp) {
                 app.recordingAction.ops.push({
                     time: time + 1, // TODO, Add delay time?
+                    delay: app.config.screenshotDelay,
                     type: 'screenshot-auto'
                 });
             }

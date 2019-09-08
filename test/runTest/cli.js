@@ -17,6 +17,8 @@ program
 
 program.parse(process.argv);
 
+program.speed = +program.speed || 1;
+
 if (!program.tests) {
     throw new Error('Tests are required');
 }
@@ -79,7 +81,7 @@ async function runActions(page, testOpt, version, screenshots) {
         return;
     }
 
-    let playbackSpeed = +program.speed || 1;
+    let playbackSpeed = +program.speed;
 
     for (let action of actions) {
         await page.evaluate((x, y) => {
@@ -96,7 +98,7 @@ async function runActions(page, testOpt, version, screenshots) {
 
         if (count === 0) {
             // TODO Configuration time
-            await waitTime(300);
+            await waitTime(200);
             await _innerTakeScreenshot();
         }
 
@@ -136,7 +138,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
         console.error(e);
     }
 
-    await waitTime(500);  // Wait for animation or something else.
+    await waitTime(200);  // Wait for animation or something else. Pending
     // Final shot.
     let desc = 'Full Shot';
     const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
@@ -209,6 +211,7 @@ async function runTests(pendingTests) {
     // TODO Not hardcoded.
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();
+    runtimeCode = `window.__TEST_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
 
     try {
         for (let testOpt of pendingTests) {

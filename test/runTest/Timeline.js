@@ -47,7 +47,7 @@ module.exports = class Timeline {
                 self._elapsedTime += dTime * playbackSpeed;
                 self._current = current;
 
-                await self._update(takeScreenshot);
+                await self._update(takeScreenshot, playbackSpeed);
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
                     resolve();
@@ -68,7 +68,7 @@ module.exports = class Timeline {
         }
     }
 
-    async _update(takeScreenshot) {
+    async _update(takeScreenshot, playbackSpeed) {
         let op = this._ops[this._currentOpIndex];
 
         if (op.time > this._elapsedTime) {
@@ -98,13 +98,11 @@ module.exports = class Timeline {
 
         // If next op is an auto screenshot
         let nextOp = this._ops[this._currentOpIndex];
-        console.log(nextOp.type);
         if (nextOp && nextOp.type === 'screenshot-auto') {
+            let delay = nextOp.delay == null ? 400 : nextOp.delay;
             // TODO Configuration time
-            await waitTime(300);
-            console.log(Date.now());
+            await waitTime(delay / playbackSpeed);
             await takeScreenshot();
-            console.log(Date.now());
             this._currentOpIndex++;
         }
     }

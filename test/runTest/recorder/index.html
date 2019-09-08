@@ -28,6 +28,10 @@
                         <div class="config-item">
                             <el-checkbox v-model="config.screenshotAfterMouseUp">Auto screenshot after mouse up</el-checkbox>
                         </div>
+                        <div class="config-item">
+                            <span>Delay</span>
+                            <el-slider style="width: 180px;" v-model="config.screenshotDelay" :step="100" :max="2000"></el-slider>
+                        </div>
                         <i slot="reference" class="el-icon-setting"></i>
                     </el-popover>
                 </div>

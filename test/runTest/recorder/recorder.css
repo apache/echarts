@@ -119,8 +119,14 @@ iframe {
     margin-left: 10px;
 }
 
-#actions .toolbar .config-item {
+.config-item {
     margin: 5px 0;
+}
+
+.config-item>* {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
 }
 
 #actions .action-item {
@@ -130,7 +136,6 @@ iframe {
     cursor: pointer;
 }
 
-\
 #actions .action-item:hover {
     background: #eee;
 }
