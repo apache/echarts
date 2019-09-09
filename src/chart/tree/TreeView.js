@@ -148,7 +148,7 @@ export default echarts.extendChartView({
         this._data = data;
     },
 
-    _updateViewCoordSys: function (seriesModel, layoutInfo, layout) {
+    _updateViewCoordSys: function (seriesModel) {
         var data = seriesModel.getData();
         var points = [];
         data.each(function (idx) {
