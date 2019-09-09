@@ -92,6 +92,11 @@ module.exports = class Timeline {
             case 'screenshot':
                 await takeScreenshot();
                 break;
+            case 'valuechange':
+                if (op.target === 'select') {
+                    await page.select(op.selector, op.value);
+                }
+                break;
         }
 
         this._currentOpIndex++;

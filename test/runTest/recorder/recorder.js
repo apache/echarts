@@ -1,5 +1,27 @@
 const socket = io('/recorder');
 
+function getUniqueSelector(el) {
+    if (el.tagName.toLowerCase() === 'body') {
+        return '';
+    }
+    let selector = '';
+    if (el.id) {
+        // id has highest priority.
+        return el.id;
+    }
+    else {
+        selector = el.tagName.toLowerCase();
+        for (let className of el.classList) {
+            selector += '.' + className;
+        }
+    }
+    let parentSelector = el.parentNode && getUniqueSelector(el.parentNode);
+    if (parentSelector) {
+        selector = parentSelector + '>' + selector;
+    }
+    return selector;
+}
+
 const app = new Vue({
     el: '#app',
     data: {
@@ -66,6 +88,9 @@ const app = new Vue({
                 this.deletePopoverVisible = false;
                 let idx = _.findIndex(this.actions, action => action.name === actionName);
                 if (idx >= 0) {
+                    if (this.currentAction === this.actions[idx]) {
+                        this.currentAction = this.actions[idx + 1] || this.actions[idx - 1];
+                    }
                     this.actions.splice(idx, 1);
                     saveData();
                 }
@@ -116,7 +141,22 @@ function saveData() {
             testName: app.currentTestName,
             actions: app.actions
         });
+
+        let test = app.tests.find(testOpt => testOpt.name === app.currentTestName);
+        test.actions = app.actions.length;
     }
+}
+
+function getEventTime() {
+    return Date.now() - app.recordingAction.timestamp;
+}
+function notify(title, message) {
+    app.$notify.info({
+        title,
+        message,
+        position: 'top-left',
+        customClass: 'op-notice'
+    });
 }
 
 function keyboardRecordingHandler(e) {
@@ -147,13 +187,9 @@ function keyboardRecordingHandler(e) {
         if (app.recordingAction) {
             app.recordingAction.ops.push({
                 type: 'screenshot',
-                time: Date.now() - app.recordingAction.timestamp
+                time: getEventTime()
             });
-            app.$notify.info({
-                title: 'screenshot',
-                position: 'top-left',
-                customClass: 'op-notice'
-            });
+            notify('screenshot', '');
         }
     }
 }
@@ -161,9 +197,10 @@ function keyboardRecordingHandler(e) {
 function recordIframeEvents(iframe, app) {
     let innerDocument = iframe.contentWindow.document;
 
+
     function addMouseOp(type, e) {
         if (app.recordingAction) {
-            let time = Date.now() - app.recordingAction.timestamp;
+            let time = getEventTime();
             app.recordingAction.ops.push({
                 type,
                 time: time,
@@ -171,31 +208,69 @@ function recordIframeEvents(iframe, app) {
                 y: e.clientY
             });
             if (type === 'mouseup' && app.config.screenshotAfterMouseUp) {
+                // Add a auto screenshot after mouseup
                 app.recordingAction.ops.push({
-                    time: time + 1, // TODO, Add delay time?
+                    time: time + 1,
                     delay: app.config.screenshotDelay,
                     type: 'screenshot-auto'
                 });
             }
-            app.$notify.info({
-                title: type,
-                message: `(x: ${e.clientX}, y: ${e.clientY})`,
-                position: 'top-left',
-                customClass: 'op-notice'
-            });
+            notify(type, `(x: ${e.clientX}, y: ${e.clientY})`);
         }
     }
 
     innerDocument.addEventListener('keyup', keyboardRecordingHandler);
 
+    let preventRecordingFollowingMouseEvents = false;
     innerDocument.body.addEventListener('mousemove', _.throttle(e => {
-        addMouseOp('mousemove', e);
+        if (!preventRecordingFollowingMouseEvents) {
+            addMouseOp('mousemove', e);
+        }
     }, 200), true);
+    innerDocument.body.addEventListener('mousedown', e => {
+        // Can't recording mouse event on select.
+        // So just prevent it and add a specific 'select' change event.
+        if (e.target.tagName.toLowerCase() === 'select') {
+            preventRecordingFollowingMouseEvents = true;
+            return;
+        }
+        addMouseOp('mousedown', e);
+    }, true);
+    innerDocument.body.addEventListener('mouseup', e => {
+        if (!preventRecordingFollowingMouseEvents) {
+            addMouseOp('mouseup', e);
+        }
+        preventRecordingFollowingMouseEvents = false;
+    }, true);
 
-    ['mouseup', 'mousedown'].forEach(eventType => {
-        innerDocument.body.addEventListener(eventType, e => {
-            addMouseOp(eventType, e);
-        }, true);
+
+    innerDocument.body.addEventListener('change', e => {
+        if (app.recordingAction) {
+            let selector = getUniqueSelector(e.target);
+            let time = getEventTime();
+            let commonData = {
+                type: 'valuechange',
+                selector,
+                value: e.target.value,
+                time: time
+            };
+            if (e.target.tagName.toLowerCase() === 'select') {
+                commonData.target = 'select';
+                notify('valuechange', `select(${commonData.value})`);
+            }
+            if (commonData.target) {
+                app.recordingAction.ops.push(commonData);
+
+                if (app.config.screenshotAfterMouseUp) {
+                    // Add a auto screenshot after mouseup
+                    app.recordingAction.ops.push({
+                        time: time + 1,
+                        delay: app.config.screenshotDelay,
+                        type: 'screenshot-auto'
+                    });
+                }
+            }
+        }
     });
 }
 
@@ -219,7 +294,6 @@ function init() {
 
     let $iframe = getIframe();
     $iframe.onload = () => {
-        console.log('loaded:' + app.currentTestName);
         recordIframeEvents($iframe, app);
     };
 

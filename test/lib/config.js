@@ -77,6 +77,17 @@
         });
     }
 
+    // Not let scrollbar affect page size.
+    // It will AFFECT interaction in the automatic testing.
+    // TODO it only works on webkit
+    var styleEl = document.createElement('style');
+    document.head.appendChild(styleEl);
+    styleEl.innerHTML = `
+    body {
+        overflow: overlay!important;
+    }
+    `;
+
     // It is not a good solution.
     // Do not need it any more:
 

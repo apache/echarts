@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
+const {installMouseHelper} = require('./installMouseHelper');
 const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime} = require('./util');
 const {origin} = require('./config');
 const Timeline = require('./Timeline');
@@ -18,12 +19,10 @@ program
 program.parse(process.argv);
 
 program.speed = +program.speed || 1;
-console.log(program.speed);
 
 if (!program.tests) {
     throw new Error('Tests are required');
 }
-
 
 function getScreenshotDir() {
     return 'tmp/__screenshot__';
@@ -119,6 +118,8 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
     const page = await browser.newPage();
     page.setRequestInterception(true);
     page.on('request', replaceEChartsVersion);
+
+    installMouseHelper(page);
     await page.evaluateOnNewDocument(runtimeCode);
 
     page.on('console', msg => {

@@ -5,7 +5,7 @@ const path = require('path');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
-const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults} = require('./store');
+const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta} = require('./store');
 const {prepareEChartsVersion, getActionsFullPath} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
@@ -205,6 +205,7 @@ async function start() {
                     JSON.stringify(data.actions),
                     'utf-8'
                 );
+                updateActionsMeta(data.testName, data.actions);
             }
             // TODO Broadcast the change?
         });
@@ -224,7 +225,8 @@ async function start() {
             try {
                 await startTests([data.testName], socket, {
                     noHeadless: true,
-                    threadsCount: 1
+                    threadsCount: 1,
+                    replaySpeed: 2
                 });
             }
             catch (e) { console.error(e); }
@@ -236,7 +238,7 @@ async function start() {
             tests: getTestsList().map(test => {
                 return {
                     name: test.name,
-                    hasActions: test.hasActions
+                    actions: test.actions
                 };
             })
         });

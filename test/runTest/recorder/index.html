@@ -64,7 +64,8 @@
             <li v-for="test in tests">
                 <a :href="'#' + test.name" :class="{active: test.name === currentTestName}">
                     {{test.name}}
-                    <i v-if="test.hasActions" class="el-icon-video-camera-solid"></i>
+                    <i v-if="test.actions" class="el-icon-video-camera-solid"></i>
+                    <span v-if="test.actions" style="font-size: 14px;">({{test.actions}})</span>
                 </a>
             </li>
         </ul>
@@ -80,6 +81,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/theme-chalk/index.css">
 <script src="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.js"></script>
+
 <script src="recorder.js"></script>
 
 <link rel="stylesheet" href="recorder.css">

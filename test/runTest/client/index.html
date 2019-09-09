@@ -75,7 +75,11 @@
                             :percentage="test.percentage"
                             :status="test.summary"
                         ></el-progress>
-                        <a :href="'#' + test.name" class="menu-link">{{test.name}}<i v-if="test.hasActions" class="el-icon-video-camera-solid"></i></a>
+                        <a :href="'#' + test.name" class="menu-link">
+                            {{test.name}}
+                            <i v-if="test.actions" class="el-icon-video-camera-solid"></i>
+                            <span v-if="test.actions" style="font-size: 12px;">({{test.actions}})</span>
+                        </a>
                     </li>
                 </ul>
             </el-aside>

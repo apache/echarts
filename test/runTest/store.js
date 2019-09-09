@@ -62,18 +62,17 @@ module.exports.updateTestsList = async function () {
         _tests.push(test);
         _testsMap[fileUrl] = test;
     });
-    let statAsync = util.promisify(fs.stat);
-    // Find if file has actions.
-    await Promise.all(_tests.map(testOpt => {
-        return statAsync(path.join(__dirname, 'actions', testOpt.name + '.json'))
-            .then(() => {
-                testOpt.hasActions = true;
-            })
-            .catch(() => {
-                testOpt.hasActions = false;
-            });
-    }));
 
+    let actionsMetaData = {};
+    let metaPath = path.join(__dirname, 'actions/__meta__.json');
+    try {
+        actionsMetaData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+    }
+    catch(e) {}
+
+    _tests.forEach(testOpt => {
+        testOpt.actions = actionsMetaData[testOpt.name] || 0;
+    });
     return _tests;
 };
 
@@ -87,4 +86,17 @@ module.exports.mergeTestsResults = function (testsResults) {
             Object.assign(_testsMap[testResult.fileUrl], testResult);
         }
     });
+};
+
+module.exports.updateActionsMeta = function (testName, actions) {
+    let metaData;
+    let metaPath = path.join(__dirname, 'actions/__meta__.json');
+    try {
+        metaData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+    }
+    catch(e) {
+        metaData = {};
+    }
+    metaData[testName] = actions.length;
+    fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2), 'utf-8');
 };
