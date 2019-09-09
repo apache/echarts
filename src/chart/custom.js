@@ -318,19 +318,11 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     // If `elOption.styleEmphasis` is `false`, remove hover style. The
     // logic is ensured by `graphicUtil.setElementHoverStyle`.
     var styleEmphasis = elOption.styleEmphasis;
-    var disableStyleEmphasis = styleEmphasis === false;
-    if (!(
-        // Try to escapse setting hover style for performance.
-        (el.__cusHasEmphStl && styleEmphasis == null)
-        || (!el.__cusHasEmphStl && disableStyleEmphasis)
-    )) {
-        // Should not use graphicUtil.setHoverStyle, since the styleEmphasis
-        // should not be share by group and its descendants.
-        graphicUtil.setElementHoverStyle(el, styleEmphasis);
-        el.__cusHasEmphStl = !disableStyleEmphasis;
-    }
+    // hoverStyle should always be set here, because if the hover style
+    // may already be changed, where the inner cache should be reset.
+    graphicUtil.setElementHoverStyle(el, styleEmphasis);
     if (isRoot) {
-        graphicUtil.setAsHighDownDispatcher(el, !disableStyleEmphasis);
+        graphicUtil.setAsHighDownDispatcher(el, styleEmphasis !== false);
     }
 }
 
