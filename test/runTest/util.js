@@ -59,17 +59,23 @@ module.exports.buildRuntimeCode = async function () {
         input: path.join(__dirname, 'runtime/main.js'),
         plugins: [
             resolve(),
-            commonjs()
+            commonjs(),
+            {
+                resolveId(importee) {
+                    return importee === 'crypto' ? importee : null;
+                },
+                load(id) {
+                    // seedrandom use crypto as external module
+                    return id === 'crypto' ? 'export default null;' : null;
+                }
+            }
         ]
     });
     const output = await bundle.generate({
         format: 'iife',
         name: 'autorun'
     });
-
-    // seedrandom use crypto as external module. Set it to null to avoid not defined error.
-    // TODO
-    return 'window.crypto = null\n' + output.code;
+    return output.code;
 };
 
 module.exports.waitTime = function (time) {

@@ -28,6 +28,12 @@ const app = new Vue({
         }
     },
     methods: {
+        refreshPage() {
+            const $iframe = getIframe();
+            if ($iframe.contentWindow) {
+                $iframe.contentWindow.location.reload();
+            }
+        },
         newAction() {
             this.currentAction = {
                 name: 'Action ' + (this.actions.length + 1),
@@ -39,6 +45,16 @@ const app = new Vue({
             this.currentAction = this.actions.find(action => {
                 return action.name === actionName;
             });
+            if (this.currentAction) {
+                const $iframe = getIframe();
+                if ($iframe.contentWindow) {
+                    $iframe.contentWindow.scrollTo({
+                        left: this.currentAction.scrollX,
+                        top: this.currentAction.scrollY,
+                        behavior: 'smooth'
+                    });
+                }
+            }
         },
 
         doDelete(actionName) {
@@ -89,6 +105,10 @@ function updateTime() {
 }
 requestAnimationFrame(updateTime);
 
+function getIframe() {
+    return document.body.querySelector('#test-view');
+}
+
 function saveData() {
     // Save
     if (app.currentTestName) {
@@ -109,7 +129,7 @@ function keyboardRecordingHandler(e) {
 
             app.recordingAction = app.currentAction;
             if (app.recordingAction) {
-                let $iframe = document.body.querySelector('iframe');
+                let $iframe = getIframe();
                 app.recordingAction.scrollY = $iframe.contentWindow.scrollY;
                 app.recordingAction.scrollX = $iframe.contentWindow.scrollX;
                 app.recordingAction.timestamp = Date.now();
@@ -179,6 +199,7 @@ function recordIframeEvents(iframe, app) {
     });
 }
 
+
 function init() {
     app.$el.style.display = 'block';
 
@@ -196,7 +217,7 @@ function init() {
         app.tests = tests;
     });
 
-    let $iframe = document.body.querySelector('iframe');
+    let $iframe = getIframe();
     $iframe.onload = () => {
         console.log('loaded:' + app.currentTestName);
         recordIframeEvents($iframe, app);

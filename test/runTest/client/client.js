@@ -46,6 +46,7 @@ const app = new Vue({
 
         runConfig: {
             noHeadless: false,
+            replaySpeed: 5,
             threads: 1
         }
     },
@@ -131,6 +132,9 @@ const app = new Vue({
         refreshList() {
 
         },
+        runTest(testName) {
+            runTests([testName]);
+        },
         runSelectedTests() {
             const tests = this.fullTests.filter(test => {
                 return test.selected;
@@ -152,7 +156,10 @@ function runTests(tests) {
         socket.emit('run', {
             tests,
             threads: app.runConfig.threads,
-            noHeadless: app.runConfig.noHeadless
+            noHeadless: app.runConfig.noHeadless,
+            replaySpeed: app.runConfig.noHeadless
+                ? app.runConfig.replaySpeed
+                : 5 // Force run at 5x speed
         });
     }
     else {

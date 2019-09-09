@@ -239,7 +239,9 @@
                 lazyUpdate: opt.lazyUpdate,
                 notMerge: opt.notMerge
             });
-            if (!opt.notResizable) {
+
+            let isAutoResize = opt.autoResize == null ? true : opt.autoResize;
+            if (isAutoResize) {
                 testHelper.resizable(chart);
             }
 

@@ -31,12 +31,20 @@
 
 
                         <el-popover title="Configuration" class="run-configuration">
-                            <div class="config-item">
-                                    <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
-                            </div>
                             <div class="run-config-item">
                                 <span>Threads</span>
                                 <el-slider style="width: 140px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
+                            </div>
+                            <div class="run-config-item">
+                                <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
+                                <el-slider
+                                    style="width: 130px;"
+                                    v-model="runConfig.replaySpeed"
+                                    :step="1" :min="1" :max="10"
+                                    show-stops
+                                    :format-tooltip="function(val) { return val + 'x'; }"
+                                    :disabled="!runConfig.noHeadless"
+                                ></el-slider>
                             </div>
                             <i slot="reference" class="el-icon-setting"></i>
                         </el-popover>
@@ -75,6 +83,10 @@
                 <div v-if="currentTest" class="test-result">
                     <div class="title">
                         <h3>{{currentTest.name}}</h3>
+                        <el-button-group style="margin-left: 10px">
+                            <el-button title="Run Selected" @click="runTest(currentTest.name)" :loading="running" circle type="primary" icon="el-icon-caret-right"></el-button>
+                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group>
                         <a target="_blank" :href="currentTestUrl"><i class="el-icon-link"></i>Open Demo</a>
                         <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>Record Interaction</a>
                     </div>
@@ -169,11 +181,11 @@
 </div>
 
 <script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
-<script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
 
 <!-- Element UI -->
-<link rel="stylesheet" href="https://unpkg.com/element-ui@2.11.1/lib/theme-chalk/index.css">
-<script src="https://unpkg.com/element-ui@2.11.1/lib/index.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/index.js"></script>
 
 <script src="client.js"></script>
 

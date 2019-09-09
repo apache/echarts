@@ -56,12 +56,12 @@ class Thread {
         this.onUpdate;
     }
 
-    fork(noHeadless) {
+    fork(noHeadless, replaySpeed) {
         let p = fork(path.join(__dirname, 'cli.js'), [
             '--tests',
             this.tests.map(testOpt => testOpt.name).join(','),
             '--speed',
-            5,
+            replaySpeed || 5,
             ...(noHeadless ? ['--no-headless'] : [])
         ]);
         this.p = p;
@@ -86,8 +86,12 @@ class Thread {
     }
 }
 
-function startTests(testsNameList, socket, {noHeadless, threadsCount}) {
-    console.log(testsNameList.join(','));
+function startTests(testsNameList, socket, {
+    noHeadless,
+    threadsCount,
+    replaySpeed
+}) {
+    console.log('Received: ', testsNameList.join(','));
 
     threadsCount = threadsCount || 1;
     stopRunningTests();
@@ -124,7 +128,7 @@ function startTests(testsNameList, socket, {noHeadless, threadsCount}) {
         for (let i = 0; i < threadsCount; i++) {
             runningThreads[i].onExit = onExit;
             runningThreads[i].onUpdate = onUpdate;
-            runningThreads[i].fork(noHeadless, onExit);
+            runningThreads[i].fork(noHeadless, replaySpeed);
             runningCount++;
         }
         // If something bad happens and no proccess are started successfully
@@ -172,7 +176,11 @@ async function start() {
                 await startTests(
                     data.tests,
                     socket,
-                    { noHeadless: data.noHeadless, threadsCount: data.threads }
+                    {
+                        noHeadless: data.noHeadless,
+                        threadsCount: data.threads,
+                        replaySpeed: data.replaySpeed
+                    }
                 );
             }
             catch (e) { console.error(e); }

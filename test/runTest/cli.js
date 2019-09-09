@@ -18,6 +18,7 @@ program
 program.parse(process.argv);
 
 program.speed = +program.speed || 1;
+console.log(program.speed);
 
 if (!program.tests) {
     throw new Error('Tests are required');
