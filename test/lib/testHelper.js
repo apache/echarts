@@ -239,7 +239,9 @@
                 lazyUpdate: opt.lazyUpdate,
                 notMerge: opt.notMerge
             });
-            testHelper.resizable(chart);
+            if (!opt.notResizable) {
+                testHelper.resizable(chart);
+            }
 
             return chart;
         }
