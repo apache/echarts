@@ -126,11 +126,11 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
         logs.push(msg.text());
     });
     page.on('pageerror', error => {
-        errors.push(error);
+        errors.push(error.toString());
     });
 
     try {
-        await page.setViewport({ width: 800, height: 600 });
+        await page.setViewport({width: 800, height: 600});
         await page.goto(`${origin}/test/${fileUrl}`, {
             waitUntil: 'networkidle2',
             timeout: 10000

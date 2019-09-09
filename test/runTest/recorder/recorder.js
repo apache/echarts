@@ -1,5 +1,17 @@
 const socket = io('/recorder');
 
+function getNthChild(el) {
+    let i = 1;
+    let elTagName = el.tagName;
+    let elClassName = el.className;
+    while (el.previousSibling) {
+        el = el.previousSibling;
+        if (el.tagName === elTagName && el.className === elClassName) { // TODO extra space in class name?
+            i++;
+        }
+    }
+    return i;
+}
 function getUniqueSelector(el) {
     if (el.tagName.toLowerCase() === 'body') {
         return '';
@@ -13,6 +25,10 @@ function getUniqueSelector(el) {
         selector = el.tagName.toLowerCase();
         for (let className of el.classList) {
             selector += '.' + className;
+        }
+        let idx = getNthChild(el);
+        if (idx > 1) {
+            selector += `:nth-child(${idx})`;
         }
     }
     let parentSelector = el.parentNode && getUniqueSelector(el.parentNode);

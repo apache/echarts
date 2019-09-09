@@ -4,5 +4,7 @@ module.exports = [
     'chord.html',
     'lines-ny.html',
     'lines-ny-appendData.html',
-    'linesGL-ny-appendData.html'
+    'linesGL-ny-appendData.html',
+    'richText.html',
+    'tmp-base.html'
 ];
