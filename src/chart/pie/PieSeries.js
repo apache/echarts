@@ -170,8 +170,11 @@ var PieSeries = echarts.extendSeriesModel({
             borderWidth: 1
         },
 
-        // Animation type canbe expansion, scale
+        // Animation type. Valid values: expansion, scale
         animationType: 'expansion',
+
+        // Animation type when update. Valid values: transition, expansion
+        animationTypeUpdate: 'transition',
 
         animationEasing: 'cubicOut'
     }
