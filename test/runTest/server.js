@@ -245,6 +245,7 @@ async function start() {
     });
 
     console.log(`Dashboard: ${origin}/test/runTest/client/index.html`);
+    console.log(`Interaction Recorder: ${origin}/test/runTest/recorder/index.html`);
     // open(`${origin}/test/runTest/client/index.html`);
 
 }

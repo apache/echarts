@@ -112,6 +112,10 @@
     font-size: 12px!important;
 }
 
+.test-result .el-progress__text {
+    font-size: 14px!important;
+}
+
 .test-result h3 {
     font-size: 40px;
     font-weight: 200;

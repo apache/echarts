@@ -86,6 +86,15 @@
             <el-main>
                 <div v-if="currentTest" class="test-result">
                     <div class="title">
+                        <el-progress
+                            v-if="currentTest.status === 'finished'"
+                            type="circle"
+                            :width="30"
+                            :stroke-width="4"
+                            :percentage="currentTest.percentage"
+                            :status="currentTest.summary"
+                            style="margin-top: 5px;"
+                        ></el-progress>
                         <h3>{{currentTest.name}}</h3>
                         <el-button-group style="margin-left: 10px">
                             <el-button title="Run Selected" @click="runTest(currentTest.name)" :loading="running" circle type="primary" icon="el-icon-caret-right"></el-button>
@@ -98,7 +107,7 @@
                     <div class="test-screenshots" v-for="(result, idx) in currentTest.results">
                         <!-- Not display title if it's same with previous -->
                         <h4 v-if="result.desc !== (currentTest.results[idx - 1] && currentTest.results[idx - 1].desc)">
-                            {{result.desc || result.name}}
+                            <i class="el-icon-s-operation"></i>{{result.desc || result.name}}
                         </h4>
                         <el-row :gutter="40" class="screenshots">
                             <el-col :span="8">
@@ -106,7 +115,7 @@
                                     <div slot="header" class="clearfix">
                                         <span>Expected</span>
                                     </div>
-                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
+                                    <el-image :src="result.expected + '?' + Date.now()"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -115,7 +124,7 @@
                                     <div slot="header" class="clearfix">
                                         <span>Actual</span>
                                     </div>
-                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
+                                    <el-image :src="result.actual + '?' + Date.now()"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -124,7 +133,7 @@
                                     <div slot="header" class="clearfix">
                                         <span>Diff({{result.diffRatio.toFixed(4)}})</span>
                                     </div>
-                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
+                                    <el-image :src="result.diff + '?' + Date.now()" :preview-src-list="[result.diff]"></el-image>
                                 </el-card>
                             </el-col>
                         </el-row>

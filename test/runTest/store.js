@@ -2,7 +2,7 @@ const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
 const glob = require('glob');
-const {getTestName} = require('./util');
+const {testNameFromFile} = require('./util');
 const util = require('util');
 const blacklist = require('./blacklist');
 
@@ -53,7 +53,7 @@ module.exports.updateTestsList = async function () {
 
         let test = {
             fileUrl,
-            name: getTestName(fileUrl),
+            name: testNameFromFile(fileUrl),
             // Default status should be unkown
             // status: 'pending',
             results: []
