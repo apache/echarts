@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 const socket = io('/client');
 
 function processTestsData(tests, oldTestsData) {
@@ -56,7 +75,17 @@ const app = new Vue({
                 ? (a, b) => a.name.localeCompare(b.name)
                 : (a, b) => {
                     if (a.percentage === b.percentage) {
-                        return a.name.localeCompare(b.name);
+                        if (a.actualErrors && b.actualErrors) {
+                            if (a.actualErrors.length === b.actualErrors.length) {
+                                return a.name.localeCompare(b.name);
+                            }
+                            else {
+                                return b.actualErrors.length - a.actualErrors.length;
+                            }
+                        }
+                        else {
+                            return a.name.localeCompare(b.name);
+                        }
                     }
                     return a.percentage - b.percentage;
                 };
@@ -175,43 +204,41 @@ socket.on('connect', () => {
     console.log('Connected');
 
     app.$el.style.display = 'block';
-
-    let firstUpdate = true;
-    socket.on('update', msg => {
-        let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
-        if (!hasFinishedTest && firstUpdate) {
-            app.$confirm('It seems you haven\'t run any test yet!<br />Do you want to start now?', 'Tip', {
-                confirmButtonText: 'Yes',
-                cancelButtonText: 'No',
-                dangerouslyUseHTMLString: true,
-                center: true
-            }).then(value => {
-                runTests(msg.tests.map(test => test.name));
-            }).catch(() => {});
-        }
-        // TODO
-        // app.running = !!msg.running;
-        app.fullTests = processTestsData(msg.tests, app.fullTests);
-
-        firstUpdate = false;
-    });
-    socket.on('finish', res => {
-        app.$notify({
-            type: 'success',
-            title: `${res.count} test complete`,
-            message: `Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`,
-            position: 'top-right',
-            duration: 8000
-        });
-        console.log(`${res.count} test complete, Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`);
-        app.running = false;
-    });
-
-    function updateTestHash() {
-        app.currentTestName = window.location.hash.slice(1);
-    }
-
-    updateTestHash();
-    window.addEventListener('hashchange', updateTestHash);
 });
 
+let firstUpdate = true;
+socket.on('update', msg => {
+    let hasFinishedTest = !!msg.tests.find(test => test.status === 'finished');
+    if (!hasFinishedTest && firstUpdate) {
+        app.$confirm('It seems you haven\'t run any test yet!<br />Do you want to start now?', 'Tip', {
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+            dangerouslyUseHTMLString: true,
+            center: true
+        }).then(value => {
+            runTests(msg.tests.map(test => test.name));
+        }).catch(() => {});
+    }
+    // TODO
+    // app.running = !!msg.running;
+    app.fullTests = processTestsData(msg.tests, app.fullTests);
+
+    firstUpdate = false;
+});
+socket.on('finish', res => {
+    app.$notify({
+        type: 'success',
+        title: `${res.count} test complete`,
+        message: `Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`,
+        position: 'top-right',
+        duration: 8000
+    });
+    console.log(`${res.count} test complete, Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`);
+    app.running = false;
+});
+
+function updateTestHash() {
+    app.currentTestName = window.location.hash.slice(1);
+}
+updateTestHash();
+window.addEventListener('hashchange', updateTestHash);

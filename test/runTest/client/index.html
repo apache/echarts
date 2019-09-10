@@ -1,3 +1,23 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +35,7 @@
             </div>
         </el-header>
         <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
-            <el-aside width="300px">
+            <el-aside width="350px">
                 <div class="nav-toolbar">
                     <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
                     <div class="controls">
@@ -67,14 +87,27 @@
                             <el-checkbox v-model="test.selected"></el-checkbox>
                         </span>
                         <i class="el-icon-loading" v-if="test.status === 'pending' && running"></i>
-                        <el-progress
+
+                        <el-tooltip
                             v-if="test.status === 'finished'"
-                            type="circle"
-                            :width="20"
-                            :stroke-width="2"
-                            :percentage="test.percentage"
-                            :status="test.summary"
-                        ></el-progress>
+                        >
+                            <div slot="content">{{test.percentage}}% Passed</div>
+                            <el-progress
+                                type="circle"
+                                :width="20"
+                                :stroke-width="2"
+                                :percentage="test.percentage"
+                                :status="test.summary"
+                            ></el-progress>
+                        </el-tooltip>
+                        <el-tooltip
+                            v-if="test.status==='finished' && test.actualErrors && test.actualErrors.length > 0"
+                        >
+                            <div slot="content">{{test.actualErrors.length}} Errors</div>
+                            <i class="el-icon-message-solid"
+                                style="color: #F56C6C"
+                            ></i>
+                        </el-tooltip>
                         <a :href="'#' + test.name" class="menu-link">
                             {{test.name}}
                             <i v-if="test.actions" class="el-icon-video-camera-solid"></i>
