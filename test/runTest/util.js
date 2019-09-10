@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 const path = require('path');
 const fse = require('fs-extra');
 const https = require('https');
@@ -6,16 +25,23 @@ const rollup = require('rollup');
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 
-module.exports.getTestName = function(fileUrl) {
-    return path.basename(fileUrl, '.html');
+module.exports.testNameFromFile = function(fileName) {
+    return path.basename(fileName, '.html');
 };
 
+module.exports.fileNameFromTest = function (testName) {
+    return testName + '.html';
+};
 
 function getVersionDir(version) {
     version = version || 'developing';
     return `tmp/__version__/${version}`;
 };
 module.exports.getVersionDir = getVersionDir;
+
+module.exports.getActionsFullPath = function (testName) {
+    return path.join(__dirname, 'actions', testName + '.json');
+};
 
 
 module.exports.prepareEChartsVersion = function (version) {
@@ -52,15 +78,29 @@ module.exports.buildRuntimeCode = async function () {
         input: path.join(__dirname, 'runtime/main.js'),
         plugins: [
             resolve(),
-            commonjs()
+            commonjs(),
+            {
+                resolveId(importee) {
+                    return importee === 'crypto' ? importee : null;
+                },
+                load(id) {
+                    // seedrandom use crypto as external module
+                    return id === 'crypto' ? 'export default null;' : null;
+                }
+            }
         ]
     });
     const output = await bundle.generate({
         format: 'iife',
         name: 'autorun'
     });
-
-    // seedrandom use crypto as external module. Set it to null to avoid not defined error.
-    // TODO
-    return 'window.crypto = null\n' + output.code;
+    return output.code;
 };
+
+module.exports.waitTime = function (time) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
+}

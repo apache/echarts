@@ -239,7 +239,11 @@
                 lazyUpdate: opt.lazyUpdate,
                 notMerge: opt.notMerge
             });
-            testHelper.resizable(chart);
+
+            let isAutoResize = opt.autoResize == null ? true : opt.autoResize;
+            if (isAutoResize) {
+                testHelper.resizable(chart);
+            }
 
             return chart;
         }
@@ -247,10 +251,24 @@
 
 
     testHelper.resizable = function (chart) {
+        let dom = chart.getDom();
+        let width = dom.clientWidth;
+        let height = dom.clientHeight;
+        function resize() {
+            let newWidth = dom.clientWidth;
+            let newHeight = dom.clientHeight;
+            if (width !== newWidth || height !== newHeight) {
+                chart.resize();
+                width = newWidth;
+                height = newHeight;
+            }
+        }
         if (window.attachEvent) {
+            // Use builtin resize in IE
             window.attachEvent('onresize', chart.resize);
-        } else if (window.addEventListener) {
-            window.addEventListener('resize', chart.resize, false);
+        }
+        else if (window.addEventListener) {
+            window.addEventListener('resize', resize, false);
         }
     };
 

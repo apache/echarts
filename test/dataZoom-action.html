@@ -26,6 +26,7 @@ under the License.
         <script src="lib/testHelper.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/config.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -74,9 +75,10 @@ under the License.
                         startValue: dzs[1].startValue,
                         endValue: dzs[1].endValue
                     }]
-                    alert(
-                        '!!! ' + ctx.hint + ' !!!\n' + JSON.stringify(info, null, 2)
-                    );
+                    console.log('!!! ' + ctx.hint + ' !!!\n' + JSON.stringify(info, null, 2));
+                    // alert(
+                    //     '!!! ' + ctx.hint + ' !!!\n' + JSON.stringify(info, null, 2)
+                    // );
                 }
 
                 function dispatchPercent(start, end) {
@@ -168,7 +170,7 @@ under the License.
             var currEndValue = maxEndValue;
 
             var option = {
-                animationDurationUpdate: 3000,
+                animationDurationUpdate: 1000,
                 tooltip: {
                     trigger: 'axis'
                 },

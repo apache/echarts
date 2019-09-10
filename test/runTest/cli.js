@@ -1,11 +1,46 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 const puppeteer = require('puppeteer');
 const slugify = require('slugify');
 const fse = require('fs-extra');
 const fs = require('fs');
 const path = require('path');
+const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
-const {getTestName, getVersionDir, buildRuntimeCode} = require('./util');
+const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime} = require('./util');
 const {origin} = require('./config');
+const Timeline = require('./Timeline');
+
+// Handling input arguments.
+program
+    .option('-t, --tests <tests>', 'Tests names list')
+    .option('--no-headless', 'Not headless')
+    .option('-s, --speed <speed>', 'Playback speed');
+
+program.parse(process.argv);
+
+program.speed = +program.speed || 1;
+
+if (!program.tests) {
+    throw new Error('Tests are required');
+}
 
 function getScreenshotDir() {
     return 'tmp/__screenshot__';
@@ -13,7 +48,7 @@ function getScreenshotDir() {
 
 function sortScreenshots(list) {
     return list.sort((a, b) => {
-        return a.testName.localeCompare(b.testName);
+        return a.screenshotName.localeCompare(b.screenshotName);
     });
 }
 
@@ -33,145 +68,101 @@ function replaceEChartsVersion(interceptedRequest, version) {
     }
 }
 
-function waitPageForFinish(page) {
-    return new Promise(resolve => {
-        page.exposeFunction('puppeteerFinishTest', () => {
-            resolve();
-        });
-    });
-}
-
-function createWaitTimeout(maxTime) {
-    let timeoutHandle;
-    let resolve;
-    function keepWait(newMaxTime) {
-        newMaxTime = newMaxTime == null ? maxTime : newMaxTime;
-        clearTimeout(timeoutHandle);
-        createTimeout(newMaxTime);
-    }
-
-    function createTimeout(maxTime) {
-        timeoutHandle = setTimeout(() => {
-            resolve();
-        }, maxTime);
-    }
-
-    function waitTimeout() {
-        return new Promise(_resolve => {
-            resolve = _resolve;
-            createTimeout(maxTime);
-        });
-    }
-
-    return {keepWait, waitTimeout};
-}
-
-async function takeScreenshot(page, elementQuery, fileUrl, desc, version) {
-    let target = elementQuery ? await page.$(elementQuery) : page;
-    if (!target) {
-        console.error(`Can't find element '${elementQuery}'`);
-        return;
-    }
-    let fullPage = !elementQuery;
-    let testName = getTestName(fileUrl);
+async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
+    let screenshotName = testNameFromFile(fileUrl);
     if (desc) {
-        testName += '-' + slugify(desc, { replacement: '-', lower: true })
+        screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
+    }
+    if (minor) {
+        screenshotName += '-' + minor;
     }
     let screenshotPrefix = version ? 'expected' : 'actual';
     fse.ensureDirSync(path.join(__dirname, getScreenshotDir()));
-    let screenshotPath = path.join(__dirname, `${getScreenshotDir()}/${testName}-${screenshotPrefix}.png`);
-    await target.screenshot({
+    let screenshotPath = path.join(__dirname, `${getScreenshotDir()}/${screenshotName}-${screenshotPrefix}.png`);
+    await page.screenshot({
         path: screenshotPath,
         fullPage
     });
 
-    return {testName, screenshotPath};
+    return {screenshotName, screenshotPath};
 }
 
-async function runTestPage(browser, fileUrl, version, runtimeCode) {
-    const {keepWait, waitTimeout} = createWaitTimeout(1500);
+async function runActions(page, testOpt, version, screenshots) {
+    let timeline = new Timeline(page);
+    let actions;
+    try {
+        let actContent = fs.readFileSync(path.join(__dirname, 'actions', testOpt.name + '.json'));
+        actions = JSON.parse(actContent);
+    }
+    catch (e) {
+        // Can't find actions
+        return;
+    }
+
+    let playbackSpeed = +program.speed;
+
+    for (let action of actions) {
+        await page.evaluate((x, y) => {
+            window.scrollTo(x, y);
+        }, action.scrollX, action.scrollY);
+
+        let count = 0;
+        async function _innerTakeScreenshot() {
+            const desc = action.desc || action.name;
+            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version, count++);
+            screenshots.push({screenshotName, desc, screenshotPath});
+        }
+        await timeline.runAction(action, _innerTakeScreenshot,  playbackSpeed);
+
+        if (count === 0) {
+            await waitTime(200);
+            await _innerTakeScreenshot();
+        }
+
+        // const desc = action.desc || action.name;
+        // const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version);
+        // screenshots.push({screenshotName, desc, screenshotPath});
+    }
+    timeline.stop();
+}
+
+async function runTestPage(browser, testOpt, version, runtimeCode) {
+    const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
     const errors = [];
-    let screenshotPromises = [];
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
     page.on('request', replaceEChartsVersion);
+
     await page.evaluateOnNewDocument(runtimeCode);
 
-    let descAutoCounter = 0;
-
-    page.exposeFunction('puppeteerScreenshot', (desc, elementQuery) => {
-        keepWait();
-        desc = desc || (descAutoCounter++).toString();
-        let promise = takeScreenshot(page, elementQuery, fileUrl, desc, version).then((result) => {
-            if (!result) {
-                return;
-            }
-            const {testName, screenshotPath} = result;
-            screenshots.push({testName, desc, screenshotPath});
-        });
-        screenshotPromises.push(promise);
-
-        return promise;
-    });
     page.on('console', msg => {
         logs.push(msg.text());
     });
     page.on('pageerror', error => {
-        errors.push(error);
+        errors.push(error.toString());
     });
 
-    let pageFinishPromise = waitPageForFinish(page);
-
     try {
-        await page.setViewport({
-            width: 800,
-            height: 600
-        });
+        await page.setViewport({width: 800, height: 600});
         await page.goto(`${origin}/test/${fileUrl}`, {
             waitUntil: 'networkidle2',
-            // waitUntil: 'domcontentloaded',
             timeout: 10000
         });
     }
     catch(e) {
-        // TODO Timeout Error
         console.error(e);
     }
 
-    // TODO Animation
+    await waitTime(200);  // Wait for animation or something else. Pending
+    // Final shot.
+    let desc = 'Full Shot';
+    const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
+    screenshots.push({screenshotName, desc, screenshotPath});
 
-    // Do auto screenshot after 100ms for animation.
-    // let autoSnapshotTimeout = setTimeout(async () => {
-    //     let desc = `Animation Interval`;
-    //     let promise = takeScreenshot(page, '', fileUrl, desc, version)
-    //         .then(({testName, screenshotPath}) => {
-    //             screenshots.push({testName, desc, screenshotPath});
-    //         });
-    //     screenshotPromises.push(promise);
-    // }, 100);
-
-    // Wait for puppeteerFinishTest() is called
-    // Or compare the whole page if nothing happened after 10 seconds.
-    await Promise.race([
-        pageFinishPromise,
-        waitTimeout().then(() => {
-            // console.warn('Test timeout after 3 seconds.');
-            // Final shot.
-            let desc = 'Final Shot';
-            return takeScreenshot(page, '', fileUrl, desc, version)
-                .then(({testName, screenshotPath}) => {
-                    screenshots.push({testName, desc, screenshotPath});
-                });
-        })
-    ]);
-
-    // clearTimeout(autoSnapshotTimeout);
-
-    // Wait for screenshot finished.
-    await Promise.all(screenshotPromises);
+    await runActions(page, testOpt, version, screenshots);
 
     await page.close();
 
@@ -192,12 +183,11 @@ async function writePNG(diffPNG, diffPath) {
 
 async function runTest(browser, testOpt, runtimeCode) {
     testOpt.status === 'running';
-    const fileUrl = testOpt.fileUrl;
-    const expectedResult = await runTestPage(browser, fileUrl, '4.2.1', runtimeCode);
-    const actualResult = await runTestPage(browser, fileUrl, '', runtimeCode);
+    const expectedResult = await runTestPage(browser, testOpt, '4.2.1', runtimeCode);
+    const actualResult = await runTestPage(browser, testOpt, '', runtimeCode);
 
-    sortScreenshots(expectedResult.screenshots);
-    sortScreenshots(actualResult.screenshots);
+    // sortScreenshots(expectedResult.screenshots);
+    // sortScreenshots(actualResult.screenshots);
 
     const screenshots = [];
     let idx = 0;
@@ -209,14 +199,14 @@ async function runTest(browser, testOpt, runtimeCode) {
             actual.screenshotPath
         );
 
-        let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.testName}-diff.png`;
+        let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
         await writePNG(diffPNG, diffPath);
 
         screenshots.push({
             actual: getClientRelativePath(actual.screenshotPath),
             expected: getClientRelativePath(expected.screenshotPath),
             diff: getClientRelativePath(diffPath),
-            name: actual.testName,
+            name: actual.screenshotName,
             desc: actual.desc,
             diffRatio
         });
@@ -228,14 +218,18 @@ async function runTest(browser, testOpt, runtimeCode) {
     testOpt.expectedLogs = expectedResult.logs;
     testOpt.actualErrors = actualResult.errors;
     testOpt.expectedErrors = expectedResult.errors;
-
+    testOpt.lastRun = Date.now();
 }
 
 async function runTests(pendingTests) {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+        headless: program.headless,
+        args: [`--window-size=830,750`] // new option
+    });
     // TODO Not hardcoded.
     // let runtimeCode = fs.readFileSync(path.join(__dirname, 'tmp/testRuntime.js'), 'utf-8');
     let runtimeCode = await buildRuntimeCode();
+    runtimeCode = `window.__TEST_PLAYBACK_SPEED__ = ${program.speed || 1};\n${runtimeCode}`;
 
     try {
         for (let testOpt of pendingTests) {
@@ -259,12 +253,10 @@ async function runTests(pendingTests) {
     await browser.close();
 }
 
-// Handling input arguments.
-const testsFileUrlList = process.argv[2] || '';
-runTests(testsFileUrlList.split(',').map(fileUrl => {
+runTests(program.tests.split(',').map(testName => {
     return {
-        fileUrl,
-        name: getTestName(fileUrl),
+        fileUrl: fileNameFromTest(testName),
+        name: testName,
         results: [],
         status: 'unsettled'
     };
