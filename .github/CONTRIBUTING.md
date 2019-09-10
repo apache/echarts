@@ -106,7 +106,9 @@ Then, open the test cases under `~/workspace/echarts/test` in Web browser. You c
 ### 4. Run test
 
 ```bash
-node test/runTest/cli.js
+# puppeteer is not in the devDependencies and needs to be installed manually
+npm install puppeteer
+npm run test:visual
 ```
 
 It will run all the test cases under `~/workspace/echarts/test` automatically to compare with the previous version. You can use this to check if your code bring some breaking change.
