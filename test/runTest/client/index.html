@@ -148,7 +148,7 @@ under the License.
                                     <div slot="header" class="clearfix">
                                         <span>Expected</span>
                                     </div>
-                                    <el-image :src="result.expected + '?' + Date.now()"></el-image>
+                                    <el-image :src="result.expected"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -157,7 +157,7 @@ under the License.
                                     <div slot="header" class="clearfix">
                                         <span>Actual</span>
                                     </div>
-                                    <el-image :src="result.actual + '?' + Date.now()"></el-image>
+                                    <el-image :src="result.actual"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -166,7 +166,7 @@ under the License.
                                     <div slot="header" class="clearfix">
                                         <span>Diff({{result.diffRatio.toFixed(4)}})</span>
                                     </div>
-                                    <el-image :src="result.diff + '?' + Date.now()" :preview-src-list="[result.diff]"></el-image>
+                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
                                 </el-card>
                             </el-col>
                         </el-row>

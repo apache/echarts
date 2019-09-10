@@ -115,7 +115,6 @@ async function runActions(page, testOpt, version, screenshots) {
         await timeline.runAction(action, _innerTakeScreenshot,  playbackSpeed);
 
         if (count === 0) {
-            // TODO Configuration time
             await waitTime(200);
             await _innerTakeScreenshot();
         }
@@ -219,7 +218,7 @@ async function runTest(browser, testOpt, runtimeCode) {
     testOpt.expectedLogs = expectedResult.logs;
     testOpt.actualErrors = actualResult.errors;
     testOpt.expectedErrors = expectedResult.errors;
-
+    testOpt.lastRun = Date.now();
 }
 
 async function runTests(pendingTests) {

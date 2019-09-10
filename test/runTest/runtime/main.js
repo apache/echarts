@@ -46,6 +46,17 @@ window.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(style);
 
 
+    // Prevent triggered mouseout event when mouse move out of window.
+    // DON"T know why, but it happens occasionally and cause hover state/ tooltip wrong before screenshot.
+
+
+    document.body.addEventListener('mouseout', e => {
+        if (!e.relatedTarget) {
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+    }, true);
+
     // Draw mouse
     const box = document.createElement('puppeteer-mouse-pointer');
     const styleElement = document.createElement('style');

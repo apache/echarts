@@ -28,5 +28,6 @@ module.exports = [
     'tmp-base.html',
 
     'finished-gl.html',
-    'scatter-gps.html'
+    'scatter-gps.html',
+    'webkit-dep.html'
 ];

@@ -28,6 +28,10 @@ function processTestsData(tests, oldTestsData) {
             if (result.diffRatio < 0.001) {
                 passed++;
             }
+            let timestamp = test.lastRun || 0;
+            result.diff = result.diff + '?' + timestamp;
+            result.actual = result.actual + '?' + timestamp;
+            result.expected = result.expected + '?' + timestamp;
         });
         test.percentage = passed === 0 ? 0 : Math.round(passed / test.results.length * 100);
         if (test.percentage === 100) {
