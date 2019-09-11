@@ -63,6 +63,7 @@ function getClientRelativePath(absPath) {
 function replaceEChartsVersion(interceptedRequest, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
+        console.log(getVersionDir(version));
         interceptedRequest.continue({
             url: `${origin}/test/runTest/${getVersionDir(version)}/echarts.js`
         });
@@ -138,7 +139,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
-    page.on('request', replaceEChartsVersion);
+    page.on('request', request => replaceEChartsVersion(request, version));
 
     await page.evaluateOnNewDocument(runtimeCode);
 
