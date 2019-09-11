@@ -170,6 +170,14 @@
     margin-top: 60px;
 }
 
+.test-screenshots .preview {
+    cursor: pointer;
+    color: #409eff;
+}
+.test-screenshots .preview:hover {
+    text-decoration: underline;
+}
+
 .test-screenshots img {
     /* height: 200px; */
     width: 100%;
@@ -194,6 +202,11 @@
 .test-errors .error-item {
     margin: 10px 20px;
     color: #f56c6c
+}
+
+iframe {
+    border: none;
+    overflow: overlay;
 }
 
 

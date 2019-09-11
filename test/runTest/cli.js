@@ -162,7 +162,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             timeout: 10000
         });
 
-        await waitTime(200);  // Wait for animation or something else. Pending
+        await waitTime(500);  // Wait for animation or something else. Pending
         // Final shot.
         await page.mouse.move(0, 0);
         let desc = 'Full Shot';
