@@ -103,8 +103,9 @@ const app = new Vue({
                 return this.fullTests.slice().sort(sortFunc);
             }
 
+            let searchString = this.searchString.toLowerCase();
             return this.fullTests.filter(test => {
-                return test.name.match(this.searchString);
+                return test.name.toLowerCase().match(searchString);
             }).sort(sortFunc);
         },
 
