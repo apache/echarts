@@ -77,17 +77,11 @@ class Thread {
         this.onUpdate;
     }
 
-    fork(noHeadless, replaySpeed, actualVersion, expectedVersion) {
+    fork(extraArgs) {
         let p = fork(path.join(__dirname, 'cli.js'), [
             '--tests',
             this.tests.map(testOpt => testOpt.name).join(','),
-            '--speed',
-            replaySpeed || 5,
-            '--actual',
-            actualVersion,
-            '--expected',
-            expectedVersion,
-            ...(noHeadless ? ['--no-headless'] : [])
+            ...extraArgs
         ]);
         this.p = p;
 
@@ -116,7 +110,8 @@ function startTests(testsNameList, socket, {
     threadsCount,
     replaySpeed,
     actualVersion,
-    expectedVersion
+    expectedVersion,
+    renderer
 }) {
     console.log('Received: ', testsNameList.join(','));
 
@@ -160,7 +155,13 @@ function startTests(testsNameList, socket, {
         for (let i = 0; i < threadsCount; i++) {
             runningThreads[i].onExit = onExit;
             runningThreads[i].onUpdate = onUpdate;
-            runningThreads[i].fork(noHeadless, replaySpeed, actualVersion, expectedVersion);
+            runningThreads[i].fork([
+                '--speed', replaySpeed || 5,
+                '--actual', actualVersion,
+                '--expected', expectedVersion,
+                '--renderer', renderer,
+                ...(noHeadless ? ['--no-headless'] : [])
+            ]);
             runningCount++;
         }
         // If something bad happens and no proccess are started successfully
@@ -228,7 +229,8 @@ async function start() {
                         threadsCount: data.threads,
                         replaySpeed: data.replaySpeed,
                         actualVersion: data.actualVersion,
-                        expectedVersion: data.expectedVersion
+                        expectedVersion: data.expectedVersion,
+                        renderer: data.renderer
                     }
                 );
             }
@@ -289,7 +291,8 @@ async function start() {
                     threadsCount: 1,
                     replaySpeed: 2,
                     actualVersion: data.actualVersion,
-                    expectedVersion: data.expectedVersion
+                    expectedVersion: data.expectedVersion,
+                    renderer: data.renderer
                 });
             }
             catch (e) { console.error(e); }

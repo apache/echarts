@@ -23,10 +23,40 @@ const fs = require('fs');
 const glob = require('glob');
 const {testNameFromFile} = require('./util');
 const util = require('util');
-const blacklist = require('./blacklist');
+const {blacklist, SVGBlacklist} = require('./blacklist');
 
 let _tests = [];
 let _testsMap = {};
+
+class Test {
+    constructor(fileUrl) {
+        this.fileUrl = fileUrl;
+        this.name = testNameFromFile(fileUrl);
+
+        // If this test case ignore svg testing.
+        this.ignoreSVG = false;
+
+        this.status = 'unsettled';
+
+        // Run results
+        this.results = [];  // Screenshots
+
+        this.actualLogs = [];
+        this.expectedLogs = [];
+        this.actualErrors = [];
+        this.expectedErrors = [];
+
+        // Use echarts versions.
+        this.actualVersion = null;
+        this.expectedVersion = null;
+
+        // Last timestamp
+        this.lastRun = 0;
+
+        // Use SVG
+        this.useSVG = false;
+    }
+}
 
 function getCacheFilePath() {
     return path.join(__dirname, 'tmp/__cache__.json');;
@@ -72,13 +102,8 @@ module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
             return;
         }
 
-        let test = {
-            fileUrl,
-            name: testNameFromFile(fileUrl),
-            // Default status should be unkown
-            // status: 'pending',
-            results: []
-        };
+        let test = new Test(fileUrl);
+        test.ignoreSVG = SVGBlacklist.includes(fileUrl);
 
         _tests.push(test);
         _testsMap[fileUrl] = test;

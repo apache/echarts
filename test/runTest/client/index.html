@@ -79,7 +79,7 @@ under the License.
                                 <el-slider style="width: 140px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
                             </div>
                             <div class="run-config-item">
-                                <span>Version </span>
+                                <span>Version</span>
                                 <span style="font-size: 12px; color:#afafaf">Expected</span>
                                 <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
                                     style="width: 80px;"
@@ -91,6 +91,13 @@ under the License.
                                     style="width: 80px;"
                                 >
                                     <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                                </el-select>
+                            </div>
+                            <div class="run-config-item">
+                                <span>Renderer</span>
+                                <el-select size="mini" v-model="runConfig.renderer" placeholder="Select Renderer">
+                                    <el-option key="canvas" label="canvas" value="canvas"></el-option>
+                                    <el-option key="svg" label="svg" value="svg"></el-option>
                                 </el-select>
                             </div>
                             <i slot="reference" class="el-icon-setting"></i>

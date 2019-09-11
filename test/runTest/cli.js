@@ -34,13 +34,15 @@ program
     .option('--no-headless', 'Not headless')
     .option('-s, --speed <speed>', 'Playback speed')
     .option('--expected <expected>', 'Expected version')
-    .option('--actual <actual>', 'Actual version');
+    .option('--actual <actual>', 'Actual version')
+    .option('--renderer <renderer>', 'svg/canvas renderer');
 
 program.parse(process.argv);
 
 program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
 program.expected = program.expected || '4.2.1';
+program.renderer = (program.renderer || 'canvas').toLowerCase();
 
 if (!program.tests) {
     throw new Error('Tests are required');
@@ -155,7 +157,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
 
     try {
         await page.setViewport({width: 800, height: 600});
-        await page.goto(`${origin}/test/${fileUrl}`, {
+        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}`, {
             waitUntil: 'networkidle2',
             timeout: 10000
         });
@@ -191,6 +193,11 @@ async function writePNG(diffPNG, diffPath) {
 };
 
 async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
+    if (program.renderer === 'svg' && testOpt.ignoreSVG) {
+        console.log(testOpt.name + ' don\'t support svg testing.');
+        return;
+    }
+
     testOpt.status === 'running';
     const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
     const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
@@ -229,6 +236,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
     testOpt.expectedErrors = expectedResult.errors;
     testOpt.actualVersion = actualVersion;
     testOpt.expectedVersion = expectedVersion;
+    testOpt.useSVG = program.renderer === 'svg';
     testOpt.lastRun = Date.now();
 }
 
@@ -244,7 +252,7 @@ async function runTests(pendingTests) {
 
     try {
         for (let testOpt of pendingTests) {
-            console.log('Running Test', testOpt.name);
+            console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
             try {
                 await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
             }
@@ -269,6 +277,10 @@ runTests(program.tests.split(',').map(testName => {
         fileUrl: fileNameFromTest(testName),
         name: testName,
         results: [],
+        actualLogs: [],
+        expectedLogs: [],
+        actualErrors: [],
+        expectedErrors: [],
         status: 'pending'
     };
 }));
