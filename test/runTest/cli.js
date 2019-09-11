@@ -73,7 +73,7 @@ function replaceEChartsVersion(interceptedRequest, version) {
     }
 }
 
-async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
+async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) {
     let screenshotName = testNameFromFile(fileUrl);
     if (desc) {
         screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
@@ -81,7 +81,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
     if (minor) {
         screenshotName += '-' + minor;
     }
-    let screenshotPrefix = version ? 'expected' : 'actual';
+    let screenshotPrefix = isExpected ? 'expected' : 'actual';
     fse.ensureDirSync(path.join(__dirname, getScreenshotDir()));
     let screenshotPath = path.join(__dirname, `${getScreenshotDir()}/${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
@@ -92,7 +92,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
     return {screenshotName, screenshotPath};
 }
 
-async function runActions(page, testOpt, version, screenshots) {
+async function runActions(page, testOpt, isExpected, screenshots) {
     let timeline = new Timeline(page);
     let actions;
     try {
@@ -114,10 +114,10 @@ async function runActions(page, testOpt, version, screenshots) {
         let count = 0;
         async function _innerTakeScreenshot() {
             const desc = action.desc || action.name;
-            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version, count++);
+            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, count++);
             screenshots.push({screenshotName, desc, screenshotPath});
         }
-        await timeline.runAction(action, _innerTakeScreenshot,  playbackSpeed);
+        await timeline.runAction(action, _innerTakeScreenshot, playbackSpeed);
 
         if (count === 0) {
             await waitTime(200);
@@ -131,7 +131,7 @@ async function runActions(page, testOpt, version, screenshots) {
     timeline.stop();
 }
 
-async function runTestPage(browser, testOpt, version, runtimeCode) {
+async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
@@ -164,10 +164,10 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
         // Final shot.
         await page.mouse.move(0, 0);
         let desc = 'Full Shot';
-        const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
+        const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, isExpected);
         screenshots.push({screenshotName, desc, screenshotPath});
 
-        await runActions(page, testOpt, version, screenshots);
+        await runActions(page, testOpt, isExpected, screenshots);
     }
     catch(e) {
         console.error(e);
@@ -192,8 +192,8 @@ async function writePNG(diffPNG, diffPath) {
 
 async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
     testOpt.status === 'running';
-    const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode);
-    const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode);
+    const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
+    const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
 
     // sortScreenshots(expectedResult.screenshots);
     // sortScreenshots(actualResult.screenshots);
