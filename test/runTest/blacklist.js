@@ -29,5 +29,10 @@ module.exports = [
 
     'finished-gl.html',
     'scatter-gps.html',
-    'webkit-dep.html'
+    'webkit-dep.html',
+
+    // This case will have timeout
+    'visualMap-performance1.html',
+    'lines-bus.html',
+    'lines-stream-not-large.html'
 ];

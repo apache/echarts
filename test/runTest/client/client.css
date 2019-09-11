@@ -79,6 +79,11 @@
     margin-left: 5px;
     cursor: pointer;
 }
+.nav-toolbar .el-button {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
 .run-config-item {
     margin: 5px 0;
 }

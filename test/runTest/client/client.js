@@ -67,9 +67,13 @@ const app = new Vue({
         allSelected: false,
         lastSelectedIndex: -1,
 
+        versions: [],
+
         runConfig: {
             noHeadless: false,
             replaySpeed: 5,
+            actualVersion: 'local',
+            expectedVersion: null,
             threads: 1
         }
     },
@@ -162,15 +166,20 @@ const app = new Vue({
                 this.tests[i].selected = selected;
             }
         },
-        refreshList() {
-
-        },
-        runTest(testName) {
+        runSingleTest(testName) {
             runTests([testName]);
         },
-        runSelectedTests() {
+        run(runTarget) {
             const tests = this.fullTests.filter(test => {
-                return test.selected;
+                if (runTarget === 'selected') {
+                    return test.selected;
+                }
+                else if (runTarget === 'unfinished') {
+                    return test.status !== 'finished';
+                }
+                else {  // Run all
+                    return true;
+                }
             }).map(test => {
                 return test.name;
             });
@@ -184,23 +193,31 @@ const app = new Vue({
 });
 
 function runTests(tests) {
-    if (tests.length > 0) {
-        app.running = true;
-        socket.emit('run', {
-            tests,
-            threads: app.runConfig.threads,
-            noHeadless: app.runConfig.noHeadless,
-            replaySpeed: app.runConfig.noHeadless
-                ? app.runConfig.replaySpeed
-                : 5 // Force run at 5x speed
-        });
-    }
-    else {
+    if (!tests.length) {
         app.$notify({
             title: 'No test selected.',
             position: 'top-right'
         });
+        return;
     }
+    if (!app.runConfig.expectedVersion || !app.runConfig.actualVersion) {
+        app.$notify({
+            title: 'No echarts version selected.',
+            position: 'top-right'
+        });
+        return;
+    }
+    app.running = true;
+    socket.emit('run', {
+        tests,
+        expectedVersion: app.runConfig.expectedVersion,
+        actualVersion: app.runConfig.actualVersion,
+        threads: app.runConfig.threads,
+        noHeadless: app.runConfig.noHeadless,
+        replaySpeed: app.runConfig.noHeadless
+            ? app.runConfig.replaySpeed
+            : 5 // Force run at 5x speed
+    });
 }
 
 
@@ -239,6 +256,17 @@ socket.on('finish', res => {
     });
     console.log(`${res.count} test complete, Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`);
     app.running = false;
+});
+socket.on('versions', versions => {
+    app.versions = versions.filter(version => {
+        return !version.startsWith('2.')
+            && !version.match('beta')
+            && !version.match('rc');
+    }).reverse();
+    if (!app.runConfig.expectedVersion) {
+        app.runConfig.expectedVersion = app.versions[0];
+    }
+    app.versions.unshift('local');
 });
 
 function updateTestHash() {

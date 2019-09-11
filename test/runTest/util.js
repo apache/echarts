@@ -34,7 +34,7 @@ module.exports.fileNameFromTest = function (testName) {
 };
 
 function getVersionDir(version) {
-    version = version || 'developing';
+    version = version || 'local';
     return `tmp/__version__/${version}`;
 };
 module.exports.getVersionDir = getVersionDir;
@@ -44,10 +44,10 @@ module.exports.getActionsFullPath = function (testName) {
 };
 
 
-module.exports.prepareEChartsVersion = function (version) {
+module.exports.prepareEChartsLib = function (version) {
     let versionFolder = path.join(__dirname, getVersionDir(version));
     fse.ensureDirSync(versionFolder);
-    if (!version) {
+    if (!version || version === 'local') {
         // Developing version, make sure it's new build
         return fse.copy(
             path.join(__dirname, '../../dist/echarts.js'),
@@ -58,7 +58,7 @@ module.exports.prepareEChartsVersion = function (version) {
         if (!fs.existsSync(`${versionFolder}/echarts.js`)) {
             const file = fs.createWriteStream(`${versionFolder}/echarts.js`);
 
-            console.log('Downloading echarts4.2.1 from ', `https://cdn.jsdelivr.net/npm/echarts@${version}/dist/echarts.js`);
+            console.log(`Downloading echarts@${version} from `, `https://cdn.jsdelivr.net/npm/echarts@${version}/dist/echarts.js`);
             https.get(`https://cdn.jsdelivr.net/npm/echarts@${version}/dist/echarts.js`, response => {
                 response.pipe(file);
 
@@ -70,6 +70,29 @@ module.exports.prepareEChartsVersion = function (version) {
         else {
             resolve();
         }
+    });
+};
+
+module.exports.fetchVersions = function () {
+    return new Promise((resolve, reject) => {
+        https.get(`https://registry.npmjs.org/echarts`, res => {
+            if (res.statusCode !== 200) {
+                res.destroy();
+                reject('Failed fetch versions from https://registry.npmjs.org/echarts');
+                return;
+            }
+            var buffers = [];
+            res.on('data', buffers.push.bind(buffers));
+            res.on('end', function () {
+                try {
+                    var data = Buffer.concat(buffers);
+                    resolve(Object.keys(JSON.parse(data).versions));
+                }
+                catch (e) {
+                    reject(e.toString());
+                }
+            });
+        });
     });
 };
 
