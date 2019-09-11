@@ -25,7 +25,7 @@ const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
 const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateActionsMeta} = require('./store');
-const {prepareEChartsVersion, getActionsFullPath} = require('./util');
+const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 
@@ -75,12 +75,16 @@ class Thread {
         this.onUpdate;
     }
 
-    fork(noHeadless, replaySpeed) {
+    fork(noHeadless, replaySpeed, actualVersion, expectedVersion) {
         let p = fork(path.join(__dirname, 'cli.js'), [
             '--tests',
             this.tests.map(testOpt => testOpt.name).join(','),
             '--speed',
             replaySpeed || 5,
+            '--actual',
+            actualVersion,
+            '--expected',
+            expectedVersion,
             ...(noHeadless ? ['--no-headless'] : [])
         ]);
         this.p = p;
@@ -108,7 +112,9 @@ class Thread {
 function startTests(testsNameList, socket, {
     noHeadless,
     threadsCount,
-    replaySpeed
+    replaySpeed,
+    actualVersion,
+    expectedVersion
 }) {
     console.log('Received: ', testsNameList.join(','));
 
@@ -147,7 +153,7 @@ function startTests(testsNameList, socket, {
         for (let i = 0; i < threadsCount; i++) {
             runningThreads[i].onExit = onExit;
             runningThreads[i].onUpdate = onUpdate;
-            runningThreads[i].fork(noHeadless, replaySpeed);
+            runningThreads[i].fork(noHeadless, replaySpeed, actualVersion, expectedVersion);
             runningCount++;
         }
         // If something bad happens and no proccess are started successfully
@@ -174,8 +180,7 @@ async function start() {
         return;
     }
 
-    await prepareEChartsVersion('4.2.1'); // Expected version.
-    await prepareEChartsVersion(); // Version to test
+    let versions = await fetchVersions();
 
     // let runtimeCode = await buildRuntimeCode();
     // fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
@@ -189,7 +194,12 @@ async function start() {
         socket.emit('update', {tests: getTestsList()});
 
         socket.on('run', async data => {
+
             let startTime = Date.now();
+
+            await prepareEChartsLib(data.expectedVersion); // Expected version.
+            await prepareEChartsLib(data.actualVersion); // Version to test
+
             // TODO Should broadcast to all sockets.
             try {
                 await startTests(
@@ -198,7 +208,9 @@ async function start() {
                     {
                         noHeadless: data.noHeadless,
                         threadsCount: data.threads,
-                        replaySpeed: data.replaySpeed
+                        replaySpeed: data.replaySpeed,
+                        actualVersion: data.actualVersion,
+                        expectedVersion: data.expectedVersion
                     }
                 );
             }
@@ -213,6 +225,8 @@ async function start() {
         socket.on('stop', () => {
             stopRunningTests();
         });
+
+        socket.emit('versions', versions);
     });
 
     io.of('/recorder').on('connect', async socket => {
@@ -245,7 +259,9 @@ async function start() {
                 await startTests([data.testName], socket, {
                     noHeadless: true,
                     threadsCount: 1,
-                    replaySpeed: 2
+                    replaySpeed: 2,
+                    actualVersion: data.actualVersion,
+                    expectedVersion: data.expectedVersion
                 });
             }
             catch (e) { console.error(e); }
@@ -264,7 +280,7 @@ async function start() {
     });
 
     console.log(`Dashboard: ${origin}/test/runTest/client/index.html`);
-    console.log(`Interaction Recorder: ${origin}/test/runTest/recorder/index.html`);
+    // console.log(`Interaction Recorder: ${origin}/test/runTest/recorder/index.html`);
     // open(`${origin}/test/runTest/client/index.html`);
 
 }

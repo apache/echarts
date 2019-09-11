@@ -32,11 +32,15 @@ const Timeline = require('./Timeline');
 program
     .option('-t, --tests <tests>', 'Tests names list')
     .option('--no-headless', 'Not headless')
-    .option('-s, --speed <speed>', 'Playback speed');
+    .option('-s, --speed <speed>', 'Playback speed')
+    .option('--expected <expected>', 'Expected version')
+    .option('--actual <actual>', 'Actual version');
 
 program.parse(process.argv);
 
 program.speed = +program.speed || 1;
+program.actual = program.actual || 'local';
+program.expected = program.expected || '4.2.1';
 
 if (!program.tests) {
     throw new Error('Tests are required');
@@ -59,6 +63,7 @@ function getClientRelativePath(absPath) {
 function replaceEChartsVersion(interceptedRequest, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
+        console.log(getVersionDir(version));
         interceptedRequest.continue({
             url: `${origin}/test/runTest/${getVersionDir(version)}/echarts.js`
         });
@@ -134,7 +139,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
-    page.on('request', replaceEChartsVersion);
+    page.on('request', request => replaceEChartsVersion(request, version));
 
     await page.evaluateOnNewDocument(runtimeCode);
 
@@ -144,6 +149,9 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
     page.on('pageerror', error => {
         errors.push(error.toString());
     });
+    page.on('dialog', async dialog => {
+        await dialog.dismiss();
+    });
 
     try {
         await page.setViewport({width: 800, height: 600});
@@ -151,18 +159,19 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
             waitUntil: 'networkidle2',
             timeout: 10000
         });
+
+        await waitTime(200);  // Wait for animation or something else. Pending
+        // Final shot.
+        await page.mouse.move(0, 0);
+        let desc = 'Full Shot';
+        const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
+        screenshots.push({screenshotName, desc, screenshotPath});
+
+        await runActions(page, testOpt, version, screenshots);
     }
     catch(e) {
         console.error(e);
     }
-
-    await waitTime(200);  // Wait for animation or something else. Pending
-    // Final shot.
-    let desc = 'Full Shot';
-    const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
-    screenshots.push({screenshotName, desc, screenshotPath});
-
-    await runActions(page, testOpt, version, screenshots);
 
     await page.close();
 
@@ -181,10 +190,10 @@ async function writePNG(diffPNG, diffPath) {
     });
 };
 
-async function runTest(browser, testOpt, runtimeCode) {
+async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
     testOpt.status === 'running';
-    const expectedResult = await runTestPage(browser, testOpt, '4.2.1', runtimeCode);
-    const actualResult = await runTestPage(browser, testOpt, '', runtimeCode);
+    const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode);
+    const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode);
 
     // sortScreenshots(expectedResult.screenshots);
     // sortScreenshots(actualResult.screenshots);
@@ -218,6 +227,8 @@ async function runTest(browser, testOpt, runtimeCode) {
     testOpt.expectedLogs = expectedResult.logs;
     testOpt.actualErrors = actualResult.errors;
     testOpt.expectedErrors = expectedResult.errors;
+    testOpt.actualVersion = actualVersion;
+    testOpt.expectedVersion = expectedVersion;
     testOpt.lastRun = Date.now();
 }
 
@@ -235,11 +246,11 @@ async function runTests(pendingTests) {
         for (let testOpt of pendingTests) {
             console.log('Running Test', testOpt.name);
             try {
-                await runTest(browser, testOpt, runtimeCode);
+                await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
             }
             catch (e) {
                 // Restore status
-                testOpt.status = 'pending';
+                testOpt.status = 'unsettled';
                 console.log(e);
             }
 
