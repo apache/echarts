@@ -63,7 +63,7 @@ function getClientRelativePath(absPath) {
 function replaceEChartsVersion(interceptedRequest, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
-        console.log(getVersionDir(version));
+        console.log('Use echarts version: ' + getVersionDir(version));
         interceptedRequest.continue({
             url: `${origin}/test/runTest/${getVersionDir(version)}/echarts.js`
         });
@@ -269,6 +269,6 @@ runTests(program.tests.split(',').map(testName => {
         fileUrl: fileNameFromTest(testName),
         name: testName,
         results: [],
-        status: 'unsettled'
+        status: 'pending'
     };
 }));

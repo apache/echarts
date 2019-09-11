@@ -40,7 +40,7 @@ module.exports.getTestByFileUrl = function (url) {
     return _testsMap[url];
 };
 
-module.exports.updateTestsList = async function () {
+module.exports.updateTestsList = async function (setPendingTestToUnsettled) {
     let tmpFolder = path.join(__dirname, 'tmp');
     fse.ensureDirSync(tmpFolder);
     _tests = [];
@@ -51,8 +51,10 @@ module.exports.updateTestsList = async function () {
         _tests.forEach(test => {
             // In somehow tests are stopped and leave the status pending.
             // Set the status to unsettled again.
-            if (test.status === 'pending') {
-                test.status = 'unsettled';
+            if (setPendingTestToUnsettled) {
+                if (test.status === 'pending') {
+                    test.status = 'unsettled';
+                }
             }
             _testsMap[test.fileUrl] = test;
         });

@@ -258,7 +258,7 @@ socket.on('update', msg => {
         }).catch(() => {});
     }
     // TODO
-    // app.running = !!msg.running;
+    app.running = !!msg.running;
     app.fullTests = processTestsData(msg.tests, app.fullTests);
 
     firstUpdate = false;
@@ -272,6 +272,14 @@ socket.on('finish', res => {
         duration: 8000
     });
     console.log(`${res.count} test complete, Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`);
+    app.running = false;
+});
+socket.on('abort', res => {
+    app.$notify({
+        type: 'info',
+        title: `Aborted`,
+        duration: 4000
+    });
     app.running = false;
 });
 socket.on('versions', versions => {
