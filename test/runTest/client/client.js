@@ -109,6 +109,22 @@ const app = new Vue({
             }).sort(sortFunc);
         },
 
+        selectedTests() {
+            return this.fullTests.filter(test => {
+                return test.selected;
+            });
+        },
+        unfinishedTests() {
+            return this.fullTests.filter(test => {
+                return test.status !== 'finished';
+            });
+        },
+        failedTests() {
+            return this.fullTests.filter(test => {
+                return test.status === 'finished' && test.summary !== 'success';
+            });
+        },
+
         currentTest() {
             let currentTest = this.fullTests.find(item => item.name === this.currentTestName);
             if (!currentTest) {
@@ -171,20 +187,20 @@ const app = new Vue({
             runTests([testName]);
         },
         run(runTarget) {
-            const tests = this.fullTests.filter(test => {
-                if (runTarget === 'selected') {
-                    return test.selected;
-                }
-                else if (runTarget === 'unfinished') {
-                    return test.status !== 'finished';
-                }
-                else {  // Run all
-                    return true;
-                }
-            }).map(test => {
-                return test.name;
-            });
-            runTests(tests);
+            let tests;
+            if (runTarget === 'selected') {
+                tests = this.selectedTests;
+            }
+            else if (runTarget === 'unfinished') {
+                tests = this.unfinishedTests;
+            }
+            else if (runTarget === 'failed') {
+                tests = this.failedTests;
+            }
+            else {
+                tests = this.fullTests;
+            }
+            runTests(tests.map(test => test.name));
         },
         stopTests() {
             this.running = false;

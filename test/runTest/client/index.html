@@ -46,10 +46,11 @@ under the License.
                             @click="run('selected')"
                             @command="run"
                         >
-                            <i class="el-icon-caret-right"></i> Run selected
+                            <i class="el-icon-caret-right"></i> Run selected ({{selectedTests.length}})
                             <el-dropdown-menu slot="dropdown" >
-                                <el-dropdown-item command="unfinished">Run unfinished</el-dropdown-item>
-                                <el-dropdown-item command="all">Run all</el-dropdown-item>
+                                <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
+                                <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
+                                <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
                             </el-dropdown-menu>
                         </el-dropdown>
 
