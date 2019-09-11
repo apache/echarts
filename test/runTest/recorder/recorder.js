@@ -196,6 +196,7 @@ function notify(title, message) {
 
 function keyboardRecordingHandler(e) {
     if (e.key.toLowerCase() === 'r' && e.shiftKey) {
+        let $iframe = getIframe();
         if (!app.recordingAction) {
             // Create a new action if currentAction has ops.
             if (!app.currentAction || app.currentAction.ops.length > 0) {
@@ -204,7 +205,6 @@ function keyboardRecordingHandler(e) {
 
             app.recordingAction = app.currentAction;
             if (app.recordingAction) {
-                let $iframe = getIframe();
                 app.recordingAction.scrollY = $iframe.contentWindow.scrollY;
                 app.recordingAction.scrollX = $iframe.contentWindow.scrollX;
                 app.recordingAction.timestamp = Date.now();
@@ -213,8 +213,19 @@ function keyboardRecordingHandler(e) {
             }
         }
         else {
+            if (app.recordingAction &&
+                (app.recordingAction.scrollY !== $iframe.contentWindow.scrollY
+             || app.recordingAction.scrollX !== $iframe.contentWindow.scrollX)) {
+                app.recordingAction.ops = [];
+                app.$alert('You can\'t scroll the page during the action recording. Please create another action after scrolled to the next demo.', 'Recording Fail', {
+                    confirmButtonText: 'Get!'
+                });
+
+            }
+            else {
+                saveData();
+            }
             app.recordingAction = null;
-            saveData();
         }
         // Get scroll
     }
