@@ -28,6 +28,7 @@ const {getTestsList, updateTestsList, saveTestsList, mergeTestsResults, updateAc
 const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
+const open = require('open');
 
 function serve() {
     const server = http.createServer((request, response) => {
@@ -51,6 +52,7 @@ function serve() {
 
 let runningThreads = [];
 let pendingTests;
+let aborted = false;
 
 function stopRunningTests() {
     if (runningThreads) {
@@ -75,17 +77,11 @@ class Thread {
         this.onUpdate;
     }
 
-    fork(noHeadless, replaySpeed, actualVersion, expectedVersion) {
+    fork(extraArgs) {
         let p = fork(path.join(__dirname, 'cli.js'), [
             '--tests',
             this.tests.map(testOpt => testOpt.name).join(','),
-            '--speed',
-            replaySpeed || 5,
-            '--actual',
-            actualVersion,
-            '--expected',
-            expectedVersion,
-            ...(noHeadless ? ['--no-headless'] : [])
+            ...extraArgs
         ]);
         this.p = p;
 
@@ -114,7 +110,8 @@ function startTests(testsNameList, socket, {
     threadsCount,
     replaySpeed,
     actualVersion,
-    expectedVersion
+    expectedVersion,
+    renderer
 }) {
     console.log('Received: ', testsNameList.join(','));
 
@@ -131,18 +128,23 @@ function startTests(testsNameList, socket, {
             testOpt.results = [];
         });
 
-        socket.emit('update', {tests: getTestsList()});
+        if (!aborted) {
+            socket.emit('update', {tests: getTestsList(), running: true});
+        }
 
         let runningCount = 0;
         function onExit() {
             runningCount--;
             if (runningCount === 0) {
+                runningThreads = [];
                 resolve();
             }
         }
         function onUpdate() {
             // Merge tests.
-            socket.emit('update', {tests: getTestsList(), running: true});
+            if (!aborted) {
+                socket.emit('update', {tests: getTestsList(), running: true});
+            }
         }
         threadsCount = Math.min(threadsCount, pendingTests.length);
         // Assigning tests to threads
@@ -153,7 +155,13 @@ function startTests(testsNameList, socket, {
         for (let i = 0; i < threadsCount; i++) {
             runningThreads[i].onExit = onExit;
             runningThreads[i].onUpdate = onUpdate;
-            runningThreads[i].fork(noHeadless, replaySpeed, actualVersion, expectedVersion);
+            runningThreads[i].fork([
+                '--speed', replaySpeed || 5,
+                '--actual', actualVersion,
+                '--expected', expectedVersion,
+                '--renderer', renderer,
+                ...(noHeadless ? ['--no-headless'] : [])
+            ]);
             runningCount++;
         }
         // If something bad happens and no proccess are started successfully
@@ -180,7 +188,10 @@ async function start() {
         return;
     }
 
-    let versions = await fetchVersions();
+    let [versions] = await Promise.all([
+        fetchVersions(),
+        updateTestsList(true)
+    ]);
 
     // let runtimeCode = await buildRuntimeCode();
     // fse.outputFileSync(path.join(__dirname, 'tmp/testRuntime.js'), runtimeCode, 'utf-8');
@@ -191,39 +202,58 @@ async function start() {
     io.of('/client').on('connect', async socket => {
         await updateTestsList();
 
-        socket.emit('update', {tests: getTestsList()});
+        socket.emit('update', {
+            tests: getTestsList(),
+            running: runningThreads.length > 0
+        });
 
         socket.on('run', async data => {
 
             let startTime = Date.now();
+            aborted = false;
 
             await prepareEChartsLib(data.expectedVersion); // Expected version.
             await prepareEChartsLib(data.actualVersion); // Version to test
+
+            if (aborted) {  // If it is aborted when downloading echarts lib.
+                return;
+            }
 
             // TODO Should broadcast to all sockets.
             try {
                 await startTests(
                     data.tests,
-                    socket,
+                    io.of('/client'),
                     {
                         noHeadless: data.noHeadless,
                         threadsCount: data.threads,
                         replaySpeed: data.replaySpeed,
                         actualVersion: data.actualVersion,
-                        expectedVersion: data.expectedVersion
+                        expectedVersion: data.expectedVersion,
+                        renderer: data.renderer
                     }
                 );
             }
-            catch (e) { console.error(e); }
-            console.log('Finished');
-            socket.emit('finish', {
-                time: Date.now() - startTime,
-                count: data.tests.length,
-                threads: data.threads
-            });
+            catch (e) {
+                console.error(e);
+            }
+
+            if (!aborted) {
+                console.log('Finished');
+                io.of('/client').emit('finish', {
+                    time: Date.now() - startTime,
+                    count: data.tests.length,
+                    threads: data.threads
+                });
+            }
+            else {
+                console.log('Aborted!');
+            }
         });
         socket.on('stop', () => {
             stopRunningTests();
+            io.of('/client').emit('abort');
+            aborted = true;
         });
 
         socket.emit('versions', versions);
@@ -261,7 +291,8 @@ async function start() {
                     threadsCount: 1,
                     replaySpeed: 2,
                     actualVersion: data.actualVersion,
-                    expectedVersion: data.expectedVersion
+                    expectedVersion: data.expectedVersion,
+                    renderer: data.renderer
                 });
             }
             catch (e) { console.error(e); }
@@ -280,8 +311,8 @@ async function start() {
     });
 
     console.log(`Dashboard: ${origin}/test/runTest/client/index.html`);
-    // console.log(`Interaction Recorder: ${origin}/test/runTest/recorder/index.html`);
-    // open(`${origin}/test/runTest/client/index.html`);
+    console.log(`Interaction Recorder: ${origin}/test/runTest/recorder/index.html`);
+    open(`${origin}/test/runTest/client/index.html`);
 
 }
 

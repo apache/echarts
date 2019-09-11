@@ -17,7 +17,7 @@
 * under the License.
 */
 
-module.exports = [
+module.exports.blacklist = [
     '-cases.html',
     'geo-random-stream.html',
     'chord.html',
@@ -35,4 +35,11 @@ module.exports = [
     'visualMap-performance1.html',
     'lines-bus.html',
     'lines-stream-not-large.html'
+];
+
+
+module.exports.SVGBlacklist = [
+    'bar-stream-large.html',
+    'bar-stream-large1.html',
+    'candlestick-large2.html'
 ];
