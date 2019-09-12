@@ -233,9 +233,12 @@ under the License.
                 <el-dialog
                     :visible.sync="showIframeDialog"
                     :center="true"
-                    :title="previewTitle"
                     width="850px"
                 >
+                    <div slot="title">
+                        {{previewTitle}}
+                        <a target="_blank" :href="'../../' + previewTitle"><i class="el-icon-link"></i>Open in New Window</a>
+                    </div>
                     <iframe :src="previewIframeSrc" width="800" height="600"></iframe>
                 </el-dialog>
             </el-main>

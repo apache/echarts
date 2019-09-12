@@ -107,7 +107,7 @@ Then, open the test cases under `~/workspace/echarts/test` in Web browser. You c
 
 ```bash
 # puppeteer is not in the devDependencies and needs to be installed manually
-npm install puppeteer
+npm install puppeteer --no-save
 npm run test:visual
 ```
 
