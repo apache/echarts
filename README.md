@@ -52,8 +52,33 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ## Build
 
-Check this tutorial [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts)
- please.
+Build echarts source code:
+
+Execute the instructions in the root directory of the echarts:
+([Node.js](https://nodejs.org) is required)
+
+```shell
+# Install the dependencies from NPM:
+npm install
+
+# If intending to build and get all types of the "production" files:
+node build/build.js --release
+
+# If only intending to get `dist/echarts.js`, which is usually
+# enough in dev or running the tests:
+node build/build.js
+
+# Get the same "production" files as `node build/build.js`, while
+# watching the editing of the source code. Usually used in dev.
+node build/build.js -w
+
+# Check the manual:
+node build/build.js --help
+```
+
+Then the "production" files are generated in `dist` directory.
+
+More custom build approaches can be checked in this tutorial: [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts) please.
 
 ## Contribution
 
