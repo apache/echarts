@@ -161,6 +161,8 @@ export default echarts.extendChartView({
         var max = [];
         bbox.fromPoints(points, min, max);
 
+        // If don't Store min max when collapse the root node after roam,
+        // the root node will disappear.
         var oldMin = this._min;
         var oldMax = this._max;
 
