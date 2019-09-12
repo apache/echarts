@@ -62,18 +62,22 @@ Execute the instructions in the root directory of the echarts:
 npm install
 
 # If intending to build and get all types of the "production" files:
-node build/build.js --release
+npm run release
+# The same as `node build/build.js --release`
 
 # If only intending to get `dist/echarts.js`, which is usually
 # enough in dev or running the tests:
-node build/build.js
+npm run build
+# The same as `node build/build.js`
 
 # Get the same "production" files as `node build/build.js`, while
 # watching the editing of the source code. Usually used in dev.
-node build/build.js -w
+npm run watch
+# The same as `node build/build.js -w`
 
 # Check the manual:
-node build/build.js --help
+npm run help
+# The same as `node build/build.js --help`
 ```
 
 Then the "production" files are generated in `dist` directory.

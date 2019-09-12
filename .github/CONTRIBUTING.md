@@ -113,7 +113,19 @@ npm run test:visual
 
 It will run all the test cases under `~/workspace/echarts/test` automatically to compare with the previous version. You can use this to check if your code bring some breaking change.
 
-### 5. Make a pull request
+### 5. Check the code style
+
+The code style should follow the [Code Standard](https://echarts.apache.org/en/coding-standard.html).
+
+It is recommanded to install [eslint](https://eslint.org) plugin to in your IDE to find the invalid code style.
+Otherwise, we can also use
+```bash
+npm run lint
+```
+to check the the code style.
+
+
+### 6. Make a pull request
 
 Fork ECharts project into your own project. Checkout a branch from master branch named `fix-xxxx`, where xxxx is the issue id related. If there's no related issue, you need to create one in most cases to describe what's wrong or what new feature is required.
 
