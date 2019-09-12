@@ -184,7 +184,7 @@ function checkPuppeteer() {
 async function start() {
     if (!checkPuppeteer()) {
         // TODO Check version.
-        console.error(`Can't find puppeteer >= 1.19.0, use 'npm install puppeteer' to install or update`);
+        console.error(`Can't find puppeteer >= 1.19.0, use 'npm install puppeteer --no-save' to install or update`);
         return;
     }
 

@@ -25,22 +25,32 @@
     // `true` by default for debugging.
     sourceMap == null && (sourceMap = true);
 
+    var params = {};
+    location.search.slice(1).split('&').forEach(item => {
+        var kv = item.split('=');
+        params[kv[0]] = kv[1];
+    });
     // Set default renderer in dev mode from hash.
-    var matchResult = location.href.match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
-    if (matchResult) {
-        window.__ECHARTS__DEFAULT__RENDERER__ = matchResult[1];
+    if (params.__RENDERER__) {
+        window.__ECHARTS__DEFAULT__RENDERER__ = params.__RENDERER__;
     }
 
     // Set echarts source code.
-    var matchResult = location.href.match(/[?&]__ECDIST__=(webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
-    var ecDistPath = 'dist/echarts';
-    if (matchResult) {
+    var ecDistPath;
+    if (params.__ECDIST__) {
         ecDistPath = ({
             'webpack-req-ec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-ec',
             'webpack-req-eclibec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-eclibec',
             'webpackold-req-ec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-ec',
             'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec',
-        })[matchResult[1]];
+        })[params.__ECDIST__];
+        if (!ecDistPath && params.__ECDIST__.match(/[0-9.]/)) {
+            // Version number
+            ecDistPath = 'test/runTest/tmp/__version__/' + params.__ECDIST__ + '/echarts';
+        }
+    }
+    if (!ecDistPath) {
+        ecDistPath = 'dist/echarts';
     }
 
     if (typeof require !== 'undefined') {

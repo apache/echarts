@@ -31,6 +31,9 @@ module.exports.blacklist = [
     'scatter-gps.html',
     'webkit-dep.html',
 
+    // Image size not match
+    'symbol2.html',
+
     // This case will have timeout
     'visualMap-performance1.html',
     'lines-bus.html',

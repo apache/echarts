@@ -175,8 +175,9 @@ under the License.
                                 <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Expected - {{currentTest.expectedVersion || ''}}</span>
+                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'expected')"></i>
                                     </div>
-                                    <el-image :src="result.expected"></el-image>
+                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -184,8 +185,9 @@ under the License.
                                 <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Actual - {{currentTest.actualVersion || ''}}</span>
+                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'actual')"></i>
                                     </div>
-                                    <el-image :src="result.actual"></el-image>
+                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -194,7 +196,7 @@ under the License.
                                     <div slot="header" class="clearfix">
                                         <span>Diff - {{result.diffRatio.toFixed(4)}}</span>
                                     </div>
-                                    <el-image :src="result.diff"></el-image>
+                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
                                 </el-card>
                             </el-col>
                         </el-row>
@@ -203,19 +205,11 @@ under the License.
                     <div class="test-errors">
                         <el-row :gutter="40">
                             <el-col :span="12">
-                                <el-alert
-                                    title="Expected Errors"
-                                    type="error"
-                                    show-icon>
-                                </el-alert>
+                                <el-alert title="Expected Errors" type="error" show-icon></el-alert>
                                 <div class="error-item" v-for="error in currentTest.expectedErrors">{{error}}</div>
                             </el-col>
                             <el-col :span="12">
-                                <el-alert
-                                    title="Actual Errors"
-                                    type="error"
-                                    show-icon>
-                                </el-alert>
+                                <el-alert title="Actual Errors" type="error" show-icon> </el-alert>
                                 <div class="error-item"  v-for="error in currentTest.actualErrors">{{error}}</div>
                             </el-col>
                         </el-row>
@@ -224,28 +218,29 @@ under the License.
                     <div class="test-logs">
                         <el-row :gutter="40">
                             <el-col :span="12">
-                                <el-alert
-                                    title="Expected Logs"
-                                    type="info"
-                                    show-icon>
-                                </el-alert>
+                                <el-alert title="Expected Logs" type="info" show-icon> </el-alert>
                                 <div class="log-item"  v-for="log in currentTest.expectedLogs">{{log}}</div>
                             </el-col>
                             <el-col :span="12">
-                                <el-alert
-                                    title="Actual Logs"
-                                    type="info"
-                                    show-icon>
+                                <el-alert title="Actual Logs" type="info" show-icon>
                                 </el-alert>
                                 <div class="log-item"  v-for="log in currentTest.actualLogs">{{log}}</div>
                             </el-col>
                         </el-row>
                     </div>
-
-                    <div class="test-result-nav">
-
-                    </div>
                 </div>
+
+                <el-dialog
+                    :visible.sync="showIframeDialog"
+                    :center="true"
+                    width="850px"
+                >
+                    <div slot="title">
+                        {{previewTitle}}
+                        <a target="_blank" :href="'../../' + previewTitle"><i class="el-icon-link"></i>Open in New Window</a>
+                    </div>
+                    <iframe :src="previewIframeSrc" width="800" height="600"></iframe>
+                </el-dialog>
             </el-main>
         </el-container>
     </el-container>

@@ -70,6 +70,10 @@ const app = new Vue({
 
         versions: [],
 
+        showIframeDialog: false,
+        previewIframeSrc: '',
+        previewTitle: '',
+
         runConfig: {
             noHeadless: false,
             replaySpeed: 5,
@@ -207,6 +211,25 @@ const app = new Vue({
         stopTests() {
             this.running = false;
             socket.emit('stop');
+        },
+
+        preview(test, version) {
+            let searches = [];
+
+            let ecVersion = test[version + 'Version'];
+            if (ecVersion !== 'local') {
+                searches.push('__ECDIST__=' + ecVersion);
+            }
+            if (test.useSVG) {
+                searches.push('__RENDERER__=svg');
+            }
+            let src = test.fileUrl;
+            if (searches.length) {
+                src = src + '?' + searches.join('&');
+            }
+            this.previewIframeSrc = `../../${src}`;
+            this.previewTitle = src;
+            this.showIframeDialog = true;
         }
     }
 });
