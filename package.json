@@ -13,12 +13,15 @@
     "url": "https://github.com/apache/incubator-echarts.git"
   },
   "scripts": {
+    "release": "node build/build.js --release",
     "build": "node build/build.js",
-    "build:watch": "node build/build.js -w",
-    "build:release": "node build/build.js --release",
+    "watch": "node build/build.js -w",
+    "help": "node build/build.js --help",
     "prepublish": "node build/build.js --prepublish",
     "test:visual": "node test/runTest/server.js",
-    "test": "node build/build.js"
+    "test": "node build/build.js",
+    "lint": "./node_modules/.bin/eslint src extension-src",
+    "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
     "zrender": "4.0.7"
@@ -48,6 +51,8 @@
     "semver": "6.3.0",
     "serve-handler": "6.1.1",
     "slugify": "1.3.4",
-    "socket.io": "2.2.0"
+    "socket.io": "2.2.0",
+    "jshint": "2.10.2",
+    "eslint": "6.3.0"
   }
 }
