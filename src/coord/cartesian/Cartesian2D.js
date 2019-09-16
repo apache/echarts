@@ -19,7 +19,21 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import Cartesian from './Cartesian';
+
+// A helper function to calculate extent of axis.
+function getAxisExtentWithGap(axis) {
+    var extent = axis.getGlobalExtent();
+    if (axis.onBand) {
+        // Remove extra 1px to avoid line miter in clipped edge
+        var halfBandWidth = axis.getBandWidth() / 2 - 1;
+        var dir = extent[1] > extent[0] ? 1 : -1;
+        extent[0] += dir * halfBandWidth;
+        extent[1] -= dir * halfBandWidth;
+    }
+    return extent;
+}
 
 function Cartesian2D(name) {
 
@@ -130,6 +144,23 @@ Cartesian2D.prototype = {
      */
     getOtherAxis: function (axis) {
         return this.getAxis(axis.dim === 'x' ? 'y' : 'x');
+    },
+
+    /**
+     * Get rect area of cartesian.
+     * Area will have a contain function to determine if a point is in the coordinate system.
+     * @return {BoundingRect}
+     */
+    getArea: function () {
+        var xExtent = getAxisExtentWithGap(this.getAxis('x'));
+        var yExtent = getAxisExtentWithGap(this.getAxis('y'));
+        var x = Math.min(xExtent[0], xExtent[1]);
+        var y = Math.min(yExtent[0], yExtent[1]);
+        var width = Math.max(xExtent[0], xExtent[1]) - x;
+        var height = Math.max(yExtent[0], yExtent[1]) - y;
+
+        let rect = new BoundingRect(x, y, width, height);
+        return rect;
     }
 
 };

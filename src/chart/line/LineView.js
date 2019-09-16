@@ -49,18 +49,6 @@ function getSmooth(smooth) {
     return typeof (smooth) === 'number' ? smooth : (smooth ? 0.5 : 0);
 }
 
-function getAxisExtentWithGap(axis) {
-    var extent = axis.getGlobalExtent();
-    if (axis.onBand) {
-        // Remove extra 1px to avoid line miter in clipped edge
-        var halfBandWidth = axis.getBandWidth() / 2 - 1;
-        var dir = extent[1] > extent[0] ? 1 : -1;
-        extent[0] += dir * halfBandWidth;
-        extent[1] -= dir * halfBandWidth;
-    }
-    return extent;
-}
-
 /**
  * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
  * @param {module:echarts/data/List} data
@@ -81,14 +69,13 @@ function getStackedOnPoints(coordSys, data, dataCoordInfo) {
 }
 
 function createGridClipShape(cartesian, hasAnimation, forSymbol, seriesModel) {
-    var xExtent = getAxisExtentWithGap(cartesian.getAxis('x'));
-    var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
+    var rect = cartesian.getArea();
     var isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
-    var x = Math.min(xExtent[0], xExtent[1]);
-    var y = Math.min(yExtent[0], yExtent[1]);
-    var width = Math.max(xExtent[0], xExtent[1]) - x;
-    var height = Math.max(yExtent[0], yExtent[1]) - y;
+    var x = rect.x;
+    var y = rect.y;
+    var width = rect.width;
+    var height = rect.height;
 
     // Avoid float number rounding error for symbol on the edge of axis extent.
     // See #7913 and `test/dataZoom-clip.html`.
@@ -135,38 +122,30 @@ function createGridClipShape(cartesian, hasAnimation, forSymbol, seriesModel) {
 }
 
 function createPolarClipShape(polar, hasAnimation, forSymbol, seriesModel) {
-    var angleAxis = polar.getAngleAxis();
-    var radiusAxis = polar.getRadiusAxis();
-
-    var radiusExtent = radiusAxis.getExtent().slice();
-    radiusExtent[0] > radiusExtent[1] && radiusExtent.reverse();
-    var angleExtent = angleAxis.getExtent();
-
-    var RADIAN = Math.PI / 180;
-
+    var sectorArea = polar.getArea();
     // Avoid float number rounding error for symbol on the edge of axis extent.
     if (forSymbol) {
-        radiusExtent[0] -= 0.5;
-        radiusExtent[1] += 0.5;
+        sectorArea.r0 -= 0.5;
+        sectorArea.r1 += 0.5;
     }
 
     var clipPath = new graphic.Sector({
         shape: {
             cx: round(polar.cx, 1),
             cy: round(polar.cy, 1),
-            r0: round(radiusExtent[0], 1),
-            r: round(radiusExtent[1], 1),
-            startAngle: -angleExtent[0] * RADIAN,
-            endAngle: -angleExtent[1] * RADIAN,
-            clockwise: angleAxis.inverse
+            r0: round(sectorArea.r0, 1),
+            r: round(sectorArea.r1, 1),
+            startAngle: sectorArea.startAngle,
+            endAngle: sectorArea.endAngle,
+            clockwise: sectorArea.clockwise
         }
     });
 
     if (hasAnimation) {
-        clipPath.shape.endAngle = -angleExtent[0] * RADIAN;
+        clipPath.shape.endAngle = sectorArea.startAngle;
         graphic.initProps(clipPath, {
             shape: {
-                endAngle: -angleExtent[1] * RADIAN
+                endAngle: sectorArea.endAngle
             }
         }, seriesModel);
     }
@@ -446,7 +425,7 @@ export default ChartView.extend({
         ) {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
-                clipShape: createClipShape(coordSys, false, true, seriesModel)
+                clipShape: coordSys.getArea()
             });
 
             if (step) {

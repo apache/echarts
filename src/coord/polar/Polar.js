@@ -254,6 +254,39 @@ Polar.prototype = {
         var y = -Math.sin(radian) * radius + this.cy;
 
         return [x, y];
+    },
+
+    /**
+     * Get sector area of cartesian.
+     * Area will have a contain function to determine if a point is in the coordinate system.
+     * @return {Sector}
+     */
+    getArea: function () {
+
+        var angleAxis = this.getAngleAxis();
+        var radiusAxis = this.getRadiusAxis();
+
+        var radiusExtent = radiusAxis.getExtent().slice();
+        radiusExtent[0] > radiusExtent[1] && radiusExtent.reverse();
+        var angleExtent = angleAxis.getExtent();
+
+        var RADIAN = Math.PI / 180;
+
+        var pt = [0, 0];
+        return {
+            cx: this.cx,
+            cy: this.cy,
+            r0: radiusExtent[0],
+            r: radiusExtent[1],
+            startAngle: -angleExtent[0] * RADIAN,
+            endAngle: -angleExtent[1] * RADIAN,
+            clockwise: angleAxis.inverse,
+            contain: function (x, y) {
+                pt[0] = x;
+                pt[1] = y;
+                return this.containPoint(pt);
+            }
+        };
     }
 
 };
