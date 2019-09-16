@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file  The file used to draw sankey diagram.
- * @author  Deqing Li(annong035@gmail.com)
- */
-
 import * as graphic from '../../util/graphic';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
