@@ -20,7 +20,7 @@ We will start the discussion about the bugs to fix and features of each release 
 
 About our release plan, we will release a mior version at the end of every month. Here is some detail.
 
-1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
+1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two versions ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
 2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/incubator-echarts/milestone/14)
 3. Vote in the mailing list for the 4.4.0 release at the end of this month.
 
