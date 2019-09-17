@@ -28,8 +28,8 @@ import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
 import {Polyline, Polygon} from './poly';
 import ChartView from '../../view/Chart';
-import {round} from '../../util/number';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
+import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
 
 function isPointsSame(points1, points2) {
     if (points1.length !== points2.length) {
@@ -66,83 +66,6 @@ function getStackedOnPoints(coordSys, data, dataCoordInfo) {
     }
 
     return points;
-}
-
-function createGridClipShape(cartesian, hasAnimation, seriesModel) {
-    var rect = cartesian.getArea();
-    var isHorizontal = cartesian.getBaseAxis().isHorizontal();
-
-    var x = rect.x;
-    var y = rect.y;
-    var width = rect.width;
-    var height = rect.height;
-
-    var lineWidth = seriesModel.get('lineStyle.width') || 2;
-    // Expand clip shape to avoid clipping when line value exceeds axis
-    var expandSize = seriesModel.get('clip') ? lineWidth / 2 : Math.max(width, height);
-    if (isHorizontal) {
-        y -= expandSize;
-        height += expandSize * 2;
-    }
-    else {
-        x -= expandSize;
-        width += expandSize * 2;
-    }
-
-    var clipPath = new graphic.Rect({
-        shape: {
-            x: x,
-            y: y,
-            width: width,
-            height: height
-        }
-    });
-
-    if (hasAnimation) {
-        clipPath.shape[isHorizontal ? 'width' : 'height'] = 0;
-        graphic.initProps(clipPath, {
-            shape: {
-                width: width,
-                height: height
-            }
-        }, seriesModel);
-    }
-
-    return clipPath;
-}
-
-function createPolarClipShape(polar, hasAnimation, seriesModel) {
-    var sectorArea = polar.getArea();
-    // Avoid float number rounding error for symbol on the edge of axis extent.
-
-    var clipPath = new graphic.Sector({
-        shape: {
-            cx: round(polar.cx, 1),
-            cy: round(polar.cy, 1),
-            r0: round(sectorArea.r0, 1),
-            r: round(sectorArea.r1, 1),
-            startAngle: sectorArea.startAngle,
-            endAngle: sectorArea.endAngle,
-            clockwise: sectorArea.clockwise
-        }
-    });
-
-    if (hasAnimation) {
-        clipPath.shape.endAngle = sectorArea.startAngle;
-        graphic.initProps(clipPath, {
-            shape: {
-                endAngle: sectorArea.endAngle
-            }
-        }, seriesModel);
-    }
-
-    return clipPath;
-}
-
-function createClipShape(coordSys, hasAnimation, seriesModel) {
-    return coordSys.type === 'polar'
-        ? createPolarClipShape(coordSys, hasAnimation, seriesModel)
-        : createGridClipShape(coordSys, hasAnimation, seriesModel);
 }
 
 function turnPointsIntoStep(points, coordSys, stepTurnAt) {
@@ -341,6 +264,30 @@ function canShowAllSymbolForCategory(categoryAxis, data) {
     return true;
 }
 
+function createLineClipPath(coordSys, hasAnimation, seriesModel) {
+    if (coordSys.type === 'cartesian2d') {
+        var isHorizontal = coordSys.getBaseAxis().isHorizontal();
+        var clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel);
+        // Expand clip shape to avoid clipping when line value exceeds axis
+        if (!seriesModel.get('clip')) {
+            var rectShape = clipPath.shape;
+            var expandSize = Math.max(rectShape.width, rectShape.height);
+            if (isHorizontal) {
+                rectShape.y -= expandSize;
+                rectShape.height += expandSize * 2;
+            }
+            else {
+                rectShape.x -= expandSize;
+                rectShape.width += expandSize * 2;
+            }
+        }
+    }
+    else {
+        return createPolarClipPath(coordSys, hasAnimation, seriesModel);
+    }
+
+}
+
 export default ChartView.extend({
 
     type: 'line',
@@ -443,7 +390,7 @@ export default ChartView.extend({
                     coordSys, hasAnimation
                 );
             }
-            lineGroup.setClipPath(createClipShape(coordSys, true, seriesModel));
+            lineGroup.setClipPath(createLineClipPath(coordSys, true, seriesModel));
         }
         else {
             if (isAreaChart && !polygon) {
@@ -460,7 +407,7 @@ export default ChartView.extend({
             }
 
             // Update clipPath
-            lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
+            lineGroup.setClipPath(createLineClipPath(coordSys, false, seriesModel));
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed

@@ -159,7 +159,7 @@ Cartesian2D.prototype = {
         var width = Math.max(xExtent[0], xExtent[1]) - x;
         var height = Math.max(yExtent[0], yExtent[1]) - y;
 
-        let rect = new BoundingRect(x, y, width, height);
+        var rect = new BoundingRect(x, y, width, height);
         return rect;
     }
 
