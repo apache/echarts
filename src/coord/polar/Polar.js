@@ -272,24 +272,22 @@ Polar.prototype = {
 
         var RADIAN = Math.PI / 180;
 
-        var cx = this.cx;
-        var cy = this.cy;
-        var r = radiusExtent[1];
-        var r0 = radiusExtent[0];
         return {
-            cx: cx,
-            cy: cy,
-            r0: r0,
-            r: r,
+            cx: this.cx,
+            cy: this.cy,
+            r0: radiusExtent[0],
+            r: radiusExtent[1],
             startAngle: -angleExtent[0] * RADIAN,
             endAngle: -angleExtent[1] * RADIAN,
             clockwise: angleAxis.inverse,
             contain: function (x, y) {
                 // It's a ring shape.
                 // Start angle and end angle don't matter
-                var dx = x - cx;
-                var dy = y - cy;
+                var dx = x - this.cx;
+                var dy = y - this.cy;
                 var d2 = dx * dx + dy * dy;
+                var r = this.r;
+                var r0 = this.r0;
 
                 return d2 <= r * r && d2 >= r0 * r0;
             }

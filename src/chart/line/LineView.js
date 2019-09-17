@@ -68,7 +68,7 @@ function getStackedOnPoints(coordSys, data, dataCoordInfo) {
     return points;
 }
 
-function createGridClipShape(cartesian, hasAnimation, forSymbol, seriesModel) {
+function createGridClipShape(cartesian, hasAnimation, seriesModel) {
     var rect = cartesian.getArea();
     var isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
@@ -77,26 +77,16 @@ function createGridClipShape(cartesian, hasAnimation, forSymbol, seriesModel) {
     var width = rect.width;
     var height = rect.height;
 
-    // Avoid float number rounding error for symbol on the edge of axis extent.
-    // See #7913 and `test/dataZoom-clip.html`.
-    if (forSymbol) {
-        x -= 0.5;
-        width += 0.5;
-        y -= 0.5;
-        height += 0.5;
+    var lineWidth = seriesModel.get('lineStyle.width') || 2;
+    // Expand clip shape to avoid clipping when line value exceeds axis
+    var expandSize = seriesModel.get('clip') ? lineWidth / 2 : Math.max(width, height);
+    if (isHorizontal) {
+        y -= expandSize;
+        height += expandSize * 2;
     }
     else {
-        var lineWidth = seriesModel.get('lineStyle.width') || 2;
-        // Expand clip shape to avoid clipping when line value exceeds axis
-        var expandSize = seriesModel.get('clipOverflow') ? lineWidth / 2 : Math.max(width, height);
-        if (isHorizontal) {
-            y -= expandSize;
-            height += expandSize * 2;
-        }
-        else {
-            x -= expandSize;
-            width += expandSize * 2;
-        }
+        x -= expandSize;
+        width += expandSize * 2;
     }
 
     var clipPath = new graphic.Rect({
@@ -121,13 +111,9 @@ function createGridClipShape(cartesian, hasAnimation, forSymbol, seriesModel) {
     return clipPath;
 }
 
-function createPolarClipShape(polar, hasAnimation, forSymbol, seriesModel) {
+function createPolarClipShape(polar, hasAnimation, seriesModel) {
     var sectorArea = polar.getArea();
     // Avoid float number rounding error for symbol on the edge of axis extent.
-    if (forSymbol) {
-        sectorArea.r0 -= 0.5;
-        sectorArea.r1 += 0.5;
-    }
 
     var clipPath = new graphic.Sector({
         shape: {
@@ -153,10 +139,10 @@ function createPolarClipShape(polar, hasAnimation, forSymbol, seriesModel) {
     return clipPath;
 }
 
-function createClipShape(coordSys, hasAnimation, forSymbol, seriesModel) {
+function createClipShape(coordSys, hasAnimation, seriesModel) {
     return coordSys.type === 'polar'
-        ? createPolarClipShape(coordSys, hasAnimation, forSymbol, seriesModel)
-        : createGridClipShape(coordSys, hasAnimation, forSymbol, seriesModel);
+        ? createPolarClipShape(coordSys, hasAnimation, seriesModel)
+        : createGridClipShape(coordSys, hasAnimation, seriesModel);
 }
 
 function turnPointsIntoStep(points, coordSys, stepTurnAt) {
@@ -419,13 +405,29 @@ export default ChartView.extend({
 
         // FIXME step not support polar
         var step = !isCoordSysPolar && seriesModel.get('step');
+        var clipShapeForSymbol;
+        if (coordSys && coordSys.getArea) {
+            clipShapeForSymbol = coordSys.getArea();
+            // Avoid float number rounding error for symbol on the edge of axis extent.
+            // See #7913 and `test/dataZoom-clip.html`.
+            if (clipShapeForSymbol.width != null) {
+                clipShapeForSymbol.x -= 0.1;
+                clipShapeForSymbol.y -= 0.1;
+                clipShapeForSymbol.width += 0.2;
+                clipShapeForSymbol.height += 0.2;
+            }
+            else if (clipShapeForSymbol.r0) {
+                clipShapeForSymbol.r0 -= 0.5;
+                clipShapeForSymbol.r1 += 0.5;
+            }
+        }
         // Initialization animation or coordinate system changed
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
-                clipShape: coordSys.getArea()
+                clipShape: clipShapeForSymbol
             });
 
             if (step) {
@@ -441,7 +443,7 @@ export default ChartView.extend({
                     coordSys, hasAnimation
                 );
             }
-            lineGroup.setClipPath(createClipShape(coordSys, true, false, seriesModel));
+            lineGroup.setClipPath(createClipShape(coordSys, true, seriesModel));
         }
         else {
             if (isAreaChart && !polygon) {
@@ -458,13 +460,13 @@ export default ChartView.extend({
             }
 
             // Update clipPath
-            lineGroup.setClipPath(createClipShape(coordSys, false, false, seriesModel));
+            lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
-                clipShape: createClipShape(coordSys, false, true, seriesModel)
+                clipShape: clipShapeForSymbol
             });
 
             // Stop symbol animation and sync with line points
