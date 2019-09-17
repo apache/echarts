@@ -22,6 +22,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from './graphic';
 import BoundingRect from 'zrender/src/core/BoundingRect';
+import {calculateTextPosition} from 'zrender/src/contain/text';
 
 /**
  * Triangle shape
@@ -269,21 +270,19 @@ var SymbolClz = graphic.extendShape({
         height: 0
     },
 
-    beforeBrush: function () {
-        var style = this.style;
+    calculateTextPosition: function (out, style, rect) {
+        var res = calculateTextPosition(out, style, rect);
         var shape = this.shape;
-        // FIXME
-        if (shape.symbolType === 'pin' && style.textPosition === 'inside') {
-            style.textPosition = ['50%', '40%'];
-            style.textAlign = 'center';
-            style.textVerticalAlign = 'middle';
+        if (shape && shape.symbolType === 'pin' && style.textPosition === 'inside') {
+            res.y = rect.y + rect.height * 0.4;
         }
+        return res;
     },
 
     buildPath: function (ctx, shape, inBundle) {
         var symbolType = shape.symbolType;
-        var proxySymbol = symbolBuildProxies[symbolType];
-        if (shape.symbolType !== 'none') {
+        if (symbolType !== 'none') {
+            var proxySymbol = symbolBuildProxies[symbolType];
             if (!proxySymbol) {
                 // Default rect
                 symbolType = 'rect';

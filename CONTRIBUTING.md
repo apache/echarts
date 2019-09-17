@@ -20,7 +20,7 @@ We will start the discussion about the bugs to fix and features of each release 
 
 About our release plan, we will release a mior version at the end of every month. Here is some detail.
 
-1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
+1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two versions ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
 2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/incubator-echarts/milestone/14)
 3. Vote in the mailing list for the 4.4.0 release at the end of this month.
 
@@ -130,3 +130,30 @@ to check the the code style.
 Fork ECharts project into your own project. Checkout a branch from master branch named `fix-xxxx`, where xxxx is the issue id related. If there's no related issue, you need to create one in most cases to describe what's wrong or what new feature is required.
 
 If you are a committer of apache/incubator-echarts project, which means you have the write access to the project, you still need to push to a new branch (by `git push origin HEAD:refs/heads/fix-xxxx`) and use pull request to push your code. You cannot push code directly to `master` branch, otherwise it will be rejected by GitHub.
+
+
+## Some hints about using code from other authors
+
++ About using some algorithms/formulas or inspired by other's work:
+    + We can be inspired from other people’s work. There is no problem with copying ideas and no problems associated with that so long as the code is entirely yours and you aren’t violating the license of the inspirational work. You can just follow "normal" source code rules.
+    + But when you copy the code, even parts of files, it must remain under the copyright of the original authors.
+    + What's the right thing to do for the public good here? I'll go with:
+        + Be transparent when implementing an existing idea/algorithm.
+        + Reference where that idea/algorithm came from.
+        + Use standard language when doing so (we need to define standard language).
+            + "inspired by", "learned from" and "references to" are vague concepts in copyright.
+        + If any copyrightable expression is copied from the existing idea/algorithm, compare its licensing to our licensing policies and include licensing accordingly.
+    + Check the original discussion about it in: https://lists.apache.org/list.html?legal-discuss@apache.org:lte=36M:echarts
++ About adding the license/header of 3rd-party work:
+    + https://www.apache.org/legal/src-headers.html#3party
++ Licenses that are compatible with the Apache license:
+    + BSD and MIT are compatibal with the Apache license but CC_BY_SA is not (https://apache.org/legal/resolved.html#cc-sa).
++ Stack overflow:
+    + before intending to copy code from Stack overlow, we must check:
+    + https://apache.org/legal/resolved.html#stackoverflow
+    + https://issues.apache.org/jira/browse/LEGAL-471
++ Wikipedia:
+    + Wikipedia is licensed CC 4.0 BY_SA and is compatible with the Apache license. So we should not copy code from Wikipedia.
++ Working in progress disclaimer:
+    + In some cases we might use the work in progress disclaimer and document the issues in that until they are fixed.
+    + https://incubator.apache.org/policy/incubation.html#disclaimers
