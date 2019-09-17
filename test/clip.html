@@ -49,6 +49,7 @@ under the License.
         <div class="chart" id="scatter-clip-incremental"></div> -->
         <div class="chart" id="large-scatter-clip"></div>
         <div class="chart" id="lines-clip"></div>
+        <div class="chart" id="line-dataZoom"></div>
         <div class="chart" id="bar-clip"></div>
         <div class="chart" id="custom-clip"></div>
         <div class="chart" id="candlestick-clip"></div>
@@ -162,6 +163,9 @@ under the License.
         </script>
 
 
+
+
+
         <script>
             require([
                 'echarts'
@@ -237,6 +241,10 @@ under the License.
             })
         </script>
 
+
+
+
+
         <script>
             require([
                 'echarts'
@@ -274,7 +282,6 @@ under the License.
                     }
 
                     var obj = {
-                        name: "测试直线"+i+1,
                         coords: [
                             [0, 0],
                             [x, y]
@@ -294,9 +301,6 @@ under the License.
 
                 option = {
                     animation: false,
-                    title: {
-                        text: '网络拓扑图'
-                    },
                     xAxis: {
                         type:'value',
                         min: -1000,
@@ -352,6 +356,153 @@ under the License.
                     option: option,
                     height: 400,
                     buttons: makeToggleChartButtons()
+                });
+            })
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var base = +new Date(2016, 9, 3);
+                var oneDay = 24 * 3600 * 1000;
+                var valueBase = Math.random() * 300;
+                var valueBase2 = Math.random() * 50;
+                var data = [];
+                var data2 = [];
+
+                for (var i = 1; i < 10; i++) {
+                    var now = new Date(base += oneDay);
+                    var dayStr = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
+
+                    valueBase = Math.round((Math.random() - 0.5) * 20 + valueBase);
+                    valueBase <= 0 && (valueBase = Math.random() * 300);
+                    data.push([dayStr, valueBase]);
+
+                    valueBase2 = Math.round((Math.random() - 0.5) * 20 + valueBase2);
+                    valueBase2 <= 0 && (valueBase2 = Math.random() * 50);
+                    data2.push([dayStr, valueBase2]);
+                }
+
+                option = {
+                    animation: false,
+                    legend: {
+                        top: 'bottom',
+                        data:['意向']
+                    },
+                    tooltip: {
+                        triggerOn: 'none',
+                        position: function (pt) {
+                            return [pt[0], 130];
+                        }
+                    },
+                    toolbox: {
+                        left: 'center',
+                        itemSize: 25,
+                        top: 55,
+                        feature: {
+                            dataZoom: {
+                                // Not filter the data.
+                                filterMode: 'none',
+                                yAxisIndex: 'none'
+                            },
+                            restore: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'time',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisTick: {
+                            inside: true
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            inside: true,
+                            formatter: '{value}\n'
+                        },
+                        z: 10
+                    },
+                    grid: {
+                        top: 110,
+                        left: 15,
+                        right: 15,
+                        height: 160
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        throttle: 50
+                    }],
+                    series: [
+                        {
+                            name:'模拟数据',
+                            type:'line',
+                            smooth: true,
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#8ec6ad'
+                                }
+                            },
+                            stack: 'a',
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#8ec6ad'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data
+                        },
+                        {
+                            name:'模拟数据',
+                            type:'line',
+                            smooth:true,
+                            stack: 'a',
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#d68262'
+                                }
+                            },
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#d68262'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data2
+                        }
+
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'line-dataZoom', {
+                    title: 'Line with dataZoom,(#10224). Should not be blank when selected a small area',
+                    option: option,
+                    height: 400
                 });
             })
         </script>

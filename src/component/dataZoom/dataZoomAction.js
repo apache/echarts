@@ -50,6 +50,11 @@ echarts.registerAction('dataZoom', function (payload, ecModel) {
             startValue: payload.startValue,
             endValue: payload.endValue
         });
+        // Update filterMode if it's needs to be changed.
+        // This action is mainly dispatched from dataZoom toolbox.
+        if (payload.filterMode != null) {
+            dataZoomModel.setFilterMode(payload.filterMode);
+        }
     });
 
 });

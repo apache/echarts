@@ -281,6 +281,7 @@ function createLineClipPath(coordSys, hasAnimation, seriesModel) {
                 rectShape.width += expandSize * 2;
             }
         }
+        return clipPath;
     }
     else {
         return createPolarClipPath(coordSys, hasAnimation, seriesModel);

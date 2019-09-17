@@ -54,6 +54,7 @@ function DataZoom(model, ecModel, api) {
 
 DataZoom.defaultOption = {
     show: true,
+    filterMode: 'filter',
     // Icon group
     icon: {
         zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
@@ -115,6 +116,7 @@ proto._onBrush = function (areas, opt) {
     }
     var snapshot = {};
     var ecModel = this.ecModel;
+    var filterMode = this.model.get('filterMode');
 
     this._brushController.updateCovers([]); // remove cover
 
@@ -157,7 +159,9 @@ proto._onBrush = function (areas, opt) {
         dataZoomModel && (snapshot[dataZoomModel.id] = {
             dataZoomId: dataZoomModel.id,
             startValue: minMax[0],
-            endValue: minMax[1]
+            endValue: minMax[1],
+            // Set filterMode
+            filterMode: filterMode
         });
     }
 
