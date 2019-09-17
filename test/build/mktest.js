@@ -63,6 +63,7 @@ function run() {
     if (nodeFS.existsSync(opt.testFilePath)) {
         printError(`The file ${opt.testFilePath} exists! Please chose another name.`);
         printError('Please chose another name.');
+        console.log(manualText);
         return;
     }
 
@@ -92,6 +93,7 @@ function prepareOpt() {
 
     if (!testFileName) {
         printError('Must input a file name!');
+        console.log(manualText);
         return;
     }
 

@@ -44,9 +44,11 @@ Please follow the [coding standard](https://echarts.apache.org/en/coding-standar
 
 If you wish to fix a bug or add new features but don't know how, please discuss it with us in the [mailing list](dev@echarts.apache.org).
 
+
 ## How to Debug ECharts
 
 The following steps help you to set up a developing environment for ECharts.
+
 
 ### 1. Clone ECharts project
 
@@ -63,6 +65,7 @@ git clone git@github.com:ecomfe/zrender.git
 ```
 
 We assume these projects are downloaded at `~/workspace/echarts` and `~/workspace/zrender`. But their locations can be arbitrary.
+
 
 ### 2. Install dependencies
 
@@ -84,6 +87,7 @@ npm link zrender
 
 With this, you can see that `~/workspace/echarts/node_modules/zrender` is a link to `~/workspace/zrender`.
 
+
 ### 3. Run and debug
 
 To build the ECharts project and watch source file changes (including ZRender project) to rebuild:
@@ -103,7 +107,59 @@ Then, open the test cases under `~/workspace/echarts/test` in Web browser. You c
 
 ![Chrome inspect](./asset/contributing-inspect.png)
 
-### 4. Run test
+
+### 4. Add test cases
+
+In most cases, one or more test cases should be added when developing a feature or fixing a bug.
+All of the existing test cases are in directory `~/workspace/echarts/test`.
+Check the file `~/workspace/echarts/test/dataZoom-action.html` as an example.
+
+**Organize test cases:**
+Each file can be regard as a **test suite** and each chart in the file can be regard as a **test case**,
+which contains one or multiple expected results (check points).
+If a feature or bug is related to a chart type or a component type, probably it should belongs to
+a test file named `chartOrComponentType-someSubCategory.html`. Or some common feature is related
+to multiple chart or component or has nothing to do with chart and component, probably it should
+belongs a test file named `featureName-someSubCateogory.html`.
+
+**The naming of a test file:**
+Generally speaking, the name of the test file should start with a chart type or component type
+or a common feature name (like "hoverStyle", "clip").
+
+**Add a test case:**
+If intending to add a test case, firstly try to find in the existing test files which file this
+new test case might belongs to.
+If an existing file found, add the test case to the file.
+Otherwise, add a new test file by commands as follows:
+
+```shell
+# Make a file named "bar-action.html" in directory "echarts/test" with 1 initial chart.
+npm run mktest bar-action
+# or `npm run mktest bar-action.html`
+
+# Make a file named "bar-action.html" in directory "echarts/test" with 5 initial charts.
+npm run mktest bar-action 5
+```
+
+**The expected results and the instructions of user interaction:**
+Although we have auto-visual-test tool to run tests, we should better write the expected result
+(check points) for each test cases for manual checking.
+Some cases need user interactions involved. The instructions should be written clearly.
+The expected results and the user instructions should be written in the `title` filed when
+creating a test by `testHelper.create` as follows:
+
+```js
+var chart = testHelper.create(echarts, 'main0', {
+    title: [
+        'Hover on the red circle',
+        '**A blue label** should appear on the **top of red circle**.'
+    ],
+    option: option
+});
+```
+
+
+### 5. Run test cases
 
 ```bash
 # puppeteer is not in the devDependencies and needs to be installed manually
@@ -113,7 +169,8 @@ npm run test:visual
 
 It will run all the test cases under `~/workspace/echarts/test` automatically to compare with the previous version. You can use this to check if your code bring some breaking change.
 
-### 5. Check the code style
+
+### 6. Check the code style
 
 The code style should follow the [Code Standard](https://echarts.apache.org/en/coding-standard.html).
 
@@ -125,7 +182,7 @@ npm run lint
 to check the the code style.
 
 
-### 6. Make a pull request
+### 7. Make a pull request
 
 Fork ECharts project into your own project. Checkout a branch from master branch named `fix-xxxx`, where xxxx is the issue id related. If there's no related issue, you need to create one in most cases to describe what's wrong or what new feature is required.
 
