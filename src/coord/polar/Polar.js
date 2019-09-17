@@ -257,9 +257,9 @@ Polar.prototype = {
     },
 
     /**
-     * Get sector area of cartesian.
+     * Get ring area of cartesian.
      * Area will have a contain function to determine if a point is in the coordinate system.
-     * @return {Sector}
+     * @return {Ring}
      */
     getArea: function () {
 
@@ -272,19 +272,26 @@ Polar.prototype = {
 
         var RADIAN = Math.PI / 180;
 
-        var pt = [0, 0];
+        var cx = this.cx;
+        var cy = this.cy;
+        var r = radiusExtent[1];
+        var r0 = radiusExtent[0];
         return {
-            cx: this.cx,
-            cy: this.cy,
-            r0: radiusExtent[0],
-            r: radiusExtent[1],
+            cx: cx,
+            cy: cy,
+            r0: r0,
+            r: r,
             startAngle: -angleExtent[0] * RADIAN,
             endAngle: -angleExtent[1] * RADIAN,
             clockwise: angleAxis.inverse,
             contain: function (x, y) {
-                pt[0] = x;
-                pt[1] = y;
-                return this.containPoint(pt);
+                // It's a ring shape.
+                // Start angle and end angle don't matter
+                var dx = x - cx;
+                var dy = y - cy;
+                var d2 = dx * dx + dy * dy;
+
+                return d2 <= r * r && d2 >= r0 * r0;
             }
         };
     }

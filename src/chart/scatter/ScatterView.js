@@ -29,8 +29,6 @@ echarts.extendChartView({
 
     render: function (seriesModel, ecModel, api) {
         var data = seriesModel.getData();
-        var coordSys = seriesModel.coordinateSystem;
-        var clipArea = coordSys && coordSys.getArea && coordSys.getArea();
 
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
 
@@ -39,7 +37,7 @@ echarts.extendChartView({
             // If this parameter should be a shape or a bounding volume
             // shape will be more general.
             // But bounding volume like bounding rect will be much faster in the contain calculation
-            clipShape: seriesModel.get('clip') ? clipArea : null
+            clipShape: this._getClipShape(seriesModel)
         });
 
         this._finished = true;
@@ -55,7 +53,9 @@ echarts.extendChartView({
     },
 
     incrementalRender: function (taskParams, seriesModel, ecModel) {
-        this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData());
+        this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData(), {
+            clipShape: this._getClipShape(seriesModel)
+        });
 
         this._finished = taskParams.end === seriesModel.getData().count();
     },
@@ -79,6 +79,12 @@ echarts.extendChartView({
 
             this._symbolDraw.updateLayout(data);
         }
+    },
+
+    _getClipShape: function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        var clipArea = coordSys && coordSys.getArea && coordSys.getArea();
+        return seriesModel.get('clip') ? clipArea : null;
     },
 
     _updateSymbolDraw: function (data, seriesModel) {

@@ -43,15 +43,11 @@ under the License.
             }
         </style>
 
-        <h1>Scatter Clip on Cartesian</h1>
         <div class="chart" id="scatter-clip-cartesian"></div>
-        <h1>Scatter Clip on Polar</h1>
         <div class="chart" id="scatter-clip-polar"></div>
-        <h1>Large Scatter Clip</h1>
+        <!-- <h1>Scatter Clip with Incremental Rendering</h1>
+        <div class="chart" id="scatter-clip-incremental"></div> -->
         <div class="chart" id="large-scatter-clip"></div>
-        <h1>Scatter Clip on Cartesian with DataZoom</h1>
-        <div class="chart" id="scatter-clip-cartesian"></div>
-        <h1>Scatter Clip on Polar with DataZoom</h1>
         <div class="chart" id="scatter-clip-polar"></div>
 
         <h1>Lines</h1>
@@ -104,6 +100,7 @@ under the License.
                     }]
                 };
                 var chart = testHelper.create(echarts, 'scatter-clip-cartesian', {
+                    title: 'Scatter Clip on Cartesian',
                     option: option,
                     height: 400,
                     buttons: makeToggleChartButtons(function (clip) {
@@ -125,31 +122,89 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
+                var data1 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    data1.push([Math.random() * 10, Math.random() * 360]);
+                }
+
                 var option = {
-                    xAxis: {},
-                    yAxis: {
-                        min: 5,
-                        max: 10
+                    polar: {},
+                    angleAxis: {
+                        type: 'value',
+                        min: 50,
+                        max: 180
+                    },
+                    radiusAxis: {
+                        axisAngle: 0,
+                        min: 0,
+                        max: 5
                     },
                     series: [{
-                        symbolSize: 20,
-                        data: [
-                            [10.0, 8.04],
-                            [8.0, 6.95],
-                            [13.0, 7.58],
-                            [9.0, 8.81],
-                            [11.0, 8.33],
-                            [14.0, 9.96],
-                            [6.0, 7.24],
-                            [4.0, 4.26],
-                            [12.0, 10.84],
-                            [7.0, 4.82],
-                            [5.0, 5.68]
-                        ],
+                        coordinateSystem: 'polar',
+                        name: 'scatter',
+                        type: 'scatter',
+                        symbolSize: 10,
+                        data: data1
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'scatter-clip-polar', {
+                    title: 'Scatter Clip on Polar',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                // Standard Normal variate using Box-Muller transform.
+                function rand() {
+                    var u = 0, v = 0;
+                    while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+                    while(v === 0) v = Math.random();
+                    return Math.sqrt(-2.0 * Math.log( u )) * Math.cos(2.0 * Math.PI * v);
+                }
+
+                var data = [];
+
+                for (let i = 0; i < 1e4; i++) {
+                    data.push([
+                        rand(),
+                        rand()
+                    ]);
+                }
+                var option = {
+                    xAxis: {
+                        type: 'value',
+                        min: -2,
+                        max: 2
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: -2,
+                        max: 2
+                    },
+                    series: [{
+                        symbolSize: 2,
+                        large: true,
+                        data: data,
+                        symbol: 'rect',
                         type: 'scatter'
                     }]
                 };
-                var chart = testHelper.create(echarts, 'scatter-clip-cartesian', {
+                var chart = testHelper.create(echarts, 'large-scatter-clip', {
+                    title: 'Large Scatter Clip',
                     option: option,
                     height: 400,
                     buttons: makeToggleChartButtons(function (clip) {
@@ -158,18 +213,29 @@ under the License.
                                 clip: clip
                             }]
                         })
-                    })
+                    }).concat([{
+                        text: 'Set Large',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    large: true,
+                                    progressive: 0
+                                }]
+                            })
+                        }
+                    }, {
+                        text: 'Set Stream',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    large: false,
+                                    progressive: 2000
+                                }]
+                            })
+                        }
+
+                    }])
                 });
-            })
-        </script>
-
-
-        <script>
-            require([
-                'echarts'
-            ], function (echarts) {
-
-                // testHelper.createChart(echarts, 'zoom-shift', option);
             })
         </script>
 
