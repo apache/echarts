@@ -116,7 +116,6 @@ proto._onBrush = function (areas, opt) {
     }
     var snapshot = {};
     var ecModel = this.ecModel;
-    var filterMode = this.model.get('filterMode');
 
     this._brushController.updateCovers([]); // remove cover
 
@@ -159,9 +158,7 @@ proto._onBrush = function (areas, opt) {
         dataZoomModel && (snapshot[dataZoomModel.id] = {
             dataZoomId: dataZoomModel.id,
             startValue: minMax[0],
-            endValue: minMax[1],
-            // Set filterMode
-            filterMode: filterMode
+            endValue: minMax[1]
         });
     }
 
@@ -306,6 +303,8 @@ echarts.registerPreprocessor(function (option) {
             var newOpt = {
                 type: 'select',
                 $fromToolbox: true,
+                // Default to be filter
+                filterMode: dataZoomOpt.filterMode || 'filter',
                 // Id for merge mapping.
                 id: DATA_ZOOM_ID_BASE + axisName + axisIndex
             };

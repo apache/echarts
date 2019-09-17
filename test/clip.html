@@ -406,7 +406,7 @@ under the License.
                         feature: {
                             dataZoom: {
                                 // Not filter the data.
-                                filterMode: 'none',
+                                // filterMode: 'none',
                                 yAxisIndex: 'none'
                             },
                             restore: {}
@@ -440,6 +440,7 @@ under the License.
                     },
                     dataZoom: [{
                         type: 'inside',
+                        filterMode: 'none',
                         throttle: 50
                     }],
                     series: [
@@ -499,10 +500,33 @@ under the License.
                     ]
                 };
 
+                function setFilterMode(mode) {
+                    chart.setOption({
+                        toolbox: {
+                            feature: {
+                                dataZoom: {
+                                    filterMode: mode
+                                }
+                            }
+                        }
+                    });
+                }
+
                 var chart = testHelper.create(echarts, 'line-dataZoom', {
                     title: 'Line with dataZoom,(#10224). Should not be blank when selected a small area',
                     option: option,
-                    height: 400
+                    height: 400,
+                    buttons: [{
+                        text: 'Set filter all',
+                        onclick: function () {
+                            setFilterMode('filter');
+                        }
+                    }, {
+                        text: 'Set filter none',
+                        onclick: function () {
+                            setFilterMode('none')
+                        }
+                    }]
                 });
             })
         </script>

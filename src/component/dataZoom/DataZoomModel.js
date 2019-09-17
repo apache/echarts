@@ -470,16 +470,6 @@ var DataZoomModel = echarts.extendComponentModel({
     },
 
     /**
-     * Set filter mode.
-     * This will be set in the action dispatched from toolbox.
-     *
-     * @param {string} filterMode Values can be 'filter', 'weakFilter', 'empty' ,'none'
-     */
-    setFilterMode: function (filterMode) {
-        this.option.filterMode = filterMode;
-    },
-
-    /**
      * @public
      * @return {Array.<number>} [startPercent, endPercent]
      */
