@@ -317,8 +317,12 @@ function map(obj, cb, context) {
 * under the License.
 */
 
-// GEXF File Parser
-// http://gexf.net/1.2draft/gexf-12draft-primer.pdf
+/**
+ * This is a parse of GEXF.
+ *
+ * The spec of GEXF:
+ * https://gephi.org/gexf/1.2draft/gexf-12draft-primer.pdf
+ */
 
 function parse(xml) {
     var doc;
@@ -578,6 +582,13 @@ var gexf = (Object.freeze || Object)({
  */
 
 
+/**
+ * asc sort arr.
+ * The input arr will be modified.
+ *
+ * @param {Array} arr
+ * @return {Array} The input arr.
+ */
 function asc(arr) {
     arr.sort(function (a, b) {
         return a - b;

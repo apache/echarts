@@ -107,7 +107,7 @@ function makeInvoker(methodName) {
 function mapNotExistsError(mapName) {
     if (__DEV__) {
         console.error(
-            'Map ' + mapName + ' not exists. You can download map file on http://echarts.baidu.com/download-map.html'
+            'Map ' + mapName + ' not exists. The GeoJSON of the map must be provided.'
         );
     }
 }
