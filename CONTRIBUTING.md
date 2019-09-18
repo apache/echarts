@@ -101,7 +101,7 @@ node build/build.js
 
 Then, open the test cases under `~/workspace/echarts/test` in Web browser. You can add breakpoints under `src` directory. For example, in Chrome Inspect, it looks like:
 
-![Chrome inspect](../asset/contributing-inspect.png)
+![Chrome inspect](./asset/contributing-inspect.png)
 
 ### 4. Run test
 
