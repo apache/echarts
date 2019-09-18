@@ -292,7 +292,8 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
         else if (rotate < -Math.PI / 2) {
             rotate += Math.PI;
         }
-    } else if (typeof rotateType === 'number') {
+    }
+    else if (typeof rotateType === 'number') {
         rotate = rotateType * Math.PI / 180;
     }
     label.attr('rotation', rotate);
