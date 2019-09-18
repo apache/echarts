@@ -95,7 +95,8 @@ export default function (ecModel) {
             var rect = coordSys.getBoundingRect();
             var forceInstance = forceLayout(nodes, edges, {
                 rect: rect,
-                gravity: forceModel.get('gravity')
+                gravity: forceModel.get('gravity'),
+                friction: forceModel.get('friction')
             });
             var oldStep = forceInstance.step;
             forceInstance.step = function (cb) {
