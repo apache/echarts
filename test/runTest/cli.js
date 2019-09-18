@@ -24,7 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
-const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime} = require('./util');
+const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime, getEChartsTestFileName} = require('./util');
 const {origin} = require('./config');
 const Timeline = require('./Timeline');
 
@@ -65,9 +65,9 @@ function getClientRelativePath(absPath) {
 function replaceEChartsVersion(interceptedRequest, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
-        console.log('Use echarts version: ' + getVersionDir(version));
+        console.log('Use echarts version: ' + version);
         interceptedRequest.continue({
-            url: `${origin}/test/runTest/${getVersionDir(version)}/echarts.js`
+            url: `${origin}/test/runTest/${getVersionDir(version)}/${getEChartsTestFileName()}`
         });
     }
     else {
@@ -210,22 +210,30 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
     for (let shot of expectedResult.screenshots) {
         let expected = shot;
         let actual = actualResult.screenshots[idx++];
-        let {diffRatio, diffPNG} = await compareScreenshot(
-            expected.screenshotPath,
-            actual.screenshotPath
-        );
-
-        let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
-        await writePNG(diffPNG, diffPath);
-
-        screenshots.push({
+        let result = {
             actual: getClientRelativePath(actual.screenshotPath),
             expected: getClientRelativePath(expected.screenshotPath),
-            diff: getClientRelativePath(diffPath),
             name: actual.screenshotName,
-            desc: actual.desc,
-            diffRatio
-        });
+            desc: actual.desc
+        };
+        try {
+            let {diffRatio, diffPNG} = await compareScreenshot(
+                expected.screenshotPath,
+                actual.screenshotPath
+            );
+
+            let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
+            await writePNG(diffPNG, diffPath);
+
+            result.diff = getClientRelativePath(diffPath);
+            result.diffRatio = diffRatio;
+        }
+        catch(e) {
+            result.diff = '';
+            result.diffRatio = 1;
+            console.log(e);
+        }
+        screenshots.push(result);
     }
 
     testOpt.results = screenshots;

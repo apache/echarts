@@ -24,10 +24,19 @@ if (typeof __TEST_PLAYBACK_SPEED__ === 'undefined') {
     window.__TEST_PLAYBACK_SPEED__ = 1;
 }
 
-let myRandom = new seedrandom('echarts-test');
+let myRandom = new seedrandom('echarts-random');
+// Random for echarts code.
+// In case different echarts version called random different times.
+// It will cause following random number all wrong.
+let myRandom2 = new seedrandom('echarts-random-inner');
 // Fixed random generator
 Math.random = function () {
     const val = myRandom();
+    return val;
+};
+
+window.__random__inner__ = function () {
+    const val = myRandom2();
     return val;
 };
 
