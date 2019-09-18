@@ -25,7 +25,7 @@ import * as graphic from '../../util/graphic';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 
-function getFixedItemStyle(model, scale) {
+function getFixedItemStyle(model) {
     var itemStyle = model.getItemStyle();
     var areaColor = model.get('areaColor');
 
@@ -187,14 +187,6 @@ MapDraw.prototype = {
             scale: scale
         };
 
-        // No animation when first draw or in action
-        if (!regionsGroup.childAt(0) || payload) {
-            group.attr(transform);
-        }
-        else {
-            graphic.updateProps(group, transform, mapOrGeoModel);
-        }
-
         regionsGroup.removeAll();
 
         var itemStyleAccessPath = ['itemStyle'];
@@ -225,8 +217,8 @@ MapDraw.prototype = {
 
             var itemStyleModel = regionModel.getModel(itemStyleAccessPath);
             var hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
-            var itemStyle = getFixedItemStyle(itemStyleModel, scale);
-            var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
+            var itemStyle = getFixedItemStyle(itemStyleModel);
+            var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
 
             var labelModel = regionModel.getModel(labelAccessPath);
             var hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
@@ -245,6 +237,13 @@ MapDraw.prototype = {
                 }
             }
 
+            var transformPoint = function (point) {
+                return [
+                    point[0] * scale[0] + geo.position[0],
+                    point[1] * scale[1] + geo.position[1]
+                ];
+            };
+
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
                     return;
@@ -252,7 +251,9 @@ MapDraw.prototype = {
                 compoundPath.shape.paths.push(new graphic.Polygon({
                     segmentIgnoreThreshold: 1,
                     shape: {
-                        points: geometry.exterior
+                        points: zrUtil.map(geometry.exterior, function (point) {
+                            return transformPoint(point);
+                        })
                     }
                 }));
 
@@ -260,7 +261,9 @@ MapDraw.prototype = {
                     compoundPath.shape.paths.push(new graphic.Polygon({
                         segmentIgnoreThreshold: 1,
                         shape: {
-                            points: geometry.interiors[i]
+                            points: zrUtil.map(geometry.interiors, function (point) {
+                                return transformPoint(point);
+                            })
                         }
                     }));
                 }
@@ -269,6 +272,7 @@ MapDraw.prototype = {
             compoundPath.setStyle(itemStyle);
             compoundPath.style.strokeNoScale = true;
             compoundPath.culling = true;
+
             // Label
             var showLabel = labelModel.get('show');
             var hoverShowLabel = hoverLabelModel.get('show');
@@ -292,12 +296,11 @@ MapDraw.prototype = {
                 }
 
                 var textEl = new graphic.Text({
-                    position: region.center.slice(),
+                    position: transformPoint(region.center.slice()),
                     // FIXME
                     // label rotation is not support yet in geo or regions of series-map
                     // that has no data. The rotation will be effected by this `scale`.
                     // So needed to change to RectText?
-                    scale: [1 / scale[0], 1 / scale[1]],
                     z2: 10,
                     silent: true
                 });
