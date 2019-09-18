@@ -104,7 +104,7 @@ export default echarts.extendComponentView({
         /* map 3.0 */
         var originalStyle2 = bMapModel.__mapStyle2;
 
-        var newMapStyle2 = bMapModel.get('mapStyleV2') || {}; 
+        var newMapStyle2 = bMapModel.get('mapStyleV2') || {};
         // FIXME, Not use JSON methods
         var mapStyleStr2 = JSON.stringify(newMapStyle2);
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {

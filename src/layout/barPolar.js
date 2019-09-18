@@ -63,8 +63,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var axisKey = getAxisKey(polar, baseAxis);
 
         var stackId = getSeriesStackId(seriesModel);
-        var columnLayoutInfo
-            = barWidthAndOffset[axisKey][stackId];
+        var columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
         var columnOffset = columnLayoutInfo.offset;
         var columnWidth = columnLayoutInfo.width;
         var valueAxis = polar.getOtherAxis(baseAxis);
