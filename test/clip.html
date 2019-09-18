@@ -49,7 +49,8 @@ under the License.
         <div class="chart" id="scatter-clip-incremental"></div> -->
         <div class="chart" id="large-scatter-clip"></div>
         <div class="chart" id="lines-clip"></div>
-        <div class="chart" id="line-dataZoom"></div>
+        <div class="chart" id="line-dataZoom-time"></div>
+        <div class="chart" id="line-dataZoom-category"></div>
         <div class="chart" id="bar-clip"></div>
         <div class="chart" id="custom-clip"></div>
         <div class="chart" id="candlestick-clip"></div>
@@ -355,7 +356,13 @@ under the License.
                     title: 'Lines Clip,(case from #10748). Should not overflow after zoomed in',
                     option: option,
                     height: 400,
-                    buttons: makeToggleChartButtons()
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
                 });
             })
         </script>
@@ -389,10 +396,6 @@ under the License.
 
                 option = {
                     animation: false,
-                    legend: {
-                        top: 'bottom',
-                        data:['意向']
-                    },
                     tooltip: {
                         triggerOn: 'none',
                         position: function (pt) {
@@ -512,7 +515,7 @@ under the License.
                     });
                 }
 
-                var chart = testHelper.create(echarts, 'line-dataZoom', {
+                var chart = testHelper.create(echarts, 'line-dataZoom-time', {
                     title: 'Line with dataZoom,(#10224). Should not be blank when selected a small area',
                     option: option,
                     height: 400,
@@ -531,5 +534,238 @@ under the License.
             })
         </script>
 
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                option = {
+                    animation: false,
+                    toolbox: {
+                        left: 'center',
+                        itemSize: 25,
+                        top: 55,
+                        feature: {
+                            dataZoom: {
+                                // Not filter the data.
+                                // filterMode: 'none',
+                                yAxisIndex: 'none'
+                            },
+                            restore: {}
+                        }
+                    },
+                    grid: {
+                        top: 100
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            data : ['周一','周二','周三','周四','周五','周六','周日']
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            data:[120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name:'联盟广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            data:[220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name:'视频广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            data:[150, 232, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name:'直接访问',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[320, 332, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
+                            },
+                            areaStyle: {normal: {}},
+                            data:[820, 932, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+
+                function setFilterMode(mode) {
+                    chart.setOption({
+                        toolbox: {
+                            feature: {
+                                dataZoom: {
+                                    filterMode: mode
+                                }
+                            }
+                        }
+                    });
+                }
+
+                var chart = testHelper.create(echarts, 'line-dataZoom-category', {
+                    title: 'Line with dataZoom (category axis)',
+                    option: option,
+                    height: 400,
+                    buttons: [{
+                        text: 'Set filter all',
+                        onclick: function () {
+                            setFilterMode('filter');
+                        }
+                    }, {
+                        text: 'Set filter none',
+                        onclick: function () {
+                            setFilterMode('none')
+                        }
+                    }]
+                });
+            })
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xInversed = false;
+
+                option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                            type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                    },
+                    legend: {
+                        data: ['直接访问', '邮件营销','联盟广告','视频广告','搜索引擎']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis:  {
+                        type: 'value',
+                        min: 200
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['周一','周二','周三','周四','周五','周六','周日']
+                    },
+                    series: [
+                        {
+                            name: '直接访问',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [320, 302, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: '邮件营销',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: '联盟广告',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: '视频广告',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [150, 212, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: '搜索引擎',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [820, 832, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'bar-clip', {
+                    title: 'Clip bar chart',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    }).concat([{
+                        text: 'Inverse X',
+                        onclick: function () {
+                            xInversed = !xInversed;
+                            chart.setOption({
+                                xAxis: {
+                                    inverse: xInversed
+                                }
+                            });
+                        }
+                    }])
+                });
+            });
+        </script>
     </body>
 </html>

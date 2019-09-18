@@ -65,6 +65,9 @@ export default SeriesModel.extend({
         progressive: 3e3,
         progressiveChunkMode: 'mod',
 
+        // If clipped
+        // Only available on cartesian2d
+        clip: true,
         // barMaxWidth: null,
         // 默认自适应
         // barWidth: null,

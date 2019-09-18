@@ -152,8 +152,8 @@ Cartesian2D.prototype = {
      * @return {BoundingRect}
      */
     getArea: function () {
-        var xExtent = getAxisExtentWithGap(this.getAxis('x'));
-        var yExtent = getAxisExtentWithGap(this.getAxis('y'));
+        var xExtent = this.getAxis('x').getGlobalExtent();
+        var yExtent = this.getAxis('y').getGlobalExtent();
         var x = Math.min(xExtent[0], xExtent[1]);
         var y = Math.min(yExtent[0], yExtent[1]);
         var width = Math.max(xExtent[0], xExtent[1]) - x;
