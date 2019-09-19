@@ -397,7 +397,7 @@ Calendar.prototype = {
         }
 
         var weeks = Math.floor((allDay + range[0].day + 6) / 7);
-        var nthWeek = reversed ? -weeks + 1: weeks - 1;
+        var nthWeek = reversed ? -weeks + 1 : weeks - 1;
 
         reversed && range.reverse();
 
@@ -441,9 +441,9 @@ Calendar.prototype = {
     }
 };
 
-Calendar.dimensions =  Calendar.prototype.dimensions;
+Calendar.dimensions = Calendar.prototype.dimensions;
 
-Calendar.getDimensionsInfo =  Calendar.prototype.getDimensionsInfo;
+Calendar.getDimensionsInfo = Calendar.prototype.getDimensionsInfo;
 
 Calendar.create = function (ecModel, api) {
     var calendarList = [];

@@ -23,7 +23,7 @@ import SeriesModel from '../../model/Series';
 import {encodeHTML, addCommas} from '../../util/format';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
-import geoCreator from '../../coord/geo/geoCreator';
+import geoSourceManager from '../../coord/geo/geoSourceManager';
 
 var MapSeries = SeriesModel.extend({
 
@@ -45,43 +45,40 @@ var MapSeries = SeriesModel.extend({
      */
     seriesGroup: [],
 
-    init: function (option) {
-
-        // this._fillOption(option, this.getMapType());
-        // this.option = option;
-
-        MapSeries.superApply(this, 'init', arguments);
-
-        this.updateSelectedMap(this._createSelectableList());
-    },
-
     getInitialData: function (option) {
-        return createListSimply(this, ['value']);
-    },
-
-    mergeOption: function (newOption) {
-        // this._fillOption(newOption, this.getMapType());
-
-        MapSeries.superApply(this, 'mergeOption', arguments);
-
-        this.updateSelectedMap(this._createSelectableList());
-    },
-
-    _createSelectableList: function () {
-        var data = this.getRawData();
+        var data = createListSimply(this, ['value']);
         var valueDim = data.mapDimension('value');
-        var targetList = [];
+        var dataNameMap = zrUtil.createHashMap();
+        var selectTargetList = [];
+        var toAppendNames = [];
+
         for (var i = 0, len = data.count(); i < len; i++) {
-            targetList.push({
-                name: data.getName(i),
+            var name = data.getName(i);
+            dataNameMap.set(name, true);
+            selectTargetList.push({
+                name: name,
                 value: data.get(valueDim, i),
                 selected: retrieveRawAttr(data, i, 'selected')
             });
         }
 
-        targetList = geoCreator.getFilledRegions(targetList, this.getMapType(), this.option.nameMap);
+        var geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap);
+        zrUtil.each(geoSource.regions, function (region) {
+            var name = region.name;
+            if (!dataNameMap.get(name)) {
+                selectTargetList.push({name: name});
+                toAppendNames.push(name);
+            }
+        });
 
-        return targetList;
+        this.updateSelectedMap(selectTargetList);
+
+        // Complete data with missing regions. The consequent processes (like visual
+        // map and render) can not be performed without a "full data". For example,
+        // find `dataIndex` by name.
+        data.appendValues([], toAppendNames);
+
+        return data;
     },
 
     /**
@@ -99,14 +96,14 @@ var MapSeries = SeriesModel.extend({
         return (this.getHostGeoModel() || this).option.map;
     },
 
-    _fillOption: function (option, mapName) {
+    // _fillOption: function (option, mapName) {
         // Shallow clone
         // option = zrUtil.extend({}, option);
 
         // option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
 
         // return option;
-    },
+    // },
 
     getRawValue: function (dataIndex) {
         // Use value stored in data instead because it is calculated from multiple series

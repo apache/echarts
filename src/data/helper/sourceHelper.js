@@ -18,7 +18,7 @@
 */
 
 import {__DEV__} from '../../config';
-import {makeInner} from '../../util/model';
+import {makeInner, getDataItemValue} from '../../util/model';
 import {getCoordSysDefineBySeries} from '../../model/referHelper';
 import {
     createHashMap,
@@ -32,7 +32,6 @@ import {
     extend,
     assert
 } from 'zrender/src/core/util';
-import {getDataItemValue} from '../../util/model';
 import Source from '../Source';
 
 import {
@@ -62,6 +61,10 @@ export function detectSourceFormat(datasetModel) {
     }
     else if (isArray(data)) {
         // FIXME Whether tolerate null in top level array?
+        if (data.length === 0) {
+            sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
+        }
+
         for (var i = 0, len = data.length; i < len; i++) {
             var item = data[i];
 

@@ -42,29 +42,32 @@ under the License.
                 position: absolute;
                 right: 10px;
                 top: 10px;
-                width: 220px;
-                height: 200px;
+                width: 200px;
+                height: 180px;
                 background: #fff;
                 border: 5px solid rgba(0,0,0,0.5);
+                z-index: 100;
             }
             .snapshot-finished {
                 position: absolute;
                 right: 10px;
-                bottom: 10px;
-                width: 220px;
-                height: 200px;
+                bottom: 30px;
+                width: 200px;
+                height: 180px;
                 background: #fff;
                 border: 5px solid rgba(0,0,0,0.5);
+                z-index: 100;
             }
             .snapshot-info {
                 position: absolute;
                 right: 10px;
-                width: 220px;
+                width: 200px;
                 text-align: center;
                 background: #333;
                 color: #fff;
                 padding: 2px 5px;
                 font-size: 12px;
+                z-index: 100;
             }
             .snapshot-info span {
                 color: yellow;
@@ -191,7 +194,11 @@ under the License.
                     };
 
                     var chart = testHelper.create(echarts, 'main0', {
-                        title: 'finished should be triggered, and not repeatly',
+                        title: [
+                            'finished should be triggered, and not repeatly',
+                            'finished should not triggered before real finished'
+                        ],
+                        autoResize: false,
                         option: option
                     });
 
@@ -208,7 +215,8 @@ under the License.
             require(['echarts'], function (echarts) {
                 var option = {
                     legend: {},
-                    animationDurationUpdate: 1500,
+                    animationDuration: 4000,
+                    animationDurationUpdate: 5500,
                     dataset: {
                         source: [
                             {name: 'a', value: 123},
@@ -224,8 +232,8 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main1', {
                     title: 'Check animation normal. \nfinished should be triggered, and not repeatly',
-                    option: option,
-                    info: option
+                    option: option
+                    // info: option
                 });
 
                 chart && enableSnapshot(chart, 'main1');

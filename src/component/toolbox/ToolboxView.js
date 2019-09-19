@@ -157,6 +157,24 @@ export default echarts.extendComponentView({
                 path.setStyle(iconStyleModel.getItemStyle());
                 path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
 
+                var tooltipModel = toolboxModel.getModel('tooltip');
+                if (tooltipModel && tooltipModel.get('show')) {
+                    path.attr('tooltip', zrUtil.extend({
+                        content: titles[iconName],
+                        formatter: tooltipModel.get('formatter', true)
+                            || function () {
+                                return titles[iconName];
+                            },
+                        formatterParams: {
+                            componentType: 'toolbox',
+                            name: iconName,
+                            title: titles[iconName],
+                            $vars: ['name', 'title']
+                        },
+                        position: tooltipModel.get('position', true) || 'bottom'
+                    }, tooltipModel.option));
+                }
+
                 graphic.setHoverStyle(path);
 
                 if (toolboxModel.get('showTitle')) {
@@ -166,14 +184,19 @@ export default echarts.extendComponentView({
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
                             path.setStyle({
                                 text: titles[iconName],
-                                textPosition: hoverStyle.textPosition || 'bottom',
-                                textFill: hoverStyle.fill || hoverStyle.stroke || '#000',
-                                textAlign: hoverStyle.textAlign || 'center'
+                                textPosition: iconStyleEmphasisModel.get('textPosition') || 'bottom',
+                                textFill: iconStyleEmphasisModel.get('textFill')
+                                    || hoverStyle.fill || hoverStyle.stroke || '#000',
+                                textAlign: iconStyleEmphasisModel.get('textAlign') || 'center',
+                                textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
+                                textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
+                                textPadding: iconStyleEmphasisModel.get('textPadding')
                             });
                         })
                         .on('mouseout', function () {
                             path.setStyle({
-                                textFill: null
+                                textFill: null,
+                                textBackgroundColor: null
                             });
                         });
                 }
@@ -211,7 +234,7 @@ export default echarts.extendComponentView({
                     needPutOnTop = true;
                 }
                 var topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
-                if (offsetX + rect.width /  2 > api.getWidth()) {
+                if (offsetX + rect.width / 2 > api.getWidth()) {
                     hoverStyle.textPosition = ['100%', topOffset];
                     hoverStyle.textAlign = 'right';
                 }

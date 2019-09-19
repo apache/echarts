@@ -33,7 +33,7 @@ var bind = zrUtil.bind;
  * Base axis pointer class in 2D.
  * Implemenents {module:echarts/component/axis/IAxisPointer}.
  */
-function BaseAxisPointer () {
+function BaseAxisPointer() {
 }
 
 BaseAxisPointer.prototype = {
@@ -238,7 +238,7 @@ BaseAxisPointer.prototype = {
      */
     updatePointerEl: function (group, elOption, updateProps) {
         var pointerEl = inner(group).pointerEl;
-        if (pointerEl) {
+        if (pointerEl && elOption.pointer) {
             pointerEl.setStyle(elOption.pointer.style);
             updateProps(pointerEl, {shape: elOption.pointer.shape});
         }

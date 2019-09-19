@@ -17,14 +17,11 @@
 * under the License.
 */
 
-/**
- * @file Get initial data and define sankey view's series model
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import {encodeHTML} from '../../util/format';
+import Model from '../../model/Model';
+import { __DEV__ } from '../../config';
 
 var SankeySeries = SeriesModel.extend({
 
@@ -32,18 +29,55 @@ var SankeySeries = SeriesModel.extend({
 
     layoutInfo: null,
 
+    levelModels: null,
+
     /**
      * Init a graph data structure from data in option series
      *
      * @param  {Object} option  the object used to config echarts view
      * @return {module:echarts/data/List} storage initial data
      */
-    getInitialData: function (option) {
+    getInitialData: function (option, ecModel) {
         var links = option.edges || option.links;
         var nodes = option.data || option.nodes;
+        var levels = option.levels;
+        var levelModels = this.levelModels = {};
+
+        for (var i = 0; i < levels.length; i++) {
+            if (levels[i].depth != null && levels[i].depth >= 0) {
+                levelModels[levels[i].depth] = new Model(levels[i], this, ecModel);
+            }
+            else {
+                if (__DEV__) {
+                    throw new Error('levels[i].depth is mandatory and should be natural number');
+                }
+            }
+        }
         if (nodes && links) {
-            var graph = createGraphFromNodeEdge(nodes, links, this, true);
+            var graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
             return graph.data;
+        }
+        function beforeLink(nodeData, edgeData) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                model.customizeGetParent(function (path) {
+                    var parentModel = this.parentModel;
+                    var nodeDepth = parentModel.getData().getItemLayout(idx).depth;
+                    var levelModel = parentModel.levelModels[nodeDepth];
+                    return levelModel || this.parentModel;
+                });
+                return model;
+            });
+
+            edgeData.wrapMethod('getItemModel', function (model, idx) {
+                model.customizeGetParent(function (path) {
+                    var parentModel = this.parentModel;
+                    var edge = parentModel.getGraph().getEdgeByIndex(idx);
+                    var depth = edge.node1.getLayout().depth;
+                    var levelModel = parentModel.levelModels[depth];
+                    return levelModel || this.parentModel;
+                });
+                return model;
+            });
         }
     },
 
@@ -85,8 +119,23 @@ var SankeySeries = SeriesModel.extend({
             }
             return encodeHTML(html);
         }
-
+        else if (dataType === 'node') {
+            var node = this.getGraph().getNodeByIndex(dataIndex);
+            var value = node.getLayout().value;
+            var name = this.getDataParams(dataIndex, dataType).data.name;
+            if (value) {
+                var html = name + ' : ' + value;
+            }
+            return encodeHTML(html);
+        }
         return SankeySeries.superCall(this, 'formatTooltip', dataIndex, multipleSeries);
+    },
+
+    optionUpdated: function () {
+        var option = this.option;
+        if (option.focusNodeAdjacency === true) {
+            option.focusNodeAdjacency = 'allEdges';
+        }
     },
 
     defaultOption: {
@@ -97,24 +146,28 @@ var SankeySeries = SeriesModel.extend({
 
         layout: null,
 
-        // the position of the whole view
+        // The position of the whole view
         left: '5%',
         top: '5%',
         right: '20%',
         bottom: '5%',
 
-        // the dx of the node
+        // Value can be 'vertical'
+        orient: 'horizontal',
+
+        // The dx of the node
         nodeWidth: 20,
 
-        // the vertical distance between two nodes
+        // The vertical distance between two nodes
         nodeGap: 8,
 
-        // control if the node can move or not
+        // Control if the node can move or not
         draggable: true,
-       
+
+        // Value can be 'inEdges', 'outEdges', 'allEdges', true (the same as 'allEdges').
         focusNodeAdjacency: false,
 
-        // the number of iterations to change the position of the node
+        // The number of iterations to change the position of the node
         layoutIterations: 32,
 
         label: {
@@ -123,6 +176,11 @@ var SankeySeries = SeriesModel.extend({
             color: '#000',
             fontSize: 12
         },
+
+        levels: [],
+
+        // Value can be 'left' or 'right'
+        nodeAlign: 'justify',
 
         itemStyle: {
             borderWidth: 1,

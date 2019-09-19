@@ -51,6 +51,20 @@ export default echarts.extendComponentView({
          * @type {module:zrender/Element}
          */
         this._backgroundEl;
+
+        /**
+         * @private
+         * @type {module:zrender/container/Group}
+         */
+        this.group.add(this._selectorGroup = new Group());
+
+        /**
+         * If first rendering, `contentGroup.position` is [0, 0], which
+         * does not make sense and may cause unexepcted animation if adopted.
+         * @private
+         * @type {boolean}
+         */
+        this._isFirstRender = true;
     },
 
     /**
@@ -61,9 +75,18 @@ export default echarts.extendComponentView({
     },
 
     /**
+     * @protected
+     */
+    getSelectorGroup: function () {
+        return this._selectorGroup;
+    },
+
+    /**
      * @override
      */
     render: function (legendModel, ecModel, api) {
+        var isFirstRender = this._isFirstRender;
+        this._isFirstRender = false;
 
         this.resetInner();
 
@@ -72,14 +95,21 @@ export default echarts.extendComponentView({
         }
 
         var itemAlign = legendModel.get('align');
+        var orient = legendModel.get('orient');
         if (!itemAlign || itemAlign === 'auto') {
             itemAlign = (
                 legendModel.get('left') === 'right'
-                && legendModel.get('orient') === 'vertical'
+                && orient === 'vertical'
             ) ? 'right' : 'left';
         }
 
-        this.renderInner(itemAlign, legendModel, ecModel, api);
+        var selector = legendModel.get('selector', true);
+        var selectorPosition = legendModel.get('selectorPosition', true);
+        if (selector && (!selectorPosition || selectorPosition === 'auto')) {
+            selectorPosition = orient === 'horizontal' ? 'end' : 'start';
+        }
+
+        this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         // Perform layout.
         var positionInfo = legendModel.getBoxLayoutParams();
@@ -87,7 +117,8 @@ export default echarts.extendComponentView({
         var padding = legendModel.get('padding');
 
         var maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
-        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize);
+
+        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
         // Place mainGroup, based on the calculated `mainRect`.
         var layoutRect = layoutUtil.getLayoutRect(
@@ -109,12 +140,13 @@ export default echarts.extendComponentView({
     resetInner: function () {
         this.getContentGroup().removeAll();
         this._backgroundEl && this.group.remove(this._backgroundEl);
+        this.getSelectorGroup().removeAll();
     },
 
     /**
      * @protected
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api) {
+    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
         var contentGroup = this.getContentGroup();
         var legendDrawnMap = zrUtil.createHashMap();
         var selectMode = legendModel.get('selectedMode');
@@ -166,8 +198,8 @@ export default echarts.extendComponentView({
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                    .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api, excludeSeriesId))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api, excludeSeriesId));
+                    .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
+                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 legendDrawnMap.set(name, true);
             }
@@ -199,9 +231,10 @@ export default echarts.extendComponentView({
 
                         // FIXME: consider different series has items with the same name.
                         itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                            // FIXME Should not specify the series name
-                            .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api, excludeSeriesId))
-                            .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api, excludeSeriesId));
+                            // Should not specify the series name, consider legend controls
+                            // more than one pie series.
+                            .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
+                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
                         legendDrawnMap.set(name, true);
                     }
@@ -211,10 +244,56 @@ export default echarts.extendComponentView({
 
             if (__DEV__) {
                 if (!legendDrawnMap.get(name)) {
-                    console.warn(name + ' series not exists. Legend data should be same with series name or data name.');
+                    console.warn(
+                        name + ' series not exists. Legend data should be same with series name or data name.'
+                    );
                 }
             }
         }, this);
+
+        if (selector) {
+            this._createSelector(selector, legendModel, api, orient, selectorPosition);
+        }
+    },
+
+    _createSelector: function (selector, legendModel, api, orient, selectorPosition) {
+        var selectorGroup = this.getSelectorGroup();
+
+        each(selector, function (selectorItem) {
+            createSelectorButton(selectorItem);
+        });
+
+        function createSelectorButton(selectorItem) {
+            var type = selectorItem.type;
+
+            var labelText = new graphic.Text({
+                style: {
+                    x: 0,
+                    y: 0,
+                    align: 'center',
+                    verticalAlign: 'middle'
+                },
+                onclick: function () {
+                    api.dispatchAction({
+                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect'
+                    });
+                }
+            });
+
+            selectorGroup.add(labelText);
+
+            var labelModel = legendModel.getModel('selectorLabel');
+            var emphasisLabelModel = legendModel.getModel('emphasis.selectorLabel');
+
+            graphic.setLabelStyle(
+                labelText.style, labelText.hoverStyle = {}, labelModel, emphasisLabelModel,
+                {
+                    defaultText: selectorItem.title,
+                    isRectText: false
+                }
+            );
+            graphic.setHoverStyle(labelText);
+        }
     },
 
     _createItem: function (
@@ -254,7 +333,7 @@ export default echarts.extendComponentView({
         // PENDING
         if (!itemIcon && symbolType
             // At least show one symbol, can't be all none
-            && ((symbolType !== legendSymbolType) || symbolType == 'none')
+            && ((symbolType !== legendSymbolType) || symbolType === 'none')
         ) {
             var size = itemHeight * 0.8;
             if (symbolType === 'none') {
@@ -334,8 +413,9 @@ export default echarts.extendComponentView({
     /**
      * @protected
      */
-    layoutInner: function (legendModel, itemAlign, maxSize) {
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
         var contentGroup = this.getContentGroup();
+        var selectorGroup = this.getSelectorGroup();
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -347,9 +427,56 @@ export default echarts.extendComponentView({
         );
 
         var contentRect = contentGroup.getBoundingRect();
-        contentGroup.attr('position', [-contentRect.x, -contentRect.y]);
+        var contentPos = [-contentRect.x, -contentRect.y];
 
-        return this.group.getBoundingRect();
+        if (selector) {
+            // Place buttons in selectorGroup
+            layoutUtil.box(
+                // Buttons in selectorGroup always layout horizontally
+                'horizontal',
+                selectorGroup,
+                legendModel.get('selectorItemGap', true)
+            );
+
+            var selectorRect = selectorGroup.getBoundingRect();
+            var selectorPos = [-selectorRect.x, -selectorRect.y];
+            var selectorButtonGap = legendModel.get('selectorButtonGap', true);
+
+            var orientIdx = legendModel.getOrient().index;
+            var wh = orientIdx === 0 ? 'width' : 'height';
+            var hw = orientIdx === 0 ? 'height' : 'width';
+            var yx = orientIdx === 0 ? 'y' : 'x';
+
+            if (selectorPosition === 'end') {
+                selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
+            }
+            else {
+                contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
+            }
+
+            //Always align selector to content as 'middle'
+            selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
+            selectorGroup.attr('position', selectorPos);
+            contentGroup.attr('position', contentPos);
+
+            var mainRect = {x: 0, y: 0};
+            mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
+            mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
+            mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
+            return mainRect;
+        }
+        else {
+            contentGroup.attr('position', contentPos);
+            return this.group.getBoundingRect();
+        }
+    },
+
+    /**
+     * @protected
+     */
+    remove: function () {
+        this.getContentGroup().removeAll();
+        this._isFirstRender = true;
     }
 
 });
@@ -361,26 +488,26 @@ function dispatchSelectAction(name, api) {
     });
 }
 
-function dispatchHighlightAction(seriesModel, dataName, api, excludeSeriesId) {
+function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'highlight',
-            seriesName: seriesModel.name,
+            seriesName: seriesName,
             name: dataName,
             excludeSeriesId: excludeSeriesId
         });
     }
 }
 
-function dispatchDownplayAction(seriesModel, dataName, api, excludeSeriesId) {
+function dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'downplay',
-            seriesName: seriesModel.name,
+            seriesName: seriesName,
             name: dataName,
             excludeSeriesId: excludeSeriesId
         });

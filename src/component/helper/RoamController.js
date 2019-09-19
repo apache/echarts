@@ -130,7 +130,7 @@ zrUtil.mixin(RoamController, Eventful);
 
 
 function mousedown(e) {
-    if (eventTool.notLeftMouse(e)
+    if (eventTool.isMiddleOrRightButtonOnMouseUpDown(e)
         || (e.target && e.target.draggable)
     ) {
         return;
@@ -149,9 +149,8 @@ function mousedown(e) {
 }
 
 function mousemove(e) {
-    if (eventTool.notLeftMouse(e)
+    if (!this._dragging
         || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
-        || !this._dragging
         || e.gestureEvent === 'pinch'
         || interactionMutex.isTaken(this._zr, 'globalPan')
     ) {
@@ -178,7 +177,7 @@ function mousemove(e) {
 }
 
 function mouseup(e) {
-    if (!eventTool.notLeftMouse(e)) {
+    if (!eventTool.isMiddleOrRightButtonOnMouseUpDown(e)) {
         this._dragging = false;
     }
 }
@@ -195,7 +194,11 @@ function mousewheel(e) {
     if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
         return;
     }
-    // console.log(wheelDelta);
+
+    // If both `shouldZoom` and `shouldMove` is true, trigger
+    // their event both, and the final behavior is determined
+    // by event listener themselves.
+
     if (shouldZoom) {
         // Convenience:
         // Mac and VM Windows on Mac: scroll up: zoom out.
@@ -212,7 +215,7 @@ function mousewheel(e) {
             scale: scale, originX: originX, originY: originY
         });
     }
-    // console.log(shouldMove);
+
     if (shouldMove) {
         // FIXME: Should do more test in different environment.
         var absDelta = Math.abs(wheelDelta);

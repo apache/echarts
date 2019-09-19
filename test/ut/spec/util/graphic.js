@@ -18,7 +18,7 @@
 * under the License.
 */
 
-describe('util/graphic', function() {
+describe('util/graphic', function () {
 
     var graphic;
 
@@ -89,5 +89,25 @@ describe('util/graphic', function() {
         });
 
     });
+
+    describe('lineLineIntersect', function () {
+
+        it ('extreme', function () {
+            expect(graphic.lineLineIntersect(10, 10, 30, 30, 10, 10, 10, 10)).toEqual(false);
+        });
+
+        it('parallel and colinear', function () {
+            expect(graphic.lineLineIntersect(10, 20, 30, 40, 100, 220, 120, 240)).toEqual(false);
+            expect(graphic.lineLineIntersect(10, 10, 30, 30, 40, 40, 50, 50)).toEqual(false);
+            expect(graphic.lineLineIntersect(10, 10, 30, 30, 10, 10, 30, 30)).toEqual(false);
+            expect(graphic.lineLineIntersect(10, 10, 30, 30, 20, 20, 30, 30)).toEqual(false);
+            expect(graphic.lineLineIntersect(10, 10, 30, 30, 20, 20, 22, 22)).toEqual(false);
+        });
+
+        it('intersect', function () {
+            expect(graphic.lineLineIntersect(10, 20, 30, 40, 12, 20, 30, 40)).toEqual(true);
+            expect(graphic.lineLineIntersect(10, 20, 30, 40, 12, 20, 20, 42)).toEqual(true);
+        });
+    })
 
 });

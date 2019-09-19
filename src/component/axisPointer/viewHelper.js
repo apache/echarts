@@ -93,6 +93,7 @@ export function buildLabelElOption(
             textFont: font,
             textFill: labelModel.getTextColor(),
             textPosition: 'inside',
+            textPadding: paddings,
             fill: bgColor,
             stroke: labelModel.get('borderColor') || 'transparent',
             lineWidth: labelModel.get('borderWidth') || 0,
@@ -137,6 +138,8 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
     if (formatter) {
         var params = {
             value: axisHelper.getAxisRawValue(axis, value),
+            axisDimension: axis.dim,
+            axisIndex: axis.index,
             seriesData: []
         };
         zrUtil.each(seriesDataIndices, function (idxItem) {
@@ -164,7 +167,7 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
  *  rotation, position, labelOffset, labelDirection, labelMargin
  * }
  */
-export function getTransformedPosition (axis, value, layoutInfo) {
+export function getTransformedPosition(axis, value, layoutInfo) {
     var transform = matrix.create();
     matrix.rotate(transform, transform, layoutInfo.rotation);
     matrix.translate(transform, transform, layoutInfo.position);

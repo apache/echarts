@@ -34,7 +34,7 @@ import CoordinateSystem from '../../CoordinateSystem';
 function create(ecModel, api) {
     var singles = [];
 
-    ecModel.eachComponent('singleAxis', function(axisModel, idx) {
+    ecModel.eachComponent('singleAxis', function (axisModel, idx) {
 
         var single = new Single(axisModel, ecModel, api);
         single.name = 'single_' + idx;

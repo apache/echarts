@@ -19,6 +19,12 @@
 
 
 export default {
+    legendSelector: {
+        title: {
+            all: '全选',
+            inverse: '反选'
+        }
+    },
     toolbox: {
         brush: {
             title: {

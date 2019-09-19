@@ -31,6 +31,7 @@ import Model from '../../model/Model';
 import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
+import { getTooltipRenderMode } from '../../util/model';
 
 var bind = zrUtil.bind;
 var each = zrUtil.each;
@@ -51,14 +52,7 @@ export default echarts.extendComponentView({
 
         var tooltipModel = ecModel.getComponent('tooltip');
         var renderMode = tooltipModel.get('renderMode');
-        this._renderMode = 'html';
-        if (renderMode === 'auto') {
-            // using html when `document` exists, use richtext otherwise
-            this._renderMode = document ? 'html' : 'richtext';
-        }
-        else {
-            this._renderMode = renderMode || this._renderMode;
-        }
+        this._renderMode = getTooltipRenderMode(renderMode);
 
         var tooltipContent;
         if (this._renderMode === 'html') {
@@ -74,7 +68,7 @@ export default echarts.extendComponentView({
     },
 
     render: function (tooltipModel, ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
 
@@ -161,7 +155,7 @@ export default echarts.extendComponentView({
                 // Show tip next tick after other charts are rendered
                 // In case highlight action has wrong result
                 // FIXME
-                self.manuallyShowTip(tooltipModel, ecModel, api, {
+                !api.isDisposed() && self.manuallyShowTip(tooltipModel, ecModel, api, {
                     x: self._lastX,
                     y: self._lastY
                 });
@@ -433,7 +427,7 @@ export default echarts.extendComponentView({
                 // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
                 var firstLine = valueLabel;
                 if (renderMode !== 'html') {
-                    singleDefaultHTML.push(seriesDefaultHTML.join(newLine))
+                    singleDefaultHTML.push(seriesDefaultHTML.join(newLine));
                 }
                 else {
                     singleDefaultHTML.push(
@@ -696,16 +690,16 @@ export default echarts.extendComponentView({
                 var lastIndices = lastItem.seriesDataIndices || [];
                 var newIndices = thisItem.seriesDataIndices || [];
 
-                contentNotChanged &=
-                    lastItem.value === thisItem.value
+                contentNotChanged
+                    &= lastItem.value === thisItem.value
                     && lastItem.axisType === thisItem.axisType
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
                 contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
                     var newIdxItem = newIndices[j];
-                    contentNotChanged &=
-                        lastIdxItem.seriesIndex === newIdxItem.seriesIndex
+                    contentNotChanged
+                        &= lastIdxItem.seriesIndex === newIdxItem.seriesIndex
                         && lastIdxItem.dataIndex === newIdxItem.dataIndex;
                 });
             });
@@ -730,7 +724,7 @@ export default echarts.extendComponentView({
     },
 
     dispose: function (ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
         this._tooltipContent.hide();

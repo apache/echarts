@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Uint32Array, Float64Array, Float32Array */
+
 import {__DEV__} from '../../config';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
@@ -120,7 +122,9 @@ var LinesSeries = SeriesModel.extend({
 
         if (__DEV__) {
             if (!(coords instanceof Array && coords.length > 0 && coords[0] instanceof Array)) {
-                throw new Error('Invalid coords ' + JSON.stringify(coords) + '. Lines must have 2d coords array in data item.');
+                throw new Error(
+                    'Invalid coords ' + JSON.stringify(coords) + '. Lines must have 2d coords array in data item.'
+                );
             }
         }
         return coords;

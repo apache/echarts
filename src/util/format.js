@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
-import Text from 'zrender/src/graphic/Text';
+// import Text from 'zrender/src/graphic/Text';
 
 /**
  * 每三位默认加,格式化
@@ -32,7 +32,7 @@ export function addCommas(x) {
         return '-';
     }
     x = (x + '').split('.');
-    return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
+    return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
             + (x.length > 1 ? ('.' + x[1]) : '');
 }
 
@@ -42,7 +42,7 @@ export function addCommas(x) {
  * @return {string} str
  */
 export function toCamelCase(str, upperCaseFirst) {
-    str = (str || '').toLowerCase().replace(/-(.)/g, function(match, group1) {
+    str = (str || '').toLowerCase().replace(/-(.)/g, function (match, group1) {
         return group1.toUpperCase();
     });
 
@@ -103,9 +103,6 @@ export function formatTpl(tpl, paramsList, encode) {
     for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
         for (var k = 0; k < $vars.length; k++) {
             var val = paramsList[seriesIdx][$vars[k]];
-            if (zrUtil.isObject(val)) {
-                val = val[$vars[k]];
-            }
             tpl = tpl.replace(
                 wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
                 encode ? encodeHTML(val) : val
@@ -139,7 +136,7 @@ export function formatTplSimple(tpl, param, encode) {
  * @param {string} [opt.color]
  * @param {string} [opt.extraCssText]
  * @param {string} [opt.type='item'] 'item' or 'subItem'
- * @param {string} [opt.renderMode='html'] render mode of tooltip, 'html' or 'richtext'
+ * @param {string} [opt.renderMode='html'] render mode of tooltip, 'html' or 'richText'
  * @param {string} [opt.markerId='X'] id name for marker. If only one marker is in a rich text, this can be omitted.
  * @return {string}
  */
@@ -239,4 +236,42 @@ export function capitalFirst(str) {
 
 export var truncateText = textContain.truncateText;
 
-export var getTextRect = textContain.getBoundingRect;
+/**
+ * @public
+ * @param {Object} opt
+ * @param {string} opt.text
+ * @param {string} opt.font
+ * @param {string} [opt.textAlign='left']
+ * @param {string} [opt.textVerticalAlign='top']
+ * @param {Array.<number>} [opt.textPadding]
+ * @param {number} [opt.textLineHeight]
+ * @param {Object} [opt.rich]
+ * @param {Object} [opt.truncate]
+ * @return {Object} {x, y, width, height, lineHeight}
+ */
+export function getTextBoundingRect(opt) {
+    return textContain.getBoundingRect(
+        opt.text,
+        opt.font,
+        opt.textAlign,
+        opt.textVerticalAlign,
+        opt.textPadding,
+        opt.textLineHeight,
+        opt.rich,
+        opt.truncate
+    );
+}
+
+/**
+ * @deprecated
+ * the `textLineHeight` was added later.
+ * For backward compatiblility, put it as the last parameter.
+ * But deprecated this interface. Please use `getTextBoundingRect` instead.
+ */
+export function getTextRect(
+    text, font, textAlign, textVerticalAlign, textPadding, rich, truncate, textLineHeight
+) {
+    return textContain.getBoundingRect(
+        text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate
+    );
+}

@@ -23,6 +23,7 @@ import * as numberUtil from '../../util/number';
 import * as markerHelper from './markerHelper';
 import LineDraw from '../../chart/helper/LineDraw';
 import MarkerView from './MarkerView';
+import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
 var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
     var data = seriesModel.getData();
@@ -40,22 +41,19 @@ var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
         )
     ) {
         var valueAxis;
-        var valueDataDim;
         var value;
 
         if (item.yAxis != null || item.xAxis != null) {
-            valueDataDim = item.yAxis != null ? 'y' : 'x';
-            valueAxis = coordSys.getAxis(valueDataDim);
-
+            valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
             value = zrUtil.retrieve(item.yAxis, item.xAxis);
         }
         else {
             var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
-            valueDataDim = axisInfo.valueDataDim;
             valueAxis = axisInfo.valueAxis;
+            var valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
             value = markerHelper.numCalculate(data, valueDataDim, mlType);
         }
-        var valueIndex = valueDataDim === 'x' ? 0 : 1;
+        var valueIndex = valueAxis.dim === 'x' ? 0 : 1;
         var baseIndex = 1 - valueIndex;
 
         var mlFrom = zrUtil.clone(item);
@@ -122,8 +120,8 @@ function markLineFilter(coordSys, item) {
         //  }
         // }
         if (
-            fromCoord && toCoord &&
-            (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
+            fromCoord && toCoord
+            && (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
             || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
         ) {
             return true;
@@ -352,7 +350,7 @@ function createList(coordSys, seriesModel, mlModel) {
         });
     }
     else {
-        coordDimsInfos =[{
+        coordDimsInfos = [{
             name: 'value',
             type: 'float'
         }];
@@ -375,15 +373,23 @@ function createList(coordSys, seriesModel, mlModel) {
         return item.value;
     };
     fromData.initData(
-        zrUtil.map(optData, function (item) { return item[0]; }),
-        null, dimValueGetter
+        zrUtil.map(optData, function (item) {
+            return item[0];
+        }),
+        null,
+        dimValueGetter
     );
     toData.initData(
-        zrUtil.map(optData, function (item) { return item[1]; }),
-        null, dimValueGetter
+        zrUtil.map(optData, function (item) {
+            return item[1];
+        }),
+        null,
+        dimValueGetter
     );
     lineData.initData(
-        zrUtil.map(optData, function (item) { return item[2]; })
+        zrUtil.map(optData, function (item) {
+            return item[2];
+        })
     );
     lineData.hasItemOption = true;
 

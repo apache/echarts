@@ -303,10 +303,10 @@ var SeriesModel = ComponentModel.extend({
      * @param {number} dataIndex
      * @param {boolean} [multipleSeries=false]
      * @param {number} [dataType]
-     * @param {string} [renderMode='html'] valid values: 'html' and 'richtext'.
+     * @param {string} [renderMode='html'] valid values: 'html' and 'richText'.
      *                                     'html' is used for rendering tooltip in extra DOM form, and the result
      *                                     string is used as DOM HTML content.
-     *                                     'richtext' is used for rendering tooltip in rich text form, for those where
+     *                                     'richText' is used for rendering tooltip in rich text form, for those where
      *                                     DOM operation is not supported.
      * @return {Object} formatted tooltip with `html` and `markers`
      */
@@ -315,7 +315,7 @@ var SeriesModel = ComponentModel.extend({
         var series = this;
         renderMode = renderMode || 'html';
         var newLine = renderMode === 'html' ? '<br/>' : '\n';
-        var isRichText = renderMode === 'richtext';
+        var isRichText = renderMode === 'richText';
         var markers = {};
         var markerId = 0;
 
@@ -343,7 +343,7 @@ var SeriesModel = ComponentModel.extend({
                     return;
                 }
                 var dimType = dimInfo.type;
-                var markName = series.seriesIndex + 'at' + markerId;
+                var markName = 'sub' + series.seriesIndex + 'at' + markerId;
                 var dimHead = getTooltipMarker({
                     color: color,
                     type: 'subItem',
@@ -371,15 +371,22 @@ var SeriesModel = ComponentModel.extend({
                 }
             }
 
+            var newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
+            var content = newLine + result.join(newLine || ', ');
             return {
                 renderMode: renderMode,
-                content: (vertially ? isRichText : '') + result.join(vertially ? isRichText : ', '),
+                content: content,
                 style: markers
             };
         }
 
         function formatSingleValue(val) {
-            return encodeHTML(addCommas(val));
+            // return encodeHTML(addCommas(val));
+            return {
+                renderMode: renderMode,
+                content: encodeHTML(addCommas(val)),
+                style: markers
+            };
         }
 
         var data = this.getData();
@@ -400,6 +407,7 @@ var SeriesModel = ComponentModel.extend({
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
+        var content = formattedValue.content;
 
         var markName = series.seriesIndex + 'at' + markerId;
         var colorEl = getTooltipMarker({
@@ -425,10 +433,10 @@ var SeriesModel = ComponentModel.extend({
         var html = !multipleSeries
             ? seriesName + colorStr
                 + (name
-                    ? encodeHTML(name) + ': ' + formattedValue
-                    : formattedValue
+                    ? encodeHTML(name) + ': ' + content
+                    : content
                 )
-            : colorStr + seriesName + formattedValue;
+            : colorStr + seriesName + content;
 
         return {
             html: html,

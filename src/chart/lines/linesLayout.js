@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Float32Array */
+
 import createRenderPlanner from '../helper/createRenderPlanner';
 
 export default {

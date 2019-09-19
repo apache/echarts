@@ -17,19 +17,12 @@
 * under the License.
 */
 
-/**
- * Graph data structure
- *
- * @module echarts/data/Graph
- * @author Yi Shen(https://www.github.com/pissang)
- */
-
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {enableClassCheck} from '../util/clazz';
 
 // id may be function name of Object, add a prefix to avoid this problem.
-function generateNodeKey (id) {
+function generateNodeKey(id) {
     return '_EC_' + id;
 }
 /**
@@ -37,7 +30,7 @@ function generateNodeKey (id) {
  * @constructor
  * @param {boolean} directed
  */
-var Graph = function(directed) {
+var Graph = function (directed) {
     /**
      * 是否是有向图
      * @type {boolean}
@@ -101,7 +94,7 @@ graphProto.isDirected = function () {
  * @param {number} [dataIndex]
  */
 graphProto.addNode = function (id, dataIndex) {
-    id = id || ('' + dataIndex);
+    id = id == null ? ('' + dataIndex) : ('' + id);
 
     var nodesMap = this._nodesMap;
 
@@ -219,7 +212,8 @@ graphProto.getEdge = function (n1, n2) {
 
     if (this._directed) {
         return edgesMap[n1 + '-' + n2];
-    } else {
+    }
+    else {
         return edgesMap[n1 + '-' + n2]
             || edgesMap[n2 + '-' + n1];
     }

@@ -21,9 +21,6 @@
  * Quick select n-th element in an array.
  *
  * Note: it will change the elements placement in array.
- *
- * @module echarts/core/quickSelect
- * @author Yi Shen(https://github.com/pissang)
  */
 
 function defaultCompareFunc(a, b) {
@@ -85,7 +82,7 @@ function select(arr, left, right, nth, compareFunc) {
 export default function (arr, left, right, nth, compareFunc) {
     if (arguments.length <= 3) {
         nth = left;
-        if (arguments.length == 2) {
+        if (arguments.length === 2) {
             compareFunc = defaultCompareFunc;
         }
         else {

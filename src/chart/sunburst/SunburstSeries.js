@@ -111,6 +111,11 @@ export default SeriesModel.extend({
         itemStyle: {
             borderWidth: 1,
             borderColor: 'white',
+            borderType: 'solid',
+            shadowBlur: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.2)',
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
             opacity: 1,
             emphasis: {},
             highlight: {

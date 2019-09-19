@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as graphic from '../../util/graphic';
 import BaseAxisPointer from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
 import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
@@ -41,7 +40,7 @@ var SingleAxisPointer = BaseAxisPointer.extend({
         if (axisPointerType && axisPointerType !== 'none') {
             var elStyle = viewHelper.buildElStyle(axisPointerModel);
             var pointerOption = pointerShapeBuilder[axisPointerType](
-                axis, pixelValue, otherExtent, elStyle
+                axis, pixelValue, otherExtent
             );
             pointerOption.style = elStyle;
 
@@ -97,23 +96,20 @@ var SingleAxisPointer = BaseAxisPointer.extend({
 
 var pointerShapeBuilder = {
 
-    line: function (axis, pixelValue, otherExtent, elStyle) {
+    line: function (axis, pixelValue, otherExtent) {
         var targetShape = viewHelper.makeLineShape(
             [pixelValue, otherExtent[0]],
             [pixelValue, otherExtent[1]],
             getPointDimIndex(axis)
         );
-        graphic.subPixelOptimizeLine({
-            shape: targetShape,
-            style: elStyle
-        });
         return {
             type: 'Line',
+            subPixelOptimize: true,
             shape: targetShape
         };
     },
 
-    shadow: function (axis, pixelValue, otherExtent, elStyle) {
+    shadow: function (axis, pixelValue, otherExtent) {
         var bandWidth = axis.getBandWidth();
         var span = otherExtent[1] - otherExtent[0];
         return {

@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import Group from 'zrender/src/container/Group';
+// import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
 
 /**
@@ -26,10 +26,8 @@ import Text from 'zrender/src/graphic/Text';
  * @constructor
  */
 function TooltipRichContent(api) {
-    // this.el = new Group();
 
-    var zr = this._zr = api.getZr();
-    // zr.add(this.el);
+    this._zr = api.getZr();
 
     this._show = false;
 
@@ -85,12 +83,24 @@ TooltipRichContent.prototype = {
         while (startId >= 0) {
             var endId = text.indexOf(suffix);
             var name = text.substr(startId + prefix.length, endId - startId - prefix.length);
-            markers['marker' + name] = {
-                textWidth: 12,
-                textHeight: 12,
-                textBorderRadius: 6,
-                textBackgroundColor: markerRich[name]
-            };
+            if (name.indexOf('sub') > -1) {
+                markers['marker' + name] = {
+                    textWidth: 4,
+                    textHeight: 4,
+                    textBorderRadius: 2,
+                    textBackgroundColor: markerRich[name],
+                    // TODO: textOffset is not implemented for rich text
+                    textOffset: [3, 0]
+                };
+            }
+            else {
+                markers['marker' + name] = {
+                    textWidth: 10,
+                    textHeight: 10,
+                    textBorderRadius: 5,
+                    textBackgroundColor: markerRich[name]
+                };
+            }
 
             text = text.substr(endId + 1);
             startId = text.indexOf('{marker');
@@ -119,16 +129,6 @@ TooltipRichContent.prototype = {
             }
             self._inContent = true;
         });
-        this.el.on('mousemove', function (e) {
-            e = e || window.event;
-            if (!self._enterable) {
-                // Try trigger zrender event to avoid mouse
-                // in and out shape too frequently
-                var handler = zr.handler;
-                eventUtil.normalizeEvent(container, e, true);
-                handler.dispatch('mousemove', e);
-            }
-        });
         this.el.on('mouseout', function () {
             if (self._enterable) {
                 if (self._show) {
@@ -155,7 +155,9 @@ TooltipRichContent.prototype = {
     },
 
     hide: function () {
-        this.el.hide();
+        if (this.el) {
+            this.el.hide();
+        }
         this._show = false;
     },
 
@@ -178,7 +180,11 @@ TooltipRichContent.prototype = {
     },
 
     getOuterSize: function () {
-        return this.getSize();
+        var size = this.getSize();
+        return {
+            width: size[0],
+            height: size[1]
+        };
     }
 };
 

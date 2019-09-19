@@ -57,8 +57,11 @@ under the License.
                     backgroundColor: '#eee',
                     tooltip: {
                         show: true,
-                        useHtml: false,
-                        trigger: 'axis'
+                        renderMode: 'richText',
+                        enterable: true,
+                        // position: [100, 100],
+                        trigger: 'axis',
+                        z: 100
                     },
                     yAxis: {
                         type: 'value'

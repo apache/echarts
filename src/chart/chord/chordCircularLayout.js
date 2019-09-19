@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * Chord layout
- * @module echarts/chart/chord/chordCircularLayout
- * @author pissang(http://github.com/pissang)
- */
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../../util/number';
 
@@ -63,7 +58,7 @@ function layout(graphs, opts) {
         return sumSize + group.size;
     }, 0);
 
-    if (opts.sort && opts.sort != 'none') {
+    if (opts.sort && opts.sort !== 'none') {
         groups.sort(compareGroups);
         if (opts.sort === 'descending') {
             groups.reverse();
@@ -74,7 +69,7 @@ function layout(graphs, opts) {
     var angle = opts.startAngle * Math.PI / 180;
     var sign = opts.clockwise ? -1 : 1;
     zrUtil.each(groups, function (group) {
-        if (opts.sortSub && opts.sortSub != 'none') {
+        if (opts.sortSub && opts.sortSub !== 'none') {
             group.subGroups.sort(compareGroups);
             if (opts.sortSub === 'descending') {
                 group.subGroups.reverse();

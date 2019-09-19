@@ -1,0 +1,202 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                /*border: 1px solid #000;*/
+            }
+        </style>
+        <div id="main"><div>
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {});
+
+                window.onresize = function () {
+                    chart.resize();
+                };
+
+                // Data used to test the circle
+                // var data = {
+                //     nodes: [
+                //         {name: 'Brazil'},
+                //         {name: 'Canada'},
+                //         {name: 'Mexico'},
+                //         {name: 'USA'},
+                //         {name: 'Portugal'},
+                //         {name: 'France'},
+                //         {name: 'Spain'},
+                //         {name: 'England'},
+                //         {name: 'Angola'},
+                //         {name: 'Senegal'},
+                //         {name: 'Morocco'},
+                //         {name: 'South Africa'},
+                //         {name: 'Mali'},
+                //         {name: 'China'},
+                //         {name: 'India'},
+                //         {name: 'Japan'}
+                //     ],
+                //     links: [
+                //         {source: 'Brazil', target: 'Portugal', value: 5},
+                //         {source: 'Brazil', target: 'France', value: 1},
+                //         {source: 'Brazil', target: 'Spain', value: 1},
+                //         {source: 'Brazil', target: 'England', value: 1},
+                //         {source: 'Canada', target: 'Portugal', value: 1},
+                //         {source: 'Canada', target: 'France', value: 5},
+                //         {source: 'Canada', target: 'England', value: 1},
+                //         {source: 'Mexico', target: 'Portugal', value: 1},
+                //         {source: 'Mexico', target: 'France', value: 1},
+                //         {source: 'Mexico', target: 'Spain', value: 5},
+                //         {source: 'Mexico', target: 'England', value: 1},
+                //         {source: 'USA', target: 'Portugal', value: 1},
+                //         {source: 'USA', target: 'France', value: 1},
+                //         {source: 'USA', target: 'Spain', value: 1},
+                //         {source: 'USA', target: 'England', value: 5},
+                //         {source: 'Portugal', target: 'Angola', value: 2},
+                //         {source: 'Portugal', target: 'Senegal', value: 1},
+                //         {source:'Portugal', target: 'Morocco', value: 1},
+                //         {source: 'Portugal', target: 'South Africa', value: 3},
+                //         {source: 'France', target: 'Angola', value: 1},
+                //         {source: 'France', target: 'Senegal', value: 3},
+                //         {source: 'France', target: 'Mali', value: 3},
+                //         {source: 'France', target: 'Morocco', value: 3},
+                //         {source: 'France', target: 'South Africa', value: 1},
+                //         {source: 'Spain', target: 'Senegal', value: 1},
+                //         {source: 'Spain', target: 'Morocco', value: 3},
+                //         {source: 'Spain', target: 'South Africa', value: 1},
+                //         {source: 'England', target: 'Angola', value: 1},
+                //         {source: 'England', target: 'Senegal', value: 1},
+                //         {source: 'England', target: 'Morocco', value: 2},
+                //         {source: 'England', target: 'South Africa', value: 7},
+                //         {source: 'South Africa', target: 'China', value: 5},
+                //         {source: 'South Africa', target: 'India', value: 1},
+                //         {source: 'South Africa', target: 'Japan', value: 3},
+                //         {source: 'Angola', target: 'China', value: 5},
+                //         {source: 'Angola', target: 'India', value: 1},
+                //         {source: 'Angola', target: 'Japan', value: 3},
+                //         {source: 'Senegal', target: 'China', value: 5},
+                //         {source: 'Senegal', target: 'India', value: 1},
+                //         {source: 'Senegal', target: 'Japan', value: 3},
+                //         {source: 'Mali', target: 'China', value: 5},
+                //         {source: 'Mali', target: 'India', value: 1},
+                //         {source: 'Mali', target: 'Japan', value: 3},
+                //         {source: 'Morocco', target: 'China', value: 5},
+                //         {source: 'Morocco', target: 'India', value: 1},
+                //         {source: 'Morocco', target: 'Japan', value: 3}
+                //     ]
+                // };
+
+                var testData =  {
+                    nodes: [
+                        {
+                            name: 'a'
+                        },
+                        {
+                            name: 'b'
+                        },
+                        {
+                            name: 'a1'
+                        },
+                        {
+                            name: 'b1'
+                        },
+                        {
+                            name: 'c'
+                        },
+                        {
+                            name: 'e'
+                        }
+                    ],
+                    links: [
+                        {
+                            source: 'a',
+                            target: 'a1',
+                            value: 5
+                        },
+                        {
+                            source: 'e',
+                            target: 'b',
+                            value: 3
+                        },
+                        {
+                            source: 'a',
+                            target: 'b1',
+                            value: 3
+                        },
+                        {
+                            source: 'b1',
+                            target: 'a1',
+                            value: 1
+                        },
+                        {
+                            source: 'b1',
+                            target: 'c',
+                            value: 2
+                        },
+                        {
+                            source: 'b',
+                            target: 'c',
+                            value: 1
+                        }
+                    ]
+                };
+
+                chart.setOption({
+                    color: ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#fddbc7', '#d1e5f0', '#92c5de', '#4393c3', '#2166ac', '#053061'],
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
+                    animation: false,
+                    series: [
+                        {
+                            type: 'sankey',
+                            bottom: '10%',
+                            focusNodeAdjacency: 'allEdges',
+                            data: testData.nodes,
+                            links: testData.links,
+                            orient: 'vertical',
+                            label: {
+                                position: 'top'
+                            },
+                            lineStyle: {
+                                normal: {
+                                    color: 'source',
+                                    curveness: 0.5
+                                }
+                            }
+                        }
+                    ]
+                });
+            });
+        </script>
+    </body>
+</html>

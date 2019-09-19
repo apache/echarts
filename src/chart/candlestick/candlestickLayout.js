@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Float32Array */
+
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
 import {parsePercent} from '../../util/number';
@@ -146,7 +148,7 @@ export default {
 
         function largeProgress(params, data) {
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
-            var points = new LargeArr(params.count * 5);
+            var points = new LargeArr(params.count * 4);
             var offset = 0;
             var point;
             var tmpIn = [];
@@ -162,7 +164,7 @@ export default {
 
                 if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
                     points[offset++] = NaN;
-                    offset += 4;
+                    offset += 3;
                     continue;
                 }
 

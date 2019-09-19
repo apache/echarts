@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var value2 = 400;
+                var total = 1000;
+
+                function getData() {
+                    return [{
+                        name: '',
+                        value: total - value2,
+                        itemStyle: { color: 'rgb(8,90,150)' },
+                        label: { show: false }
+                    }, {
+                        name: '50%',
+                        value: value2,
+                        itemStyle: { color: 'rgb(23,235,255)'},
+                        label: { position: 'center', color: '#999', fontSize: '100' }
+                    }]
+                }
+
+                var option = {
+                    animation: false,
+                    series: [{
+                        type: 'pie',
+                        radius: ['60%','80%'],
+                        labelLine: { show: false },
+                        hoverAnimation: false,
+                        data: getData()
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: 'Label should be always at center of the pie',
+                    option: option,
+                    info: {
+                        data: [{
+                            label: {position: 'center'}
+                        }]
+                    }
+                });
+
+                setInterval(function () {
+                    value2 += 3;
+                    if (value2 > total) {
+                        value2 = 0;
+                    }
+                    chart.setOption({
+                        series: [{
+                            data: getData()
+                        }]
+                    });
+                }, 20);
+            });
+
+        </script>
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var count = 60;
+                var data = [];
+                for (var i = 0; i < count; i++) {
+                    var label = i === 30
+                        ? {
+                            position: 'center',
+                            fontSize: 30,
+                            color: '#fff'
+                        }
+                        : null;
+                    data.push({
+                        name: i + 'A',
+                        value: Math.random(),
+                        label: label
+                    });
+                }
+
+                var option = {
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: data
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: 'Too many',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var count = 60;
+
+                function makeData(sign) {
+                    var data = [];
+                    for (var i = 0; i < count; i++) {
+                        var value = Math.random() * 50 * sign;
+                        value = +value.toFixed(2);
+
+                        if (i >= 2
+                            && i <= count - 2
+                            && i % 10 !== 0
+                            // Test the case that the bottom label is normal to display.
+                            && Math.abs(i - Math.round(count / 2)) > 2
+                        ) {
+                            value = sign > 0
+                                ? value - Math.floor(value)
+                                : value - Math.ceil(value);
+                            value = +value.toFixed(2);
+                        }
+
+                        data.push({
+                            name: value,
+                            value: value
+                        });
+                    }
+                    return data;
+                }
+
+                var pos = ['25%', '75%'];
+
+                var option = {
+                    title: [{
+                        text: 'Positive value\nminShowLabelAngle: 10',
+                        textAlign: 'center',
+                        left: pos[0]
+                    }, {
+                        text: 'Negative value\nminShowLabelAngle: 2',
+                        textAlign: 'center',
+                        left: pos[1]
+                    }],
+                    series: [{
+                        type: 'pie',
+                        center: [pos[0], '50%'],
+                        minShowLabelAngle: 10,
+                        label: {show: true},
+                        radius: '30%',
+                        data: makeData(1)
+                    }, {
+                        type: 'pie',
+                        center: [pos[1], '50%'],
+                        minShowLabelAngle: 2,
+                        label: {show: true},
+                        radius: '30%',
+                        data: makeData(-1)
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'minShowLabelAngle: label of small sector should **not be displayed**.',
+                        'other label should **be displayed** in appropriate place.'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var count = 5;
+
+                function makeData(sign) {
+                    var data = [];
+                    for (var i = 0; i < count; i++) {
+                        var value = Math.random() * 50 * sign;
+                        value = +value.toFixed(2);
+
+                        if (i >= 2
+                            && i <= count - 2
+                            && i % 10 !== 0
+                            // Test the case that the bottom label is normal to display.
+                            && Math.abs(i - Math.round(count / 2)) > 2
+                        ) {
+                            value = sign > 0
+                                ? value - Math.floor(value)
+                                : value - Math.ceil(value);
+                            value = +value.toFixed(2);
+                        }
+
+                        data.push({
+                            name: value,
+                            value: value
+                        });
+                    }
+                    return data;
+                }
+
+                var pos = ['25%', '75%'];
+
+                var option = {
+                    title: [{
+                        text: 'label.rotate: true, label should be in redical direction.',
+                        textAlign: 'center',
+                        left: pos[0]
+                    }, {
+                        text: 'label.rotate: 20',
+                        textAlign: 'center',
+                        left: pos[1]
+                    }],
+                    series: [{
+                        type: 'pie',
+                        center: [pos[0], '50%'],
+                        minShowLabelAngle: 10,
+                        label: {
+                            show: true,
+                            rotate: true
+                        },
+                        labelLine: {
+                            length2: 0
+                        },
+                        radius: '30%',
+                        data: makeData(1)
+                    }, {
+                        type: 'pie',
+                        center: [pos[1], '50%'],
+                        minShowLabelAngle: 2,
+                        label: {
+                            show: true,
+                            rotate: 20
+                        },
+                        radius: '30%',
+                        data: makeData(-1)
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'label should be rotated'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+    </body>
+</html>

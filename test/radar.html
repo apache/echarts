@@ -49,9 +49,10 @@ under the License.
                     },
                     tooltip: {},
                     legend: {
-                        data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）']
+                        data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）含有 "-" 数据', '第一个元素是 null']
                     },
                     radar: {
+                        radius: [50, '70%'],
                         name: {
                             formatter:'【{value}】',
                             color:'#72ACD1'
@@ -59,7 +60,7 @@ under the License.
                         triggerEvent: true,
                         // shape: 'circle',
                         indicator: [
-                           { text: '销售（sales）', max: 6500},
+                           { text: '销售（sales）', max: 100},
                            { text: '管理（Administration）', max: 16000},
                            { text: '信息技术（Information Techology）', max: 30000},
                            { text: '客服（Customer Support）', max: 38000},
@@ -78,12 +79,16 @@ under the License.
                         // areaStyle: {normal: {}},
                         data : [
                             {
-                                value : [4300, 10000, 28000, 35000, 50000, 19000],
+                                value : [0, 10000, 28000, 35000, 50000, 19000],
                                 name : '预算分配（Allocated Budget）'
                             },
                              {
-                                value : [5000, 14000, 28000, 31000, 42000, 21000],
-                                name : '实际开销（Actual Spending）'
+                                value : [50, 14000, 28000, 31000, '-', 21000],
+                                name : '实际开销（Actual Spending）含有 "-" 数据'
+                            },
+                            {
+                                value: ['-', 8000, 20000, 20000, 40000, 10000],
+                                name: '第一个元素是 null'
                             }
                         ]
                     }]

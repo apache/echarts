@@ -17,6 +17,8 @@
 * under the License.
 */
 
+/* global Float32Array */
+
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../util/number';
 import {isDimensionStacked} from '../data/helper/dataStackHelper';
@@ -293,7 +295,8 @@ export function layout(seriesType, ecModel) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
 
-            if (isNaN(value)) {
+            // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
+            if (isNaN(value) || isNaN(baseValue)) {
                 continue;
             }
 
@@ -387,23 +390,29 @@ export var largeLayout = {
         return {progress: progress};
 
         function progress(params, data) {
-            var largePoints = new LargeArr(params.count * 2);
+            var count = params.count;
+            var largePoints = new LargeArr(count * 2);
+            var largeDataIndices = new LargeArr(count);
             var dataIndex;
             var coord = [];
             var valuePair = [];
-            var offset = 0;
+            var pointsOffset = 0;
+            var idxOffset = 0;
 
             while ((dataIndex = params.next()) != null) {
                 valuePair[valueDimIdx] = data.get(valueDim, dataIndex);
                 valuePair[1 - valueDimIdx] = data.get(baseDim, dataIndex);
 
                 coord = cartesian.dataToPoint(valuePair, null, coord);
-                largePoints[offset++] = coord[0];
-                largePoints[offset++] = coord[1];
+                // Data index might not be in order, depends on `progressiveChunkMode`.
+                largePoints[pointsOffset++] = coord[0];
+                largePoints[pointsOffset++] = coord[1];
+                largeDataIndices[idxOffset++] = dataIndex;
             }
 
             data.setLayout({
                 largePoints: largePoints,
+                largeDataIndices: largeDataIndices,
                 barWidth: barWidth,
                 valueAxisStart: getValueAxisStart(baseAxis, valueAxis, false),
                 valueAxisHorizontal: valueAxisHorizontal
@@ -420,11 +429,23 @@ function isInLargeMode(seriesModel) {
     return seriesModel.pipelineContext && seriesModel.pipelineContext.large;
 }
 
+// See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis, valueAxis, stacked) {
-    return (
-        zrUtil.indexOf(baseAxis.getAxesOnZeroOf(), valueAxis) >= 0
-        || stacked
-    )
-    ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
-    : valueAxis.getGlobalExtent()[0];
+    var extent = valueAxis.getGlobalExtent();
+    var min;
+    var max;
+    if (extent[0] > extent[1]) {
+        min = extent[1];
+        max = extent[0];
+    }
+    else {
+        min = extent[0];
+        max = extent[1];
+    }
+
+    var valueStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    valueStart < min && (valueStart = min);
+    valueStart > max && (valueStart = max);
+
+    return valueStart;
 }

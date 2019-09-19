@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file This file used to draw tree view.
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import SymbolClz from '../helper/Symbol';
@@ -84,7 +79,7 @@ export default echarts.extendChartView({
             group.attr('position', [layoutInfo.x, layoutInfo.y]);
         }
 
-        this._updateViewCoordSys(seriesModel);
+        this._updateViewCoordSys(seriesModel, layoutInfo, layout);
         this._updateController(seriesModel, ecModel, api);
 
         var oldData = this._data;
@@ -160,14 +155,20 @@ export default echarts.extendChartView({
         var min = [];
         var max = [];
         bbox.fromPoints(points, min, max);
+
+        // If don't Store min max when collapse the root node after roam,
+        // the root node will disappear.
+        var oldMin = this._min;
+        var oldMax = this._max;
+
         // If width or height is 0
         if (max[0] - min[0] === 0) {
-            max[0] += 1;
-            min[0] -= 1;
+            min[0] = oldMin ? oldMin[0] : min[0] - 1;
+            max[0] = oldMax ? oldMax[0] : max[0] + 1;
         }
         if (max[1] - min[1] === 0) {
-            max[1] += 1;
-            min[1] -= 1;
+            min[1] = oldMin ? oldMin[1] : min[1] - 1;
+            max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
         var viewCoordSys = seriesModel.coordinateSystem = new View();
@@ -185,6 +186,8 @@ export default echarts.extendChartView({
         });
 
         this._viewCoordSys = viewCoordSys;
+        this._min = min;
+        this._max = max;
     },
 
     _updateController: function (seriesModel, ecModel, api) {
@@ -440,12 +443,16 @@ function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
     var cpx2;
     var cpy2;
     var orient = seriesScope.orient;
+    var x1;
+    var x2;
+    var y1;
+    var y2;
 
     if (seriesScope.layout === 'radial') {
-        var x1 = sourceLayout.rawX;
-        var y1 = sourceLayout.rawY;
-        var x2 = targetLayout.rawX;
-        var y2 = targetLayout.rawY;
+        x1 = sourceLayout.rawX;
+        y1 = sourceLayout.rawY;
+        x2 = targetLayout.rawX;
+        y2 = targetLayout.rawY;
 
         var radialCoor1 = radialCoordinate(x1, y1);
         var radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
@@ -464,10 +471,10 @@ function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
         };
     }
     else {
-        var x1 = sourceLayout.x;
-        var y1 = sourceLayout.y;
-        var x2 = targetLayout.x;
-        var y2 = targetLayout.y;
+        x1 = sourceLayout.x;
+        y1 = sourceLayout.y;
+        x2 = targetLayout.x;
+        y2 = targetLayout.y;
 
         if (orient === 'LR' || orient === 'RL') {
             cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
@@ -481,15 +488,17 @@ function getEdgeShape(seriesScope, sourceLayout, targetLayout) {
             cpx2 = x2;
             cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
         }
-        return {
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2,
-            cpx1: cpx1,
-            cpy1: cpy1,
-            cpx2: cpx2,
-            cpy2: cpy2
-        };
     }
+
+    return {
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2,
+        cpx1: cpx1,
+        cpy1: cpy1,
+        cpx2: cpx2,
+        cpy2: cpy2
+    };
+
 }
