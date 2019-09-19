@@ -84,7 +84,7 @@ echarts.extendChartView({
     _getClipShape: function (seriesModel) {
         var coordSys = seriesModel.coordinateSystem;
         var clipArea = coordSys && coordSys.getArea && coordSys.getArea();
-        return seriesModel.get('clip') ? clipArea : null;
+        return seriesModel.get('clip', true) ? clipArea : null;
     },
 
     _updateSymbolDraw: function (data, seriesModel) {

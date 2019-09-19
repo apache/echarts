@@ -167,7 +167,7 @@ ChartView.extend({
             .execute();
 
         // Do clipping
-        var clipPath = customSeries.get('clip')
+        var clipPath = customSeries.get('clip', true)
             ? createClipPath(customSeries.coordinateSystem, false, customSeries)
             : null;
         if (clipPath) {

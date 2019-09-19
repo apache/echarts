@@ -77,7 +77,7 @@ export default echarts.extendChartView({
 
         lineDraw.updateData(data);
 
-        var clipPath = seriesModel.get('clip') && createClipPath(
+        var clipPath = seriesModel.get('clip', true) && createClipPath(
             seriesModel.coordinateSystem, false, seriesModel
         );
         if (clipPath) {

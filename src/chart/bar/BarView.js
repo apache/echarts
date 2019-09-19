@@ -96,7 +96,7 @@ export default echarts.extendChartView({
 
         var coordSysClipArea = coord.getArea && coord.getArea();
 
-        var needsClip = seriesModel.get('clip');
+        var needsClip = seriesModel.get('clip', true);
 
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
@@ -189,7 +189,7 @@ export default echarts.extendChartView({
         createLarge(seriesModel, this.group);
 
         // Use clipPath in large mode.
-        var clipPath = seriesModel.get('clip')
+        var clipPath = seriesModel.get('clip', true)
             ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
             : null;
         if (clipPath) {

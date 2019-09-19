@@ -269,7 +269,7 @@ function createLineClipPath(coordSys, hasAnimation, seriesModel) {
         var isHorizontal = coordSys.getBaseAxis().isHorizontal();
         var clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel);
         // Expand clip shape to avoid clipping when line value exceeds axis
-        if (!seriesModel.get('clip')) {
+        if (!seriesModel.get('clip', true)) {
             var rectShape = clipPath.shape;
             var expandSize = Math.max(rectShape.width, rectShape.height);
             if (isHorizontal) {
