@@ -43,18 +43,6 @@ under the License.
             }
         </style>
 
-        <div class="chart" id="scatter-clip-cartesian"></div>
-        <div class="chart" id="scatter-clip-polar"></div>
-        <!-- <h1>Scatter Clip with Incremental Rendering</h1>
-        <div class="chart" id="scatter-clip-incremental"></div> -->
-        <div class="chart" id="large-scatter-clip"></div>
-        <div class="chart" id="lines-clip"></div>
-        <div class="chart" id="line-dataZoom-time"></div>
-        <div class="chart" id="line-dataZoom-category"></div>
-        <div class="chart" id="bar-clip"></div>
-        <div class="chart" id="custom-clip"></div>
-        <div class="chart" id="candlestick-clip"></div>
-
         <script>
             function makeToggleChartButtons(toggleClip) {
                 return  [{
@@ -71,6 +59,7 @@ under the License.
             }
         </script>
 
+        <div class="chart" id="scatter-clip-cartesian"></div>
         <script>
             require([
                 'echarts'
@@ -116,8 +105,7 @@ under the License.
 
 
 
-
-
+        <div class="chart" id="scatter-clip-polar"></div>
         <script>
             require([
                 'echarts'
@@ -167,6 +155,7 @@ under the License.
 
 
 
+        <div class="chart" id="large-scatter-clip"></div>
         <script>
             require([
                 'echarts'
@@ -246,6 +235,7 @@ under the License.
 
 
 
+        <div class="chart" id="lines-clip"></div>
         <script>
             require([
                 'echarts'
@@ -369,6 +359,7 @@ under the License.
 
 
 
+        <div class="chart" id="line-dataZoom-time"></div>
         <script>
             require([
                 'echarts'
@@ -536,6 +527,7 @@ under the License.
 
 
 
+        <div class="chart" id="line-dataZoom-category"></div>
         <script>
             require([
                 'echarts'
@@ -647,6 +639,7 @@ under the License.
         </script>
 
 
+        <div class="chart" id="bar-clip"></div>
         <script>
 
             require([
@@ -767,5 +760,197 @@ under the License.
                 });
             });
         </script>
+
+
+        <div class="chart" id="bar-large-clip"></div>
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+                var data4 = [];
+                for (var i = 0; i < 1000; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data2.push(Math.random().toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                    data4.push((Math.random() + 0.3).toFixed(2));
+                }
+                var isLarge = true;
+                var option = {
+                    xAxis: {
+                        data: xAxisData,
+                        silent: false,
+                        splitLine: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        min: 1,
+                        max: 4,
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        data: data1,
+                        large: true
+                    }, {
+                        show: false,
+                        name: 'bar2',
+                        type: 'bar',
+                        stack: 'one',
+                        data: data2,
+                        large: true
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data3,
+                        large: true
+                    }, {
+                        name: 'bar4',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data4,
+                        large: true
+                    }]
+                }
+
+                function setLarge(large) {
+                    chart.setOption({
+                        series: [{
+                            large: large
+                        }, {
+                            large: large
+                        }, {
+                            large: large
+                        }, {
+                            large: large
+                        }]
+                    })
+                }
+                var chart = testHelper.create(echarts, 'bar-large-clip', {
+                    option: option,
+                    title: 'Bar clip with large mode',
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }, {
+                                clip: clip
+                            }, {
+                                clip: clip
+                            }, {
+                                clip: clip
+                            }]
+                        })
+                    }).concat([{
+                        text: 'Set large',
+                        onclick: function () {
+                            setLarge(true);
+                        }
+                    }, {
+                        text: 'Set normal',
+                        onclick: function () {
+                            setLarge(false);
+                        }
+                    }])
+                });
+            });
+        </script>
+
+        <div class="chart" id="custom-clip"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [];
+                var dataCount = 20;
+                for (var i = 0; i < dataCount; i++) {
+                    var val = Math.random() * 1000;
+                    data.push([
+                        echarts.number.round(Math.random() * 100),
+                        echarts.number.round(Math.random() * 400)
+                    ]);
+                }
+
+                function renderItem(params, api) {
+                    if (params.context.rendered) {
+                        return;
+                    }
+                    params.context.rendered = true;
+
+                    var points = [];
+                    for (var i = 0; i < data.length; i++) {
+                        points.push(api.coord(data[i]));
+                    }
+                    var color = api.visual('color');
+
+                    return {
+                        type: 'polygon',
+                        shape: {
+                            points: points
+                        },
+                        style: api.style({
+                            fill: color,
+                            stroke: echarts.color.lift(color)
+                        })
+                    };
+                }
+
+                option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        filterMode: 'none',
+                        end: 40
+                    }, {
+                        type: 'inside',
+                        filterMode: 'none'
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        data: data,
+                        clip: true
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'custom-clip', {
+                    title: 'Clip custon series',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            });
+        </script>
+
+
+        <div class="chart" id="candlestick-clip"></div>
     </body>
 </html>

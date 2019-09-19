@@ -26,6 +26,7 @@ import Model from '../../model/Model';
 import barItemStyle from './barItemStyle';
 import Path from 'zrender/src/graphic/Path';
 import {throttle} from '../../util/throttle';
+import {createClipPath} from '../helper/createClipPathFromCoordSys';
 
 var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
 var _eventPos = [0, 0];
@@ -96,6 +97,11 @@ export default echarts.extendChartView({
         var coordSysClipArea = coord.getArea && coord.getArea();
 
         var needsClip = seriesModel.get('clip');
+
+        // If there is clipPath created in large mode. Remove it.
+        group.removeClipPath();
+        // We don't use clipPath in normal mode because we needs a perfect animation
+        // And don't want the label are clipped.
 
         data.diff(oldData)
             .add(function (dataIndex) {
@@ -181,6 +187,17 @@ export default echarts.extendChartView({
     _renderLarge: function (seriesModel, ecModel, api) {
         this._clear();
         createLarge(seriesModel, this.group);
+
+        // Use clipPath in large mode.
+        var clipPath = seriesModel.get('clip')
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        if (clipPath) {
+            this.group.setClipPath(clipPath);
+        }
+        else {
+            this.group.removeClipPath(null);
+        }
     },
 
     _incrementalRenderLarge: function (params, seriesModel) {
