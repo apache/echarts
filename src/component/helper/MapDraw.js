@@ -181,11 +181,11 @@ MapDraw.prototype = {
         var regionsGroup = this._regionsGroup;
         var group = this.group;
 
-        var scale = geo.scale;
-        var transform = {
-            position: geo.position,
-            scale: scale
-        };
+        group.scale = geo._roamTransformable.scale.slice();
+        group.position = geo._roamTransformable.position.slice();
+
+        var scale = geo._rawTransformable.scale;
+        var position = geo._rawTransformable.position;
 
         regionsGroup.removeAll();
 
@@ -239,8 +239,8 @@ MapDraw.prototype = {
 
             var transformPoint = function (point) {
                 return [
-                    point[0] * scale[0] + geo.position[0],
-                    point[1] * scale[1] + geo.position[1]
+                    point[0] * scale[0] + position[0],
+                    point[1] * scale[1] + position[1]
                 ];
             };
 
@@ -301,6 +301,7 @@ MapDraw.prototype = {
                     // label rotation is not support yet in geo or regions of series-map
                     // that has no data. The rotation will be effected by this `scale`.
                     // So needed to change to RectText?
+                    scale: [1 / group.scale[0], 1 / group.scale[1]],
                     z2: 10,
                     silent: true
                 });
