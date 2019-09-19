@@ -315,12 +315,16 @@ under the License.
                     dataZoom: [{
                             type: 'inside',
                             xAxisIndex: 0,
-                            filterMode: 'filter'
+                            filterMode: 'filter',
+                            start: 30,
+                            end: 70
                         },
                         {
                             type: 'inside',
                             yAxisIndex: 0,
-                            filterMode: 'weakFilter'
+                            filterMode: 'weakFilter',
+                            start: 30,
+                            end: 70
                         }
                     ],
                     series: [{
@@ -349,7 +353,8 @@ under the License.
                     buttons: makeToggleChartButtons(function (clip) {
                         chart.setOption({
                             series: [{
-                                clip: clip
+                                clip: clip,
+                                data: lineData
                             }]
                         })
                     })

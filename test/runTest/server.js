@@ -111,7 +111,8 @@ function startTests(testsNameList, socket, {
     replaySpeed,
     actualVersion,
     expectedVersion,
-    renderer
+    renderer,
+    noSave
 }) {
     console.log('Received: ', testsNameList.join(','));
 
@@ -122,16 +123,18 @@ function startTests(testsNameList, socket, {
         pendingTests = getTestsList().filter(testOpt => {
             return testsNameList.includes(testOpt.name);
         });
-        pendingTests.forEach(testOpt => {
-            // Reset all tests results
-            testOpt.status = 'pending';
-            testOpt.results = [];
-        });
 
-        if (!aborted) {
-            socket.emit('update', {tests: getTestsList(), running: true});
+        if (!noSave) {
+            pendingTests.forEach(testOpt => {
+                // Reset all tests results
+                testOpt.status = 'pending';
+                testOpt.results = [];
+            });
+
+            if (!aborted) {
+                socket.emit('update', {tests: getTestsList(), running: true});
+            }
         }
-
         let runningCount = 0;
         function onExit() {
             runningCount--;
@@ -142,7 +145,7 @@ function startTests(testsNameList, socket, {
         }
         function onUpdate() {
             // Merge tests.
-            if (!aborted) {
+            if (!aborted && !noSave) {
                 socket.emit('update', {tests: getTestsList(), running: true});
             }
         }
@@ -160,7 +163,8 @@ function startTests(testsNameList, socket, {
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
                 '--renderer', renderer,
-                ...(noHeadless ? ['--no-headless'] : [])
+                ...(noHeadless ? ['--no-headless'] : []),
+                ...(noSave ? ['--no-save'] : [])
             ]);
             runningCount++;
         }
@@ -230,7 +234,8 @@ async function start() {
                         replaySpeed: data.replaySpeed,
                         actualVersion: data.actualVersion,
                         expectedVersion: data.expectedVersion,
-                        renderer: data.renderer
+                        renderer: data.renderer,
+                        noSave: false
                     }
                 );
             }
@@ -292,7 +297,8 @@ async function start() {
                     replaySpeed: 2,
                     actualVersion: data.actualVersion,
                     expectedVersion: data.expectedVersion,
-                    renderer: data.renderer
+                    renderer: data.renderer,
+                    noSave: true
                 });
             }
             catch (e) { console.error(e); }

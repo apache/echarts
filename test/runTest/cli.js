@@ -35,7 +35,8 @@ program
     .option('-s, --speed <speed>', 'Playback speed')
     .option('--expected <expected>', 'Expected version')
     .option('--actual <actual>', 'Actual version')
-    .option('--renderer <renderer>', 'svg/canvas renderer');
+    .option('--renderer <renderer>', 'svg/canvas renderer')
+    .option('--no-save', 'Don\'t save result');
 
 program.parse(process.argv);
 
@@ -115,6 +116,9 @@ async function runActions(page, testOpt, isExpected, screenshots) {
 
         let count = 0;
         async function _innerTakeScreenshot() {
+            if (!program.save) {
+                return;
+            }
             const desc = action.desc || action.name;
             const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, count++);
             screenshots.push({screenshotName, desc, screenshotPath});
@@ -165,9 +169,11 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         await waitTime(500);  // Wait for animation or something else. Pending
         // Final shot.
         await page.mouse.move(0, 0);
-        let desc = 'Full Shot';
-        const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, isExpected);
-        screenshots.push({screenshotName, desc, screenshotPath});
+        if (program.save) {
+            let desc = 'Full Shot';
+            const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, isExpected);
+            screenshots.push({screenshotName, desc, screenshotPath});
+        }
 
         await runActions(page, testOpt, isExpected, screenshots);
     }
@@ -198,54 +204,61 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
         return;
     }
 
-    testOpt.status === 'running';
-    const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
-    const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
+    if (program.save) {
+        testOpt.status === 'running';
 
-    // sortScreenshots(expectedResult.screenshots);
-    // sortScreenshots(actualResult.screenshots);
+        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
+        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
 
-    const screenshots = [];
-    let idx = 0;
-    for (let shot of expectedResult.screenshots) {
-        let expected = shot;
-        let actual = actualResult.screenshots[idx++];
-        let result = {
-            actual: getClientRelativePath(actual.screenshotPath),
-            expected: getClientRelativePath(expected.screenshotPath),
-            name: actual.screenshotName,
-            desc: actual.desc
-        };
-        try {
-            let {diffRatio, diffPNG} = await compareScreenshot(
-                expected.screenshotPath,
-                actual.screenshotPath
-            );
+        // sortScreenshots(expectedResult.screenshots);
+        // sortScreenshots(actualResult.screenshots);
 
-            let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
-            await writePNG(diffPNG, diffPath);
+        const screenshots = [];
+        let idx = 0;
+        for (let shot of expectedResult.screenshots) {
+            let expected = shot;
+            let actual = actualResult.screenshots[idx++];
+            let result = {
+                actual: getClientRelativePath(actual.screenshotPath),
+                expected: getClientRelativePath(expected.screenshotPath),
+                name: actual.screenshotName,
+                desc: actual.desc
+            };
+            try {
+                let {diffRatio, diffPNG} = await compareScreenshot(
+                    expected.screenshotPath,
+                    actual.screenshotPath
+                );
 
-            result.diff = getClientRelativePath(diffPath);
-            result.diffRatio = diffRatio;
+                let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
+                await writePNG(diffPNG, diffPath);
+
+                result.diff = getClientRelativePath(diffPath);
+                result.diffRatio = diffRatio;
+            }
+            catch(e) {
+                result.diff = '';
+                result.diffRatio = 1;
+                console.log(e);
+            }
+            screenshots.push(result);
         }
-        catch(e) {
-            result.diff = '';
-            result.diffRatio = 1;
-            console.log(e);
-        }
-        screenshots.push(result);
+
+        testOpt.results = screenshots;
+        testOpt.status = 'finished';
+        testOpt.actualLogs = actualResult.logs;
+        testOpt.expectedLogs = expectedResult.logs;
+        testOpt.actualErrors = actualResult.errors;
+        testOpt.expectedErrors = expectedResult.errors;
+        testOpt.actualVersion = actualVersion;
+        testOpt.expectedVersion = expectedVersion;
+        testOpt.useSVG = program.renderer === 'svg';
+        testOpt.lastRun = Date.now();
     }
-
-    testOpt.results = screenshots;
-    testOpt.status = 'finished';
-    testOpt.actualLogs = actualResult.logs;
-    testOpt.expectedLogs = expectedResult.logs;
-    testOpt.actualErrors = actualResult.errors;
-    testOpt.expectedErrors = expectedResult.errors;
-    testOpt.actualVersion = actualVersion;
-    testOpt.expectedVersion = expectedVersion;
-    testOpt.useSVG = program.renderer === 'svg';
-    testOpt.lastRun = Date.now();
+    else {
+        // Only run once
+        await runTestPage(browser, testOpt, 'local', runtimeCode, true);
+    }
 }
 
 async function runTests(pendingTests) {
@@ -270,7 +283,9 @@ async function runTests(pendingTests) {
                 console.log(e);
             }
 
-            process.send(testOpt);
+            if (program.save) {
+                process.send(testOpt);
+            }
         }
     }
     catch(e) {

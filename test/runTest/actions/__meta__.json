@@ -129,5 +129,6 @@
   "treemap-option2": 1,
   "visualMap-categories": 1,
   "axes": 0,
-  "stackBar-dataZoom": 7
+  "stackBar-dataZoom": 7,
+  "clip": 9
 }
