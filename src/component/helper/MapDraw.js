@@ -181,8 +181,10 @@ MapDraw.prototype = {
         var regionsGroup = this._regionsGroup;
         var group = this.group;
 
-        group.scale = geo._roamTransformable.scale.slice();
-        group.position = geo._roamTransformable.position.slice();
+        if (geo._roamTransformable.transform) {
+            group.transform = geo._roamTransformable.transform.slice();
+            group.decomposeTransform();
+        }
 
         var scale = geo._rawTransformable.scale;
         var position = geo._rawTransformable.position;
@@ -196,7 +198,6 @@ MapDraw.prototype = {
         var nameMap = zrUtil.createHashMap();
 
         zrUtil.each(geo.regions, function (region) {
-
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
             // colonies). And it is not appropriate to merge them in geo, which
