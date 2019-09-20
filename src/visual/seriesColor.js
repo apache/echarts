@@ -33,6 +33,15 @@ export default {
 
         // FIXME Set color function or use the platte color
         data.setVisual('color', color);
+        
+        var borderColorAccessPath = (seriesModel.visualBorderColorAccessPath || 'itemStyle.borderColor').split('.');
+        var borderColor = seriesModel.get(borderColorAccessPath) // Set in itemStyle
+            || seriesModel.getColorFromPalette(
+                // TODO series count changed.
+                seriesModel.name, null, ecModel.getSeriesCount()
+            );  // Default borderColor
+        // FIXME Set borderColor function or use the platte borderColor
+        data.setVisual('borderColor', borderColor);
 
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {
@@ -44,12 +53,24 @@ export default {
                 });
             }
 
+            if (typeof borderColor === 'function' && !(borderColor instanceof Gradient)) {
+                data.each(function (idx) {
+                    data.setItemVisual(
+                        idx, 'borderColor', borderColor(seriesModel.getDataParams(idx))
+                    );
+                });
+            }
+
             // itemStyle in each data item
             var dataEach = function (data, idx) {
                 var itemModel = data.getItemModel(idx);
                 var color = itemModel.get(colorAccessPath, true);
+                var borderColor = itemModel.get(borderColorAccessPath, true);
                 if (color != null) {
                     data.setItemVisual(idx, 'color', color);
+                }
+                if (borderColor != null) {
+                    data.setItemVisual(idx, 'borderColor', borderColor);
                 }
             };
 

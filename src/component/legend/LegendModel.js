@@ -283,6 +283,14 @@ var LegendModel = echarts.extendComponentModel({
         // 图例关闭时候的颜色
         inactiveColor: '#ccc',
 
+        // 图例关闭时候的颜色
+        inactiveBorderColor: '#ccc',
+
+        itemStyle: {
+            // 图例默认无边框
+            borderWidth: 0
+        },
+
         textStyle: {
             // 图例文字颜色
             color: '#333'
