@@ -19,14 +19,6 @@
 
 /* global Uint8ClampedArray */
 
-/**
- * @file defines echarts Heatmap Chart
- * @author Ovilia (me@zhangwenli.com)
- * Inspired by https://github.com/mourner/simpleheat
- *
- * @module
- */
-
 import * as zrUtil from 'zrender/src/core/util';
 
 var GRADIENT_LEVELS = 256;

@@ -141,7 +141,8 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
         if (animationTypeUpdate === 'expansion') {
             // Sectors are set to be target shape and an overlaying clipPath is used for animation
             sector.setShape(sectorShape);
-        } else {
+        }
+        else {
             // Transition animation from the old shape
             graphic.updateProps(sector, {
                 shape: sectorShape

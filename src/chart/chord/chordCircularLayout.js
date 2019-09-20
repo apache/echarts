@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * Chord layout
- * @module echarts/chart/chord/chordCircularLayout
- * @author pissang(http://github.com/pissang)
- */
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../../util/number';
 

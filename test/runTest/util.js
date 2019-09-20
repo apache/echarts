@@ -24,6 +24,12 @@ const fs = require('fs');
 const rollup = require('rollup');
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
+const util = require('util');
+const config = require('./config');
+
+function modifyEChartsCode(code) {
+    return code.replace(/Math.random/g, '__random__inner__');
+}
 
 module.exports.testNameFromFile = function(fileName) {
     return path.basename(fileName, '.html');
@@ -43,19 +49,24 @@ module.exports.getActionsFullPath = function (testName) {
     return path.join(__dirname, 'actions', testName + '.json');
 };
 
+module.exports.getEChartsTestFileName = function () {
+    return `echarts.test-${config.testVersion}.js`;
+};
 
 module.exports.prepareEChartsLib = function (version) {
     let versionFolder = path.join(__dirname, getVersionDir(version));
     fse.ensureDirSync(versionFolder);
     if (!version || version === 'local') {
         // Developing version, make sure it's new build
-        return fse.copy(
-            path.join(__dirname, '../../dist/echarts.js'),
-            `${versionFolder}/echarts.js`
-        );
+        fse.copySync(path.join(__dirname, '../../dist/echarts.js'), `${versionFolder}/echarts.js`);
+        let code = modifyEChartsCode(fs.readFileSync(`${versionFolder}/echarts.js`, 'utf-8'));
+        fs.writeFileSync(`${versionFolder}/${module.exports.getEChartsTestFileName()}`, code, 'utf-8');
+        return Promise.resolve();
+
     }
     return new Promise(resolve => {
-        if (!fs.existsSync(`${versionFolder}/echarts.js`)) {
+        let testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
+        if (!fs.existsSync(testLibPath)) {
             const file = fs.createWriteStream(`${versionFolder}/echarts.js`);
 
             console.log(`Downloading echarts@${version} from `, `https://cdn.jsdelivr.net/npm/echarts@${version}/dist/echarts.js`);
@@ -63,6 +74,8 @@ module.exports.prepareEChartsLib = function (version) {
                 response.pipe(file);
 
                 file.on('finish', () => {
+                    let code = modifyEChartsCode(fs.readFileSync(`${versionFolder}/echarts.js`, 'utf-8'));
+                    fs.writeFileSync(testLibPath, code, 'utf-8');
                     resolve();
                 });
             });
