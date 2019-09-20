@@ -29,6 +29,8 @@ module.exports = class Timeline {
 
         this._ops = [];
         this._currentOpIndex = 0;
+
+        this._client;
     }
 
     _reset() {
@@ -39,6 +41,10 @@ module.exports = class Timeline {
 
 
     async runAction(action, takeScreenshot, playbackSpeed) {
+        if (!this._client) {
+            this._client = await this._page.target().createCDPSession();
+        }
+
         this.stop();
 
         playbackSpeed = playbackSpeed || 1;
@@ -108,6 +114,32 @@ module.exports = class Timeline {
             case 'mousemove':
                 await page.mouse.move(op.x, op.y);
                 break;
+            case 'mousewheel':
+                await page.evaluate((x, y, deltaX, deltaY) => {
+                    let element = document.elementFromPoint(x, y);
+                    // Here dispatch mousewheel event because echarts used it.
+                    // TODO Consider upgrade?
+                    let event = new WheelEvent('mousewheel', {
+                        // PENDING
+                        // Needs inverse delta?
+                        deltaY,
+                        clientX: x, clientY: y,
+                        // Needs bubble to parent container
+                        bubbles: true
+                    });
+
+                    element.dispatchEvent(event);
+                }, op.x, op.y, op.deltaX || 0, op.deltaY);
+
+                // console.log('mousewheel', op.x, op.y, op.deltaX, op.deltaY);
+                // await this._client.send('Input.dispatchMouseEvent', {
+                //     type: 'mouseWheel',
+                //     x: op.x,
+                //     y: op.y,
+                //     deltaX: op.deltaX,
+                //     deltaY: op.deltaY
+                // });
+                // break;
             case 'screenshot':
                 await takeScreenshot();
                 break;
