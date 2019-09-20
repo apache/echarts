@@ -66,7 +66,7 @@ function createPolarClipPath(polar, hasAnimation, seriesModel) {
             cx: round(polar.cx, 1),
             cy: round(polar.cy, 1),
             r0: round(sectorArea.r0, 1),
-            r: round(sectorArea.r1, 1),
+            r: round(sectorArea.r, 1),
             startAngle: sectorArea.startAngle,
             endAngle: sectorArea.endAngle,
             clockwise: sectorArea.clockwise
@@ -81,7 +81,6 @@ function createPolarClipPath(polar, hasAnimation, seriesModel) {
             }
         }, seriesModel);
     }
-
     return clipPath;
 }
 
