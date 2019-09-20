@@ -305,7 +305,6 @@ function recordIframeEvents(iframe, app) {
         preventRecordingFollowingMouseEvents = false;
     }, true);
     iframe.contentWindow.addEventListener('mousewheel', e => {
-        console.log(e);
         addMouseOp('mousewheel', e);
     }, true);
 
