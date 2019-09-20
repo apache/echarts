@@ -402,7 +402,7 @@ echarts.extendComponentView({
                 };
 
             // PENDING
-            // Currently, when `bounding: 'all'`, the union bounding rect of the group 
+            // Currently, when `bounding: 'all'`, the union bounding rect of the group
             // does not include the rect of [0, 0, group.width, group.height], which
             // is probably weird for users. Should we make a break change for it?
             layoutUtil.positionElement(

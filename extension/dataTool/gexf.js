@@ -38,8 +38,13 @@ var zrUtil = require("zrender/lib/core/util");
 * specific language governing permissions and limitations
 * under the License.
 */
-// GEXF File Parser
-// http://gexf.net/1.2draft/gexf-12draft-primer.pdf
+
+/**
+ * This is a parse of GEXF.
+ *
+ * The spec of GEXF:
+ * https://gephi.org/gexf/1.2draft/gexf-12draft-primer.pdf
+ */
 function parse(xml) {
   var doc;
 

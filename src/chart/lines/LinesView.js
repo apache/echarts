@@ -26,6 +26,7 @@ import Polyline from '../helper/Polyline';
 import EffectPolyline from '../helper/EffectPolyline';
 import LargeLineDraw from '../helper/LargeLineDraw';
 import linesLayout from './linesLayout';
+import {createClipPath} from '../helper/createClipPathFromCoordSys';
 
 export default echarts.extendChartView({
 
@@ -75,6 +76,16 @@ export default echarts.extendChartView({
         }
 
         lineDraw.updateData(data);
+
+        var clipPath = seriesModel.get('clip', true) && createClipPath(
+            seriesModel.coordinateSystem, false, seriesModel
+        );
+        if (clipPath) {
+            this.group.setClipPath(clipPath);
+        }
+        else {
+            this.group.removeClipPath();
+        }
 
         this._lastZlevel = zlevel;
 

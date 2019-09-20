@@ -57,10 +57,10 @@ Component.prototype = {
 };
 
 var componentProto = Component.prototype;
-componentProto.updateView
-    = componentProto.updateLayout
-    = componentProto.updateVisual
-    = function (seriesModel, ecModel, api, payload) {
+componentProto.updateView =
+    componentProto.updateLayout =
+    componentProto.updateVisual =
+    function (seriesModel, ecModel, api, payload) {
         // Do nothing;
     };
 // Enable Component.extend.

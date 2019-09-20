@@ -143,6 +143,7 @@ const app = new Vue({
                 if (action) {
                     action.ops = [];
                 }
+                saveData();
             }).catch(e => {});
         },
 
@@ -240,6 +241,10 @@ function keyboardRecordingHandler(e) {
     }
 }
 
+function sign(value) {
+    return value > 0 ? 1 : -1;
+}
+
 function recordIframeEvents(iframe, app) {
     let innerDocument = iframe.contentWindow.document;
 
@@ -247,12 +252,23 @@ function recordIframeEvents(iframe, app) {
     function addMouseOp(type, e) {
         if (app.recordingAction) {
             let time = getEventTime();
-            app.recordingAction.ops.push({
+            let op = {
                 type,
                 time: time,
                 x: e.clientX,
                 y: e.clientY
-            });
+            };
+            app.recordingAction.ops.push(op);
+            if (type === 'mousewheel') {
+                // TODO Sreenshot after mousewheel?
+                op.deltaY = e.deltaY;
+
+                // In a reversed direction.
+                // When creating WheelEvent, the sign of wheelData and deltaY are same
+                if (sign(e.wheelDelta) !== sign(e.deltaY)) {
+                    op.deltaY = -op.deltaY;
+                }
+            }
             if (type === 'mouseup' && app.config.screenshotAfterMouseUp) {
                 // Add a auto screenshot after mouseup
                 app.recordingAction.ops.push({
@@ -287,6 +303,9 @@ function recordIframeEvents(iframe, app) {
             addMouseOp('mouseup', e);
         }
         preventRecordingFollowingMouseEvents = false;
+    }, true);
+    iframe.contentWindow.addEventListener('mousewheel', e => {
+        addMouseOp('mousewheel', e);
     }, true);
 
 

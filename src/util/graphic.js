@@ -51,6 +51,13 @@ var EMPTY_OBJ = {};
 
 export var Z2_EMPHASIS_LIFT = 1;
 
+// key: label model property nane, value: style property name.
+export var CACHED_LABEL_STYLE_PROPERTIES = {
+    color: 'textFill',
+    textBorderColor: 'textStroke',
+    textBorderWidth: 'textStrokeWidth'
+};
+
 var EMPHASIS = 'emphasis';
 var NORMAL = 'normal';
 
@@ -928,13 +935,6 @@ function getAutoColor(color, opt) {
     return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
 }
 
-// key: label model property nane, value: style property name.
-export var CACHED_LABEL_STYLE_PROPERTIES = {
-    color: 'textFill',
-    textBorderColor: 'textStroke',
-    textBorderWidth: 'textStrokeWidth'
-};
-
 /**
  * Give some default value to the input `textStyle` object, based on the current settings
  * in this `textStyle` object.
@@ -953,52 +953,49 @@ export var CACHED_LABEL_STYLE_PROPERTIES = {
  * does, `rollbackDefaultTextStyle` is not needed to be called).
  */
 function applyDefaultTextStyle(textStyle) {
-    var opt = textStyle.insideRollbackOpt;
-
-    // Only `insideRollbackOpt` created (in `setTextStyleCommon`),
-    // applyDefaultTextStyle works.
-    if (!opt || textStyle.textFill != null) {
-        return;
-    }
-
-    var useInsideStyle = opt.useInsideStyle;
     var textPosition = textStyle.textPosition;
+    var opt = textStyle.insideRollbackOpt;
     var insideRollback;
-    var autoColor = opt.autoColor;
 
-    if (useInsideStyle !== false
-        && (useInsideStyle === true
-            || (opt.isRectText
-                && textPosition
-                // textPosition can be [10, 30]
-                && typeof textPosition === 'string'
-                && textPosition.indexOf('inside') >= 0
-            )
-        )
-    ) {
-        // If intend to cache more properties here, modify the
-        // `CACHED_LABEL_STYLE_PROPERTIES`.
-        insideRollback = {
-            textFill: null,
-            textStroke: textStyle.textStroke,
-            textStrokeWidth: textStyle.textStrokeWidth
-        };
-        textStyle.textFill = '#fff';
-        // Consider text with #fff overflow its container.
-        if (textStyle.textStroke == null) {
-            textStyle.textStroke = autoColor;
-            textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
+    if (opt && textStyle.textFill == null) {
+        var autoColor = opt.autoColor;
+        var isRectText = opt.isRectText;
+        var useInsideStyle = opt.useInsideStyle;
+
+        var useInsideStyleCache = useInsideStyle !== false
+            && (useInsideStyle === true
+                || (isRectText
+                    && textPosition
+                    // textPosition can be [10, 30]
+                    && typeof textPosition === 'string'
+                    && textPosition.indexOf('inside') >= 0
+                )
+            );
+        var useAutoColorCache = !useInsideStyleCache && autoColor != null;
+
+        // All of the props declared in `CACHED_LABEL_STYLE_PROPERTIES` are to be cached.
+        if (useInsideStyleCache || useAutoColorCache) {
+            insideRollback = {
+                textFill: textStyle.textFill,
+                textStroke: textStyle.textStroke,
+                textStrokeWidth: textStyle.textStrokeWidth
+            };
+        }
+        if (useInsideStyleCache) {
+            textStyle.textFill = '#fff';
+            // Consider text with #fff overflow its container.
+            if (textStyle.textStroke == null) {
+                textStyle.textStroke = autoColor;
+                textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
+            }
+        }
+        if (useAutoColorCache) {
+            textStyle.textFill = autoColor;
         }
     }
-    else if (autoColor != null) {
-        insideRollback = {textFill: null};
-        textStyle.textFill = autoColor;
-    }
 
-    // Always set `insideRollback`, for clearing previous.
-    if (insideRollback) {
-        textStyle.insideRollback = insideRollback;
-    }
+    // Always set `insideRollback`, so that the previous one can be cleared.
+    textStyle.insideRollback = insideRollback;
 }
 
 /**
@@ -1014,6 +1011,7 @@ function applyDefaultTextStyle(textStyle) {
 function rollbackDefaultTextStyle(style) {
     var insideRollback = style.insideRollback;
     if (insideRollback) {
+        // Reset all of the props in `CACHED_LABEL_STYLE_PROPERTIES`.
         style.textFill = insideRollback.textFill;
         style.textStroke = insideRollback.textStroke;
         style.textStrokeWidth = insideRollback.textStrokeWidth;
@@ -1295,6 +1293,88 @@ export function createIcon(iconStr, opt, rect) {
                 )
             );
     }
+}
+
+/**
+ * Return `true` if the given line (line `a`) and the given polygon
+ * are intersect.
+ * Note that we do not count colinear as intersect here because no
+ * requirement for that. We could do that if required in future.
+ *
+ * @param {number} a1x
+ * @param {number} a1y
+ * @param {number} a2x
+ * @param {number} a2y
+ * @param {Array.<Array.<number>>} points Points of the polygon.
+ * @return {boolean}
+ */
+export function linePolygonIntersect(a1x, a1y, a2x, a2y, points) {
+    for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
+        var p = points[i];
+        if (lineLineIntersect(a1x, a1y, a2x, a2y, p[0], p[1], p2[0], p2[1])) {
+            return true;
+        }
+        p2 = p;
+    }
+}
+
+/**
+ * Return `true` if the given two lines (line `a` and line `b`)
+ * are intersect.
+ * Note that we do not count colinear as intersect here because no
+ * requirement for that. We could do that if required in future.
+ *
+ * @param {number} a1x
+ * @param {number} a1y
+ * @param {number} a2x
+ * @param {number} a2y
+ * @param {number} b1x
+ * @param {number} b1y
+ * @param {number} b2x
+ * @param {number} b2y
+ * @return {boolean}
+ */
+export function lineLineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
+    // let `vec_m` to be `vec_a2 - vec_a1` and `vec_n` to be `vec_b2 - vec_b1`.
+    var mx = a2x - a1x;
+    var my = a2y - a1y;
+    var nx = b2x - b1x;
+    var ny = b2y - b1y;
+
+    // `vec_m` and `vec_n` are parallel iff
+    //     exising `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
+    var nmCrossProduct = crossProduct2d(nx, ny, mx, my);
+    if (nearZero(nmCrossProduct)) {
+        return false;
+    }
+
+    // `vec_m` and `vec_n` are intersect iff
+    //     existing `p` and `q` in [0, 1] such that `vec_a1 + p * vec_m = vec_b1 + q * vec_n`,
+    //     such that `q = ((vec_a1 - vec_b1) X vec_m) / (vec_n X vec_m)`
+    //           and `p = ((vec_a1 - vec_b1) X vec_n) / (vec_n X vec_m)`.
+    var b1a1x = a1x - b1x;
+    var b1a1y = a1y - b1y;
+    var q = crossProduct2d(b1a1x, b1a1y, mx, my) / nmCrossProduct;
+    if (q < 0 || q > 1) {
+        return false;
+    }
+    var p = crossProduct2d(b1a1x, b1a1y, nx, ny) / nmCrossProduct;
+    if (p < 0 || p > 1) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Cross product of 2-dimension vector.
+ */
+function crossProduct2d(x1, y1, x2, y2) {
+    return x1 * y2 - x2 * y1;
+}
+
+function nearZero(val) {
+    return val <= (1e-6) && val >= -(1e-6);
 }
 
 export {
