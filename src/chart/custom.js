@@ -27,6 +27,7 @@ import DataDiffer from '../data/DataDiffer';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import ChartView from '../view/Chart';
+import {createClipPath} from './helper/createClipPathFromCoordSys';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
 import prepareGeo from '../coord/geo/prepareCustom';
@@ -80,7 +81,13 @@ SeriesModel.extend({
         z: 2,
         legendHoverLink: true,
 
-        useTransform: true
+        useTransform: true,
+
+        // Custom series will not clip by default.
+        // Some case will use custom series to draw label
+        // For example https://echarts.apache.org/examples/en/editor.html?c=custom-gantt-flight
+        // Only works on polar and cartesian2d coordinate system.
+        clip: false
 
         // Cartesian coordinate system
         // xAxisIndex: 0,
@@ -158,6 +165,17 @@ ChartView.extend({
                 el && group.remove(el);
             })
             .execute();
+
+        // Do clipping
+        var clipPath = customSeries.get('clip', true)
+            ? createClipPath(customSeries.coordinateSystem, false, customSeries)
+            : null;
+        if (clipPath) {
+            group.setClipPath(clipPath);
+        }
+        else {
+            group.removeClipPath();
+        }
 
         this._data = data;
     },
