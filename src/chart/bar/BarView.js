@@ -196,7 +196,7 @@ export default echarts.extendChartView({
             this.group.setClipPath(clipPath);
         }
         else {
-            this.group.removeClipPath(null);
+            this.group.removeClipPath();
         }
     },
 
@@ -258,7 +258,7 @@ var clip = {
         layout.width = x2 - x;
         layout.height = y2 - y;
 
-        var clipped = layout.width < 0 || layout.height < 0;;
+        var clipped = layout.width < 0 || layout.height < 0;
 
         // Reverse back
         if (signWidth < 0) {
