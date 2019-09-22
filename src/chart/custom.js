@@ -231,6 +231,8 @@ function createEl(elOption) {
     var graphicType = elOption.type;
     var el;
 
+    // Those graphic elements are not shapes. They should not be
+    // overwritten by users, so do them first.
     if (graphicType === 'path') {
         var shape = elOption.shape;
         // Using pathRect brings convenience to users sacle svg path.
@@ -255,8 +257,14 @@ function createEl(elOption) {
         el = new graphicUtil.Text({});
         el.__customText = elOption.style.text;
     }
+    else if (graphicType === 'group') {
+        el = new graphicUtil.Group();
+    }
+    else if (graphicType === 'compoundPath') {
+        throw new Error('"compoundPath" is not supported yet.');
+    }
     else {
-        var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
+        var Clz = graphicUtil.getShapeClass(graphicType);
 
         if (__DEV__) {
             zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
