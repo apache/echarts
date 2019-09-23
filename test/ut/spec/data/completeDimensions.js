@@ -26,7 +26,7 @@ describe('completeDimensions', function () {
     var testCase = utHelper.prepare([
         'echarts/src/data/helper/completeDimensions',
         'echarts/src/data/Source',
-        'echarts/src/data/sourceType',
+        'echarts/src/data/helper/sourceType',
     ]);
 
 
@@ -169,6 +169,7 @@ describe('completeDimensions', function () {
                 'name': 'y'
             }
         ]);
+
         doTest(['x', 'y'], [12], null, [
             {
                 'otherDims': {},
@@ -183,6 +184,7 @@ describe('completeDimensions', function () {
                 'name': 'y'
             }
         ]);
+
         doTest(['x', 'y'], [12, 4], null, [
             {
                 'otherDims': {},
@@ -197,21 +199,16 @@ describe('completeDimensions', function () {
                 'name': 'y'
             }
         ]);
+
         doTest(['x'], [[32, 55]], null, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x'
-            },
-            {
-                'otherDims': {},
-                'coordDim': 'value',
-                'coordDimIndex': 0,
-                'isExtraCoord': true,
-                'name': 'value'
             }
         ]);
+
         doTest(['x', 'y', 'z'], [[32, 55]], null, [
             {
                 'otherDims': {},
@@ -232,21 +229,16 @@ describe('completeDimensions', function () {
                 'name': 'z'
             }
         ]);
+
         doTest(['x'], [[32, 55], [99, 11]], null, [
             {
                 'otherDims': {},
                 'coordDim': 'x',
                 'coordDimIndex': 0,
                 'name': 'x'
-            },
-            {
-                'otherDims': {},
-                'coordDim': 'value',
-                'coordDimIndex': 0,
-                'isExtraCoord': true,
-                'name': 'value'
             }
         ]);
+
         doTest(['x', 'y'], [[32, 55], [99, 11]], {dimCount: 4}, [
             {
                 'otherDims': {},
