@@ -22,7 +22,10 @@ describe('List', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/src/data/List']);
+    var testCase = utHelper.prepare([
+        'echarts/src/data/List',
+        'echarts/src/data/Source'
+    ]);
 
     describe('Data Manipulation', function () {
 
@@ -75,7 +78,7 @@ describe('List', function () {
                 stackable: true
             }]);
             list1.initData([1, '-', 2, -2]);
-            list2.initData([1, 2,   3, 2]);
+            list2.initData([1, 2, 3, 2]);
 
             list2.stackedOn = list1;
 
@@ -168,15 +171,19 @@ describe('List', function () {
             })).toEqual([20]);
         });
 
-        testCase('dataProvider', function (List) {
+        testCase('dataProvider', function (List, Source) {
             var list = new List(['x', 'y']);
             var typedArray = new Float32Array([10, 10, 20, 20]);
+            var source = Source.seriesDataToSource(typedArray);
             list.initData({
                 count: function () {
                     return typedArray.length / 2;
                 },
                 getItem: function (idx) {
                     return [typedArray[idx * 2], typedArray[idx * 2 + 1]];
+                },
+                getSource: function () {
+                    return source;
                 }
             });
             expect(list.mapArray(['x', 'y'], function (x, y) {
