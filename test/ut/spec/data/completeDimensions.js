@@ -301,30 +301,10 @@ describe('completeDimensions', function () {
                     'coordDim': 'y',
                     'coordDimIndex': 0,
                     'name': 'y'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
                 }
             ]
         );
+
         doTest(
             ['value'], data, null,
             [
@@ -334,37 +314,10 @@ describe('completeDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'value',
                     'type': 'ordinal'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value2',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value2'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value3',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value3'
                 }
             ]
         );
+
         doTest(
             [{name: 'time', type: 'time', stackable: false}, 'value'], data, null,
             [
@@ -374,6 +327,7 @@ describe('completeDimensions', function () {
                     'type': 'time',
                     'stackable': false,
                     'coordDimIndex': 0,
+                    'ordinalMeta': undefined,
                     'coordDim': 'time'
                 },
                 {
@@ -381,30 +335,10 @@ describe('completeDimensions', function () {
                     'coordDim': 'value',
                     'coordDimIndex': 0,
                     'name': 'value'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value2',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value2'
                 }
             ]
         );
+
         doTest(
             [{
                 name: 'y',
@@ -422,41 +356,25 @@ describe('completeDimensions', function () {
                         'tooltip': false
                     },
                     'name': 'base',
-                    'tooltipName': 'base',
+                    'defaultTooltip': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'y',
-                    'type': 'ordinal'
+                    'type': 'ordinal',
+                    'displayName': 'base',
+                    'ordinalMeta': undefined
                 },
                 {
                     'otherDims': {},
                     'name': 'open',
-                    'tooltipName': 'open',
+                    'ordinalMeta': undefined,
+                    'defaultTooltip': undefined,
                     'coordDimIndex': 0,
-                    'coordDim': 'x'
-                },
-                {
-                    'otherDims': {},
-                    'name': 'close',
-                    'tooltipName': 'close',
-                    'coordDimIndex': 1,
-                    'coordDim': 'x'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
+                    'coordDim': 'x',
+                    'displayName': 'open'
                 }
             ]
         );
+
         doTest(
             [{
                 name: 'y',
@@ -479,7 +397,8 @@ describe('completeDimensions', function () {
                         'tooltip': 2
                     },
                     'name': '基础',
-                    'tooltipName': '基础',
+                    'displayName': '基础',
+                    'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'y',
                     'type': 'ordinal'
@@ -489,8 +408,9 @@ describe('completeDimensions', function () {
                         'tooltip': 0
                     },
                     'name': '打开',
-                    'tooltipName': '打开',
+                    'displayName': '打开',
                     'coordDimIndex': 0,
+                    'ordinalMeta': undefined,
                     'coordDim': 'x'
                 },
                 {
@@ -498,26 +418,14 @@ describe('completeDimensions', function () {
                         'tooltip': 1
                     },
                     'name': '关闭',
-                    'tooltipName': '关闭',
+                    'displayName': '关闭',
+                    'ordinalMeta': undefined,
                     'coordDimIndex': 1,
                     'coordDim': 'x'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
                 }
             ]
         );
+
         doTest(
             [{
                 name: 'y',
@@ -537,10 +445,11 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
+                    'displayName': '基础',
                     'name': '基础',
-                    'tooltipName': '基础',
                     'coordDimIndex': 0,
                     'coordDim': 'x',
+                    'ordinalMeta': undefined,
                     'type': 'ordinal'
                 },
                 {
@@ -548,31 +457,19 @@ describe('completeDimensions', function () {
                         'tooltip': false
                     },
                     'name': 'base',
-                    'tooltipName': 'base',
+                    'displayName': 'base',
+                    'ordinalMeta': undefined,
+                    'defaultTooltip': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'y'
                 },
                 {
                     'otherDims': {},
                     'name': '关闭',
-                    'tooltipName': '关闭',
+                    'displayName': '关闭',
                     'coordDimIndex': 0,
                     'isExtraCoord': true,
                     'coordDim': 'value'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'x',
-                    'coordDimIndex': 1,
-                    'name': 'close',
-                    'tooltipName': 'close'
                 }
             ]
         );
