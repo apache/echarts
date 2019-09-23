@@ -56,10 +56,9 @@ export default function (seriesType) {
                 var singleDataBorderColor = filteredIdx != null
                     && data.getItemVisual(filteredIdx, 'borderColor', true);
 
-                // FIXME Performance
-                var itemModel = dataAll.getItemModel(rawIdx);
-
                 if (!singleDataColor) {
+                    // FIXME Performance
+                    var itemModel = dataAll.getItemModel(rawIdx);
                     var color = itemModel.get('itemStyle.color')
                         || seriesModel.getColorFromPalette(
                             dataAll.getName(rawIdx) || (rawIdx + ''), seriesModel.__paletteScope,
@@ -79,11 +78,9 @@ export default function (seriesType) {
                 }
 
                 if (!singleDataBorderColor) {
-                    var borderColor = itemModel.get('itemStyle.borderColor')
-                    || seriesModel.getColorFromPalette(
-                        dataAll.getName(rawIdx) || (rawIdx + ''), seriesModel.__paletteScope,
-                        dataAll.count()
-                    );
+                    // FIXME Performance
+                    var itemModel = dataAll.getItemModel(rawIdx);
+                    var borderColor = itemModel.get('itemStyle.borderColor');
                     // Legend may use the visual info in data before processed
                     dataAll.setItemVisual(rawIdx, 'borderColor', borderColor);
 

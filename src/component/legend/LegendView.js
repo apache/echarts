@@ -339,7 +339,7 @@ export default echarts.extendComponentView({
             symbolKeepAspect == null ? true : symbolKeepAspect
         );
         itemGroup.add(
-            setSympleStyle(
+            setSymbolStyle(
                 legendSymbol, legendSymbolType, itemStyle,
                 borderColor, inactiveBorderColor, isSelected
             )
@@ -367,7 +367,7 @@ export default echarts.extendComponentView({
             );
             // Put symbol in the center
             itemGroup.add(
-                setSympleStyle(
+                setSymbolStyle(
                     legendSymbolCenter, symbolType, itemStyle,
                     borderColor, inactiveBorderColor, isSelected
                 )
@@ -503,7 +503,7 @@ export default echarts.extendComponentView({
 
 });
 
-function setSympleStyle(symbol, symbolType, itemStyle, borderColor, inactiveBorderColor, isSelected) {
+function setSymbolStyle(symbol, symbolType, itemStyle, borderColor, inactiveBorderColor, isSelected) {
     if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
         symbol.style.stroke = borderColor;
         if (!isSelected) {

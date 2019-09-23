@@ -275,19 +275,19 @@ var LegendModel = echarts.extendComponentModel({
         // 各个item之间的间隔，单位px，默认为10，
         // 横向布局时为水平间隔，纵向布局时为纵向间隔
         itemGap: 10,
-        // 图例图形宽度
+        // the width of legend symbol
         itemWidth: 25,
-        // 图例图形高度
+        // the height of legend symbol
         itemHeight: 14,
 
-        // 图例关闭时候的颜色
+        // the color of unselected legend symbol
         inactiveColor: '#ccc',
 
-        // 图例关闭时候的颜色
+        // the borderColor of unselected legend symbol
         inactiveBorderColor: '#ccc',
 
         itemStyle: {
-            // 图例默认无边框
+            // the default borderWidth of legend symbol
             borderWidth: 0
         },
 

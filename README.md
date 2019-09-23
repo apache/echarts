@@ -86,7 +86,7 @@ More custom build approaches can be checked in this tutorial: [Create Custom Bui
 
 ## Contribution
 
-If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/.github/CONTRIBUTING.md) document.
+If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/CONTRIBUTING.md) document.
 
 ## Resources
 

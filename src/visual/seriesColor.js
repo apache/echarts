@@ -35,12 +35,7 @@ export default {
         data.setVisual('color', color);
         
         var borderColorAccessPath = (seriesModel.visualBorderColorAccessPath || 'itemStyle.borderColor').split('.');
-        var borderColor = seriesModel.get(borderColorAccessPath) // Set in itemStyle
-            || seriesModel.getColorFromPalette(
-                // TODO series count changed.
-                seriesModel.name, null, ecModel.getSeriesCount()
-            );  // Default borderColor
-        // FIXME Set borderColor function or use the platte borderColor
+        var borderColor = seriesModel.get(borderColorAccessPath);
         data.setVisual('borderColor', borderColor);
 
         // Only visible series has each data be visual encoded
@@ -49,14 +44,6 @@ export default {
                 data.each(function (idx) {
                     data.setItemVisual(
                         idx, 'color', color(seriesModel.getDataParams(idx))
-                    );
-                });
-            }
-
-            if (typeof borderColor === 'function' && !(borderColor instanceof Gradient)) {
-                data.each(function (idx) {
-                    data.setItemVisual(
-                        idx, 'borderColor', borderColor(seriesModel.getDataParams(idx))
                     );
                 });
             }
