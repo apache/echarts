@@ -68,25 +68,6 @@ describe('List', function () {
             expect(list.get('y', 1)).toBeNaN();
         });
 
-        testCase('Stacked data', function (List) {
-            var list1 = new List(['x', {
-                name: 'y',
-                stackable: true
-            }]);
-            var list2 = new List(['x', {
-                name: 'y',
-                stackable: true
-            }]);
-            list1.initData([1, '-', 2, -2]);
-            list2.initData([1, 2, 3, 2]);
-
-            list2.stackedOn = list1;
-
-            expect(list2.get('y', 1, true)).toEqual(2);
-            expect(list2.get('y', 2, true)).toEqual(5);
-            expect(list2.get('y', 3, true)).toEqual(2);
-        });
-
         testCase('getRawValue', function (List) {
             var list = new List(['x', 'y']);
 
