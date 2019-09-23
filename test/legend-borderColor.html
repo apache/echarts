@@ -74,7 +74,8 @@ under the License.
                     data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎'],
                     itemStyle: {
                         // borderColor: '#f00',
-                        borderWidth: 3
+                        borderWidth: 3,
+                        borderType: 'dashed'
                     },
                     selected: {
                         '联盟广告': false,
@@ -179,6 +180,7 @@ under the License.
                 title: [
                     '(Legend symbol of line)',
                     'the emptyCircle symbol doesn\'t have fillColor, so the strokeColor should be the same as color of corresponding series',
+                    'the borderType of legend symbol is dashed, especially the first emptyCircle symbol',
                     'the color of line in legend symbol should be same as corresponding symbol',
                     'the borderWidth of legend symbols should only be determined by legend.itemStyle.borderWidth',
                     'the second and the third legend symbol should be unselected'

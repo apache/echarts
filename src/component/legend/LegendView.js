@@ -314,7 +314,7 @@ export default echarts.extendComponentView({
         var inactiveColor = legendModel.get('inactiveColor');
         var inactiveBorderColor = legendModel.get('inactiveBorderColor');
         var symbolKeepAspect = legendModel.get('symbolKeepAspect');
-        var itemStyle = legendModel.getModel('itemStyle').getItemStyle();
+        var legendModelItemStyle = legendModel.getModel('itemStyle');
 
         var isSelected = legendModel.isSelected(name);
         var itemGroup = new Group();
@@ -340,7 +340,7 @@ export default echarts.extendComponentView({
         );
         itemGroup.add(
             setSymbolStyle(
-                legendSymbol, legendSymbolType, itemStyle,
+                legendSymbol, legendSymbolType, legendModelItemStyle,
                 borderColor, inactiveBorderColor, isSelected
             )
         );
@@ -368,7 +368,7 @@ export default echarts.extendComponentView({
             // Put symbol in the center
             itemGroup.add(
                 setSymbolStyle(
-                    legendSymbolCenter, symbolType, itemStyle,
+                    legendSymbolCenter, symbolType, legendModelItemStyle,
                     borderColor, inactiveBorderColor, isSelected
                 )
             );
@@ -503,15 +503,19 @@ export default echarts.extendComponentView({
 
 });
 
-function setSymbolStyle(symbol, symbolType, itemStyle, borderColor, inactiveBorderColor, isSelected) {
+function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, isSelected) {
+    var itemStyle;
     if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
+        itemStyle = legendModelItemStyle.getItemStyle();
         symbol.style.stroke = borderColor;
         if (!isSelected) {
             itemStyle.stroke = inactiveBorderColor;
         }
-        symbol.setStyle(itemStyle);
     }
-    return symbol;
+    else {
+        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
+    }
+    return symbol.setStyle(itemStyle);
 }
 
 function dispatchSelectAction(name, api) {
