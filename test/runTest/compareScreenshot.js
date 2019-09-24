@@ -35,7 +35,7 @@ function readPNG(path) {
     });
 }
 
-module.exports = function (expectedShotPath, actualShotPath, threshold = 0.1) {
+module.exports = function (expectedShotPath, actualShotPath, threshold = 0.01) {
     return Promise.all([
         readPNG(expectedShotPath),
         readPNG(actualShotPath)
