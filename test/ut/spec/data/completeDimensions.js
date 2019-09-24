@@ -708,48 +708,10 @@ describe('completeDimensions', function () {
                     'name': 'value',
                     'isExtraCoord': true,
                     'type': 'ordinal'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'y',
-                    'coordDimIndex': 0,
-                    'name': 'y'
-                },
-                {
-                    'otherDims': {
-                        'tooltip': 0
-                    },
-                    'coordDim': 'x',
-                    'coordDimIndex': 0,
-                    'name': 'x'
-                },
-                {
-                    'otherDims': {
-                        'label': 0
-                    },
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'y',
-                    'coordDimIndex': 1,
-                    'name': 'y0',
-                    'type': 'ordinal'
-                },
-                {
-                    'otherDims': {
-                        'label': 1
-                    },
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
                 }
             ]
         );
+
         doTest(
             null, data,
             {
@@ -764,7 +726,7 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '挨克思',
+                    'displayName': '挨克思',
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'value',
@@ -781,38 +743,14 @@ describe('completeDimensions', function () {
                     'otherDims': {
                         'tooltip': 0
                     },
-                    'tooltipName': '歪溜',
+                    'displayName': '歪溜',
                     'name': '歪溜',
                     'coordDim': 'x',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {
-                        'label': 0
-                    },
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'y',
-                    'coordDimIndex': 1,
-                    'name': 'y0',
-                    'type': 'ordinal'
-                },
-                {
-                    'otherDims': {
-                        'label': 1
-                    },
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
                 }
             ]
         );
+
         doTest(
             ['x', {name: 'y', type: 'time', stackable: false}, 'z'], data,
             {
@@ -827,7 +765,7 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '挨克思',
+                    'displayName': '挨克思',
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'z',
@@ -839,45 +777,21 @@ describe('completeDimensions', function () {
                     'coordDimIndex': 0,
                     'name': 'y',
                     'type': 'time',
-                    'stackable': false
+                    'stackable': false,
+                    'ordinalMeta': undefined
                 },
                 {
                     'otherDims': {
                         'tooltip': 0
                     },
-                    'tooltipName': '歪溜',
+                    'displayName': '歪溜',
                     'name': '歪溜',
                     'coordDim': 'x',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {
-                        'label': 0
-                    },
-                    'coordDim': 'value',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'y',
-                    'coordDimIndex': 1,
-                    'name': 'y0',
-                    'type': 'time',
-                    'stackable': false
-                },
-                {
-                    'otherDims': {
-                        'label': 1
-                    },
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
                 }
             ]
         );
+
         doTest(
             [{name: 'time', type: 'time', stackable: false}, 'value'], data,
             {
@@ -891,51 +805,21 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '泰亩',
+                    'displayName': '泰亩',
                     'name': '泰亩',
                     'type': 'ordinal',
                     'stackable': false,
+                    'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time'
                 },
                 {
                     'otherDims': {},
-                    'tooltipName': '歪溜',
+                    'displayName': '歪溜',
                     'name': '歪溜',
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {
-                        'tooltip': 0
-                    },
-                    'coordDim': 'aaa',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'aaa0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'aaa1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa1',
-                    'type': 'ordinal'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'aaa2',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa2'
                 }
             ]
         );
@@ -954,51 +838,21 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '泰亩',
+                    'displayName': '泰亩',
                     'name': '泰亩',
                     'type': 'ordinal',
                     'stackable': false,
+                    'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time'
                 },
                 {
                     'otherDims': {},
-                    'tooltipName': '歪溜',
+                    'displayName': '歪溜',
                     'name': '歪溜',
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {
-                        'tooltip': 0
-                    },
-                    'coordDim': 'aaa0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'aaa1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa1'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'aaa2',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa2',
-                    'type': 'ordinal'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'aaa3',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'aaa3'
                 }
             ]
         );
