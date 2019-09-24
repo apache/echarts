@@ -83,7 +83,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a1', 'a2', 'a3'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a1', []], ['a3', ['a1']], ['a2', ['a1']], ['m1', ['a2', 'a3']]]);
+            expect(result).toEqual([['a1', ['dataset']], ['a3', ['dataset', 'a1']], ['a2', ['dataset', 'a1']], ['m1', ['dataset', 'a2', 'a3']]]);
         });
 
         testCase('topologicalTravel_loop', function (ComponentModel) {
