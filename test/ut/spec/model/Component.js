@@ -35,7 +35,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a1', 'a2'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', []], ['a1', []], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset','a1', 'a2']]]);
         });
 
         testCase('topologicalTravel_a1IsAbsent', function (ComponentModel) {
