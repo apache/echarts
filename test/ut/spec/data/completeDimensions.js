@@ -599,7 +599,7 @@ describe('completeDimensions', function () {
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '挨克思',
+                    'displayName': '挨克思',
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'x',
@@ -613,34 +613,21 @@ describe('completeDimensions', function () {
                 },
                 {
                     'otherDims': {},
-                    'tooltipName': '歪溜',
+                    'displayName': '歪溜',
                     'name': '歪溜',
                     'coordDim': 'value',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
                 }
             ]
         );
+
         doTest(
             ['x', 'y', 'value'], data,
             {dimsDef: ['挨克思', null, {type: 'ordinal'}]}, // no name but only type
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '挨克思',
+                    'displayName': '挨克思',
                     'name': '挨克思',
                     'type': 'ordinal',
                     'coordDim': 'x',
@@ -658,64 +645,31 @@ describe('completeDimensions', function () {
                     'coordDim': 'value',
                     'type': 'ordinal',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
                 }
             ]
         );
+
         doTest(
             [{name: 'time', type: 'time', stackable: false}, 'value'], data,
             {dimsDef: [{name: '泰亩', type: 'ordinal'}, {name: '歪溜', type: 'float'}]},
             [
                 {
                     'otherDims': {},
-                    'tooltipName': '泰亩',
+                    'displayName': '泰亩',
                     'name': '泰亩',
                     'type': 'ordinal',
                     'stackable': false,
+                    'ordinalMeta': undefined,
                     'coordDimIndex': 0,
                     'coordDim': 'time'
                 },
                 {
                     'otherDims': {},
-                    'tooltipName': '歪溜',
+                    'displayName': '歪溜',
                     'name': '歪溜',
                     'type': 'float',
                     'coordDim': 'value',
                     'coordDimIndex': 0
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value0',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value0'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value1',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value1'
-                },
-                {
-                    'otherDims': {},
-                    'coordDim': 'value2',
-                    'coordDimIndex': 0,
-                    'isExtraCoord': true,
-                    'name': 'value2'
                 }
             ]
         );
