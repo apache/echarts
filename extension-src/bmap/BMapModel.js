@@ -49,6 +49,8 @@ export default echarts.extendComponentModel({
 
         mapStyle: {},
 
+        mapStyleV2: {},
+
         roam: false
     }
 });

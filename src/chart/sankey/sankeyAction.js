@@ -22,7 +22,7 @@ import '../helper/focusNodeAdjacencyAction';
 
 echarts.registerAction({
     type: 'dragNode',
-    event: 'dragNode',
+    event: 'dragnode',
     // here can only use 'update' now, other value is not support in echarts.
     update: 'update'
 }, function (payload, ecModel) {

@@ -72,12 +72,6 @@ var ScrollableLegendModel = LegendModel.extend({
         ScrollableLegendModel.superCall(this, 'mergeOption', option, extraOpt);
 
         mergeAndNormalizeLayoutParams(this, this.option, option);
-    },
-
-    getOrient: function () {
-        return this.get('orient') === 'vertical'
-            ? {index: 1, name: 'vertical'}
-            : {index: 0, name: 'horizontal'};
     }
 
 });

@@ -19,6 +19,12 @@
 
 
 export default {
+    legendSelector: {
+        title: {
+            all: 'All',
+            inverse: 'Inv'
+        }
+    },
     toolbox: {
         brush: {
             title: {

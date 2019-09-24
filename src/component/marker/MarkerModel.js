@@ -40,7 +40,7 @@ var MarkerModel = echarts.extendComponentModel({
     /**
      * @overrite
      */
-    init: function (option, parentModel, ecModel, extraOpt) {
+    init: function (option, parentModel, ecModel) {
 
         if (__DEV__) {
             if (this.type === 'marker') {
@@ -48,7 +48,7 @@ var MarkerModel = echarts.extendComponentModel({
             }
         }
         this.mergeDefaultAndTheme(option, ecModel);
-        this.mergeOption(option, ecModel, extraOpt.createdBySelf, true);
+        this._mergeOption(option, ecModel, false, true);
     },
 
     /**
@@ -63,7 +63,14 @@ var MarkerModel = echarts.extendComponentModel({
         return this.getShallow('animation') && hostSeries && hostSeries.isAnimationEnabled();
     },
 
-    mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
+    /**
+     * @overrite
+     */
+    mergeOption: function (newOpt, ecModel) {
+        this._mergeOption(newOpt, ecModel, false, false);
+    },
+
+    _mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
         var MarkerModel = this.constructor;
         var modelPropName = this.mainType + 'Model';
         if (!createdBySelf) {
@@ -107,7 +114,7 @@ var MarkerModel = echarts.extendComponentModel({
                     markerModel.__hostSeries = seriesModel;
                 }
                 else {
-                    markerModel.mergeOption(markerOpt, ecModel, true);
+                    markerModel._mergeOption(markerOpt, ecModel, true);
                 }
                 seriesModel[modelPropName] = markerModel;
             }, this);

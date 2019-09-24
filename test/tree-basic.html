@@ -68,7 +68,6 @@ under the License.
                                 {
                                     type: 'tree',
                                     id: '3',
-                                    roam: true,
 
                                     data: [data],
 
@@ -76,6 +75,7 @@ under the License.
                                     left: '7%',
                                     bottom: '1%',
                                     right: '20%',
+                                    roam: true,
 
                                     symbolSize: 7,
 
@@ -102,17 +102,17 @@ under the License.
                             ]
                         });
 
-                        // setTimeout(function() {
-                        //     var newData = echarts.util.clone(data);
-                        //     newData.children.splice(0, 1);
-                        //     chart.setOption({
-                        //         series: [{
-                        //             type: 'tree',
-                        //             id: '3',
-                        //             data: [newData]
-                        //         }]
-                        //     }, false);
-                        // }, 1000);
+                        setTimeout(function() {
+                            var newData = echarts.util.clone(data);
+                            newData.children.splice(0, 1);
+                            chart.setOption({
+                                series: [{
+                                    type: 'tree',
+                                    id: '3',
+                                    data: [newData]
+                                }]
+                            }, false);
+                        }, 1000);
 
                     });
                 });

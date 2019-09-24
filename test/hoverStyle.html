@@ -55,6 +55,8 @@ under the License.
         <div id="info"></div>
 
         <div id="maina1"></div>
+        <div id="maina2"></div>
+
         <div id="mainb1"></div>
         <div id="mainb2"></div>
         <div id="mainb3"></div>
@@ -200,6 +202,137 @@ under the License.
         </script>
 
 
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    backgroundColor: '#eee',
+                    animation: false,
+                    grid: {left: 400, top: 50},
+                    xAxis: {},
+                    yAxis: {},
+                    visualMap: {
+                        type: 'piecewise',
+                        orient: 'horizontal',
+                        top: 10,
+                        left: 0,
+                        pieces: [
+                            {min: 1000, color: 'red'},
+                            {min: 600, max: 1000, color: 'blue'},
+                            {min: 0, max: 600, color: 'green'}
+                        ],
+                        outOfRange: {
+                            color: '#aaa'
+                        }
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'none',
+                        renderItem: function (params, api) {
+                            var pos = [api.value(0), api.value(1)];
+                            return {
+                                type: 'circle',
+                                shape: {cx: pos[0], cy: pos[1], r: 20},
+                                style: api.style({lineWidth: 1, stroke: '#777'})
+                            };
+                        },
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbolSize: 20,
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'maina1', {
+                    title: [
+                        '`visualMap.hoverLink` is the by default (`true`)',
+                        '**Click** a visualMap item, and then **mouseout**. The hover style of the circles should be OK.'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    backgroundColor: '#eee',
+                    animation: false,
+                    grid: {left: 400, top: 50},
+                    xAxis: {},
+                    yAxis: {},
+                    visualMap: {
+                        type: 'piecewise',
+                        orient: 'horizontal',
+                        top: 10,
+                        left: 0,
+                        pieces: [
+                            {min: 1000, color: 'red'},
+                            {min: 600, max: 1000, color: 'blue'},
+                            {min: 0, max: 600, color: 'green'}
+                        ],
+                        outOfRange: {
+                            color: '#aaa'
+                        },
+                        hoverLink: false
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'none',
+                        renderItem: function (params, api) {
+                            var pos = [api.value(0), api.value(1)];
+                            return {
+                                type: 'circle',
+                                shape: {cx: pos[0], cy: pos[1], r: 20},
+                                style: api.style({lineWidth: 1, stroke: '#777'})
+                            };
+                        },
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbolSize: 20,
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'maina2', {
+                    title: [
+                        '`visualMap.hoverLink` is `false`',
+                        '**mouseover** a circle, and then **click** the coresponding visualMap item',
+                        'and then **mouseover** the circle again, and then **mouseout**.',
+                        'The hover style of the circles should be OK.'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+
+        </script>
 
 
 

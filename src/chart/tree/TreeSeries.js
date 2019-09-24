@@ -128,7 +128,9 @@ export default SeriesModel.extend({
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
 
-        roam: false, // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.4,
 

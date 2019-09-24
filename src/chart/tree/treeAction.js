@@ -30,7 +30,6 @@ echarts.registerAction({
         var tree = seriesModel.getData().tree;
         var node = tree.getNodeByDataIndex(dataIndex);
         node.isExpand = !node.isExpand;
-
     });
 });
 

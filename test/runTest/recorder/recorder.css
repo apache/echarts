@@ -1,0 +1,217 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+* {
+    font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+}
+
+iframe {
+    border: none;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+
+    width: 800px;
+    height: 600px;
+    margin-left: -400px;
+
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    overflow-x: hidden;
+}
+
+#open-nav {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+}
+
+.op-notice {
+    width: 200px;
+}
+
+#tests-nav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 2000;
+    left: 0;
+    width: 300px;
+    box-shadow: 0 0  50px rgba(0, 0, 0, 0.4);
+    background-color: white;
+    padding: 20px;
+    overflow-y: scroll;
+}
+
+#tests-nav ul {
+    margin: 0;
+    padding: 0;
+}
+
+#tests-nav li {
+    list-style: none;
+}
+
+#tests-nav a {
+    color: #444;
+    text-decoration: none;
+    line-height: 30px;
+    transition: .15s ease-out;
+}
+
+#tests-nav a:hover, #tests-nav a.active {
+    color: #409eff;
+}
+
+#tests-nav .el-icon-circle-close {
+    position: fixed;
+    left: 280px;
+    top: 10px;
+    cursor: pointer;
+    font-size: 30px;
+    z-index: 2100;
+}
+#tests-nav .el-icon-circle-close:hover {
+    color: #409eff;
+}
+
+#recording-status {
+    position: absolute;
+    top: 650px;
+    width: 100%;
+    border-radius: 20px;
+    text-align: center;
+}
+
+#recording-status .recording-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50px;
+    font-size: 35px;
+}
+
+#recording-status .hint {
+    font-size: 22px;
+    font-weight: 200;
+    margin-top: 10px;
+}
+
+#recording-status .recording-time {
+    font-size: 50px;
+    font-weight: 200;
+    margin-top: 10px;
+    color: #F56C6C;
+}
+
+#recording-status .hint .emphasis {
+    font-weight: 400;
+    margin: 0 10px;
+    color: #409eff;
+}
+
+#actions {
+    position: fixed;
+    right: 10px;
+    width: 300px;
+}
+
+#actions .toolbar {
+    float: right;
+    margin-top: -5px;
+}
+
+#actions .toolbar>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+#actions .toolbar i.el-icon-setting {
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.config-item {
+    margin: 5px 0;
+}
+
+.config-item>* {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+#actions .action-item {
+    line-height: 40px;
+    padding: 0 20px;
+    margin: 0 -20px;
+    cursor: pointer;
+}
+
+#actions .action-item:hover {
+    background: #eee;
+}
+
+#actions .action-item.active {
+    background: #409Eff;
+    color: #ffffff;
+}
+
+#actions .action-item .operations {
+    height: 30px;
+    font-size: 14px;
+}
+#actions .action-item .operations>* {
+    display: inline-block;
+    vertical-align: middle;
+}
+#actions .action-item .operations i {
+    margin-left: 5px;
+    font-size: 18px;
+}
+
+#actions .action-item .operations .el-icon-delete {
+    color: #F56C6C;
+    margin-left: 10px;
+}
+
+::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -webkit-border-radius: 2px;
+    border-radius: 2px
+}
+
+::-webkit-scrollbar-button {
+    display: none
+}
+
+::-webkit-scrollbar-thumb {
+    width: 8px;
+    min-height: 15px;
+    background: rgba(50,50,50,0.6) !important;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+    -webkit-border-radius: 2px;
+    border-radius: 2px
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.5) !important
+}

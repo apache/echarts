@@ -71,6 +71,7 @@ zrUtil.each(
         'setHoverStyle', 'setLabelStyle', 'setTextStyle', 'setText',
         'getFont', 'updateProps', 'initProps', 'getTransform',
         'clipPointsByRect', 'clipRectByRect',
+        'registerShape', 'getShapeClass',
         'Group',
         'Image',
         'Text',

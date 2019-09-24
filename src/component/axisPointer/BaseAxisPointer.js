@@ -128,8 +128,8 @@ BaseAxisPointer.prototype = {
         }
         this._lastGraphicKey = graphicKey;
 
-        var moveAnimation = this._moveAnimation
-            = this.determineAnimation(axisModel, axisPointerModel);
+        var moveAnimation = this._moveAnimation =
+            this.determineAnimation(axisModel, axisPointerModel);
 
         if (!group) {
             group = this._group = new graphic.Group();

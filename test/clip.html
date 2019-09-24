@@ -1,0 +1,961 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="./lib/esl.js"></script>
+        <script src="./lib/config.js"></script>
+        <script src="./lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+        <script>
+            function makeToggleChartButtons(toggleClip) {
+                return  [{
+                    text: 'Set Clip',
+                    onclick: function () {
+                        toggleClip(true);
+                    }
+                }, {
+                    text: 'Set Visible',
+                    onclick: function () {
+                        toggleClip(false);
+                    }
+                }];
+            }
+        </script>
+
+        <div class="chart" id="scatter-clip-cartesian"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    xAxis: {},
+                    yAxis: {
+                        min: 5,
+                        max: 10
+                    },
+                    series: [{
+                        symbolSize: 20,
+                        data: [
+                            [10.0, 8.04],
+                            [8.0, 6.95],
+                            [13.0, 7.58],
+                            [9.0, 8.81],
+                            [11.0, 8.33],
+                            [14.0, 9.96],
+                            [6.0, 7.24],
+                            [4.0, 4.26],
+                            [12.0, 10.84],
+                            [7.0, 4.82],
+                            [5.0, 5.68]
+                        ],
+                        type: 'scatter'
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'scatter-clip-cartesian', {
+                    title: 'Scatter Clip on Cartesian',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+
+
+
+        <div class="chart" id="scatter-clip-polar"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var data1 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    data1.push([Math.random() * 10, Math.random() * 360]);
+                }
+
+                var option = {
+                    polar: {},
+                    angleAxis: {
+                        type: 'value',
+                        min: 50,
+                        max: 180
+                    },
+                    radiusAxis: {
+                        axisAngle: 0,
+                        min: 0,
+                        max: 5
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        name: 'scatter',
+                        type: 'scatter',
+                        symbolSize: 10,
+                        data: data1
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'scatter-clip-polar', {
+                    title: 'Scatter Clip on Polar',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+
+
+
+
+
+        <div class="chart" id="large-scatter-clip"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                // Standard Normal variate using Box-Muller transform.
+                function rand() {
+                    var u = 0, v = 0;
+                    while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+                    while(v === 0) v = Math.random();
+                    return Math.sqrt(-2.0 * Math.log( u )) * Math.cos(2.0 * Math.PI * v);
+                }
+
+                var data = [];
+
+                for (let i = 0; i < 1e4; i++) {
+                    data.push([
+                        rand(),
+                        rand()
+                    ]);
+                }
+                var option = {
+                    xAxis: {
+                        type: 'value',
+                        min: -2,
+                        max: 2
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: -2,
+                        max: 2
+                    },
+                    series: [{
+                        symbolSize: 2,
+                        large: true,
+                        data: data,
+                        symbol: 'rect',
+                        type: 'scatter'
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'large-scatter-clip', {
+                    title: 'Large Scatter Clip',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    }).concat([{
+                        text: 'Set Large',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    large: true,
+                                    progressive: 0
+                                }]
+                            })
+                        }
+                    }, {
+                        text: 'Set Stream',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    large: false,
+                                    progressive: 2000
+                                }]
+                            })
+                        }
+
+                    }])
+                });
+            })
+        </script>
+
+
+
+
+
+        <div class="chart" id="lines-clip"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var lineData = []
+
+                function getColor() {
+                    //定义字符串变量colorValue存放可以构成十六进制颜色值的值
+                    var colorValue = "0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f";
+                    //以","为分隔符，将colorValue字符串分割为字符数组["0","1",...,"f"]
+                    var colorArray = colorValue.split(",");
+                    var color = "#";//定义一个存放十六进制颜色值的字符串变量，先将#存放进去
+                    //使用for循环语句生成剩余的六位十六进制值
+                    for (var i = 0; i < 6; i++) {
+                        //colorArray[Math.floor(Math.random()*16)]随机取出
+                        // 由16个元素组成的colorArray的某一个值，然后将其加在color中，
+                        //字符串相加后，得出的仍是字符串
+                        color += colorArray[Math.floor(Math.random() * 16)];
+                    }
+                    return color;
+                }
+
+                for (var i = 0; i < 20; ++i) {
+                    var x = Math.floor(Math.random()*600+50)
+                    var y = Math.floor(Math.random()*600+50)
+                    var xSign = Math.floor(Math.random()*2+1)
+                    var ySign = Math.floor(Math.random()*2+1)
+                    //负数
+                    if (xSign === 1) {
+                        x *= -1;
+                    }
+                    if (ySign === 1) {
+                        y *= -1;
+                    }
+
+                    var obj = {
+                        coords: [
+                            [0, 0],
+                            [x, y]
+                        ],
+                        label: {
+                            show:false
+                        },
+                        lineStyle: {
+                            normal: {
+                                color: getColor(),
+                                width: 1
+                            }
+                        }
+                    };
+                    lineData.push(obj);
+                }
+
+                option = {
+                    animation: false,
+                    xAxis: {
+                        type:'value',
+                        min: -1000,
+                        max: 1000,
+                        splitLine:{
+                    　　　　lineStyle: {
+                    　　　　    width: 1
+                    　　　　}
+                    　　}
+                    },
+                    yAxis: {
+                        type:'value',
+                        min: -1000,
+                        max: 1000,
+                        splitLine:{
+                    　　　　lineStyle: {
+                    　　　　    width: 1
+                    　　　　}
+                    　　}
+                    },
+                    dataZoom: [{
+                            type: 'inside',
+                            xAxisIndex: 0,
+                            filterMode: 'filter',
+                            start: 30,
+                            end: 70
+                        },
+                        {
+                            type: 'inside',
+                            yAxisIndex: 0,
+                            filterMode: 'weakFilter',
+                            start: 30,
+                            end: 70
+                        }
+                    ],
+                    series: [{
+                        type: 'lines',
+                        name: '网络拓扑图',
+                        coordinateSystem: 'cartesian2d',
+                        lineStyle: {
+                            normal: {
+                                color: '#F00',
+                                width: 1
+                            }
+                        },
+                        label: {
+                        fontSize: 15
+                        },
+                        symbol: ['none', 'arrow'],
+                        // 数据
+                        data: lineData
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'lines-clip', {
+                    title: 'Lines Clip,(case from #10748). Should not overflow after zoomed in',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip,
+                                data: lineData
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+
+
+
+        <div class="chart" id="line-dataZoom-time"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var base = +new Date(2016, 9, 3);
+                var oneDay = 24 * 3600 * 1000;
+                var valueBase = Math.random() * 300;
+                var valueBase2 = Math.random() * 50;
+                var data = [];
+                var data2 = [];
+
+                for (var i = 1; i < 10; i++) {
+                    var now = new Date(base += oneDay);
+                    var dayStr = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
+
+                    valueBase = Math.round((Math.random() - 0.5) * 20 + valueBase);
+                    valueBase <= 0 && (valueBase = Math.random() * 300);
+                    data.push([dayStr, valueBase]);
+
+                    valueBase2 = Math.round((Math.random() - 0.5) * 20 + valueBase2);
+                    valueBase2 <= 0 && (valueBase2 = Math.random() * 50);
+                    data2.push([dayStr, valueBase2]);
+                }
+
+                option = {
+                    animation: false,
+                    tooltip: {
+                        triggerOn: 'none',
+                        position: function (pt) {
+                            return [pt[0], 130];
+                        }
+                    },
+                    toolbox: {
+                        left: 'center',
+                        itemSize: 25,
+                        top: 55,
+                        feature: {
+                            dataZoom: {
+                                // Not filter the data.
+                                // filterMode: 'none',
+                                yAxisIndex: 'none'
+                            },
+                            restore: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'time',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisTick: {
+                            inside: true
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            inside: true,
+                            formatter: '{value}\n'
+                        },
+                        z: 10
+                    },
+                    grid: {
+                        top: 110,
+                        left: 15,
+                        right: 15,
+                        height: 160
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        filterMode: 'none',
+                        throttle: 50
+                    }],
+                    series: [
+                        {
+                            name:'模拟数据',
+                            type:'line',
+                            smooth: true,
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#8ec6ad'
+                                }
+                            },
+                            stack: 'a',
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#8ec6ad'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data
+                        },
+                        {
+                            name:'模拟数据',
+                            type:'line',
+                            smooth:true,
+                            stack: 'a',
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#d68262'
+                                }
+                            },
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#d68262'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data2
+                        }
+
+                    ]
+                };
+
+                function setFilterMode(mode) {
+                    chart.setOption({
+                        toolbox: {
+                            feature: {
+                                dataZoom: {
+                                    filterMode: mode
+                                }
+                            }
+                        }
+                    });
+                }
+
+                var chart = testHelper.create(echarts, 'line-dataZoom-time', {
+                    title: 'Line with dataZoom,(#10224). Should not be blank when selected a small area',
+                    option: option,
+                    height: 400,
+                    buttons: [{
+                        text: 'Set filter all',
+                        onclick: function () {
+                            setFilterMode('filter');
+                        }
+                    }, {
+                        text: 'Set filter none',
+                        onclick: function () {
+                            setFilterMode('none')
+                        }
+                    }]
+                });
+            })
+        </script>
+
+
+
+        <div class="chart" id="line-dataZoom-category"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                option = {
+                    animation: false,
+                    toolbox: {
+                        left: 'center',
+                        itemSize: 25,
+                        top: 55,
+                        feature: {
+                            dataZoom: {
+                                // Not filter the data.
+                                // filterMode: 'none',
+                                yAxisIndex: 'none'
+                            },
+                            restore: {}
+                        }
+                    },
+                    grid: {
+                        top: 100
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            data : ['周一','周二','周三','周四','周五','周六','周日']
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            data:[120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name:'联盟广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            data:[220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name:'视频广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {},
+                            data:[150, 232, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name:'直接访问',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[320, 332, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
+                            },
+                            areaStyle: {normal: {}},
+                            data:[820, 932, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+
+                function setFilterMode(mode) {
+                    chart.setOption({
+                        toolbox: {
+                            feature: {
+                                dataZoom: {
+                                    filterMode: mode
+                                }
+                            }
+                        }
+                    });
+                }
+
+                var chart = testHelper.create(echarts, 'line-dataZoom-category', {
+                    title: 'Line with dataZoom (category axis)',
+                    option: option,
+                    height: 400,
+                    buttons: [{
+                        text: 'Set filter all',
+                        onclick: function () {
+                            setFilterMode('filter');
+                        }
+                    }, {
+                        text: 'Set filter none',
+                        onclick: function () {
+                            setFilterMode('none')
+                        }
+                    }]
+                });
+            })
+        </script>
+
+
+        <div class="chart" id="bar-clip"></div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xInversed = false;
+
+                option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                            type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                    },
+                    legend: {
+                        data: ['直接访问', '邮件营销','联盟广告','视频广告','搜索引擎']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis:  {
+                        type: 'value',
+                        min: 200
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['周一','周二','周三','周四','周五','周六','周日']
+                    },
+                    series: [
+                        {
+                            name: '直接访问',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [320, 302, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: '邮件营销',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: '联盟广告',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: '视频广告',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [150, 212, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: '搜索引擎',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [820, 832, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'bar-clip', {
+                    title: 'Clip bar chart',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    }).concat([{
+                        text: 'Inverse X',
+                        onclick: function () {
+                            xInversed = !xInversed;
+                            chart.setOption({
+                                xAxis: {
+                                    inverse: xInversed
+                                }
+                            });
+                        }
+                    }])
+                });
+            });
+        </script>
+
+
+        <div class="chart" id="bar-large-clip"></div>
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+                var data4 = [];
+                for (var i = 0; i < 1000; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data2.push(Math.random().toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                    data4.push((Math.random() + 0.3).toFixed(2));
+                }
+                var isLarge = true;
+                var option = {
+                    xAxis: {
+                        data: xAxisData,
+                        silent: false,
+                        splitLine: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        min: 1,
+                        max: 4,
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        data: data1,
+                        large: true
+                    }, {
+                        show: false,
+                        name: 'bar2',
+                        type: 'bar',
+                        stack: 'one',
+                        data: data2,
+                        large: true
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data3,
+                        large: true
+                    }, {
+                        name: 'bar4',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data4,
+                        large: true
+                    }]
+                }
+
+                function setLarge(large) {
+                    chart.setOption({
+                        series: [{
+                            large: large
+                        }, {
+                            large: large
+                        }, {
+                            large: large
+                        }, {
+                            large: large
+                        }]
+                    })
+                }
+                var chart = testHelper.create(echarts, 'bar-large-clip', {
+                    option: option,
+                    title: 'Bar clip with large mode',
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }, {
+                                clip: clip
+                            }, {
+                                clip: clip
+                            }, {
+                                clip: clip
+                            }]
+                        })
+                    }).concat([{
+                        text: 'Set large',
+                        onclick: function () {
+                            setLarge(true);
+                        }
+                    }, {
+                        text: 'Set normal',
+                        onclick: function () {
+                            setLarge(false);
+                        }
+                    }])
+                });
+            });
+        </script>
+
+        <div class="chart" id="custom-clip"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [];
+                var dataCount = 20;
+                for (var i = 0; i < dataCount; i++) {
+                    var val = Math.random() * 1000;
+                    data.push([
+                        echarts.number.round(Math.random() * 100),
+                        echarts.number.round(Math.random() * 400)
+                    ]);
+                }
+
+                function renderItem(params, api) {
+                    if (params.context.rendered) {
+                        return;
+                    }
+                    params.context.rendered = true;
+
+                    var points = [];
+                    for (var i = 0; i < data.length; i++) {
+                        points.push(api.coord(data[i]));
+                    }
+                    var color = api.visual('color');
+
+                    return {
+                        type: 'polygon',
+                        shape: {
+                            points: points
+                        },
+                        style: api.style({
+                            fill: color,
+                            stroke: echarts.color.lift(color)
+                        })
+                    };
+                }
+
+                option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['bar', 'error']
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        filterMode: 'none',
+                        end: 40
+                    }, {
+                        type: 'inside',
+                        filterMode: 'none'
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'custom',
+                        renderItem: renderItem,
+                        data: data,
+                        clip: true
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'custom-clip', {
+                    title: 'Clip custon series',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            });
+        </script>
+
+
+        <div class="chart" id="candlestick-clip"></div>
+    </body>
+</html>
