@@ -85,7 +85,10 @@ describe('scale_interval', function() {
             var yAxis = this.chart.getModel().getComponent('yAxis', 0);
             var scale = yAxis.axis.scale;
             var ticks = scale.getTicks();
-            var labels = scale.getTicksLabels();
+            var labels = yAxis.axis.getViewLabels().map(function (item) {
+                return item.formattedLabel;
+            });
+
             var labelPrecisioned = scale.getLabel(0.0000005, {precision: 10});
 
             expect(ticks).toEqual(
