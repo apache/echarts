@@ -142,7 +142,110 @@ describe('completeDimensions', function () {
         };
 
         var result = [
-
+            {
+                'otherDims': {
+                    'tooltip': false,
+                    'itemName': 0
+                },
+                'displayName': 'date',
+                'name': 'date',
+                'coordDim': 'x',
+                'coordDimIndex': 0,
+                'type': 'ordinal',
+                'ordinalMeta': undefined
+            },
+            {
+                'otherDims': {
+                    'tooltip': 0
+                },
+                'displayName': 'open',
+                'name': 'open',
+                'coordDim': 'value',
+                'coordDimIndex': 0,
+                'isExtraCoord': true
+            },
+            {
+                'otherDims': {
+                    'tooltip': 1
+                },
+                'displayName': 'high',
+                'name': 'high',
+                'coordDim': 'value0',
+                'coordDimIndex': 0,
+                'isExtraCoord': true
+            },
+            {
+                'otherDims': {
+                    'tooltip': 2
+                },
+                'displayName': 'low',
+                'name': 'low',
+                'coordDim': 'value1',
+                'coordDimIndex': 0,
+                'isExtraCoord': true
+            },
+            {
+                'otherDims': {
+                    'tooltip': 3
+                },
+                'displayName': 'close',
+                'name': 'close',
+                'coordDim': 'value2',
+                'coordDimIndex': 0,
+                'isExtraCoord': true
+            },
+            {
+                'otherDims': {},
+                'displayName': 'volume',
+                'name': 'volume',
+                'coordDim': 'value3',
+                'coordDimIndex': 0,
+                'isExtraCoord': true
+            },
+            {
+                'otherDims': {},
+                'displayName': 'haOpen',
+                'name': 'haOpen',
+                'coordDim': 'y',
+                'coordDimIndex': 0,
+                'type': 'float',
+                'ordinalMeta': undefined
+            },
+            {
+                'otherDims': {},
+                'displayName': 'haHigh',
+                'name': 'haHigh',
+                'coordDim': 'y',
+                'coordDimIndex': 3,
+                'type': 'float',
+                'ordinalMeta': undefined
+            },
+            {
+                'otherDims': {},
+                'displayName': 'haLow',
+                'name': 'haLow',
+                'coordDim': 'y',
+                'coordDimIndex': 2,
+                'type': 'float',
+                'ordinalMeta': undefined
+            },
+            {
+                'otherDims': {},
+                'displayName': 'haClose',
+                'name': 'haClose',
+                'coordDim': 'y',
+                'coordDimIndex': 1,
+                'type': 'float',
+                'ordinalMeta': undefined
+            },
+            {
+                'otherDims': {},
+                'displayName': 'sma9',
+                'name': 'sma9',
+                'coordDim': 'value4',
+                'coordDimIndex': 0,
+                'isExtraCoord': true
+            }
         ];
 
         expect(doCompleteDimensions(completeDimensions, sysDims, source, opt)).toEqual(result);
