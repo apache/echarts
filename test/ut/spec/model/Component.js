@@ -70,7 +70,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['a1', 'a2', 'm1'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a1', []], ['a2', []], ['m1', ['a2']]]);
+            expect(result).toEqual([['a1', ['dataset']], ['a2', ['dataset']], ['m1', ['dataset','a2']]]);
         });
 
         testCase('topologicalTravel_diamond', function (ComponentModel) {
