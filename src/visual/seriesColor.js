@@ -33,6 +33,10 @@ export default {
 
         // FIXME Set color function or use the platte color
         data.setVisual('color', color);
+        
+        var borderColorAccessPath = (seriesModel.visualBorderColorAccessPath || 'itemStyle.borderColor').split('.');
+        var borderColor = seriesModel.get(borderColorAccessPath);
+        data.setVisual('borderColor', borderColor);
 
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {
@@ -48,8 +52,12 @@ export default {
             var dataEach = function (data, idx) {
                 var itemModel = data.getItemModel(idx);
                 var color = itemModel.get(colorAccessPath, true);
+                var borderColor = itemModel.get(borderColorAccessPath, true);
                 if (color != null) {
                     data.setItemVisual(idx, 'color', color);
+                }
+                if (borderColor != null) {
+                    data.setItemVisual(idx, 'borderColor', borderColor);
                 }
             };
 

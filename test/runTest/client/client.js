@@ -18,6 +18,7 @@
 */
 
 const socket = io('/client');
+const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
 
 function processTestsData(tests, oldTestsData) {
     tests.forEach((test, idx) => {
@@ -69,11 +70,16 @@ const app = new Vue({
 
         versions: [],
 
+        showIframeDialog: false,
+        previewIframeSrc: '',
+        previewTitle: '',
+
         runConfig: {
             noHeadless: false,
             replaySpeed: 5,
             actualVersion: 'local',
             expectedVersion: null,
+            renderer: 'canvas',
             threads: 1
         }
     },
@@ -205,9 +211,37 @@ const app = new Vue({
         stopTests() {
             this.running = false;
             socket.emit('stop');
+        },
+
+        preview(test, version) {
+            let searches = [];
+
+            let ecVersion = test[version + 'Version'];
+            if (ecVersion !== 'local') {
+                searches.push('__ECDIST__=' + ecVersion);
+            }
+            if (test.useSVG) {
+                searches.push('__RENDERER__=svg');
+            }
+            let src = test.fileUrl;
+            if (searches.length) {
+                src = src + '?' + searches.join('&');
+            }
+            this.previewIframeSrc = `../../${src}`;
+            this.previewTitle = src;
+            this.showIframeDialog = true;
         }
     }
 });
+
+// Save and restore
+try {
+    Object.assign(app.runConfig, JSON.parse(localStorage.getItem(LOCAL_SAVE_KEY)));
+}
+catch (e) {}
+app.$watch('runConfig', () => {
+    localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(app.runConfig));
+}, {deep: true});
 
 function runTests(tests) {
     if (!tests.length) {
@@ -230,6 +264,7 @@ function runTests(tests) {
         expectedVersion: app.runConfig.expectedVersion,
         actualVersion: app.runConfig.actualVersion,
         threads: app.runConfig.threads,
+        renderer: app.runConfig.renderer,
         noHeadless: app.runConfig.noHeadless,
         replaySpeed: app.runConfig.noHeadless
             ? app.runConfig.replaySpeed
@@ -258,7 +293,7 @@ socket.on('update', msg => {
         }).catch(() => {});
     }
     // TODO
-    // app.running = !!msg.running;
+    app.running = !!msg.running;
     app.fullTests = processTestsData(msg.tests, app.fullTests);
 
     firstUpdate = false;
@@ -272,6 +307,14 @@ socket.on('finish', res => {
         duration: 8000
     });
     console.log(`${res.count} test complete, Cost: ${(res.time / 1000).toFixed(1)} s. Threads: ${res.threads}`);
+    app.running = false;
+});
+socket.on('abort', res => {
+    app.$notify({
+        type: 'info',
+        title: `Aborted`,
+        duration: 4000
+    });
     app.running = false;
 });
 socket.on('versions', versions => {

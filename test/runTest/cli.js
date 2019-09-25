@@ -24,7 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
-const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime} = require('./util');
+const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, waitTime, getEChartsTestFileName} = require('./util');
 const {origin} = require('./config');
 const Timeline = require('./Timeline');
 
@@ -34,13 +34,16 @@ program
     .option('--no-headless', 'Not headless')
     .option('-s, --speed <speed>', 'Playback speed')
     .option('--expected <expected>', 'Expected version')
-    .option('--actual <actual>', 'Actual version');
+    .option('--actual <actual>', 'Actual version')
+    .option('--renderer <renderer>', 'svg/canvas renderer')
+    .option('--no-save', 'Don\'t save result');
 
 program.parse(process.argv);
 
 program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
 program.expected = program.expected || '4.2.1';
+program.renderer = (program.renderer || 'canvas').toLowerCase();
 
 if (!program.tests) {
     throw new Error('Tests are required');
@@ -63,9 +66,9 @@ function getClientRelativePath(absPath) {
 function replaceEChartsVersion(interceptedRequest, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
-        console.log(getVersionDir(version));
+        console.log('Use echarts version: ' + version);
         interceptedRequest.continue({
-            url: `${origin}/test/runTest/${getVersionDir(version)}/echarts.js`
+            url: `${origin}/test/runTest/${getVersionDir(version)}/${getEChartsTestFileName()}`
         });
     }
     else {
@@ -73,7 +76,7 @@ function replaceEChartsVersion(interceptedRequest, version) {
     }
 }
 
-async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
+async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) {
     let screenshotName = testNameFromFile(fileUrl);
     if (desc) {
         screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
@@ -81,7 +84,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
     if (minor) {
         screenshotName += '-' + minor;
     }
-    let screenshotPrefix = version ? 'expected' : 'actual';
+    let screenshotPrefix = isExpected ? 'expected' : 'actual';
     fse.ensureDirSync(path.join(__dirname, getScreenshotDir()));
     let screenshotPath = path.join(__dirname, `${getScreenshotDir()}/${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
@@ -92,7 +95,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, version, minor) {
     return {screenshotName, screenshotPath};
 }
 
-async function runActions(page, testOpt, version, screenshots) {
+async function runActions(page, testOpt, isExpected, screenshots) {
     let timeline = new Timeline(page);
     let actions;
     try {
@@ -113,11 +116,14 @@ async function runActions(page, testOpt, version, screenshots) {
 
         let count = 0;
         async function _innerTakeScreenshot() {
+            if (!program.save) {
+                return;
+            }
             const desc = action.desc || action.name;
-            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, version, count++);
+            const {screenshotName, screenshotPath} = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, count++);
             screenshots.push({screenshotName, desc, screenshotPath});
         }
-        await timeline.runAction(action, _innerTakeScreenshot,  playbackSpeed);
+        await timeline.runAction(action, _innerTakeScreenshot, playbackSpeed);
 
         if (count === 0) {
             await waitTime(200);
@@ -131,7 +137,7 @@ async function runActions(page, testOpt, version, screenshots) {
     timeline.stop();
 }
 
-async function runTestPage(browser, testOpt, version, runtimeCode) {
+async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
@@ -155,19 +161,21 @@ async function runTestPage(browser, testOpt, version, runtimeCode) {
 
     try {
         await page.setViewport({width: 800, height: 600});
-        await page.goto(`${origin}/test/${fileUrl}`, {
+        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}`, {
             waitUntil: 'networkidle2',
             timeout: 10000
         });
 
-        await waitTime(200);  // Wait for animation or something else. Pending
+        await waitTime(500);  // Wait for animation or something else. Pending
         // Final shot.
         await page.mouse.move(0, 0);
-        let desc = 'Full Shot';
-        const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, version);
-        screenshots.push({screenshotName, desc, screenshotPath});
+        if (program.save) {
+            let desc = 'Full Shot';
+            const {screenshotName, screenshotPath} = await takeScreenshot(page, true, fileUrl, desc, isExpected);
+            screenshots.push({screenshotName, desc, screenshotPath});
+        }
 
-        await runActions(page, testOpt, version, screenshots);
+        await runActions(page, testOpt, isExpected, screenshots);
     }
     catch(e) {
         console.error(e);
@@ -191,45 +199,66 @@ async function writePNG(diffPNG, diffPath) {
 };
 
 async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
-    testOpt.status === 'running';
-    const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode);
-    const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode);
-
-    // sortScreenshots(expectedResult.screenshots);
-    // sortScreenshots(actualResult.screenshots);
-
-    const screenshots = [];
-    let idx = 0;
-    for (let shot of expectedResult.screenshots) {
-        let expected = shot;
-        let actual = actualResult.screenshots[idx++];
-        let {diffRatio, diffPNG} = await compareScreenshot(
-            expected.screenshotPath,
-            actual.screenshotPath
-        );
-
-        let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
-        await writePNG(diffPNG, diffPath);
-
-        screenshots.push({
-            actual: getClientRelativePath(actual.screenshotPath),
-            expected: getClientRelativePath(expected.screenshotPath),
-            diff: getClientRelativePath(diffPath),
-            name: actual.screenshotName,
-            desc: actual.desc,
-            diffRatio
-        });
+    if (program.renderer === 'svg' && testOpt.ignoreSVG) {
+        console.log(testOpt.name + ' don\'t support svg testing.');
+        return;
     }
 
-    testOpt.results = screenshots;
-    testOpt.status = 'finished';
-    testOpt.actualLogs = actualResult.logs;
-    testOpt.expectedLogs = expectedResult.logs;
-    testOpt.actualErrors = actualResult.errors;
-    testOpt.expectedErrors = expectedResult.errors;
-    testOpt.actualVersion = actualVersion;
-    testOpt.expectedVersion = expectedVersion;
-    testOpt.lastRun = Date.now();
+    if (program.save) {
+        testOpt.status === 'running';
+
+        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
+        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
+
+        // sortScreenshots(expectedResult.screenshots);
+        // sortScreenshots(actualResult.screenshots);
+
+        const screenshots = [];
+        let idx = 0;
+        for (let shot of expectedResult.screenshots) {
+            let expected = shot;
+            let actual = actualResult.screenshots[idx++];
+            let result = {
+                actual: getClientRelativePath(actual.screenshotPath),
+                expected: getClientRelativePath(expected.screenshotPath),
+                name: actual.screenshotName,
+                desc: actual.desc
+            };
+            try {
+                let {diffRatio, diffPNG} = await compareScreenshot(
+                    expected.screenshotPath,
+                    actual.screenshotPath
+                );
+
+                let diffPath = `${path.resolve(__dirname, getScreenshotDir())}/${shot.screenshotName}-diff.png`;
+                await writePNG(diffPNG, diffPath);
+
+                result.diff = getClientRelativePath(diffPath);
+                result.diffRatio = diffRatio;
+            }
+            catch(e) {
+                result.diff = '';
+                result.diffRatio = 1;
+                console.log(e);
+            }
+            screenshots.push(result);
+        }
+
+        testOpt.results = screenshots;
+        testOpt.status = 'finished';
+        testOpt.actualLogs = actualResult.logs;
+        testOpt.expectedLogs = expectedResult.logs;
+        testOpt.actualErrors = actualResult.errors;
+        testOpt.expectedErrors = expectedResult.errors;
+        testOpt.actualVersion = actualVersion;
+        testOpt.expectedVersion = expectedVersion;
+        testOpt.useSVG = program.renderer === 'svg';
+        testOpt.lastRun = Date.now();
+    }
+    else {
+        // Only run once
+        await runTestPage(browser, testOpt, 'local', runtimeCode, true);
+    }
 }
 
 async function runTests(pendingTests) {
@@ -244,7 +273,7 @@ async function runTests(pendingTests) {
 
     try {
         for (let testOpt of pendingTests) {
-            console.log('Running Test', testOpt.name);
+            console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
             try {
                 await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
             }
@@ -254,7 +283,9 @@ async function runTests(pendingTests) {
                 console.log(e);
             }
 
-            process.send(testOpt);
+            if (program.save) {
+                process.send(testOpt);
+            }
         }
     }
     catch(e) {
@@ -269,6 +300,10 @@ runTests(program.tests.split(',').map(testName => {
         fileUrl: fileNameFromTest(testName),
         name: testName,
         results: [],
-        status: 'unsettled'
+        actualLogs: [],
+        expectedLogs: [],
+        actualErrors: [],
+        expectedErrors: [],
+        status: 'pending'
     };
 }));

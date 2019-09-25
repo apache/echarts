@@ -21,7 +21,7 @@
 import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 
-var PI2 = Math.PI * 2;
+// var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;
 
 export default function (seriesType, ecModel, api, payload) {
@@ -74,8 +74,8 @@ export default function (seriesType, ecModel, api, payload) {
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // In the case some sector angle is smaller than minAngle
-        var restAngle = PI2;
-        var valueSumLargerThanMinAngle = 0;
+        // var restAngle = PI2;
+        // var valueSumLargerThanMinAngle = 0;
 
         var dir = clockwise ? 1 : -1;
 
@@ -99,11 +99,11 @@ export default function (seriesType, ecModel, api, payload) {
                     ? unitRadian : (value * unitRadian);
                 if (angle < minAngle) {
                     angle = minAngle;
-                    restAngle -= minAngle;
+                    // restAngle -= minAngle;
                 }
-                else {
-                    valueSumLargerThanMinAngle += value;
-                }
+                // else {
+                //     valueSumLargerThanMinAngle += value;
+                // }
 
                 endAngle = startAngle + dir * angle;
 

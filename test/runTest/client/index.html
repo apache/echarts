@@ -24,6 +24,8 @@ under the License.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" href="https://www.echartsjs.com/zh/images/favicon.png">
+    <title>Visual Regression Testing Tool</title>
 </head>
 <body>
 <div id="app" style="display: none">
@@ -31,7 +33,7 @@ under the License.
         <el-header class="header" height="50">
             <div id="logo">
                 <img src="https://echarts.apache.org/zh/images/logo.png" />
-                <h1>Visual Regression Test</h1>
+                <h1>Visual Regression Testing Tool</h1>
             </div>
         </el-header>
         <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
@@ -77,7 +79,7 @@ under the License.
                                 <el-slider style="width: 140px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
                             </div>
                             <div class="run-config-item">
-                                <span>Version </span>
+                                <span>Version</span>
                                 <span style="font-size: 12px; color:#afafaf">Expected</span>
                                 <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
                                     style="width: 80px;"
@@ -89,6 +91,13 @@ under the License.
                                     style="width: 80px;"
                                 >
                                     <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                                </el-select>
+                            </div>
+                            <div class="run-config-item">
+                                <span>Renderer</span>
+                                <el-select size="mini" v-model="runConfig.renderer" placeholder="Select Renderer">
+                                    <el-option key="canvas" label="canvas" value="canvas"></el-option>
+                                    <el-option key="svg" label="svg" value="svg"></el-option>
                                 </el-select>
                             </div>
                             <i slot="reference" class="el-icon-setting"></i>
@@ -166,8 +175,9 @@ under the License.
                                 <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Expected - {{currentTest.expectedVersion || ''}}</span>
+                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'expected')"></i>
                                     </div>
-                                    <el-image :src="result.expected"></el-image>
+                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -175,8 +185,9 @@ under the License.
                                 <el-card shadow="hover">
                                     <div slot="header" class="clearfix">
                                         <span>Actual - {{currentTest.actualVersion || ''}}</span>
+                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'actual')"></i>
                                     </div>
-                                    <el-image :src="result.actual"></el-image>
+                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
                                 </el-card>
                             </el-col>
 
@@ -185,7 +196,7 @@ under the License.
                                     <div slot="header" class="clearfix">
                                         <span>Diff - {{result.diffRatio.toFixed(4)}}</span>
                                     </div>
-                                    <el-image :src="result.diff"></el-image>
+                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
                                 </el-card>
                             </el-col>
                         </el-row>
@@ -194,19 +205,11 @@ under the License.
                     <div class="test-errors">
                         <el-row :gutter="40">
                             <el-col :span="12">
-                                <el-alert
-                                    title="Expected Errors"
-                                    type="error"
-                                    show-icon>
-                                </el-alert>
+                                <el-alert title="Expected Errors" type="error" show-icon></el-alert>
                                 <div class="error-item" v-for="error in currentTest.expectedErrors">{{error}}</div>
                             </el-col>
                             <el-col :span="12">
-                                <el-alert
-                                    title="Actual Errors"
-                                    type="error"
-                                    show-icon>
-                                </el-alert>
+                                <el-alert title="Actual Errors" type="error" show-icon> </el-alert>
                                 <div class="error-item"  v-for="error in currentTest.actualErrors">{{error}}</div>
                             </el-col>
                         </el-row>
@@ -215,28 +218,29 @@ under the License.
                     <div class="test-logs">
                         <el-row :gutter="40">
                             <el-col :span="12">
-                                <el-alert
-                                    title="Expected Logs"
-                                    type="info"
-                                    show-icon>
-                                </el-alert>
+                                <el-alert title="Expected Logs" type="info" show-icon> </el-alert>
                                 <div class="log-item"  v-for="log in currentTest.expectedLogs">{{log}}</div>
                             </el-col>
                             <el-col :span="12">
-                                <el-alert
-                                    title="Actual Logs"
-                                    type="info"
-                                    show-icon>
+                                <el-alert title="Actual Logs" type="info" show-icon>
                                 </el-alert>
                                 <div class="log-item"  v-for="log in currentTest.actualLogs">{{log}}</div>
                             </el-col>
                         </el-row>
                     </div>
-
-                    <div class="test-result-nav">
-
-                    </div>
                 </div>
+
+                <el-dialog
+                    :visible.sync="showIframeDialog"
+                    :center="true"
+                    width="850px"
+                >
+                    <div slot="title">
+                        {{previewTitle}}
+                        <a target="_blank" :href="'../../' + previewTitle"><i class="el-icon-link"></i>Open in New Window</a>
+                    </div>
+                    <iframe :src="previewIframeSrc" width="800" height="600"></iframe>
+                </el-dialog>
             </el-main>
         </el-container>
     </el-container>

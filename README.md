@@ -52,12 +52,41 @@ ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visua
 
 ## Build
 
-Check this tutorial [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts)
- please.
+Build echarts source code:
+
+Execute the instructions in the root directory of the echarts:
+([Node.js](https://nodejs.org) is required)
+
+```shell
+# Install the dependencies from NPM:
+npm install
+
+# If intending to build and get all types of the "production" files:
+npm run release
+# The same as `node build/build.js --release`
+
+# If only intending to get `dist/echarts.js`, which is usually
+# enough in dev or running the tests:
+npm run build
+# The same as `node build/build.js`
+
+# Get the same "production" files as `node build/build.js`, while
+# watching the editing of the source code. Usually used in dev.
+npm run watch
+# The same as `node build/build.js -w`
+
+# Check the manual:
+npm run help
+# The same as `node build/build.js --help`
+```
+
+Then the "production" files are generated in `dist` directory.
+
+More custom build approaches can be checked in this tutorial: [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts) please.
 
 ## Contribution
 
-If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/.github/CONTRIBUTING.md) document.
+If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/CONTRIBUTING.md) document.
 
 ## Resources
 

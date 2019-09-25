@@ -26,6 +26,7 @@ under the License.
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css">
     </head>
@@ -57,6 +58,8 @@ under the License.
         <div class="chart" id="main-specify-y-axis"></div>
         <h2>Specify Y axis (yAxisIndex: false, should be 'lineX' brush)</h2>
         <div class="chart" id="main-specify-x-axis"></div>
+
+        <div id="main0"></div>
 
         <script>
 
@@ -682,6 +685,54 @@ under the License.
         </script>
 
 
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            // yAxisIndex: false
+                        }
+                    }
+                },
+                legend: {},
+                xAxis: {
+                    data: ['I', 'II', 'III']
+                },
+                yAxis: {},
+                series: [{
+                    name: 'x',
+                    type: 'bar',
+                    stack: 'a',
+                    data: [11, 22, 33]
+                }, {
+                    name: 'y',
+                    type: 'bar',
+                    stack: 'a',
+                    data: [44, 33, 22]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    '(1) Use toolbox.dataZoom to brush a small rect in grid.',
+                    '(2) Click a legend item to disappear a series and click again to show the series.',
+                    '[Check]: the extent of yAxis: should be able to return to **the previous state after (1) did**.',
+                    '(3) Click "back" in toolbox.dataZoom',
+                    '[Check]: Back normally.'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
 
 
     </body>

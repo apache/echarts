@@ -185,7 +185,8 @@ export default echarts.extendComponentView({
                             path.setStyle({
                                 text: titles[iconName],
                                 textPosition: iconStyleEmphasisModel.get('textPosition') || 'bottom',
-                                textFill: iconStyleEmphasisModel.get('textFill') || hoverStyle.fill || hoverStyle.stroke || '#000',
+                                textFill: iconStyleEmphasisModel.get('textFill')
+                                    || hoverStyle.fill || hoverStyle.stroke || '#000',
                                 textAlign: iconStyleEmphasisModel.get('textAlign') || 'center',
                                 textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
                                 textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
