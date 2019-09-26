@@ -394,7 +394,7 @@ export function quantity(val) {
  * @return {number}
  */
 export function quantityExponent(val) {
-    return Math.floor(Math.log(val) / Math.LN10);
+    return val > 0 ? Math.floor(Math.log(val) / Math.LN10) : 0;
 }
 
 /**
