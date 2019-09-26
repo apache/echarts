@@ -35,6 +35,29 @@ var _eventPos = [0, 0];
 // Just for compatible with ec2.
 zrUtil.extend(Model.prototype, barItemStyle);
 
+function getClipArea(coord, data) {
+    var coordSysClipArea = coord.getArea && coord.getArea();
+    if (coord.type === 'cartesian2d') {
+        var baseAxis = coord.getBaseAxis();
+        // When boundaryGap is false or using time axis. bar may exceed the grid.
+        // We should not clip this part.
+        // See test/bar2.html
+        if (baseAxis.type !== 'category' || !baseAxis.onBand) {
+            var expandWidth = data.getLayout('bandWidth');
+            if (baseAxis.isHorizontal()) {
+                coordSysClipArea.x -= expandWidth;
+                coordSysClipArea.width += expandWidth * 2;
+            }
+            else {
+                coordSysClipArea.y -= expandWidth;
+                coordSysClipArea.height += expandWidth * 2;
+            }
+        }
+    }
+
+    return coordSysClipArea;
+}
+
 export default echarts.extendChartView({
 
     type: 'bar',
@@ -94,10 +117,8 @@ export default echarts.extendChartView({
 
         var animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
 
-        var coordSysClipArea = coord.getArea && coord.getArea();
-
         var needsClip = seriesModel.get('clip', true);
-
+        var coordSysClipArea = getClipArea(coord, data);
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
         // We don't use clipPath in normal mode because we needs a perfect animation
