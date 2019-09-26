@@ -332,7 +332,7 @@ function singleEnterEmphasis(el) {
 
     var zr = el.__zr;
 
-    var useHoverLayer = el.useHoverLayer && zr.painter.type === 'canvas';
+    var useHoverLayer = el.useHoverLayer && zr && zr.painter.type === 'canvas';
     el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     if (el.isGroup || (!zr && el.useHoverLayer)) {
