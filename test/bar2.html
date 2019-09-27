@@ -358,7 +358,7 @@ under the License.
 
                 function makeSeriesData() {
                     var result = [];
-                    var date = 100;
+                    var date = 0;
                     for (var i = 0; i < dataCount; i++) {
                         result.push([+date, Math.random() * 1000]);
                         date += 5;
@@ -372,6 +372,7 @@ under the License.
                 option = {
                     xAxis: {
                         scale: true,
+                        // boundaryGap: ['0.5%', .1],
                         splitLine: {show: false}
                     },
                     yAxis: {
@@ -382,6 +383,11 @@ under the License.
                         axisTick: {show: false},
                         splitLine: {show: false}
                     },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
                     legend: {},
                     series: [{
                         name: 'barA',
