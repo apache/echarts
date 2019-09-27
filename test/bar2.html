@@ -208,6 +208,20 @@ under the License.
                 echarts = ec;
 
                 option = {
+                    color: [{
+                        type: 'linear',
+                        colorStops: [{
+                            offset: 0,
+                            color: 'rgba(42, 20, 20, 0.8)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(42, 20, 20, 0)'
+                        }],
+                        x: 0.5,
+                        y: 0,
+                        x2: 0.49999999999999994,
+                        y2: 1
+                    }],
                     xAxis: {
                         // data: ['a', 'b', 'c', 'd'],
                         data: ['a', 'b'],
@@ -234,7 +248,12 @@ under the License.
                         silent: true,
                         barWidth: 40,
                         barGap: '-100%', // Make series be overlap
-                        data: [60, 60]
+                        data: [60, 60],
+                        label: {
+                            show: true,
+                            color: 'blue',
+                            position: 'top'
+                        }
                     }, {
                         type: 'bar',
                         barWidth: 40,
