@@ -46,7 +46,6 @@ under the License.
             }
         </style>
 
-        <h1>No scroll, left not set (should be center)</h1>
         <div class="chart" id="plain"></div>
         <h1>No scroll, width 300, right: 10</h1>
         <div class="chart" id="plain2"></div>
@@ -153,6 +152,16 @@ under the License.
                 var option = {
                     legend: {
                         selector: true,
+                        selectorLabel: {
+                            color: 'yellow',
+                            borderColor: 'green',
+                            backgroundColor: 'blue'
+                        },
+                        emphasis: {
+                            selectorLabel: {
+                                backgroundColor: 'red'
+                            }
+                        },
                         data: seriesInfo.legendData,
                         // backgroundColor: 'rgba(0,100,50,0.2)'
                     },
@@ -169,7 +178,13 @@ under the License.
                     series: seriesInfo.series
                 };
 
-                testHelper.createChart(echarts, 'plain', option);
+                testHelper.create(echarts, 'plain', {
+                    title: [
+                        'No scroll, left not set (should be center)',
+                        'color: yellow, borderColor: green, backgroundColor: blue, emphasis backgroundColor: red'
+                    ],
+                    option: option
+                });
             })
         </script>
 
