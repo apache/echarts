@@ -85,7 +85,8 @@ export function extendPath(pathData, opts) {
 /**
  * Register a user defined shape.
  * The shape class can be fetched by `getShapeClass`
- * This method will not overwrite the built-in shapes.
+ * This method will overwrite the registered shapes, including
+ * the registered built-in shapes, if using the same `name`.
  * The shape can be used in `custom series` and
  * `graphic component` by declaring `{type: name}`.
  *
