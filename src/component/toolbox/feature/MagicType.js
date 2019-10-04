@@ -103,7 +103,7 @@ var seriesOptGenreator = {
         if (seriesType === 'line' || seriesType === 'bar') {
             return zrUtil.merge({
                 id: seriesId,
-                stack: seriesModel.get('stack') === '__ec_magicType_stack__' ? '' : '__ec_magicType_stack__'
+                stack: ''
             }, model.get('option.tiled') || {}, true);
         }
     }

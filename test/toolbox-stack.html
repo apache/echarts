@@ -29,18 +29,27 @@ under the License.
 <body>
     <style>
         html,
-        body,
-        #main {
-            width: 80%;
+        body {
+            width: 100%;
             height: 100%;
             margin: 0;
         }
 
         #main {
+            width: 90%;
+            height: 45%;
+            margin: 0;
+            background: #fff;
+        }
+        #nodata {
+            width: 90%;
+            height: 45%;
+            margin: 0;
             background: #fff;
         }
     </style>
     <div id="main"></div>
+    <div id="nodata"></div>
     <script>
 
         require([
@@ -64,6 +73,7 @@ under the License.
                 },
                 toolbox: {
                     show: true,
+                    right: '5%',
                     feature: {
                         saveAsImage: {
                             show: true,
@@ -108,6 +118,70 @@ under the License.
                         stack: 'stackTest',
                         data:[120, 132, 101, 134, 90, 230, 210]
                     }
+                ]
+            };
+
+            chart.setOption(option, true);
+
+        });
+    </script>
+    <script>
+
+        require([
+            'echarts'
+            // 'echarts/chart/bar',
+            // 'echarts/component/polar',
+            // 'zrender/vml/vml'
+        ], function (echarts) {
+
+            var chart = echarts.init(document.getElementById('nodata'), null, {
+                // renderer: 'svg'
+            });
+            option = {
+                color: ['#3398DB', '#CA2121'],
+                legend: {
+                    show: true,
+                    data: [],
+                },
+                tooltip: {
+                    show: true
+                },
+                toolbox: {
+                    show: true,
+                    right: '5%',
+                    feature: {
+                        saveAsImage: {
+                            show: true,
+                            title: 'Save As Image'
+                        },
+                        dataView: {
+                            show: true,
+                            title: 'Data View'
+                        },
+                        magicType : {show: true, type: ['line', 'bar', 'stack']},
+                    },
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        data : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value'
+                    }
+                ],
+                series : [
                 ]
             };
 

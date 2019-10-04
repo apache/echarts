@@ -63,6 +63,11 @@ export default echarts.extendComponentView({
             var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
             var feature;
 
+            // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
+            if (payload && payload.newOption !== undefined && payload.newOption.series.length > 0) {
+                featureOpt.title = payload.newOption.series[0].title;
+            }
+
             if (featureName && !oldName) { // Create
                 if (isUserFeatureName(featureName)) {
                     feature = {
