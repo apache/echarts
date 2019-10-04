@@ -88,10 +88,14 @@ var seriesOptGenreator = {
         }
     },
     'stack': function (seriesType, seriesId, seriesModel, model) {
+        var isStack = seriesModel.get('stack') === '__ec_magicType_stack__';
         if (seriesType === 'line' || seriesType === 'bar') {
+            model.setIconStatus('stack', isStack ? 'normal' : 'emphasis');
             return zrUtil.merge({
                 id: seriesId,
-                stack: '__ec_magicType_stack__'
+                stack: isStack ? '' : '__ec_magicType_stack__',
+                // FIXME: also need to change tooltip for stack/unstack state.
+                title: isStack ? zrUtil.clone(magicTypeLang.title) : zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
             }, model.get('option.stack') || {}, true);
         }
     },
@@ -99,7 +103,7 @@ var seriesOptGenreator = {
         if (seriesType === 'line' || seriesType === 'bar') {
             return zrUtil.merge({
                 id: seriesId,
-                stack: ''
+                stack: seriesModel.get('stack') === '__ec_magicType_stack__' ? '' : '__ec_magicType_stack__'
             }, model.get('option.tiled') || {}, true);
         }
     }
