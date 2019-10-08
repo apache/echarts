@@ -26,8 +26,8 @@ var GaugeSeries = SeriesModel.extend({
     type: 'series.gauge',
 
     getInitialData: function (option, ecModel) {
-        var dataOpt = option.data || [];
-        if (!zrUtil.isArray(dataOpt)) {
+        var dataOpt = option.data;
+        if (dataOpt && !zrUtil.isArray(dataOpt)) {
             dataOpt = [dataOpt];
         }
         option.data = dataOpt;
