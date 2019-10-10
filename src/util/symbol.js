@@ -130,6 +130,72 @@ var Pin = graphic.extendShape({
 });
 
 /**
+ * Sausage: similar to sector, but have half circle on both sides
+ * @inner
+ */
+var Sausage = graphic.extendShape({
+
+    type: 'sausage',
+
+    shape: {
+
+        cx: 0,
+
+        cy: 0,
+
+        r0: 0,
+
+        r: 0,
+
+        startAngle: 0,
+
+        endAngle: Math.PI * 2,
+
+        clockwise: true
+    },
+
+    brush: graphic.fixClipWithShadow(),
+
+    buildPath: function (ctx, shape) {
+
+        var x = shape.cx;
+        var y = shape.cy;
+        var r0 = Math.max(shape.r0 || 0, 0);
+        var r = Math.max(shape.r, 0);
+        var dr = (r - r0) * 0.5;
+        var rCenter = r0 + dr;
+        var startAngle = shape.startAngle;
+        var endAngle = shape.endAngle;
+        var clockwise = shape.clockwise;
+
+        var unitX = Math.cos(startAngle);
+        var unitY = Math.sin(startAngle);
+
+        ctx.moveTo(unitX * r0 + x, unitY * r0 + y);
+
+        ctx.arc(unitX * rCenter + x, unitY * rCenter + y, dr,
+            Math.PI + startAngle, startAngle, !clockwise);
+
+        ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
+
+        ctx.arc(
+            Math.cos(endAngle) * rCenter + x,
+            Math.sin(endAngle) * rCenter + x,
+            dr,
+            endAngle,
+            endAngle + Math.PI,
+            !clockwise
+        );
+
+        if (r0 !== 0) {
+            ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
+        }
+
+        ctx.closePath();
+    }
+});
+
+/**
  * Arrow shape
  * @inner
  */
@@ -179,6 +245,8 @@ var symbolCtors = {
 
     pin: Pin,
 
+    sausage: Sausage,
+
     arrow: Arrow,
 
     triangle: Triangle
@@ -207,6 +275,15 @@ var symbolShapeMakers = {
         shape.width = w;
         shape.height = h;
         shape.r = Math.min(w, h) / 4;
+    },
+
+    sausage: function (x, y, w, h, shape) {
+        shape.r = Math.min(w, h) / 2;
+        shape.r0 = shape.r / 2;
+        shape.cx = x + w / 2;
+        shape.cy = y + h / 2;
+        shape.startAngle = -Math.PI / 6;
+        shape.endAngle = Math.PI / 6 * 7;
     },
 
     square: function (x, y, w, h, shape) {
