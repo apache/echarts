@@ -97,6 +97,7 @@ export default echarts.extendChartView({
         var coordSysClipArea = coord.getArea && coord.getArea();
 
         var needsClip = seriesModel.get('clip', true);
+        var roundCap = seriesModel.get('roundCap', true);
 
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
@@ -123,7 +124,7 @@ export default echarts.extendChartView({
                 }
 
                 var el = elementCreator[coord.type](
-                    data, dataIndex, itemModel, layout, isHorizontalOrRadial, animationModel
+                    dataIndex, layout, isHorizontalOrRadial, animationModel, false, roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -157,7 +158,7 @@ export default echarts.extendChartView({
                 }
                 else {
                     el = elementCreator[coord.type](
-                        data, newIndex, itemModel, layout, isHorizontalOrRadial, animationModel, true
+                        newIndex, layout, isHorizontalOrRadial, animationModel, true, roundCap
                     );
                 }
 
@@ -281,7 +282,7 @@ var clip = {
 var elementCreator = {
 
     cartesian2d: function (
-        data, dataIndex, itemModel, layout, isHorizontal,
+        dataIndex, layout, isHorizontal,
         animationModel, isUpdate
     ) {
         var rect = new graphic.Rect({shape: zrUtil.extend({}, layout)});
@@ -302,15 +303,18 @@ var elementCreator = {
     },
 
     polar: function (
-        data, dataIndex, itemModel, layout, isRadial,
-        animationModel, isUpdate
+        dataIndex, layout, isRadial,
+        animationModel, isUpdate, roundCap
     ) {
         // Keep the same logic with bar in catesion: use end value to control
         // direction. Notice that if clockwise is true (by default), the sector
         // will always draw clockwisely, no matter whether endAngle is greater
         // or less than startAngle.
         var clockwise = layout.startAngle < layout.endAngle;
-        var sector = new graphic.Sector({
+
+        var ShapeClass = (!isRadial && roundCap) ? graphic.Sausage : graphic.Sector;
+
+        var sector = new ShapeClass({
             shape: zrUtil.defaults({clockwise: clockwise}, layout)
         });
 

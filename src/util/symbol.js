@@ -133,7 +133,7 @@ var Pin = graphic.extendShape({
  * Sausage: similar to sector, but have half circle on both sides
  * @inner
  */
-var Sausage = graphic.extendShape({
+export var Sausage = graphic.extendShape({
 
     type: 'sausage',
 
@@ -154,10 +154,11 @@ var Sausage = graphic.extendShape({
         clockwise: true
     },
 
-    brush: graphic.fixClipWithShadow(),
+    brush: graphic.fixClipWithShadow(function () {
+        return this.startAngle === this.endAngle;
+    }),
 
     buildPath: function (ctx, shape) {
-
         var x = shape.cx;
         var y = shape.cy;
         var r0 = Math.max(shape.r0 || 0, 0);
@@ -168,27 +169,33 @@ var Sausage = graphic.extendShape({
         var endAngle = shape.endAngle;
         var clockwise = shape.clockwise;
 
-        var unitX = Math.cos(startAngle);
-        var unitY = Math.sin(startAngle);
+        var unitStartX = Math.cos(startAngle);
+        var unitStartY = Math.sin(startAngle);
+        var unitEndX = Math.cos(endAngle);
+        var unitEndY = Math.sin(endAngle);
 
-        ctx.moveTo(unitX * r0 + x, unitY * r0 + y);
+        var lessThanCircle = clockwise
+            ? endAngle - startAngle < Math.PI * 2
+            : startAngle - endAngle < Math.PI * 2;
 
-        ctx.arc(unitX * rCenter + x, unitY * rCenter + y, dr,
-            Math.PI + startAngle, startAngle, !clockwise);
+        if (lessThanCircle) {
+            ctx.moveTo(unitStartX * r0 + x, unitStartY * r0 + y);
+
+            ctx.arc(unitStartX * rCenter + x, unitStartY * rCenter + y, dr,
+                -Math.PI + startAngle, startAngle, !clockwise);
+        }
 
         ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
 
-        ctx.arc(
-            Math.cos(endAngle) * rCenter + x,
-            Math.sin(endAngle) * rCenter + x,
-            dr,
-            endAngle,
-            endAngle + Math.PI,
-            !clockwise
-        );
+        ctx.moveTo(unitEndX * r + x, unitEndY * r + y);
+
+        ctx.arc(unitEndX * rCenter + x, unitEndY * rCenter + y, dr,
+            endAngle - Math.PI * 2, endAngle - Math.PI, !clockwise);
 
         if (r0 !== 0) {
             ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
+
+            ctx.moveTo(unitStartX * r0 + x, unitEndY * r0 + y);
         }
 
         ctx.closePath();

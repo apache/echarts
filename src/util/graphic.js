@@ -43,6 +43,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
 import fixPathClipWithShadow from 'zrender/src/graphic/helper/fixClipWithShadow';
+import {Sausage} from './symbol';
 
 
 var mathMax = Math.max;
@@ -76,8 +77,8 @@ export function extendShape(opts) {
     return Path.extend(opts);
 }
 
-export function fixClipWithShadow() {
-    return fixPathClipWithShadow(Path.prototype.brush);
+export function fixClipWithShadow(conditionCheck) {
+    return fixPathClipWithShadow(Path.prototype.brush, conditionCheck);
 }
 
 /**
@@ -1435,6 +1436,7 @@ function nearZero(val) {
 // by users, although we do not recommend that.
 registerShape('circle', Circle);
 registerShape('sector', Sector);
+registerShape('sausage', Sausage);
 registerShape('ring', Ring);
 registerShape('polygon', Polygon);
 registerShape('polyline', Polyline);
@@ -1449,6 +1451,7 @@ export {
     Text,
     Circle,
     Sector,
+    Sausage,
     Ring,
     Polygon,
     Polyline,
