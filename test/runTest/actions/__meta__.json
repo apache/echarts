@@ -134,5 +134,6 @@
   "dataZoom-scroll": 3,
   "map-contour": 2,
   "map-default": 1,
-  "map-labels": 1
+  "map-labels": 1,
+  "polar-rounded": 1
 }
