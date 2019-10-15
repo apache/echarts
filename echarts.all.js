@@ -147,7 +147,7 @@ import './src/component/calendar';
 
 
 
-// `grapchic` component, for example:
+// `graphic` component, for example:
 // chart.setOption({
 //     graphic: {...}
 // });
