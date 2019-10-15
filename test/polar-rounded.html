@@ -45,6 +45,8 @@ under the License.
 
         <div id="main3"></div>
 
+        <div id="main4"></div>
+
 
 
         <script>
@@ -83,7 +85,7 @@ under the License.
         require(['echarts'], function (echarts) {
             var option = {
                 angleAxis: {
-                    max: 2,
+                    max: 3,
                     startAngle: 30,
                     splitLine: {
                         show: false
@@ -92,9 +94,10 @@ under the License.
                 radiusAxis: {
                     type: 'category',
                     data: ['v', 'w', 'x', 'y', 'z'],
-                    z: 10
+                    show: false
                 },
                 polar: {
+                    radius: [10, '80%']
                 },
                 series: [{
                     type: 'bar',
@@ -126,7 +129,8 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
-                    'Polar bar with and without round cap on rotated axis'
+                    'Polar bar with and without round cap on rotated axis',
+                    'Check the split position without round cap, which should always point to 0 when data larger than 100%'
                 ],
                 option: option
             });
@@ -145,14 +149,18 @@ under the License.
 
             var option = {
                 angleAxis: {
-                    max: 5
+                    max: 5,
+                    show: false
                 },
                 radiusAxis: {
                     type: 'category',
                     data: data1,
-                    z: 10
+                    z: 10,
+                    show: false
                 },
                 polar: {
+                    show: false,
+                    radius: '80%'
                 },
                 series: [{
                     type: 'bar',
@@ -204,14 +212,15 @@ under the License.
                 },
                 radiusAxis: {
                     type: 'category',
-                    data: ['-', 'a'],
+                    data: ['a'],
                     z: 10
                 },
                 polar: {
+                    radius: ['25%', '60%']
                 },
                 series: [{
                     type: 'bar',
-                    data: ['-', 1],
+                    data: [1],
                     coordinateSystem: 'polar',
                     name: 'A',
                     roundCap: true,
@@ -232,18 +241,19 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main3', {
                 title: [
-                    'Click button and check animation',
+                    'Polar radius and animation test',
+                    'Click button to check animation',
                     'Data add 3 by each click; data change to 1 when bigger than 10'
                 ],
                 option: option,
                 buttons: [{
                     text: 'Change data',
                     onclick: function () {
-                        if (option.series[0].data[1] > 10) {
-                            option.series[0].data[1] = 1;
+                        if (option.series[0].data[0] > 10) {
+                            option.series[0].data[0] = 1;
                         }
                         else {
-                            option.series[0].data[1] += 3;
+                            option.series[0].data[0] += 3;
                         }
                         chart.setOption(option);
                     }
