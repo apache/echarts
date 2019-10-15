@@ -196,7 +196,7 @@ function notify(title, message) {
 }
 
 function keyboardRecordingHandler(e) {
-    if (e.key.toLowerCase() === 'r' && e.shiftKey) {
+    if (e.keyCode === 82 && e.altKey) {
         let $iframe = getIframe();
         if (!app.recordingAction) {
             // Create a new action if currentAction has ops.
@@ -230,7 +230,7 @@ function keyboardRecordingHandler(e) {
         }
         // Get scroll
     }
-    else if (e.key.toLowerCase() === 's' && e.shiftKey) {
+    else if (e.keyCode === 83 && e.altKey) {
         if (app.recordingAction) {
             app.recordingAction.ops.push({
                 type: 'screenshot',
