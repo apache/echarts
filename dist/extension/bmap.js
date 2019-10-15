@@ -264,6 +264,8 @@ echarts.extendComponentModel({
 
         mapStyle: {},
 
+        mapStyleV2: {},
+
         roam: false
     }
 });
@@ -355,6 +357,7 @@ echarts.extendComponentView({
             bmap.disablePinchToZoom();
         }
 
+        /* map 2.0 */
         var originalStyle = bMapModel.__mapStyle;
 
         var newMapStyle = bMapModel.get('mapStyle') || {};
@@ -366,6 +369,20 @@ echarts.extendComponentView({
                 bmap.setMapStyle(newMapStyle);
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);
+        }
+
+        /* map 3.0 */
+        var originalStyle2 = bMapModel.__mapStyle2;
+
+        var newMapStyle2 = bMapModel.get('mapStyleV2') || {};
+        // FIXME, Not use JSON methods
+        var mapStyleStr2 = JSON.stringify(newMapStyle2);
+        if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
+            // FIXME May have blank tile when dragging if setMapStyle
+            if (Object.keys(newMapStyle2).length) {
+                bmap.setMapStyleV2(newMapStyle2);
+            }
+            bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
         }
 
         rendering = false;

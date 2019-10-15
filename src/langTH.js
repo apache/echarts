@@ -17,7 +17,17 @@
 * under the License.
 */
 
+/**
+ * Language: Thai
+ */
+
 export default {
+    legend: {
+        selector: {
+            all: 'ทั้งหมด',
+            inverse: 'ผกผัน'
+        }
+    },
     toolbox: {
         brush: {
             title: {
