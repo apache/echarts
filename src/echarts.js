@@ -2047,10 +2047,11 @@ export function init(dom, theme, opts) {
                 + dependencies.zrender + '+'
             );
         }
+    }
 
-        if (!dom) {
-            throw new Error('Initialize failed: invalid dom.');
-        }
+    if (!dom) {
+        // In the vue, react library, the dom object will be delayed.
+        throw new Error('Initialize failed: invalid dom.');
     }
 
     var existInstance = getInstanceByDom(dom);
