@@ -79,7 +79,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
         var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
-        var clampLayout = baseDim !== 'radius'
+        var clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
         var valueAxisStart = valueAxis.getExtent()[0];

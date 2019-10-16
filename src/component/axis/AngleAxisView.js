@@ -96,6 +96,39 @@ export default AxisView.extend({
     _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
         var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
+        // extent id of the axis radius (r0 and r)
+        var rId = getRadiusIdx(polar);
+        var r0Id = rId ? 0 : 1;
+
+        var shape;
+        if (radiusExtent[r0Id] === 0) {
+            shape = new graphic.Circle({
+                shape: {
+                    cx: polar.cx,
+                    cy: polar.cy,
+                    r: radiusExtent[rId]
+                },
+                style: lineStyleModel.getLineStyle(),
+                z2: 1,
+                silent: true
+            });
+        }
+        else {
+            shape = new graphic.Ring({
+                shape: {
+                    cx: polar.cx,
+                    cy: polar.cy,
+                    r: radiusExtent[rId],
+                    r0: radiusExtent[r0Id]
+                },
+                style: lineStyleModel.getLineStyle(),
+                z2: 1,
+                silent: true
+            });
+        }
+        shape.style.fill = null;
+        this.group.add(shape);
+
         for (var rx = 0; rx < radiusExtent.length; ++rx) {
             // Draw a circle for radius like [0, 100], and two circles for [20, 100]
             if (radiusExtent[rx] > 0) {
