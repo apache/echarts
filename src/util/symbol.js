@@ -181,16 +181,20 @@ export var Sausage = graphic.extendShape({
         if (lessThanCircle) {
             ctx.moveTo(unitStartX * r0 + x, unitStartY * r0 + y);
 
-            ctx.arc(unitStartX * rCenter + x, unitStartY * rCenter + y, dr,
-                -Math.PI + startAngle, startAngle, !clockwise);
+            ctx.arc(
+                unitStartX * rCenter + x, unitStartY * rCenter + y, dr,
+                -Math.PI + startAngle, startAngle, !clockwise
+            );
         }
 
         ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
 
         ctx.moveTo(unitEndX * r + x, unitEndY * r + y);
 
-        ctx.arc(unitEndX * rCenter + x, unitEndY * rCenter + y, dr,
-            endAngle - Math.PI * 2, endAngle - Math.PI, !clockwise);
+        ctx.arc(
+            unitEndX * rCenter + x, unitEndY * rCenter + y, dr,
+            endAngle - Math.PI * 2, endAngle - Math.PI, !clockwise
+        );
 
         if (r0 !== 0) {
             ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
