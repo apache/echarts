@@ -60,6 +60,7 @@ var _default = echarts.extendComponentModel({
     center: [104.114129, 37.550339],
     zoom: 5,
     mapStyle: {},
+    mapStyleV2: {},
     roam: false
   }
 });

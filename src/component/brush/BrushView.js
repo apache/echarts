@@ -107,6 +107,12 @@ export default echarts.extendComponentView({
             areas: zrUtil.clone(areas),
             $from: modelId
         });
+        opt.isEnd && this.api.dispatchAction({
+            type: 'brushEnd',
+            brushId: modelId,
+            areas: zrUtil.clone(areas),
+            $from: modelId
+        });
     }
 
 });
