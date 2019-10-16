@@ -17,13 +17,6 @@
 * under the License.
 */
 
-/**
- * K-Dimension Tree
- *
- * @module echarts/data/KDTree
- * @author Yi Shen(https://github.com/pissang)
- */
-
 import quickSelect from './quickSelect';
 
 function Node(axis, data) {

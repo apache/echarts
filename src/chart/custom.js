@@ -27,6 +27,7 @@ import DataDiffer from '../data/DataDiffer';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import ChartView from '../view/Chart';
+import {createClipPath} from './helper/createClipPathFromCoordSys';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
 import prepareGeo from '../coord/geo/prepareCustom';
@@ -80,7 +81,13 @@ SeriesModel.extend({
         z: 2,
         legendHoverLink: true,
 
-        useTransform: true
+        useTransform: true,
+
+        // Custom series will not clip by default.
+        // Some case will use custom series to draw label
+        // For example https://echarts.apache.org/examples/en/editor.html?c=custom-gantt-flight
+        // Only works on polar and cartesian2d coordinate system.
+        clip: false
 
         // Cartesian coordinate system
         // xAxisIndex: 0,
@@ -159,6 +166,17 @@ ChartView.extend({
             })
             .execute();
 
+        // Do clipping
+        var clipPath = customSeries.get('clip', true)
+            ? createClipPath(customSeries.coordinateSystem, false, customSeries)
+            : null;
+        if (clipPath) {
+            group.setClipPath(clipPath);
+        }
+        else {
+            group.removeClipPath();
+        }
+
         this._data = data;
     },
 
@@ -213,6 +231,8 @@ function createEl(elOption) {
     var graphicType = elOption.type;
     var el;
 
+    // Those graphic elements are not shapes. They should not be
+    // overwritten by users, so do them first.
     if (graphicType === 'path') {
         var shape = elOption.shape;
         // Using pathRect brings convenience to users sacle svg path.
@@ -237,8 +257,14 @@ function createEl(elOption) {
         el = new graphicUtil.Text({});
         el.__customText = elOption.style.text;
     }
+    else if (graphicType === 'group') {
+        el = new graphicUtil.Group();
+    }
+    else if (graphicType === 'compoundPath') {
+        throw new Error('"compoundPath" is not supported yet.');
+    }
     else {
-        var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
+        var Clz = graphicUtil.getShapeClass(graphicType);
 
         if (__DEV__) {
             zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
@@ -318,19 +344,11 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     // If `elOption.styleEmphasis` is `false`, remove hover style. The
     // logic is ensured by `graphicUtil.setElementHoverStyle`.
     var styleEmphasis = elOption.styleEmphasis;
-    var disableStyleEmphasis = styleEmphasis === false;
-    if (!(
-        // Try to escapse setting hover style for performance.
-        (el.__cusHasEmphStl && styleEmphasis == null)
-        || (!el.__cusHasEmphStl && disableStyleEmphasis)
-    )) {
-        // Should not use graphicUtil.setHoverStyle, since the styleEmphasis
-        // should not be share by group and its descendants.
-        graphicUtil.setElementHoverStyle(el, styleEmphasis);
-        el.__cusHasEmphStl = !disableStyleEmphasis;
-    }
+    // hoverStyle should always be set here, because if the hover style
+    // may already be changed, where the inner cache should be reset.
+    graphicUtil.setElementHoverStyle(el, styleEmphasis);
     if (isRoot) {
-        graphicUtil.setAsHighDownDispatcher(el, !disableStyleEmphasis);
+        graphicUtil.setAsHighDownDispatcher(el, styleEmphasis !== false);
     }
 }
 

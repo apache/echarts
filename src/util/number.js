@@ -386,8 +386,15 @@ export function quantity(val) {
     return Math.pow(10, quantityExponent(val));
 }
 
-function quantityExponent(val) {
-    return Math.floor(Math.log(val) / Math.LN10);
+/**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
+ * @return {number}
+ */
+export function quantityExponent(val) {
+    return val > 0 ? Math.floor(Math.log(val) / Math.LN10) : 0;
 }
 
 /**

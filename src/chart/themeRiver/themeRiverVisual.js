@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file Visual encoding for themeRiver view
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import {createHashMap} from 'zrender/src/core/util';
 
 export default function (ecModel) {

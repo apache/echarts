@@ -23,16 +23,16 @@ import Model from '../../model/Model';
 import {isNameSpecified} from '../../util/model';
 import lang from '../../lang';
 
-var langTitle = lang.legendSelector.title;
+var langSelector = lang.legend.selector;
 
 var defaultSelectorOption = {
     all: {
         type: 'all',
-        title: zrUtil.clone(langTitle.all)
+        title: zrUtil.clone(langSelector.all)
     },
     inverse: {
         type: 'inverse',
-        title: zrUtil.clone(langTitle.inverse)
+        title: zrUtil.clone(langSelector.inverse)
     }
 };
 
@@ -275,13 +275,21 @@ var LegendModel = echarts.extendComponentModel({
         // 各个item之间的间隔，单位px，默认为10，
         // 横向布局时为水平间隔，纵向布局时为纵向间隔
         itemGap: 10,
-        // 图例图形宽度
+        // the width of legend symbol
         itemWidth: 25,
-        // 图例图形高度
+        // the height of legend symbol
         itemHeight: 14,
 
-        // 图例关闭时候的颜色
+        // the color of unselected legend symbol
         inactiveColor: '#ccc',
+
+        // the borderColor of unselected legend symbol
+        inactiveBorderColor: '#ccc',
+
+        itemStyle: {
+            // the default borderWidth of legend symbol
+            borderWidth: 0
+        },
 
         textStyle: {
             // 图例文字颜色

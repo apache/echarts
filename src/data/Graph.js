@@ -17,13 +17,6 @@
 * under the License.
 */
 
-/**
- * Graph data structure
- *
- * @module echarts/data/Graph
- * @author Yi Shen(https://www.github.com/pissang)
- */
-
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {enableClassCheck} from '../util/clazz';

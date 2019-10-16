@@ -22,7 +22,10 @@ describe('List', function () {
 
     var utHelper = window.utHelper;
 
-    var testCase = utHelper.prepare(['echarts/src/data/List']);
+    var testCase = utHelper.prepare([
+        'echarts/src/data/List',
+        'echarts/src/data/Source'
+    ]);
 
     describe('Data Manipulation', function () {
 
@@ -65,33 +68,18 @@ describe('List', function () {
             expect(list.get('y', 1)).toBeNaN();
         });
 
-        testCase('Stacked data', function (List) {
-            var list1 = new List(['x', {
-                name: 'y',
-                stackable: true
-            }]);
-            var list2 = new List(['x', {
-                name: 'y',
-                stackable: true
-            }]);
-            list1.initData([1, '-', 2, -2]);
-            list2.initData([1, 2,   3, 2]);
-
-            list2.stackedOn = list1;
-
-            expect(list2.get('y', 1, true)).toEqual(2);
-            expect(list2.get('y', 2, true)).toEqual(5);
-            expect(list2.get('y', 3, true)).toEqual(2);
-        });
-
         testCase('getRawValue', function (List) {
-            var list = new List(['x', 'y']);
+            var list1 = new List(['x', 'y']);
+            // here construct a new list2 because if we only use one list
+            // to call initData() twice, list._chunkCount will be accumulated
+            // to 1 instead of 0.
+            var list2 = new List(['x', 'y']);
 
-            list.initData([1, 2, 3]);
-            expect(list.getItemModel(1).option).toEqual(2);
+            list1.initData([1, 2, 3]);
+            expect(list1.getItemModel(1).option).toEqual(2);
 
-            list.initData([[10, 15], [20, 25], [30, 35]]);
-            expect(list.getItemModel(1).option).toEqual([20, 25]);
+            list2.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(list2.getItemModel(1).option).toEqual([20, 25]);
         });
 
         testCase('indexOfRawIndex', function (List) {
@@ -168,15 +156,19 @@ describe('List', function () {
             })).toEqual([20]);
         });
 
-        testCase('dataProvider', function (List) {
+        testCase('dataProvider', function (List, Source) {
             var list = new List(['x', 'y']);
             var typedArray = new Float32Array([10, 10, 20, 20]);
+            var source = Source.seriesDataToSource(typedArray);
             list.initData({
                 count: function () {
                     return typedArray.length / 2;
                 },
                 getItem: function (idx) {
                     return [typedArray[idx * 2], typedArray[idx * 2 + 1]];
+                },
+                getSource: function () {
+                    return source;
                 }
             });
             expect(list.mapArray(['x', 'y'], function (x, y) {

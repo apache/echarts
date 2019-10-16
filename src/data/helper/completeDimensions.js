@@ -153,8 +153,8 @@ function completeDimensions(sysDims, source, opt) {
             // `coordDimIndex` should not be set directly.
             sysDimItemDimsDef = sysDimItem.dimsDef;
             sysDimItemOtherDims = sysDimItem.otherDims;
-            sysDimItem.name = sysDimItem.coordDim = sysDimItem.coordDimIndex
-                = sysDimItem.dimsDef = sysDimItem.otherDims = null;
+            sysDimItem.name = sysDimItem.coordDim = sysDimItem.coordDimIndex =
+                sysDimItem.dimsDef = sysDimItem.otherDims = null;
         }
 
         var dataDims = encodeDef.get(coordDim);

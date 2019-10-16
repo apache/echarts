@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file Create data struct and define tree view's series model
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
 import {encodeHTML} from '../../util/format';
@@ -133,7 +128,9 @@ export default SeriesModel.extend({
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
 
-        roam: false, // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.4,
 

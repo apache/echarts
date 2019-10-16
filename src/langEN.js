@@ -17,10 +17,13 @@
 * under the License.
 */
 
+/**
+ * Language: English.
+ */
 
 export default {
-    legendSelector: {
-        title: {
+    legend: {
+        selector: {
             all: 'All',
             inverse: 'Inv'
         }

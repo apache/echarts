@@ -1,0 +1,1 @@
+[{"name":"Action 1","ops":[{"type":"valuechange","selector":"div.dg.ac>div.dg.main.a>ul>li.cr.string>div>div.c>select","value":"vertical","time":1358,"target":"select"},{"time":1359,"delay":400,"type":"screenshot-auto"}],"scrollY":0,"scrollX":0,"timestamp":1568029071032}]

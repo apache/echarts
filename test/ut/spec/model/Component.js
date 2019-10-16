@@ -35,7 +35,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a1', 'a2'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', []], ['a1', []], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset','a1', 'a2']]]);
         });
 
         testCase('topologicalTravel_a1IsAbsent', function (ComponentModel) {
@@ -46,7 +46,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a2'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', []], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a2', ['dataset']], ['m1', ['dataset', 'a1', 'a2']]]);
         });
 
         testCase('topologicalTravel_empty', function (ComponentModel) {
@@ -70,7 +70,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['a1', 'a2', 'm1'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a1', []], ['a2', []], ['m1', ['a2']]]);
+            expect(result).toEqual([['a1', ['dataset']], ['a2', ['dataset']], ['m1', ['dataset','a2']]]);
         });
 
         testCase('topologicalTravel_diamond', function (ComponentModel) {
@@ -83,7 +83,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a1', 'a2', 'a3'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a1', []], ['a3', ['a1']], ['a2', ['a1']], ['m1', ['a2', 'a3']]]);
+            expect(result).toEqual([['a1', ['dataset']], ['a3', ['dataset', 'a1']], ['a2', ['dataset', 'a1']], ['m1', ['dataset', 'a2', 'a3']]]);
         });
 
         testCase('topologicalTravel_loop', function (ComponentModel) {
@@ -107,7 +107,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a1', 'a2'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', []], ['a1', []], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset', 'a1', 'a2']]]);
 
             result = [];
             ComponentModel.extend({type: 'm2', dependencies: ['a1', 'm1']});
@@ -115,7 +115,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m2', 'm1', 'a1', 'a2'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', []], ['a1', []], ['m1', ['a1', 'a2']], ['m2', ['a1', 'm1']]]);
+            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset', 'a1', 'a2']], ['m2', ['dataset', 'a1', 'm1']]]);
         });
 
         testCase('topologicalTravel_missingSomeNodeButHasDependencies', function (ComponentModel) {
@@ -128,13 +128,13 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['a3', 'm1'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a3', []], ['a2', ['a3']], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a3', ['dataset']], ['a2', ['dataset', 'a3']], ['m1', ['dataset', 'a1', 'a2']]]);
             var result = [];
             var allList = ComponentModel.getAllClassMainTypes();
             ComponentModel.topologicalTravel(['m1', 'a3'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a3', []], ['a2', ['a3']], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a3', ['dataset']], ['a2', ['dataset', 'a3']], ['m1', ['dataset', 'a1', 'a2']]]);
         });
 
         testCase('topologicalTravel_subType', function (ComponentModel) {
@@ -149,7 +149,7 @@ describe('Component', function() {
             ComponentModel.topologicalTravel(['m1', 'a1', 'a2', 'a4'], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a4', []], ['a2',[]], ['a1', ['a2','a3','a4']], ['m1', ['a1', 'a2']]]);
+            expect(result).toEqual([['a4', ['dataset']], ['a2',['dataset']], ['a1', ['dataset', 'a2','a3','a4']], ['m1', ['dataset', 'a1', 'a2']]]);
         });
     });
 
