@@ -197,7 +197,8 @@ Axis.prototype = {
         }, this);
 
         var alignWithLabel = tickModel.get('alignWithLabel');
-        var tickLen = this.scale.getTicks().length;
+        var dataExtent = this.scale.getExtent();
+        var tickLen = this.scale.getTicks().length + dataExtent[0];
         
         fixOnBandTicksCoords(
             this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp,tickLen
@@ -322,6 +323,7 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
         });
 
         diffSize = tickLen - ticksCoords[ticksLen - 1].tickValue;
+        
         last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize}; 
 
         ticksCoords.push(last);
