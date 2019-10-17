@@ -56,6 +56,8 @@ export default {
             throw new Error('Invalid geoJson format\n' + e.message);
         }
 
+        fixNanhai(mapName, regions);
+
         each(regions, function (region) {
             var regionName = region.name;
 
@@ -72,8 +74,6 @@ export default {
                 );
             }
         });
-
-        fixNanhai(mapName, regions);
 
         return (inner(mapRecord).parsed = {
             regions: regions,
