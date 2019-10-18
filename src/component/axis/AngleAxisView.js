@@ -128,25 +128,6 @@ export default AxisView.extend({
         }
         shape.style.fill = null;
         this.group.add(shape);
-
-        for (var rx = 0; rx < radiusExtent.length; ++rx) {
-            // Draw a circle for radius like [0, 100], and two circles for [20, 100]
-            if (radiusExtent[rx] > 0) {
-                var circle = new graphic.Circle({
-                    shape: {
-                        cx: polar.cx,
-                        cy: polar.cy,
-                        r: radiusExtent[rx]
-                    },
-                    style: lineStyleModel.getLineStyle(),
-                    z2: 1,
-                    silent: true
-                });
-                circle.style.fill = null;
-
-                this.group.add(circle);
-            }
-        }
     },
 
     /**
