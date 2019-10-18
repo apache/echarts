@@ -42,6 +42,7 @@ import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
+import {Sausage} from './symbol';
 
 
 var mathMax = Math.max;
@@ -1432,6 +1433,7 @@ function nearZero(val) {
 // by users, although we do not recommend that.
 registerShape('circle', Circle);
 registerShape('sector', Sector);
+registerShape('sausage', Sausage);
 registerShape('ring', Ring);
 registerShape('polygon', Polygon);
 registerShape('polyline', Polyline);
@@ -1446,6 +1448,7 @@ export {
     Text,
     Circle,
     Sector,
+    Sausage,
     Ring,
     Polygon,
     Polyline,
