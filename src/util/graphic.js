@@ -42,7 +42,6 @@ import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
-import fixPathClipWithShadow from 'zrender/src/graphic/helper/fixClipWithShadow';
 import {Sausage} from './symbol';
 
 
@@ -75,10 +74,6 @@ var _customShapeMap = {};
  */
 export function extendShape(opts) {
     return Path.extend(opts);
-}
-
-export function fixClipWithShadow(conditionCheck) {
-    return fixPathClipWithShadow(Path.prototype.brush, conditionCheck);
 }
 
 /**

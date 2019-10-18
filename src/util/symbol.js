@@ -154,10 +154,6 @@ export var Sausage = graphic.extendShape({
         clockwise: true
     },
 
-    brush: graphic.fixClipWithShadow(function () {
-        return this.startAngle === this.endAngle;
-    }),
-
     buildPath: function (ctx, shape) {
         var x = shape.cx;
         var y = shape.cy;
