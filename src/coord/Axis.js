@@ -186,7 +186,6 @@ Axis.prototype = {
         opt = opt || {};
 
         var tickModel = opt.tickModel || this.getTickModel();
-
         var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
 
@@ -198,8 +197,11 @@ Axis.prototype = {
         }, this);
 
         var alignWithLabel = tickModel.get('alignWithLabel');
+        var dataExtent = this.scale.getExtent();
+        var tickLen = this.scale.getTicks().length + dataExtent[0];
+        
         fixOnBandTicksCoords(
-            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp
+            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp,tickLen
         );
 
         return ticksCoords;
@@ -292,7 +294,7 @@ function fixExtentWithBands(extent, nTick) {
 // splitLine/spliteArea should layout appropriately corresponding
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
-function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp) {
+function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp,tickLen) {
     var ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
@@ -301,12 +303,16 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
 
     var axisExtent = axis.getExtent();
     var last;
+    var diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-        var shift = (ticksCoords[1].coord - ticksCoords[0].coord);
+
+        var crossLen = ticksCoords[ticksLen-1].tickValue - ticksCoords[0].tickValue;
+        var shift = (ticksCoords[ticksLen-1].coord - ticksCoords[0].coord) / crossLen;
+
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
             var tickCategoryInterval = tickCategoryInterval || 0;
@@ -315,7 +321,11 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
                 ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
             }
         });
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift};
+
+        diffSize = tickLen - ticksCoords[ticksLen - 1].tickValue;
+        
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize}; 
+
         ticksCoords.push(last);
     }
 
