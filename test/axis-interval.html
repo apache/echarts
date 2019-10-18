@@ -20,383 +20,387 @@ under the License.
 
 
 <html>
-    <head>
-        <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
-        <script src="lib/config.js"></script>
-        <script src="lib/jquery.min.js"></script>
-        <script src="lib/facePrint.js"></script>
-        <script src="lib/testHelper.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="lib/reset.css">
-    </head>
-    <body>
-        <style>
-            h1 {
-                line-height: 60px;
-                height: 60px;
-                background: #a60;
-                text-align: center;
-                font-weight: bold;
-                color: #eee;
-                font-size: 14px;
-            }
-            .chart {
-                height: 500px;
-            }
-        </style>
 
-        <div class="chart" id="mainA"></div>
-
-        <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
-        <div class="chart" id="main0"></div>
-        <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
-        <div class="chart" id="main1"></div>
-        <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
-        <div class="chart" id="main2"></div>
-        <h1>[ Test xAxis.axisTick.interval ]&nbsp;&nbsp;&nbsp; let list = [true, false, true, true];axisTick.interval = function(index){return list[index]} </h1>
-        <div class="chart" id="main3"></div>
-
-
-
-
-
-        <script>
-
-            require([
-                'echarts'
-            ], function (echarts) {
-
-                var dataCount = 200;
-                var data = [];
-                var d = +new Date(2015, 3, 13);
-                var oneDay = 3600 * 1000;
-                for (var i = 0; i < dataCount; i++) {
-                    data.push([d, Math.random()]);
-                    d += 2.5 * oneDay;
-                }
-
-                var startValue = '2015-04-24T04:21';
-                var endValue = '2015-04-24T10:12';
-
-                var option = {
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    dataZoom: [{
-                        startValue: startValue,
-                        endValue: endValue
-                    }, {
-                        type: 'inside',
-                        startValue: startValue,
-                        endValue: endValue
-                    }],
-                    grid: {
-                        left: '3%',
-                        right: '4%',
-                        bottom: 60,
-                        containLabel: true
-                    },
-                    xAxis: {
-                        type: 'time',
-                        minInterval: 3600 * 1000,
-                        maxInterval: 3600 * 1000
-                        // splitNumber: 7
-                    },
-                    yAxis: {},
-                    series: [
-                        {
-                            type:'line',
-                            data: data
-                        }
-                    ]
-                };
-
-                testHelper.create(echarts, 'mainA', {
-                    title: 'xAxis (type: time) should always be 1 hour interval',
-                    option: option
-                });
-            });
-
-        </script>
-
-
-
-
-
-
-
-        <script>
-
-            require([
-                'echarts'
-            ], function (echarts) {
-
-                option = {
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    grid: {
-                        left: '3%',
-                        right: '4%',
-                        bottom: '3%',
-                        containLabel: true
-                    },
-                    xAxis: [
-                        {
-                            type: 'category',
-                            boundaryGap: false,
-                            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            type: 'value',
-                            scale: true,
-                            min: 0,
-                            minInterval: 1
-                        }
-                    ],
-                    series: [
-                        {
-                            type:'line',
-                            data: [1]
-                        }
-                    ]
-                };
-
-                testHelper.createChart(echarts, 'main0', option);
-            });
-
-        </script>
-
-
-
-
-
-
-
-
-
-
-
-
-        <script>
-            require([
-                'echarts'
-            ], function (echarts) {
-
-                var categoryData = [];
-                var data = [];
-                var rotate = 20;
-
-                for (var i = 0; i < 100; i++) {
-                    categoryData.push(i + 'longlonglong');
-                    data.push(Math.random() * 1000000);
-                }
-
-                option = {
-                    title: {
-                    },
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    grid: [{
-                        height: 50
-                    }, {
-                        top: 220,
-                        height: 300
-                    }],
-                    xAxis: [{
-                        id: 'category',
-                        type: 'category',
-                        boundaryGap: false,
-                        data: categoryData,
-                        axisLabel: {
-                            rotate: rotate
-                        }
-                    }, {
-                        gridIndex: 1
-                    }],
-                    yAxis: [{
-                    }, {
-                        id: 'category',
-                        type: 'category',
-                        boundaryGap: false,
-                        data: categoryData,
-                        gridIndex: 1,
-                        axisLabel: {
-                            rotate: rotate
-                        }
-                    }],
-                    series: [
-                        {
-                            type:'line',
-                            data: data
-                        },
-                        {
-                            type:'line',
-                            xAxisIndex: 1,
-                            yAxisIndex: 1,
-                            data: data
-                        }
-                    ]
-                };
-
-                var chart = testHelper.createChart(echarts, 'main1', option, {height: 600});
-
-                chart && next();
-
-                function next() {
-                    var nextInterval = rotate % 90 === 0 ? 2000: 70;
-                    rotate = (rotate + 1) % 360;
-                    setTimeout(function () {
-                        chart.setOption({
-                            xAxis: {
-                                id: 'category',
-                                axisLabel: {
-                                    rotate: rotate
-                                }
-                            },
-                            yAxis: {
-                                id: 'category',
-                                axisLabel: {
-                                    rotate: rotate
-                                }
-                            }
-                        });
-                        next();
-                    }, nextInterval);
-                }
-            });
-
-        </script>
-
-
-
-
-
-
-
-
-
-
-
-
-        <script>
-
-            require([
-                'data/rainfall.json',
-                'echarts'
-            ], function (rainfallData, echarts) {
-
-                var option = {
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    grid: {
-                        bottom: 150
-                    },
-                    dataZoom: {
-                        show: true,
-                        realtime: true,
-                        startValue: '2009-09-20 12:00',
-                        end: 100
-                    },
-                    xAxis: [
-                        {
-                            type: 'time',
-                            axisLabel: {
-                                formatter: function (value) {
-                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
-                                }
-                            }
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            name: '流量(m^3/s)'
-                        }
-                    ],
-                    series: [
-                        {
-                            name: '流量',
-                            type: 'line',
-                            symbol: 'none',
-                            itemStyle: {normal: {areaStyle: {type: 'default'}}},
-                            data: rainfallData.flow.map(function (val, idx) {
-                                return [+(new Date(rainfallData.category[idx])), val];
-                            })
-                        }
-                    ]
-                };
-
-                testHelper.createChart(echarts, 'main2', option);
-            })
-
-        </script>
-
-
-<script>
-
-    require([
-        'echarts'
-    ], function (echarts) {
-
-        let dataIndex = 0;
-
-        let testArr = [
-            [true, false, true, true],
-            [true, false, true, false],
-            [false, true, true, false],
-            [false, true, false, true],
-            [false, false, true, true],
-            [true, true, false, false]
-        ];
-
-        function print(index){
-            return `intervalList = [${testArr[index].toString()}] ,currentIndex is ${index}`
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="lib/reset.css">
+</head>
+
+<body>
+    <style>
+        h1 {
+            line-height: 60px;
+            height: 60px;
+            background: #a60;
+            text-align: center;
+            font-weight: bold;
+            color: #eee;
+            font-size: 14px;
         }
 
-        var option = {
-            title:{
-                text:print(dataIndex)
-            },
-            xAxis: {
-                type: 'category',
-                data: ['Mon', 'Tue', 'Wed', 'Thu'],
-                axisTick: {
+        .chart {
+            height: 500px;
+        }
+    </style>
+
+    <div class="chart" id="mainA"></div>
+
+    <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
+    <div class="chart" id="main0"></div>
+    <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
+    <div class="chart" id="main1"></div>
+    <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
+    <div class="chart" id="main2"></div>
+    <h1>[ Test xAxis.axisTick.interval ]&nbsp;&nbsp;&nbsp; var list = [true, false, true, true];axisTick.interval =
+        function(index){return list[index]} </h1>
+    <div class="chart" id="main3"></div>
+
+
+
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var dataCount = 200;
+            var data = [];
+            var d = +new Date(2015, 3, 13);
+            var oneDay = 3600 * 1000;
+            for (var i = 0; i < dataCount; i++) {
+                data.push([d, Math.random()]);
+                d += 2.5 * oneDay;
+            }
+
+            var startValue = '2015-04-24T04:21';
+            var endValue = '2015-04-24T10:12';
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                dataZoom: [{
+                    startValue: startValue,
+                    endValue: endValue
+                }, {
+                    type: 'inside',
+                    startValue: startValue,
+                    endValue: endValue
+                }],
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'time',
+                    minInterval: 3600 * 1000,
+                    maxInterval: 3600 * 1000
+                    // splitNumber: 7
+                },
+                yAxis: {},
+                series: [
+                    {
+                        type: 'line',
+                        data: data
+                    }
+                ]
+            };
+
+            testHelper.create(echarts, 'mainA', {
+                title: 'xAxis (type: time) should always be 1 hour interval',
+                option: option
+            });
+        });
+
+    </script>
+
+
+
+
+
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        scale: true,
+                        min: 0,
+                        minInterval: 1
+                    }
+                ],
+                series: [
+                    {
+                        type: 'line',
+                        data: [1]
+                    }
+                ]
+            };
+
+            testHelper.createChart(echarts, 'main0', option);
+        });
+
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var categoryData = [];
+            var data = [];
+            var rotate = 20;
+
+            for (var i = 0; i < 100; i++) {
+                categoryData.push(i + 'longlonglong');
+                data.push(Math.random() * 1000000);
+            }
+
+            option = {
+                title: {
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: [{
+                    height: 50
+                }, {
+                    top: 220,
+                    height: 300
+                }],
+                xAxis: [{
+                    id: 'category',
+                    type: 'category',
+                    boundaryGap: false,
+                    data: categoryData,
+                    axisLabel: {
+                        rotate: rotate
+                    }
+                }, {
+                    gridIndex: 1
+                }],
+                yAxis: [{
+                }, {
+                    id: 'category',
+                    type: 'category',
+                    boundaryGap: false,
+                    data: categoryData,
+                    gridIndex: 1,
+                    axisLabel: {
+                        rotate: rotate
+                    }
+                }],
+                series: [
+                    {
+                        type: 'line',
+                        data: data
+                    },
+                    {
+                        type: 'line',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: data
+                    }
+                ]
+            };
+
+            var chart = testHelper.createChart(echarts, 'main1', option, {height: 600});
+
+            chart && next();
+
+            function next() {
+                var nextInterval = rotate % 90 === 0 ? 2000 : 70;
+                rotate = (rotate + 1) % 360;
+                setTimeout(function () {
+                    chart.setOption({
+                        xAxis: {
+                            id: 'category',
+                            axisLabel: {
+                                rotate: rotate
+                            }
+                        },
+                        yAxis: {
+                            id: 'category',
+                            axisLabel: {
+                                rotate: rotate
+                            }
+                        }
+                    });
+                    next();
+                }, nextInterval);
+            }
+        });
+
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+
+        require([
+            'data/rainfall.json',
+            'echarts'
+        ], function (rainfallData, echarts) {
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: {
+                    bottom: 150
+                },
+                dataZoom: {
                     show: true,
-                    interval: function (index) {
-                    // return index && !!x2Data[index]
-                    return testArr[dataIndex][index]
+                    realtime: true,
+                    startValue: '2009-09-20 12:00',
+                    end: 100
                 },
-                length:50,
-                alignWithLabel: false,
-                },
-            },
-            yAxis: {
-                type: 'value'
-            },
-            series: [{
-                data: [820, 932, 901, 934],
-                type: 'bar'
-            }]
-        };
-        let ec = echarts.init(document.getElementById('main3'));
+                xAxis: [
+                    {
+                        type: 'time',
+                        axisLabel: {
+                            formatter: function (value) {
+                                return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value);
+                            }
+                        }
+                    }
+                ],
+                yAxis: [
+                    {
+                        name: '流量(m^3/s)'
+                    }
+                ],
+                series: [
+                    {
+                        name: '流量',
+                        type: 'line',
+                        symbol: 'none',
+                        itemStyle: {normal: {areaStyle: {type: 'default'}}},
+                        data: rainfallData.flow.map(function (val, idx) {
+                            return [+(new Date(rainfallData.category[idx])), val];
+                        })
+                    }
+                ]
+            };
 
-        setInterval(function(){
-            let next = ++dataIndex;
-            dataIndex = next > 5 ? 0: next;
-            option.title.text = print(dataIndex);
+            testHelper.createChart(echarts, 'main2', option);
+        })
+
+    </script>
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var dataIndex = 0;
+
+            var testArr = [
+                [true, false, true, true],
+                [true, false, true, false],
+                [false, true, true, false],
+                [false, true, false, true],
+                [false, false, true, true],
+                [true, true, false, false]
+            ];
+
+            function print(index) {
+                return `intervalList = [${testArr[index].toString()}] ,currentIndex is ${index}`
+            }
+
+            var option = {
+                title: {
+                    text: print(dataIndex)
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                    axisTick: {
+                        show: true,
+                        interval: function (index) {
+                            // return index && !!x2Data[index]
+                            return testArr[dataIndex][index]
+                        },
+                        length: 50,
+                        alignWithLabel: false,
+                    },
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [820, 932, 901, 934],
+                    type: 'bar'
+                }]
+            };
+            var ec = echarts.init(document.getElementById('main3'));
+
+            setInterval(function () {
+                var next = ++dataIndex;
+                dataIndex = next > 5 ? 0 : next;
+                option.title.text = print(dataIndex);
+                ec.setOption(option);
+            }, 6000);
+
             ec.setOption(option);
-        },6000);
-        
-        ec.setOption(option);
 
-    });
+        });
 
-</script>
+    </script>
 
 
 
@@ -404,5 +408,6 @@ under the License.
 
 
 
-    </body>
+</body>
+
 </html>
