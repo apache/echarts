@@ -199,9 +199,9 @@ Axis.prototype = {
         var alignWithLabel = tickModel.get('alignWithLabel');
         var dataExtent = this.scale.getExtent();
         var tickLen = this.scale.getTicks().length + dataExtent[0];
-        
+
         fixOnBandTicksCoords(
-            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp,tickLen
+            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp, tickLen
         );
 
         return ticksCoords;
@@ -294,7 +294,7 @@ function fixExtentWithBands(extent, nTick) {
 // splitLine/spliteArea should layout appropriately corresponding
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
-function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp,tickLen) {
+function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp, tickLen) {
     var ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
@@ -310,8 +310,8 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
     }
     else {
 
-        var crossLen = ticksCoords[ticksLen-1].tickValue - ticksCoords[0].tickValue;
-        var shift = (ticksCoords[ticksLen-1].coord - ticksCoords[0].coord) / crossLen;
+        var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
+        var shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
@@ -323,8 +323,8 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
         });
 
         diffSize = tickLen - ticksCoords[ticksLen - 1].tickValue;
-        
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize}; 
+
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
 
         ticksCoords.push(last);
     }
