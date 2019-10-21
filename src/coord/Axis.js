@@ -197,11 +197,9 @@ Axis.prototype = {
         }, this);
 
         var alignWithLabel = tickModel.get('alignWithLabel');
-        var dataExtent = this.scale.getExtent();
-        var tickLen = this.scale.getTicks().length + dataExtent[0];
 
         fixOnBandTicksCoords(
-            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp, tickLen
+            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp
         );
 
         return ticksCoords;
@@ -294,7 +292,7 @@ function fixExtentWithBands(extent, nTick) {
 // splitLine/spliteArea should layout appropriately corresponding
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
-function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp, tickLen) {
+function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp) {
     var ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
@@ -315,14 +313,15 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
 
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
-            var tickCategoryInterval = tickCategoryInterval || 0;
+            tickCategoryInterval = tickCategoryInterval || 0;
             // Avoid split a single data item when odd interval.
             if (tickCategoryInterval % 2 > 0) {
                 ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
             }
         });
 
-        diffSize = tickLen - ticksCoords[ticksLen - 1].tickValue;
+        var dataExtent = axis.scale.getExtent();
+        diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
 
         last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
 
