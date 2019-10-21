@@ -68,7 +68,7 @@ var RadarModel = echarts.extendComponentModel({
                 scale: scale,
                 axisLine: axisLine,
                 axisTick: axisTick,
-                axisType,
+                axisType: axisType,
                 axisLabel: axisLabel,
                 // Compatible with 2 and use text
                 name: indicatorOpt.text,
