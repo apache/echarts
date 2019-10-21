@@ -48,6 +48,9 @@ under the License.
         <div class="chart" id="main1"></div>
         <h1>Narrow grid</h1>
         <div class="chart" id="main2"></div>
+        <div class="chart" id="main3"></div>
+        <div class="chart" id="main4"></div>
+        <div class="chart" id="main5"></div>
 
 
         <script>
@@ -208,6 +211,20 @@ under the License.
                 echarts = ec;
 
                 option = {
+                    color: [{
+                        type: 'linear',
+                        colorStops: [{
+                            offset: 0,
+                            color: 'rgba(42, 20, 20, 0.8)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(42, 20, 20, 0)'
+                        }],
+                        x: 0.5,
+                        y: 0,
+                        x2: 0.49999999999999994,
+                        y2: 1
+                    }],
                     xAxis: {
                         // data: ['a', 'b', 'c', 'd'],
                         data: ['a', 'b'],
@@ -234,7 +251,12 @@ under the License.
                         silent: true,
                         barWidth: 40,
                         barGap: '-100%', // Make series be overlap
-                        data: [60, 60]
+                        data: [60, 60],
+                        label: {
+                            show: true,
+                            color: 'blue',
+                            position: 'top'
+                        }
                     }, {
                         type: 'bar',
                         barWidth: 40,
@@ -249,6 +271,245 @@ under the License.
         </script>
 
 
+
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                var dataCount = 10;
+                var dayTimestamp = 24 * 60 * 60 * 1000;
+
+                function makeSeriesData() {
+                    var result = [];
+                    var date = +(new Date(2019, 8, 10));
+                    for (var i = 0; i < dataCount; i++) {
+                        result.push([+date, Math.random() * 1000]);
+                        date += dayTimestamp;
+                    }
+                    return result;
+                }
+
+                option = {
+                    xAxis: {
+                        type: 'time',
+                        boundaryGap: ['20%', '20%'],
+                        splitLine: {show: false}
+                    },
+                    yAxis: {
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false}
+                    },
+                    legend: {},
+                    series: [{
+                        name: 'barA1',
+                        type: 'bar',
+                        stack: 'a',
+                        itemStyle: {
+                            shadowBlur: 10,
+                            borderColor: '#ef1',
+                            borderWidth: 5
+                        },
+                        data: makeSeriesData()
+                    }, {
+                        name: 'barA2',
+                        type: 'bar',
+                        stack: 'a',
+                        itemStyle: {
+                            borderColor: '#1dd',
+                            borderWidth: 5
+                        },
+                        data: makeSeriesData()
+                    }, {
+                        name: 'barB',
+                        type: 'bar',
+                        itemStyle: {
+                            shadowBlur: 5,
+                            borderColor: '#ef1',
+                            borderWidth: 3
+                        },
+                        data: makeSeriesData()
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'bar on time axis',
+                        'click the legend, the bar should display normally'
+                    ],
+                    option: option
+                    // recordCanvas: true
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                var dataCount = 10;
+
+                function makeSeriesData() {
+                    var result = [];
+                    var date = 0;
+                    for (var i = 0; i < dataCount; i++) {
+                        result.push([+date, Math.random() * 1000]);
+                        date += 5;
+                    }
+                    return result;
+                }
+                var itemStyle = {
+                    shadowBlur: 5
+                };
+
+                option = {
+                    xAxis: {
+                        scale: true,
+                        // boundaryGap: ['0.5%', .1],
+                        splitLine: {show: false}
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            margin: 40
+                        },
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false}
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    legend: {},
+                    series: [{
+                        name: 'barA',
+                        type: 'bar',
+                        itemStyle: itemStyle,
+                        data: makeSeriesData()
+                    }, {
+                        name: 'barB',
+                        type: 'bar',
+                        itemStyle: itemStyle,
+                        data: makeSeriesData()
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'bar on value axis',
+                        'click the legend, the bar should display normally'
+                    ],
+                    option: option
+                    // recordCanvas: true
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                var dataCount = 10;
+
+                function makeSeriesData() {
+                    var result = [];
+                    var date = 10;
+                    for (var i = 0; i < dataCount; i++) {
+                        result.push([+date, Math.random() * 1000]);
+                        date += 1;
+                    }
+                    return result;
+                }
+                var itemStyle = {
+                    shadowBlur: 5
+                };
+
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        scale: true,
+                        boundaryGap: false,
+                        splitLine: {show: false},
+                        axisLine: {show: false}
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            margin: 40
+                        },
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false}
+                    },
+                    legend: {},
+                    series: [{
+                        name: 'lineA',
+                        type: 'line',
+                        data: makeSeriesData()
+                    }, {
+                        name: 'barA',
+                        type: 'bar',
+                        itemStyle: itemStyle,
+                        data: makeSeriesData()
+                    }, {
+                        name: 'barB',
+                        type: 'bar',
+                        itemStyle: itemStyle,
+                        data: makeSeriesData()
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: [
+                        'bar on category axis',
+                        'click the legend, the bar should display normally'
+                    ],
+                    option: option
+                    // recordCanvas: true
+                });
+            });
+
+        </script>
 
 
     </body>

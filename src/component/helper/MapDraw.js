@@ -249,23 +249,27 @@ MapDraw.prototype = {
                 if (geometry.type !== 'polygon') {
                     return;
                 }
-                var exterior = [];
+                var points = [];
                 for (var i = 0; i < geometry.exterior.length; ++i) {
-                    exterior.push(transformPoint(geometry.exterior[i]));
+                    points.push(transformPoint(geometry.exterior[i]));
                 }
                 compoundPath.shape.paths.push(new graphic.Polygon({
                     segmentIgnoreThreshold: 1,
                     shape: {
-                        points: exterior
+                        points: points
                     }
                 }));
 
-                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); i++) {
-                    var interiors = transformPoint(geometry.interiors[i]);
+                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
+                    var interior = geometry.interiors[i];
+                    var points = [];
+                    for (var j = 0; j < interior.length; ++j) {
+                        points.push(transformPoint(interior[j]));
+                    }
                     compoundPath.shape.paths.push(new graphic.Polygon({
                         segmentIgnoreThreshold: 1,
                         shape: {
-                            points: interiors
+                            points: points
                         }
                     }));
                 }

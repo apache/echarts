@@ -23,16 +23,16 @@ import Model from '../../model/Model';
 import {isNameSpecified} from '../../util/model';
 import lang from '../../lang';
 
-var langTitle = lang.legendSelector.title;
+var langSelector = lang.legend.selector;
 
 var defaultSelectorOption = {
     all: {
         type: 'all',
-        title: zrUtil.clone(langTitle.all)
+        title: zrUtil.clone(langSelector.all)
     },
     inverse: {
         type: 'inverse',
-        title: zrUtil.clone(langTitle.inverse)
+        title: zrUtil.clone(langSelector.inverse)
     }
 };
 
