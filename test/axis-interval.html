@@ -50,16 +50,21 @@ under the License.
     </style>
 
     <div class="chart" id="mainA"></div>
-
     <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
     <div class="chart" id="main0"></div>
     <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
     <div class="chart" id="main1"></div>
     <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
     <div class="chart" id="main2"></div>
-    <h1>[ Test xAxis.axisTick.interval ]&nbsp;&nbsp;&nbsp; var list = [true, false, true, true];axisTick.interval =
-        function(index){return list[index]} </h1>
-    <div class="chart" id="main3"></div>
+
+    <h1>Test xAxis.axisTick.interval</h1>
+    <div class="chart" id="main30"></div>
+    <div class="chart" id="main31"></div>
+    <div class="chart" id="main32"></div>
+    <div class="chart" id="main33"></div>
+    <div class="chart" id="main34"></div>
+    <div class="chart" id="main35"></div>
+
 
 
 
@@ -341,13 +346,15 @@ under the License.
     </script>
 
 
+
+
+
+
     <script>
 
         require([
             'echarts'
         ], function (echarts) {
-
-            var dataIndex = 0;
 
             var testArr = [
                 [true, false, true, true],
@@ -359,49 +366,60 @@ under the License.
             ];
 
             function print(index) {
-                return `intervalList = [${testArr[index].toString()}] ,currentIndex is ${index}`
+                return `intervalList:\n[${testArr[index].toString()}] \n\n currentIndex: ${index}`
             }
 
-            var option = {
-                title: {
-                    text: print(dataIndex)
-                },
-                xAxis: {
-                    type: 'category',
-                    data: ['Mon', 'Tue', 'Wed', 'Thu'],
-                    axisTick: {
-                        show: true,
-                        interval: function (index) {
-                            // return index && !!x2Data[index]
-                            return testArr[dataIndex][index]
-                        },
-                        length: 50,
-                        alignWithLabel: false,
+            function makeOption(dataIndex) {
+                var option = {
+                    title: {
+                        text: print(dataIndex),
+                        textStyle: {
+                            fontSize: 12
+                        }
                     },
-                },
-                yAxis: {
-                    type: 'value'
-                },
-                series: [{
-                    data: [820, 932, 901, 934],
-                    type: 'bar'
-                }]
-            };
-            var ec = echarts.init(document.getElementById('main3'));
+                    grid: {
+                        top: 10,
+                        right: 50,
+                        left: 160,
+                        bottom: 30
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                        axisTick: {
+                            show: true,
+                            interval: function (index) {
+                                // return index && !!x2Data[index]
+                                return testArr[dataIndex][index]
+                            },
+                            length: 30,
+                            alignWithLabel: false
+                        },
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: [820, 932, 901, 934],
+                        type: 'bar'
+                    }]
+                };
 
-            setInterval(function () {
-                var next = ++dataIndex;
-                dataIndex = next > 5 ? 0 : next;
-                option.title.text = print(dataIndex);
-                ec.setOption(option);
-            }, 6000);
+                return option;
+            }
 
-            ec.setOption(option);
+            for (var i = 0; i < testArr.length; i++) {
+                var dom = document.getElementById('main3' + i);
+                if (dom) {
+                    dom.style.height = '90px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(makeOption(i));
+                }
+            }
 
         });
 
     </script>
-
 
 
 
