@@ -223,6 +223,7 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         var offset = -widthSum / 2;
         zrUtil.each(stacks, function (column, stackId) {
             result[coordSysName][stackId] = result[coordSysName][stackId] || {
+                bandWidth: bandWidth,
                 offset: offset,
                 width: column.width
             };
@@ -280,6 +281,7 @@ export function layout(seriesType, ecModel) {
         lastStackCoordsOrigin[stackId] = lastStackCoordsOrigin[stackId] || []; // Fix #4243
 
         data.setLayout({
+            bandWidth: columnLayoutInfo.bandWidth,
             offset: columnOffset,
             size: columnWidth
         });
