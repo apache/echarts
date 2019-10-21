@@ -137,9 +137,10 @@ graphProto.getNodeById = function (id) {
  * @param {number|string|module:echarts/data/Graph.Node} n1
  * @param {number|string|module:echarts/data/Graph.Node} n2
  * @param {number} [dataIndex=-1]
+ * @param forceIgnore
  * @return {module:echarts/data/Graph.Edge}
  */
-graphProto.addEdge = function (n1, n2, dataIndex) {
+graphProto.addEdge = function (n1, n2, dataIndex, forceIgnore) {
     var nodesMap = this._nodesMap;
     var edgesMap = this._edgesMap;
 
@@ -167,7 +168,7 @@ graphProto.addEdge = function (n1, n2, dataIndex) {
         return;
     }
 
-    var edge = new Edge(n1, n2, dataIndex);
+    var edge = new Edge(n1, n2, dataIndex, forceIgnore);
     edge.hostGraph = this;
 
     if (this._directed) {
@@ -432,8 +433,9 @@ Node.prototype = {
  * @param {module:echarts/data/Graph.Node} n1
  * @param {module:echarts/data/Graph.Node} n2
  * @param {number} [dataIndex=-1]
+ * @param {boolean} forceIgnore
  */
-function Edge(n1, n2, dataIndex) {
+function Edge(n1, n2, dataIndex, forceIgnore) {
 
     /**
      * 节点1，如果是有向图则为源节点
@@ -448,6 +450,12 @@ function Edge(n1, n2, dataIndex) {
     this.node2 = n2;
 
     this.dataIndex = dataIndex == null ? -1 : dataIndex;
+
+    /**
+     * ignore node positioning
+     * @type {boolean}
+     */
+    this.forceIgnore = forceIgnore;
 }
 
 /**
