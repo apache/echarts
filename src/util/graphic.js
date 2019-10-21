@@ -42,6 +42,7 @@ import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
+import {Sausage} from './symbol';
 
 
 var mathMax = Math.max;
@@ -85,7 +86,8 @@ export function extendPath(pathData, opts) {
 /**
  * Register a user defined shape.
  * The shape class can be fetched by `getShapeClass`
- * This method will not overwrite the built-in shapes.
+ * This method will overwrite the registered shapes, including
+ * the registered built-in shapes, if using the same `name`.
  * The shape can be used in `custom series` and
  * `graphic component` by declaring `{type: name}`.
  *
@@ -331,12 +333,13 @@ function singleEnterEmphasis(el) {
     }
 
     var zr = el.__zr;
+
+    var useHoverLayer = el.useHoverLayer && zr && zr.painter.type === 'canvas';
+    el.__highlighted = useHoverLayer ? 'layer' : 'plain';
+
     if (el.isGroup || (!zr && el.useHoverLayer)) {
         return;
     }
-
-    var useHoverLayer = el.useHoverLayer && zr.painter.type === 'canvas';
-    el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     var elTarget = el;
     var targetStyle = el.style;
@@ -1430,6 +1433,7 @@ function nearZero(val) {
 // by users, although we do not recommend that.
 registerShape('circle', Circle);
 registerShape('sector', Sector);
+registerShape('sausage', Sausage);
 registerShape('ring', Ring);
 registerShape('polygon', Polygon);
 registerShape('polyline', Polyline);
@@ -1444,6 +1448,7 @@ export {
     Text,
     Circle,
     Sector,
+    Sausage,
     Ring,
     Polygon,
     Polyline,

@@ -145,7 +145,7 @@ function parseNodes(parent, attributesMap) {
               break;
 
             case 'boolean':
-              attValue = attValue.toLowerCase() == 'true';
+              attValue = attValue.toLowerCase() === 'true';
               break;
 
             default:
@@ -202,7 +202,7 @@ function getChildByTagName(parent, tagName) {
   var node = parent.firstChild;
 
   while (node) {
-    if (node.nodeType != 1 || node.nodeName.toLowerCase() != tagName.toLowerCase()) {
+    if (node.nodeType !== 1 || node.nodeName.toLowerCase() !== tagName.toLowerCase()) {
       node = node.nextSibling;
     } else {
       return node;
@@ -217,7 +217,7 @@ function getChildrenByTagName(parent, tagName) {
   var children = [];
 
   while (node) {
-    if (node.nodeName.toLowerCase() == tagName.toLowerCase()) {
+    if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
       children.push(node);
     }
 
