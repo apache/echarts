@@ -27,7 +27,7 @@ import barItemStyle from './barItemStyle';
 import Path from 'zrender/src/graphic/Path';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
-import {Sausage} from '../../util/symbol';
+import Sausage from '../../util/shape/sausage';
 
 var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
 var _eventPos = [0, 0];
