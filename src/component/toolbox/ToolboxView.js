@@ -157,6 +157,15 @@ export default echarts.extendComponentView({
                 path.setStyle(iconStyleModel.getItemStyle());
                 path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
 
+                // Text position calculation
+                path.setStyle({
+                    text: titles[iconName],
+                    textAlign: iconStyleEmphasisModel.get('textAlign'),
+                    textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
+                    textPadding: iconStyleEmphasisModel.get('textPadding'),
+                    textFill: null
+                });
+
                 var tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
                     path.attr('tooltip', zrUtil.extend({
@@ -182,15 +191,14 @@ export default echarts.extendComponentView({
                     path.on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                            var defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                                ? (toolboxModel.get('right') == null ? 'right' : 'left')
+                                : (toolboxModel.get('bottom') == null ? 'bottom' : 'top');
                             path.setStyle({
-                                text: titles[iconName],
-                                textPosition: iconStyleEmphasisModel.get('textPosition') || 'bottom',
                                 textFill: iconStyleEmphasisModel.get('textFill')
                                     || hoverStyle.fill || hoverStyle.stroke || '#000',
-                                textAlign: iconStyleEmphasisModel.get('textAlign') || 'center',
                                 textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
-                                textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
-                                textPadding: iconStyleEmphasisModel.get('textPadding')
+                                textPosition: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
                             });
                         })
                         .on('mouseout', function () {
