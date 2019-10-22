@@ -95,7 +95,7 @@ export function forceLayout(nodes, edges, opts) {
             var nLen = nodes.length;
             for (var i = 0; i < edges.length; i++) {
                 var e = edges[i];
-                if (e.forceIgnore) {
+                if (e.ignoreForceLayout) {
                     continue;
                 }
                 var n1 = e.n1;

@@ -87,7 +87,8 @@ export default function (ecModel) {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
-                    curveness: edge.getModel().get('lineStyle.curveness') || 0
+                    curveness: edge.getModel().get('lineStyle.curveness') || 0,
+                    ignoreForceLayout: edge.getModel().get('ignoreForceLayout')
                 };
             });
 
