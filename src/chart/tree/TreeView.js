@@ -377,9 +377,12 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         }
 
         var textPosition = isLeft ? 'left' : 'right';
+        var rotate = seriesScope.labelModel.get('rotate');
+        var labelRotateRadian = rotate * (Math.PI / 180);
+
         symbolPath.setStyle({
-            textPosition: textPosition,
-            textRotation: -rad,
+            textPosition: seriesScope.labelModel.get('position') || textPosition,
+            textRotation: rotate == null ? -rad : labelRotateRadian,
             textOrigin: 'center',
             verticalAlign: 'middle'
         });
