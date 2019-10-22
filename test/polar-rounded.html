@@ -36,9 +36,6 @@ under the License.
         </style>
 
 
-
-        <div id="main0"></div>
-
         <div id="main1"></div>
 
         <div id="main2"></div>
@@ -46,37 +43,6 @@ under the License.
         <div id="main3"></div>
 
         <div id="main4"></div>
-
-
-
-        <script>
-        require(['echarts'], function (echarts) {
-            var option =  {
-                xAxis: {
-                    type: 'category',
-                    data: ['A'],
-                    show: false
-                },
-                yAxis: {
-                    show: false
-                },
-                series: {
-                    type: 'line',
-                    symbol: 'sausage',
-                    symbolSize: 120,
-                    data: [1]
-                },
-                animation: false
-            };
-
-            var chart = testHelper.create(echarts, 'main0', {
-                title: [
-                    'Sausage shape'
-                ],
-                option: option
-            });
-        });
-        </script>
 
 
 
