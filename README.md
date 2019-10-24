@@ -114,7 +114,7 @@ ECharts is available under the Apache License V2.
 
 Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
 
-## Publication
+## Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
 [ECharts: A Declarative Framework for Rapid Construction of Web-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).
