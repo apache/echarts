@@ -135,6 +135,7 @@
   "map-contour": 2,
   "map-default": 1,
   "map-labels": 1,
-  "gauge-simple": 2,
-  "polar-rounded": 2
+  "polar-rounded": 2,
+  "toolbox-title": 4,
+  "gauge-simple": 2
 }
