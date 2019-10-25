@@ -394,7 +394,20 @@ export function quantity(val) {
  * @return {number}
  */
 export function quantityExponent(val) {
-    return val > 0 ? Math.floor(Math.log(val) / Math.LN10) : 0;
+    if (val === 0) {
+        return 0;
+    }
+
+    var exp = Math.floor(Math.log(val) / Math.LN10);
+    /**
+     * exp is expected to be the rounded-down result of the base-10 log of val.
+     * But due to the precision loss with Math.log(val), we need to restore it
+     * using 10^exp to make sure we can get val back from exp. #11249
+     */
+    if (val / Math.pow(10, exp) >= 10) {
+        exp++;
+    }
+    return exp;
 }
 
 /**
