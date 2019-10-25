@@ -186,7 +186,6 @@ Axis.prototype = {
         opt = opt || {};
 
         var tickModel = opt.tickModel || this.getTickModel();
-
         var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
 
@@ -198,6 +197,7 @@ Axis.prototype = {
         }, this);
 
         var alignWithLabel = tickModel.get('alignWithLabel');
+
         fixOnBandTicksCoords(
             this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp
         );
@@ -301,21 +301,30 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
 
     var axisExtent = axis.getExtent();
     var last;
+    var diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-        var shift = (ticksCoords[1].coord - ticksCoords[0].coord);
+
+        var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
+        var shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
+
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
-            var tickCategoryInterval = tickCategoryInterval || 0;
+            tickCategoryInterval = tickCategoryInterval || 0;
             // Avoid split a single data item when odd interval.
             if (tickCategoryInterval % 2 > 0) {
                 ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
             }
         });
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift};
+
+        var dataExtent = axis.scale.getExtent();
+        diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
+
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
+
         ticksCoords.push(last);
     }
 

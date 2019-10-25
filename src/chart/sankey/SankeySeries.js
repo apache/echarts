@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file Get initial data and define sankey view's series model
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import {encodeHTML} from '../../util/format';

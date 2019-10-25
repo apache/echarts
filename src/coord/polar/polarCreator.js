@@ -47,10 +47,23 @@ function resizePolar(polar, polarModel, api) {
 
     var radiusAxis = polar.getRadiusAxis();
     var size = Math.min(width, height) / 2;
-    var radius = parsePercent(polarModel.get('radius'), size);
+
+    var radius = polarModel.get('radius');
+    if (radius == null) {
+        radius = [0, "100%"];
+    }
+    else if (!zrUtil.isArray(radius)) {
+        // r0 = 0
+        radius = [0, radius];
+    }
+    radius = [
+        parsePercent(radius[0], size),
+        parsePercent(radius[1], size)
+    ];
+
     radiusAxis.inverse
-        ? radiusAxis.setExtent(radius, 0)
-        : radiusAxis.setExtent(0, radius);
+        ? radiusAxis.setExtent(radius[1], radius[0])
+        : radiusAxis.setExtent(radius[0], radius[1]);
 }
 
 /**

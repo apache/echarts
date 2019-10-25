@@ -112,6 +112,8 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
+    var animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
+
     if (firstCreate) {
         sector.setShape(sectorShape);
 
@@ -136,9 +138,16 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
 
     }
     else {
-        graphic.updateProps(sector, {
-            shape: sectorShape
-        }, seriesModel, idx);
+        if (animationTypeUpdate === 'expansion') {
+            // Sectors are set to be target shape and an overlaying clipPath is used for animation
+            sector.setShape(sectorShape);
+        }
+        else {
+            // Transition animation from the old shape
+            graphic.updateProps(sector, {
+                shape: sectorShape
+            }, seriesModel, idx);
+        }
     }
 
     // Update common style
@@ -167,7 +176,9 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
         seriesModel.get('animation')
     );
 
-    this._updateLabel(data, idx);
+    // Label and text animation should be applied only for transition type animation when update
+    var withAnimation = !firstCreate && animationTypeUpdate === 'transition';
+    this._updateLabel(data, idx, withAnimation);
 
     this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
         ? function (fromState, toState) {
@@ -201,7 +212,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     graphic.setHoverStyle(this);
 };
 
-piePieceProto._updateLabel = function (data, idx) {
+piePieceProto._updateLabel = function (data, idx, withAnimation) {
 
     var labelLine = this.childAt(1);
     var labelText = this.childAt(2);
@@ -218,20 +229,33 @@ piePieceProto._updateLabel = function (data, idx) {
         return;
     }
 
-    graphic.updateProps(labelLine, {
-        shape: {
-            points: labelLayout.linePoints || [
-                [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
-            ]
-        }
-    }, seriesModel, idx);
+    var targetLineShape = {
+        points: labelLayout.linePoints || [
+            [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
+        ]
+    };
+    var targetTextStyle = {
+        x: labelLayout.x,
+        y: labelLayout.y
+    };
+    if (withAnimation) {
+        graphic.updateProps(labelLine, {
+            shape: targetLineShape
+        }, seriesModel, idx);
 
-    graphic.updateProps(labelText, {
-        style: {
-            x: labelLayout.x,
-            y: labelLayout.y
-        }
-    }, seriesModel, idx);
+        graphic.updateProps(labelText, {
+            style: targetTextStyle
+        }, seriesModel, idx);
+    }
+    else {
+        labelLine.attr({
+            shape: targetLineShape
+        });
+        labelText.attr({
+            style: targetTextStyle
+        });
+    }
+
     labelText.attr({
         rotation: labelLayout.rotation,
         origin: [labelLayout.x, labelLayout.y],
@@ -309,6 +333,7 @@ var PieView = ChartView.extend({
         var hasAnimation = ecModel.get('animation');
         var isFirstRender = !oldData;
         var animationType = seriesModel.get('animationType');
+        var animationTypeUpdate = seriesModel.get('animationTypeUpdate');
 
         var onSectorClick = zrUtil.curry(
             updateDataSelected, this.uid, seriesModel, hasAnimation, api
@@ -334,6 +359,12 @@ var PieView = ChartView.extend({
             .update(function (newIdx, oldIdx) {
                 var piePiece = oldData.getItemGraphicEl(oldIdx);
 
+                if (!isFirstRender && animationTypeUpdate !== 'transition') {
+                    piePiece.eachChild(function (child) {
+                        child.stopAnimation(true);
+                    });
+                }
+
                 piePiece.updateData(data, newIdx);
 
                 piePiece.off('click');
@@ -348,9 +379,8 @@ var PieView = ChartView.extend({
             .execute();
 
         if (
-            hasAnimation && isFirstRender && data.count() > 0
-            // Default expansion animation
-            && animationType !== 'scale'
+            hasAnimation && data.count() > 0
+            && (isFirstRender ? animationType !== 'scale' : animationTypeUpdate !== 'transition')
         ) {
             var shape = data.getItemLayout(0);
             for (var s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
@@ -361,7 +391,7 @@ var PieView = ChartView.extend({
 
             var removeClipPath = zrUtil.bind(group.removeClipPath, group);
             group.setClipPath(this._createClipPath(
-                shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel
+                shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel, isFirstRender
             ));
         }
         else {
@@ -375,7 +405,7 @@ var PieView = ChartView.extend({
     dispose: function () {},
 
     _createClipPath: function (
-        cx, cy, r, startAngle, clockwise, cb, seriesModel
+        cx, cy, r, startAngle, clockwise, cb, seriesModel, isFirstRender
     ) {
         var clipPath = new graphic.Sector({
             shape: {
@@ -389,7 +419,8 @@ var PieView = ChartView.extend({
             }
         });
 
-        graphic.initProps(clipPath, {
+        var initOrUpdate = isFirstRender ? graphic.initProps : graphic.updateProps;
+        initOrUpdate(clipPath, {
             shape: {
                 endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
             }

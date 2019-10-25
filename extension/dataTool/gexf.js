@@ -38,8 +38,13 @@ var zrUtil = require("zrender/lib/core/util");
 * specific language governing permissions and limitations
 * under the License.
 */
-// GEXF File Parser
-// http://gexf.net/1.2draft/gexf-12draft-primer.pdf
+
+/**
+ * This is a parse of GEXF.
+ *
+ * The spec of GEXF:
+ * https://gephi.org/gexf/1.2draft/gexf-12draft-primer.pdf
+ */
 function parse(xml) {
   var doc;
 
@@ -140,7 +145,7 @@ function parseNodes(parent, attributesMap) {
               break;
 
             case 'boolean':
-              attValue = attValue.toLowerCase() == 'true';
+              attValue = attValue.toLowerCase() === 'true';
               break;
 
             default:
@@ -197,7 +202,7 @@ function getChildByTagName(parent, tagName) {
   var node = parent.firstChild;
 
   while (node) {
-    if (node.nodeType != 1 || node.nodeName.toLowerCase() != tagName.toLowerCase()) {
+    if (node.nodeType !== 1 || node.nodeName.toLowerCase() !== tagName.toLowerCase()) {
       node = node.nextSibling;
     } else {
       return node;
@@ -212,7 +217,7 @@ function getChildrenByTagName(parent, tagName) {
   var children = [];
 
   while (node) {
-    if (node.nodeName.toLowerCase() == tagName.toLowerCase()) {
+    if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
       children.push(node);
     }
 

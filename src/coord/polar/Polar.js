@@ -254,6 +254,44 @@ Polar.prototype = {
         var y = -Math.sin(radian) * radius + this.cy;
 
         return [x, y];
+    },
+
+    /**
+     * Get ring area of cartesian.
+     * Area will have a contain function to determine if a point is in the coordinate system.
+     * @return {Ring}
+     */
+    getArea: function () {
+
+        var angleAxis = this.getAngleAxis();
+        var radiusAxis = this.getRadiusAxis();
+
+        var radiusExtent = radiusAxis.getExtent().slice();
+        radiusExtent[0] > radiusExtent[1] && radiusExtent.reverse();
+        var angleExtent = angleAxis.getExtent();
+
+        var RADIAN = Math.PI / 180;
+
+        return {
+            cx: this.cx,
+            cy: this.cy,
+            r0: radiusExtent[0],
+            r: radiusExtent[1],
+            startAngle: -angleExtent[0] * RADIAN,
+            endAngle: -angleExtent[1] * RADIAN,
+            clockwise: angleAxis.inverse,
+            contain: function (x, y) {
+                // It's a ring shape.
+                // Start angle and end angle don't matter
+                var dx = x - this.cx;
+                var dy = y - this.cy;
+                var d2 = dx * dx + dy * dy;
+                var r = this.r;
+                var r0 = this.r0;
+
+                return d2 <= r * r && d2 >= r0 * r0;
+            }
+        };
     }
 
 };

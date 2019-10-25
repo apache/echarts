@@ -1,0 +1,264 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" href="https://www.echartsjs.com/zh/images/favicon.png">
+    <title>Visual Regression Testing Tool</title>
+</head>
+<body>
+<div id="app" style="display: none">
+    <el-container id="main">
+        <el-header class="header" height="50">
+            <div id="logo">
+                <img src="https://echarts.apache.org/zh/images/logo.png" />
+                <h1>Visual Regression Testing Tool</h1>
+            </div>
+        </el-header>
+        <el-container style="min-height: 0"> <!-- https://juejin.im/post/5c642f2ff265da2de660ecfc -->
+            <el-aside width="350px">
+                <div class="nav-toolbar">
+                    <el-input v-model="searchString" size="mini" placeholder="Filter Tests"></el-input>
+                    <div class="controls">
+                        <el-checkbox :indeterminate="isSelectAllIndeterminate" v-model="allSelected" @change="handleSelectAllChange"></el-checkbox>
+                        <el-button title="Sort By Failue Percentage" @click="toggleSort" size="mini" type="primary" icon="el-icon-sort">Sort</el-button>
+
+                        <el-dropdown v-if="!running" split-button type="primary" size="mini" title="Run"
+                            @click="run('selected')"
+                            @command="run"
+                        >
+                            <i class="el-icon-caret-right"></i> Run selected ({{selectedTests.length}})
+                            <el-dropdown-menu slot="dropdown" >
+                                <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
+                                <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
+                                <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+
+                        <el-button-group v-else>
+                            <el-button type="primary" size="mini" :loading="true">Stop</el-button>
+                            <el-button title="Run Selected" @click="stopTests" size="mini" type="primary" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
+                        </el-button-group>
+
+
+                        <el-popover title="Configuration" class="run-configuration">
+                            <div class="run-config-item">
+                                <el-checkbox v-model="runConfig.noHeadless">Replay</el-checkbox>
+                                <el-slider
+                                    style="width: 130px;"
+                                    v-model="runConfig.replaySpeed"
+                                    :step="1" :min="1" :max="10"
+                                    show-stops
+                                    :format-tooltip="function(val) { return val + 'x'; }"
+                                    :disabled="!runConfig.noHeadless"
+                                ></el-slider>
+                            </div>
+                            <div class="run-config-item">
+                                <span>Threads</span>
+                                <el-slider style="width: 140px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider>
+                            </div>
+                            <div class="run-config-item">
+                                <span>Version</span>
+                                <span style="font-size: 12px; color:#afafaf">Expected</span>
+                                <el-select size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
+                                    style="width: 80px;"
+                                >
+                                    <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                                </el-select>
+                                <span style="font-size: 12px; color: #afafaf">Actual</span>
+                                <el-select size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
+                                    style="width: 80px;"
+                                >
+                                    <el-option v-for="version in versions" :key="version" :label="version" :value="version"></el-option>
+                                </el-select>
+                            </div>
+                            <div class="run-config-item">
+                                <span>Renderer</span>
+                                <el-select size="mini" v-model="runConfig.renderer" placeholder="Select Renderer">
+                                    <el-option key="canvas" label="canvas" value="canvas"></el-option>
+                                    <el-option key="svg" label="svg" value="svg"></el-option>
+                                </el-select>
+                            </div>
+                            <i slot="reference" class="el-icon-setting"></i>
+                        </el-popover>
+
+                    </div>
+                </div>
+                <ul class="test-list">
+                    <li v-for="(test, index) in tests"
+                        :title="test.name"
+                        :class="{active: currentTest && currentTest.name === test.name}"
+                        @click.self="goto(test.name)"
+                    >
+                        <span @mouseup="handleSelect(index)" @mouseup.shift="handleShiftSelect(index)">
+                            <el-checkbox v-model="test.selected"></el-checkbox>
+                        </span>
+                        <i class="el-icon-loading" v-if="test.status === 'pending' && running"></i>
+
+                        <el-tooltip
+                            v-if="test.status === 'finished'"
+                        >
+                            <div slot="content">{{test.percentage}}% Passed</div>
+                            <el-progress
+                                type="circle"
+                                :width="20"
+                                :stroke-width="2"
+                                :percentage="test.percentage"
+                                :status="test.summary"
+                            ></el-progress>
+                        </el-tooltip>
+                        <el-tooltip
+                            v-if="test.status==='finished' && test.actualErrors && test.actualErrors.length > 0"
+                        >
+                            <div slot="content">{{test.actualErrors.length}} Errors</div>
+                            <i class="el-icon-message-solid"
+                                style="color: #F56C6C"
+                            ></i>
+                        </el-tooltip>
+                        <a :href="'#' + test.name" class="menu-link">
+                            {{test.name}}
+                            <i v-if="test.actions" class="el-icon-video-camera-solid"></i>
+                            <span v-if="test.actions" style="font-size: 12px;">({{test.actions}})</span>
+                        </a>
+                    </li>
+                </ul>
+            </el-aside>
+            <el-main>
+                <div v-if="currentTest" class="test-result">
+                    <div class="title">
+                        <el-progress
+                            v-if="currentTest.status === 'finished'"
+                            type="circle"
+                            :width="30"
+                            :stroke-width="4"
+                            :percentage="currentTest.percentage"
+                            :status="currentTest.summary"
+                            style="margin-top: 5px;"
+                        ></el-progress>
+                        <h3>{{currentTest.name}}</h3>
+                        <el-button-group style="margin-left: 10px">
+                            <el-button title="Run Selected" @click="runSingleTest(currentTest.name)" :loading="running" circle type="primary" icon="el-icon-caret-right"></el-button>
+                            <el-button v-if="running" title="Run Selected" @click="stopTests" circle type="primary" icon="el-icon-close"></el-button>
+                        </el-button-group>
+                        <a target="_blank" :href="currentTestUrl"><i class="el-icon-link"></i>Open Demo</a>
+                        <a target="_blank" :href="currentTestRecordUrl"><i class="el-icon-video-camera"></i>Record Interaction</a>
+                    </div>
+
+                    <div class="test-screenshots" v-for="(result, idx) in currentTest.results">
+                        <!-- Not display title if it's same with previous -->
+                        <h4 v-if="result.desc !== (currentTest.results[idx - 1] && currentTest.results[idx - 1].desc)">
+                            <i class="el-icon-s-operation"></i>{{result.desc || result.name}}
+                        </h4>
+                        <el-row :gutter="40" class="screenshots">
+                            <el-col :span="8">
+                                <el-card shadow="hover">
+                                    <div slot="header" class="clearfix">
+                                        <span>Expected - {{currentTest.expectedVersion || ''}}</span>
+                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'expected')"></i>
+                                    </div>
+                                    <el-image :src="result.expected" :preview-src-list="[result.expected]"></el-image>
+                                </el-card>
+                            </el-col>
+
+                            <el-col :span="8">
+                                <el-card shadow="hover">
+                                    <div slot="header" class="clearfix">
+                                        <span>Actual - {{currentTest.actualVersion || ''}}</span>
+                                        <i title="Preview" class="el-icon-view preview" @click="preview(currentTest, 'actual')"></i>
+                                    </div>
+                                    <el-image :src="result.actual" :preview-src-list="[result.actual]"></el-image>
+                                </el-card>
+                            </el-col>
+
+                            <el-col :span="8">
+                                <el-card shadow="hover">
+                                    <div slot="header" class="clearfix">
+                                        <span>Diff - {{result.diffRatio.toFixed(4)}}</span>
+                                    </div>
+                                    <el-image :src="result.diff" :preview-src-list="[result.diff]"></el-image>
+                                </el-card>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="test-errors">
+                        <el-row :gutter="40">
+                            <el-col :span="12">
+                                <el-alert title="Expected Errors" type="error" show-icon></el-alert>
+                                <div class="error-item" v-for="error in currentTest.expectedErrors">{{error}}</div>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-alert title="Actual Errors" type="error" show-icon> </el-alert>
+                                <div class="error-item"  v-for="error in currentTest.actualErrors">{{error}}</div>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <div class="test-logs">
+                        <el-row :gutter="40">
+                            <el-col :span="12">
+                                <el-alert title="Expected Logs" type="info" show-icon> </el-alert>
+                                <div class="log-item"  v-for="log in currentTest.expectedLogs">{{log}}</div>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-alert title="Actual Logs" type="info" show-icon>
+                                </el-alert>
+                                <div class="log-item"  v-for="log in currentTest.actualLogs">{{log}}</div>
+                            </el-col>
+                        </el-row>
+                    </div>
+                </div>
+
+                <el-dialog
+                    :visible.sync="showIframeDialog"
+                    :center="true"
+                    width="850px"
+                >
+                    <div slot="title">
+                        {{previewTitle}}
+                        <a target="_blank" :href="'../../' + previewTitle"><i class="el-icon-link"></i>Open in New Window</a>
+                    </div>
+                    <iframe :src="previewIframeSrc" width="800" height="600"></iframe>
+                </el-dialog>
+            </el-main>
+        </el-container>
+    </el-container>
+
+
+
+</div>
+
+<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+
+<!-- Element UI -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/index.js"></script>
+
+<script src="client.js"></script>
+
+<link rel="stylesheet" href="client.css">
+
+</body>
+</html>

@@ -26,6 +26,18 @@ import * as graphicUtil from '../util/graphic';
 import * as layoutUtil from '../util/layout';
 import {parsePercent} from '../util/number';
 
+var _nonShapeGraphicElements = {
+
+    // Reserved but not supported in graphic component.
+    path: null,
+    compoundPath: null,
+
+    // Supported in graphic component.
+    group: graphicUtil.Group,
+    image: graphicUtil.Image,
+    text: graphicUtil.Text
+};
+
 // -------------
 // Preprocessor
 // -------------
@@ -402,7 +414,7 @@ echarts.extendComponentView({
                 };
 
             // PENDING
-            // Currently, when `bounding: 'all'`, the union bounding rect of the group 
+            // Currently, when `bounding: 'all'`, the union bounding rect of the group
             // does not include the rect of [0, 0, group.width, group.height], which
             // is probably weird for users. Should we make a break change for it?
             layoutUtil.positionElement(
@@ -440,7 +452,11 @@ function createEl(id, targetElParent, elOption, elMap) {
         zrUtil.assert(graphicType, 'graphic type MUST be set');
     }
 
-    var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
+    var Clz = _nonShapeGraphicElements.hasOwnProperty(graphicType)
+        // Those graphic elements are not shapes. They should not be
+        // overwritten by users, so do them first.
+        ? _nonShapeGraphicElements[graphicType]
+        : graphicUtil.getShapeClass(graphicType);
 
     if (__DEV__) {
         zrUtil.assert(Clz, 'graphic type can not be found');

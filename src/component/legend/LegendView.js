@@ -179,11 +179,18 @@ export default echarts.extendComponentView({
             if (seriesModel) {
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
+                var borderColor = data.getVisual('borderColor');
 
                 // If color is a callback function
                 if (typeof color === 'function') {
                     // Use the first data
                     color = color(seriesModel.getDataParams(0));
+                }
+
+                 // If borderColor is a callback function
+                if (typeof borderColor === 'function') {
+                    // Use the first data
+                    borderColor = borderColor(seriesModel.getDataParams(0));
                 }
 
                 // Using rect symbol defaultly
@@ -193,7 +200,7 @@ export default echarts.extendComponentView({
                 var itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
-                    itemAlign, color,
+                    itemAlign, color, borderColor,
                     selectMode
                 );
 
@@ -219,13 +226,14 @@ export default echarts.extendComponentView({
                         }
 
                         var color = data.getItemVisual(idx, 'color');
+                        var borderColor = data.getItemVisual(idx, 'borderColor');
 
                         var legendSymbolType = 'roundRect';
 
                         var itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
-                            itemAlign, color,
+                            itemAlign, color, borderColor,
                             selectMode
                         );
 
@@ -299,12 +307,14 @@ export default echarts.extendComponentView({
     _createItem: function (
         name, dataIndex, itemModel, legendModel,
         legendSymbolType, symbolType,
-        itemAlign, color, selectMode
+        itemAlign, color, borderColor, selectMode
     ) {
         var itemWidth = legendModel.get('itemWidth');
         var itemHeight = legendModel.get('itemHeight');
         var inactiveColor = legendModel.get('inactiveColor');
+        var inactiveBorderColor = legendModel.get('inactiveBorderColor');
         var symbolKeepAspect = legendModel.get('symbolKeepAspect');
+        var legendModelItemStyle = legendModel.getModel('itemStyle');
 
         var isSelected = legendModel.isSelected(name);
         var itemGroup = new Group();
@@ -318,7 +328,7 @@ export default echarts.extendComponentView({
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-        itemGroup.add(createSymbol(
+        var legendSymbol = createSymbol(
             legendSymbolType,
             0,
             0,
@@ -327,7 +337,13 @@ export default echarts.extendComponentView({
             isSelected ? color : inactiveColor,
             // symbolKeepAspect default true for legend
             symbolKeepAspect == null ? true : symbolKeepAspect
-        ));
+        );
+        itemGroup.add(
+            setSymbolStyle(
+                legendSymbol, legendSymbolType, legendModelItemStyle,
+                borderColor, inactiveBorderColor, isSelected
+            )
+        );
 
         // Compose symbols
         // PENDING
@@ -339,8 +355,7 @@ export default echarts.extendComponentView({
             if (symbolType === 'none') {
                 symbolType = 'circle';
             }
-            // Put symbol in the center
-            itemGroup.add(createSymbol(
+            var legendSymbolCenter = createSymbol(
                 symbolType,
                 (itemWidth - size) / 2,
                 (itemHeight - size) / 2,
@@ -349,7 +364,14 @@ export default echarts.extendComponentView({
                 isSelected ? color : inactiveColor,
                 // symbolKeepAspect default true for legend
                 symbolKeepAspect == null ? true : symbolKeepAspect
-            ));
+            );
+            // Put symbol in the center
+            itemGroup.add(
+                setSymbolStyle(
+                    legendSymbolCenter, symbolType, legendModelItemStyle,
+                    borderColor, inactiveBorderColor, isSelected
+                )
+            );
         }
 
         var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
@@ -480,6 +502,21 @@ export default echarts.extendComponentView({
     }
 
 });
+
+function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, isSelected) {
+    var itemStyle;
+    if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
+        itemStyle = legendModelItemStyle.getItemStyle();
+        symbol.style.stroke = borderColor;
+        if (!isSelected) {
+            itemStyle.stroke = inactiveBorderColor;
+        }
+    }
+    else {
+        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
+    }
+    return symbol.setStyle(itemStyle);
+}
 
 function dispatchSelectAction(name, api) {
     api.dispatchAction({

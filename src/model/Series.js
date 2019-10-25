@@ -74,6 +74,11 @@ var SeriesModel = ComponentModel.extend({
     visualColorAccessPath: 'itemStyle.color',
 
     /**
+     * Access path of borderColor for visual
+     */
+    visualBorderColorAccessPath: 'itemStyle.borderColor',
+
+    /**
      * Support merge layout params.
      * Only support 'box' now (left/right/top/bottom/width/height).
      * @type {string|Object} Object can be {ignoreSize: true}

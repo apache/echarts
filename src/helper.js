@@ -62,7 +62,6 @@ export var dataStack = {
 
 /**
  * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
- * @see http://echarts.baidu.com/option.html#series-scatter.symbol
  * @param {string} symbolDesc
  * @param {number} x
  * @param {number} y

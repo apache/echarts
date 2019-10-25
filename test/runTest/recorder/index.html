@@ -1,0 +1,109 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body>
+<div id="app" style="display: none">
+    <iframe :src="url" id="test-view"></iframe>
+    <div id="recording-status">
+        <el-button
+            :icon="recordingAction ? 'el-icon-video-camera' : 'el-icon-video-camera'"
+            class="recording-button" circle :type="recordingAction ? 'danger' : 'info'"
+        >
+        </el-button>
+        <div class="hint"><span class="emphasis">ALT + R</span>to {{recordingAction ? 'stop' : 'start'}} recording</div>
+        <div class="hint" v-if="recordingAction"><span class="emphasis">ALT + S</span>to take screenshot</div>
+        <div class="recording-time" v-if="recordingAction">{{(recordingTimeElapsed / 1000).toFixed(0)}} s</div>
+    </div>
+    <div id="actions">
+        <el-card class="box-card">
+            <div slot="header" class="clearfix">
+                <span>Actions</span>
+                <div class="toolbar">
+                    <i style="font-size: 18px;cursor:pointer;" class="el-icon-refresh" title="Refresh Page" @click="refreshPage"></i>
+                    <el-button type="primary" size="mini" icon="el-icon-caret-right" circle @click="run"></el-button>
+                    <el-button type="primary" size="mini" icon="el-icon-circle-plus" @click="newAction">New</el-button>
+
+                    <el-popover title="Configuration" class="configuration">
+                        <div class="config-item">
+                            <el-checkbox v-model="config.screenshotAfterMouseUp">Auto screenshot after mouse up</el-checkbox>
+                        </div>
+                        <div class="config-item">
+                            <span>Delay</span>
+                            <el-slider style="width: 180px;" v-model="config.screenshotDelay" :step="100" :max="2000"></el-slider>
+                        </div>
+                        <i slot="reference" class="el-icon-setting"></i>
+                    </el-popover>
+                </div>
+            </div>
+            <div v-for="action in actions" :class="{'action-item': true, 'active': action.name === currentAction.name}" @click.self="select(action.name)">
+                {{action.name}}
+                <div style="float:right" class="operations">
+                    <el-popover>
+                        <div style="text-align: center">{ scrollX: {{action.scrollX}}, scrollY: {{action.scrollY}} }</div>
+                        <div v-for="op in action.ops" style="text-align: center">{{op}}</div>
+                        <div slot="reference">
+                            <span>Data ({{action.ops.length}})</span>
+                            <i slot="reference" class="el-icon-caret-bottom"></i>
+                        </div>
+                    </el-popover>
+                    <i class="el-icon-delete" @click="doDelete(action.name)"></i>
+                    <i class="el-icon-refresh-left" @click="clearOps(action.name)"></i>
+                </div>
+            </div>
+        </el-card>
+    </div>
+    <div
+        id="tests-nav"
+        v-show="drawerVisible"
+    >
+        <ul>
+            <li v-for="test in tests">
+                <a :href="'#' + test.name" :class="{active: test.name === currentTestName}">
+                    {{test.name}}
+                    <i v-if="test.actions" class="el-icon-video-camera-solid"></i>
+                    <span v-if="test.actions" style="font-size: 14px;">({{test.actions}})</span>
+                </a>
+            </li>
+        </ul>
+        <i class="el-icon-circle-close" @click="drawerVisible=false"></i>
+    </div>
+    <el-button icon="el-icon-menu" type="info" plain id="open-nav" @click="drawerVisible=true"></el-button>
+</div>
+
+<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+
+<!-- Element UI -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.js"></script>
+
+<script src="recorder.js"></script>
+
+<link rel="stylesheet" href="recorder.css">
+
+</body>
+</html>

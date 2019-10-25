@@ -54,6 +54,7 @@ function DataZoom(model, ecModel, api) {
 
 DataZoom.defaultOption = {
     show: true,
+    filterMode: 'filter',
     // Icon group
     icon: {
         zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
@@ -302,6 +303,8 @@ echarts.registerPreprocessor(function (option) {
             var newOpt = {
                 type: 'select',
                 $fromToolbox: true,
+                // Default to be filter
+                filterMode: dataZoomOpt.filterMode || 'filter',
                 // Id for merge mapping.
                 id: DATA_ZOOM_ID_BASE + axisName + axisIndex
             };

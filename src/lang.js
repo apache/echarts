@@ -17,10 +17,13 @@
 * under the License.
 */
 
+/**
+ * Language: (Simplified) Chinese.
+ */
 
 export default {
-    legendSelector: {
-        title: {
+    legend: {
+        selector: {
             all: '全选',
             inverse: '反选'
         }
