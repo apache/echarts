@@ -374,14 +374,14 @@ under the License.
                 'echarts'
             ], function (ec) {
                 echarts = ec;
-                var dataCount = 10;
+                var dataCount = 5;
 
                 function makeSeriesData() {
                     var result = [];
                     var date = 0;
                     for (var i = 0; i < dataCount; i++) {
                         result.push([+date, Math.random() * 1000]);
-                        date += 5;
+                        date += Math.ceil(Math.random() * 10);
                     }
                     return result;
                 }
@@ -419,7 +419,8 @@ under the License.
                         type: 'bar',
                         itemStyle: itemStyle,
                         data: makeSeriesData()
-                    }]
+                    }],
+                    animation: false
                 };
 
                 var chart = testHelper.create(echarts, 'main4', {
@@ -551,15 +552,12 @@ under the License.
                             type: 'bar',
                             data: [["2017-05-26", 240], ["2017-05-24", 315]]
                         }
-                    ],
-                    grid: {
-                        left: 200,
-                        right: 200
-                    }
+                    ]
                 };
 
                 var chart = testHelper.create(echarts, 'main6', {
                     title: [
+                        'Bar series with time axis',
                         'Zoom in and bars should not overlap'
                     ],
                     option: option
