@@ -401,6 +401,7 @@ describe('util/number', function () {
             expect(numberUtil.quantityExponent(1234)).toEqual(3);
             expect(numberUtil.quantityExponent(1234.5678)).toEqual(3);
             expect(numberUtil.quantityExponent(10)).toEqual(1);
+            expect(numberUtil.quantityExponent(1000)).toEqual(3);
             expect(numberUtil.quantityExponent(10000)).toEqual(4);
         });
 
@@ -429,6 +430,7 @@ describe('util/number', function () {
             expect(numberUtil.quantity(1234)).toEqual(1000);
             expect(numberUtil.quantity(1234.5678)).toEqual(1000);
             expect(numberUtil.quantity(10)).toEqual(10);
+            expect(numberUtil.quantity(1000)).toEqual(1000);
             expect(numberUtil.quantity(10000)).toEqual(10000);
         });
 
