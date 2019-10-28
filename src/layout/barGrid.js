@@ -137,10 +137,11 @@ function getValueAxesMinGaps(barSeries) {
 
             var min = Number.MAX_VALUE;
             for (var j = 1; j < axisValues[i].length; ++j) {
-                // Ignore 0 delta because they are of the same axis value
                 var delta = axisValues[i][j] - axisValues[i][j - 1];
-                delta = delta === 0 ? Number.MAX_VALUE : delta;
-                min = Math.min(min, delta);
+                if (delta > 0) {
+                    // Ignore 0 delta because they are of the same axis value
+                    min = Math.min(min, delta);
+                }
             }
             // Set to null if only have one data
             axisMinGaps[i] = min === Number.MAX_VALUE ? null : min;
