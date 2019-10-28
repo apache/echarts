@@ -30,5 +30,5 @@ glob('*.json', (err, files) => {
         const actions = JSON.parse(fs.readFileSync(file, 'utf-8'));
         result[file.replace(/.json$/, '')] = actions.length;
     });
-    fs.writeFileSync('__meta__.json', JSON.stringify(result, null, 2), 'utf-8');
+    fs.writeFileSync('__meta__.json', JSON.stringify(result, Object.keys(result).sort((a, b) => a.localeCompare(b)), 2), 'utf-8');
 });
