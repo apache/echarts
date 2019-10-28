@@ -87,16 +87,95 @@ export function prepareLayoutBarSeries(seriesType, ecModel) {
     return seriesModels;
 }
 
+
+/**
+ * Map from axis.index to min gap of two adjacent values.
+ * This works for time axes, value axes, and log axes.
+ * For a single time axis, return value is in the form like
+ * [[1000000]].
+ * The value of 1000000 is in milliseconds.
+ */
+function getValueAxesMinGaps(barSeries) {
+    /**
+     * Map from axis.index to values.
+     * For a single time axis, axisValues is in the form like
+     * [[1495555200000, 1495641600000, 1495728000000]].
+     * Items in axisValues[x], e.g. 1495555200000, are time values of all
+     * series.
+     */
+    var axisValues = [];
+    zrUtil.each(barSeries, function (seriesModel) {
+        var cartesian = seriesModel.coordinateSystem;
+        var baseAxis = cartesian.getBaseAxis();
+        if (baseAxis.type !== 'time' && baseAxis.type !== 'value') {
+            return;
+        }
+
+        var data = seriesModel.getData();
+        var axisId = baseAxis.index;
+        for (var i = 0, cnt = data.count(); i < cnt; ++i) {
+            var value = data.get(baseAxis.dim, i);
+            if (!axisValues[axisId]) {
+                // No previous data for the axis
+                axisValues[axisId] = [value];
+            }
+            else {
+                // No value in previous series
+                axisValues[axisId].push(value);
+            }
+            // Ignore duplicated time values in the same axis
+        }
+    });
+
+    var axisMinGaps = [];
+    for (var i = 0; i < axisValues.length; ++i) {
+        if (axisValues[i]) {
+            // Sort axis values into ascending order to calculate gaps
+            axisValues[i].sort(function (a, b) {
+                return a - b;
+            });
+
+            var min = Number.MAX_VALUE;
+            for (var j = 1; j < axisValues[i].length; ++j) {
+                var delta = axisValues[i][j] - axisValues[i][j - 1];
+                if (delta > 0) {
+                    // Ignore 0 delta because they are of the same axis value
+                    min = Math.min(min, delta);
+                }
+            }
+            // Set to null if only have one data
+            axisMinGaps[i] = min === Number.MAX_VALUE ? null : min;
+        }
+    }
+    return axisMinGaps;
+}
+
 export function makeColumnLayout(barSeries) {
+    var axisMinGaps = getValueAxesMinGaps(barSeries);
+
     var seriesInfoList = [];
     zrUtil.each(barSeries, function (seriesModel) {
-        var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();
         var axisExtent = baseAxis.getExtent();
-        var bandWidth = baseAxis.type === 'category'
-            ? baseAxis.getBandWidth()
-            : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
+
+        var bandWidth;
+        if (baseAxis.type === 'category') {
+            bandWidth = baseAxis.getBandWidth();
+        }
+        else if (baseAxis.type === 'value' || baseAxis.type === 'time') {
+            var minGap = axisMinGaps[baseAxis.index];
+            var extentSpan = Math.abs(axisExtent[1] - axisExtent[0]);
+            var scale = baseAxis.scale.getExtent();
+            var scaleSpan = Math.abs(scale[1] - scale[0]);
+            bandWidth = minGap
+                ? extentSpan / scaleSpan * minGap
+                : extentSpan; // When there is only one data value
+        }
+        else {
+            var data = seriesModel.getData();
+            bandWidth = Math.abs(axisExtent[1] - axisExtent[0]) / data.count();
+        }
 
         var barWidth = parsePercent(
             seriesModel.get('barWidth'), bandWidth
