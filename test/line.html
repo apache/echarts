@@ -35,7 +35,8 @@ under the License.
         </style>
         <div id="info"></div>
         (1) tick 14 and 20 should be red (has textStyle) <br>
-        (2) Check all symbol show if possible.
+        (2) Check all symbol show if possible<br>
+        (3) Toggle the legend line4, the image symbol, emphasis style and normal style are normal
         <div id="main"></div>
         <script>
 
@@ -57,6 +58,7 @@ under the License.
                 var data1 = [];
                 var data2 = [];
                 var data3 = [];
+                var data4 = [];
 
                 for (var i = 0; i < 100; i++) {
 
@@ -79,6 +81,7 @@ under the License.
                     }
                     data2.push(+(Math.random() + 0.5).toFixed(3));
                     data3.push(+(Math.random() + 0.5).toFixed(3));
+                    data4.push(+(Math.random() + 0.5).toFixed(3));
                 }
 
                 var itemStyle = {
@@ -120,7 +123,7 @@ under the License.
                     // },
 
                     legend: {
-                        data: ['line', 'line2', 'line3']
+                        data: ['line', 'line2', 'line3', 'line4']
                     },
                     visualMap: null, // 用于测试 option 中含有null的情况。
                     tooltip: {
@@ -217,8 +220,37 @@ under the License.
                         stack: 'all',
                         symbol: 'triangle',
                         symbolSize: 10,
-                        data: data3,
+                        data: data4,
                         itemStyle: itemStyle,
+                        step: 'end'
+                    }, {
+                        name: 'line4',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'image://https://echarts.apache.org/zh/images/logo.png',
+                        symbolKeepAspect: true,
+                        symbolSize: 40,
+                        data: data1,
+                        itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true,
+                                fontSize: 12
+                            }
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowColor: 'black',
+                                shadowOffsetX: 10
+                            }
+                        },
+                        lineStyle: {
+                            normal: {
+                                shadowBlur: 4,
+                                shadowOffsetX: 3,
+                                shadowOffsetY: 3
+                            }
+                        },
                         step: 'end'
                     }]
                 });
