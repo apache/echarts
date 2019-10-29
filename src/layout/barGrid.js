@@ -89,21 +89,22 @@ export function prepareLayoutBarSeries(seriesType, ecModel) {
 
 
 /**
- * Map from axis.index to min gap of two adjacent values.
+ * Map from (baseAxis.dim + '_' + baseAxis.index) to min gap of two adjacent
+ * values.
  * This works for time axes, value axes, and log axes.
  * For a single time axis, return value is in the form like
- * [[1000000]].
+ * {'x_0': [1000000]}.
  * The value of 1000000 is in milliseconds.
  */
 function getValueAxesMinGaps(barSeries) {
     /**
      * Map from axis.index to values.
      * For a single time axis, axisValues is in the form like
-     * [[1495555200000, 1495641600000, 1495728000000]].
+     * {'x_0': [1495555200000, 1495641600000, 1495728000000]}.
      * Items in axisValues[x], e.g. 1495555200000, are time values of all
      * series.
      */
-    var axisValues = [];
+    var axisValues = {};
     zrUtil.each(barSeries, function (seriesModel) {
         var cartesian = seriesModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();
@@ -112,39 +113,41 @@ function getValueAxesMinGaps(barSeries) {
         }
 
         var data = seriesModel.getData();
-        var axisId = baseAxis.index;
+        var key = baseAxis.dim + '_' + baseAxis.index;
+        var dim = data.mapDimension(baseAxis.dim);
         for (var i = 0, cnt = data.count(); i < cnt; ++i) {
-            var value = data.get(baseAxis.dim, i);
-            if (!axisValues[axisId]) {
+            var value = data.get(dim, i);
+            if (!axisValues[key]) {
                 // No previous data for the axis
-                axisValues[axisId] = [value];
+                axisValues[key] = [value];
             }
             else {
                 // No value in previous series
-                axisValues[axisId].push(value);
+                axisValues[key].push(value);
             }
             // Ignore duplicated time values in the same axis
         }
     });
 
     var axisMinGaps = [];
-    for (var i = 0; i < axisValues.length; ++i) {
-        if (axisValues[i]) {
+    for (var i in axisValues) {
+        var valuesInAxis = axisValues[i];
+        if (valuesInAxis) {
             // Sort axis values into ascending order to calculate gaps
-            axisValues[i].sort(function (a, b) {
+            valuesInAxis.sort(function (a, b) {
                 return a - b;
             });
 
-            var min = Number.MAX_VALUE;
-            for (var j = 1; j < axisValues[i].length; ++j) {
-                var delta = axisValues[i][j] - axisValues[i][j - 1];
+            var min = null;
+            for (var j = 1; j < valuesInAxis.length; ++j) {
+                var delta = valuesInAxis[j] - valuesInAxis[j - 1];
                 if (delta > 0) {
                     // Ignore 0 delta because they are of the same axis value
-                    min = Math.min(min, delta);
+                    min = min === null ? delta : Math.min(min, delta);
                 }
             }
             // Set to null if only have one data
-            axisMinGaps[i] = min === Number.MAX_VALUE ? null : min;
+            axisMinGaps[i] = min;
         }
     }
     return axisMinGaps;
@@ -164,7 +167,8 @@ export function makeColumnLayout(barSeries) {
             bandWidth = baseAxis.getBandWidth();
         }
         else if (baseAxis.type === 'value' || baseAxis.type === 'time') {
-            var minGap = axisMinGaps[baseAxis.index];
+            var key = baseAxis.dim + '_' + baseAxis.index;
+            var minGap = axisMinGaps[key];
             var extentSpan = Math.abs(axisExtent[1] - axisExtent[0]);
             var scale = baseAxis.scale.getExtent();
             var scaleSpan = Math.abs(scale[1] - scale[0]);
