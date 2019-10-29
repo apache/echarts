@@ -18,7 +18,7 @@
 */
 
 import {each, map} from 'zrender/src/core/util';
-import {linearMap, getPixelPrecision} from '../util/number';
+import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
@@ -307,7 +307,6 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-
         var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
         var shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 
@@ -330,6 +329,7 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
 
     var inverse = axisExtent[0] > axisExtent[1];
 
+    // Handling clamp.
     if (littleThan(ticksCoords[0].coord, axisExtent[0])) {
         clamp ? (ticksCoords[0].coord = axisExtent[0]) : ticksCoords.shift();
     }
@@ -344,6 +344,10 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
     }
 
     function littleThan(a, b) {
+        // Avoid rounding error cause calculated tick coord different with extent.
+        // It may cause an extra unecessary tick added.
+        a = round(a);
+        b = round(b);
         return inverse ? a > b : a < b;
     }
 }
