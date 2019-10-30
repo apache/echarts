@@ -69,11 +69,12 @@ export function forceLayout(nodes, edges, opts) {
     // var k = scale * Math.sqrt(width * height / nodes.length);
     // var k2 = k * k;
 
-    var friction = 0.6;
+    var initialFriction = opts.friction == null ? 0.6 : opts.friction;
+    var friction = initialFriction;
 
     return {
         warmUp: function () {
-            friction = 0.5;
+            friction = initialFriction * 0.8;
         },
 
         setFixed: function (idx) {

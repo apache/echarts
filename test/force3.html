@@ -38,22 +38,10 @@ under the License.
         <script>
 
             require([
-                'echarts',
-
-                // 'extension/dataTool/gexf'
-
-                // 'echarts/chart/graph',
-
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/geo',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
+                'echarts'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var data = [{
                     fixed: true,
