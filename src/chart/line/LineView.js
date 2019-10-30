@@ -454,10 +454,7 @@ export default ChartView.extend({
 
         var visualColor = getVisualGradient(data, coordSys) || data.getVisual('color');
         if (typeof visualColor === 'function') {
-            var color = visualColor;
-            data.each(function (idx) {
-                visualColor = color(seriesModel.getDataParams(idx));
-            });
+            visualColor = visualColor(seriesModel.getDataParams(0)) || '#000000';
         }
 
         polyline.useStyle(zrUtil.defaults(
