@@ -97,4 +97,8 @@ function createClipPath(coordSys, hasAnimation, seriesModel) {
     return null;
 }
 
-export {createGridClipPath, createPolarClipPath, createClipPath};
+export {
+    createGridClipPath,
+    createPolarClipPath,
+    createClipPath
+};

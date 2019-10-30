@@ -21,17 +21,20 @@ import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
 import Path from 'zrender/src/graphic/Path';
+import {createClipPath} from '../helper/createClipPathFromCoordSys';
 
 var NORMAL_ITEM_STYLE_PATH = ['itemStyle'];
 var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'];
 var SKIP_PROPS = ['color', 'color0', 'borderColor', 'borderColor0'];
-
 
 var CandlestickView = ChartView.extend({
 
     type: 'candlestick',
 
     render: function (seriesModel, ecModel, api) {
+        // If there is clipPath created in large mode. Remove it.
+        this.group.removeClipPath();
+
         this._updateDrawMode(seriesModel);
 
         this._isLargeDraw
@@ -64,6 +67,10 @@ var CandlestickView = ChartView.extend({
         var group = this.group;
         var isSimpleBox = data.getLayout('isSimpleBox');
 
+        var needsClip = seriesModel.get('clip', true);
+        var coord = seriesModel.coordinateSystem;
+        var clipArea = coord.getArea && coord.getArea();
+
         // There is no old data only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
         if (!this._data) {
@@ -76,12 +83,18 @@ var CandlestickView = ChartView.extend({
                     var el;
 
                     var itemLayout = data.getItemLayout(newIdx);
+
+                    if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
+                        return;
+                    }
+
                     el = createNormalBox(itemLayout, newIdx, true);
                     graphic.initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
 
                     setBoxCommon(el, data, newIdx, isSimpleBox);
 
                     group.add(el);
+
                     data.setItemGraphicEl(newIdx, el);
                 }
             })
@@ -95,6 +108,11 @@ var CandlestickView = ChartView.extend({
                 }
 
                 var itemLayout = data.getItemLayout(newIdx);
+                if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
+                    group.remove(el);
+                    return;
+                }
+
                 if (!el) {
                     el = createNormalBox(itemLayout, newIdx);
                 }
@@ -118,7 +136,19 @@ var CandlestickView = ChartView.extend({
 
     _renderLarge: function (seriesModel) {
         this._clear();
+
         createLarge(seriesModel, this.group);
+
+        var clipPath = seriesModel.get('clip', true)
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        if (clipPath) {
+            this.group.setClipPath(clipPath);
+        }
+        else {
+            this.group.removeClipPath();
+        }
+
     },
 
     _incrementalRenderNormal: function (params, seriesModel) {
@@ -184,6 +214,7 @@ var NormalBoxPath = Path.extend({
     }
 });
 
+
 function createNormalBox(itemLayout, dataIndex, isInit) {
     var ends = itemLayout.ends;
     return new NormalBoxPath({
@@ -194,6 +225,18 @@ function createNormalBox(itemLayout, dataIndex, isInit) {
         },
         z2: 100
     });
+}
+
+function isNormalBoxClipped(clipArea, itemLayout) {
+    var clipped = true;
+    for (var i = 0; i < itemLayout.ends.length; i++) {
+        // If any point are in the region.
+        if (clipArea.contain(itemLayout.ends[i][0], itemLayout.ends[i][1])) {
+            clipped = false;
+            break;
+        }
+    }
+    return clipped;
 }
 
 function setBoxCommon(el, data, dataIndex, isSimpleBox) {
