@@ -9,6 +9,7 @@
   "axes": 0,
   "axis": 1,
   "axis-boundaryGap": 1,
+  "axis-interval": 3,
   "axis-lastLabel": 5,
   "axis-multiple": 1,
   "axis-style": 2,
