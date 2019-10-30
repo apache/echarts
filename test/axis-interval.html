@@ -28,6 +28,7 @@ under the License.
     <script src="lib/jquery.min.js"></script>
     <script src="lib/facePrint.js"></script>
     <script src="lib/testHelper.js"></script>
+    <script src="lib/draggable.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="lib/reset.css">
 </head>
@@ -50,9 +51,7 @@ under the License.
     </style>
 
     <div class="chart" id="mainA"></div>
-    <h1>[ Test minInterval ]&nbsp;&nbsp;&nbsp; yAxis: {minInterval: 1, min: 0}, series.data: [1]</h1>
     <div class="chart" id="main0"></div>
-    <h1>[ Test category axis interval ]&nbsp;&nbsp;&nbsp; interval of xAxis should be approperiate after rotated.</h1>
     <div class="chart" id="main1"></div>
     <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
     <div class="chart" id="main2"></div>
@@ -65,8 +64,9 @@ under the License.
     <div class="chart" id="main34"></div>
     <div class="chart" id="main35"></div>
 
-
-
+    <div style="height: 600px;">
+        <div class="chart" id="main4"></div>
+    </div>
 
 
 
@@ -174,7 +174,10 @@ under the License.
                 ]
             };
 
-            testHelper.createChart(echarts, 'main0', option);
+            testHelper.create(echarts, 'main0', {
+                title: '[ Test minInterval ] yAxis: {minInterval: 1, min: 0}, series.data: [1]',
+                option: option
+            });
         });
 
     </script>
@@ -197,7 +200,7 @@ under the License.
 
             var categoryData = [];
             var data = [];
-            var rotate = 20;
+            var rotate = 0;
 
             for (var i = 0; i < 100; i++) {
                 categoryData.push(i + 'longlonglong');
@@ -252,31 +255,32 @@ under the License.
                 ]
             };
 
-            var chart = testHelper.createChart(echarts, 'main1', option, {height: 600});
+            var chart = testHelper.create(echarts, 'main1', {
+                title: '[ Test category axis interval ] interval of xAxis should be approperiate after rotated.',
+                option: option,
+                height: 600,
 
-            chart && next();
-
-            function next() {
-                var nextInterval = rotate % 90 === 0 ? 2000 : 70;
-                rotate = (rotate + 1) % 360;
-                setTimeout(function () {
-                    chart.setOption({
-                        xAxis: {
-                            id: 'category',
-                            axisLabel: {
-                                rotate: rotate
+                buttons: [{
+                    text: 'Rotate',
+                    onclick: function () {
+                        rotate = (rotate + 30) % 360;
+                        chart.setOption({
+                            xAxis: {
+                                id: 'category',
+                                axisLabel: {
+                                    rotate: rotate
+                                }
+                            },
+                            yAxis: {
+                                id: 'category',
+                                axisLabel: {
+                                    rotate: rotate
+                                }
                             }
-                        },
-                        yAxis: {
-                            id: 'category',
-                            axisLabel: {
-                                rotate: rotate
-                            }
-                        }
-                    });
-                    next();
-                }, nextInterval);
-            }
+                        });
+                    }
+                }]
+            });
         });
 
     </script>
@@ -423,7 +427,39 @@ under the License.
 
 
 
+    <script>
 
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'],
+                    axisLabel: {
+                        fontSize: 20
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [120, 200, 150, 80, 70, 110, 130],
+                    type: 'bar'
+                }]
+            };
+
+
+            testHelper.create(echarts, 'main4', {
+                title: 'Label should not disappear after size changed. #11112',
+                option: option,
+                width: 700,
+                height: 300,
+                draggable: true
+            });
+        });
+    </script>
 
 
 </body>
