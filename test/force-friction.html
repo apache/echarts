@@ -28,75 +28,71 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
+            html, body {
                 width: 100%;
                 height: 100%;
                 margin: 0;
             }
+            .chart {
+                width: 50%;
+                float: left;
+                height: 100%;
+            }
         </style>
-        <div id="main"></div>
+        <div id="main0" class="chart"></div>
+        <div id="main1" class="chart"></div>
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                [0.1, 0.9].forEach(function (friction, index) {
+                    var chart = echarts.init(document.getElementById('main' + index));
 
-                function createNodes(count) {
-                    var nodes = [];
-                    for (var i = 0; i < count; i++) {
-                        nodes.push({
-                            id: i
-                        });
+                    function createNodes(count) {
+                        var nodes = [];
+                        for (var i = 0; i < count; i++) {
+                            nodes.push({
+                                id: i
+                            });
+                        }
+                        return nodes;
                     }
-                    return nodes;
-                }
 
-                function createEdges(count) {
-                    var edges = [];
-                    if (count === 2) {
-                        return [[0, 1]];
+                    function createEdges(count) {
+                        var edges = [];
+                        if (count === 2) {
+                            return [[0, 1]];
+                        }
+                        for (var i = 0; i < count; i++) {
+                            edges.push([i, (i + 1) % count]);
+                        }
+                        return edges;
                     }
-                    for (var i = 0; i < count; i++) {
-                        edges.push([i, (i + 1) % count]);
-                    }
-                    return edges;
-                }
 
-                var datas = [];
-                for (var i = 0; i < 16; i++) {
-                    datas.push({
-                        nodes: createNodes(i + 2),
-                        edges: createEdges(i + 2)
-                    });
-                }
-
-                chart.setOption({
-                    series: datas.map(function (item, idx) {
-                        return {
+                    chart.setOption({
+                        series: {
                             type: 'graph',
                             layout: 'force',
                             animation: false,
-                            data: item.nodes,
-                            left: (idx % 4) * 25 + '%',
-                            top: Math.floor(idx / 4) * 25 + '%',
-                            width: '25%',
-                            height: '25%',
+                            data: createNodes(22),
+                            width: '50%',
+                            height: '50%',
                             force: {
-                                // initLayout: 'circular',
-                                // gravity: 0
+                                layoutAnimation: false,
                                 repulsion: 100,
-                                edgeLength: 5
+                                edgeLength: 5,
+                                friction
                             },
-                            edges: item.edges.map(function (e) {
+                            edges: createEdges(22).map(function (e) {
                                 return {
                                     source: e[0],
                                     target: e[1]
                                 };
                             })
-                        };
-                    })
+                        }
+                    });
                 });
             });
         </script>
