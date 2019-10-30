@@ -26,7 +26,7 @@ function processTestsData(tests, oldTestsData) {
         test.index = idx;
         test.results.forEach(result => {
             // Threshold?
-            if (result.diffRatio < 0.001) {
+            if (result.diffRatio < 0.0001) {
                 passed++;
             }
             let timestamp = test.lastRun || 0;
