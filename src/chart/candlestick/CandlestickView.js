@@ -233,6 +233,7 @@ function isNormalBoxClipped(clipArea, itemLayout) {
         // If any point are in the region.
         if (clipArea.contain(itemLayout.ends[i][0], itemLayout.ends[i][1])) {
             clipped = false;
+            break;
         }
     }
     return clipped;
