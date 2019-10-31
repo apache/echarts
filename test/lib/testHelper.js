@@ -53,6 +53,7 @@
      * @param {boolean} [opt.draggable]
      * @param {boolean} [opt.lazyUpdate]
      * @param {boolean} [opt.notMerge]
+     * @param {boolean} [opt.autoResize=true]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      * @param {boolean} [opt.recordCanvas] 'ut/lib/canteen.js' is required.
@@ -232,6 +233,12 @@
             var chart = echarts.init(dom);
 
             if (opt.draggable) {
+                if (!window.draggable) {
+                    throw new Error(
+                        'Pleasse add the script in HTML: \n'
+                        + '<script src="lib/draggable.js"></script>'
+                    );
+                }
                 window.draggable.init(dom, chart, {throttle: 70, addPlaceholder: true});
             }
 
