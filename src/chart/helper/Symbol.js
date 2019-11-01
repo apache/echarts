@@ -236,6 +236,15 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
             strokeNoScale: true
         });
     }
+    else {
+        symbolPath.setStyle({
+            opacity: null,
+            shadowBlur: null,
+            shadowOffsetX: null,
+            shadowOffsetY: null,
+            shadowColor: null
+        });
+    }
 
     var itemStyle = seriesScope && seriesScope.itemStyle;
     var hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;

@@ -204,13 +204,13 @@ If you are a committer of apache/incubator-echarts project, which means you have
 + About adding the license/header of 3rd-party work:
     + https://www.apache.org/legal/src-headers.html#3party
 + Licenses that are compatible with the Apache license:
-    + BSD and MIT are compatibal with the Apache license but CC_BY_SA is not (https://apache.org/legal/resolved.html#cc-sa).
+    + BSD and MIT are compatible with the Apache license but CC_BY_SA is not (https://apache.org/legal/resolved.html#cc-sa).
 + Stack overflow:
     + before intending to copy code from Stack overlow, we must check:
     + https://apache.org/legal/resolved.html#stackoverflow
     + https://issues.apache.org/jira/browse/LEGAL-471
 + Wikipedia:
-    + Wikipedia is licensed CC 4.0 BY_SA and is compatible with the Apache license. So we should not copy code from Wikipedia.
+    + Wikipedia is licensed CC 4.0 BY_SA and is incompatible with the Apache license. So we should not copy code from Wikipedia.
 + Working in progress disclaimer:
     + In some cases we might use the work in progress disclaimer and document the issues in that until they are fixed.
     + https://incubator.apache.org/policy/incubation.html#disclaimers

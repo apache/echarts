@@ -24,7 +24,7 @@ You may choose one of the following methods:
 
 ## Get ECharts GL
 
-ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visualization and WebGL acceleration.
+ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visualization, and WebGL acceleration.
 
 + Get from [https://github.com/ecomfe/echarts-gl](https://github.com/ecomfe/echarts-gl)
 
@@ -80,13 +80,13 @@ npm run help
 # The same as `node build/build.js --help`
 ```
 
-Then the "production" files are generated in `dist` directory.
+Then the "production" files are generated in the `dist` directory.
 
 More custom build approaches can be checked in this tutorial: [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts) please.
 
 ## Contribution
 
-If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/CONTRIBUTING.md) document.
+If you wish to debug locally or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/CONTRIBUTING.md) document.
 
 ## Resources
 
@@ -114,7 +114,7 @@ ECharts is available under the Apache License V2.
 
 Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
 
-## Publication
+## Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
 [ECharts: A Declarative Framework for Rapid Construction of Web-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).

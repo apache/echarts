@@ -392,6 +392,64 @@ describe('util/number', function () {
         });
     });
 
+    describe('quantityExponent', function () {
+        testCase('basic', function (numberUtil) {
+            expect(numberUtil.quantityExponent(1)).toEqual(0);
+            expect(numberUtil.quantityExponent(9)).toEqual(0);
+            expect(numberUtil.quantityExponent(12)).toEqual(1);
+            expect(numberUtil.quantityExponent(123)).toEqual(2);
+            expect(numberUtil.quantityExponent(1234)).toEqual(3);
+            expect(numberUtil.quantityExponent(1234.5678)).toEqual(3);
+            expect(numberUtil.quantityExponent(10)).toEqual(1);
+            expect(numberUtil.quantityExponent(1000)).toEqual(3);
+            expect(numberUtil.quantityExponent(10000)).toEqual(4);
+        });
+
+        testCase('decimals', function (numberUtil) {
+            expect(numberUtil.quantityExponent(0.1)).toEqual(-1);
+            expect(numberUtil.quantityExponent(0.001)).toEqual(-3);
+            expect(numberUtil.quantityExponent(0.00123)).toEqual(-3);
+        });
+
+        testCase('large number', function (numberUtil) {
+            expect(numberUtil.quantityExponent(3.14e100)).toEqual(100);
+            expect(numberUtil.quantityExponent(3.14e-100)).toEqual(-100);
+        });
+
+        testCase('zero', function (numberUtil) {
+            expect(numberUtil.quantityExponent(0)).toEqual(0);
+        });
+    });
+
+    describe('quantity', function () {
+        testCase('basic', function (numberUtil) {
+            expect(numberUtil.quantity(1)).toEqual(1);
+            expect(numberUtil.quantity(9)).toEqual(1);
+            expect(numberUtil.quantity(12)).toEqual(10);
+            expect(numberUtil.quantity(123)).toEqual(100);
+            expect(numberUtil.quantity(1234)).toEqual(1000);
+            expect(numberUtil.quantity(1234.5678)).toEqual(1000);
+            expect(numberUtil.quantity(10)).toEqual(10);
+            expect(numberUtil.quantity(1000)).toEqual(1000);
+            expect(numberUtil.quantity(10000)).toEqual(10000);
+        });
+
+        testCase('decimals', function (numberUtil) {
+            expect(numberUtil.quantity(0.2)).toEqual(0.1);
+            expect(numberUtil.quantity(0.002)).toEqual(0.001);
+            expect(numberUtil.quantity(0.00123)).toEqual(0.001);
+        });
+
+        testCase('large number', function (numberUtil) {
+            expect(numberUtil.quantity(3.14e100)).toEqual(1e100);
+            expect(numberUtil.quantity(3.14e-100)).toEqual(1e-100);
+        });
+
+        testCase('zero', function (numberUtil) {
+            expect(numberUtil.quantity(0)).toEqual(1);
+        });
+    });
+
 
     describe('nice', function () {
         testCase('extreme', function (numberUtil) {

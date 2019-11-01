@@ -215,6 +215,8 @@ var GraphSeries = echarts.extendSeriesModel({
             // Node repulsion. Can be an array to represent range.
             repulsion: [0, 50],
             gravity: 0.1,
+            // Initial friction
+            friction: 0.6,
 
             // Edge length. Can be an array to represent range.
             edgeLength: 30,

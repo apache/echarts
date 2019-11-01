@@ -144,5 +144,8 @@ module.exports.updateActionsMeta = function (testName, actions) {
         metaData = {};
     }
     metaData[testName] = actions.length;
-    fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2), 'utf-8');
+
+    fs.writeFileSync(metaPath, JSON.stringify(
+        metaData, Object.keys(metaData).sort((a, b) => a.localeCompare(b)), 2
+    ), 'utf-8');
 };

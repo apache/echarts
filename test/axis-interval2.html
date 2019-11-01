@@ -27,6 +27,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css">
     </head>
@@ -56,6 +57,8 @@ under the License.
         <div class="chart" id="main6.5"></div>
         <div class="chart" id="main7"></div>
         <div class="chart" id="main8"></div>
+        <div class="chart" id="main9"></div>
+        <div class="chart" id="main10"></div>
 
 
         <script>
@@ -1208,6 +1211,143 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0
+                    }, {
+                    }],
+                    grid: {
+                        top: 10,
+                        left: 100
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                        type: 'category',
+                        axisLabel: {
+                            formatter: 'GOOD {value}',
+                            fontSize: 20
+                        }
+                    }, {
+                        axisLabel: {
+                            showMaxLabel: false
+                        }
+                    }],
+                    series: [{
+                        type: 'scatter',
+                        data: [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main9', {
+                    title: [
+                        'Drag to resize the yAxis util labels changes, and then drag back.',
+                        'Labels of yAxis should be able to back too the original state.'
+                    ],
+                    width: 300,
+                    height: 300,
+                    option: option,
+                    draggable: true
+                });
+
+            });
+
+        </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        start: 14.63022259346915,
+                        end: 77.06506102371338
+                    }, {
+                        start: 14.63022259346915,
+                        end: 77.06506102371338
+                    }],
+                    xAxis: [{
+                        data: xAxisData,
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'line',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main10', {
+                    title: [
+                        'The dataZoom window range is at the critical value of changing axis interval from 2 to 3.',
+                        'Move the dataZoom bar, the **xAxis labels should be stable**.',
+                        'That is, xAxis labels should not be sometimes [c21, c24, c27] sometimes [c20, c24, c28]'
+                    ],
+                    option: option,
+                    // Should be fixed this width to make the dataZoom window range at the critical value.
+                    width: 653,
+                    height: 300,
+                    autoResize: false
+                });
+
+            });
+
+        </script>
+
 
 
 

@@ -51,6 +51,7 @@ under the License.
         <div class="chart" id="main3"></div>
         <div class="chart" id="main4"></div>
         <div class="chart" id="main5"></div>
+        <div class="chart" id="main6"></div>
 
 
         <script>
@@ -211,6 +212,20 @@ under the License.
                 echarts = ec;
 
                 option = {
+                    color: [{
+                        type: 'linear',
+                        colorStops: [{
+                            offset: 0,
+                            color: 'rgba(42, 20, 20, 0.8)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(42, 20, 20, 0)'
+                        }],
+                        x: 0.5,
+                        y: 0,
+                        x2: 0.49999999999999994,
+                        y2: 1
+                    }],
                     xAxis: {
                         // data: ['a', 'b', 'c', 'd'],
                         data: ['a', 'b'],
@@ -237,7 +252,12 @@ under the License.
                         silent: true,
                         barWidth: 40,
                         barGap: '-100%', // Make series be overlap
-                        data: [60, 60]
+                        data: [60, 60],
+                        label: {
+                            show: true,
+                            color: 'blue',
+                            position: 'top'
+                        }
                     }, {
                         type: 'bar',
                         barWidth: 40,
@@ -354,14 +374,14 @@ under the License.
                 'echarts'
             ], function (ec) {
                 echarts = ec;
-                var dataCount = 10;
+                var dataCount = 5;
 
                 function makeSeriesData() {
                     var result = [];
                     var date = 0;
                     for (var i = 0; i < dataCount; i++) {
                         result.push([+date, Math.random() * 1000]);
-                        date += 5;
+                        date += Math.ceil(Math.random() * 10);
                     }
                     return result;
                 }
@@ -399,7 +419,8 @@ under the License.
                         type: 'bar',
                         itemStyle: itemStyle,
                         data: makeSeriesData()
-                    }]
+                    }],
+                    animation: false
                 };
 
                 var chart = testHelper.create(echarts, 'main4', {
@@ -490,6 +511,58 @@ under the License.
                 });
             });
 
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                option = {
+                    animation: false,
+                    dataZoom: [
+                        {
+                            "type": "slider",
+                            "show": true
+                        }
+                    ],
+                    color: ['#003366', '#e5323e'],
+                    legend: {
+                        data: ['Forest', 'Desert']
+                    },
+                    xAxis: [
+                        {
+                            type: 'time'
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'Forest',
+                            type: 'bar',
+                            barGap: 0,
+                            data: [["2017-05-26", 320], ["2017-05-25", 340], ["2017-05-24", 310]]
+                        },
+                        {
+                            name: 'Desert',
+                            type: 'bar',
+                            data: [["2017-05-26", 240], ["2017-05-24", 315]]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'Bar series with time axis',
+                        'Zoom in and bars should not overlap'
+                    ],
+                    option: option
+                });
+            });
         </script>
 
 
