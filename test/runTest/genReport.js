@@ -77,9 +77,9 @@ async function genDetail(test) {
         }
 
         let [expectedUrl, actualUrl, diffUrl] = await Promise.all([
-            inlineImage(shot.expected),
-            inlineImage(shot.actual),
-            inlineImage(shot.diff)
+            resolveImagePath(shot.expected),
+            resolveImagePath(shot.actual),
+            resolveImagePath(shot.diff)
         ]);
         shotDetail += `
 <div style="margin-top:10px">
@@ -130,6 +130,7 @@ async function run() {
 <a id="${test.name}"></a>
 
 ## ${title}
+
 ${detail.content}
     `;
 
