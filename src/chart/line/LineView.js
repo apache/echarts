@@ -369,6 +369,7 @@ export default ChartView.extend({
                 clipShapeForSymbol.r1 += 0.5;
             }
         }
+        this._clipShapeForSymbol = clipShapeForSymbol;
         // Initialization animation or coordinate system changed
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
@@ -519,6 +520,10 @@ export default ChartView.extend({
                 var pt = data.getItemLayout(dataIndex);
                 if (!pt) {
                     // Null data
+                    return;
+                }
+                // fix #11360: don't draw symbol if clip is true and symbol is outside the visible area
+                if (seriesModel.get('clip', true) && !this._clipShapeForSymbol.contain(pt[0], pt[1])) {
                     return;
                 }
                 symbol = new SymbolClz(data, dataIndex);
