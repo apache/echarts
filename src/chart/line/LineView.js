@@ -354,7 +354,7 @@ export default ChartView.extend({
         // FIXME step not support polar
         var step = !isCoordSysPolar && seriesModel.get('step');
         var clipShapeForSymbol;
-        if (coordSys && coordSys.getArea && seriesModel.get('clip')) {
+        if (coordSys && coordSys.getArea && seriesModel.get('clip', true)) {
             clipShapeForSymbol = coordSys.getArea();
             // Avoid float number rounding error for symbol on the edge of axis extent.
             // See #7913 and `test/dataZoom-clip.html`.
