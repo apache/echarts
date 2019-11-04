@@ -47,7 +47,18 @@ export default SeriesModel.extend({
 
         treeOption.leaves = leaves;
 
-        var tree = Tree.createTree(root, this, treeOption);
+        var tree = Tree.createTree(root, this, treeOption, beforeLink);
+
+        function beforeLink(nodeData) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                var node = tree.getNodeByDataIndex(idx);
+                var leavesModel = node.getLeavesModel();
+                if (node.children.length === 0 || (node.children.length !== 0 && node.isExpand === false)) {
+                    model.parentModel = leavesModel;
+                }
+                return model;
+            });
+        }
 
         var treeDepth = 0;
 
