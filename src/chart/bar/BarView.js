@@ -424,8 +424,8 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            fill: color,
-            opacity: opacity
+            fill: layout.startAngle === layout.endAngle ? 'transparent' : color,
+            opacity: layout.startAngle === layout.endAngle ? 0 : opacity
         },
         itemStyleModel.getBarItemStyle()
     ));
