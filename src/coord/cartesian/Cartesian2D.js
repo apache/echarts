@@ -81,15 +81,7 @@ Cartesian2D.prototype = {
      * @return {boolean}
      */
     containData: function (data) {
-        var axisX = this.getAxis('x');
-
-        // For aixs type is category,
-        // only one data shows on viewport just check if it xAxis' value equal to scale
-        if (axisX.type === 'category' && axisX.scale.count() === 1) {
-            return data[0] === axisX.scale._extent[0];
-        }
-
-        return axisX.containData(data[0])
+        return this.getAxis('x').containData(data[0])
             && this.getAxis('y').containData(data[1]);
     },
 
