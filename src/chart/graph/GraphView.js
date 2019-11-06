@@ -76,6 +76,8 @@ export default echarts.extendChartView({
 
     type: 'graph',
 
+    _focusState: true,
+
     init: function (ecModel, api) {
         var symbolDraw = new SymbolDraw();
         var lineDraw = new LineDraw();
@@ -94,6 +96,7 @@ export default echarts.extendChartView({
     },
 
     render: function (seriesModel, ecModel, api) {
+        var graphView = this;
         var coordSys = seriesModel.coordinateSystem;
 
         this._model = seriesModel;
@@ -163,6 +166,7 @@ export default echarts.extendChartView({
 
             if (itemModel.get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                    graphView._focusState = true;
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -170,7 +174,8 @@ export default echarts.extendChartView({
                     });
                 });
                 el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
-                    api.dispatchAction({
+                    graphView._focusState = false;
+                    graphView._dispatchUnfocus(api, {
                         type: 'unfocusNodeAdjacency',
                         seriesId: seriesModel.id
                     });
@@ -187,6 +192,7 @@ export default echarts.extendChartView({
 
             if (edge.getModel().get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                    graphView._focusState = true;
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -194,7 +200,8 @@ export default echarts.extendChartView({
                     });
                 });
                 el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
-                    api.dispatchAction({
+                    graphView._focusState = false;
+                    graphView._dispatchUnfocus(api, {
                         type: 'unfocusNodeAdjacency',
                         seriesId: seriesModel.id
                     });
@@ -244,11 +251,29 @@ export default echarts.extendChartView({
         });
 
         this._firstRender = false;
+
+        this._unfocusDelayCache = [];
     },
 
     dispose: function () {
         this._controller && this._controller.dispose();
         this._controllerHost = {};
+    },
+
+    _dispatchUnfocus: function (api, opt) {
+        var self = this;
+        this._unfocusDelayCache.push(opt);
+        if (this._unfocusDelayTimer == null) {
+            this._unfocusDelayTimer = setTimeout(function () {
+                self._unfocusDelayTimer = null;
+                for (var i = 0; i < self._unfocusDelayCache.length; i++) {
+                    if (!self._focusState) {
+                        api.dispatchAction(self._unfocusDelayCache[i]);
+                    }
+                }
+                self._unfocusDelayCache.length = 0;
+            }, 500);
+        }
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
