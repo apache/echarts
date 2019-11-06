@@ -111,6 +111,8 @@ export default echarts.extendChartView({
      */
     _focusAdjacencyDisabled: false,
 
+    _focusState: false,
+
     render: function (seriesModel, ecModel, api) {
         var sankeyView = this;
         var graph = seriesModel.getGraph();
@@ -277,6 +279,7 @@ export default echarts.extendChartView({
             if (itemModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
+                        sankeyView._focusState = true;
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -286,7 +289,8 @@ export default echarts.extendChartView({
                 });
                 el.off('mouseout').on('mouseout', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        api.dispatchAction({
+                        sankeyView._focusState = false;
+                        sankeyView._dispatchUnfocus(api, {
                             type: 'unfocusNodeAdjacency',
                             seriesId: seriesModel.id
                         });
@@ -300,6 +304,7 @@ export default echarts.extendChartView({
             if (edgeModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
+                        sankeyView._focusState = true;
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -309,7 +314,8 @@ export default echarts.extendChartView({
                 });
                 el.off('mouseout').on('mouseout', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        api.dispatchAction({
+                        sankeyView._focusState = false;
+                        sankeyView._dispatchUnfocus(api, {
                             type: 'unfocusNodeAdjacency',
                             seriesId: seriesModel.id
                         });
@@ -325,9 +331,27 @@ export default echarts.extendChartView({
         }
 
         this._data = seriesModel.getData();
+
+        this._unfocusDelayCache = [];
     },
 
     dispose: function () {},
+
+    _dispatchUnfocus: function (api, opt) {
+        var self = this;
+        this._unfocusDelayCache.push(opt);
+        if (this._unfocusDelayTimer == null) {
+            this._unfocusDelayTimer = setTimeout(function () {
+                self._unfocusDelayTimer = null;
+                for (var i = 0; i < self._unfocusDelayCache.length; i++) {
+                    if (!self._focusState) {
+                        api.dispatchAction(self._unfocusDelayCache[i]);
+                    }
+                }
+                self._unfocusDelayCache.length = 0;
+            }, 500);
+        }
+    },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
         var data = this._model.getData();
