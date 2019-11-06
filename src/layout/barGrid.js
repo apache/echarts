@@ -130,24 +130,26 @@ function getValueAxesMinGaps(barSeries) {
     });
 
     var axisMinGaps = [];
-    for (var i in axisValues) {
-        var valuesInAxis = axisValues[i];
-        if (valuesInAxis) {
-            // Sort axis values into ascending order to calculate gaps
-            valuesInAxis.sort(function (a, b) {
-                return a - b;
-            });
+    for (var key in axisValues) {
+        if (axisValues.hasOwnProperty(key)) {
+            var valuesInAxis = axisValues[key];
+            if (valuesInAxis) {
+                // Sort axis values into ascending order to calculate gaps
+                valuesInAxis.sort(function (a, b) {
+                    return a - b;
+                });
 
-            var min = null;
-            for (var j = 1; j < valuesInAxis.length; ++j) {
-                var delta = valuesInAxis[j] - valuesInAxis[j - 1];
-                if (delta > 0) {
-                    // Ignore 0 delta because they are of the same axis value
-                    min = min === null ? delta : Math.min(min, delta);
+                var min = null;
+                for (var j = 1; j < valuesInAxis.length; ++j) {
+                    var delta = valuesInAxis[j] - valuesInAxis[j - 1];
+                    if (delta > 0) {
+                        // Ignore 0 delta because they are of the same axis value
+                        min = min === null ? delta : Math.min(min, delta);
+                    }
                 }
+                // Set to null if only have one data
+                axisMinGaps[key] = min;
             }
-            // Set to null if only have one data
-            axisMinGaps[i] = min;
         }
     }
     return axisMinGaps;
