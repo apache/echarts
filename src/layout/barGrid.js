@@ -43,6 +43,7 @@ function getAxisKey(axis) {
  * @param {number} opt.count Positive interger.
  * @param {number} [opt.barWidth]
  * @param {number} [opt.barMaxWidth]
+ * @param {number} [opt.barMinWidth]
  * @param {number} [opt.barGap]
  * @param {number} [opt.barCategoryGap]
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
@@ -187,6 +188,11 @@ export function makeColumnLayout(barSeries) {
         var barMaxWidth = parsePercent(
             seriesModel.get('barMaxWidth'), bandWidth
         );
+        var barMinWidth = parsePercent(
+            // barMinWidth by default is 1 in cartesian. Because in value axis,
+            // the auto-calculated bar width might be less than 1.
+            seriesModel.get('barMinWidth') || 1, bandWidth
+        );
         var barGap = seriesModel.get('barGap');
         var barCategoryGap = seriesModel.get('barCategoryGap');
 
@@ -194,6 +200,7 @@ export function makeColumnLayout(barSeries) {
             bandWidth: bandWidth,
             barWidth: barWidth,
             barMaxWidth: barMaxWidth,
+            barMinWidth: barMinWidth,
             barGap: barGap,
             barCategoryGap: barCategoryGap,
             axisKey: getAxisKey(baseAxis),
@@ -248,6 +255,8 @@ function doCalBarWidthAndOffset(seriesInfoList) {
 
         var barMaxWidth = seriesInfo.barMaxWidth;
         barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
+        var barMinWidth = seriesInfo.barMinWidth;
+        barMinWidth && (stacks[stackId].minWidth = barMinWidth);
         var barGap = seriesInfo.barGap;
         (barGap != null) && (columnsOnAxis.gap = barGap);
         var barCategoryGap = seriesInfo.barCategoryGap;
@@ -273,14 +282,26 @@ function doCalBarWidthAndOffset(seriesInfoList) {
 
         // Find if any auto calculated bar exceeded maxBarWidth
         zrUtil.each(stacks, function (column, stack) {
+            if (column.width) {
+                return;
+            }
             var maxWidth = column.maxWidth;
-            if (maxWidth && maxWidth < autoWidth) {
-                maxWidth = Math.min(maxWidth, remainedWidth);
-                if (column.width) {
-                    maxWidth = Math.min(maxWidth, column.width);
-                }
-                remainedWidth -= maxWidth;
-                column.width = maxWidth;
+            var minWidth = column.minWidth;
+            var finalWidth = autoWidth;
+            if (maxWidth && maxWidth < finalWidth) {
+                finalWidth = Math.min(finalWidth, maxWidth, remainedWidth);
+            }
+            // `minWidth` has higher priority. `minWidth` decide that wheter the
+            // bar is able to be visible. So `minWidth` should not be restricted
+            // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
+            // the extreme cases for `value` axis, bars are allowed to overlap
+            // with each other if `minWidth` specified.
+            if (minWidth && minWidth > finalWidth) {
+                finalWidth = Math.max(finalWidth, minWidth);
+            }
+            if (finalWidth !== autoWidth) {
+                column.width = finalWidth;
+                remainedWidth -= finalWidth;
                 autoWidthCount--;
             }
         });

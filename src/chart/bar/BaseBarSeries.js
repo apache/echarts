@@ -66,6 +66,10 @@ export default SeriesModel.extend({
         progressiveChunkMode: 'mod',
 
         // barMaxWidth: null,
+
+        // In cartesian, the default value is 1. Otherwise null.
+        // barMinWidth: null,
+
         // 默认自适应
         // barWidth: null,
         // 柱间距离，默认为柱形宽度的30%，可设固定值
