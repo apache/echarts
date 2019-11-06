@@ -49,15 +49,18 @@ under the License.
 
                     var data = {
                         "name": "flare",
+                        "value": 111,
                         "children": [
                             {
                                 "name": "flex",
+                                "value": 222,
                                 "children": [
                                     {"name": "FlareVis", "value": 4116, symbolSize: 20}
                                 ]
                             },
                             {
                                 "name": "scale",
+                                "value": 333,
                                 "children": [
                                     {"name": "IScaleMap", "value": 2105},
                                     {"name": "LinearScale", "value": 1316},
@@ -73,6 +76,7 @@ under the License.
                             },
                             {
                                 "name": "display",
+                                "value": 444,
                                 "children": [
                                     {"name": "DirtySprite", "value": 8833}
                                ]
@@ -120,14 +124,18 @@ under the License.
                                 label: {
                                     position: 'right',
                                     verticalAlign: 'middle',
-                                    align: 'left'
+                                    align: 'left',
+                                    formatter: '{b}: {c}'
                                 },
 
                                 leaves: {
                                     label: {
-                                            position: 'left',
-                                            verticalAlign: 'middle',
-                                            align: 'right'
+                                        position: 'left',
+                                        verticalAlign: 'middle',
+                                        align: 'right',
+                                        formatter: function (params) {
+                                            return params.data.name + params.dataIndex;
+                                        }
                                     }
                                 },
 
