@@ -415,6 +415,7 @@ function updateStyle(
 ) {
     var color = data.getItemVisual(dataIndex, 'color');
     var opacity = data.getItemVisual(dataIndex, 'opacity');
+    var stroke = data.getVisual('borderColor');
     var itemStyleModel = itemModel.getModel('itemStyle');
     var hoverStyle = itemModel.getModel('emphasis.itemStyle').getBarItemStyle();
 
@@ -424,8 +425,9 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            fill: layout.startAngle === layout.endAngle ? 'transparent' : color,
-            opacity: layout.startAngle === layout.endAngle ? 0 : opacity
+            stroke : layout.startAngle === layout.endAngle ? 'none' : stroke,
+            fill: layout.startAngle === layout.endAngle ? 'none' : color,
+            opacity: opacity
         },
         itemStyleModel.getBarItemStyle()
     ));
