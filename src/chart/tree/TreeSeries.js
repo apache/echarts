@@ -53,7 +53,7 @@ export default SeriesModel.extend({
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 var node = tree.getNodeByDataIndex(idx);
                 var leavesModel = node.getLeavesModel();
-                if (node.children.length === 0 || (node.children.length !== 0 && node.isExpand === false)) {
+                if (!node.children.length || !node.isExpand) {
                     model.parentModel = leavesModel;
                 }
                 return model;
