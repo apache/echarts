@@ -522,8 +522,8 @@ export default ChartView.extend({
                     // Null data
                     return;
                 }
-                // fix #11360: don't draw symbol if clip is true and symbol is outside the visible area
-                if (seriesModel.get('clip', true) && !this._clipShapeForSymbol.contain(pt[0], pt[1])) {
+                // fix #11360: should't draw symbol outside clipShapeForSymbol
+                if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(pt[0], pt[1])) {
                     return;
                 }
                 symbol = new SymbolClz(data, dataIndex);
