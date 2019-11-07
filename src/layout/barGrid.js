@@ -283,13 +283,13 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
-        zrUtil.each(stacks, function (column, stack) {
+        zrUtil.each(stacks, function (column) {
             var maxWidth = column.maxWidth;
             var minWidth = column.minWidth;
             if (!column.width) {
                 var finalWidth = autoWidth;
                 if (maxWidth && maxWidth < finalWidth) {
-                    finalWidth = Math.min(finalWidth, maxWidth, remainedWidth);
+                    finalWidth = Math.min(maxWidth, remainedWidth);
                 }
                 // `minWidth` has higher priority. `minWidth` decide that wheter the
                 // bar is able to be visible. So `minWidth` should not be restricted
@@ -297,7 +297,7 @@ function doCalBarWidthAndOffset(seriesInfoList) {
                 // the extreme cases for `value` axis, bars are allowed to overlap
                 // with each other if `minWidth` specified.
                 if (minWidth && minWidth > finalWidth) {
-                    finalWidth = Math.max(finalWidth, minWidth);
+                    finalWidth = minWidth;
                 }
                 if (finalWidth !== autoWidth) {
                     column.width = finalWidth;
@@ -318,6 +318,8 @@ function doCalBarWidthAndOffset(seriesInfoList) {
                     finalWidth = Math.max(finalWidth, minWidth);
                 }
                 column.width = finalWidth;
+                remainedWidth -= finalWidth;
+                autoWidthCount--;
             }
         });
 
