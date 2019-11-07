@@ -312,11 +312,6 @@ function fixOnBandTicksCoords(axis, ticksCoords, alignWithLabel, clamp) {
 
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
-            var tickCategoryInterval = 0;
-            // Avoid split a single data item when odd interval.
-            if (tickCategoryInterval % 2 > 0) {
-                ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
-            }
         });
 
         var dataExtent = axis.scale.getExtent();
