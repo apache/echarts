@@ -111,8 +111,6 @@ export default echarts.extendChartView({
      */
     _focusAdjacencyDisabled: false,
 
-    _focusState: false,
-
     render: function (seriesModel, ecModel, api) {
         var sankeyView = this;
         var graph = seriesModel.getGraph();
@@ -279,7 +277,7 @@ export default echarts.extendChartView({
             if (itemModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        sankeyView._focusState = true;
+                        clearTimeout(this._unfocusDelayTimer);
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -289,11 +287,7 @@ export default echarts.extendChartView({
                 });
                 el.off('mouseout').on('mouseout', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        sankeyView._focusState = false;
-                        sankeyView._dispatchUnfocus(api, {
-                            type: 'unfocusNodeAdjacency',
-                            seriesId: seriesModel.id
-                        });
+                        sankeyView._dispatchUnfocus(api);
                     }
                 });
             }
@@ -304,7 +298,7 @@ export default echarts.extendChartView({
             if (edgeModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        sankeyView._focusState = true;
+                        clearTimeout(this._unfocusDelayTimer);
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -314,11 +308,7 @@ export default echarts.extendChartView({
                 });
                 el.off('mouseout').on('mouseout', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        sankeyView._focusState = false;
-                        sankeyView._dispatchUnfocus(api, {
-                            type: 'unfocusNodeAdjacency',
-                            seriesId: seriesModel.id
-                        });
+                        sankeyView._dispatchUnfocus(api);
                     }
                 });
             }
@@ -331,26 +321,26 @@ export default echarts.extendChartView({
         }
 
         this._data = seriesModel.getData();
-
-        this._unfocusDelayCache = [];
     },
 
-    dispose: function () {},
-
-    _dispatchUnfocus: function (api, opt) {
-        var self = this;
-        this._unfocusDelayCache.push(opt);
-        if (this._unfocusDelayTimer == null) {
-            this._unfocusDelayTimer = setTimeout(function () {
-                self._unfocusDelayTimer = null;
-                for (var i = 0; i < self._unfocusDelayCache.length; i++) {
-                    if (!self._focusState) {
-                        api.dispatchAction(self._unfocusDelayCache[i]);
-                    }
-                }
-                self._unfocusDelayCache.length = 0;
-            }, 500);
+    dispose: function () {
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
         }
+    },
+
+    _dispatchUnfocus: function (api) {
+        var self = this;
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+        }
+        this._unfocusDelayTimer = setTimeout(function () {
+            self._unfocusDelayTimer = null;
+            api.dispatchAction({
+                type: 'unfocusNodeAdjacency',
+                seriesId: self._model.id
+            });
+        }, 500);
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
