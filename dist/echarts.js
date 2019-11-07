@@ -7136,23 +7136,31 @@ Style.prototype = {
 
     /**
      * Whether transform text.
-     * Only useful in Path and Image element
+     * Only available in Path and Image element,
+     * where the text is called as `RectText`.
      * @type {boolean}
      */
     transformText: false,
 
     /**
-     * Text rotate around position of Path or Image
-     * Only useful in Path and Image element and transformText is false.
+     * Text rotate around position of Path or Image.
+     * The origin of the rotation can be specified by `textOrigin`.
+     * Only available in Path and Image element,
+     * where the text is called as `RectText`.
      */
     textRotation: 0,
 
     /**
-     * Text origin of text rotation, like [10, 40].
-     * Based on x, y of rect.
-     * Useful in label rotation of circular symbol.
-     * By default, this origin is textPosition.
-     * Can be 'center'.
+     * Text origin of text rotation.
+     * Useful in the case like label rotation of circular symbol.
+     * Only available in Path and Image element, where the text is called
+     * as `RectText` and the element is called as "host element".
+     * The value can be:
+     * + If specified as a coordinate like `[10, 40]`, it is the `[x, y]`
+     * base on the left-top corner of the rect of its host element.
+     * + If specified as a string `center`, it is the center of the rect of
+     * its host element.
+     * + By default, this origin is the `textPosition`.
      * @type {string|Array.<number>}
      */
     textOrigin: null,
@@ -7827,6 +7835,7 @@ function calculateTextPosition(out, style, rect) {
 
     var x = rect.x;
     var y = rect.y;
+    distance = distance || 0;
 
     var height = rect.height;
     var width = rect.width;
@@ -8079,8 +8088,11 @@ methods$1.measureText = function (text, font) {
  * @param {string} text
  * @param {string} font
  * @param {Object} [truncate]
- * @return {Object} block: {lineHeight, lines, height, outerHeight}
+ * @return {Object} block: {lineHeight, lines, height, outerHeight, canCacheByTextString}
  *  Notice: for performance, do not calculate outerWidth util needed.
+ *  `canCacheByTextString` means the result `lines` is only determined by the input `text`.
+ *  Thus we can simply comparing the `input` text to determin whether the result changed,
+ *  without travel the result `lines`.
  */
 function parsePlainText(text, font, padding, textLineHeight, truncate) {
     text != null && (text += '');
@@ -8089,12 +8101,14 @@ function parsePlainText(text, font, padding, textLineHeight, truncate) {
     var lines = text ? text.split('\n') : [];
     var height = lines.length * lineHeight;
     var outerHeight = height;
+    var canCacheByTextString = true;
 
     if (padding) {
         outerHeight += padding[0] + padding[2];
     }
 
     if (text && truncate) {
+        canCacheByTextString = false;
         var truncOuterHeight = truncate.outerHeight;
         var truncOuterWidth = truncate.outerWidth;
         if (truncOuterHeight != null && outerHeight > truncOuterHeight) {
@@ -8121,7 +8135,8 @@ function parsePlainText(text, font, padding, textLineHeight, truncate) {
         lines: lines,
         height: height,
         outerHeight: outerHeight,
-        lineHeight: lineHeight
+        lineHeight: lineHeight,
+        canCacheByTextString: canCacheByTextString
     };
 }
 
@@ -9101,7 +9116,6 @@ RectText.prototype = {
 };
 
 /**
- * 可绘制的图形基类
  * Base class of all displayable graphic objects
  * @module zrender/graphic/Displayable
  */
@@ -9150,16 +9164,15 @@ Displayable.prototype = {
     type: 'displayable',
 
     /**
-     * Displayable 是否为脏，Painter 中会根据该标记判断是否需要是否需要重新绘制
-     * Dirty flag. From which painter will determine if this displayable object needs brush
+     * Dirty flag. From which painter will determine if this displayable object needs brush.
      * @name module:zrender/graphic/Displayable#__dirty
      * @type {boolean}
      */
     __dirty: true,
 
     /**
-     * 图形是否可见，为true时不绘制图形，但是仍能触发鼠标事件
-     * If ignore drawing of the displayable object. Mouse event will still be triggered
+     * Whether the displayable object is visible. when it is true, the displayable object
+     * is not drawn, but the mouse event can still trigger the object.
      * @name module:/zrender/graphic/Displayable#invisible
      * @type {boolean}
      * @default false
@@ -9181,7 +9194,7 @@ Displayable.prototype = {
     z2: 0,
 
     /**
-     * z层level，决定绘画在哪层canvas中
+     * The z level determines the displayable object can be drawn in which layer canvas.
      * @name module:/zrender/graphic/Displayable#zlevel
      * @type {number}
      * @default 0
@@ -9189,7 +9202,7 @@ Displayable.prototype = {
     zlevel: 0,
 
     /**
-     * 是否可拖拽
+     * Whether it can be dragged.
      * @name module:/zrender/graphic/Displayable#draggable
      * @type {boolean}
      * @default false
@@ -9197,7 +9210,7 @@ Displayable.prototype = {
     draggable: false,
 
     /**
-     * 是否正在拖拽
+     * Whether is it dragging.
      * @name module:/zrender/graphic/Displayable#draggable
      * @type {boolean}
      * @default false
@@ -9205,7 +9218,7 @@ Displayable.prototype = {
     dragging: false,
 
     /**
-     * 是否相应鼠标事件
+     * Whether to respond to mouse events.
      * @name module:/zrender/graphic/Displayable#silent
      * @type {boolean}
      * @default false
@@ -9255,21 +9268,20 @@ Displayable.prototype = {
     afterBrush: function (ctx) {},
 
     /**
-     * 图形绘制方法
+     * Graphic drawing method.
      * @param {CanvasRenderingContext2D} ctx
      */
     // Interface
     brush: function (ctx, prevEl) {},
 
     /**
-     * 获取最小包围盒
+     * Get the minimum bounding box.
      * @return {module:zrender/core/BoundingRect}
      */
     // Interface
     getBoundingRect: function () {},
 
     /**
-     * 判断坐标 x, y 是否在图形上
      * If displayable element contain coord x, y
      * @param  {number} x
      * @param  {number} y
@@ -9288,7 +9300,6 @@ Displayable.prototype = {
     },
 
     /**
-     * 判断坐标 x, y 是否在图形的包围盒上
      * If bounding rect of element contain coord x, y
      * @param  {number} x
      * @param  {number} y
@@ -9301,7 +9312,6 @@ Displayable.prototype = {
     },
 
     /**
-     * 标记图形元素为脏，并且在下一帧重绘
      * Mark displayable element dirty and refresh next frame
      */
     dirty: function () {
@@ -9313,11 +9323,10 @@ Displayable.prototype = {
     },
 
     /**
-     * 图形是否会触发事件
      * If displayable object binded any event
      * @return {boolean}
      */
-    // TODO, 通过 bind 绑定的事件
+    // TODO, events bound by bind
     // isSilent: function () {
     //     return !(
     //         this.hoverable || this.draggable
@@ -9569,10 +9578,16 @@ function doClip(clipPaths, ctx) {
 function createRoot(width, height) {
     var domRoot = document.createElement('div');
 
-    // domRoot.onselectstart = returnFalse; // 避免页面选中的尴尬
+    // domRoot.onselectstart = returnFalse; // Avoid page selected
     domRoot.style.cssText = [
         'position:relative',
-        'overflow:hidden',
+        // IOS13 safari probably has a compositing bug (z order of the canvas and the consequent
+        // dom does not act as expected) when some of the parent dom has
+        // `-webkit-overflow-scrolling: touch;` and the webpage is longer than one screen and
+        // the canvas is not at the top part of the page.
+        // Check `https://bugs.webkit.org/show_bug.cgi?id=203681` for more details. We remove
+        // this `overflow:hidden` to avoid the bug.
+        // 'overflow:hidden',
         'width:' + width + 'px',
         'height:' + height + 'px',
         'padding:0',
@@ -10899,7 +10914,7 @@ var domHandlers = {
 
         this._lastTouchMoment = new Date();
 
-        this.handler.processGesture(this, event, 'start');
+        this.handler.processGesture(event, 'start');
 
         // In touch device, trigger `mousemove`(`mouseover`) should
         // be triggered, and must before `mousedown` triggered.
@@ -10923,7 +10938,7 @@ var domHandlers = {
         // mouse event in upper applicatoin.
         event.zrByTouch = true;
 
-        this.handler.processGesture(this, event, 'change');
+        this.handler.processGesture(event, 'change');
 
         // Mouse move should always be triggered no matter whether
         // there is gestrue event, because mouse move and pinch may
@@ -10946,7 +10961,7 @@ var domHandlers = {
         // mouse event in upper applicatoin.
         event.zrByTouch = true;
 
-        this.handler.processGesture(this, event, 'end');
+        this.handler.processGesture(event, 'end');
 
         domHandlers.mouseup.call(this, event);
 
@@ -11153,7 +11168,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.1.1';
+var version$1 = '4.1.2';
 
 /**
  * Initializing a zrender instance
@@ -19142,8 +19157,28 @@ function quantity(val) {
     return Math.pow(10, quantityExponent(val));
 }
 
+/**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
+ * @return {number}
+ */
 function quantityExponent(val) {
-    return Math.floor(Math.log(val) / Math.LN10);
+    if (val === 0) {
+        return 0;
+    }
+
+    var exp = Math.floor(Math.log(val) / Math.LN10);
+    /**
+     * exp is expected to be the rounded-down result of the base-10 log of val.
+     * But due to the precision loss with Math.log(val), we need to restore it
+     * using 10^exp to make sure we can get val back from exp. #11249
+     */
+    if (val / Math.pow(10, exp) >= 10) {
+        exp++;
+    }
+    return exp;
 }
 
 /**
@@ -19308,6 +19343,7 @@ var number = (Object.freeze || Object)({
 	isRadianAroundZero: isRadianAroundZero,
 	parseDate: parseDate,
 	quantity: quantity,
+	quantityExponent: quantityExponent,
 	nice: nice,
 	quantile: quantile,
 	reformIntervals: reformIntervals,
@@ -21620,7 +21656,7 @@ var GlobalModel = Model.extend({
                         mainType, resultItem.keyInfo.subType, true
                     );
 
-                    if (componentModel && componentModel instanceof ComponentModelClass) {
+                    if (componentModel && componentModel.constructor === ComponentModelClass) {
                         componentModel.name = resultItem.keyInfo.name;
                         // componentModel.settingTask && componentModel.settingTask.dirty();
                         componentModel.mergeOption(newCptOption, this);
@@ -27367,10 +27403,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.4.0';
+var version = '4.5.0';
 
 var dependencies = {
-    zrender: '4.1.1'
+    zrender: '4.1.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -29846,9 +29882,6 @@ DataDiffer.prototype = {
         initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, '_oldKeyGetter', this);
         initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter', this);
 
-        // Travel by inverted order to make sure order consistency
-        // when duplicate keys exists (consider newDataIndex.pop() below).
-        // For performance consideration, these code below do not look neat.
         for (i = 0; i < oldArr.length; i++) {
             var key = oldDataKeyArr[i];
             var idx = newDataIndexMap[key];
@@ -29860,7 +29893,7 @@ DataDiffer.prototype = {
                 var len = idx.length;
                 if (len) {
                     len === 1 && (newDataIndexMap[key] = null);
-                    idx = idx.unshift();
+                    idx = idx.shift();
                 }
                 else {
                     newDataIndexMap[key] = null;
@@ -31160,12 +31193,12 @@ listProto.indexOfName = function (name) {
  * @return {number}
  */
 listProto.indexOfRawIndex = function (rawIndex) {
-    if (!this._indices) {
-        return rawIndex;
-    }
-
     if (rawIndex >= this._rawCount || rawIndex < 0) {
         return -1;
+    }
+
+    if (!this._indices) {
+        return rawIndex;
     }
 
     // Indices are ascending
@@ -33481,6 +33514,7 @@ function getAxisKey(axis) {
  * @param {number} opt.count Positive interger.
  * @param {number} [opt.barWidth]
  * @param {number} [opt.barMaxWidth]
+ * @param {number} [opt.barMinWidth]
  * @param {number} [opt.barGap]
  * @param {number} [opt.barCategoryGap]
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
@@ -33525,22 +33559,112 @@ function prepareLayoutBarSeries(seriesType, ecModel) {
     return seriesModels;
 }
 
+
+/**
+ * Map from (baseAxis.dim + '_' + baseAxis.index) to min gap of two adjacent
+ * values.
+ * This works for time axes, value axes, and log axes.
+ * For a single time axis, return value is in the form like
+ * {'x_0': [1000000]}.
+ * The value of 1000000 is in milliseconds.
+ */
+function getValueAxesMinGaps(barSeries) {
+    /**
+     * Map from axis.index to values.
+     * For a single time axis, axisValues is in the form like
+     * {'x_0': [1495555200000, 1495641600000, 1495728000000]}.
+     * Items in axisValues[x], e.g. 1495555200000, are time values of all
+     * series.
+     */
+    var axisValues = {};
+    each$1(barSeries, function (seriesModel) {
+        var cartesian = seriesModel.coordinateSystem;
+        var baseAxis = cartesian.getBaseAxis();
+        if (baseAxis.type !== 'time' && baseAxis.type !== 'value') {
+            return;
+        }
+
+        var data = seriesModel.getData();
+        var key = baseAxis.dim + '_' + baseAxis.index;
+        var dim = data.mapDimension(baseAxis.dim);
+        for (var i = 0, cnt = data.count(); i < cnt; ++i) {
+            var value = data.get(dim, i);
+            if (!axisValues[key]) {
+                // No previous data for the axis
+                axisValues[key] = [value];
+            }
+            else {
+                // No value in previous series
+                axisValues[key].push(value);
+            }
+            // Ignore duplicated time values in the same axis
+        }
+    });
+
+    var axisMinGaps = [];
+    for (var key in axisValues) {
+        if (axisValues.hasOwnProperty(key)) {
+            var valuesInAxis = axisValues[key];
+            if (valuesInAxis) {
+                // Sort axis values into ascending order to calculate gaps
+                valuesInAxis.sort(function (a, b) {
+                    return a - b;
+                });
+
+                var min = null;
+                for (var j = 1; j < valuesInAxis.length; ++j) {
+                    var delta = valuesInAxis[j] - valuesInAxis[j - 1];
+                    if (delta > 0) {
+                        // Ignore 0 delta because they are of the same axis value
+                        min = min === null ? delta : Math.min(min, delta);
+                    }
+                }
+                // Set to null if only have one data
+                axisMinGaps[key] = min;
+            }
+        }
+    }
+    return axisMinGaps;
+}
+
 function makeColumnLayout(barSeries) {
+    var axisMinGaps = getValueAxesMinGaps(barSeries);
+
     var seriesInfoList = [];
     each$1(barSeries, function (seriesModel) {
-        var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();
         var axisExtent = baseAxis.getExtent();
-        var bandWidth = baseAxis.type === 'category'
-            ? baseAxis.getBandWidth()
-            : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
+
+        var bandWidth;
+        if (baseAxis.type === 'category') {
+            bandWidth = baseAxis.getBandWidth();
+        }
+        else if (baseAxis.type === 'value' || baseAxis.type === 'time') {
+            var key = baseAxis.dim + '_' + baseAxis.index;
+            var minGap = axisMinGaps[key];
+            var extentSpan = Math.abs(axisExtent[1] - axisExtent[0]);
+            var scale = baseAxis.scale.getExtent();
+            var scaleSpan = Math.abs(scale[1] - scale[0]);
+            bandWidth = minGap
+                ? extentSpan / scaleSpan * minGap
+                : extentSpan; // When there is only one data value
+        }
+        else {
+            var data = seriesModel.getData();
+            bandWidth = Math.abs(axisExtent[1] - axisExtent[0]) / data.count();
+        }
 
         var barWidth = parsePercent$1(
             seriesModel.get('barWidth'), bandWidth
         );
         var barMaxWidth = parsePercent$1(
             seriesModel.get('barMaxWidth'), bandWidth
+        );
+        var barMinWidth = parsePercent$1(
+            // barMinWidth by default is 1 in cartesian. Because in value axis,
+            // the auto-calculated bar width might be less than 1.
+            seriesModel.get('barMinWidth') || 1, bandWidth
         );
         var barGap = seriesModel.get('barGap');
         var barCategoryGap = seriesModel.get('barCategoryGap');
@@ -33549,6 +33673,7 @@ function makeColumnLayout(barSeries) {
             bandWidth: bandWidth,
             barWidth: barWidth,
             barMaxWidth: barMaxWidth,
+            barMinWidth: barMinWidth,
             barGap: barGap,
             barCategoryGap: barCategoryGap,
             axisKey: getAxisKey(baseAxis),
@@ -33603,6 +33728,8 @@ function doCalBarWidthAndOffset(seriesInfoList) {
 
         var barMaxWidth = seriesInfo.barMaxWidth;
         barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
+        var barMinWidth = seriesInfo.barMinWidth;
+        barMinWidth && (stacks[stackId].minWidth = barMinWidth);
         var barGap = seriesInfo.barGap;
         (barGap != null) && (columnsOnAxis.gap = barGap);
         var barCategoryGap = seriesInfo.barCategoryGap;
@@ -33627,15 +33754,42 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
-        each$1(stacks, function (column, stack) {
+        each$1(stacks, function (column) {
             var maxWidth = column.maxWidth;
-            if (maxWidth && maxWidth < autoWidth) {
-                maxWidth = Math.min(maxWidth, remainedWidth);
-                if (column.width) {
-                    maxWidth = Math.min(maxWidth, column.width);
+            var minWidth = column.minWidth;
+            if (!column.width) {
+                var finalWidth = autoWidth;
+                if (maxWidth && maxWidth < finalWidth) {
+                    finalWidth = Math.min(maxWidth, remainedWidth);
                 }
-                remainedWidth -= maxWidth;
-                column.width = maxWidth;
+                // `minWidth` has higher priority. `minWidth` decide that wheter the
+                // bar is able to be visible. So `minWidth` should not be restricted
+                // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
+                // the extreme cases for `value` axis, bars are allowed to overlap
+                // with each other if `minWidth` specified.
+                if (minWidth && minWidth > finalWidth) {
+                    finalWidth = minWidth;
+                }
+                if (finalWidth !== autoWidth) {
+                    column.width = finalWidth;
+                    remainedWidth -= finalWidth;
+                    autoWidthCount--;
+                }
+            }
+            else {
+                // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
+                // CSS does. Becuase barWidth can be a percent value, where
+                // `barMaxWidth` can be used to restrict the final width.
+                var finalWidth = column.width;
+                if (maxWidth) {
+                    finalWidth = Math.min(finalWidth, maxWidth);
+                }
+                // `minWidth` has higher priority, as described above
+                if (minWidth) {
+                    finalWidth = Math.max(finalWidth, minWidth);
+                }
+                column.width = finalWidth;
+                remainedWidth -= finalWidth;
                 autoWidthCount--;
             }
         });
@@ -33783,7 +33937,6 @@ function layout(seriesType, ecModel) {
                 }
                 stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
-
             data.setItemLayout(idx, {
                 x: x,
                 y: y,
@@ -33867,7 +34020,7 @@ function isInLargeMode(seriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis, valueAxis, stacked) {
-    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
 }
 
 /*
@@ -35819,12 +35972,16 @@ function calculateCategoryInterval(axis) {
     var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
 
     var cache = inner$6(axis.model);
+    var axisExtent = axis.getExtent();
     var lastAutoInterval = cache.lastAutoInterval;
     var lastTickCount = cache.lastTickCount;
 
     // Use cache to keep interval stable while moving zoom window,
     // otherwise the calculated interval might jitter when the zoom
     // window size is close to the interval-changing size.
+    // For example, if all of the axis labels are `a, b, c, d, e, f, g`.
+    // The jitter will cause that sometimes the displayed labels are
+    // `a, d, g` (interval: 2) sometimes `a, c, e`(interval: 1).
     if (lastAutoInterval != null
         && lastTickCount != null
         && Math.abs(lastAutoInterval - interval) <= 1
@@ -35832,6 +35989,10 @@ function calculateCategoryInterval(axis) {
         // Always choose the bigger one, otherwise the critical
         // point is not the same when zooming in or zooming out.
         && lastAutoInterval > interval
+        // If the axis change is caused by chart resize, the cache should not
+        // be used. Otherwise some hiden labels might not be shown again.
+        && cache.axisExtend0 === axisExtent[0]
+        && cache.axisExtend1 === axisExtent[1]
     ) {
         interval = lastAutoInterval;
     }
@@ -35840,6 +36001,8 @@ function calculateCategoryInterval(axis) {
     else {
         cache.lastTickCount = tickCount;
         cache.lastAutoInterval = interval;
+        cache.axisExtend0 = axisExtent[0];
+        cache.axisExtend1 = axisExtent[1];
     }
 
     return interval;
@@ -36120,7 +36283,6 @@ Axis.prototype = {
         opt = opt || {};
 
         var tickModel = opt.tickModel || this.getTickModel();
-
         var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
 
@@ -36132,8 +36294,9 @@ Axis.prototype = {
         }, this);
 
         var alignWithLabel = tickModel.get('alignWithLabel');
+
         fixOnBandTicksCoords(
-            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp
+            this, ticksCoords, alignWithLabel, opt.clamp
         );
 
         return ticksCoords;
@@ -36226,7 +36389,7 @@ function fixExtentWithBands(extent, nTick) {
 // splitLine/spliteArea should layout appropriately corresponding
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
-function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp) {
+function fixOnBandTicksCoords(axis, ticksCoords, alignWithLabel, clamp) {
     var ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
@@ -36235,26 +36398,30 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
 
     var axisExtent = axis.getExtent();
     var last;
+    var diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-        var shift = (ticksCoords[1].coord - ticksCoords[0].coord);
+        var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
+        var shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
+
         each$1(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
-            var tickCategoryInterval = tickCategoryInterval || 0;
-            // Avoid split a single data item when odd interval.
-            if (tickCategoryInterval % 2 > 0) {
-                ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
-            }
         });
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift};
+
+        var dataExtent = axis.scale.getExtent();
+        diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
+
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
+
         ticksCoords.push(last);
     }
 
     var inverse = axisExtent[0] > axisExtent[1];
 
+    // Handling clamp.
     if (littleThan(ticksCoords[0].coord, axisExtent[0])) {
         clamp ? (ticksCoords[0].coord = axisExtent[0]) : ticksCoords.shift();
     }
@@ -36269,6 +36436,10 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
     }
 
     function littleThan(a, b) {
+        // Avoid rounding error cause calculated tick coord different with extent.
+        // It may cause an extra unecessary tick added.
+        a = round$1(a);
+        b = round$1(b);
         return inverse ? a > b : a < b;
     }
 }
@@ -36712,6 +36883,15 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     if (symbolPath.type !== 'image') {
         symbolPath.useStyle({
             strokeNoScale: true
+        });
+    }
+    else {
+        symbolPath.setStyle({
+            opacity: null,
+            shadowBlur: null,
+            shadowOffsetX: null,
+            shadowOffsetY: null,
+            shadowColor: null
         });
     }
 
@@ -41993,6 +42173,10 @@ var BaseBarSeries = SeriesModel.extend({
         progressiveChunkMode: 'mod',
 
         // barMaxWidth: null,
+
+        // In cartesian, the default value is 1. Otherwise null.
+        // barMinWidth: null,
+
         // 默认自适应
         // barWidth: null,
         // 柱间距离，默认为柱形宽度的30%，可设固定值
@@ -42060,7 +42244,11 @@ BaseBarSeries.extend({
     defaultOption: {
         // If clipped
         // Only available on cartesian2d
-        clip: true
+        clip: true,
+
+        // If use caps on two sides of bars
+        // Only available on tangential polar bar
+        roundCap: false
     }
 });
 
@@ -42155,6 +42343,98 @@ var barItemStyle = {
         return style;
     }
 };
+
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/**
+ * Sausage: similar to sector, but have half circle on both sides
+ * @public
+ */
+var Sausage = extendShape({
+
+    type: 'sausage',
+
+    shape: {
+
+        cx: 0,
+
+        cy: 0,
+
+        r0: 0,
+
+        r: 0,
+
+        startAngle: 0,
+
+        endAngle: Math.PI * 2,
+
+        clockwise: true
+    },
+
+    buildPath: function (ctx, shape) {
+        var x = shape.cx;
+        var y = shape.cy;
+        var r0 = Math.max(shape.r0 || 0, 0);
+        var r = Math.max(shape.r, 0);
+        var dr = (r - r0) * 0.5;
+        var rCenter = r0 + dr;
+        var startAngle = shape.startAngle;
+        var endAngle = shape.endAngle;
+        var clockwise = shape.clockwise;
+
+        var unitStartX = Math.cos(startAngle);
+        var unitStartY = Math.sin(startAngle);
+        var unitEndX = Math.cos(endAngle);
+        var unitEndY = Math.sin(endAngle);
+
+        var lessThanCircle = clockwise
+            ? endAngle - startAngle < Math.PI * 2
+            : startAngle - endAngle < Math.PI * 2;
+
+        if (lessThanCircle) {
+            ctx.moveTo(unitStartX * r0 + x, unitStartY * r0 + y);
+
+            ctx.arc(
+                unitStartX * rCenter + x, unitStartY * rCenter + y, dr,
+                -Math.PI + startAngle, startAngle, !clockwise
+            );
+        }
+
+        ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
+
+        ctx.moveTo(unitEndX * r + x, unitEndY * r + y);
+
+        ctx.arc(
+            unitEndX * rCenter + x, unitEndY * rCenter + y, dr,
+            endAngle - Math.PI * 2, endAngle - Math.PI, !clockwise
+        );
+
+        if (r0 !== 0) {
+            ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
+
+            ctx.moveTo(unitStartX * r0 + x, unitEndY * r0 + y);
+        }
+
+        ctx.closePath();
+    }
+});
 
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -42271,6 +42551,8 @@ extendChartView({
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
 
+        var roundCap = seriesModel.get('roundCap', true);
+
         data.diff(oldData)
             .add(function (dataIndex) {
                 if (!data.hasValue(dataIndex)) {
@@ -42291,7 +42573,7 @@ extendChartView({
                 }
 
                 var el = elementCreator[coord.type](
-                    data, dataIndex, itemModel, layout, isHorizontalOrRadial, animationModel
+                    dataIndex, layout, isHorizontalOrRadial, animationModel, false, roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -42325,7 +42607,7 @@ extendChartView({
                 }
                 else {
                     el = elementCreator[coord.type](
-                        data, newIndex, itemModel, layout, isHorizontalOrRadial, animationModel, true
+                        newIndex, layout, isHorizontalOrRadial, animationModel, true, roundCap
                     );
                 }
 
@@ -42449,7 +42731,7 @@ var clip = {
 var elementCreator = {
 
     cartesian2d: function (
-        data, dataIndex, itemModel, layout, isHorizontal,
+        dataIndex, layout, isHorizontal,
         animationModel, isUpdate
     ) {
         var rect = new Rect({shape: extend({}, layout)});
@@ -42470,15 +42752,18 @@ var elementCreator = {
     },
 
     polar: function (
-        data, dataIndex, itemModel, layout, isRadial,
-        animationModel, isUpdate
+        dataIndex, layout, isRadial,
+        animationModel, isUpdate, roundCap
     ) {
         // Keep the same logic with bar in catesion: use end value to control
         // direction. Notice that if clockwise is true (by default), the sector
         // will always draw clockwisely, no matter whether endAngle is greater
         // or less than startAngle.
         var clockwise = layout.startAngle < layout.endAngle;
-        var sector = new Sector({
+
+        var ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
+
+        var sector = new ShapeClass({
             shape: defaults({clockwise: clockwise}, layout)
         });
 
@@ -44781,7 +45066,8 @@ function Radar(radarModel, ecModel, api) {
 
     this._indicatorAxes = map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
         var dim = 'indicator_' + idx;
-        var indicatorAxis = new IndicatorAxis(dim, new IntervalScale());
+        var indicatorAxis = new IndicatorAxis(dim,
+            (indicatorModel.get('axisType') === 'log') ? new LogScale() : new IntervalScale());
         indicatorAxis.name = indicatorModel.get('name');
         // Inject model and axis
         indicatorAxis.model = indicatorModel;
@@ -45042,6 +45328,7 @@ var RadarModel = extendComponentModel({
         var scale = this.get('scale');
         var axisLine = this.get('axisLine');
         var axisTick = this.get('axisTick');
+        var axisType = this.get('axisType');
         var axisLabel = this.get('axisLabel');
         var nameTextStyle = this.get('name');
         var showName = this.get('name.show');
@@ -45068,8 +45355,9 @@ var RadarModel = extendComponentModel({
                 scale: scale,
                 axisLine: axisLine,
                 axisTick: axisTick,
+                axisType: axisType,
                 axisLabel: axisLabel,
-                // Competitable with 2 and use text
+                // Compatible with 2 and use text
                 name: indicatorOpt.text,
                 nameLocation: 'end',
                 nameGap: nameGap,
@@ -45145,6 +45433,7 @@ var RadarModel = extendComponentModel({
         ),
         axisLabel: defaultsShow(valueAxisDefault.axisLabel, false),
         axisTick: defaultsShow(valueAxisDefault.axisTick, false),
+        axisType: 'interval',
         splitLine: defaultsShow(valueAxisDefault.splitLine, true),
         splitArea: defaultsShow(valueAxisDefault.splitArea, true),
 
@@ -46043,6 +46332,8 @@ var geoJSONLoader = {
             throw new Error('Invalid geoJson format\n' + e.message);
         }
 
+        fixNanhai(mapName, regions);
+
         each$1(regions, function (region) {
             var regionName = region.name;
 
@@ -46059,8 +46350,6 @@ var geoJSONLoader = {
                 );
             }
         });
-
-        fixNanhai(mapName, regions);
 
         return (inner$7(mapRecord).parsed = {
             regions: regions,
@@ -50402,9 +50691,12 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         }
 
         var textPosition = isLeft ? 'left' : 'right';
+        var rotate = seriesScope.labelModel.get('rotate');
+        var labelRotateRadian = rotate * (Math.PI / 180);
+
         symbolPath.setStyle({
-            textPosition: textPosition,
-            textRotation: -rad,
+            textPosition: seriesScope.labelModel.get('position') || textPosition,
+            textRotation: rotate == null ? -rad : labelRotateRadian,
             textOrigin: 'center',
             verticalAlign: 'middle'
         });
@@ -54824,6 +55116,8 @@ var GraphSeries = extendSeriesModel({
             // Node repulsion. Can be an array to represent range.
             repulsion: [0, 50],
             gravity: 0.1,
+            // Initial friction
+            friction: 0.6,
 
             // Edge length. Can be an array to represent range.
             edgeLength: 30,
@@ -56768,11 +57062,12 @@ function forceLayout$1(nodes, edges, opts) {
     // var k = scale * Math.sqrt(width * height / nodes.length);
     // var k2 = k * k;
 
-    var friction = 0.6;
+    var initialFriction = opts.friction == null ? 0.6 : opts.friction;
+    var friction = initialFriction;
 
     return {
         warmUp: function () {
-            friction = 0.5;
+            friction = initialFriction * 0.8;
         },
 
         setFixed: function (idx) {
@@ -56794,6 +57089,9 @@ function forceLayout$1(nodes, edges, opts) {
             var nLen = nodes.length;
             for (var i = 0; i < edges.length; i++) {
                 var e = edges[i];
+                if (e.ignoreForceLayout) {
+                    continue;
+                }
                 var n1 = e.n1;
                 var n2 = e.n2;
 
@@ -56935,11 +57233,13 @@ var forceLayout = function (ecModel) {
                 if (isNaN(d)) {
                     d = (edgeLength[0] + edgeLength[1]) / 2;
                 }
+                var edgeModel = edge.getModel();
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
-                    curveness: edge.getModel().get('lineStyle.curveness') || 0
+                    curveness: edgeModel.get('lineStyle.curveness') || 0,
+                    ignoreForceLayout: edgeModel.get('ignoreForceLayout')
                 };
             });
 
@@ -56947,7 +57247,8 @@ var forceLayout = function (ecModel) {
             var rect = coordSys.getBoundingRect();
             var forceInstance = forceLayout$1(nodes, edges, {
                 rect: rect,
-                gravity: forceModel.get('gravity')
+                gravity: forceModel.get('gravity'),
+                friction: forceModel.get('friction')
             });
             var oldStep = forceInstance.step;
             forceInstance.step = function (cb) {
@@ -57150,11 +57451,6 @@ var GaugeSeries = SeriesModel.extend({
     type: 'series.gauge',
 
     getInitialData: function (option, ecModel) {
-        var dataOpt = option.data || [];
-        if (!isArray(dataOpt)) {
-            dataOpt = [dataOpt];
-        }
-        option.data = dataOpt;
         return createListSimply(this, ['value']);
     },
 
@@ -59661,6 +59957,12 @@ function BrushController(zr) {
 
     /**
      * @private
+     * @type {Object}
+     */
+    this._lastMouseMovePoint = {};
+
+    /**
+     * @private
      * @type {Array}
      */
     this._covers = [];
@@ -60343,7 +60645,7 @@ var mouseHandlers = {
         if (this._dragging) {
             // In case some browser do not support globalOut,
             // and release mose out side the browser.
-            handleDragEnd.call(this, e);
+            handleDragEnd(this, e);
         }
         else if (!e.target || !e.target.draggable) {
 
@@ -60362,7 +60664,11 @@ var mouseHandlers = {
     },
 
     mousemove: function (e) {
-        var localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
+        var lastPoint = this._lastMouseMovePoint;
+        lastPoint.x = e.offsetX;
+        lastPoint.y = e.offsetY;
+
+        var localCursorPoint = this.group.transformCoordToLocal(lastPoint.x, lastPoint.y);
 
         resetCursor(this, e, localCursorPoint);
 
@@ -60376,27 +60682,46 @@ var mouseHandlers = {
         }
     },
 
-    mouseup: handleDragEnd //,
+    mouseup: function (e) {
+        handleDragEnd(this, e);
+    },
 
-    // FIXME
-    // in tooltip, globalout should not be triggered.
-    // globalout: handleDragEnd
+    globalout: function (e) {
+        handleDragEnd(this, e, true);
+    }
 };
 
-function handleDragEnd(e) {
-    if (this._dragging) {
+function handleDragEnd(controller, e, isGlobalOut) {
+    if (controller._dragging) {
 
-        preventDefault(e);
+        // Just be worried about bring some side effect to the world
+        // out of echarts, we do not `preventDefault` for globalout.
+        !isGlobalOut && preventDefault(e);
 
-        var localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
-        var eventParams = updateCoverByMouse(this, e, localCursorPoint, true);
+        var pointerX = e.offsetX;
+        var pointerY = e.offsetY;
+        var lastPoint = controller._lastMouseMovePoint;
+        if (isGlobalOut) {
+            pointerX = lastPoint.x;
+            pointerY = lastPoint.y;
+        }
 
-        this._dragging = false;
-        this._track = [];
-        this._creatingCover = null;
+        var localCursorPoint = controller.group.transformCoordToLocal(pointerX, pointerY);
+        // FIXME
+        // Here `e` is used only in `onIrrelevantElement` finally. And it's OK
+        // that pass the `e` of `globalout` to `onIrrelevantElement`. But it is
+        // not a good design of these interfaces. However, we do not refactor
+        // these code now because the implementation of `onIrrelevantElement`
+        // need to be discussed and probably be changed in future, becuase it
+        // slows down the performance of zrender in some cases.
+        var eventParams = updateCoverByMouse(controller, e, localCursorPoint, true);
+
+        controller._dragging = false;
+        controller._track = [];
+        controller._creatingCover = null;
 
         // trigger event shoule be at final, after procedure will be nested.
-        eventParams && trigger$1(this, eventParams);
+        eventParams && trigger$1(controller, eventParams);
     }
 }
 
@@ -63319,6 +63644,8 @@ var CandlestickSeries = SeriesModel.extend({
 
         layout: null, // 'horizontal' or 'vertical'
 
+        clip: true,
+
         itemStyle: {
             color: '#c23531', // 阳线 positive
             color0: '#314656', // 阴线 negative     '#c23531', '#314656'
@@ -63391,12 +63718,14 @@ var NORMAL_ITEM_STYLE_PATH$1 = ['itemStyle'];
 var EMPHASIS_ITEM_STYLE_PATH$1 = ['emphasis', 'itemStyle'];
 var SKIP_PROPS = ['color', 'color0', 'borderColor', 'borderColor0'];
 
-
 var CandlestickView = Chart.extend({
 
     type: 'candlestick',
 
     render: function (seriesModel, ecModel, api) {
+        // If there is clipPath created in large mode. Remove it.
+        this.group.removeClipPath();
+
         this._updateDrawMode(seriesModel);
 
         this._isLargeDraw
@@ -63429,6 +63758,10 @@ var CandlestickView = Chart.extend({
         var group = this.group;
         var isSimpleBox = data.getLayout('isSimpleBox');
 
+        var needsClip = seriesModel.get('clip', true);
+        var coord = seriesModel.coordinateSystem;
+        var clipArea = coord.getArea && coord.getArea();
+
         // There is no old data only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
         if (!this._data) {
@@ -63441,12 +63774,18 @@ var CandlestickView = Chart.extend({
                     var el;
 
                     var itemLayout = data.getItemLayout(newIdx);
+
+                    if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
+                        return;
+                    }
+
                     el = createNormalBox$1(itemLayout, newIdx, true);
                     initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
 
                     setBoxCommon(el, data, newIdx, isSimpleBox);
 
                     group.add(el);
+
                     data.setItemGraphicEl(newIdx, el);
                 }
             })
@@ -63460,6 +63799,11 @@ var CandlestickView = Chart.extend({
                 }
 
                 var itemLayout = data.getItemLayout(newIdx);
+                if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
+                    group.remove(el);
+                    return;
+                }
+
                 if (!el) {
                     el = createNormalBox$1(itemLayout, newIdx);
                 }
@@ -63483,7 +63827,19 @@ var CandlestickView = Chart.extend({
 
     _renderLarge: function (seriesModel) {
         this._clear();
+
         createLarge$1(seriesModel, this.group);
+
+        var clipPath = seriesModel.get('clip', true)
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        if (clipPath) {
+            this.group.setClipPath(clipPath);
+        }
+        else {
+            this.group.removeClipPath();
+        }
+
     },
 
     _incrementalRenderNormal: function (params, seriesModel) {
@@ -63549,6 +63905,7 @@ var NormalBoxPath = Path.extend({
     }
 });
 
+
 function createNormalBox$1(itemLayout, dataIndex, isInit) {
     var ends = itemLayout.ends;
     return new NormalBoxPath({
@@ -63559,6 +63916,18 @@ function createNormalBox$1(itemLayout, dataIndex, isInit) {
         },
         z2: 100
     });
+}
+
+function isNormalBoxClipped(clipArea, itemLayout) {
+    var clipped = true;
+    for (var i = 0; i < itemLayout.ends.length; i++) {
+        // If any point are in the region.
+        if (clipArea.contain(itemLayout.ends[i][0], itemLayout.ends[i][1])) {
+            clipped = false;
+            break;
+        }
+    }
+    return clipped;
 }
 
 function setBoxCommon(el, data, dataIndex, isSimpleBox) {
@@ -72525,6 +72894,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
      * @param {number} opt.count Positive interger.
      * @param {number} [opt.barWidth]
      * @param {number} [opt.barMaxWidth]
+     * @param {number} [opt.barMinWidth]
      * @param {number} [opt.barGap]
      * @param {number} [opt.barCategoryGap]
      * @return {Object} {width, offset, offsetCenter} is not support, return undefined.
@@ -72873,6 +73243,8 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
         var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        var clampLayout = baseAxis.dim !== 'radius'
+            || !seriesModel.get('roundCap', true);
 
         var valueAxisStart = valueAxis.getExtent()[0];
 
@@ -72924,8 +73296,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
             }
             // tangential sector
             else {
-                // angleAxis must be clamped.
-                var angleSpan = valueAxis.dataToAngle(value, true) - valueAxisStart;
+                var angleSpan = valueAxis.dataToAngle(value, clampLayout) - valueAxisStart;
                 var radius = baseAxis.dataToRadius(baseValue);
 
                 if (Math.abs(angleSpan) < barMinAngle) {
@@ -73729,10 +74100,23 @@ function resizePolar(polar, polarModel, api) {
 
     var radiusAxis = polar.getRadiusAxis();
     var size = Math.min(width, height) / 2;
-    var radius = parsePercent$1(polarModel.get('radius'), size);
+
+    var radius = polarModel.get('radius');
+    if (radius == null) {
+        radius = [0, '100%'];
+    }
+    else if (!isArray(radius)) {
+        // r0 = 0
+        radius = [0, radius];
+    }
+    radius = [
+        parsePercent$1(radius[0], size),
+        parsePercent$1(radius[1], size)
+    ];
+
     radiusAxis.inverse
-        ? radiusAxis.setExtent(radius, 0)
-        : radiusAxis.setExtent(0, radius);
+        ? radiusAxis.setExtent(radius[1], radius[0])
+        : radiusAxis.setExtent(radius[0], radius[1]);
 }
 
 /**
@@ -73947,19 +74331,38 @@ AxisView.extend({
     _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
         var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
-        var circle = new Circle({
-            shape: {
-                cx: polar.cx,
-                cy: polar.cy,
-                r: radiusExtent[getRadiusIdx(polar)]
-            },
-            style: lineStyleModel.getLineStyle(),
-            z2: 1,
-            silent: true
-        });
-        circle.style.fill = null;
+        // extent id of the axis radius (r0 and r)
+        var rId = getRadiusIdx(polar);
+        var r0Id = rId ? 0 : 1;
 
-        this.group.add(circle);
+        var shape;
+        if (radiusExtent[r0Id] === 0) {
+            shape = new Circle({
+                shape: {
+                    cx: polar.cx,
+                    cy: polar.cy,
+                    r: radiusExtent[rId]
+                },
+                style: lineStyleModel.getLineStyle(),
+                z2: 1,
+                silent: true
+            });
+        }
+        else {
+            shape = new Ring({
+                shape: {
+                    cx: polar.cx,
+                    cy: polar.cy,
+                    r: radiusExtent[rId],
+                    r0: radiusExtent[r0Id]
+                },
+                style: lineStyleModel.getLineStyle(),
+                z2: 1,
+                silent: true
+            });
+        }
+        shape.style.fill = null;
+        this.group.add(shape);
     },
 
     /**
@@ -76856,6 +77259,15 @@ extendComponentView({
                 path.setStyle(iconStyleModel.getItemStyle());
                 path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
 
+                // Text position calculation
+                path.setStyle({
+                    text: titles[iconName],
+                    textAlign: iconStyleEmphasisModel.get('textAlign'),
+                    textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
+                    textPadding: iconStyleEmphasisModel.get('textPadding'),
+                    textFill: null
+                });
+
                 var tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
                     path.attr('tooltip', extend({
@@ -76881,15 +77293,14 @@ extendComponentView({
                     path.on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                            var defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                                ? (toolboxModel.get('right') == null ? 'right' : 'left')
+                                : (toolboxModel.get('bottom') == null ? 'bottom' : 'top');
                             path.setStyle({
-                                text: titles[iconName],
-                                textPosition: iconStyleEmphasisModel.get('textPosition') || 'bottom',
                                 textFill: iconStyleEmphasisModel.get('textFill')
                                     || hoverStyle.fill || hoverStyle.stroke || '#000',
-                                textAlign: iconStyleEmphasisModel.get('textAlign') || 'center',
                                 textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
-                                textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
-                                textPadding: iconStyleEmphasisModel.get('textPadding')
+                                textPosition: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
                             });
                         })
                         .on('mouseout', function () {
@@ -79097,7 +79508,21 @@ var DataZoomModel = extendComponentModel({
         this._autoThrottle = true;
 
         /**
-         * 'percent' or 'value'
+         * It is `[rangeModeForMin, rangeModeForMax]`.
+         * The optional values for `rangeMode`:
+         * + `'value'` mode: the axis extent will always be determined by
+         *     `dataZoom.startValue` and `dataZoom.endValue`, despite
+         *     how data like and how `axis.min` and `axis.max` are.
+         * + `'percent'` mode: `100` represents 100% of the `[dMin, dMax]`,
+         *     where `dMin` is `axis.min` if `axis.min` specified, otherwise `data.extent[0]`,
+         *     and `dMax` is `axis.max` if `axis.max` specified, otherwise `data.extent[1]`.
+         *     Axis extent will be determined by the result of the percent of `[dMin, dMax]`.
+         *
+         * For example, when users are using dynamic data (update data periodically via `setOption`),
+         * if in `'value`' mode, the window will be kept in a fixed value range despite how
+         * data are appended, while if in `'percent'` mode, whe window range will be changed alone with
+         * the appended data (suppose `axis.min` and `axis.max` are not specified).
+         *
          * @private
          */
         this._rangePropMode = ['percent', 'percent'];
@@ -82779,6 +83204,12 @@ extendComponentView({
             areas: clone(areas),
             $from: modelId
         });
+        opt.isEnd && this.api.dispatchAction({
+            type: 'brushEnd',
+            brushId: modelId,
+            areas: clone(areas),
+            $from: modelId
+        });
     }
 
 });
@@ -82850,6 +83281,11 @@ registerAction(
  */
 registerAction(
     {type: 'brushSelect', event: 'brushSelected', update: 'none'},
+    function () {}
+);
+
+registerAction(
+    {type: 'brushEnd', event: 'brushEnd', update: 'none'},
     function () {}
 );
 
@@ -92438,15 +92874,7 @@ if (!env$1.canvasSupported) {
         return (parseFloat(zlevel) || 0) * ZLEVEL_BASE + (parseFloat(z) || 0) * Z_BASE$1 + z2;
     };
 
-    var parsePercent$3 = function (value, maxValue) {
-        if (typeof value === 'string') {
-            if (value.lastIndexOf('%') >= 0) {
-                return parseFloat(value) / 100 * maxValue;
-            }
-            return parseFloat(value);
-        }
-        return value;
-    };
+    var parsePercent$3 = parsePercent;
 
     /***************************************************
      * PATH
@@ -93782,18 +94210,20 @@ function pathDataToString$1(path) {
 
                 var dThetaPositive = Math.abs(dTheta);
                 var isCircle = isAroundZero$1(dThetaPositive - PI2$6)
-                    && !isAroundZero$1(dThetaPositive);
+                    || (clockwise ? dTheta >= PI2$6 : -dTheta >= PI2$6);
+
+                // Mapping to 0~2PI
+                var unifiedTheta = dTheta > 0 ? dTheta % PI2$6 : (dTheta % PI2$6 + PI2$6);
 
                 var large = false;
-                if (dThetaPositive >= PI2$6) {
+                if (isCircle) {
                     large = true;
                 }
                 else if (isAroundZero$1(dThetaPositive)) {
                     large = false;
                 }
                 else {
-                    large = (dTheta > -PI$6 && dTheta < 0 || dTheta > PI$6)
-                        === !!clockwise;
+                    large = (unifiedTheta >= PI$6) === !!clockwise;
                 }
 
                 var x0 = round4(cx + rx * mathCos$3(theta));
@@ -93943,22 +94373,43 @@ svgImage.brush = function (el) {
  * TEXT
  **************************************************/
 var svgText = {};
-var tmpRect$3 = new BoundingRect();
-var tmpTextPositionResult = {};
+var _tmpTextHostRect = new BoundingRect();
+var _tmpTextBoxPos = {};
+var _tmpTextTransform = [];
+var TEXT_ALIGN_TO_ANCHRO = {
+    left: 'start',
+    right: 'end',
+    center: 'middle',
+    middle: 'middle'
+};
 
-var svgTextDrawRectText = function (el, rect, textRect) {
+/**
+ * @param {module:zrender/Element} el
+ * @param {Object|boolean} [hostRect] {x, y, width, height}
+ *        If set false, rect text is not used.
+ */
+var svgTextDrawRectText = function (el, hostRect) {
     var style = el.style;
+    var elTransform = el.transform;
+    var needTransformTextByHostEl = el instanceof Text || style.transformText;
 
     el.__dirty && normalizeTextStyle(style, true);
 
     var text = style.text;
     // Convert to string
-    if (text == null) {
-        // Draw no text only when text is set to null, but not ''
+    text != null && (text += '');
+    if (!needDrawText(text, style)) {
         return;
     }
-    else {
-        text += '';
+    // render empty text for svg if no text but need draw text.
+    text == null && (text = '');
+
+    // Follow the setting in the canvas renderer, if not transform the
+    // text, transform the hostRect, by which the text is located.
+    if (!needTransformTextByHostEl && elTransform) {
+        _tmpTextHostRect.copy(hostRect);
+        _tmpTextHostRect.applyTransform(elTransform);
+        hostRect = _tmpTextHostRect;
     }
 
     var textSvgEl = el.__textSvgEl;
@@ -93967,188 +94418,153 @@ var svgTextDrawRectText = function (el, rect, textRect) {
         el.__textSvgEl = textSvgEl;
     }
 
-    var x;
-    var y;
-    var textPosition = style.textPosition;
-    var align = style.textAlign || 'left';
-
-    if (typeof style.fontSize === 'number') {
-        style.fontSize += 'px';
-    }
-    var font = style.font
-        || [
-            style.fontStyle || '',
-            style.fontWeight || '',
-            style.fontSize || '',
-            style.fontFamily || ''
-        ].join(' ')
-        || DEFAULT_FONT$1;
-
-    var verticalAlign = style.textVerticalAlign;
-
-    textRect = getBoundingRect(
-        text, font, align,
-        verticalAlign, style.textPadding, style.textLineHeight,
-        false, style.truncate
-    );
-
-    var lineHeight = textRect.lineHeight;
-    // Text position represented by coord
-    if (textPosition instanceof Array) {
-        x = rect.x + parsePercent(textPosition[0], rect.width);
-        y = rect.y + parsePercent(textPosition[1], rect.height);
-    }
-    else {
-        var newPos = el.calculateTextPosition
-            ? el.calculateTextPosition(tmpTextPositionResult, style, rect)
-            : calculateTextPosition(tmpTextPositionResult, style, rect);
-        x = newPos.x;
-        y = newPos.y;
-        verticalAlign = newPos.textVerticalAlign;
-        align = newPos.textAlign;
-    }
-
-    setVerticalAlign(textSvgEl, verticalAlign);
-
-    if (font) {
-        textSvgEl.style.font = font;
+    // style.font has been normalized by `normalizeTextStyle`.
+    var textSvgElStyle = textSvgEl.style;
+    var font = style.font || DEFAULT_FONT$1;
+    var computedFont = textSvgEl.__computedFont;
+    if (font !== textSvgEl.__styleFont) {
+        textSvgElStyle.font = textSvgEl.__styleFont = font;
+        // The computedFont might not be the orginal font if it is illegal font.
+        computedFont = textSvgEl.__computedFont = textSvgElStyle.font;
     }
 
     var textPadding = style.textPadding;
+    var textLineHeight = style.textLineHeight;
 
-    // Make baseline top
-    attr(textSvgEl, 'x', x);
-    attr(textSvgEl, 'y', y);
+    var contentBlock = el.__textCotentBlock;
+    if (!contentBlock || el.__dirtyText) {
+        contentBlock = el.__textCotentBlock = parsePlainText(
+            text, computedFont, textPadding, textLineHeight, style.truncate
+        );
+    }
+
+    var outerHeight = contentBlock.outerHeight;
+    var lineHeight = contentBlock.lineHeight;
+
+    getBoxPosition(_tmpTextBoxPos, el, style, hostRect);
+    var baseX = _tmpTextBoxPos.baseX;
+    var baseY = _tmpTextBoxPos.baseY;
+    var textAlign = _tmpTextBoxPos.textAlign || 'left';
+    var textVerticalAlign = _tmpTextBoxPos.textVerticalAlign;
+
+    setTextTransform(
+        textSvgEl, needTransformTextByHostEl, elTransform, style, hostRect, baseX, baseY
+    );
+
+    var boxY = adjustTextY(baseY, outerHeight, textVerticalAlign);
+    var textX = baseX;
+    var textY = boxY;
+
+    // TODO needDrawBg
+    if (textPadding) {
+        textX = getTextXForPadding$1(baseX, textAlign, textPadding);
+        textY += textPadding[0];
+    }
+
+    // `textBaseline` is set as 'middle'.
+    textY += lineHeight / 2;
 
     bindStyle(textSvgEl, style, true, el);
-    if (el instanceof Text || el.style.transformText) {
-        // Transform text with element
-        setTransform(textSvgEl, el.transform);
-    }
-    else {
-        if (el.transform) {
-            tmpRect$3.copy(rect);
-            tmpRect$3.applyTransform(el.transform);
-            rect = tmpRect$3;
-        }
-        else {
-            var pos = el.transformCoordToGlobal(rect.x, rect.y);
-            rect.x = pos[0];
-            rect.y = pos[1];
-            el.transform = identity(create$1());
-        }
 
-        // Text rotation, but no element transform
-        var origin = style.textOrigin;
-        if (origin === 'center') {
-            x = textRect.width / 2 + x;
-            y = textRect.height / 2 + y;
-        }
-        else if (origin) {
-            x = origin[0] + x;
-            y = origin[1] + y;
-        }
-        var rotate$$1 = -style.textRotation || 0;
-        var transform = create$1();
-        // Apply textRotate to element matrix
-        rotate(transform, transform, rotate$$1);
-
-        var pos = [el.transform[4], el.transform[5]];
-        translate(transform, transform, pos);
-        setTransform(textSvgEl, transform);
-    }
-
-    var contentBlock = parsePlainText(
-        text, font, textPadding, lineHeight, style.truncate);
-
-    var textLines = contentBlock.lines;
-    var nTextLines = textLines.length;
-    var textAnchor = align;
-    // PENDING
-    if (textAnchor === 'left') {
-        textAnchor = 'start';
-        textPadding && (x += textPadding[3]);
-    }
-    else if (textAnchor === 'right') {
-        textAnchor = 'end';
-        textPadding && (x -= textPadding[1]);
-    }
-    else if (textAnchor === 'center') {
-        textAnchor = 'middle';
-        textPadding && (x += (textPadding[3] - textPadding[1]) / 2);
-    }
-
-    var dy = 0;
-    if (verticalAlign === 'bottom') {
-        dy = -textRect.height + lineHeight;
-        textPadding && (dy -= textPadding[2]);
-    }
-    else if (verticalAlign === 'middle') {
-        dy = (-textRect.height + lineHeight) / 2;
-        textPadding && (y += (textPadding[0] - textPadding[2]) / 2);
-    }
-    else {
-        textPadding && (dy += textPadding[0]);
-    }
+    // FIXME
+    // Add a <style> to reset all of the text font as inherit?
+    // otherwise the outer <style> may set the unexpected style.
 
     // Font may affect position of each tspan elements
-    if (el.__text !== text || el.__textFont !== font) {
-        var tspanList = el.__tspanList || [];
-        el.__tspanList = tspanList;
-        for (var i = 0; i < nTextLines; i++) {
-            // Using cached tspan elements
-            var tspan = tspanList[i];
-            if (!tspan) {
-                tspan = tspanList[i] = createElement('tspan');
-                textSvgEl.appendChild(tspan);
-                setVerticalAlign(tspan, verticalAlign);
-                attr(tspan, 'text-anchor', textAnchor);
-            }
-            else {
-                tspan.innerHTML = '';
-            }
-            attr(tspan, 'x', x);
-            attr(tspan, 'y', y + i * lineHeight + dy);
-            tspan.appendChild(document.createTextNode(textLines[i]));
-        }
-        // Remove unsed tspan elements
-        for (; i < tspanList.length; i++) {
-            textSvgEl.removeChild(tspanList[i]);
-        }
-        tspanList.length = nTextLines;
+    var canCacheByTextString = contentBlock.canCacheByTextString;
+    var tspanList = el.__tspanList || (el.__tspanList = []);
+    var tspanOriginLen = tspanList.length;
 
-        el.__text = text;
-        el.__textFont = font;
-    }
-    else if (el.__tspanList.length) {
-        // Update span x and y
-        var len = el.__tspanList.length;
-        for (var i = 0; i < len; ++i) {
-            var tspan = el.__tspanList[i];
-            if (tspan) {
-                attr(tspan, 'x', x);
-                attr(tspan, 'y', y + i * lineHeight + dy);
+    // Optimize for most cases, just compare text string to determine change.
+    if (canCacheByTextString && el.__canCacheByTextString && el.__text === text) {
+        if (el.__dirtyText && tspanOriginLen) {
+            for (var idx = 0; idx < tspanOriginLen; ++idx) {
+                updateTextLocation(tspanList[idx], textAlign, textX, textY + idx * lineHeight);
             }
+        }
+    }
+    else {
+        el.__text = text;
+        el.__canCacheByTextString = canCacheByTextString;
+        var textLines = contentBlock.lines;
+        var nTextLines = textLines.length;
+
+        var idx = 0;
+        for (; idx < nTextLines; idx++) {
+            // Using cached tspan elements
+            var tspan = tspanList[idx];
+            var singleLineText = textLines[idx];
+
+            if (!tspan) {
+                tspan = tspanList[idx] = createElement('tspan');
+                textSvgEl.appendChild(tspan);
+                tspan.appendChild(document.createTextNode(singleLineText));
+            }
+            else if (tspan.__zrText !== singleLineText) {
+                tspan.innerHTML = '';
+                tspan.appendChild(document.createTextNode(singleLineText));
+            }
+            updateTextLocation(tspan, textAlign, textX, textY + idx * lineHeight);
+        }
+        // Remove unused tspan elements
+        if (tspanOriginLen > nTextLines) {
+            for (; idx < tspanOriginLen; idx++) {
+                textSvgEl.removeChild(tspanList[idx]);
+            }
+            tspanList.length = nTextLines;
         }
     }
 };
 
-function setVerticalAlign(textSvgEl, verticalAlign) {
-    switch (verticalAlign) {
-        case 'middle':
-            attr(textSvgEl, 'dominant-baseline', 'middle');
-            attr(textSvgEl, 'alignment-baseline', 'middle');
-            break;
+function setTextTransform(textSvgEl, needTransformTextByHostEl, elTransform, style, hostRect, baseX, baseY) {
+    identity(_tmpTextTransform);
 
-        case 'bottom':
-            attr(textSvgEl, 'dominant-baseline', 'ideographic');
-            attr(textSvgEl, 'alignment-baseline', 'ideographic');
-            break;
-
-        default:
-            attr(textSvgEl, 'dominant-baseline', 'hanging');
-            attr(textSvgEl, 'alignment-baseline', 'hanging');
+    if (needTransformTextByHostEl && elTransform) {
+        copy$1(_tmpTextTransform, elTransform);
     }
+
+    // textRotation only apply in RectText.
+    var textRotation = style.textRotation;
+    if (hostRect && textRotation) {
+        var origin = style.textOrigin;
+        if (origin === 'center') {
+            baseX = hostRect.width / 2 + hostRect.x;
+            baseY = hostRect.height / 2 + hostRect.y;
+        }
+        else if (origin) {
+            baseX = origin[0] + hostRect.x;
+            baseY = origin[1] + hostRect.y;
+        }
+
+        _tmpTextTransform[4] -= baseX;
+        _tmpTextTransform[5] -= baseY;
+        // Positive: anticlockwise
+        rotate(_tmpTextTransform, _tmpTextTransform, textRotation);
+        _tmpTextTransform[4] += baseX;
+        _tmpTextTransform[5] += baseY;
+    }
+    // See the definition in `Style.js#textOrigin`, the default
+    // origin is from the result of `getBoxPosition`.
+
+    setTransform(textSvgEl, _tmpTextTransform);
+}
+
+// FIXME merge the same code with `helper/text.js#getTextXForPadding`;
+function getTextXForPadding$1(x, textAlign, textPadding) {
+    return textAlign === 'right'
+        ? (x - textPadding[1])
+        : textAlign === 'center'
+        ? (x + textPadding[3] / 2 - textPadding[1] / 2)
+        : (x + textPadding[3]);
+}
+
+function updateTextLocation(tspan, textAlign, x, y) {
+    // Consider different font display differently in vertial align, we always
+    // set vertialAlign as 'middle', and use 'y' to locate text vertically.
+    attr(tspan, 'dominant-baseline', 'middle');
+    attr(tspan, 'text-anchor', TEXT_ALIGN_TO_ANCHRO[textAlign]);
+    attr(tspan, 'x', x);
+    attr(tspan, 'y', y);
 }
 
 svgText.drawRectText = svgTextDrawRectText;
@@ -94156,12 +94572,7 @@ svgText.drawRectText = svgTextDrawRectText;
 svgText.brush = function (el) {
     var style = el.style;
     if (style.text != null) {
-        // 强制设置 textPosition
-        style.textPosition = [0, 0];
-        svgTextDrawRectText(el, {
-            x: style.x || 0, y: style.y || 0,
-            width: 0, height: 0
-        }, el.getBoundingRect());
+        svgTextDrawRectText(el, false);
     }
 };
 
@@ -95021,16 +95432,15 @@ ShadowManager.prototype.addWithoutUpdate = function (
     displayable
 ) {
     if (displayable && hasShadow(displayable.style)) {
-        var style = displayable.style;
 
         // Create dom in <defs> if not exists
         var dom;
-        if (style._shadowDom) {
+        if (displayable._shadowDom) {
             // Gradient exists
-            dom = style._shadowDom;
+            dom = displayable._shadowDom;
 
             var defs = this.getDefs(true);
-            if (!defs.contains(style._shadowDom)) {
+            if (!defs.contains(displayable._shadowDom)) {
                 // _shadowDom is no longer in defs, recreate
                 this.addDom(dom);
             }
@@ -95056,16 +95466,15 @@ ShadowManager.prototype.addWithoutUpdate = function (
  */
 ShadowManager.prototype.add = function (displayable) {
     var dom = this.createElement('filter');
-    var style = displayable.style;
 
     // Set dom id with shadow id, since each shadow instance
     // will have no more than one dom element.
     // id may exists before for those dirty elements, in which case
     // id should remain the same, and other attributes should be
     // updated.
-    style._shadowDomId = style._shadowDomId || this.nextId++;
+    displayable._shadowDomId = displayable._shadowDomId || this.nextId++;
     dom.setAttribute('id', 'zr' + this._zrId
-        + '-shadow-' + style._shadowDomId);
+        + '-shadow-' + displayable._shadowDomId);
 
     this.updateDom(displayable, dom);
     this.addDom(dom);
@@ -95083,13 +95492,13 @@ ShadowManager.prototype.update = function (svgElement, displayable) {
     var style = displayable.style;
     if (hasShadow(style)) {
         var that = this;
-        Definable.prototype.update.call(this, displayable, function (style) {
-            that.updateDom(displayable, style._shadowDom);
+        Definable.prototype.update.call(this, displayable, function () {
+            that.updateDom(displayable, displayable._shadowDom);
         });
     }
     else {
         // Remove shadow
-        this.remove(svgElement, style);
+        this.remove(svgElement, displayable);
     }
 };
 
@@ -95097,9 +95506,9 @@ ShadowManager.prototype.update = function (svgElement, displayable) {
 /**
  * Remove DOM and clear parent filter
  */
-ShadowManager.prototype.remove = function (svgElement, style) {
-    if (style._shadowDomId != null) {
-        this.removeDom(style);
+ShadowManager.prototype.remove = function (svgElement, displayable) {
+    if (displayable._shadowDomId != null) {
+        this.removeDom(svgElement);
         svgElement.style.filter = '';
     }
 };
@@ -95168,7 +95577,7 @@ ShadowManager.prototype.updateDom = function (displayable, dom) {
 
     // Store dom element in shadow, to avoid creating multiple
     // dom instances for the same shadow element
-    style._shadowDom = dom;
+    displayable._shadowDom = dom;
 };
 
 /**
@@ -95177,9 +95586,8 @@ ShadowManager.prototype.updateDom = function (displayable, dom) {
  * @param {Displayable} displayable displayable element
  */
 ShadowManager.prototype.markUsed = function (displayable) {
-    var style = displayable.style;
-    if (style && style._shadowDom) {
-        Definable.prototype.markUsed.call(this, style._shadowDom);
+    if (displayable._shadowDom) {
+        Definable.prototype.markUsed.call(this, displayable._shadowDom);
     }
 };
 
@@ -95409,29 +95817,30 @@ SVGPainter.prototype = {
                     prevSvgElement = textSvgElement || svgElement
                         || prevSvgElement;
 
+                    // zrender.Text only create textSvgElement.
                     this.gradientManager
-                        .addWithoutUpdate(svgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
                     this.shadowManager
-                        .addWithoutUpdate(prevSvgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
                     this.clipPathManager.markUsed(displayable);
                 }
             }
             else if (!item.removed) {
                 for (var k = 0; k < item.count; k++) {
                     var displayable = newVisibleList[item.indices[k]];
-                    prevSvgElement =
-                        svgElement =
-                        getTextSvgElement(displayable)
-                        || getSvgElement(displayable)
-                        || prevSvgElement;
+                    prevSvgElement = getTextSvgElement(displayable)
+                        || getSvgElement(displayable) || prevSvgElement;
+
+                    var svgElement = getSvgElement(displayable);
+                    var textSvgElement = getTextSvgElement(displayable);
 
                     this.gradientManager.markUsed(displayable);
                     this.gradientManager
-                        .addWithoutUpdate(svgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
 
                     this.shadowManager.markUsed(displayable);
                     this.shadowManager
-                        .addWithoutUpdate(svgElement, displayable);
+                        .addWithoutUpdate(svgElement || textSvgElement, displayable);
 
                     this.clipPathManager.markUsed(displayable);
                 }
@@ -95690,7 +96099,7 @@ registerPainter('svg', SVGPainter);
 
 
 
-// `grapchic` component, for example:
+// `graphic` component, for example:
 // chart.setOption({
 //     graphic: {...}
 // });
