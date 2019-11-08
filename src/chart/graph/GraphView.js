@@ -164,7 +164,10 @@ export default echarts.extendChartView({
 
             if (itemModel.get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
-                    clearTimeout(this._unfocusDelayTimer);
+                    if (this._unfocusDelayTimer) {
+                        clearTimeout(this._unfocusDelayTimer);
+                        this._unfocusDelayTimer = null;
+                    }
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -186,7 +189,10 @@ export default echarts.extendChartView({
 
             if (edge.getModel().get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
-                    clearTimeout(this._unfocusDelayTimer);
+                    if (this._unfocusDelayTimer) {
+                        clearTimeout(this._unfocusDelayTimer);
+                        this._unfocusDelayTimer = null;
+                    }
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -248,6 +254,7 @@ export default echarts.extendChartView({
         this._controllerHost = {};
         if (this._unfocusDelayTimer) {
             clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
         }
     },
 
@@ -255,6 +262,7 @@ export default echarts.extendChartView({
         var self = this;
         if (this._unfocusDelayTimer) {
             clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
         }
         this._unfocusDelayTimer = setTimeout(function () {
             self._unfocusDelayTimer = null;
