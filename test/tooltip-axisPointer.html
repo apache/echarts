@@ -75,6 +75,8 @@ under the License.
         <div class="chart" id="none"></div>
         <h1>tooltip.axisPointer.label.show: fasle</h1>
         <div class="chart" id="tooltip.axisPointer.label.show: fasle"></div>
+        <h1>axis tooltip show with value</h1>
+        <div class="chart" id="toolip-show-with-value"></div>
 
 
         <script>
@@ -1031,6 +1033,61 @@ under the License.
 
         </script>
 
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        axisPointer : {
+                            type : 'shadow'
+                        }
+                    },
+                    legend: {
+                        data: ['直接访问', '邮件营销','联盟广告','视频广告','搜索引擎']
+                    },
+                    xAxis:  {
+                        type: 'value'
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['周一','周二','周三','周四','周五','周六','周日']
+                    },
+                    series: [
+                        {
+                            name: '邮件营销',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [[200, '周五'], [1000, '周四']]
+                        },
+                        {
+                            name: '联盟广告',
+                            type: 'bar',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'insideRight'
+                                }
+                            },
+                            data: [[1000, '周五']]
+                        }
+                    ]
+                };
+
+                createChart('toolip-show-with-value', echarts, option, 500);
+            });
+        </script>
 
 
     </body>

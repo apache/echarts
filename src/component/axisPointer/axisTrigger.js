@@ -229,6 +229,10 @@ function buildPayloadsBySeries(value, axisInfo) {
                 snapToValue = seriesNestestValue;
                 payloadBatch.length = 0;
             }
+            // no need to show tooltip if value not equals to seriesNestestValue
+            if (dist > 0) {
+                return;
+            }
             each(dataIndices, function (dataIndex) {
                 payloadBatch.push({
                     seriesIndex: series.seriesIndex,
