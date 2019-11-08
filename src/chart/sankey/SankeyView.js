@@ -277,6 +277,10 @@ export default echarts.extendChartView({
             if (itemModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
+                        if (this._unfocusDelayTimer) {
+                            clearTimeout(this._unfocusDelayTimer);
+                            this._unfocusDelayTimer = null;
+                        }
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -286,10 +290,7 @@ export default echarts.extendChartView({
                 });
                 el.off('mouseout').on('mouseout', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        api.dispatchAction({
-                            type: 'unfocusNodeAdjacency',
-                            seriesId: seriesModel.id
-                        });
+                        sankeyView._dispatchUnfocus(api);
                     }
                 });
             }
@@ -300,6 +301,10 @@ export default echarts.extendChartView({
             if (edgeModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
+                        if (this._unfocusDelayTimer) {
+                            clearTimeout(this._unfocusDelayTimer);
+                            this._unfocusDelayTimer = null;
+                        }
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -309,10 +314,7 @@ export default echarts.extendChartView({
                 });
                 el.off('mouseout').on('mouseout', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        api.dispatchAction({
-                            type: 'unfocusNodeAdjacency',
-                            seriesId: seriesModel.id
-                        });
+                        sankeyView._dispatchUnfocus(api);
                     }
                 });
             }
@@ -327,7 +329,27 @@ export default echarts.extendChartView({
         this._data = seriesModel.getData();
     },
 
-    dispose: function () {},
+    dispose: function () {
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
+        }
+    },
+
+    _dispatchUnfocus: function (api) {
+        var self = this;
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
+        }
+        this._unfocusDelayTimer = setTimeout(function () {
+            self._unfocusDelayTimer = null;
+            api.dispatchAction({
+                type: 'unfocusNodeAdjacency',
+                seriesId: self._model.id
+            });
+        }, 500);
+    },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
         var data = this._model.getData();
