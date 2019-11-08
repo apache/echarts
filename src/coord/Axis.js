@@ -85,7 +85,7 @@ Axis.prototype = {
      * @return {boolean}
      */
     containData: function (data) {
-        return this.contain(this.dataToCoord(data));
+        return this.scale.contain(data);
     },
 
     /**
