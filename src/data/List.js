@@ -467,6 +467,21 @@ listProto.getProvider = function () {
     return this._rawData;
 };
 
+// Get store data
+listProto.getStorage = function () {
+    return this._storage;
+};
+
+/**
+ *  Get specific item's data
+ *
+ * @param {string} dim dim name
+ * @return {Array} item data
+ */
+listProto.getStorageItem = function (dim) {
+    return [].slice.call(this._storage[dim][0]);
+};
+
 /**
  * Caution: Can be only called on raw data (before `this._indices` created).
  */
