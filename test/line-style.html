@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <div id="main0"></div>
+    <div></div>
+    <script>
+        var chart;
+        var myChart;
+
+        require([
+            'echarts'
+        ], function (echarts) {
+            var colorList = ['#33ff11', '#aa0088', '#224477', '#00ee44', '#6611ff', '#889911'];
+            var option = {
+                legend: {
+                    left: 'center',
+                    bottom: 'bottom'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: [100, 200, 20, 30, 60, 89],
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                grid: {
+                    bottom: 120
+                },
+                series: [
+                    {
+                        // itemStyle.color is callback, lineStyle.color not set
+                        name: 'Symbol color is from callback, line color should be palette color',
+                        type: 'line',
+                        data: [100, 110, 100, 120, 100, 130],
+                        symbolSize: 10,
+                        smooth: true,
+                        itemStyle: {
+                            color: function (param) {
+                                return colorList[param.dataIndex]
+                            }
+                        }
+                    },
+                    {
+                        // itemStyle.color is callback, lineStyle.color is "blue"
+                        name: 'Symbol color is from callback, line color should be "blue"',
+                        type: 'line',
+                        data: [200, 210, 200, 220, 200, 230],
+                        symbolSize: 10,
+                        smooth: true,
+                        itemStyle: {
+                            color: function (param) {
+                                return colorList[param.dataIndex]
+                            }
+                        },
+                        lineStyle: {
+                            color: 'blue'
+                        }
+                    },
+                    {
+                        // itemStyle.color is "green", lineStyle.color not set
+                        name: 'Both symbol color and line color should be "green"',
+                        type: 'line',
+                        data: [300, 310, 300, 320, 300, 330],
+                        symbolSize: 10,
+                        smooth: true,
+                        itemStyle: {
+                            color: 'green'
+                        }
+                    },
+                    {
+                        // itemStyle.color is "green", lineStyle.color is "blue"
+                        name: 'Symbol color should be "green", line color should be "blue"',
+                        type: 'line',
+                        data: [400, 410, 400, 420, 400, 430],
+                        symbolSize: 10,
+                        smooth: true,
+                        itemStyle: {
+                            color: 'green'
+                        },
+                        lineStyle: {
+                            color: 'blue'
+                        }
+                    },
+                    {
+                        // itemStyle.color not set, lineStyle.color not set
+                        name: 'Both symbol color and line color should be palette color',
+                        type: 'line',
+                        data: [500, 510, 500, 520, 500, 530],
+                        symbolSize: 10,
+                        smooth: true
+                    }
+                ]
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Test itemStyle.color and lineStyle.color',
+                    'The colors should follow what the legend described.'
+                ],
+                option: option
+            });
+        });
+
+    </script>
+</body>
+
+</html>
