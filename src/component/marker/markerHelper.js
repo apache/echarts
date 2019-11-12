@@ -60,27 +60,10 @@ function markerTypeCalculatorWithExtent(
 ) {
     var coordArr = [];
 
-    var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
-    var calcDataDim = stacked
-        ? data.getCalculationInfo('stackResultDimension')
-        : targetDataDim;
-
-    var value = numCalculate(data, calcDataDim, mlType);
-
-    var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
-    var targetData = data.getStorageItem(targetDataDim);
-    if (mlType === 'max') {
-        coordArr[targetCoordIndex] = Math.max(...targetData);
-        coordArr[otherCoordIndex] = targetData.indexOf(Math.max(...targetData));
-    }
-    else if (mlType === 'min') {
-        coordArr[targetCoordIndex] = Math.min(...targetData);
-        coordArr[otherCoordIndex] = targetData.indexOf(Math.min(...targetData));
-    }
-    else {
-        coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
-        coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex);
-    }
+    var value = numCalculate(data, targetDataDim, mlType);
+    var dataIndex = data.indicesOfNearest(targetDataDim, value)[0];
+    coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
+    coordArr[targetCoordIndex] = mlType === 'average' ? value : data.get(targetDataDim, dataIndex);
 
     // Make it simple, do not visit all stacked value to count precision.
     var precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
