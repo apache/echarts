@@ -1330,5 +1330,66 @@ under the License.
                 });
             });
         </script>
+
+
+
+        <div class="chart" id="line-highlight-point"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    grid: {
+                        top: 130,
+                        bottom: 80
+                    },
+                    dataZoom: [{
+                            type: 'slider',
+                            show: true
+                        },
+                        {
+                            type: 'inside'
+                        }
+                    ],
+                    xAxis: {
+                        type: 'category',
+                        name: 'x',
+                        splitLine: {
+                        show: false
+                        },
+                        data: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                        axisPointer: {
+                        show: 'true'
+                        },
+                    },
+                    yAxis: {
+                        name: 'y',
+                        max: 20
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    series: [{
+                        name: 'B',
+                        type: 'line',
+                        clip: true,
+                        data: [1, 2, 4, 8, 16, 32, 64, 128, 256]
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'line-highlight-point', {
+                    title: 'Line Clip on emphasis',
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+
     </body>
 </html>
