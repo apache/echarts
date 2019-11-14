@@ -164,10 +164,7 @@ export default echarts.extendChartView({
 
             if (itemModel.get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
-                    if (this._unfocusDelayTimer) {
-                        clearTimeout(this._unfocusDelayTimer);
-                        this._unfocusDelayTimer = null;
-                    }
+                    graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -189,10 +186,7 @@ export default echarts.extendChartView({
 
             if (edge.getModel().get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
-                    if (this._unfocusDelayTimer) {
-                        clearTimeout(this._unfocusDelayTimer);
-                        this._unfocusDelayTimer = null;
-                    }
+                    graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -252,18 +246,12 @@ export default echarts.extendChartView({
     dispose: function () {
         this._controller && this._controller.dispose();
         this._controllerHost = {};
-        if (this._unfocusDelayTimer) {
-            clearTimeout(this._unfocusDelayTimer);
-            this._unfocusDelayTimer = null;
-        }
+        this._clearTimer();
     },
 
     _dispatchUnfocus: function (api, opt) {
         var self = this;
-        if (this._unfocusDelayTimer) {
-            clearTimeout(this._unfocusDelayTimer);
-            this._unfocusDelayTimer = null;
-        }
+        this._clearTimer();
         this._unfocusDelayTimer = setTimeout(function () {
             self._unfocusDelayTimer = null;
             api.dispatchAction({
@@ -272,6 +260,13 @@ export default echarts.extendChartView({
             });
         }, 500);
 
+    },
+
+    _clearTimer: function () {
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
+        }
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
