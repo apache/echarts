@@ -55,7 +55,7 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
         }
     }
 
-    function changeX(list, isDownList, cx, cy, r, dir, maxTextWidth) {
+    function changeX(list, isDownList, cx, cy, r, dir) {
         var lastDeltaX = dir > 0
             ? isDownList                // right-side
                 ? Number.MAX_VALUE      // down
@@ -70,13 +70,49 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
                 var x2 = list[i].linePoints[1][0];
                 var x3 = list[i].linePoints[2][0] + dx;
                 var len2 = (x3 - x2) * dir;
+                var padding = list[i].labelPadding;
+                var edgeMargin = list[i].edgeMargin;
+                var isAlignToEdge = list[i].labelAlignTo === 'edge';
 
                 list[i].x = x3 + dir * list[i].labelPadding;
-                if (len2 < labelLine.restrainMinLen2) {
-                    var x3Updated = x2 + labelLine.restrainMinLen2 * dir;
-                    var padding = list[i].labelPadding;
 
-                    var textWidth = list[i].width + (x3 - x3Updated + padding) * dir;
+                var textWidth = isAlignToEdge
+                    // Default text width is the real width when alignTo is 'edge'
+                    ? list[i].width
+                    // Default text width is the distance between boundary to x3 for 'labelLine'
+                    : (dir > 0
+                        ? viewWidth - x3 - padding - edgeMargin
+                        : x3 - padding - edgeMargin
+                    );
+                var x3Updated = x3;
+                if (len2 < labelLine.restrainMinLen2) {
+                    // Move text or x3 to make len2 larger
+                    x3Updated = x2 + labelLine.restrainMinLen2 * dir;
+                }
+                // Prevent text overflowing edgeMargin
+                if (dir > 0) {
+                    x3Updated = Math.min(x3Updated, viewWidth - edgeMargin - padding);
+                }
+                else if (dir <= 0) {
+                    x3Updated = Math.max(x3Updated, edgeMargin + padding);
+                }
+                // Prevent x3 being inner than x2
+                x3Updated = dir > 0 ? Math.max(x2, x3Updated) : Math.min(x2, x3Updated);
+
+                var x3Delta = (x3 - x3Updated) * dir;
+                // Set text width to be smaller to make len2 large
+                textWidth += x3Delta;
+                list[i].x -= x3Delta * dir;
+
+                x3 = x3Updated;
+
+                // Restrain edgeMargin
+                var maxTextWidth = dir > 0
+                    ? Math.max(0, viewWidth - edgeMargin - list[i].x - padding)
+                    : Math.max(0, list[i].x - edgeMargin);
+                textWidth = Math.min(textWidth, maxTextWidth);
+
+                if (textWidth < list[i].width) {
                     list[i].truncatedText = textContain.truncateText(
                         list[i].truncatedText,
                         textWidth,
@@ -86,10 +122,11 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
                         list[i].truncatedText,
                         list[i].font
                     );
-                    list[i].x += dir * (list[i].width - realTextWidth);
-
-                    x3 = x3Updated;
+                    // Small adjustment when realTextWidth is not exactly the same
+                    isAlignToEdge && (list[i].x += dir * (textWidth - realTextWidth));
+                    list[i].width = realTextWidth;
                 }
+
                 list[i].linePoints[2][0] = x3;
                 continue;
             }
@@ -122,14 +159,12 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
     var len = list.length;
     var upList = [];
     var downList = [];
-    var maxTextWidth = -1;
     for (var i = 0; i < len; i++) {
         delta = list[i].y - lastY;
         if (delta < 0) {
             shiftDown(i, len, -delta, dir);
         }
         lastY = list[i].y + list[i].height;
-        maxTextWidth = Math.max(maxTextWidth, list[i].width);
     }
     if (viewHeight - lastY < 0) {
         shiftUp(len - 1, lastY - viewHeight);
@@ -142,8 +177,8 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
             upList.push(list[i]);
         }
     }
-    changeX(upList, false, cx, cy, r, dir, maxTextWidth);
-    changeX(downList, true, cx, cy, r, dir, maxTextWidth);
+    changeX(upList, false, cx, cy, r, dir);
+    changeX(downList, true, cx, cy, r, dir);
 }
 
 function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, labelLine) {
@@ -165,19 +200,17 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, labelLi
     adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, labelLine);
 
     for (var i = 0; i < labelLayoutList.length; i++) {
-        if (isPositionCenter(labelLayoutList[i])
-            || labelLayoutList[i].labelAlignTo !== 'none'
-        ) {
+        if (isPositionCenter(labelLayoutList[i])) {
             continue;
         }
         var linePoints = labelLayoutList[i].linePoints;
         if (linePoints) {
             var dist = linePoints[1][0] - linePoints[2][0];
             if (labelLayoutList[i].x < cx) {
-                linePoints[2][0] = labelLayoutList[i].x + 3;
+                linePoints[2][0] = labelLayoutList[i].x + labelLayoutList[i].labelPadding;
             }
             else {
-                linePoints[2][0] = labelLayoutList[i].x - 3;
+                linePoints[2][0] = labelLayoutList[i].x - labelLayoutList[i].labelPadding;
             }
             linePoints[1][1] = linePoints[2][1] = labelLayoutList[i].y;
             linePoints[1][0] = linePoints[2][0] + dist;
@@ -201,7 +234,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
     var seriesLabelModel = seriesModel.getModel('label');
     var edgeMargin = seriesLabelModel.get('edgeMargin');
     edgeMargin = parsePercent(edgeMargin, viewWidth);
-    var maxLen2 = -1;
+    var maxLen2 = -Number.MAX_VALUE;
     var minLen2 = Number.MAX_VALUE;
 
     data.each(function (idx) {
@@ -229,6 +262,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         var midAngle = (layout.startAngle + layout.endAngle) / 2;
         var dx = Math.cos(midAngle);
         var dy = Math.sin(midAngle);
+        var dir = dx < 0 ? -1 : 1;
 
         var textX;
         var textY;
@@ -257,8 +291,6 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
             textX = x1 + dx * 3;
             textY = y1 + dy * 3;
 
-            var dir = dx < 0 ? -1 : 1;
-
             if (!isLabelInside) {
                 // For roseType
                 var x2 = x1 + dx * (labelLineLen + r - layout.r);
@@ -279,8 +311,12 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
                     x3 = x2 + dir * labelLineLen2;
                 }
 
+                // x3 Cannot be inner than x2
+                dir > 0 && (x3 = Math.max(x3, x2));
+                dir <= 0 && (x3 = Math.min(x3, x2));
+
                 if (labelAlignTo === 'edge' || labelAlignTo === 'labelLine') {
-                    var len2 = (x3 - x2) * dir;
+                    var len2 = Math.max((x3 - x2) * dir, 0);
                     minLen2 = Math.min(minLen2, len2);
                     maxLen2 = Math.max(maxLen2, len2);
                 }
@@ -345,11 +381,11 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         var targetMaxLen2 = Math.max(Math.min(maxLen2, restrainMaxLen2), restrainMinLen2);
 
         var dx = 0;
-        if (minLen2 < targetMinLen2) {
-            dx = targetMinLen2 - minLen2;
-        }
-        else if (maxLen2 > targetMaxLen2) {
+        if (maxLen2 > targetMaxLen2) {
             dx = targetMaxLen2 - maxLen2;
+        }
+        else if (minLen2 < targetMinLen2) {
+            dx = targetMinLen2 - minLen2;
         }
 
         var labelLine = {
@@ -358,7 +394,6 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
             dx: dx
         };
 
-        // console.log(labelLine);
         avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, labelLine);
     }
 }
