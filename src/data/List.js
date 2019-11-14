@@ -1159,23 +1159,31 @@ listProto.indicesOfNearest = function (dim, value, maxDistance) {
         maxDistance = Infinity;
     }
 
-    var minDist = Number.MAX_VALUE;
+    var minDist = Infinity;
     var minDiff = -1;
+    var nearestIndicesLen = 0;
     for (var i = 0, len = this.count(); i < len; i++) {
-        var diff = value - this.get(dim, i /*, stack */);
+        var diff = value - this.get(dim, i);
         var dist = Math.abs(diff);
-        if (diff <= maxDistance && dist <= minDist) {
-            // For the case of two data are same on xAxis, which has sequence data.
-            // Show the nearest index
-            // https://github.com/ecomfe/echarts/issues/2869
-            if (dist < minDist || (diff >= 0 && minDiff < 0)) {
+        if (dist <= maxDistance) {
+            // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
+            // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
+            // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
+            // So we chose the one that `diff >= 0` in this csae.
+            if (dist < minDist
+                || (dist === minDist && diff >= 0 && minDiff < 0)
+            ) {
                 minDist = dist;
                 minDiff = diff;
-                nearestIndices.length = 0;
+                nearestIndicesLen = 0;
             }
-            nearestIndices.push(i);
+            if (diff === minDiff) {
+                nearestIndices[nearestIndicesLen++] = i;
+            }
         }
     }
+    nearestIndices.length = nearestIndicesLen;
+
     return nearestIndices;
 };
 
