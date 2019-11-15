@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <script src="lib/dat.gui.min.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var count = 20;
+            var data = [];
+            var text = '';
+            for (var i = 0; i < count; i++) {
+                text += 'XY';
+                data.push({
+                    name: text + i,
+                    value: Math.random()
+                });
+            }
+            var defaultMin = 20;
+            var defaultMax = 200;
+
+            var option0 = {
+                series: [{
+                    type: 'pie',
+                    radius: '50%',
+                    data: data,
+                    // animation: false,
+                    labelLine: {
+                        minLength2: defaultMin,
+                        maxLength2: defaultMax
+                    },
+                    label: {
+                        edgeMargin: 20,
+                        position: 'outer',
+                        alignTo: 'labelLine',
+                        padding: 5
+                    }
+                }]
+            };
+
+            var option1 = {
+                series: [{
+                    type: 'pie',
+                    radius: '50%',
+                    data: data,
+                    // animation: false,
+                    labelLine: {
+                        minLength2: defaultMin,
+                        maxLength2: defaultMax
+                    },
+                    label: {
+                        edgeMargin: 20,
+                        position: 'outer',
+                        alignTo: 'edge'
+                    }
+                }]
+            };
+
+            var chart0 = testHelper.create(echarts, 'main0', {
+                title: 'alignTo: "labelLine"',
+                option: option0
+            });
+
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: 'alignTo: "edge"',
+                option: option1
+            });
+
+            var gui = new dat.GUI({
+            });
+            var config = {
+                maxLength2: defaultMax,
+                minLength2: defaultMin
+            };
+            var maxCtrl = gui
+                .add(config, 'maxLength2', 0, 1000)
+                .onChange(function (value) {
+                    if (value < config.minLength2) {
+                        config.minLength2 = value;
+                        option0.series[0].labelLine.minLength2 = value;
+                        option1.series[0].labelLine.minLength2 = value;
+                        minCtrl.setValue(value);
+                    }
+                    option0.series[0].labelLine.maxLength2 = value;
+                    option1.series[0].labelLine.maxLength2 = value;
+                    chart0.setOption(option0);
+                    chart1.setOption(option1);
+                });
+
+            var minCtrl = gui
+                .add(config, 'minLength2', 0, 1000)
+                .onChange(function (value) {
+                    if (value > config.maxLength2) {
+                        config.maxLength2 = value;
+                        option0.series[0].labelLine.maxLength2 = value;
+                        option1.series[0].labelLine.maxLength2 = value;
+                        maxCtrl.setValue(value);
+                    }
+                    option0.series[0].labelLine.minLength2 = value;
+                    option1.series[0].labelLine.minLength2 = value;
+                    chart0.setOption(option0);
+                    chart1.setOption(option1);
+                });
+            });
+        </script>
+
+
+    </body>
+</html>
+
