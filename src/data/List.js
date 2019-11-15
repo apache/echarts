@@ -1144,7 +1144,8 @@ listProto.indexOfRawIndex = function (rawIndex) {
  * @param {string} dim
  * @param {number} value
  * @param {number} [maxDistance=Infinity]
- * @return {Array.<number>} Considere multiple points has the same value.
+ * @return {Array.<number>} If and only if multiple indices has
+ *        the same value, they are put to the result.
  */
 listProto.indicesOfNearest = function (dim, value, maxDistance) {
     var storage = this._storage;
@@ -1162,6 +1163,8 @@ listProto.indicesOfNearest = function (dim, value, maxDistance) {
     var minDist = Infinity;
     var minDiff = -1;
     var nearestIndicesLen = 0;
+
+    // Check the test case of `test/ut/spec/data/List.js`.
     for (var i = 0, len = this.count(); i < len; i++) {
         var diff = value - this.get(dim, i);
         var dist = Math.abs(diff);
@@ -1170,6 +1173,8 @@ listProto.indicesOfNearest = function (dim, value, maxDistance) {
             // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
             // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
             // So we chose the one that `diff >= 0` in this csae.
+            // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
+            // should be push to `nearestIndices`.
             if (dist < minDist
                 || (dist === minDist && diff >= 0 && minDiff < 0)
             ) {
