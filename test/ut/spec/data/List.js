@@ -180,4 +180,24 @@ describe('List', function () {
             expect(list.getItemModel(0).option).toEqual([10, 10]);
         });
     });
+
+    describe('Data read', function () {
+        testCase('indicesOfNearest', function (List) {
+            var list = new List(['value']);
+            // ---- index: 0   1   2   3   4   5   6   7
+            list.initData([10, 20, 30, 35, 40, 40, 35, 50]);
+
+            expect(list.indicesOfNearest('value', 24.5)).toEqual([1]);
+            expect(list.indicesOfNearest('value', 25)).toEqual([1]);
+            expect(list.indicesOfNearest('value', 25.5)).toEqual([2]);
+            expect(list.indicesOfNearest('value', 25.5)).toEqual([2]);
+            expect(list.indicesOfNearest('value', 41)).toEqual([4, 5]);
+            expect(list.indicesOfNearest('value', 39)).toEqual([4, 5]);
+            expect(list.indicesOfNearest('value', 41)).toEqual([4, 5]);
+            expect(list.indicesOfNearest('value', 36)).toEqual([3, 6]);
+
+            expect(list.indicesOfNearest('value', 50.6, 0.5)).toEqual([]);
+            expect(list.indicesOfNearest('value', 50.5, 0.5)).toEqual([7]);
+        });
+    });
 });
