@@ -273,7 +273,7 @@ piePieceProto._updateLabel = function (data, idx, withAnimation) {
         {
             labelFetcher: data.hostModel,
             labelDataIndex: idx,
-            defaultText: labelLayout.truncatedText,
+            defaultText: labelLayout.truncatedText == null ? labelLayout.truncatedText : labelLayout.truncatedText,
             autoColor: visualColor,
             useInsideStyle: !!labelLayout.inside
         },
