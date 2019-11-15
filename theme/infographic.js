@@ -1,22 +1,3 @@
-/*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
-
 (function (root, factory) {if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports', 'echarts'], factory);
@@ -116,28 +97,27 @@
             }
         },
 
-        timeline: {
-            lineStyle: {
+		timeline: {
+			itemStyle: {
+                    color: '#27727B'
+			},
+			lineStyle: {
                 color: '#27727B'
-            },
-            controlStyle: {
-                normal: {
+			},
+			controlStyle: {
                     color: '#27727B',
                     borderColor: '#27727B'
-                }
-            },
+			},
             symbol: 'emptyCircle',
             symbolSize: 3
-        },
+		},
 
         line: {
             itemStyle: {
-                normal: {
                     borderWidth:2,
                     borderColor:'#fff',
                     lineStyle: {
                         width: 3
-                    }
                 },
                 emphasis: {
                     borderWidth:0
@@ -147,47 +127,44 @@
             symbolSize: 3.5
         },
 
-        candlestick: {
-            itemStyle: {
-                normal: {
-                    color: '#C1232B',
-                    color0: '#B5C334',
-                    lineStyle: {
-                        width: 1,
-                        color: '#C1232B',
-                        color0: '#B5C334'
-                    }
-                }
-            }
-        },
+	candlestick: {
+		itemStyle: {
+                 color: '#c1232b',
+                 color0: '#b5c334',
+		},
+		lineStyle: {
+                 width: 1,
+                 color: '#c1232b',
+                 color0: '#b5c334',
+		},
+		areaStyle: {
+                 color: '#c1232b',
+                 color0: '#27727b'
+		}
+	},
 
-        graph: {
-            color: colorPalette
-        },
+	graph: { 
+		itemStyle: {
+                 color: '#c1232b',
+		},
+        linkStyle: {
+                 color: '#b5c334'
+        }
+	},
 
-        map: {
-            label: {
-                normal: {
-                    textStyle: {
-                        color: '#C1232B'
-                    }
-                },
-                emphasis: {
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
-                }
-            },
-            itemStyle: {
-                normal: {
-                    areaColor: '#ddd',
-                    borderColor: '#eee'
-                },
-                emphasis: {
-                    areaColor: '#fe994e'
-                }
-            }
-        },
+	map: { 
+		itemStyle: {
+                 color: '#f2385a',
+                 areaColor: '#ddd',
+                 borderColor: '#eee'					 
+		},
+		areaStyle: {
+                 color: '#fe994e',
+		},
+        label: {
+              color: '#c1232b'
+        }
+	},
 
         gauge: {
             axisLine: {
