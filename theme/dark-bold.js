@@ -89,9 +89,6 @@
                 color: contrastColor
             }
         },
-        textStyle: {
-            color: contrastColor
-        },
         title: {
             textStyle: {
                 color: contrastColor
@@ -104,29 +101,30 @@
                 }
             }
         },
-        timeline: {
-            lineStyle: {
+
+		// Area scaling controller
+		dataZoom: {
+			dataBackgroundColor: '#eee',            // Data background color
+			fillerColor: 'rgba(200,200,200,0.2)',   // Fill the color
+			handleColor: '#458c6b'     // Handle color
+		},
+
+		timeline: {
+			itemStyle: {
+                color: colorPalette[1]
+			},
+			lineStyle: {
                 color: contrastColor
-            },
-            itemStyle: {
-                normal: {
-                    color: colorPalette[1]
-                }
-            },
-            label: {
-                normal: {
-                    textStyle: {
-                        color: contrastColor
-                    }
-                }
-            },
-            controlStyle: {
-                normal: {
-                    color: contrastColor,
-                    borderColor: contrastColor
-                }
-            }
-        },
+			},
+			controlStyle: {
+                color: contrastColor,
+                borderColor: contrastColor
+			},
+			label: {
+                color: contrastColor
+			}
+		},
+
         timeAxis: axisCommon(),
         logAxis: axisCommon(),
         valueAxis: axisCommon(),
@@ -138,14 +136,17 @@
         graph: {
             color: colorPalette
         },
-        gauge: {
-            title: {
-                textStyle: {
-                    color: contrastColor
-                }
-            }
-        }
-    };
+
+		gauge: {
+				axisLine: {
+					lineStyle: {
+						color: [[0.2, '#f2da87'],[0.8, '#458c6b'],[1, '#a62424']], 
+						width: 8
+					}
+				}
+			}
+		};
+
     theme.categoryAxis.splitLine.show = false;
     echarts.registerTheme('dark-bold', theme);
 }));

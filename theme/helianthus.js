@@ -56,78 +56,72 @@
             }
         },
 
-
-    // 值域
     dataRange: {
         x:'right',
         y:'center',
         itemWidth: 5,
         itemHeight:25,
         color:['#E42B6D','#F9AD96'],
-        text:['高','低'],         // 文本，默认为数值文本
+        text:['High','Low'],         // Text, default is numeric text
         textStyle: {
-            color: '#8A826D'          // 值域文字颜色
+            color: '#8A826D'          // Range text color
         }
     },
 
     toolbox: {
-        color : ['#E95569','#E95569','#E95569','#E95569'],
-        effectiveColor : '#ff4500',
+        color: ['#E95569','#E95569','#E95569','#E95569'],
+        effectiveColor: '#ff4500',
         itemGap: 8
     },
 
-    // 提示框
     tooltip: {
-        backgroundColor: 'rgba(138,130,109,0.7)',     // 提示背景颜色，默认为透明度为0.7的黑色
-        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
-            type : 'line',         // 默认为直线，可选为：'line' | 'shadow'
-            lineStyle : {          // 直线指示器样式设置
+        backgroundColor: 'rgba(138,130,109,0.7)',     // Prompt background color, default is black with a transparency of 0.7
+        axisPointer: {             // Axis indicator, coordinate trigger effective
+            type: 'line',         // The default is a straight line： 'line' | 'shadow'
+            lineStyle: {          // Straight line indicator style settings
                 color: '#6B6455',
                 type: 'dashed'
             },
-            crossStyle: {          //十字准星指示器
+            crossStyle: {          
                 color: '#A6A299'
             },
-            shadowStyle : {                     // 阴影指示器样式设置
+            shadowStyle : {                     // Shadow indicator style settings
                 color: 'rgba(200,200,200,0.3)'
             }
         }
     },
 
-    // 区域缩放控制器
+	// Area scaling controller
     dataZoom: {
-        dataBackgroundColor: 'rgba(130,197,209,0.6)',            // 数据背景颜色
-        fillerColor: 'rgba(233,84,105,0.1)',   // 填充颜色
-        handleColor: 'rgba(107,99,84,0.8)'     // 手柄颜色
+        dataBackgroundColor: 'rgba(130,197,209,0.6)',            // Data background color
+        fillerColor: 'rgba(233,84,105,0.1)',   // Fill the color
+        handleColor: 'rgba(107,99,84,0.8)'     // Handle color
     },
 
-    // 网格
     grid: {
         borderWidth:0
     },
 
-    // 类目轴
     categoryAxis: {
-        axisLine: {            // 坐标轴线
-            lineStyle: {       // 属性lineStyle控制线条样式
+        axisLine: {            // Coordinate axis
+            lineStyle: {       // Property 'lineStyle' controls line styles
                 color: '#6B6455'
             }
         },
-        splitLine: {           // 分隔线
+        splitLine: {           // separate line
             show: false
         }
     },
 
-    // 数值型坐标轴默认参数
     valueAxis: {
-        axisLine: {            // 坐标轴线
+        axisLine: {            // Coordinate axis
             show: true
         },
         splitArea : {
             show: false
         },
-        splitLine: {           // 分隔线
-            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
+        splitLine: {           // separate line
+            lineStyle: {       // Property 'lineStyle' controls line styles
                 color: ['#FFF'],
                 type: 'dashed'
             }
@@ -135,8 +129,8 @@
     },
 
     polar : {
-        axisLine: {            // 坐标轴线
-            lineStyle: {       // 属性lineStyle控制线条样式
+        axisLine: {            // Coordinate axis
+            lineStyle: {       // // Property 'lineStyle' controls line styles
                 color: '#ddd'
             }
         },
@@ -152,168 +146,84 @@
             }
         }
     },
-
-    timeline : {
-        lineStyle : {
-            color : '#6B6455'
+  
+    timeline: {
+        lineStyle: {
+            color: '#6B6455'
         },
-        controlStyle : {
-            normal : { color : '#6B6455'},
-            emphasis : { color : '#6B6455'}
-        },
-        symbol : 'emptyCircle',
-        symbolSize : 3
-    },
-
-    // 柱形图默认参数
-    bar: {
-        itemStyle: {
-            normal: {
-                barBorderRadius: 0
-            },
-            emphasis: {
-                barBorderRadius: 0
-            }
+        controlStyle: {
+            color: '#6B6455',
+            borderColor: '#6B6455'
         }
     },
 
-    // 折线图默认参数
     line: {
         smooth : true,
-        symbol: 'emptyCircle',  // 拐点图形类型
-        symbolSize: 3           // 拐点图形大小
+        symbol: 'emptyCircle',  // Inflection point graphic type
+        symbolSize: 3           // Inflection point graphic size
     },
 
+	candlestick: {
+		itemStyle: {
+                 color: '#e42B6d',
+                 color0: '#44B7d3',
+		},
+		lineStyle: {
+                 width: 1,
+                 color: '#e42B6d',
+                 color0: '#44B7d3',
+		},
+		areaStyle: {
+                 color: '#fe994e',
+                 color0: '#e42B6d'
+		}
+	},
 
-    // K线图默认参数
-    k: {
-        itemStyle: {
-            normal: {
-                color: '#E42B6D',       // 阳线填充颜色
-                color0: '#44B7D3',      // 阴线填充颜色
+	map: { 
+		itemStyle: {
+                 color: '#6b6455',
+		},
+		areaStyle: {
+                 color: '#ddd',
+		},
+        label: {
+              color: '#e42B6d'
+        }
+	},
+
+	graph: { 
+		itemStyle: {
+                 color: '#e42B6d',
+		},
+        linkStyle: {
+                 color: '#6b6455'
+        }
+	},
+
+	chord: {
+        padding: 4,
+		itemStyle: {
+                 color: '#e42B6d',
+                 borderWidth: 1,
+				 borderColor: 'rgba(128, 128, 128, 0.5)',
+		},
+		lineStyle: {
+                 color: 'rgba(128, 128, 128, 0.5)',
+		},
+		areaStyle: {
+                 color: '#6b6455',
+		}
+	},
+
+        gauge: {
+            axisLine: {
                 lineStyle: {
-                    width: 1,
-                    color: '#E42B6D',   // 阳线边框颜色
-                    color0: '#44B7D3'   // 阴线边框颜色
+					color: [[0.2, '#44B7D3'],[0.8, '#6B6455'],[1, '#E42B6D']],
+                    width: 8
                 }
             }
         }
-    },
+    };
 
-        graph: {
-            color: colorPalette
-        },
-
-        map: {
-        itemStyle: {
-            normal: {
-                areaStyle: {
-                    color: '#ddd'
-                },
-                label: {
-                    textStyle: {
-                        color: '#E42B6D'
-                    }
-                }
-            },
-            emphasis: {                 // 也是选中样式
-                areaStyle: {
-                    color: '#fe994e'
-                },
-                label: {
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
-                }
-            }
-        }
-    },
-
-	force : {
-        itemStyle: {
-            normal: {
-                nodeStyle : {
-                    borderColor : 'rgba(0,0,0,0)'
-                },
-                linkStyle : {
-                    color : '#6B6455'
-                }
-            }
-        }
-    },
-
-    chord : {
-        itemStyle : {
-            normal : {
-                chordStyle : {
-                    lineStyle : {
-                        width : 0,
-                        color : 'rgba(128, 128, 128, 0.5)'
-                    }
-                }
-            },
-            emphasis : {
-                chordStyle : {
-                    lineStyle : {
-                        width : 1,
-                        color : 'rgba(128, 128, 128, 0.5)'
-                    }
-                }
-            }
-        }
-    },
-
-        gauge : {                  // 仪表盘
-        center:['50%','80%'],
-        radius:'100%',
-        startAngle: 180,
-        endAngle : 0,
-        axisLine: {            // 坐标轴线
-            show: true,        // 默认显示，属性show控制显示与否
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[0.2, '#44B7D3'],[0.8, '#6B6455'],[1, '#E42B6D']],
-                width: '40%'
-            }
-        },
-        axisTick: {            // 坐标轴小标记
-            splitNumber: 2,   // 每份split细分多少段
-            length: 5,        // 属性length控制线长
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: '#fff'
-            }
-        },
-        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: '#fff',
-                fontWeight:'bolder'
-            }
-        },
-        splitLine: {           // 分隔线
-            length: '5%',         // 属性length控制线长
-            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                color: '#fff'
-            }
-        },
-        pointer : {
-            width : '40%',
-            length: '80%',
-            color: '#fff'
-        },
-        title : {
-          offsetCenter: [0, -20],       // x, y，单位px
-          textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: 'auto',
-            fontSize: 20
-          }
-        },
-        detail : {
-            offsetCenter: [0, 0],       // x, y，单位px
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto',
-                fontSize: 40
-            }
-        }
-    }
-  };
     echarts.registerTheme('helianthus', theme);
 }));

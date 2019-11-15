@@ -89,9 +89,6 @@
                 color: contrastColor
             }
         },
-        textStyle: {
-            color: contrastColor
-        },
         title: {
             textStyle: {
                 color: contrastColor
@@ -104,29 +101,30 @@
                 }
             }
         },
-        timeline: {
-            lineStyle: {
-                color: contrastColor
-            },
-            itemStyle: {
-                normal: {
+
+		// Area scaling controller
+		dataZoom: {
+			dataBackgroundColor: '#eee',            // Data background color
+			fillerColor: 'rgba(200,200,200,0.2)',   // Fill the color
+			handleColor: '#cc0e00'     // Handle color
+		},
+
+		timeline: {
+			itemStyle: {
                     color: colorPalette[1]
-                }
-            },
-            label: {
-                normal: {
-                    textStyle: {
-                        color: contrastColor
-                    }
-                }
-            },
-            controlStyle: {
-                normal: {
+			},
+			lineStyle: {
+					color: contrastColor
+			},
+			controlStyle: {
                     color: contrastColor,
                     borderColor: contrastColor
-                }
-            }
-        },
+			},
+			label: {
+                    color: contrastColor
+			}
+		},
+
         timeAxis: axisCommon(),
         logAxis: axisCommon(),
         valueAxis: axisCommon(),
@@ -138,14 +136,17 @@
         graph: {
             color: colorPalette
         },
-        gauge: {
-            title: {
-                textStyle: {
-                    color: contrastColor
-                }
-            }
-        }
-    };
+
+		gauge: {
+				axisLine: {
+					lineStyle: {
+						color: [[0.2, '#ff1a0a'],[0.8, '#cc0e00'],[1, '#ffc2b0']], 
+						width: 8
+					}
+				}
+			}
+		};
+
     theme.categoryAxis.splitLine.show = false;
     echarts.registerTheme('dark-mushroom', theme);
 }));

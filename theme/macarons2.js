@@ -70,7 +70,7 @@
         barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值
         barCategoryGap : '20%',   // 类目间柱形距离，默认为类目间距的20%，可设固定值
         itemStyle: {
-            normal: {
+            normal: { 
                 // color: '各异',
                 barBorderColor: '#fff',       // 柱条边线
                 barBorderRadius: 0,           // 柱条边线圆角，单位px，默认为0
@@ -110,7 +110,7 @@
                 lineStyle: {
                     width: 2,
                     type: 'solid',
-                    shadowColor : 'rgba(0,0,0,0)', //默认透明
+                    shadowColor: 'rgba(0,0,0,0)', //默认透明
                     shadowBlur: 5,
                     shadowOffsetX: 3,
                     shadowOffsetY: 3
@@ -132,33 +132,28 @@
         //symbolRotate : null,  // 拐点图形旋转控制
         showAllSymbol: false    // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
     },
-		
-	// K线图默认参数
-    k: {
-        // barWidth : null          // 默认自适应
-        // barMaxWidth : null       // 默认自适应 
-        itemStyle: {
-            normal: {
-                color: '#fe9778',          // 阳线填充颜色
-                color0: '#e7dac9',      // 阴线填充颜色
-                lineStyle: {
-                    width: 1,
-                    color: '#f78766',   // 阳线边框颜色
-                    color0: '#f1ccb8'   // 阴线边框颜色
-                }
-            },
-            emphasis: {
-                // color: 各异,
-                // color0: 各异
-            }
-        }
-    },
+	
+	candlestick: {
+		itemStyle: {
+                 color: '#fe9778',
+                 color0: '#e7dac9',
+		},
+		lineStyle: {
+                 width: 1,
+                 color: '#f78766',
+                 color0: '#f1ccb8',
+		},
+		areaStyle: {
+                 color: '#e7dac9',
+                 color0: '#c8e49c'
+		}
+	},
 
     // 饼图默认参数
     pie: {
-        center : ['50%', '50%'],    // 默认全局居中
-        radius : [0, '75%'],
-        clockWise : false,          // 默认逆时针
+        center: ['50%', '50%'],    // 默认全局居中
+        radius: [0, '75%'],
+        clockWise: false,          // 默认逆时针
         startAngle: 90,
         minAngle: 0,                // 最小角度改为0
         selectedOffset: 10,         // 选中是扇区偏移量
@@ -187,116 +182,46 @@
         }
     },
 
-       map: {
-        mapType: 'china',   // 各省的mapType暂时都用中文
-        mapLocation: {
-            x : 'center',
-            y : 'center'
-            // width    // 自适应
-            // height   // 自适应
-        },
-        showLegendSymbol : true,       // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
-        itemStyle: {
-            normal: {
-                // color: 各异,
+		map: { 
+			itemStyle: {
+				color: '#ddd',
                 borderColor: '#fff',
                 borderWidth: 1,
-                areaStyle: {
-                    color: '#ccc'//rgba(135,206,250,0.8)
-                },
-                label: {
-                    show: false,
-                    textStyle: {
-                        color: 'rgba(139,69,19,1)'
-                    }
-                }
-            },
-            emphasis: {                 // 也是选中样式
-                // color: 各异,
-                borderColor: 'rgba(0,0,0,0)',
-                borderWidth: 1,
-                areaStyle: {
-                    color: '#f3f39d'
-                },
-                label: {
-                    show: false,
-                    textStyle: {
-                        color: 'rgba(139,69,19,1)'
-                    }
-                }
-            }
-        }
-    },
+			},
+			areaStyle: {
+                color: '#f3f39d',
+			},
+			label: {
+                show: false,
+				color: 'rgba(139,69,19,1)'
+			},
+			showLegendSymbol: true
+		},
 
-        force : {
-        itemStyle: {
-            normal: {
-                // color: 各异,
-                label: {
-                    show: false
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                },
-                nodeStyle : {
-                    brushType : 'both',
-                    strokeColor : '#a17e6e'
-                },
-                linkStyle : {
-                    strokeColor : '#a17e6e'
-                }
+		graph: { 
+			itemStyle: {
+                 color: '#d87a80',
+			},
+			linkStyle: {
+                 strokeColor: '#a17e6e'
+			},
+            nodeStyle: {
+                 brushType: 'both',
+                 strokeColor: '#a17e6e'
             },
-            emphasis: {
-                // color: 各异,
-                label: {
-                    show: false
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                },
-                nodeStyle : {},
-                linkStyle : {}
-            }
-        }
-    },
+			label: {
+                 show: false
+			}
+		},
 
-    gauge : {
-        axisLine: {            // 坐标轴线
-            show: true,        // 默认显示，属性show控制显示与否
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[0.2, '#ed9678'],[0.8, '#e7dac9'],[1, '#cb8e85']], 
-                width: 8
-            }
-        },
-        axisTick: {            // 坐标轴小标记
-            splitNumber: 10,   // 每份split细分多少段
-            length :12,        // 属性length控制线长
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: 'auto'
-            }
-        },
-        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto'
-            }
-        },
-        splitLine: {           // 分隔线
-            length : 18,         // 属性length控制线长
-            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                color: 'auto'
-            }
-        },
-        pointer : {
-            length : '90%',
-            color : 'auto'
-        },
-        title : {
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: '#333'
-            }
-        },
-        detail : {
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto'
+        gauge: {
+            axisLine: {
+                lineStyle: {
+					color: [[0.2, '#ed9678'],[0.8, '#e7dac9'],[1, '#cb8e85']], 
+                    width: 8
+                }
             }
         }
-    }
     };
 
     echarts.registerTheme('macarons2', theme);

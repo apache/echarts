@@ -55,181 +55,83 @@
         },
 
         toolbox: {
-            color : ['#8aedd5','#8aedd5','#8aedd5','#8aedd5']
+            color: ['#8aedd5','#8aedd5','#8aedd5','#8aedd5']
         },
 
-   tooltip: {
+    tooltip: {
         backgroundColor: 'rgba(0,0,0,0.5)',
-        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
-            type : 'line',         // 默认为直线，可选为：'line' | 'shadow'
-            lineStyle : {          // 直线指示器样式设置
+        axisPointer: {            // Axis indicator, coordinate trigger effective
+            type: 'line',         // The default is a straight line： 'line' | 'shadow'
+            lineStyle: {          // Straight line indicator style settings
                 color: '#8aedd5',
                 type: 'dashed'
             },
             crossStyle: {
                 color: '#8aedd5'
             },
-            shadowStyle : {                     // 阴影指示器样式设置
+            shadowStyle: {                     // Shadow indicator style settings
                 color: 'rgba(200,200,200,0.3)'
             }
         }
     },
 
-    // 区域缩放控制器
+    // Area scaling controller
     dataZoom: {
-        dataBackgroundColor: '#eee',            // 数据背景颜色
-        fillerColor: 'rgba(64,136,41,0.2)',   // 填充颜色
-        handleColor: '#408829'     // 手柄颜色
+        dataBackgroundColor: '#eee',            // Data background color
+        fillerColor: 'rgba(64,136,41,0.2)',   // Fill the color
+        handleColor: '#408829'     // Handle color
     },
 
     dataRange: {
         color:['#93bc92','#bef0bb']
     }, 
 
-	k: {
-        // barWidth : null          // 默认自适应
-        // barMaxWidth : null       // 默认自适应 
-        itemStyle: {
-            normal: {
-                color: '#8aedd5',          // 阳线填充颜色
-                color0: '#7fe579',      // 阴线填充颜色
+	candlestick: {
+		itemStyle: {
+                 color: '#8aedd5',
+                 color0: '#7fe579',
+		},
+		lineStyle: {
+                 width: 1,
+                 color: '#8aedd5',
+                 color0: '#7fe579',
+		},
+		areaStyle: {
+                 color: '#8aedd5',
+                 color0: '#93bc9e'
+		}
+	},
+
+	graph: { 
+		itemStyle: {
+                 color: '#8aedd5',
+		},
+        linkStyle: {
+                 color: '#93bc9e'
+        }
+	},
+
+	map: { 
+		itemStyle: {
+                 color: '#8aedd5',
+		},
+		areaStyle: {
+                 color: '#93bc9e',
+		},
+        label: {
+              color: '#cef1db'
+        }
+	},
+
+   gauge: {
+            axisLine: {
                 lineStyle: {
-                    width: 1,
-                    color: '#8aedd5',   // 阳线边框颜色
-                    color0: '#7fe579'   // 阴线边框颜色
-                }
-            },
-            emphasis: {
-                // color: 各异,
-                // color0: 各异
-            }
-        }
-    },
-
-	pie: {
-        itemStyle: {
-            normal: {
-                // color: 各异,
-                borderColor: '#fff',
-                borderWidth: 1,
-                label: {
-                    show: true,
-                    position: 'outer',
-                  textStyle: {color: '#1b1b1b'},
-                  lineStyle: {color: '#1b1b1b'}
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                },
-                labelLine: {
-                    show: true,
-                    length: 20,
-                    lineStyle: {
-                        // color: 各异,
-                        width: 1,
-                        type: 'solid'
-                    }
+					color: [[0.2, '#93bc9e'],[0.8, '#8aedd5'],[1, '#a6d7c2']], 
+                    width: 8
                 }
             }
         }
-    },
+    };
 
-	force : {
-        itemStyle: {
-            normal: {
-                // color: 各异,
-                label: {
-                    show: false
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                },
-                nodeStyle : {
-                    brushType : 'both',
-                    strokeColor : '#49b485'
-                },
-                linkStyle : {
-                    strokeColor : '#49b485'
-                }
-            },
-            emphasis: {
-                // color: 各异,
-                label: {
-                    show: false
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                },
-                nodeStyle : {},
-                linkStyle : {}
-            }
-        }
-    },
-
-        graph: { 
-            color: colorPalette
-        },
-
-        map: {
-        itemStyle: {
-            normal: {
-                areaStyle: {
-                    color: '#ccc'
-                },
-                label: {
-                    textStyle: {
-                        color: 'rgba(139,69,19,1)'
-                    }
-                }
-            },
-            emphasis: {                 // 也是选中样式
-                areaStyle: {
-                    color: '#f3f39d'
-                },
-                label: {
-                    textStyle: {
-                        color: 'rgba(139,69,19,1)'
-                    }
-                }
-            }
-        }
-    },
-
-        gauge : {
-        axisLine: {            // 坐标轴线
-            show: true,        // 默认显示，属性show控制显示与否
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[0.2, '#93bc9e'],[0.8, '#8aedd5'],[1, '#a6d7c2']], 
-                width: 8
-            }
-        },
-        axisTick: {            // 坐标轴小标记
-            splitNumber: 10,   // 每份split细分多少段
-            length :12,        // 属性length控制线长
-            lineStyle: {       // 属性lineStyle控制线条样式
-                color: 'auto'
-            }
-        },
-        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto'
-            }
-        },
-        splitLine: {           // 分隔线
-            length : 18,         // 属性length控制线长
-            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
-                color: 'auto'
-            }
-        },
-        pointer : {
-            length : '90%',
-            color : 'auto'
-        },
-        title : {
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: '#333'
-            }
-        },
-        detail : {
-            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: 'auto'
-            }
-        }
-    }
-  };
     echarts.registerTheme('mint', theme);
 }));

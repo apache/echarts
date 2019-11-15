@@ -59,12 +59,12 @@
         }, 
 
         toolbox: {
-            color : ['#8b1a2d','#8b1a2d','#8b1a2d','#8b1a2d']
+            color: ['#8b1a2d','#8b1a2d','#8b1a2d','#8b1a2d']
         },
 
     tooltip: {
         backgroundColor: 'rgba(0,0,0,0.5)',
-        axisPointer : {            // Axis indicator, coordinate trigger effective
+        axisPointer: {            // Axis indicator, coordinate trigger effective
             type : 'line',         // The default is a straight line： 'line' | 'shadow'
             lineStyle : {          // Straight line indicator style settings
                 color: '#8b1a2d',
@@ -86,124 +86,62 @@
         handleColor: '#8b1a2d'     // Handle color
     },
 
-    timeline : {
-        lineStyle : {
-            color : '#8b1a2d'
+    timeline: {
+        lineStyle: {
+            color: '#8b1a2d'
         },
-        controlStyle : {
-            normal : { color : '#8b1a2d'},
-            emphasis : { color : '#8b1a2d'}
+        controlStyle: {
+            color: '#8b1a2d',
+            borderColor: '#8b1a2d'
         }
     },
 
-	k: {
-        itemStyle: {
-            normal: {
-                color: '#a7314b',          // Yang line filled with color
-                color0: '#d6c582',      // Yinxian fill color
+	candlestick: {
+		itemStyle: {
+                 color: '#a7314b',
+                 color0: '#d6c582',
+		},
+		lineStyle: {
+                 width: 1,
+                 color: '#8e5c4e',
+                 color0: '#f0d4af',
+		},
+		areaStyle: {
+                 color: '#8b1a2d',
+                 color0: '#ff8066'
+		}
+	},
+
+	map: { 
+		itemStyle: {
+                 color: '#8b1a2d',
+		},
+		areaStyle: {
+                 color: '#ff8066',
+		},
+        label: {
+              color: '#c12e34'
+        }
+	},
+
+	graph: { 
+		itemStyle: {
+                 color: '#ff8066',
+		},
+        linkStyle: {
+                 color: '#8b1a2d'
+        }
+	},
+
+    gauge: {
+            axisLine: {
                 lineStyle: {
-                    width: 1,
-                    color: '#8e5c4e',   // Yang line border color
-                    color0: '#f0d4af'   // Yinbian border color
+					color: [[0.2, '#a7314b'],[0.8, '#8b1a2d'],[1, '#8e5c4e']], 
+                    width: 8
                 }
             }
         }
-    },
+    };
 
-        candlestick: {
-            itemStyle: {
-                normal: {
-                    color: '#8b1a2d',
-                    color0: '#a7314b',
-                    lineStyle: {
-                        width: 1,
-                        color: '#8b1a2d',
-                        color0: '#a7314b'
-                    }
-                }
-            }
-        },
-
-        graph: {
-            color: colorPalette
-        },
-
-        map: {
-        itemStyle: {
-            normal: {
-                areaStyle: {
-                    color: '#ddd'
-                },
-                label: {
-                    textStyle: {
-                        color: '#c12e34'
-                    }
-                }
-            },
-            emphasis: {                 // Is also selected style
-                areaStyle: {
-                    color: '#d6c582'
-                },
-                label: {
-                    textStyle: {
-                        color: '#c12e34'
-                    }
-                }
-            }
-        }
-    },
-
-	force : { 
-        itemStyle: {
-            normal: {
-                linkStyle : {
-                    color : '#8b1a2d'
-                }
-            }
-        }
-    },
-
-        gauge : {
-        axisLine: {            // Coordinate axis
-            show: true,        // Default display, property show control display or not
-            lineStyle: {       // Attribute lineStyle controls the line style
-                color: [[0.2, '#a7314b'],[0.8, '#8b1a2d'],[1, '#8e5c4e']], 
-                width: 8
-            }
-        },
-        axisTick: {            // Small mark of the axis
-            splitNumber: 10,   // How many segments per split subdivision
-            length :12,        // Attribute length control line length
-            lineStyle: {       // Attribute lineStyle controls the line style
-                color: 'auto'
-            }
-        },
-        axisLabel: {           // Axis text label, see details axis.axisLabel
-            textStyle: {       // The remaining attributes use the global text style by default TEXTSTYLE
-                color: 'auto'
-            }
-        },
-        splitLine: {           // Separate lines
-            length : 18,         // Attribute length control line length
-            lineStyle: {       // The attribute lineStyle (see lineStyle for details) controls the line style
-                color: 'auto'
-            }
-        },
-        pointer : {
-            length : '90%',
-            color : 'auto'
-        },
-        title : {
-            textStyle: {       // The remaining attributes use the global text style by default TEXTSTYLE
-                color: '#333'
-            }
-        },
-        detail : {
-            textStyle: {       // The remaining attributes use the global text style by default TEXTSTYLE
-                color: 'auto'
-            }
-        }
-    }
-  };
     echarts.registerTheme('red-velvet', theme);
 }));
