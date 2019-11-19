@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -51,7 +70,7 @@
         };
     };
 
-    var colorPalette = ['#dd6b66','#759aa0','#e69d87','#8dc1a9','#ea7e53','#eedd78','#73a373','#73b9bc','#7289ab', '#91ca8c','#f49f42'];
+    var colorPalette = ['#cc0e00','#ff1a0a','#ff8880','#ffc180','#ffc2b0','#ffffff','#ff8880','#ffe6e6'];
     var theme = {
         color: colorPalette,
         backgroundColor: '#333',
@@ -62,9 +81,6 @@
                 },
                 crossStyle: {
                     color: contrastColor
-                },
-                label: {
-                    color: '#000'
                 }
             }
         },
@@ -90,22 +106,22 @@
 		dataZoom: {
 			dataBackgroundColor: '#eee',            // Data background color
 			fillerColor: 'rgba(200,200,200,0.2)',   // Fill the color
-			handleColor: '#dd6b66'     // Handle color
+			handleColor: '#cc0e00'     // Handle color
 		},
 
 		timeline: {
 			itemStyle: {
-                color: colorPalette[1]
+                    color: colorPalette[1]
 			},
 			lineStyle: {
-                color: contrastColor
+					color: contrastColor
 			},
 			controlStyle: {
-                color: contrastColor,
-                borderColor: contrastColor
+                    color: contrastColor,
+                    borderColor: contrastColor
 			},
 			label: {
-                color: contrastColor
+                    color: contrastColor
 			}
 		},
 
@@ -121,26 +137,16 @@
             color: colorPalette
         },
 
-        gauge: {
+		gauge: {
 				axisLine: {
 					lineStyle: {
-						color: [[0.2, '#dd6b66'],[0.8, '#759aa0'],[1, '#ea7e53']], 
+						color: [[0.2, '#ff1a0a'],[0.8, '#cc0e00'],[1, '#ffc2b0']], 
 						width: 8
 					}
 				}
 			}
-        },
-
-        candlestick: {
-            itemStyle: {
-                    color: '#FD1050',
-                    color0: '#0CF49B',
-                    borderColor: '#FD1050',
-                    borderColor0: '#0CF49B'
-            }
-        }
-    };
+		};
 
     theme.categoryAxis.splitLine.show = false;
-    echarts.registerTheme('dark', theme);
+    echarts.registerTheme('dark-mushroom', theme);
 }));
