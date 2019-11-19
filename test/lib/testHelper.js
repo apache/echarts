@@ -239,7 +239,7 @@
                         + '<script src="lib/draggable.js"></script>'
                     );
                 }
-                window.draggable.init(dom, chart, {throttle: 70, addPlaceholder: true});
+                window.draggable.init(dom, chart, {throttle: 70});
             }
 
             option && chart.setOption(option, {

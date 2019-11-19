@@ -1,6 +1,6 @@
 # ECharts
 
-<a href="http://echarts.baidu.com">
+<a href="https://echarts.apache.org/">
     <img style="vertical-align: top;" src="./asset/logo.png?raw=true" alt="logo" height="50px">
 </a>
 
@@ -21,14 +21,6 @@ You may choose one of the following methods:
 + Download from Official Website in [English](https://echarts.apache.org/en/download.html)
 + `npm install echarts --save`
 + CDN: [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
-
-## Get ECharts GL
-
-ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visualization, and WebGL acceleration.
-
-+ Get from [https://github.com/ecomfe/echarts-gl](https://github.com/ecomfe/echarts-gl)
-
-+ `npm install echarts-gl --save`
 
 ## Docs
 
@@ -95,6 +87,8 @@ If you wish to debug locally or make pull requests, please refer to [contributin
 [https://github.com/ecomfe/awesome-echarts](https://github.com/ecomfe/awesome-echarts)
 
 ### Extensions
+
++ [ECharts GL](https://github.com/ecomfe/echarts-gl) An extension pack of ECharts, which provides 3D plots, globe visualization, and WebGL acceleration.
 
 + [Liquidfill 水球图](https://github.com/ecomfe/echarts-liquidfill)
 

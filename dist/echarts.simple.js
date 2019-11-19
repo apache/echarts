@@ -6839,23 +6839,31 @@ Style.prototype = {
 
     /**
      * Whether transform text.
-     * Only useful in Path and Image element
+     * Only available in Path and Image element,
+     * where the text is called as `RectText`.
      * @type {boolean}
      */
     transformText: false,
 
     /**
-     * Text rotate around position of Path or Image
-     * Only useful in Path and Image element and transformText is false.
+     * Text rotate around position of Path or Image.
+     * The origin of the rotation can be specified by `textOrigin`.
+     * Only available in Path and Image element,
+     * where the text is called as `RectText`.
      */
     textRotation: 0,
 
     /**
-     * Text origin of text rotation, like [10, 40].
-     * Based on x, y of rect.
-     * Useful in label rotation of circular symbol.
-     * By default, this origin is textPosition.
-     * Can be 'center'.
+     * Text origin of text rotation.
+     * Useful in the case like label rotation of circular symbol.
+     * Only available in Path and Image element, where the text is called
+     * as `RectText` and the element is called as "host element".
+     * The value can be:
+     * + If specified as a coordinate like `[10, 40]`, it is the `[x, y]`
+     * base on the left-top corner of the rect of its host element.
+     * + If specified as a string `center`, it is the center of the rect of
+     * its host element.
+     * + By default, this origin is the `textPosition`.
      * @type {string|Array.<number>}
      */
     textOrigin: null,
@@ -7528,6 +7536,7 @@ function calculateTextPosition(out, style, rect) {
 
     var x = rect.x;
     var y = rect.y;
+    distance = distance || 0;
 
     var height = rect.height;
     var width = rect.width;
@@ -7780,8 +7789,11 @@ methods$1.measureText = function (text, font) {
  * @param {string} text
  * @param {string} font
  * @param {Object} [truncate]
- * @return {Object} block: {lineHeight, lines, height, outerHeight}
+ * @return {Object} block: {lineHeight, lines, height, outerHeight, canCacheByTextString}
  *  Notice: for performance, do not calculate outerWidth util needed.
+ *  `canCacheByTextString` means the result `lines` is only determined by the input `text`.
+ *  Thus we can simply comparing the `input` text to determin whether the result changed,
+ *  without travel the result `lines`.
  */
 function parsePlainText(text, font, padding, textLineHeight, truncate) {
     text != null && (text += '');
@@ -7790,12 +7802,14 @@ function parsePlainText(text, font, padding, textLineHeight, truncate) {
     var lines = text ? text.split('\n') : [];
     var height = lines.length * lineHeight;
     var outerHeight = height;
+    var canCacheByTextString = true;
 
     if (padding) {
         outerHeight += padding[0] + padding[2];
     }
 
     if (text && truncate) {
+        canCacheByTextString = false;
         var truncOuterHeight = truncate.outerHeight;
         var truncOuterWidth = truncate.outerWidth;
         if (truncOuterHeight != null && outerHeight > truncOuterHeight) {
@@ -7822,7 +7836,8 @@ function parsePlainText(text, font, padding, textLineHeight, truncate) {
         lines: lines,
         height: height,
         outerHeight: outerHeight,
-        lineHeight: lineHeight
+        lineHeight: lineHeight,
+        canCacheByTextString: canCacheByTextString
     };
 }
 
@@ -8802,7 +8817,6 @@ RectText.prototype = {
 };
 
 /**
- * 可绘制的图形基类
  * Base class of all displayable graphic objects
  * @module zrender/graphic/Displayable
  */
@@ -8851,16 +8865,15 @@ Displayable.prototype = {
     type: 'displayable',
 
     /**
-     * Displayable 是否为脏，Painter 中会根据该标记判断是否需要是否需要重新绘制
-     * Dirty flag. From which painter will determine if this displayable object needs brush
+     * Dirty flag. From which painter will determine if this displayable object needs brush.
      * @name module:zrender/graphic/Displayable#__dirty
      * @type {boolean}
      */
     __dirty: true,
 
     /**
-     * 图形是否可见，为true时不绘制图形，但是仍能触发鼠标事件
-     * If ignore drawing of the displayable object. Mouse event will still be triggered
+     * Whether the displayable object is visible. when it is true, the displayable object
+     * is not drawn, but the mouse event can still trigger the object.
      * @name module:/zrender/graphic/Displayable#invisible
      * @type {boolean}
      * @default false
@@ -8882,7 +8895,7 @@ Displayable.prototype = {
     z2: 0,
 
     /**
-     * z层level，决定绘画在哪层canvas中
+     * The z level determines the displayable object can be drawn in which layer canvas.
      * @name module:/zrender/graphic/Displayable#zlevel
      * @type {number}
      * @default 0
@@ -8890,7 +8903,7 @@ Displayable.prototype = {
     zlevel: 0,
 
     /**
-     * 是否可拖拽
+     * Whether it can be dragged.
      * @name module:/zrender/graphic/Displayable#draggable
      * @type {boolean}
      * @default false
@@ -8898,7 +8911,7 @@ Displayable.prototype = {
     draggable: false,
 
     /**
-     * 是否正在拖拽
+     * Whether is it dragging.
      * @name module:/zrender/graphic/Displayable#draggable
      * @type {boolean}
      * @default false
@@ -8906,7 +8919,7 @@ Displayable.prototype = {
     dragging: false,
 
     /**
-     * 是否相应鼠标事件
+     * Whether to respond to mouse events.
      * @name module:/zrender/graphic/Displayable#silent
      * @type {boolean}
      * @default false
@@ -8956,21 +8969,20 @@ Displayable.prototype = {
     afterBrush: function (ctx) {},
 
     /**
-     * 图形绘制方法
+     * Graphic drawing method.
      * @param {CanvasRenderingContext2D} ctx
      */
     // Interface
     brush: function (ctx, prevEl) {},
 
     /**
-     * 获取最小包围盒
+     * Get the minimum bounding box.
      * @return {module:zrender/core/BoundingRect}
      */
     // Interface
     getBoundingRect: function () {},
 
     /**
-     * 判断坐标 x, y 是否在图形上
      * If displayable element contain coord x, y
      * @param  {number} x
      * @param  {number} y
@@ -8989,7 +9001,6 @@ Displayable.prototype = {
     },
 
     /**
-     * 判断坐标 x, y 是否在图形的包围盒上
      * If bounding rect of element contain coord x, y
      * @param  {number} x
      * @param  {number} y
@@ -9002,7 +9013,6 @@ Displayable.prototype = {
     },
 
     /**
-     * 标记图形元素为脏，并且在下一帧重绘
      * Mark displayable element dirty and refresh next frame
      */
     dirty: function () {
@@ -9014,11 +9024,10 @@ Displayable.prototype = {
     },
 
     /**
-     * 图形是否会触发事件
      * If displayable object binded any event
      * @return {boolean}
      */
-    // TODO, 通过 bind 绑定的事件
+    // TODO, events bound by bind
     // isSilent: function () {
     //     return !(
     //         this.hoverable || this.draggable
@@ -9270,10 +9279,16 @@ function doClip(clipPaths, ctx) {
 function createRoot(width, height) {
     var domRoot = document.createElement('div');
 
-    // domRoot.onselectstart = returnFalse; // 避免页面选中的尴尬
+    // domRoot.onselectstart = returnFalse; // Avoid page selected
     domRoot.style.cssText = [
         'position:relative',
-        'overflow:hidden',
+        // IOS13 safari probably has a compositing bug (z order of the canvas and the consequent
+        // dom does not act as expected) when some of the parent dom has
+        // `-webkit-overflow-scrolling: touch;` and the webpage is longer than one screen and
+        // the canvas is not at the top part of the page.
+        // Check `https://bugs.webkit.org/show_bug.cgi?id=203681` for more details. We remove
+        // this `overflow:hidden` to avoid the bug.
+        // 'overflow:hidden',
         'width:' + width + 'px',
         'height:' + height + 'px',
         'padding:0',
@@ -10600,7 +10615,7 @@ var domHandlers = {
 
         this._lastTouchMoment = new Date();
 
-        this.handler.processGesture(this, event, 'start');
+        this.handler.processGesture(event, 'start');
 
         // In touch device, trigger `mousemove`(`mouseover`) should
         // be triggered, and must before `mousedown` triggered.
@@ -10624,7 +10639,7 @@ var domHandlers = {
         // mouse event in upper applicatoin.
         event.zrByTouch = true;
 
-        this.handler.processGesture(this, event, 'change');
+        this.handler.processGesture(event, 'change');
 
         // Mouse move should always be triggered no matter whether
         // there is gestrue event, because mouse move and pinch may
@@ -10647,7 +10662,7 @@ var domHandlers = {
         // mouse event in upper applicatoin.
         event.zrByTouch = true;
 
-        this.handler.processGesture(this, event, 'end');
+        this.handler.processGesture(event, 'end');
 
         domHandlers.mouseup.call(this, event);
 
@@ -10852,7 +10867,7 @@ var painterCtors = {
 /**
  * @type {string}
  */
-var version$1 = '4.1.1';
+var version$1 = '4.1.2';
 
 /**
  * Initializing a zrender instance
@@ -18708,8 +18723,28 @@ function quantity(val) {
     return Math.pow(10, quantityExponent(val));
 }
 
+/**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
+ * @return {number}
+ */
 function quantityExponent(val) {
-    return Math.floor(Math.log(val) / Math.LN10);
+    if (val === 0) {
+        return 0;
+    }
+
+    var exp = Math.floor(Math.log(val) / Math.LN10);
+    /**
+     * exp is expected to be the rounded-down result of the base-10 log of val.
+     * But due to the precision loss with Math.log(val), we need to restore it
+     * using 10^exp to make sure we can get val back from exp. #11249
+     */
+    if (val / Math.pow(10, exp) >= 10) {
+        exp++;
+    }
+    return exp;
 }
 
 /**
@@ -20995,7 +21030,7 @@ var GlobalModel = Model.extend({
                         mainType, resultItem.keyInfo.subType, true
                     );
 
-                    if (componentModel && componentModel instanceof ComponentModelClass) {
+                    if (componentModel && componentModel.constructor === ComponentModelClass) {
                         componentModel.name = resultItem.keyInfo.name;
                         // componentModel.settingTask && componentModel.settingTask.dirty();
                         componentModel.mergeOption(newCptOption, this);
@@ -26703,10 +26738,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.4.0';
+var version = '4.5.0';
 
 var dependencies = {
-    zrender: '4.1.1'
+    zrender: '4.1.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -29182,9 +29217,6 @@ DataDiffer.prototype = {
         initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, '_oldKeyGetter', this);
         initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter', this);
 
-        // Travel by inverted order to make sure order consistency
-        // when duplicate keys exists (consider newDataIndex.pop() below).
-        // For performance consideration, these code below do not look neat.
         for (i = 0; i < oldArr.length; i++) {
             var key = oldDataKeyArr[i];
             var idx = newDataIndexMap[key];
@@ -29196,7 +29228,7 @@ DataDiffer.prototype = {
                 var len = idx.length;
                 if (len) {
                     len === 1 && (newDataIndexMap[key] = null);
-                    idx = idx.unshift();
+                    idx = idx.shift();
                 }
                 else {
                     newDataIndexMap[key] = null;
@@ -30496,12 +30528,12 @@ listProto.indexOfName = function (name) {
  * @return {number}
  */
 listProto.indexOfRawIndex = function (rawIndex) {
-    if (!this._indices) {
-        return rawIndex;
-    }
-
     if (rawIndex >= this._rawCount || rawIndex < 0) {
         return -1;
+    }
+
+    if (!this._indices) {
+        return rawIndex;
     }
 
     // Indices are ascending
@@ -32754,6 +32786,15 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     if (symbolPath.type !== 'image') {
         symbolPath.useStyle({
             strokeNoScale: true
+        });
+    }
+    else {
+        symbolPath.setStyle({
+            opacity: null,
+            shadowBlur: null,
+            shadowOffsetX: null,
+            shadowOffsetY: null,
+            shadowColor: null
         });
     }
 
@@ -35706,6 +35747,7 @@ function getAxisKey(axis) {
  * @param {number} opt.count Positive interger.
  * @param {number} [opt.barWidth]
  * @param {number} [opt.barMaxWidth]
+ * @param {number} [opt.barMinWidth]
  * @param {number} [opt.barGap]
  * @param {number} [opt.barCategoryGap]
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
@@ -35723,22 +35765,112 @@ function prepareLayoutBarSeries(seriesType, ecModel) {
     return seriesModels;
 }
 
+
+/**
+ * Map from (baseAxis.dim + '_' + baseAxis.index) to min gap of two adjacent
+ * values.
+ * This works for time axes, value axes, and log axes.
+ * For a single time axis, return value is in the form like
+ * {'x_0': [1000000]}.
+ * The value of 1000000 is in milliseconds.
+ */
+function getValueAxesMinGaps(barSeries) {
+    /**
+     * Map from axis.index to values.
+     * For a single time axis, axisValues is in the form like
+     * {'x_0': [1495555200000, 1495641600000, 1495728000000]}.
+     * Items in axisValues[x], e.g. 1495555200000, are time values of all
+     * series.
+     */
+    var axisValues = {};
+    each$1(barSeries, function (seriesModel) {
+        var cartesian = seriesModel.coordinateSystem;
+        var baseAxis = cartesian.getBaseAxis();
+        if (baseAxis.type !== 'time' && baseAxis.type !== 'value') {
+            return;
+        }
+
+        var data = seriesModel.getData();
+        var key = baseAxis.dim + '_' + baseAxis.index;
+        var dim = data.mapDimension(baseAxis.dim);
+        for (var i = 0, cnt = data.count(); i < cnt; ++i) {
+            var value = data.get(dim, i);
+            if (!axisValues[key]) {
+                // No previous data for the axis
+                axisValues[key] = [value];
+            }
+            else {
+                // No value in previous series
+                axisValues[key].push(value);
+            }
+            // Ignore duplicated time values in the same axis
+        }
+    });
+
+    var axisMinGaps = [];
+    for (var key in axisValues) {
+        if (axisValues.hasOwnProperty(key)) {
+            var valuesInAxis = axisValues[key];
+            if (valuesInAxis) {
+                // Sort axis values into ascending order to calculate gaps
+                valuesInAxis.sort(function (a, b) {
+                    return a - b;
+                });
+
+                var min = null;
+                for (var j = 1; j < valuesInAxis.length; ++j) {
+                    var delta = valuesInAxis[j] - valuesInAxis[j - 1];
+                    if (delta > 0) {
+                        // Ignore 0 delta because they are of the same axis value
+                        min = min === null ? delta : Math.min(min, delta);
+                    }
+                }
+                // Set to null if only have one data
+                axisMinGaps[key] = min;
+            }
+        }
+    }
+    return axisMinGaps;
+}
+
 function makeColumnLayout(barSeries) {
+    var axisMinGaps = getValueAxesMinGaps(barSeries);
+
     var seriesInfoList = [];
     each$1(barSeries, function (seriesModel) {
-        var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
         var baseAxis = cartesian.getBaseAxis();
         var axisExtent = baseAxis.getExtent();
-        var bandWidth = baseAxis.type === 'category'
-            ? baseAxis.getBandWidth()
-            : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
+
+        var bandWidth;
+        if (baseAxis.type === 'category') {
+            bandWidth = baseAxis.getBandWidth();
+        }
+        else if (baseAxis.type === 'value' || baseAxis.type === 'time') {
+            var key = baseAxis.dim + '_' + baseAxis.index;
+            var minGap = axisMinGaps[key];
+            var extentSpan = Math.abs(axisExtent[1] - axisExtent[0]);
+            var scale = baseAxis.scale.getExtent();
+            var scaleSpan = Math.abs(scale[1] - scale[0]);
+            bandWidth = minGap
+                ? extentSpan / scaleSpan * minGap
+                : extentSpan; // When there is only one data value
+        }
+        else {
+            var data = seriesModel.getData();
+            bandWidth = Math.abs(axisExtent[1] - axisExtent[0]) / data.count();
+        }
 
         var barWidth = parsePercent$1(
             seriesModel.get('barWidth'), bandWidth
         );
         var barMaxWidth = parsePercent$1(
             seriesModel.get('barMaxWidth'), bandWidth
+        );
+        var barMinWidth = parsePercent$1(
+            // barMinWidth by default is 1 in cartesian. Because in value axis,
+            // the auto-calculated bar width might be less than 1.
+            seriesModel.get('barMinWidth') || 1, bandWidth
         );
         var barGap = seriesModel.get('barGap');
         var barCategoryGap = seriesModel.get('barCategoryGap');
@@ -35747,6 +35879,7 @@ function makeColumnLayout(barSeries) {
             bandWidth: bandWidth,
             barWidth: barWidth,
             barMaxWidth: barMaxWidth,
+            barMinWidth: barMinWidth,
             barGap: barGap,
             barCategoryGap: barCategoryGap,
             axisKey: getAxisKey(baseAxis),
@@ -35801,6 +35934,8 @@ function doCalBarWidthAndOffset(seriesInfoList) {
 
         var barMaxWidth = seriesInfo.barMaxWidth;
         barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
+        var barMinWidth = seriesInfo.barMinWidth;
+        barMinWidth && (stacks[stackId].minWidth = barMinWidth);
         var barGap = seriesInfo.barGap;
         (barGap != null) && (columnsOnAxis.gap = barGap);
         var barCategoryGap = seriesInfo.barCategoryGap;
@@ -35825,15 +35960,42 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
-        each$1(stacks, function (column, stack) {
+        each$1(stacks, function (column) {
             var maxWidth = column.maxWidth;
-            if (maxWidth && maxWidth < autoWidth) {
-                maxWidth = Math.min(maxWidth, remainedWidth);
-                if (column.width) {
-                    maxWidth = Math.min(maxWidth, column.width);
+            var minWidth = column.minWidth;
+            if (!column.width) {
+                var finalWidth = autoWidth;
+                if (maxWidth && maxWidth < finalWidth) {
+                    finalWidth = Math.min(maxWidth, remainedWidth);
                 }
-                remainedWidth -= maxWidth;
-                column.width = maxWidth;
+                // `minWidth` has higher priority. `minWidth` decide that wheter the
+                // bar is able to be visible. So `minWidth` should not be restricted
+                // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
+                // the extreme cases for `value` axis, bars are allowed to overlap
+                // with each other if `minWidth` specified.
+                if (minWidth && minWidth > finalWidth) {
+                    finalWidth = minWidth;
+                }
+                if (finalWidth !== autoWidth) {
+                    column.width = finalWidth;
+                    remainedWidth -= finalWidth;
+                    autoWidthCount--;
+                }
+            }
+            else {
+                // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
+                // CSS does. Becuase barWidth can be a percent value, where
+                // `barMaxWidth` can be used to restrict the final width.
+                var finalWidth = column.width;
+                if (maxWidth) {
+                    finalWidth = Math.min(finalWidth, maxWidth);
+                }
+                // `minWidth` has higher priority, as described above
+                if (minWidth) {
+                    finalWidth = Math.max(finalWidth, minWidth);
+                }
+                column.width = finalWidth;
+                remainedWidth -= finalWidth;
                 autoWidthCount--;
             }
         });
@@ -35981,7 +36143,6 @@ function layout(seriesType, ecModel) {
                 }
                 stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
-
             data.setItemLayout(idx, {
                 x: x,
                 y: y,
@@ -36065,7 +36226,7 @@ function isInLargeMode(seriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis, valueAxis, stacked) {
-    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
 }
 
 /*
@@ -37399,12 +37560,16 @@ function calculateCategoryInterval(axis) {
     var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
 
     var cache = inner$6(axis.model);
+    var axisExtent = axis.getExtent();
     var lastAutoInterval = cache.lastAutoInterval;
     var lastTickCount = cache.lastTickCount;
 
     // Use cache to keep interval stable while moving zoom window,
     // otherwise the calculated interval might jitter when the zoom
     // window size is close to the interval-changing size.
+    // For example, if all of the axis labels are `a, b, c, d, e, f, g`.
+    // The jitter will cause that sometimes the displayed labels are
+    // `a, d, g` (interval: 2) sometimes `a, c, e`(interval: 1).
     if (lastAutoInterval != null
         && lastTickCount != null
         && Math.abs(lastAutoInterval - interval) <= 1
@@ -37412,6 +37577,10 @@ function calculateCategoryInterval(axis) {
         // Always choose the bigger one, otherwise the critical
         // point is not the same when zooming in or zooming out.
         && lastAutoInterval > interval
+        // If the axis change is caused by chart resize, the cache should not
+        // be used. Otherwise some hiden labels might not be shown again.
+        && cache.axisExtend0 === axisExtent[0]
+        && cache.axisExtend1 === axisExtent[1]
     ) {
         interval = lastAutoInterval;
     }
@@ -37420,6 +37589,8 @@ function calculateCategoryInterval(axis) {
     else {
         cache.lastTickCount = tickCount;
         cache.lastAutoInterval = interval;
+        cache.axisExtend0 = axisExtent[0];
+        cache.axisExtend1 = axisExtent[1];
     }
 
     return interval;
@@ -37700,7 +37871,6 @@ Axis.prototype = {
         opt = opt || {};
 
         var tickModel = opt.tickModel || this.getTickModel();
-
         var result = createAxisTicks(this, tickModel);
         var ticks = result.ticks;
 
@@ -37712,8 +37882,9 @@ Axis.prototype = {
         }, this);
 
         var alignWithLabel = tickModel.get('alignWithLabel');
+
         fixOnBandTicksCoords(
-            this, ticksCoords, result.tickCategoryInterval, alignWithLabel, opt.clamp
+            this, ticksCoords, alignWithLabel, opt.clamp
         );
 
         return ticksCoords;
@@ -37806,7 +37977,7 @@ function fixExtentWithBands(extent, nTick) {
 // splitLine/spliteArea should layout appropriately corresponding
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
-function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWithLabel, clamp) {
+function fixOnBandTicksCoords(axis, ticksCoords, alignWithLabel, clamp) {
     var ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
@@ -37815,26 +37986,30 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
 
     var axisExtent = axis.getExtent();
     var last;
+    var diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-        var shift = (ticksCoords[1].coord - ticksCoords[0].coord);
+        var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
+        var shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
+
         each$1(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
-            var tickCategoryInterval = tickCategoryInterval || 0;
-            // Avoid split a single data item when odd interval.
-            if (tickCategoryInterval % 2 > 0) {
-                ticksItem.coord -= shift / ((tickCategoryInterval + 1) * 2);
-            }
         });
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift};
+
+        var dataExtent = axis.scale.getExtent();
+        diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
+
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
+
         ticksCoords.push(last);
     }
 
     var inverse = axisExtent[0] > axisExtent[1];
 
+    // Handling clamp.
     if (littleThan(ticksCoords[0].coord, axisExtent[0])) {
         clamp ? (ticksCoords[0].coord = axisExtent[0]) : ticksCoords.shift();
     }
@@ -37849,6 +38024,10 @@ function fixOnBandTicksCoords(axis, ticksCoords, tickCategoryInterval, alignWith
     }
 
     function littleThan(a, b) {
+        // Avoid rounding error cause calculated tick coord different with extent.
+        // It may cause an extra unecessary tick added.
+        a = round$1(a);
+        b = round$1(b);
         return inverse ? a > b : a < b;
     }
 }
@@ -40555,6 +40734,10 @@ var BaseBarSeries = SeriesModel.extend({
         progressiveChunkMode: 'mod',
 
         // barMaxWidth: null,
+
+        // In cartesian, the default value is 1. Otherwise null.
+        // barMinWidth: null,
+
         // 默认自适应
         // barWidth: null,
         // 柱间距离，默认为柱形宽度的30%，可设固定值
@@ -40622,7 +40805,11 @@ BaseBarSeries.extend({
     defaultOption: {
         // If clipped
         // Only available on cartesian2d
-        clip: true
+        clip: true,
+
+        // If use caps on two sides of bars
+        // Only available on tangential polar bar
+        roundCap: false
     }
 });
 
@@ -40717,6 +40904,98 @@ var barItemStyle = {
         return style;
     }
 };
+
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/**
+ * Sausage: similar to sector, but have half circle on both sides
+ * @public
+ */
+var Sausage = extendShape({
+
+    type: 'sausage',
+
+    shape: {
+
+        cx: 0,
+
+        cy: 0,
+
+        r0: 0,
+
+        r: 0,
+
+        startAngle: 0,
+
+        endAngle: Math.PI * 2,
+
+        clockwise: true
+    },
+
+    buildPath: function (ctx, shape) {
+        var x = shape.cx;
+        var y = shape.cy;
+        var r0 = Math.max(shape.r0 || 0, 0);
+        var r = Math.max(shape.r, 0);
+        var dr = (r - r0) * 0.5;
+        var rCenter = r0 + dr;
+        var startAngle = shape.startAngle;
+        var endAngle = shape.endAngle;
+        var clockwise = shape.clockwise;
+
+        var unitStartX = Math.cos(startAngle);
+        var unitStartY = Math.sin(startAngle);
+        var unitEndX = Math.cos(endAngle);
+        var unitEndY = Math.sin(endAngle);
+
+        var lessThanCircle = clockwise
+            ? endAngle - startAngle < Math.PI * 2
+            : startAngle - endAngle < Math.PI * 2;
+
+        if (lessThanCircle) {
+            ctx.moveTo(unitStartX * r0 + x, unitStartY * r0 + y);
+
+            ctx.arc(
+                unitStartX * rCenter + x, unitStartY * rCenter + y, dr,
+                -Math.PI + startAngle, startAngle, !clockwise
+            );
+        }
+
+        ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
+
+        ctx.moveTo(unitEndX * r + x, unitEndY * r + y);
+
+        ctx.arc(
+            unitEndX * rCenter + x, unitEndY * rCenter + y, dr,
+            endAngle - Math.PI * 2, endAngle - Math.PI, !clockwise
+        );
+
+        if (r0 !== 0) {
+            ctx.arc(x, y, r0, endAngle, startAngle, clockwise);
+
+            ctx.moveTo(unitStartX * r0 + x, unitEndY * r0 + y);
+        }
+
+        ctx.closePath();
+    }
+});
 
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -40833,6 +41112,8 @@ extendChartView({
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
 
+        var roundCap = seriesModel.get('roundCap', true);
+
         data.diff(oldData)
             .add(function (dataIndex) {
                 if (!data.hasValue(dataIndex)) {
@@ -40853,7 +41134,7 @@ extendChartView({
                 }
 
                 var el = elementCreator[coord.type](
-                    data, dataIndex, itemModel, layout, isHorizontalOrRadial, animationModel
+                    dataIndex, layout, isHorizontalOrRadial, animationModel, false, roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -40887,7 +41168,7 @@ extendChartView({
                 }
                 else {
                     el = elementCreator[coord.type](
-                        data, newIndex, itemModel, layout, isHorizontalOrRadial, animationModel, true
+                        newIndex, layout, isHorizontalOrRadial, animationModel, true, roundCap
                     );
                 }
 
@@ -41011,7 +41292,7 @@ var clip = {
 var elementCreator = {
 
     cartesian2d: function (
-        data, dataIndex, itemModel, layout, isHorizontal,
+        dataIndex, layout, isHorizontal,
         animationModel, isUpdate
     ) {
         var rect = new Rect({shape: extend({}, layout)});
@@ -41032,15 +41313,18 @@ var elementCreator = {
     },
 
     polar: function (
-        data, dataIndex, itemModel, layout, isRadial,
-        animationModel, isUpdate
+        dataIndex, layout, isRadial,
+        animationModel, isUpdate, roundCap
     ) {
         // Keep the same logic with bar in catesion: use end value to control
         // direction. Notice that if clockwise is true (by default), the sector
         // will always draw clockwisely, no matter whether endAngle is greater
         // or less than startAngle.
         var clockwise = layout.startAngle < layout.endAngle;
-        var sector = new Sector({
+
+        var ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
+
+        var sector = new ShapeClass({
             shape: defaults({clockwise: clockwise}, layout)
         });
 
