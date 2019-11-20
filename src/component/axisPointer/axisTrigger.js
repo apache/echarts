@@ -97,19 +97,92 @@ export default function (payload, ecModel, api) {
 
     // Process for triggered axes.
     each(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
+        /**
+         * If both x and y axes are snapping and one and only one of them is
+         * of category type, then the category axis is used as primary
+         * snapping, otherwise the baseAxis is used as primary snapping.
+         * The snapped value of the other axis is calculated from it.
+         *
+         *  4 |                 *
+         *  3 |       *
+         *  2 |            *
+         *  1 |  *     +
+         *    ---------------------
+         *       a    b    c    d
+         *
+         * In the above example, the x axis is in category type, and y axis
+         *     value.
+         * The *'s are data items, + is the mouse position.
+         *
+         * If both x and y axes are using snapping, then:
+         * 1. x axis is used as primary snapping axis because it's the only
+         *     category axis.
+         * 2. The nearest x value to the mouse is 'b', so 'b' is used as
+         *     snapped x value.
+         * 3. The corresponding y value of 'b' is 3, so 3 is used as snapped y
+         *     value.
+         * 4. So the axisPointer should be at ('b', 3).
+         *
+         * If only x is snapping, then the axisPointer should be at ('b', 1).
+         * If only y is snapping, then the axisPointer should be at the
+         *     position of +.
+         */
+
         // If a point given, it must be contained by the coordinate system.
         var coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
 
+        var snapXor; // One and only one of the axes is snapping
+        var snapBoth = true; // Both axes are snapping
+        var primarySnapAxis;
+        each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo) {
+            if (snapXor === undefined) {
+                snapXor = axisInfo.snap;
+            }
+            else {
+                snapXor = snapXor && !axisInfo.snap || !snapXor && axisInfo.snap;
+            }
+            snapBoth = snapBoth && axisInfo.snap;
+            axisInfo.snap && (primarySnapAxis = axisInfo.axis);
+        });
+
+        if (!snapBoth && !snapXor) {
+            // Snap none
+            return;
+        }
+
+        if (!snapXor) {
+            // Snap both
+            var coord = coordSys.getCartesians()[0];
+            primarySnapAxis = coord.getBaseAxis()// coord.getOtherAxis(coord.getBaseAxis());
+        }
+
+        var primaryPayload;
         each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
             var axis = axisInfo.axis;
-            var inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
-            // If no inputAxesInfo, no axis is restricted.
-            if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
-                var val = inputAxisInfo && inputAxisInfo.value;
-                if (val == null && !isIllegalPoint) {
-                    val = axis.pointToData(point);
+            if (axis === primarySnapAxis) {
+                var inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
+                // If no inputAxesInfo, no axis is restricted.
+                if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
+                    var val = inputAxisInfo && inputAxisInfo.value;
+                    if (val == null && !isIllegalPoint) {
+                        val = axis.pointToData(point);
+                    }
+                    axisInfo.isPrimarySnap = true;
+                    if (val != null) {
+                        primaryPayload = processOnAxis(axisInfo, val, updaters, false, outputFinder);
+                    }
                 }
-                val != null && processOnAxis(axisInfo, val, updaters, false, outputFinder);
+            }
+            else {
+                if (axisInfo.snap) {
+                    // Secondary snapping axis
+                    val = axis.pointToData(point);
+                    axisInfo.isPrimarySnap = false;
+                    if (primaryPayload) {
+                        axisInfo.primarySnapToValue = primaryPayload.snapToValue;
+                    }
+                    val != null && processOnAxis(axisInfo, val, updaters, false, outputFinder);
+                }
             }
         });
     });
@@ -180,6 +253,8 @@ function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
     // Tooltip should always be snapToValue, otherwise there will be
     // incorrect "axis value ~ series value" mapping displayed in tooltip.
     updaters.showTooltip(axisInfo, payloadInfo, snapToValue);
+
+    return payloadInfo;
 }
 
 function buildPayloadsBySeries(value, axisInfo) {
@@ -191,6 +266,10 @@ function buildPayloadsBySeries(value, axisInfo) {
     var minDiff = -1;
 
     each(axisInfo.seriesModels, function (series, idx) {
+        if (!axisInfo.isPrimarySnap && idx > 0) {
+            return;
+        }
+
         var dataDim = series.getData().mapDimension(dim, true);
         var seriesNestestValue;
         var dataIndices;
@@ -201,14 +280,20 @@ function buildPayloadsBySeries(value, axisInfo) {
             seriesNestestValue = result.nestestValue;
         }
         else {
-            dataIndices = series.getData().indicesOfNearest(
-                dataDim[0],
-                value,
-                // Add a threshold to avoid find the wrong dataIndex
-                // when data length is not same.
-                // false,
-                axis.type === 'category' ? 0.5 : null
-            );
+            if (isPrimarySnap) {
+                dataIndices = series.getData().indicesOfNearest(
+                    dataDim[0],
+                    value,
+                    // Add a threshold to avoid find the wrong dataIndex
+                    // when data length is not same.
+                    // false,
+                    axis.type === 'category' ? 0.5 : null
+                );
+            }
+            else {
+                // TODO: find somewhere to put primarySnapDataIndex into axisInfo?
+                dataIndices = axisInfo.primarySnapDataIndex == null ? [] : [axisInfo.primarySnapDataIndex];
+            }
             if (!dataIndices.length) {
                 return;
             }
