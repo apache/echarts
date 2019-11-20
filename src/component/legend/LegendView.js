@@ -204,7 +204,7 @@ export default echarts.extendComponentView({
                     selectMode
                 );
 
-                itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
@@ -238,7 +238,7 @@ export default echarts.extendComponentView({
                         );
 
                         // FIXME: consider different series has items with the same name.
-                        itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                        itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
                             // Should not specify the series name, consider legend controls
                             // more than one pie series.
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
@@ -518,11 +518,15 @@ function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, i
     return symbol.setStyle(itemStyle);
 }
 
-function dispatchSelectAction(name, api) {
+function dispatchSelectAction(name, dataName, api, excludeSeriesId) {
+    // downplay before unselect
+    dispatchDownplayAction(name, dataName, api, excludeSeriesId);
     api.dispatchAction({
         type: 'legendToggleSelect',
         name: name
     });
+    // highlight after select
+    dispatchHighlightAction(name, dataName, api, excludeSeriesId);
 }
 
 function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {
