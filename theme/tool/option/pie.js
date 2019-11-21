@@ -17,7 +17,7 @@
 * under the License.
 */
 
-module.exports = {
+export default {
     legend: {
         bottom: '5%',
         data: ['rose1', 'rose2', 'rose3', 'rose4']
