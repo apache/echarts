@@ -88,7 +88,13 @@ symbolDrawProto.updateData = function (data, opt) {
                 group.remove(symbolEl);
                 return;
             }
-            if (!symbolEl) {
+            // FIXME
+            // Currently the highlight state is stored in el (maybe it is inappropriate
+            // but that is another big topic). The el in oldData may be already removed
+            // prevoiusly but still has highlight state, which is unexpected. We simply
+            // do not reuse those el (detected by `!symbolEl.parent`). Check the test
+            // case in `main0` of `test/hoverStyle2.html`.
+            if (!symbolEl || !symbolEl.parent) {
                 symbolEl = new SymbolCtor(data, newIdx);
                 symbolEl.attr('position', point);
             }
