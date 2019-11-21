@@ -415,6 +415,7 @@ function updateStyle(
 ) {
     var color = data.getItemVisual(dataIndex, 'color');
     var opacity = data.getItemVisual(dataIndex, 'opacity');
+    var stroke = data.getVisual('borderColor');
     var itemStyleModel = itemModel.getModel('itemStyle');
     var hoverStyle = itemModel.getModel('emphasis.itemStyle').getBarItemStyle();
 
@@ -424,7 +425,8 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            fill: color,
+            stroke: layout.startAngle === layout.endAngle ? 'none' : stroke,
+            fill: layout.startAngle === layout.endAngle ? 'none' : color,
             opacity: opacity
         },
         itemStyleModel.getBarItemStyle()
@@ -443,7 +445,9 @@ function updateStyle(
             seriesModel, dataIndex, labelPositionOutside
         );
     }
-
+    if (layout.startAngle === layout.endAngle) {
+        hoverStyle.fill = hoverStyle.stroke = 'none';
+    }
     graphic.setHoverStyle(el, hoverStyle);
 }
 
