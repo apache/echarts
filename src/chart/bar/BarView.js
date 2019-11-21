@@ -425,7 +425,7 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            stroke : layout.startAngle === layout.endAngle ? 'none' : stroke,
+            stroke: layout.startAngle === layout.endAngle ? 'none' : stroke,
             fill: layout.startAngle === layout.endAngle ? 'none' : color,
             opacity: opacity
         },
@@ -445,7 +445,9 @@ function updateStyle(
             seriesModel, dataIndex, labelPositionOutside
         );
     }
-
+    if (layout.startAngle === layout.endAngle) {
+        hoverStyle.fill = hoverStyle.stroke = 'none';
+    }
     graphic.setHoverStyle(el, hoverStyle);
 }
 
