@@ -102,6 +102,31 @@ var defaultOption = {
         areaStyle: {
             color: ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
         }
+    },
+
+    minorTick: {
+        // Minor tick, not available for cateogry axis.
+        show: false,
+        // Split number of minor ticks. The value should be in range of (0, 100)
+        splitNumber: 5,
+        // Lenght of minor tick
+        length: 3,
+
+        // Same inside with axisTick
+
+        // Line style
+        lineStyle: {
+            // Default to be same with axisTick
+        }
+    },
+
+    minorSplitLine: {
+        show: false,
+
+        lineStyle: {
+            color: '#eee',
+            width: 1
+        }
     }
 };
 

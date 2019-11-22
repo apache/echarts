@@ -173,7 +173,7 @@ Axis.prototype = {
      * `axis.getTicksCoords` considers `onBand`, which is used by
      * `boundaryGap:true` of category axis and splitLine and splitArea.
      * @param {Object} [opt]
-     * @param {number} [opt.tickModel=axis.model.getModel('axisTick')]
+     * @param {Model} [opt.tickModel=axis.model.getModel('axisTick')]
      * @param {boolean} [opt.clamp] If `true`, the first and the last
      *        tick must be at the axis end points. Otherwise, clip ticks
      *        that outside the axis extent.
@@ -203,6 +203,31 @@ Axis.prototype = {
         );
 
         return ticksCoords;
+    },
+
+    /**
+     * @return {Array.<Array.<number>>}
+     */
+    getMinorTicksCoords: function (opt) {
+        if (this.scale.type === 'ordinal') {
+            // Category axis doesn't support minor ticks
+            return [];
+        }
+
+        opt = opt || {};
+        var minorTickModel = this.model.getModel('minorTick');
+        var splitNumber = minorTickModel.get('splitNumber');
+        // Protection.
+        if (!(splitNumber > 0 && splitNumber < 100)) {
+            splitNumber = 5;
+        }
+        var minorTicks = this.scale.getMinorTicks(splitNumber);
+        var minorTicksCoords = map(minorTicks, function (minorTicksGroup) {
+            return map(minorTicksGroup, function (minorTick) {
+                return this.dataToCoord(minorTick);
+            }, this);
+        }, this);
+        return minorTicksCoords;
     },
 
     /**
