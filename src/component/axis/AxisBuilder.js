@@ -576,7 +576,7 @@ function createTicks(ticksCoords, tickTransform, tickEndCoord, tickLineStyle, an
     var pt1 = [];
     var pt2 = [];
     for (var i = 0; i < ticksCoords.length; i++) {
-        var tickCoord = ticksCoords[i];
+        var tickCoord = ticksCoords[i].coord;
 
         pt1[0] = tickCoord;
         pt1[1] = 0;
@@ -619,9 +619,7 @@ function buildAxisMajorTicks(axisBuilder, axisModel, opt) {
     var lineStyleModel = tickModel.getModel('lineStyle');
     var tickEndCoord = opt.tickDirection * tickModel.get('length');
 
-    var ticksCoords = map(axis.getTicksCoords(), function (item) {
-        return item.coord;
-    });
+    var ticksCoords = axis.getTicksCoords();
 
     var ticksEls = createTicks(ticksCoords, axisBuilder._transform, tickEndCoord, defaults(
         lineStyleModel.getLineStyle(),

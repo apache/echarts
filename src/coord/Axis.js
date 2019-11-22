@@ -206,7 +206,7 @@ Axis.prototype = {
     },
 
     /**
-     * @return {Array.<Array.<number>>}
+     * @return {Array.<Array.<Object>>} [{ coord: ..., tickValue: ...}]
      */
     getMinorTicksCoords: function (opt) {
         if (this.scale.type === 'ordinal') {
@@ -224,7 +224,10 @@ Axis.prototype = {
         var minorTicks = this.scale.getMinorTicks(splitNumber);
         var minorTicksCoords = map(minorTicks, function (minorTicksGroup) {
             return map(minorTicksGroup, function (minorTick) {
-                return this.dataToCoord(minorTick);
+                return {
+                    coord: this.dataToCoord(minorTick),
+                    tickValue: minorTick
+                };
             }, this);
         }, this);
         return minorTicksCoords;

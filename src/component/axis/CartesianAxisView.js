@@ -172,7 +172,7 @@ var CartesianAxisView = AxisView.extend({
 
         for (var i = 0; i < minorTicksCoords.length; i++) {
             for (let k = 0; k < minorTicksCoords[i].length; k++) {
-                var tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k]);
+                var tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
 
                 if (isHorizontal) {
                     p1[0] = tickCoord;
@@ -188,7 +188,7 @@ var CartesianAxisView = AxisView.extend({
                 }
 
                 this._axisGroup.add(new graphic.Line({
-                    anid: 'line_' + i + '_' + k,
+                    anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
                     subPixelOptimize: true,
                     shape: {
                         x1: p1[0],
