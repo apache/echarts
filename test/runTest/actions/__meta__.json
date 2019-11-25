@@ -68,6 +68,7 @@
   "dataZoom-sync": 1,
   "dataZoom-toolbox": 6,
   "dataZoomHighPrecision": 3,
+  "drag-out": 2,
   "dynamic-splitNumber": 1,
   "ec-event": 4,
   "funnel": 2,
