@@ -410,6 +410,12 @@ var getLayout = {
     }
 };
 
+function isZeroOnPolar(layout) {
+    return layout.startAngle != null
+        && layout.endAngle != null
+        && layout.startAngle === layout.endAngle;
+}
+
 function updateStyle(
     el, data, dataIndex, itemModel, layout, seriesModel, isHorizontal, isPolar
 ) {
@@ -425,8 +431,8 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            stroke: layout.startAngle === layout.endAngle ? 'none' : stroke,
-            fill: layout.startAngle === layout.endAngle ? 'none' : color,
+            stroke: isZeroOnPolar(layout) ? 'none' : stroke,
+            fill: isZeroOnPolar(layout) ? 'none' : color,
             opacity: opacity
         },
         itemStyleModel.getBarItemStyle()
@@ -445,7 +451,7 @@ function updateStyle(
             seriesModel, dataIndex, labelPositionOutside
         );
     }
-    if (layout.startAngle === layout.endAngle) {
+    if (isZeroOnPolar(layout)) {
         hoverStyle.fill = hoverStyle.stroke = 'none';
     }
     graphic.setHoverStyle(el, hoverStyle);
