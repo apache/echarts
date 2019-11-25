@@ -17,18 +17,9 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
+const helper = require('../../../../../lib/component/dataZoom/helper');
+const utHelper = require('../../../core/utHelper');
 describe('dataZoom/helper', function() {
-
-    var utHelper = window.utHelper;
-    var helper;
-
-    beforeAll(function (done) { // jshint ignore:line
-        window.requireES(['echarts/src/component/dataZoom/helper'], function (h) {
-            helper = h;
-            done();
-        });
-    });
 
     function makeRecords(result) {
         var o = {};

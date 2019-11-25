@@ -18,25 +18,41 @@
 * under the License.
 */
 
+const echarts = require('../../../../lib/echarts');
+const scaleHelper = require('../../../../lib/scale/helper');
+const numberUtil = require('../../../../lib/util/number');
+const gridComponent = require('../../../../lib/component/grid');
+const line = require('../../../../lib/chart/line');
+const bar = require('../../../../lib/chart/bar');
+const utHelper = require('../../core/utHelper');
+
 describe('scale_interval', function() {
+    var requireItems = [echarts, scaleHelper, numberUtil, gridComponent, line, bar];
 
-    var utHelper = window.utHelper;
+    var context = utHelper.genContext({
+        requireItems: requireItems
+    });
 
-    var testCase = utHelper.prepare([
-        'echarts/src/scale/helper',
-        'echarts/src/util/number',
-        'echarts/src/component/grid',
-        'echarts/src/chart/line',
-        'echarts/src/chart/bar'
-    ]);
+    var chart = '';
+    var createResult = '';
+    beforeEach(function () {
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+    });
+
+    afterEach(function () {
+        utHelper.removeChart(createResult);
+    });
+
 
     describe('extreme', function () {
-        testCase.createChart()('ticks_min_max', function () {
+        it('ticks_min_max', function () {
+
             var min = 0;
             var max = 54.090909;
             var splitNumber = 5;
 
-            this.chart.setOption({
+            chart.setOption({
                 xAxis: {},
                 yAxis: {
                     type: 'value',
@@ -48,7 +64,7 @@ describe('scale_interval', function() {
                 series: [{type: 'line', data: []}]
             });
 
-            var yAxis = this.chart.getModel().getComponent('yAxis', 0);
+            var yAxis = chart.getModel().getComponent('yAxis', 0);
             var scale = yAxis.axis.scale;
             var ticks = scale.getTicks();
 
@@ -56,8 +72,8 @@ describe('scale_interval', function() {
             expect(ticks[ticks.length - 1]).toEqual(max);
         });
 
-        testCase.createChart()('ticks_small_value', function () {
-            this.chart.setOption({
+        it('ticks_small_value', function () {
+            chart.setOption({
                 tooltip: {},
                 xAxis: [
                     {
@@ -82,7 +98,7 @@ describe('scale_interval', function() {
                 ]
             });
 
-            var yAxis = this.chart.getModel().getComponent('yAxis', 0);
+            var yAxis = chart.getModel().getComponent('yAxis', 0);
             var scale = yAxis.axis.scale;
             var ticks = scale.getTicks();
             var labels = yAxis.axis.getViewLabels().map(function (item) {
@@ -118,7 +134,7 @@ describe('scale_interval', function() {
             return +cond;
         }
 
-        function doSingleTest(scaleHelper, numberUtil, extent, splitNumber) {
+        function doSingleTest(extent, splitNumber) {
             var result = scaleHelper.intervalScaleNiceTicks(extent, splitNumber);
             var intervalPrecision = result.intervalPrecision;
             var interval = result.interval;
@@ -151,7 +167,7 @@ describe('scale_interval', function() {
             // check precision rounding error ????????????
 
             if (fails.length) {
-                utHelper.print(
+                print(
                     'FAIL:[' + fails
                     + ']  extent:[' + extent + '] niceTickExtent:[' + niceTickExtent + '] ticks:['
                     + ticks + '] '
@@ -159,7 +175,7 @@ describe('scale_interval', function() {
             }
         }
 
-        function doRandomTest(scaleHelper, numberUtil, count, splitNumber, quantity) {
+        function doRandomTest(count, splitNumber, quantity) {
             for (var i = 0; i < count; i++) {
                 var extent = [];
                 extent[0] = randomNumber(quantity);
@@ -170,19 +186,19 @@ describe('scale_interval', function() {
                 if (extent[0] > extent[1]) {
                     extent.reverse();
                 }
-                doSingleTest(scaleHelper, numberUtil, extent, splitNumber);
+                doSingleTest(extent, splitNumber);
             }
         }
 
-        testCase.createChart()('cases', function (scaleHelper, numberUtil) {
-            doSingleTest(scaleHelper, numberUtil, [3.7210923755786733e-8,176.4352516752083], 1);
-            doSingleTest(scaleHelper, numberUtil, [1550932.3941785, 1550932.3941786], 5);
-            doSingleTest(scaleHelper, numberUtil, [-3711126.9907707,-3711126.990770699], 5);
+        it('cases', function () {
+            doSingleTest([3.7210923755786733e-8, 176.4352516752083], 1);
+            doSingleTest([1550932.3941785, 1550932.3941786], 5);
+            doSingleTest([-3711126.9907707, -3711126.990770699], 5);
         });
 
-        testCase.createChart()('randomCover', function (scaleHelper, numberUtil) {
-            doRandomTest(scaleHelper, numberUtil, 500, 5, 20);
-            doRandomTest(scaleHelper, numberUtil, 200, 1, 20);
+        it('randomCover', function () {
+            doRandomTest(500, 5, 20);
+            doRandomTest(200, 1, 20);
         });
     });
 

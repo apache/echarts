@@ -18,16 +18,9 @@
 * under the License.
 */
 
+const graphic = require('../../../../lib/util/graphic');
+
 describe('util/graphic', function () {
-
-    var graphic;
-
-    beforeAll(function (done) { // jshint ignore:line
-        window.requireES(['echarts/src/util/graphic'], function (g) {
-            graphic = g;
-            done();
-        });
-    });
 
     describe('subPixelOptimize', function () {
 
@@ -92,7 +85,7 @@ describe('util/graphic', function () {
 
     describe('lineLineIntersect', function () {
 
-        it ('extreme', function () {
+        it('extreme', function () {
             expect(graphic.lineLineIntersect(10, 10, 30, 30, 10, 10, 10, 10)).toEqual(false);
         });
 
@@ -108,6 +101,6 @@ describe('util/graphic', function () {
             expect(graphic.lineLineIntersect(10, 20, 30, 40, 12, 20, 30, 40)).toEqual(true);
             expect(graphic.lineLineIntersect(10, 20, 30, 40, 12, 20, 20, 42)).toEqual(true);
         });
-    })
+    });
 
 });

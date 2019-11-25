@@ -18,11 +18,9 @@
 * under the License.
 */
 
+const modelUtil = require('../../../../lib/util/model');
+
 describe('util/model', function() {
-
-    var utHelper = window.utHelper;
-
-    var testCase = utHelper.prepare(['echarts/src/util/model', 'echarts/src/model/Model']);
 
 
     describe('compressBatches', function () {
@@ -31,7 +29,7 @@ describe('util/model', function() {
             return {seriesId: seriesId, dataIndex: dataIndex};
         }
 
-        testCase('base', function (modelUtil) {
+        it('base', function () {
             // Remove dupliate between A and B
             expect(modelUtil.compressBatches(
                 [item(3, 4), item(3, 5), item(4, 5)],

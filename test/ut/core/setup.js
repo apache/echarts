@@ -1,4 +1,3 @@
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -18,9 +17,12 @@
 * under the License.
 */
 
-require.config({
-    paths: {
-        'oldEcharts': 'tmp/echarts-v4.0.4',
-        'newEcharts': '../../dist/echarts'
-    }
-});
+const jsdom = require('jsdom');
+const Canvas = require('canvas');
+const {JSDOM} = jsdom;
+const {window} = new JSDOM();
+
+global.window = window;
+global.navigator = window.navigator;
+global.document = window.document;
+global.Image = Canvas.Image;

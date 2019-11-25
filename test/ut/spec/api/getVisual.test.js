@@ -18,8 +18,18 @@
 * under the License.
 */
 
-/* jshint maxlen:200 */
+const echarts = require('../../../../lib/echarts');
+const gridComponent = require('../../../../lib/component/grid');
+const geoComponent = require('../../../../lib/component/geo');
+const polarComponent = require('../../../../lib/component/polar');
+const visuleMapComponent = require('../../../../lib/component/visualMap');
+const dataZoomComponent = require('../../../../lib/component/dataZoom');
+const pie = require('../../../../lib/chart/pie');
+const scatter = require('../../../../lib/chart/scatter');
+const graph = require('../../../../lib/chart/graph');
+const utHelper = require('../../core/utHelper');
 
+/* jshint maxlen:200 */
 describe('api/getVisual', function() {
 
 
@@ -28,22 +38,23 @@ describe('api/getVisual', function() {
     // each of which should test visual map.
     // symbol and symbolSize should be tested.
 
+    var requireItems = [echarts, gridComponent, geoComponent, polarComponent, visuleMapComponent, dataZoomComponent, pie, scatter, graph];
 
-    var utHelper = window.utHelper;
+    var context = utHelper.genContext({
+        requireItems: requireItems
+    });
 
-    var testCase = utHelper.prepare([
-        'echarts/src/chart/pie',
-        'echarts/src/chart/scatter',
-        'echarts/src/chart/graph',
-        'echarts/src/component/geo',
-        'echarts/src/component/grid',
-        'echarts/src/component/polar',
-        'echarts/src/component/visualMap',
-        'echarts/src/component/dataZoom'
-    ]);
+    var chart = '';
+    var createResult = '';
+    beforeEach(function () {
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+    });
 
-    testCase.createChart()('scatter', function () {
-        var chart = this.chart;
+    afterEach(function () {
+        utHelper.removeChart(createResult);
+    });
+    it('scatter', function () {
 
         chart.setOption({
             xAxis: {},
@@ -132,8 +143,7 @@ describe('api/getVisual', function() {
     });
 
 
-    testCase.createChart()('dataZoom', function () {
-        var chart = this.chart;
+    it('dataZoom', function () {
 
         chart.setOption({
             xAxis: {},
@@ -178,7 +188,7 @@ describe('api/getVisual', function() {
     });
 
 
-    // testCase.createChart()('pie', function () {
+    // it('pie', function () {
     //     var chart = this.chart;
 
     //     chart.setOption({
@@ -207,7 +217,7 @@ describe('api/getVisual', function() {
     // });
 
 
-    // testCase.createChart()('graph', function () {
+    // it('graph', function () {
     //     var chart = this.chart;
 
     //     chart.setOption({

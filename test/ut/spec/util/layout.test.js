@@ -17,12 +17,9 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+const layoutUtil = require('../../../../lib/util/layout');
 
 describe('util/number', function () {
-
-    var utHelper = window.utHelper;
-
-    var testCase = utHelper.prepare(['echarts/src/util/layout']);
 
     describe('mergeLayoutParam', function () {
 
@@ -54,7 +51,7 @@ describe('util/number', function () {
             return newObj;
         }
 
-        testCase('all', function (layoutUtil) {
+        it('all', function () {
 
             function testMerge(targetOption, newOption, result, resultIgnoreSize) {
                 var t1 = shadowClone(targetOption);
