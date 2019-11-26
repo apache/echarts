@@ -584,7 +584,7 @@ function dataTaskReset(context) {
 
 function dataTaskProgress(param, context) {
     // Avoid repead cloneShallow when data just created in reset.
-    if (param.end > context.outputData.count()) {
+    if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
     }
 }
