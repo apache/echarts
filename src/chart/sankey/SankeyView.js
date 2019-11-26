@@ -274,8 +274,11 @@ export default echarts.extendChartView({
                 el.cursor = 'move';
             }
 
+            el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
+            el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
+
             if (itemModel.get('focusNodeAdjacency')) {
-                el.off('mouseover').on('mouseover', function () {
+                el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._clearTimer();
                         api.dispatchAction({
@@ -285,7 +288,8 @@ export default echarts.extendChartView({
                         });
                     }
                 });
-                el.off('mouseout').on('mouseout', function () {
+
+                el.on('mouseout', el.unfocusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._dispatchUnfocus(api);
                     }
@@ -295,8 +299,12 @@ export default echarts.extendChartView({
 
         edgeData.eachItemGraphicEl(function (el, dataIndex) {
             var edgeModel = edgeData.getItemModel(dataIndex);
+
+            el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
+            el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
+
             if (edgeModel.get('focusNodeAdjacency')) {
-                el.off('mouseover').on('mouseover', function () {
+                el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._clearTimer();
                         api.dispatchAction({
@@ -306,7 +314,8 @@ export default echarts.extendChartView({
                         });
                     }
                 });
-                el.off('mouseout').on('mouseout', function () {
+
+                el.on('mouseout', el.unfocusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._dispatchUnfocus(api);
                     }
