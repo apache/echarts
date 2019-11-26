@@ -142,12 +142,25 @@ var PieSeries = echarts.extendSeriesModel({
 
         // cursor: null,
 
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: null,
+        height: null,
+
         label: {
             // If rotate around circle
             rotate: false,
             show: true,
             // 'outer', 'inside', 'center'
-            position: 'outer'
+            position: 'outer',
+            // 'none', 'labelLine', 'edge'. Works only when position is 'outer'
+            alignTo: 'none',
+            // Closest distance between label and chart edge.
+            // Works only position is 'outer' and alignTo is 'labelLine' or 'edge'.
+            margin: '25%',
+            padding: 5,
             // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
             // 默认使用全局文本样式，详见TEXTSTYLE
             // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数

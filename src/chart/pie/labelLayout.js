@@ -20,16 +20,21 @@
 // FIXME emphasis label position is not same with normal label position
 
 import * as textContain from 'zrender/src/contain/text';
+import {parsePercent} from '../../util/number';
 
 var RADIAN = Math.PI / 180;
 
-function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
+function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, viewLeft, viewTop, farthestX) {
     list.sort(function (a, b) {
         return a.y - b.y;
     });
 
     function shiftDown(start, end, delta, dir) {
         for (var j = start; j < end; j++) {
+            if (list[j].y + delta > viewTop + viewHeight) {
+                break;
+            }
+
             list[j].y += delta;
             if (j > start
                 && j + 1 < end
@@ -45,6 +50,10 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
 
     function shiftUp(end, delta) {
         for (var j = end; j >= 0; j--) {
+            if (list[j].y - delta < viewTop) {
+                break;
+            }
+
             list[j].y -= delta;
             if (j > 0
                 && list[j].y > list[j - 1].y + list[j - 1].height
@@ -64,6 +73,10 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
                 : 0;                    // up
 
         for (var i = 0, l = list.length; i < l; i++) {
+            if (list[i].labelAlignTo !== 'none') {
+                continue;
+            }
+
             var deltaY = Math.abs(list[i].y - cy);
             var length = list[i].len;
             var length2 = list[i].len2;
@@ -93,6 +106,12 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
     var upList = [];
     var downList = [];
     for (var i = 0; i < len; i++) {
+        if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
+            var dx = list[i].x - farthestX;
+            list[i].linePoints[1][0] += dx;
+            list[i].x = farthestX;
+        }
+
         delta = list[i].y - lastY;
         if (delta < 0) {
             shiftDown(i, len, -delta, dir);
@@ -114,39 +133,87 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight) {
     changeX(downList, true, cx, cy, r, dir);
 }
 
-function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight) {
+function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLeft, viewTop) {
     var leftList = [];
     var rightList = [];
+    var leftmostX = Number.MAX_VALUE;
+    var rightmostX = -Number.MAX_VALUE;
     for (var i = 0; i < labelLayoutList.length; i++) {
         if (isPositionCenter(labelLayoutList[i])) {
             continue;
         }
         if (labelLayoutList[i].x < cx) {
+            leftmostX = Math.min(leftmostX, labelLayoutList[i].x);
             leftList.push(labelLayoutList[i]);
         }
         else {
+            rightmostX = Math.max(rightmostX, labelLayoutList[i].x);
             rightList.push(labelLayoutList[i]);
         }
     }
 
-    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight);
-    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight);
+    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
+    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
 
     for (var i = 0; i < labelLayoutList.length; i++) {
-        if (isPositionCenter(labelLayoutList[i])) {
+        var layout = labelLayoutList[i];
+        if (isPositionCenter(layout)) {
             continue;
         }
-        var linePoints = labelLayoutList[i].linePoints;
+
+        var linePoints = layout.linePoints;
         if (linePoints) {
-            var dist = linePoints[1][0] - linePoints[2][0];
-            if (labelLayoutList[i].x < cx) {
-                linePoints[2][0] = labelLayoutList[i].x + 3;
+            var isAlignToEdge = layout.labelAlignTo === 'edge';
+
+            var realTextWidth = layout.textRect.width;
+            var targetTextWidth;
+            if (isAlignToEdge) {
+                // debugger;
+                // targetTextWidth = Math.abs(layout.x - linePoints[2][0]) - layout.labelPadding;
+                if (layout.x < cx) {
+                    targetTextWidth = linePoints[2][0] - layout.labelPadding - viewLeft - layout.labelMargin;
+                }
+                else {
+                    targetTextWidth = viewLeft + viewWidth - layout.labelMargin - linePoints[2][0] - layout.labelPadding;
+                }
             }
             else {
-                linePoints[2][0] = labelLayoutList[i].x - 3;
+                if (layout.x < cx) {
+                    targetTextWidth = layout.x - viewLeft - layout.labelMargin;
+                }
+                else {
+                    targetTextWidth = viewLeft + viewWidth - layout.x - layout.labelMargin;
+                }
             }
-            linePoints[1][1] = linePoints[2][1] = labelLayoutList[i].y;
-            linePoints[1][0] = linePoints[2][0] + dist;
+            if (targetTextWidth < layout.textRect.width) {
+                layout.text = textContain.truncateText(layout.text, targetTextWidth, layout.font);
+                if (layout.labelAlignTo === 'edge') {
+                    realTextWidth = textContain.getWidth(layout.text, layout.font);
+                }
+            }
+
+            var dist = linePoints[1][0] - linePoints[2][0];
+            if (isAlignToEdge) {
+                if (layout.x < cx) {
+                    linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelPadding;
+                }
+                else {
+                    linePoints[2][0] = viewLeft + viewWidth - layout.labelMargin
+                            - realTextWidth - layout.labelPadding;
+                }
+            }
+            else {
+                if (layout.x < cx) {
+                    linePoints[2][0] = layout.x + layout.labelPadding;
+                    layout.x += layout.labelPadding;
+                }
+                else {
+                    linePoints[2][0] = layout.x - layout.labelPadding;
+                    layout.x -= layout.labelPadding;
+                }
+                linePoints[1][0] = linePoints[2][0] + dist;
+            }
+            linePoints[1][1] = linePoints[2][1] = layout.y;
         }
     }
 }
@@ -156,7 +223,7 @@ function isPositionCenter(layout) {
     return layout.position === 'center';
 }
 
-export default function (seriesModel, r, viewWidth, viewHeight, sum) {
+export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTop) {
     var data = seriesModel.getData();
     var labelLayoutList = [];
     var cx;
@@ -171,10 +238,16 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         var labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
         var labelPosition = labelModel.get('position') || itemModel.get('emphasis.label.position');
+        var labelPadding = labelModel.get('padding');
+        var labelAlignTo = labelModel.get('alignTo');
+        var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        var font = labelModel.getFont();
 
         var labelLineModel = itemModel.getModel('labelLine');
         var labelLineLen = labelLineModel.get('length');
+        labelLineLen = parsePercent(labelLineLen, viewWidth);
         var labelLineLen2 = labelLineModel.get('length2');
+        labelLineLen2 = parsePercent(labelLineLen2, viewWidth);
 
         if (layout.angle < minShowLabelRadian) {
             return;
@@ -191,6 +264,12 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
 
         cx = layout.cx;
         cy = layout.cy;
+
+        var text = seriesModel.getFormattedLabel(idx, 'normal')
+                || data.getName(idx);
+        var textRect = textContain.getBoundingRect(
+            text, font, textAlign, 'top'
+        );
 
         var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {
@@ -212,14 +291,23 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
                 var x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
                 var y3 = y2;
 
-                textX = x3 + (dx < 0 ? -5 : 5);
+                if (labelAlignTo === 'edge') {
+                    // Adjust textX because text align of edge is opposite
+                    textX = dx < 0 ? viewLeft + labelMargin - labelPadding : viewLeft + viewWidth - labelMargin + labelPadding;
+                }
+                else {
+                    textX = x3 + (dx < 0 ? -labelPadding : labelPadding);
+                }
                 textY = y3;
                 linePoints = [[x1, y1], [x2, y2], [x3, y3]];
             }
 
-            textAlign = isLabelInside ? 'center' : (dx > 0 ? 'left' : 'right');
+            textAlign = isLabelInside
+                ? 'center'
+                : (labelAlignTo === 'edge'
+                    ? (dx > 0 ? 'right' : 'left')
+                    : (dx > 0 ? 'left' : 'right'));
         }
-        var font = labelModel.getFont();
 
         var labelRotate;
         var rotate = labelModel.get('rotate');
@@ -231,11 +319,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
                 ? (dx < 0 ? -midAngle + Math.PI : -midAngle)
                 : 0;
         }
-        var text = seriesModel.getFormattedLabel(idx, 'normal')
-                    || data.getName(idx);
-        var textRect = textContain.getBoundingRect(
-            text, font, textAlign, 'top'
-        );
+
         hasLabelRotate = !!labelRotate;
         layout.label = {
             x: textX,
@@ -248,7 +332,13 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
             textAlign: textAlign,
             verticalAlign: 'middle',
             rotation: labelRotate,
-            inside: isLabelInside
+            inside: isLabelInside,
+            labelPadding: labelPadding,
+            labelAlignTo: labelAlignTo,
+            labelMargin:labelMargin,
+            textRect: textRect,
+            text: text,
+            font: font
         };
 
         // Not layout the inside label
@@ -257,6 +347,6 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         }
     });
     if (!hasLabelRotate && seriesModel.get('avoidLabelOverlap')) {
-        avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight);
+        avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLeft, viewTop);
     }
 }
