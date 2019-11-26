@@ -108,8 +108,8 @@ describe('api/containPixel', function() {
         ]
     };
 
-    let chart = '';
-    let createResult = '';
+    var chart = '';
+    var createResult = '';
     beforeEach(function () {
         createResult = utHelper.createChart(context, echarts);
         chart = createResult.charts[0];

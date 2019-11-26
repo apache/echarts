@@ -242,7 +242,7 @@ describe('vsiaulMap_setOption', function() {
 
     it('normalizeVisualRange', function (done) {
         createResult = utHelper.createChart(context, echarts, 2);
-        let charts = createResult.charts;
+        var charts = createResult.charts;
         charts[0].setOption({
             xAxis: {},
             yAxis: {},
