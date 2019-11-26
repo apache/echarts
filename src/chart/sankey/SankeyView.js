@@ -22,7 +22,9 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 
 var nodeOpacityPath = ['itemStyle', 'opacity'];
+var hoverNodeOpacityPath = ['emphasis', 'itemStyle', 'opacity'];
 var lineOpacityPath = ['lineStyle', 'opacity'];
+var hoverLineOpacityPath = ['emphasis', 'lineStyle', 'opacity'];
 
 function getItemOpacity(item, opacityPath) {
     return item.getVisual('opacity') || item.getModel().get(opacityPath);
@@ -376,15 +378,15 @@ export default echarts.extendChartView({
         });
 
         if (node) {
-            fadeInItem(node, nodeOpacityPath);
+            fadeInItem(node, hoverNodeOpacityPath);
             var focusNodeAdj = itemModel.get('focusNodeAdjacency');
             if (focusNodeAdj === 'outEdges') {
                 zrUtil.each(node.outEdges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node2, nodeOpacityPath);
+                    fadeInItem(edge, hoverLineOpacityPath);
+                    fadeInItem(edge.node2, hoverNodeOpacityPath);
                 });
             }
             else if (focusNodeAdj === 'inEdges') {
@@ -392,8 +394,8 @@ export default echarts.extendChartView({
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node1, nodeOpacityPath);
+                    fadeInItem(edge, hoverLineOpacityPath);
+                    fadeInItem(edge.node1, hoverNodeOpacityPath);
                 });
             }
             else if (focusNodeAdj === 'allEdges') {
@@ -401,16 +403,16 @@ export default echarts.extendChartView({
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node1, nodeOpacityPath);
-                    fadeInItem(edge.node2, nodeOpacityPath);
+                    fadeInItem(edge, hoverLineOpacityPath);
+                    (edge.node1 !== node) && fadeInItem(edge.node1, hoverNodeOpacityPath);
+                    (edge.node2 !== node) && fadeInItem(edge.node2, hoverNodeOpacityPath);
                 });
             }
         }
         if (edge) {
-            fadeInItem(edge, lineOpacityPath);
-            fadeInItem(edge.node1, nodeOpacityPath);
-            fadeInItem(edge.node2, nodeOpacityPath);
+            fadeInItem(edge, hoverLineOpacityPath);
+            fadeInItem(edge.node1, hoverNodeOpacityPath);
+            fadeInItem(edge.node2, hoverNodeOpacityPath);
         }
     },
 
