@@ -176,7 +176,7 @@ describe('List', function () {
     });
 
     describe('Data read', function () {
-        testCase('indicesOfNearest', function (List) {
+        it('indicesOfNearest', function () {
             var list = new List(['value']);
             // ---- index: 0   1   2   3   4   5   6   7
             list.initData([10, 20, 30, 35, 40, 40, 35, 50]);
