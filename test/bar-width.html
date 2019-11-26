@@ -1,0 +1,254 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 400px;
+            }
+        </style>
+
+        <div class="chart" id="main1"></div>
+        <div class="chart" id="main2"></div>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var data = [
+                    [7880,6.52],
+                    [7881,3.18], // very near 7880, which makes the bar very thin
+                    [6110,2.68],
+                    [7390,9.55],
+                    [7250,5.59],
+                    [7300,7.43],
+                    [3980,8.54],
+                    [4290,3.22],
+                    [500,4.68],
+                    [1720,5.15],
+                    [900,9],
+                    [910,10]
+                ];
+
+                function makeOption() {
+                    var option = {
+                        tooltip: {},
+                        xAxis: {
+                        },
+                        yAxis: {
+                        },
+                        dataZoom:
+                        [{
+                            type: 'inside'
+                        }, {
+                            type: 'slider'
+                        }],
+                        series: {
+                            type: 'bar',
+                            label: {
+                                show: true,
+                                position: 'top'
+                            },
+                            data: data
+                        },
+                        title: {
+                            text: 'no barMinWidth, no barMaxWidth specifed'
+                        }
+                    };
+                    return option;
+                }
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'On `value` axis.',
+                        'Test **barMinWidth** and **barMaxWidth**: move dataZoom, ',
+                        'bar should be **visible** ',
+                        '**bar width** should be correct as the title described.'
+                    ],
+                    height: 200,
+                    option: makeOption(),
+                    buttons: [{
+                        text: 'barMinWidth: 10',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barMinWidth: 10, no barMaxWidth';
+                            option.series.barMinWidth = 10;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barMinWidth: 10, barMaxWidth: 40',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barMinWidth: 10, barMaxWidth: 40';
+                            option.series.barMinWidth = 10;
+                            option.series.barMaxWidth = 40;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barMaxWidth: 40',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'no barMinWidth, barMaxWidth: 40';
+                            option.series.barMaxWidth = 40;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barWidth: 60, barMaxWidth: 20',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barWidth: 60, barMaxWidth: 20, final bar width should keep 20';
+                            option.series.barWidth = 60;
+                            option.series.barMaxWidth = 20;
+                            chart.setOption(option, true);
+                        }
+                    }]
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 80; i++) {
+                    data.push(['a' + i, 10]);
+                }
+
+                function makeOption() {
+                    var option = {
+                        tooltip: {},
+                        xAxis: {
+                            type: 'category'
+                        },
+                        yAxis: {
+                        },
+                        dataZoom:
+                        [{
+                            type: 'inside'
+                        }, {
+                            type: 'slider'
+                        }],
+                        series: {
+                            type: 'bar',
+                            data: data
+                        },
+                        title: {
+                            text: 'no barMinWidth, no barMaxWidth specifed'
+                        }
+                    };
+                    return option;
+                }
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'On `category` axis.',
+                        'Test **barMinWidth** and **barMaxWidth**: move dataZoom, ',
+                        'bar should be **visible**.',
+                        '**bar width** should be correct as the title described.'
+                    ],
+                    height: 200,
+                    width: 600,
+                    option: makeOption(),
+                    buttons: [{
+                        text: 'barMinWidth: 10',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barMinWidth: 10, no barMaxWidth';
+                            option.series.barMinWidth = 10;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barMinWidth: 10, barMaxWidth: 40',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barMinWidth: 10, barMaxWidth: 40';
+                            option.series.barMinWidth = 10;
+                            option.series.barMaxWidth = 40;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barMaxWidth: 40',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'no barMinWidth, barMaxWidth: 40';
+                            option.series.barMaxWidth = 40;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barWidth: "98%", barMaxWidth: 20',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barWidth: "98%", barMaxWidth: 20\nfinal bar width should not over 20';
+                            option.series.barWidth = '98%';
+                            option.series.barMaxWidth = 20;
+                            chart.setOption(option, true);
+                        }
+                    }, {
+                        text: 'barWidth: 60, barMaxWidth: 20',
+                        onclick: function () {
+                            var option = makeOption();
+                            option.title.text = 'barWidth: 60, barMaxWidth: 20\nfinal bar width should keep 20';
+                            option.series.barWidth = 60;
+                            option.series.barMaxWidth = 20;
+                            chart.setOption(option, true);
+                        }
+                    }]
+                });
+            });
+
+        </script>
+
+
+
+
+    </body>
+</html>

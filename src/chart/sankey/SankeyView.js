@@ -277,10 +277,7 @@ export default echarts.extendChartView({
             if (itemModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        if (this._unfocusDelayTimer) {
-                            clearTimeout(this._unfocusDelayTimer);
-                            this._unfocusDelayTimer = null;
-                        }
+                        sankeyView._clearTimer();
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -301,10 +298,7 @@ export default echarts.extendChartView({
             if (edgeModel.get('focusNodeAdjacency')) {
                 el.off('mouseover').on('mouseover', function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        if (this._unfocusDelayTimer) {
-                            clearTimeout(this._unfocusDelayTimer);
-                            this._unfocusDelayTimer = null;
-                        }
+                        sankeyView._clearTimer();
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -330,18 +324,12 @@ export default echarts.extendChartView({
     },
 
     dispose: function () {
-        if (this._unfocusDelayTimer) {
-            clearTimeout(this._unfocusDelayTimer);
-            this._unfocusDelayTimer = null;
-        }
+        this._clearTimer();
     },
 
     _dispatchUnfocus: function (api) {
         var self = this;
-        if (this._unfocusDelayTimer) {
-            clearTimeout(this._unfocusDelayTimer);
-            this._unfocusDelayTimer = null;
-        }
+        this._clearTimer();
         this._unfocusDelayTimer = setTimeout(function () {
             self._unfocusDelayTimer = null;
             api.dispatchAction({
@@ -349,6 +337,13 @@ export default echarts.extendChartView({
                 seriesId: self._model.id
             });
         }, 500);
+    },
+
+    _clearTimer: function () {
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
+        }
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {

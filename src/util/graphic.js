@@ -1071,8 +1071,7 @@ function rollbackDefaultTextStyle(style) {
 }
 
 export function getFont(opt, ecModel) {
-    // ecModel or default text style model.
-    var gTextStyleModel = ecModel || ecModel.getModel('textStyle');
+    var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return zrUtil.trim([
         // FIXME in node-canvas fontWeight is before fontStyle
         opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',

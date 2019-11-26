@@ -1,22 +1,3 @@
-/*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
-
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -72,15 +53,15 @@
 
         tooltip: {
             backgroundColor: 'rgba(50,50,50,0.5)',
-            axisPointer : {
-                type : 'line',
-                lineStyle : {
+            axisPointer: {
+                type: 'line',
+                lineStyle: {
                     color: '#008acd'
                 },
                 crossStyle: {
                     color: '#008acd'
                 },
-                shadowStyle : {
+                shadowStyle: {
                     color: 'rgba(200,200,200,0.2)'
                 }
             }
@@ -115,9 +96,9 @@
                     color: '#008acd'
                 }
             },
-            splitArea : {
-                show : true,
-                areaStyle : {
+            splitArea: {
+                show: true,
+                areaStyle: {
                     color: ['rgba(250,250,250,0.1)','rgba(200,200,200,0.1)']
                 }
             },
@@ -128,66 +109,67 @@
             }
         },
 
-        timeline : {
-            lineStyle : {
-                color : '#008acd'
-            },
-            controlStyle : {
-                normal : { color : '#008acd'},
-                emphasis : { color : '#008acd'}
-            },
-            symbol : 'emptyCircle',
-            symbolSize : 3
-        },
+		timeline: {
+			lineStyle: {
+				color: '#008acd'
+			},
+			controlStyle: {
+				color: '#008acd',
+				borderColor: '#008acd'
+			},
+            symbol: 'emptyCircle',
+            symbolSize: 3
+		},
 
         line: {
-            smooth : true,
+            smooth: true,
             symbol: 'emptyCircle',
             symbolSize: 3
         },
 
-        candlestick: {
-            itemStyle: {
-                normal: {
-                    color: '#d87a80',
-                    color0: '#2ec7c9',
-                    lineStyle: {
-                        color: '#d87a80',
-                        color0: '#2ec7c9'
-                    }
-                }
-            }
-        },
+	candlestick: {
+		itemStyle: {
+                 color: '#d87a80',
+                 color0: '#2ec7c9',
+		},
+		lineStyle: {
+                 width: 1,
+                 color: '#d87a80',
+                 color0: '#2ec7c9',
+		},
+		areaStyle: {
+                 color: '#2ec7c9',
+                 color0: '#b6a2de'
+		}
+	},
 
         scatter: {
             symbol: 'circle',
             symbolSize: 4
         },
 
-        map: {
-            label: {
-                normal: {
-                    textStyle: {
-                        color: '#d87a80'
-                    }
-                }
-            },
-            itemStyle: {
-                normal: {
-                    borderColor: '#eee',
-                    areaColor: '#ddd'
-                },
-                emphasis: {
-                    areaColor: '#fe994e'
-                }
-            }
-        },
+	map: { 
+		itemStyle: {
+                 color: '#ddd',
+		},
+		areaStyle: {
+                 color: '#fe994e',
+		},
+        label: {
+              color: '#d87a80'
+        }
+	},
 
-        graph: {
-            color: colorPalette
-        },
+	graph: { 
+		itemStyle: {
+                 color: '#d87a80',
+		},
+        linkStyle: {
+                 color: '#2ec7c9'
+        }
+	},
 
-        gauge : {
+        gauge: {
             axisLine: {
                 lineStyle: {
                     color: [[0.2, '#2ec7c9'],[0.8, '#5ab1ef'],[1, '#d87a80']],
@@ -196,19 +178,19 @@
             },
             axisTick: {
                 splitNumber: 10,
-                length :15,
+                length: 15,
                 lineStyle: {
                     color: 'auto'
                 }
             },
             splitLine: {
-                length :22,
+                length: 22,
                 lineStyle: {
                     color: 'auto'
                 }
             },
-            pointer : {
-                width : 5
+            pointer: {
+                width: 5
             }
         }
     };

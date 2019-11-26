@@ -675,6 +675,15 @@ function asc(arr) {
 
 
 /**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
+ * @return {number}
+ */
+
+
+/**
  * find a “nice” number approximately equal to x. Round the number if round = true,
  * take ceiling if round = false. The primary observation is that the “nicest”
  * numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
