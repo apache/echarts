@@ -142,6 +142,13 @@ var PieSeries = echarts.extendSeriesModel({
 
         // cursor: null,
 
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: null,
+        height: null,
+
         label: {
             // If rotate around circle
             rotate: false,
@@ -152,7 +159,7 @@ var PieSeries = echarts.extendSeriesModel({
             alignTo: 'none',
             // Closest distance between label and chart edge.
             // Works only position is 'outer' and alignTo is 'labelLine' or 'edge'.
-            edgeMargin: 20,
+            margin: 20,
             padding: 3,
             // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
             // 默认使用全局文本样式，详见TEXTSTYLE

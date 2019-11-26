@@ -40,6 +40,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -74,7 +75,7 @@ under the License.
                         maxLength2: defaultMax
                     },
                     label: {
-                        edgeMargin: 20,
+                        margin: 20,
                         position: 'outer',
                         alignTo: 'labelLine',
                         padding: 5
@@ -93,10 +94,94 @@ under the License.
                         maxLength2: defaultMax
                     },
                     label: {
-                        edgeMargin: 20,
+                        margin: 20,
                         position: 'outer',
                         alignTo: 'edge'
                     }
+                }]
+            };
+
+            var option2 = {
+                series: [{
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+                    // animation: false,
+                    labelLine: {
+                        minLength2: 50,
+                        maxLength2: 10
+                    },
+                    label: {
+                        // margin: 20,
+                        position: 'outer',
+                        alignTo: 'edge',
+                        padding: 5
+                    },
+                    left: 0,
+                    right: '50%',
+                    top: 0,
+                    bottom: '50%'
+                }, {
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+                    // animation: false,
+                    labelLine: {
+                        minLength2: 50,
+                        maxLength2: 10
+                    },
+                    label: {
+                        margin: 20,
+                        position: 'outer',
+                        alignTo: 'labelLine',
+                        padding: 5
+                    },
+                    left: '50%',
+                    right: 0,
+                    top: 0,
+                    bottom: '50%'
+                }, {
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+                    // animation: false,
+                    labelLine: {
+                        minLength2: 50,
+                        maxLength2: 10
+                    },
+                    label: {
+                        // margin: 20,
+                        position: 'outer',
+                        alignTo: 'edge',
+                        padding: 5
+                    },
+                    left: 0,
+                    right: '50%',
+                    top: '50%',
+                    bottom: 0
+                }, {
+                    type: 'pie',
+                    radius: '25%',
+                    center: ['50%', '50%'],
+                    data: data,
+                    // animation: false,
+                    labelLine: {
+                        minLength2: 50,
+                        maxLength2: 10
+                    },
+                    label: {
+                        margin: 20,
+                        position: 'outer',
+                        alignTo: 'labelLine',
+                        padding: 5
+                    },
+                    left: '50%',
+                    right: 0,
+                    top: '50%',
+                    bottom: 0
                 }]
             };
 
@@ -108,6 +193,11 @@ under the License.
             var chart1 = testHelper.create(echarts, 'main1', {
                 title: 'alignTo: "edge"',
                 option: option1
+            });
+
+            var chart2 = testHelper.create(echarts, 'main2', {
+                title: 'Multiple charts',
+                option: option2
             });
 
             var gui = new dat.GUI({
@@ -123,12 +213,20 @@ under the License.
                         config.minLength2 = value;
                         option0.series[0].labelLine.minLength2 = value;
                         option1.series[0].labelLine.minLength2 = value;
+                        for (var i = 0; i < 4; ++i) {
+                            option2.series[i].labelLine.minLength2 = value;
+                        }
                         minCtrl.setValue(value);
                     }
                     option0.series[0].labelLine.maxLength2 = value;
                     option1.series[0].labelLine.maxLength2 = value;
                     chart0.setOption(option0);
                     chart1.setOption(option1);
+
+                    for (var i = 0; i < 4; ++i) {
+                        option2.series[i].labelLine.maxLength2 = value;
+                    }
+                    chart2.setOption(option2);
                 });
 
             var minCtrl = gui
@@ -138,12 +236,20 @@ under the License.
                         config.maxLength2 = value;
                         option0.series[0].labelLine.maxLength2 = value;
                         option1.series[0].labelLine.maxLength2 = value;
+                        for (var i = 0; i < 4; ++i) {
+                            option2.series[i].labelLine.maxLength2 = value;
+                        }
                         maxCtrl.setValue(value);
                     }
                     option0.series[0].labelLine.minLength2 = value;
                     option1.series[0].labelLine.minLength2 = value;
                     chart0.setOption(option0);
                     chart1.setOption(option1);
+
+                    for (var i = 0; i < 4; ++i) {
+                        option2.series[i].labelLine.minLength2 = value;
+                    }
+                    chart2.setOption(option2);
                 });
             });
         </script>

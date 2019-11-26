@@ -24,13 +24,17 @@ import {parsePercent} from '../../util/number';
 
 var RADIAN = Math.PI / 180;
 
-function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine) {
+function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, left, top, labelLine) {
     list.sort(function (a, b) {
         return a.y - b.y;
     });
 
     function shiftDown(start, end, delta, dir) {
         for (var j = start; j < end; j++) {
+            if (list[j].y + delta > top + viewHeight) {
+                break;
+            }
+
             list[j].y += delta;
             if (j > start
                 && j + 1 < end
@@ -46,6 +50,10 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
 
     function shiftUp(end, delta) {
         for (var j = end; j >= 0; j--) {
+            if (list[j].y - delta < top) {
+                break;
+            }
+
             list[j].y -= delta;
             if (j > 0
                 && list[j].y > list[j - 1].y + list[j - 1].height
@@ -71,33 +79,39 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
                 var x3 = list[i].linePoints[2][0] + dx;
                 var len2 = (x3 - x2) * dir;
                 var padding = list[i].labelPadding;
-                var edgeMargin = list[i].edgeMargin;
+                var margin = list[i].margin;
                 var isAlignToEdge = list[i].labelAlignTo === 'edge';
 
                 list[i].x = x3 + dir * list[i].labelPadding;
 
                 var textWidth = isAlignToEdge
                     // Default text width is the real width when alignTo is 'edge'
-                    ? list[i].width
+                    ? left + list[i].width
                     // Default text width is the distance between boundary to x3 for 'labelLine'
                     : (dir > 0
-                        ? viewWidth - x3 - padding - edgeMargin
-                        : x3 - padding - edgeMargin
+                        ? left + viewWidth - x3 - padding - margin
+                        : left + x3 - padding - margin
                     );
+
+
                 var x3Updated = x3;
+
                 if (len2 < labelLine.restrainMinLen2) {
                     // Move text or x3 to make len2 larger
                     x3Updated = x2 + labelLine.restrainMinLen2 * dir;
                 }
-                // Prevent text overflowing edgeMargin
+                // Prevent text overflowing margin
                 if (dir > 0) {
-                    x3Updated = Math.min(x3Updated, viewWidth - edgeMargin - padding);
+                    x3Updated = Math.min(x3Updated, left + viewWidth - margin - padding);
                 }
                 else if (dir <= 0) {
-                    x3Updated = Math.max(x3Updated, edgeMargin + padding);
+                    x3Updated = Math.max(x3Updated, left + margin + padding);
                 }
                 // Prevent x3 being inner than x2
-                x3Updated = dir > 0 ? Math.max(x2, x3Updated) : Math.min(x2, x3Updated);
+                x3Updated = dir > 0
+                    ? Math.max(x2, x3Updated)
+                    : Math.min(x2, x3Updated);
+                console.log(x3, x3Updated);
 
                 var x3Delta = (x3 - x3Updated) * dir;
                 // Set text width to be smaller to make len2 large
@@ -106,10 +120,10 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
 
                 x3 = x3Updated;
 
-                // Restrain edgeMargin
+                // Restrain margin
                 var maxTextWidth = dir > 0
-                    ? Math.max(0, viewWidth - edgeMargin - list[i].x - padding)
-                    : Math.max(0, list[i].x - edgeMargin);
+                    ? Math.max(0, left + viewWidth - margin - list[i].x - padding)
+                    : Math.max(0, list[i].x - margin - left - padding);
                 textWidth = Math.min(textWidth, maxTextWidth);
 
                 if (textWidth < list[i].width) {
@@ -181,7 +195,7 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, labelLine
     changeX(downList, true, cx, cy, r, dir);
 }
 
-function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, labelLine) {
+function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, left, top, labelLine) {
     var leftList = [];
     var rightList = [];
     for (var i = 0; i < labelLayoutList.length; i++) {
@@ -196,8 +210,8 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, labelLi
         }
     }
 
-    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, labelLine);
-    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, labelLine);
+    adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, left, top, labelLine);
+    adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, left, top, labelLine);
 
     for (var i = 0; i < labelLayoutList.length; i++) {
         if (isPositionCenter(labelLayoutList[i])) {
@@ -223,7 +237,7 @@ function isPositionCenter(layout) {
     return layout.position === 'center';
 }
 
-export default function (seriesModel, r, viewWidth, viewHeight, sum) {
+export default function (seriesModel, r, viewWidth, viewHeight, left, top) {
     var data = seriesModel.getData();
     var labelLayoutList = [];
     var cx;
@@ -231,9 +245,6 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
     var hasLabelRotate = false;
     var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
 
-    var seriesLabelModel = seriesModel.getModel('label');
-    var edgeMargin = seriesLabelModel.get('edgeMargin');
-    edgeMargin = parsePercent(edgeMargin, viewWidth);
     var maxLen2 = -Number.MAX_VALUE;
     var minLen2 = Number.MAX_VALUE;
 
@@ -252,8 +263,8 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
         var labelLineLen = labelLineModel.get('length');
         var labelLineLen2 = labelLineModel.get('length2');
 
-        var edgeMargin = labelModel.get('edgeMargin');
-        edgeMargin = parsePercent(edgeMargin, viewWidth);
+        var margin = labelModel.get('margin');
+        margin = parsePercent(margin, viewWidth);
 
         if (layout.angle < minShowLabelRadian) {
             return;
@@ -299,13 +310,13 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
                 var x3;
                 if (labelAlignTo === 'labelLine') {
                     x3 = dx < 0
-                        ? edgeMargin + labelPadding
-                        : viewWidth - edgeMargin - labelPadding;
+                        ? left + margin + labelPadding
+                        : left + viewWidth - margin - labelPadding;
                 }
                 else if (labelAlignTo === 'edge') {
                     x3 = dx < 0
-                        ? edgeMargin + labelPadding + textRect.width
-                        : viewWidth - edgeMargin - labelPadding - textRect.width;
+                        ? left + margin + labelPadding + textRect.width
+                        : left + viewWidth - margin - labelPadding - textRect.width;
                 }
                 else {
                     x3 = x2 + dir * labelLineLen2;
@@ -348,7 +359,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
             y: textY,
             position: labelPosition,
             labelAlignTo: labelAlignTo,
-            edgeMargin: edgeMargin,
+            margin: margin,
             width: textRect.width,
             height: textRect.height,
             len: labelLineLen,
@@ -394,6 +405,6 @@ export default function (seriesModel, r, viewWidth, viewHeight, sum) {
             dx: dx
         };
 
-        avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, labelLine);
+        avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, left, top, labelLine);
     }
 }
