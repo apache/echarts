@@ -168,13 +168,13 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
             var realTextWidth = layout.textRect.width;
             var targetTextWidth;
             if (isAlignToEdge) {
-                // debugger;
-                // targetTextWidth = Math.abs(layout.x - linePoints[2][0]) - layout.labelPadding;
                 if (layout.x < cx) {
-                    targetTextWidth = linePoints[2][0] - layout.labelPadding - viewLeft - layout.labelMargin;
+                    targetTextWidth = linePoints[2][0] - layout.labelPadding
+                            - viewLeft - layout.labelMargin;
                 }
                 else {
-                    targetTextWidth = viewLeft + viewWidth - layout.labelMargin - linePoints[2][0] - layout.labelPadding;
+                    targetTextWidth = viewLeft + viewWidth - layout.labelMargin
+                            - linePoints[2][0] - layout.labelPadding;
                 }
             }
             else {
@@ -293,7 +293,9 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
 
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
-                    textX = dx < 0 ? viewLeft + labelMargin - labelPadding : viewLeft + viewWidth - labelMargin + labelPadding;
+                    textX = dx < 0
+                        ? viewLeft + labelMargin - labelPadding
+                        : viewLeft + viewWidth - labelMargin + labelPadding;
                 }
                 else {
                     textX = x3 + (dx < 0 ? -labelPadding : labelPadding);
