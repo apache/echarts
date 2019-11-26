@@ -26,7 +26,7 @@ import * as zrUtil from 'zrender/src/core/util';
 var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;
 
-export function getViewRect(seriesModel, api) {
+function getViewRect(seriesModel, api) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
