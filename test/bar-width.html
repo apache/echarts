@@ -26,6 +26,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="lib/reset.css">
     </head>
@@ -47,6 +48,7 @@ under the License.
 
         <div class="chart" id="main1"></div>
         <div class="chart" id="main2"></div>
+        <div class="chart" id="main3" style="height: 600px;"></div>
 
 
         <script>
@@ -248,6 +250,68 @@ under the License.
         </script>
 
 
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var cat = [];
+                var data3 = [];
+                var data4 = [];
+                var days = 20;
+                for (var i = 0; i < days; i++) {
+                    cat.push(i);
+                    data3.push(i * 2);
+                    data4.push(50 - i * 2);
+                }
+                var option = {
+                    title: {
+                        name: "数据纯属虚构"
+                    },
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: {
+                            type: "shadow"
+                        }
+                    },
+                    xAxis: {
+                        type: "category",
+                        data: cat,
+                        interval: 1,
+                    },
+                    yAxis: {
+                        type: "value",
+                        min: 0,
+                    },
+                    series: [
+                        {
+                            type: "bar",
+                            name: "系列3",
+                            barMaxWidth: 20,
+                            data: data3,
+                        }, {
+                            type: "bar",
+                            name: "系列4",
+                            barMaxWidth: 20,
+                            data: data4,
+                            barGap: "-100%",
+                        }
+                    ],
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Two series of bar should have same width if barGap is set to -100%, and barMaxWidth is set',
+                        'Case from #7356'
+                    ],
+                    draggable: true,
+                    width: 700,
+                    option: option,
+                    buttons: []
+                });
+            });
+
+        </script>
 
 
     </body>

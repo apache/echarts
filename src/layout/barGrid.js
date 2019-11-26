@@ -246,7 +246,6 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         // only the attributes set on the last series will work.
         // Do not change this fact unless there will be a break change.
 
-        // TODO
         var barWidth = seriesInfo.barWidth;
         if (barWidth && !stacks[stackId].width) {
             // See #6312, do not restrict width.
@@ -286,6 +285,7 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         zrUtil.each(stacks, function (column) {
             var maxWidth = column.maxWidth;
             var minWidth = column.minWidth;
+
             if (!column.width) {
                 var finalWidth = autoWidth;
                 if (maxWidth && maxWidth < finalWidth) {
@@ -301,7 +301,7 @@ function doCalBarWidthAndOffset(seriesInfoList) {
                 }
                 if (finalWidth !== autoWidth) {
                     column.width = finalWidth;
-                    remainedWidth -= finalWidth;
+                    remainedWidth -= finalWidth + barGapPercent * finalWidth;
                     autoWidthCount--;
                 }
             }
@@ -318,7 +318,7 @@ function doCalBarWidthAndOffset(seriesInfoList) {
                     finalWidth = Math.max(finalWidth, minWidth);
                 }
                 column.width = finalWidth;
-                remainedWidth -= finalWidth;
+                remainedWidth -= finalWidth + barGapPercent * finalWidth;
                 autoWidthCount--;
             }
         });
@@ -326,7 +326,9 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         // Recalculate width again
         autoWidth = (remainedWidth - categoryGap)
             / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
+
         autoWidth = Math.max(autoWidth, 0);
+
 
         var widthSum = 0;
         var lastColumn;
@@ -470,6 +472,7 @@ export function layout(seriesType, ecModel) {
                 }
                 stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
+
             data.setItemLayout(idx, {
                 x: x,
                 y: y,
