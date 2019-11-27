@@ -32,8 +32,8 @@ function getItemOpacity(item, opacityPath) {
 
 function fadeOutItem(item, opacityPath, opacityRatio) {
     var el = item.getGraphicEl();
-
     var opacity = getItemOpacity(item, opacityPath);
+
     if (opacityRatio != null) {
         opacity == null && (opacity = 1);
         opacity *= opacityRatio;
@@ -51,12 +51,14 @@ function fadeInItem(item, opacityPath) {
     var opacity = getItemOpacity(item, opacityPath);
     var el = item.getGraphicEl();
 
-    el.highlight && el.highlight();
     el.traverse(function (child) {
         if (child.type !== 'group') {
             child.setStyle('opacity', opacity);
         }
     });
+
+    // Support emphasis here.
+    el.highlight && el.highlight();
 }
 
 var SankeyShape = graphic.extendShape({
@@ -94,6 +96,14 @@ var SankeyShape = graphic.extendShape({
             );
         }
         ctx.closePath();
+    },
+
+    highlight: function () {
+        this.trigger('emphasis');
+    },
+
+    downplay: function () {
+        this.trigger('normal');
     }
 });
 
@@ -358,7 +368,7 @@ export default echarts.extendChartView({
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var itemModel = data.getItemModel(dataIndex);
@@ -417,7 +427,7 @@ export default echarts.extendChartView({
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getGraph();
+        var graph = seriesModel.getGraph();
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);
