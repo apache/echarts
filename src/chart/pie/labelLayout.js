@@ -169,12 +169,12 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
             var targetTextWidth;
             if (isAlignToEdge) {
                 if (layout.x < cx) {
-                    targetTextWidth = linePoints[2][0] - layout.labelPadding
+                    targetTextWidth = linePoints[2][0] - layout.labelDistance
                             - viewLeft - layout.labelMargin;
                 }
                 else {
                     targetTextWidth = viewLeft + viewWidth - layout.labelMargin
-                            - linePoints[2][0] - layout.labelPadding;
+                            - linePoints[2][0] - layout.labelDistance;
                 }
             }
             else {
@@ -195,21 +195,21 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
             var dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (layout.x < cx) {
-                    linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelPadding;
+                    linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelDistance;
                 }
                 else {
                     linePoints[2][0] = viewLeft + viewWidth - layout.labelMargin
-                            - realTextWidth - layout.labelPadding;
+                            - realTextWidth - layout.labelDistance;
                 }
             }
             else {
                 if (layout.x < cx) {
-                    linePoints[2][0] = layout.x + layout.labelPadding;
-                    layout.x += layout.labelPadding;
+                    linePoints[2][0] = layout.x + layout.labelDistance;
+                    // layout.x += layout.labelDistance;
                 }
                 else {
-                    linePoints[2][0] = layout.x - layout.labelPadding;
-                    layout.x -= layout.labelPadding;
+                    linePoints[2][0] = layout.x - layout.labelDistance;
+                    // layout.x -= layout.labelDistance;
                 }
                 linePoints[1][0] = linePoints[2][0] + dist;
             }
@@ -238,7 +238,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
         var labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
         var labelPosition = labelModel.get('position') || itemModel.get('emphasis.label.position');
-        var labelPadding = labelModel.get('padding');
+        var labelDistance = labelModel.get('distanceToLabelLine');
         var labelAlignTo = labelModel.get('alignTo');
         var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
         var font = labelModel.getFont();
@@ -294,11 +294,11 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
                     textX = dx < 0
-                        ? viewLeft + labelMargin - labelPadding
-                        : viewLeft + viewWidth - labelMargin + labelPadding;
+                        ? viewLeft + labelMargin - labelDistance
+                        : viewLeft + viewWidth - labelMargin + labelDistance;
                 }
                 else {
-                    textX = x3 + (dx < 0 ? -labelPadding : labelPadding);
+                    textX = x3 + (dx < 0 ? -labelDistance : labelDistance);
                 }
                 textY = y3;
                 linePoints = [[x1, y1], [x2, y2], [x3, y3]];
@@ -335,7 +335,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
             verticalAlign: 'middle',
             rotation: labelRotate,
             inside: isLabelInside,
-            labelPadding: labelPadding,
+            labelDistance: labelDistance,
             labelAlignTo: labelAlignTo,
             labelMargin:labelMargin,
             textRect: textRect,
