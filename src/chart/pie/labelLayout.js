@@ -179,10 +179,10 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
             }
             else {
                 if (layout.x < cx) {
-                    targetTextWidth = layout.x - viewLeft - layout.bleedingMargin;
+                    targetTextWidth = layout.x - viewLeft - layout.bleedMargin;
                 }
                 else {
-                    targetTextWidth = viewLeft + viewWidth - layout.x - layout.bleedingMargin;
+                    targetTextWidth = viewLeft + viewWidth - layout.x - layout.bleedMargin;
                 }
             }
             if (targetTextWidth < layout.textRect.width) {
@@ -239,7 +239,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
         var labelDistance = labelModel.get('distanceToLabelLine');
         var labelAlignTo = labelModel.get('alignTo');
         var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
-        var bleedingMargin = labelModel.get('bleedMargin');
+        var bleedMargin = labelModel.get('bleedMargin');
         var font = labelModel.getFont();
 
         var labelLineModel = itemModel.getModel('labelLine');
@@ -337,7 +337,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
             labelDistance: labelDistance,
             labelAlignTo: labelAlignTo,
             labelMargin:labelMargin,
-            bleedingMargin: bleedingMargin,
+            bleedMargin: bleedMargin,
             textRect: textRect,
             text: text,
             font: font
