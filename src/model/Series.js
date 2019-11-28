@@ -63,7 +63,7 @@ var SeriesModel = ComponentModel.extend({
 
     /**
      * legend visual provider to the legend component
-     * @type {Function}
+     * @type {Object}
      */
     // PENDING
     legendVisualProvider: null,
