@@ -26,10 +26,11 @@
     sourceMap == null && (sourceMap = true);
 
     var params = {};
-    location.search.slice(1).split('&').forEach(item => {
-        var kv = item.split('=');
+    var parts = location.search.slice(1).split('&');
+    for (var i = 0; i < parts.length; ++i) {
+        var kv = parts[i].split('=');
         params[kv[0]] = kv[1];
-    });
+    }
     // Set default renderer in dev mode from hash.
     if (params.__RENDERER__) {
         window.__ECHARTS__DEFAULT__RENDERER__ = params.__RENDERER__;
@@ -42,7 +43,7 @@
             'webpack-req-ec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-ec',
             'webpack-req-eclibec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-eclibec',
             'webpackold-req-ec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-ec',
-            'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec',
+            'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec'
         })[params.__ECDIST__];
         if (!ecDistPath && params.__ECDIST__.match(/[0-9.]/)) {
             // Version number
@@ -89,14 +90,9 @@
 
     // Not let scrollbar affect page size.
     // It will AFFECT interaction in the automatic testing.
-    // TODO it only works on webkit
-    var styleEl = document.createElement('style');
-    document.head.appendChild(styleEl);
-    styleEl.innerHTML = `
-    body {
-        overflow: overlay!important;
-    }
-    `;
+    window.onload = function () {
+        document.body.style.cssText = 'overflow:overlay!important';
+    };
 
     // It is not a good solution.
     // Do not need it any more:
