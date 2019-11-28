@@ -12,6 +12,7 @@
   "axis-interval": 3,
   "axis-interval2": 3,
   "axis-lastLabel": 5,
+  "axis-minorTick": 1,
   "axis-multiple": 1,
   "axis-style": 2,
   "axisPosition": 2,

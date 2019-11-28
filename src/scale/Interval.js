@@ -81,12 +81,92 @@ var IntervalScale = Scale.extend({
     },
 
     /**
+     * @param {boolean} [expandToNicedExtent=false] If expand the ticks to niced extent.
      * @return {Array.<number>}
      */
-    getTicks: function () {
-        return helper.intervalScaleGetTicks(
-            this._interval, this._extent, this._niceExtent, this._intervalPrecision
-        );
+    getTicks: function (expandToNicedExtent) {
+        var interval = this._interval;
+        var extent = this._extent;
+        var niceTickExtent = this._niceExtent;
+        var intervalPrecision = this._intervalPrecision;
+
+        var ticks = [];
+        // If interval is 0, return [];
+        if (!interval) {
+            return ticks;
+        }
+
+        // Consider this case: using dataZoom toolbox, zoom and zoom.
+        var safeLimit = 10000;
+
+        if (extent[0] < niceTickExtent[0]) {
+            if (expandToNicedExtent) {
+                ticks.push(roundNumber(niceTickExtent[0] - interval));
+            }
+            else {
+                ticks.push(extent[0]);
+            }
+        }
+        var tick = niceTickExtent[0];
+
+        while (tick <= niceTickExtent[1]) {
+            ticks.push(tick);
+            // Avoid rounding error
+            tick = roundNumber(tick + interval, intervalPrecision);
+            if (tick === ticks[ticks.length - 1]) {
+                // Consider out of safe float point, e.g.,
+                // -3711126.9907707 + 2e-10 === -3711126.9907707
+                break;
+            }
+            if (ticks.length > safeLimit) {
+                return [];
+            }
+        }
+        // Consider this case: the last item of ticks is smaller
+        // than niceTickExtent[1] and niceTickExtent[1] === extent[1].
+        var lastNiceTick = ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1];
+        if (extent[1] > lastNiceTick) {
+            if (expandToNicedExtent) {
+                ticks.push(lastNiceTick + interval);
+            }
+            else {
+                ticks.push(extent[1]);
+            }
+        }
+
+        return ticks;
+    },
+
+    /**
+     * @param {number} [splitNumber=5]
+     * @return {Array.<Array.<number>>}
+     */
+    getMinorTicks: function (splitNumber) {
+        var ticks = this.getTicks(true);
+        var minorTicks = [];
+        var extent = this.getExtent();
+
+        for (var i = 1; i < ticks.length; i++) {
+            var nextTick = ticks[i];
+            var prevTick = ticks[i - 1];
+            var count = 0;
+            var minorTicksGroup = [];
+            var interval = nextTick - prevTick;
+            var minorInterval = interval / splitNumber;
+
+            while (count < splitNumber - 1) {
+                var minorTick = numberUtil.round(prevTick + (count + 1) * minorInterval);
+
+                // For the first and last interval. The count may be less than splitNumber.
+                if (minorTick > extent[0] && minorTick < extent[1]) {
+                    minorTicksGroup.push(minorTick);
+                }
+                count++;
+            }
+            minorTicks.push(minorTicksGroup);
+        }
+
+        return minorTicks;
     },
 
     /**

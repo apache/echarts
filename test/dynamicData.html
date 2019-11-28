@@ -83,7 +83,7 @@ under the License.
 
                 chart.setOption({
                     legend: {
-                        data: ['line', 'line2']
+                        data: ['line']
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -101,6 +101,12 @@ under the License.
                     },
                     yAxis: {
                         scale: true,
+                        minorTick: {
+                            show: true
+                        },
+                        minorSplitLine: {
+                            show: true
+                        },
                         splitLine: {
                             // show: false
                         }
