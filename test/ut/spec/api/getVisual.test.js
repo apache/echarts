@@ -30,7 +30,7 @@ const graph = require('../../../../lib/chart/graph');
 const utHelper = require('../../core/utHelper');
 
 /* jshint maxlen:200 */
-describe('api/getVisual', function() {
+describe('api/getVisual', function () {
 
 
     // TODO

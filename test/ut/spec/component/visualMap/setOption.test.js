@@ -23,7 +23,7 @@ const scatter = require('../../../../../lib/chart/scatter');
 const visualMap = require('../../../../../lib/component/visualMap');
 const utHelper = require('../../../core/utHelper');
 
-describe('vsiaulMap_setOption', function() {
+describe('vsiaulMap_setOption', function () {
     var requireItems = [echarts, gridComponent, scatter, visualMap];
 
     var context = utHelper.genContext({

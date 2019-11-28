@@ -30,7 +30,7 @@ const scatter = require('../../../../lib/chart/scatter');
 const graph = require('../../../../lib/chart/graph');
 const utHelper = require('../../core/utHelper');
 
-describe('api/containPixel', function() {
+describe('api/containPixel', function () {
     var requireItems = [echarts, gridComponent, geoComponent, polarComponent, map, pie, scatter, graph];
 
     var context = utHelper.genContext({

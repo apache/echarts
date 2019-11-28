@@ -19,7 +19,7 @@
 */
 const helper = require('../../../../../lib/component/dataZoom/helper');
 const utHelper = require('../../../core/utHelper');
-describe('dataZoom/helper', function() {
+describe('dataZoom/helper', function () {
 
     function makeRecords(result) {
         var o = {};

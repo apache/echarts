@@ -27,7 +27,7 @@ const scatter = require('../../../../lib/chart/scatter');
 const graph = require('../../../../lib/chart/graph');
 const utHelper = require('../../core/utHelper');
 
-describe('api/converter', function() {
+describe('api/converter', function () {
 
     var requireItems = [echarts, gridComponent, geoComponent, map, scatter, graph];
 

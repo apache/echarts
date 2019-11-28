@@ -25,7 +25,9 @@ var utHelper = {};
 
 var nativeSlice = Array.prototype.slice;
 
-
+/**
+ * @public
+ */
 utHelper.genContext = function (props, originalContext) {
     var context = {};
     if (originalContext) {
@@ -45,6 +47,9 @@ utHelper.genContext = function (props, originalContext) {
     return context;
 };
 
+/**
+ * @public
+ */
 utHelper.createChart = function (context, echarts) {
     context.chartCount || (context.chartCount = 1);
     var els = [];
@@ -63,9 +68,12 @@ utHelper.createChart = function (context, echarts) {
         els.push(el);
         charts.push(echarts.init(el, null, {}));
     }
-    return { charts: charts, els: els };
+    return {charts: charts, els: els};
 };
 
+/**
+ * @public
+ */
 utHelper.removeChart = function (createResult) {
     for (var i = 0; i < createResult.charts.length; i++) {
         var chart = createResult.charts[i];
@@ -183,26 +191,26 @@ utHelper.loadScript = function (url, id, callback) {
  *
  * @public
  */
-utHelper.resetAMDLoader = function (then) {
-    // Clean esl
-    var eslEl = utHelper.g('esl');
-    if (eslEl) {
-        utHelper.removeEl(eslEl);
-    }
-    var eslConfig = utHelper.g('esl');
-    if (eslConfig) {
-        utHelper.removeEl(eslConfig);
-    }
-    context.define = null;
-    context.require = null;
+// utHelper.resetAMDLoader = function (then) {
+//     // Clean esl
+//     var eslEl = utHelper.g('esl');
+//     if (eslEl) {
+//         utHelper.removeEl(eslEl);
+//     }
+//     var eslConfig = utHelper.g('esl');
+//     if (eslConfig) {
+//         utHelper.removeEl(eslConfig);
+//     }
+//     context.define = null;
+//     context.require = null;
 
-    // Import esl.
-    utHelper.loadScript('../lib/esl.js', 'esl', function () {
-        utHelper.loadScript('lib/config.js', 'config', function () {
-            then();
-        });
-    });
-};
+//     // Import esl.
+//     utHelper.loadScript('../lib/esl.js', 'esl', function () {
+//         utHelper.loadScript('lib/config.js', 'config', function () {
+//             then();
+//         });
+//     });
+// };
 
 /**
  * @public

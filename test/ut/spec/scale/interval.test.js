@@ -77,23 +77,23 @@ describe('scale_interval', function() {
                 tooltip: {},
                 xAxis: [
                     {
-                        type : 'category',
-                        data : ['Mon'],
+                        type: 'category',
+                        data: ['Mon'],
                         axisTick: {
                             alignWithLabel: true
                         }
                     }
                 ],
-                yAxis : [
+                yAxis: [
                     {
-                        type : 'value'
+                        type: 'value'
                     }
                 ],
-                series : [
+                series: [
                     {
-                        name:'',
-                        type:'bar',
-                        data:[0.0000034]
+                        name: '',
+                        type: 'bar',
+                        data: [0.0000034]
                     }
                 ]
             });

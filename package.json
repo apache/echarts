@@ -12,24 +12,6 @@
     "type": "git",
     "url": "https://github.com/apache/incubator-echarts.git"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "jest-canvas-mock",
-      "<rootDir>/test/ut/core/setup.js"
-    ],
-    "testMatch": [
-      "**/spec/api/*.test.js",
-      "**/spec/component/**/*.test.js",
-      "**/spec/data/*.test.js",
-      "**/spec/model/*.test.js",
-      "**/spec/scale/*.test.js",
-      "**/spec/util/*.test.js",
-      "!**/spec/api/containPixel.test.js",
-      "!**/spec/component/graphic/setOption.test.js",
-      "!**/spec/model/Component.test.js"
-    ]
-  },
   "scripts": {
     "release": "node build/build.js --release",
     "build": "node build/build.js",
@@ -38,7 +20,7 @@
     "prepublish": "node build/build.js --prepublish",
     "test:visual": "node test/runTest/server.js",
     "test:visual:report": "node test/runTest/genReport.js",
-    "test": "node build/build.js --prepublish && jest --coverage",
+    "test": "node build/build.js --prepublish && jest --config test/ut/jest.config.js",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "lint": "./node_modules/.bin/eslint src extension-src",
