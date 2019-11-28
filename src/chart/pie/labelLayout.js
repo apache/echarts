@@ -205,11 +205,9 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
             else {
                 if (layout.x < cx) {
                     linePoints[2][0] = layout.x + layout.labelDistance;
-                    // layout.x += layout.labelDistance;
                 }
                 else {
                     linePoints[2][0] = layout.x - layout.labelDistance;
-                    // layout.x -= layout.labelDistance;
                 }
                 linePoints[1][0] = linePoints[2][0] + dist;
             }
@@ -230,6 +228,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
     var cy;
     var hasLabelRotate = false;
     var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
+    var viewSize = Math.min(viewWidth, viewHeight);
 
     data.each(function (idx) {
         var layout = data.getItemLayout(idx);
@@ -240,7 +239,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
         var labelPosition = labelModel.get('position') || itemModel.get('emphasis.label.position');
         var labelDistance = labelModel.get('distanceToLabelLine');
         var labelAlignTo = labelModel.get('alignTo');
-        var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        var labelMargin = parsePercent(labelModel.get('margin'), viewSize);
         var font = labelModel.getFont();
 
         var labelLineModel = itemModel.getModel('labelLine');
@@ -294,8 +293,8 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
                     textX = dx < 0
-                        ? viewLeft + labelMargin - labelDistance
-                        : viewLeft + viewWidth - labelMargin + labelDistance;
+                        ? viewLeft + labelMargin
+                        : viewLeft + viewWidth - labelMargin;
                 }
                 else {
                     textX = x3 + (dx < 0 ? -labelDistance : labelDistance);
