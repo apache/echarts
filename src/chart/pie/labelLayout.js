@@ -179,10 +179,10 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
             }
             else {
                 if (layout.x < cx) {
-                    targetTextWidth = layout.x - viewLeft - layout.labelMargin;
+                    targetTextWidth = layout.x - viewLeft - layout.bleedingMargin;
                 }
                 else {
-                    targetTextWidth = viewLeft + viewWidth - layout.x - layout.labelMargin;
+                    targetTextWidth = viewLeft + viewWidth - layout.x - layout.bleedingMargin;
                 }
             }
             if (targetTextWidth < layout.textRect.width) {
@@ -228,7 +228,6 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
     var cy;
     var hasLabelRotate = false;
     var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
-    var viewSize = Math.min(viewWidth, viewHeight);
 
     data.each(function (idx) {
         var layout = data.getItemLayout(idx);
@@ -239,7 +238,8 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
         var labelPosition = labelModel.get('position') || itemModel.get('emphasis.label.position');
         var labelDistance = labelModel.get('distanceToLabelLine');
         var labelAlignTo = labelModel.get('alignTo');
-        var labelMargin = parsePercent(labelModel.get('margin'), viewSize);
+        var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        var bleedingMargin = labelModel.get('bleedMargin');
         var font = labelModel.getFont();
 
         var labelLineModel = itemModel.getModel('labelLine');
@@ -337,6 +337,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
             labelDistance: labelDistance,
             labelAlignTo: labelAlignTo,
             labelMargin:labelMargin,
+            bleedingMargin: bleedingMargin,
             textRect: textRect,
             text: text,
             font: font

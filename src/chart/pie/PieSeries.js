@@ -159,7 +159,8 @@ var PieSeries = echarts.extendSeriesModel({
             alignTo: 'none',
             // Closest distance between label and chart edge.
             // Works only position is 'outer' and alignTo is 'labelLine' or 'edge'.
-            margin: '20%',
+            margin: '25%',
+            bleedMargin: 10,
             distanceToLabelLine: 5,
             // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
             // 默认使用全局文本样式，详见TEXTSTYLE
