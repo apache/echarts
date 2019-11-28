@@ -105,6 +105,7 @@
   "pictorial-repeat": 5,
   "pie": 1,
   "pie-action": 1,
+  "pie-alignTo": 4,
   "pie-calculable": 1,
   "polar-rounded": 2,
   "polarLine": 1,

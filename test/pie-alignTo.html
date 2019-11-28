@@ -217,43 +217,39 @@ under the License.
             gui
                 .add(config, 'length2', 0, 300)
                 .onChange(function (value) {
-                    option0.series[0].labelLine.length2 = value;
-                    option1.series[0].labelLine.length2 = value;
-                    optionNone.series[0].labelLine.length2 = value;
-                    chart0.setOption(option0);
-                    chart1.setOption(option1);
-                    chartNone.setOption(optionNone);
+                    if (chart0) {
+                        option0.series[0].labelLine.length2 = value;
+                        option1.series[0].labelLine.length2 = value;
+                        optionNone.series[0].labelLine.length2 = value;
+                        chart0.setOption(option0);
+                        chart1.setOption(option1);
+                        chartNone.setOption(optionNone);
 
-                    for (var i = 0; i < 4; ++i) {
-                        option2.series[i].labelLine.length2 = value;
+                        for (var i = 0; i < 4; ++i) {
+                            option2.series[i].labelLine.length2 = value;
+                        }
+                        chart2.setOption(option2);
                     }
-                    chart2.setOption(option2);
                 });
 
             gui
                 .add(config, 'margin', 0, 300)
                 .onChange(function (value) {
-                    option0.series[0].label.margin = value;
-                    option1.series[0].label.margin = value;
-                    optionNone.series[0].label.margin = value;
-                    chart0.setOption(option0);
-                    chart1.setOption(option1);
-                    chartNone.setOption(optionNone);
+                    if (chart0) {
+                        option0.series[0].label.margin = value;
+                        option1.series[0].label.margin = value;
+                        optionNone.series[0].label.margin = value;
+                        chart0.setOption(option0);
+                        chart1.setOption(option1);
+                        chartNone.setOption(optionNone);
 
-                    for (var i = 0; i < 4; ++i) {
-                        option2.series[i].label.margin = value;
+                        for (var i = 0; i < 4; ++i) {
+                            option2.series[i].label.margin = value;
+                        }
+                        chart2.setOption(option2);
                     }
-                    chart2.setOption(option2);
                 });
             });
-
-            window.onresize = function () {
-                if (chart0) {
-                    chart0.resize();
-                    chart1.resize();
-                    chart2.resize();
-                }
-            };
         </script>
 
 
