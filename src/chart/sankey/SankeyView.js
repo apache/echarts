@@ -286,6 +286,14 @@ export default echarts.extendChartView({
                 el.cursor = 'move';
             }
 
+            el.highlight = function () {
+                this.trigger('emphasis');
+            };
+
+            el.downplay = function () {
+                this.trigger('normal');
+            };
+
             el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
             el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
 
