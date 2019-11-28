@@ -62,11 +62,11 @@ var SeriesModel = ComponentModel.extend({
     defaultOption: null,
 
     /**
-     * Data provided for legend
+     * legend visual provider to the legend component
      * @type {Function}
      */
     // PENDING
-    legendDataProvider: null,
+    legendVisualProvider: null,
 
     /**
      * Access path of color for visual

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            option = {
+                "dataset": [
+                    {
+                    "source": [
+                        [
+                            "Mark3",
+                            "Mark3_desc",
+                            "Role4",
+                            "Role4_desc"
+                        ],
+                        [
+                            "01",
+                            "高档",
+                            61278,
+                            "61278.00"
+                        ],
+                        [
+                            "03",
+                            "中档",
+                            108814,
+                            "108814.00"
+                        ],
+                        [
+                            "04",
+                            "低档",
+                            242664,
+                            "242664.00"
+                        ]
+                    ]
+                    }
+                ],
+                "series": [
+                    {
+                        "type": "pie",
+                        "datasetIndex": 0,
+                        "name": "销售数量",
+                        "encode": {
+                            "value": "Role4",
+                            "itemName": "Mark3_desc"
+                        }
+                    }
+                ],
+                "visualMap": [
+                    {
+                        "show": false,
+                        "inRange": {
+                            "color": [
+                                "#6EB9FF",
+                                "#99DFA2",
+                                "#FDAD29"
+                            ]
+                        },
+                        "dataDefIndex": 0,
+                        "field": "FA_XS_MONTH.JGDC",
+                        "type": "piecewise",
+                        "categories": [
+                            "高档",
+                            "中档",
+                            "低档"
+                        ],
+                        "dimension": "Mark3_desc",
+                        "seriesIndex": 0
+                    }
+                ],
+                "legend": {
+                    "show": true
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Legend use color from visualMap',
+                    'Test case from #10766'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+    </body>
+</html>
+
