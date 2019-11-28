@@ -251,7 +251,7 @@ var builders = {
 
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
 
-        buildMinorAxisTicks(this, axisModel, opt);
+        buildAxisMinorTicks(this, axisModel, opt);
     },
 
     /**
@@ -635,7 +635,7 @@ function buildAxisMajorTicks(axisBuilder, axisModel, opt) {
     return ticksEls;
 }
 
-function buildMinorAxisTicks(axisBuilder, axisModel, opt) {
+function buildAxisMinorTicks(axisBuilder, axisModel, opt) {
     var axis = axisModel.axis;
 
     var minorTickModel = axisModel.getModel('minorTick');

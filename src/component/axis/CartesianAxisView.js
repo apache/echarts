@@ -77,9 +77,6 @@ var CartesianAxisView = AxisView.extend({
         this._splitAreaColors = null;
     },
 
-    _createSplitLines: function () {
-
-    },
     /**
      * @param {module:echarts/coord/cartesian/AxisModel} axisModel
      * @param {module:echarts/coord/cartesian/GridModel} gridModel

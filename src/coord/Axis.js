@@ -208,13 +208,12 @@ Axis.prototype = {
     /**
      * @return {Array.<Array.<Object>>} [{ coord: ..., tickValue: ...}]
      */
-    getMinorTicksCoords: function (opt) {
+    getMinorTicksCoords: function () {
         if (this.scale.type === 'ordinal') {
             // Category axis doesn't support minor ticks
             return [];
         }
 
-        opt = opt || {};
         var minorTickModel = this.model.getModel('minorTick');
         var splitNumber = minorTickModel.get('splitNumber');
         // Protection.
