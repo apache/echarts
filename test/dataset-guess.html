@@ -48,6 +48,11 @@ under the License.
         <div id="main8"></div>
         <div id="main9"></div>
         <div id="main10"></div>
+        <div id="main11"></div>
+        <div id="main12"></div>
+        <div id="main13"></div>
+        <div id="main14"></div>
+        <div id="main15"></div>
 
 
 
@@ -62,6 +67,7 @@ under the License.
             var option;
 
             option = {
+                animation: false,
                 legend: {},
                 tooltip: {},
                 dataset: {
@@ -82,7 +88,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    '6 equal sectors should be rendered with labels'
+                    '**6 equivalent sectors**  should be rendered with **labels different**'
                 ],
                 option: option,
                 height: 200
@@ -99,12 +105,13 @@ under the License.
             var option;
 
             option = {
+                animation: false,
                 legend: {},
                 tooltip: {},
                 dataset: {
                     source: [
                         ['分类', '平均消费金额'],
-                        // number like
+                        // number-like as category
                         ['7', 100],
                         ['008', 100],
                         ['123', 100],
@@ -120,7 +127,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
-                    '6 equal sectors should be rendered with labels'
+                    '**6 equivalent sectors**  should be rendered with **labels different**'
                 ],
                 option: option,
                 height: 200
@@ -136,6 +143,7 @@ under the License.
             var option;
 
             option = {
+                animation: false,
                 legend: {},
                 tooltip: {},
                 dataset: {
@@ -157,7 +165,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main2', {
                 title: [
-                    '6 bars (decrease) should be rendered with labels'
+                    '**6 decreased bars** should be rendered with **labels different**'
                 ],
                 option: option,
                 height: 200
@@ -174,12 +182,13 @@ under the License.
             var option;
 
             option = {
+                animation: false,
                 legend: {},
                 tooltip: {},
                 dataset: {
                     source: [
                         ['分类', 'V100', 'V200', 'V300'],
-                        // number like
+                        // number-like as category
                         ['7', 100, 200, 300],
                         ['008', 100, 200, 300],
                         ['123', 100, 200, 300],
@@ -198,7 +207,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main3', {
                 title: [
-                    'share category xAxis (number-like) and 100, 200 bars'
+                    'share category xAxis (number-like) and **series0: V100, series1: 200** bars'
                 ],
                 option: option,
                 height: 200
@@ -217,12 +226,13 @@ under the License.
             var option;
 
             option = {
+                animation: false,
                 legend: {},
                 tooltip: {},
                 dataset: {
                     source: [
                         ['分类', 'V100', 'V200', 'V300'],
-                        // number like
+                        // number-like as category
                         ['7', 100, 200, 300],
                         ['008', 100, 200, 300],
                         ['123', 100, 200, 300],
@@ -241,7 +251,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main4', {
                 title: [
-                    'both x y value axis. Should be series0: "分类 V100", series1: "V200 V300" '
+                    'both x y value axis. Should be **series0: "分类 V100", series1: "V200 V300"** '
                 ],
                 option: option,
                 height: 200
@@ -258,6 +268,7 @@ under the License.
             var option;
 
             option = {
+                animation: false,
                 legend: {},
                 tooltip: {},
                 dataset: {
@@ -290,6 +301,393 @@ under the License.
         });
         </script>
 
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['A', 'B'],
+                        // all-number like
+                        ['74', '100'],
+                        ['008', '101'],
+                        ['123', '102'],
+                        ['333', '103'],
+                        ['444', '104'],
+                        ['555', '105']
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main6', {
+                title: [
+                    'all number-like. Should **6 different sectors** and **labels 100-105**'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['A', 'B'],
+                        // all-number like
+                        [74, 100],
+                        [8, 101],
+                        [123, 102],
+                        [333, 103],
+                        [444, 104],
+                        [555, 105]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main7', {
+                title: [
+                    'all pure number. Should **6 different size** sectors with **labels 100-105**.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['A', 'B'],
+                        // all-number like
+                        ['23', '-'],
+                        ['8', 100],
+                        ['123', 100],
+                        ['333', 100],
+                        ['444', 100],
+                        ['555', 100]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main8', {
+                title: [
+                    'Has empty "-". Should have **5 equivalent** sectors with **labels different**.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['A', 'B'],
+                        // all-number like
+                        ['23', null],
+                        ['8', 100],
+                        ['123', 100],
+                        ['333', 100],
+                        ['444', 100],
+                        ['555', 100]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main9', {
+                title: [
+                    'Has empty null. Should have **5 equivalent** sectors with **labels different**.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        {what: '007', name: 100},
+                        {what: '008', name: 101},
+                        {what: '123', name: 102},
+                        {what: '333', name: 103},
+                        {what: '444', name: 104},
+                        {what: 'Test', name: 105}
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main10', {
+                title: [
+                    'dimension is named as "name" in Array.<Object>',
+                    '**5 different size** sectors should be rendered with **labels 100-105**'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        {what: 212, name: 100},
+                        {what: 312, name: 101},
+                        {what: 456, name: 102},
+                        {what: 123, name: 103},
+                        {what: 344, name: 104},
+                        {what: 123, name: 105}
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main11', {
+                title: [
+                    'dimension is named as "name" in Array.<Object>',
+                    '**6 different size** sectors should be rendered with **labels 100-105**'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        [212],
+                        [312],
+                        [456],
+                        [123],
+                        [344],
+                        [254]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main12', {
+                title: [
+                    'Only one column of pure number, **6 different size** sectors with labels.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['212'],
+                        ['312'],
+                        ['456'],
+                        ['123'],
+                        ['344'],
+                        ['254']
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main13', {
+                title: [
+                    'Only one column of number-like str, **5 different size** sectors with labels.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    dimensions: [null, {type: 'ordinal'}],
+                    source: [
+                        ['212', 100],
+                        ['312', 101],
+                        ['456', 102],
+                        ['123', 103],
+                        ['344', 104],
+                        ['123', 105]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main14', {
+                title: [
+                    'dataset.dimensions type defined, **6 different size** sectors with **labels 100-105**.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                animation: false,
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['212', 100],
+                        ['312', 101],
+                        ['456', 102],
+                        ['123', 103],
+                        ['344', 104],
+                        ['123', 105]
+                    ]
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        radius: '50%',
+                        dimensions: [null, {type: 'ordinal'}]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main15', {
+                title: [
+                    'series.dimensions type defined, **6 different size** sectors with **labels 100-105**.'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
 
 
     </body>

@@ -450,7 +450,7 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
  * @param {module:data/Source} source
  * @return {Object} encode Never be `null/undefined`.
  */
-export function makeSeriesEncodeForNameBased(seriesModel, source) {
+export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
     var encode = {};
 
     var datasetModel = getDatasetModel(seriesModel);
@@ -461,6 +461,7 @@ export function makeSeriesEncodeForNameBased(seriesModel, source) {
 
     var sourceFormat = source.sourceFormat;
     var dimensionsDefine = source.dimensionsDefine;
+
     var potentialNameDimIndex;
     if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS || sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
         each(dimensionsDefine, function (dim, idx) {
@@ -470,34 +471,70 @@ export function makeSeriesEncodeForNameBased(seriesModel, source) {
         });
     }
 
-    var encodeItemName = [];
-    var encodeSeriesName = [];
+    // idxResult: {v, n}.
+    var idxResult = (function () {
 
-    // Do not make a complex rule! Hard to code maintain and not necessary.
-    // Find the first not ordinal. (5 is an experience value)
-    var firstNotOrdinal;
-    var firstMaybeOrdinal;
-    for (var i = 0; i < 5 && (firstNotOrdinal == null || firstMaybeOrdinal == null); i++) {
-        doGuessOrdinal(
-            source.data, source.sourceFormat, source.seriesLayoutBy,
-            dimensionsDefine, source.startIndex, i
-        ) === BE_ORDINAL.Not
-            ? (firstNotOrdinal = i)
-            : (firstMaybeOrdinal = i);
-    }
-    if (firstNotOrdinal != null) {
-        encode.value = firstNotOrdinal;
-        var nameDimIndex = potentialNameDimIndex != null
-            ? potentialNameDimIndex
-            : firstMaybeOrdinal;
+        var idxRes0 = {};
+        var idxRes1 = {};
+        var guessRecords = [];
+
+        // 5 is an experience value.
+        for (var i = 0, len = Math.min(5, dimCount); i < len; i++) {
+            var guessResult = doGuessOrdinal(
+                source.data, sourceFormat, source.seriesLayoutBy,
+                dimensionsDefine, source.startIndex, i
+            );
+            guessRecords.push(guessResult);
+            var isPureNumber = guessResult === BE_ORDINAL.Not;
+
+            // [Strategy of idxRes0]: find the first BE_ORDINAL.Not as the value dim,
+            // and then find a name dim with the priority:
+            // "BE_ORDINAL.Might|BE_ORDINAL.Must" > "other dim" > "the value dim itself".
+            if (isPureNumber && idxRes0.v == null && i !== potentialNameDimIndex) {
+                idxRes0.v = i;
+            }
+            if (idxRes0.n == null
+                || (idxRes0.n === idxRes0.v)
+                || (!isPureNumber && guessRecords[idxRes0.n] === BE_ORDINAL.Not)
+            ) {
+                idxRes0.n = i;
+            }
+            if (fulfilled(idxRes0) && guessRecords[idxRes0.n] !== BE_ORDINAL.Not) {
+                return idxRes0;
+            }
+
+            // [Strategy of idxRes1]: if idxRes0 not satisfied (that is, no BE_ORDINAL.Not),
+            // find the first BE_ORDINAL.Might as the value dim,
+            // and then find a name dim with the priority:
+            // "other dim" > "the value dim itself".
+            // That is for backward compat: number-like (e.g., `'3'`, `'55'`) can be
+            // treated as number.
+            if (!isPureNumber) {
+                if (guessResult === BE_ORDINAL.Might && idxRes1.v == null && i !== potentialNameDimIndex) {
+                    idxRes1.v = i;
+                }
+                if (idxRes1.n == null || (idxRes1.n === idxRes1.v)) {
+                    idxRes1.n = i;
+                }
+            }
+        }
+
+        function fulfilled(idxResult) {
+            return idxResult.v != null && idxResult.n != null;
+        }
+
+        return fulfilled(idxRes0) ? idxRes0 : fulfilled(idxRes1) ? idxRes1 : null;
+    })();
+
+    if (idxResult) {
+        encode.value = idxResult.v;
+        // `potentialNameDimIndex` has highest priority.
+        var nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n;
         // By default, label use itemName in charts.
         // So we dont set encodeLabel here.
-        encodeSeriesName.push(nameDimIndex);
-        encodeItemName.push(nameDimIndex);
+        encode.itemName = [nameDimIndex];
+        encode.seriesName = [nameDimIndex];
     }
-
-    encodeItemName.length && (encode.itemName = encodeItemName);
-    encodeSeriesName.length && (encode.seriesName = encodeSeriesName);
 
     return encode;
 }
@@ -554,9 +591,20 @@ function doGuessOrdinal(
     // When sourceType is 'objectRows' or 'keyedColumns', dimensionsDefine
     // always exists in source.
     var dimName;
+    var dimType;
     if (dimensionsDefine) {
-        dimName = dimensionsDefine[dimIndex];
-        dimName = isObject(dimName) ? dimName.name : dimName;
+        var dimDefItem = dimensionsDefine[dimIndex];
+        if (isObject(dimDefItem)) {
+            dimName = dimDefItem.name;
+            dimType = dimDefItem.type;
+        }
+        else if (isString(dimDefItem)) {
+            dimName = dimDefItem;
+        }
+    }
+
+    if (dimType != null) {
+        return dimType === 'ordinal' ? BE_ORDINAL.Must : BE_ORDINAL.Not;
     }
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {

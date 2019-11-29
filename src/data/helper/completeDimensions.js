@@ -55,7 +55,8 @@ import DataDimensionInfo from '../DataDimensionInfo';
  * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
  * @param {Function} [opt.encodeDefaulter] Called if no `opt.encodeDef` exists.
  *      If not specified, auto find the next available data dim.
- *      param {module:data/Source}
+ *      param source {module:data/Source}
+ *      param dimCount {number}
  *      return {Object} encode Never be `null/undefined`.
  * @param {string} [opt.generateCoord] Generate coord dim with the given name.
  *      If not specified, extra dim names will be:
@@ -103,7 +104,7 @@ function completeDimensions(sysDims, source, opt) {
 
     var encodeDef = opt.encodeDef;
     if (!encodeDef && opt.encodeDefaulter) {
-        encodeDef = opt.encodeDefaulter(source);
+        encodeDef = opt.encodeDefaulter(source, dimCount);
     }
     encodeDef = createHashMap(encodeDef);
 
@@ -240,7 +241,7 @@ function completeDimensions(sysDims, source, opt) {
                 //    ]},
                 //    series: {type: 'pie'}
                 // }
-                // The first colum should better be traded as a "ordinal" although it
+                // The first colum should better be treated as a "ordinal" although it
                 // might not able to be detected as an "ordinal" by `guessOrdinal`.
                 || (resultItem.isExtraCoord
                     && (resultItem.otherDims.itemName != null
