@@ -18,8 +18,10 @@
 */
 
 import * as echarts from '../../echarts';
+import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import {defaultEmphasis} from '../../util/model';
+import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 
 var FunnelSeries = echarts.extendSeriesModel({
 
@@ -38,7 +40,10 @@ var FunnelSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        return createListSimply(this, ['value']);
+        return createListSimply(this, {
+            coordDimensions: ['value'],
+            encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
+        });
     },
 
     _defaultLabelLine: function (option) {

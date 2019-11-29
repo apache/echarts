@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+        <div id="main7"></div>
+        <div id="main8"></div>
+        <div id="main9"></div>
+        <div id="main10"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['分类', '平均消费金额'],
+                        ['a007', 100],
+                        ['008', 100],
+                        ['123', 100],
+                        ['333', 100],
+                        ['444', 100],
+                        ['Test', 100]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    '6 equal sectors should be rendered with labels'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['分类', '平均消费金额'],
+                        // number like
+                        ['7', 100],
+                        ['008', 100],
+                        ['123', 100],
+                        ['333', 100],
+                        ['444', 100],
+                        ['Test', 100]
+                    ]
+                },
+                series: [
+                    {type: 'pie', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    '6 equal sectors should be rendered with labels'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['分类', '平均消费金额'],
+                        // [value, label]
+                        [100, '7'],
+                        [90, '008'],
+                        [80, '123'],
+                        [70, '333'],
+                        [60, '444'],
+                        [50, 'Test']
+                    ]
+                },
+                series: [
+                    {type: 'funnel', radius: '50%'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    '6 bars (decrease) should be rendered with labels'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['分类', 'V100', 'V200', 'V300'],
+                        // number like
+                        ['7', 100, 200, 300],
+                        ['008', 100, 200, 300],
+                        ['123', 100, 200, 300],
+                        ['333', 100, 200, 300],
+                        ['444', 100, 200, 300],
+                        ['Test', 100, 200, 300]
+                    ]
+                },
+                xAxis: {type: 'category'},
+                yAxis: {},
+                series: [
+                    {type: 'bar'},
+                    {type: 'bar'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'share category xAxis (number-like) and 100, 200 bars'
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['分类', 'V100', 'V200', 'V300'],
+                        // number like
+                        ['7', 100, 200, 300],
+                        ['008', 100, 200, 300],
+                        ['123', 100, 200, 300],
+                        ['333', 100, 200, 300],
+                        ['444', 100, 200, 300],
+                        ['Test', 100, 200, 300]
+                    ]
+                },
+                xAxis: {},
+                yAxis: {},
+                series: [
+                    {type: 'scatter'},
+                    {type: 'scatter'}
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'both x y value axis. Should be series0: "分类 V100", series1: "V200 V300" '
+                ],
+                option: option,
+                height: 200
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['分类', 'O', 'C', 'L', 'H', 'Column'],
+                        ['7', 190, 250, 50, 490, 500],
+                        ['008', 180, 240, 60, 480, 510],
+                        ['123', 170, 230, 70, 470, 520],
+                        ['333', 160, 220, 80, 460, 530],
+                        ['444', 150, 210, 90, 450, 540],
+                        ['Test', 140, 200, 100, 440, 550]
+                    ]
+                },
+                xAxis: {type: 'category'},
+                yAxis: {},
+                series: [
+                    {type: 'candlestick'},
+                    {type: 'line'},
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'candlestick series should be "O C L H"',
+                    'line series should be "Column"'
+                ],
+                option: option,
+                height: 300
+            });
+        });
+        </script>
+
+
+
+    </body>
+</html>
+

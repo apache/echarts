@@ -34,7 +34,7 @@ export default SeriesModel.extend({
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this);
+        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     },
 
     defaultOption: {
