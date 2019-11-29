@@ -23,6 +23,7 @@ import lang from '../../../lang';
 import * as featureManager from '../featureManager';
 
 var magicTypeLang = lang.toolbox.magicType;
+var INNER_STACK_KEYWORD = '__ec_magicType_stack__';
 
 function MagicType(model) {
     this.model = model;
@@ -87,14 +88,12 @@ var seriesOptGenreator = {
         }
     },
     'stack': function (seriesType, seriesId, seriesModel, model) {
-        var isStack = seriesModel.get('stack') === '__ec_magicType_stack__';
+        var isStack = seriesModel.get('stack') === INNER_STACK_KEYWORD;
         if (seriesType === 'line' || seriesType === 'bar') {
             model.setIconStatus('stack', isStack ? 'normal' : 'emphasis');
             return zrUtil.merge({
                 id: seriesId,
-                stack: isStack ? '' : '__ec_magicType_stack__',
-                // FIXME: also need to change tooltip for stack/unstack state.
-                title: isStack ? zrUtil.clone(magicTypeLang.title) : zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
+                stack: isStack ? '' : INNER_STACK_KEYWORD
             }, model.get('option.stack') || {}, true);
         }
     }
@@ -167,10 +166,21 @@ proto.onclick = function (ecModel, api, type) {
             }
         }, generateNewSeriesTypes
     );
+
+    var newTitle;
+    // Change title of stack
+    if (type === 'stack') {
+        var isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
+        newTitle = isStack
+            ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
+            : zrUtil.clone(magicTypeLang.title);
+    }
+
     api.dispatchAction({
         type: 'changeMagicType',
         currentType: type,
-        newOption: newOption
+        newOption: newOption,
+        newTitle: newTitle
     });
 };
 
