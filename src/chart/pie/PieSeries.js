@@ -24,6 +24,7 @@ import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
 
 
 var PieSeries = echarts.extendSeriesModel({
@@ -36,9 +37,9 @@ var PieSeries = echarts.extendSeriesModel({
 
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
-        this.legendDataProvider = function () {
-            return this.getRawData();
-        };
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
 
         this.updateSelectedMap(this._createSelectableList());
 

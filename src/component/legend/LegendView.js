@@ -175,7 +175,7 @@ export default echarts.extendComponentView({
                 return;
             }
 
-            // Series legend
+            // Legend to control series.
             if (seriesModel) {
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
@@ -211,22 +211,24 @@ export default echarts.extendComponentView({
                 legendDrawnMap.set(name, true);
             }
             else {
-                // Data legend of pie, funnel
+                // Legend to control data. In pie and funnel.
                 ecModel.eachRawSeries(function (seriesModel) {
+
                     // In case multiple series has same data name
                     if (legendDrawnMap.get(name)) {
                         return;
                     }
 
-                    if (seriesModel.legendDataProvider) {
-                        var data = seriesModel.legendDataProvider();
-                        var idx = data.indexOfName(name);
-                        if (idx < 0) {
+                    if (seriesModel.legendVisualProvider) {
+                        var provider = seriesModel.legendVisualProvider;
+                        if (!provider.containName(name)) {
                             return;
                         }
 
-                        var color = data.getItemVisual(idx, 'color');
-                        var borderColor = data.getItemVisual(idx, 'borderColor');
+                        var idx = provider.indexOfName(name);
+
+                        var color = provider.getItemVisual(idx, 'color');
+                        var borderColor = provider.getItemVisual(idx, 'borderColor');
 
                         var legendSymbolType = 'roundRect';
 
