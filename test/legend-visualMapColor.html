@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -59,20 +60,20 @@ under the License.
                         [
                             "01",
                             "高档",
-                            61278,
-                            "61278.00"
+                            6789,
+                            "6789.00"
                         ],
                         [
                             "03",
                             "中档",
-                            108814,
-                            "108814.00"
+                            9546,
+                            "9546.00"
                         ],
                         [
                             "04",
                             "低档",
-                            242664,
-                            "242664.00"
+                            16892,
+                            "16892.00"
                         ]
                     ]
                     }
@@ -139,16 +140,13 @@ under the License.
                 backgroundColor: '#2c343c',
 
                 legend: {
-                    data: data.map(function (item) {
-                        return item.name
-                    }),
                     textStyle: {
                         color: '#fff'
                     }
                 },
                 visualMap: {
                     show: false,
-                    min: 80,
+                    min: 200,
                     max: 600,
                     inRange: {
                         colorLightness: [0, 1]
@@ -199,6 +197,36 @@ under the License.
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
                     'Legend use color from lightness visualMap.'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                legend: {
+                },
+                series: {
+                    type: 'pie',
+                    itemStyle: {
+                        color: function (params) {
+                            var colorList = ['#ff3322', '#232211', '#aabbcc'];
+                            return colorList[params.dataIndex];
+                        }
+                    },
+                    data: [
+                        {name: 'First', value: 1222},
+                        {name: 'Second', value: 2333},
+                        {name: 'Third', value: 3444},
+                    ]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Legend use color from callback'
                 ],
                 option: option
             });
