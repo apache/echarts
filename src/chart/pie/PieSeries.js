@@ -24,6 +24,7 @@ import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
+import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 
 
@@ -54,7 +55,10 @@ var PieSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        return createListSimply(this, ['value']);
+        return createListSimply(this, {
+            coordDimensions: ['value'],
+            encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
+        });
     },
 
     _createSelectableList: function () {

@@ -31,6 +31,7 @@ import DataDiffer from './DataDiffer';
 import Source from './Source';
 import {defaultDimValueGetters, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions} from './helper/dimensionHelper';
+import DataDimensionInfo from './DataDimensionInfo';
 
 var isObject = zrUtil.isObject;
 
@@ -102,13 +103,9 @@ function transferProperties(target, source) {
  * @constructor
  * @alias module:echarts/data/List
  *
- * @param {Array.<string|Object>} dimensions
+ * @param {Array.<string|Object|module:data/DataDimensionInfo>} dimensions
  *      For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
  *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
- *      Spetial fields: {
- *          ordinalMeta: <module:echarts/data/OrdinalMeta>
- *          createInvertedIndices: <boolean>
- *      }
  * @param {module:echarts/model/Model} hostModel
  */
 var List = function (dimensions, hostModel) {
@@ -124,7 +121,10 @@ var List = function (dimensions, hostModel) {
         var dimensionInfo = dimensions[i];
 
         if (zrUtil.isString(dimensionInfo)) {
-            dimensionInfo = {name: dimensionInfo};
+            dimensionInfo = new DataDimensionInfo({name: dimensionInfo});
+        }
+        else if (!(dimensionInfo instanceof DataDimensionInfo)) {
+            dimensionInfo = new DataDimensionInfo(dimensionInfo);
         }
 
         var dimensionName = dimensionInfo.name;

@@ -30,7 +30,8 @@ import {__DEV__} from '../config';
 import {createHashMap, retrieve, each} from 'zrender/src/core/util';
 
 /**
- * @return {Object} For example:
+ * @class
+ * For example:
  * {
  *     coordSysName: 'cartesian2d',
  *     coordSysDims: ['x', 'y', ...],
@@ -42,19 +43,41 @@ import {createHashMap, retrieve, each} from 'zrender/src/core/util';
  *         x: xAxisModel,
  *         y: undefined
  *     }),
- *     // It also indicate that whether there is category axis.
+ *     // The index of the first category axis in `coordSysDims`.
+ *     // `null/undefined` means no category axis exists.
  *     firstCategoryDimIndex: 1,
  *     // To replace user specified encode.
  * }
  */
-export function getCoordSysDefineBySeries(seriesModel) {
+function CoordSysInfo(coordSysName) {
+    /**
+     * @type {string}
+     */
+    this.coordSysName = coordSysName;
+    /**
+     * @type {Array.<string>}
+     */
+    this.coordSysDims = [];
+    /**
+     * @type {module:zrender/core/util#HashMap}
+     */
+    this.axisMap = createHashMap();
+    /**
+     * @type {module:zrender/core/util#HashMap}
+     */
+    this.categoryAxisMap = createHashMap();
+    /**
+     * @type {number}
+     */
+    this.firstCategoryDimIndex = null;
+}
+
+/**
+ * @return {module:model/referHelper#CoordSysInfo}
+ */
+export function getCoordSysInfoBySeries(seriesModel) {
     var coordSysName = seriesModel.get('coordinateSystem');
-    var result = {
-        coordSysName: coordSysName,
-        coordSysDims: [],
-        axisMap: createHashMap(),
-        categoryAxisMap: createHashMap()
-    };
+    var result = new CoordSysInfo(coordSysName);
     var fetch = fetchers[coordSysName];
     if (fetch) {
         fetch(seriesModel, result, result.axisMap, result.categoryAxisMap);
@@ -95,7 +118,7 @@ var fetchers = {
         }
         if (isCategory(yAxisModel)) {
             categoryAxisMap.set('y', yAxisModel);
-            result.firstCategoryDimIndex = 1;
+            result.firstCategoryDimIndex == null & (result.firstCategoryDimIndex = 1);
         }
     },
 
@@ -141,7 +164,7 @@ var fetchers = {
         }
         if (isCategory(angleAxisModel)) {
             categoryAxisMap.set('angle', angleAxisModel);
-            result.firstCategoryDimIndex = 1;
+            result.firstCategoryDimIndex == null && (result.firstCategoryDimIndex = 1);
         }
     },
 
