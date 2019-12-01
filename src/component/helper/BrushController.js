@@ -919,12 +919,12 @@ function handleDragEnd(controller, e) {
 function getLocalMouseXY(event, zr) {
     var x = event.offsetX;
     var y = event.offsetY;
-    var w = zr.getWidth();
-    var h = zr.getHeight();
-    x < 0 && (x = 0);
-    x > w && (x = w);
-    y < 0 && (y = 0);
-    y > h && (y = h);
+    // var w = zr.getWidth();
+    // var h = zr.getHeight();
+    // x < 0 && (x = 0);
+    // x > w && (x = w);
+    // y < 0 && (y = 0);
+    // y > h && (y = h);
 
     return [x, y];
 }
