@@ -86,6 +86,7 @@
   "label-position": 1,
   "largeLine-tooltip": 1,
   "legend": 6,
+  "legend-visualMapColor": 2,
   "line": 1,
   "line-animation": 1,
   "map": 3,

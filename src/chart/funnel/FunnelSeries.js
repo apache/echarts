@@ -22,6 +22,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import {defaultEmphasis} from '../../util/model';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import {bind} from 'zrender/src/core/util';
 
 var FunnelSeries = echarts.extendSeriesModel({
 
@@ -32,9 +34,9 @@ var FunnelSeries = echarts.extendSeriesModel({
 
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
-        this.legendDataProvider = function () {
-            return this.getRawData();
-        };
+        this.legendVisualProvider = new LegendVisualProvider(
+            bind(this.getData, this), bind(this.getRawData, this)
+        );
         // Extend labelLine emphasis
         this._defaultLabelLine(option);
     },

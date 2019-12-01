@@ -111,9 +111,9 @@ var LegendModel = echarts.extendComponentModel({
             availableNames.push(seriesName);
             var isPotential;
 
-            if (seriesModel.legendDataProvider) {
-                var data = seriesModel.legendDataProvider();
-                var names = data.mapArray(data.getName);
+            if (seriesModel.legendVisualProvider) {
+                var provider = seriesModel.legendVisualProvider;
+                var names = provider.getAllNames();
 
                 if (!ecModel.isSeriesFiltered(seriesModel)) {
                     availableNames = availableNames.concat(names);
