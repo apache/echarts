@@ -664,7 +664,7 @@ function buildAxisMinorTicks(axisBuilder, axisModel, opt) {
 
     for (var i = 0; i < minorTicksCoords.length; i++) {
         var minorTicksEls = createTicks(
-            minorTicksCoords[i], axisBuilder._transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i,
+            minorTicksCoords[i], axisBuilder._transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
         );
         for (let k = 0; k < minorTicksEls.length; k++) {
             axisBuilder.group.add(minorTicksEls[k]);
