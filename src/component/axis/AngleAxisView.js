@@ -175,7 +175,7 @@ export default AxisView.extend({
         var lines = [];
 
         for (var i = 0; i < minorTickAngles.length; i++) {
-            for (let k = 0; k < minorTickAngles[i].length; k++) {
+            for (var k = 0; k < minorTickAngles[i].length; k++) {
                 lines.push(new graphic.Line({
                     shape: getAxisLineShape(polar, [radius, radius + tickLen], minorTickAngles[i][k].coord)
                 }));
@@ -299,7 +299,7 @@ export default AxisView.extend({
         var lines = [];
 
         for (var i = 0; i < minorTickAngles.length; i++) {
-            for (let k = 0; k < minorTickAngles[i].length; k++) {
+            for (var k = 0; k < minorTickAngles[i].length; k++) {
                 lines.push(new graphic.Line({
                     shape: getAxisLineShape(polar, radiusExtent, minorTickAngles[i][k].coord)
                 }));
