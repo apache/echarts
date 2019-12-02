@@ -95,7 +95,7 @@ export default AxisView.extend({
     /**
      * @private
      */
-    _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
+    _axisLine: function (angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
         var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
         // extent id of the axis radius (r0 and r)
