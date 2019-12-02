@@ -247,7 +247,7 @@
                 notMerge: opt.notMerge
             });
 
-            let isAutoResize = opt.autoResize == null ? true : opt.autoResize;
+            var isAutoResize = opt.autoResize == null ? true : opt.autoResize;
             if (isAutoResize) {
                 testHelper.resizable(chart);
             }
@@ -258,12 +258,12 @@
 
 
     testHelper.resizable = function (chart) {
-        let dom = chart.getDom();
-        let width = dom.clientWidth;
-        let height = dom.clientHeight;
+        var dom = chart.getDom();
+        var width = dom.clientWidth;
+        var height = dom.clientHeight;
         function resize() {
-            let newWidth = dom.clientWidth;
-            let newHeight = dom.clientHeight;
+            var newWidth = dom.clientWidth;
+            var newHeight = dom.clientHeight;
             if (width !== newWidth || height !== newHeight) {
                 chart.resize();
                 width = newWidth;

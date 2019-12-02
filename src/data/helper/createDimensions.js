@@ -32,6 +32,7 @@ import completeDimensions from './completeDimensions';
  * @param {string} [opt.generateCoordCount]
  * @param {Array.<string|Object>} [opt.dimensionsDefine=source.dimensionsDefine] Overwrite source define.
  * @param {Object|HashMap} [opt.encodeDefine=source.encodeDefine] Overwrite source define.
+ * @param {Function} [opt.encodeDefaulter] Make default encode if user not specified.
  * @return {Array.<Object>} dimensionsInfo
  */
 export default function (source, opt) {
@@ -40,6 +41,7 @@ export default function (source, opt) {
         dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
         encodeDef: opt.encodeDefine || source.encodeDefine,
         dimCount: opt.dimensionsCount,
+        encodeDefaulter: opt.encodeDefaulter,
         generateCoord: opt.generateCoord,
         generateCoordCount: opt.generateCoordCount
     });

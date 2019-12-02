@@ -24,6 +24,8 @@ import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
+import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
 
 
 var PieSeries = echarts.extendSeriesModel({
@@ -36,9 +38,9 @@ var PieSeries = echarts.extendSeriesModel({
 
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
-        this.legendDataProvider = function () {
-            return this.getRawData();
-        };
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
 
         this.updateSelectedMap(this._createSelectableList());
 
@@ -53,7 +55,10 @@ var PieSeries = echarts.extendSeriesModel({
     },
 
     getInitialData: function (option, ecModel) {
-        return createListSimply(this, ['value']);
+        return createListSimply(this, {
+            coordDimensions: ['value'],
+            encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
+        });
     },
 
     _createSelectableList: function () {
@@ -142,12 +147,26 @@ var PieSeries = echarts.extendSeriesModel({
 
         // cursor: null,
 
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: null,
+        height: null,
+
         label: {
             // If rotate around circle
             rotate: false,
             show: true,
             // 'outer', 'inside', 'center'
-            position: 'outer'
+            position: 'outer',
+            // 'none', 'labelLine', 'edge'. Works only when position is 'outer'
+            alignTo: 'none',
+            // Closest distance between label and chart edge.
+            // Works only position is 'outer' and alignTo is 'labelLine' or 'edge'.
+            margin: '25%',
+            bleedMargin: 10,
+            distanceToLabelLine: 5
             // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
             // 默认使用全局文本样式，详见TEXTSTYLE
             // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数

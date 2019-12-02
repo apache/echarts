@@ -68,32 +68,19 @@ export default function (seriesType) {
                             dataAll.getName(rawIdx) || (rawIdx + ''), seriesModel.__paletteScope,
                             dataAll.count()
                         );
-                    // Legend may use the visual info in data before processed
-                    dataAll.setItemVisual(rawIdx, 'color', color);
-
                     // Data is not filtered
                     if (filteredIdx != null) {
                         data.setItemVisual(filteredIdx, 'color', color);
                     }
                 }
-                else {
-                    // Set data all color for legend
-                    dataAll.setItemVisual(rawIdx, 'color', singleDataColor);
-                }
 
                 if (!singleDataBorderColor) {
                     var borderColor = itemModel.get('itemStyle.borderColor');
-                    // Legend may use the visual info in data before processed
-                    dataAll.setItemVisual(rawIdx, 'borderColor', borderColor);
 
                     // Data is not filtered
                     if (filteredIdx != null) {
                         data.setItemVisual(filteredIdx, 'borderColor', borderColor);
                     }
-                }
-                else {
-                    // Set data all borderColor for legend
-                    dataAll.setItemVisual(rawIdx, 'borderColor', singleDataBorderColor);
                 }
             });
         }

@@ -44,6 +44,7 @@ under the License.
 
         <div id="main4"></div>
 
+        <div id="main5"></div>
 
 
 
@@ -186,7 +187,7 @@ under the License.
                 },
                 series: [{
                     type: 'bar',
-                    data: [1],
+                    data: [0],
                     coordinateSystem: 'polar',
                     name: 'A',
                     roundCap: true,
@@ -194,6 +195,11 @@ under the License.
                     itemStyle: {
                         borderColor: 'red',
                         borderWidth: 1
+                    },emphasis:{
+                        itemStyle:{
+                            color:'red',
+                            borderColor:'blue'
+                        }
                     }
                 }],
                 legend: {
@@ -278,6 +284,90 @@ under the License.
                     'Polar radius axis inverse tests'
                 ],
                 option: option
+            });
+        });
+        </script>
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            let hoverColors = [
+                '255,0,0',
+                '0,128,0',
+                '0,0,255',
+            ];
+            let hoverIndex = 0;
+
+            let getOptions = function(hoverIndex){
+                return  {
+                    angleAxis: {
+                        max: 5
+                    },
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['a'],
+                        z: 10
+                    },
+                    polar: {
+                        radius: ['20%', '60%']
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [4],
+                        coordinateSystem: 'polar',
+                        name: 'A',
+                        roundCap: true,
+                        animationDuration:5 * 1000,
+                        color: `rgba(${hoverColors[hoverIndex]},0.5)`,
+                        itemStyle: {
+                            borderColor: `rgb(${hoverColors[hoverIndex]})`,
+                            borderWidth: 0
+                        }, 
+                        emphasis: {
+                            itemStyle: {
+                                color: `rgb(${hoverColors[hoverIndex]})`,
+                                borderColor: `rgb(${hoverColors[hoverIndex]})`
+                            }
+                        }
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A']
+                    },
+                    tooltip: {
+                        show: true
+                    }
+                };
+            }
+
+            var chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'Polar radius and value [0,\'-\',\'rational num\'] test',
+                    'Click button to change hoverStyle and data value',
+                ],
+                option: getOptions(hoverIndex),
+                buttons: [{
+                    text: 'Change data',
+                    onclick: function () {
+                        ++hoverIndex > 2 && (hoverIndex=0)
+                        let option = chart.getOption();
+
+                        if (option.series[0].data[0] == 0) {
+                            option.series[0].data[0] = 4;
+                        } else if (option.series[0].data[0] == 4) {
+                            option.series[0].data[0] = '-';
+                        } else if (option.series[0].data[0] = '-') {
+                            option.series[0].data[0] = 0;
+                        }
+
+                        option.series[0].color = `rgba(${hoverColors[hoverIndex]},0.5)`;
+                        option.series[0].emphasis.itemStyle = {
+                            color:`rgb(${hoverColors[hoverIndex]})`,
+                            borderColor:`rgb(${hoverColors[hoverIndex]})`
+                        };
+                        chart.setOption(option);
+                    }
+                }]
             });
         });
         </script>

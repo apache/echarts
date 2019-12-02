@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="../../dist/echarts.js"></script>
+    <script src="../../map/js/china.js"></script>
+</head>
+<body>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+    <div id="main"></div>
+    <script type="module">
+        import bar from './option/bar';
+        import area from './option/area';
+        import scatter from './option/scatter';
+        import pie from './option/pie';
+        import graph from './option/graph';
+        import map from './option/map';
+
+        let options = [bar, area, scatter, pie, graph, map];
+        let mainDiv = document.querySelector('#main');
+
+        let theme = window.location.hash.slice(1);
+
+        let scriptTag = document.createElement('script');
+        scriptTag.src = '../' + theme + '.js';
+        scriptTag.onload = function () {
+            options.forEach(option => {
+                let div = document.createElement('div');
+                mainDiv.appendChild(div);
+                div.style.cssText = 'float:left;width:50%;height:400px';
+                let chart = echarts.init(div, theme);
+                option.animation = false;
+                chart.setOption(option);
+            });
+        }
+        document.body.appendChild(scriptTag);
+    </script>
+</body>
+</html>

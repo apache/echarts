@@ -17,7 +17,7 @@
 * under the License.
 */
 
-module.exports = {
+export default {
     title: {
         text: 'Area Chart',
         left: 'center',
