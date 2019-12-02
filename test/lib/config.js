@@ -90,8 +90,15 @@
 
     // Not let scrollbar affect page size.
     // It will AFFECT interaction in the automatic testing.
-    window.onload = function () {
-        document.body.style.cssText = 'overflow:overlay!important';
+    if (typeof MutationObserver !== 'undefined') {
+        // Must be set as soon as possible(before chart is created)
+        var observer = new MutationObserver(function() {
+            if (document.body) {
+                document.body.style.cssText = 'overflow:overlay!important';
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.documentElement, {childList: true});
     };
 
     // It is not a good solution.
