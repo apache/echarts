@@ -25,20 +25,15 @@ under the License.
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css"/>
     </head>
     <body>
-        <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                /*border: 1px solid #000;*/
-            }
-        </style>
-        <div id="main"><div>
+
+        <div id="main"></div>
+
         <script>
             require(['echarts'], function (echarts) {
-
-                var chart = echarts.init(document.getElementById('main'), null, {});
 
                 window.onresize = function () {
                     chart.resize();
@@ -117,7 +112,13 @@ under the License.
                 var testData =  {
                     nodes: [
                         {
-                            name: 'a'
+                            name: 'a',
+                            emphasis: {
+                                itemStyle: {
+                                    color: 'yellow',
+                                    opacity: 0.6
+                                }
+                            }
                         },
                         {
                             name: 'b'
@@ -139,7 +140,13 @@ under the License.
                         {
                             source: 'a',
                             target: 'a1',
-                            value: 5
+                            value: 5,
+                            emphasis: {
+                                lineStyle: {
+                                    color: 'green',
+                                    opacity: 0.2
+                                }
+                            }
                         },
                         {
                             source: 'e',
@@ -169,7 +176,7 @@ under the License.
                     ]
                 };
 
-                chart.setOption({
+                var option = {
                     color: ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#fddbc7', '#d1e5f0', '#92c5de', '#4393c3', '#2166ac', '#053061'],
                     tooltip: {
                         trigger: 'item',
@@ -189,12 +196,21 @@ under the License.
                             },
                             lineStyle: {
                                 normal: {
-                                    color: 'source',
-                                    curveness: 0.5
+                                    color: 'source'
                                 }
                             }
                         }
                     ]
+                };
+
+                var chart = testHelper.create(echarts, 'main' , {
+                    title: [
+                        '1. when hover on node a1 the edge a1-a is green with opacity 0.2 and the node a is yellow with opacity 0.6',
+                        '2. when hover on edge a1-a the color is green with opacity 0.2 and the node a is yellow with opacity 0.6',
+                        '3. when hover on node a the color is yellow with opacity 0.6 and the edge a1-a is green with opacity 0.2'
+                    ],
+                    option: option,
+                    height: 700
                 });
             });
         </script>
