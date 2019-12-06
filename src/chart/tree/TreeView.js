@@ -28,6 +28,81 @@ import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController from '../../component/helper/RoamController';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 
+var TreeShape = graphic.extendShape({
+    shape: {
+        parentPoint: [],
+        childPoints: [],
+        orient: ''
+    },
+
+    buildPath: function (ctx, shape) {
+        var ptMin = [Infinity, Infinity];
+        var ptMax = [-Infinity, -Infinity];
+        var points = shape.childPoints;
+        for (var i = 0; i < points.length; i++) {
+            var pt = points[i];
+            if (pt[0] < ptMin[0]) {
+                ptMin[0] = pt[0];
+            }
+            if (pt[0] > ptMax[0]) {
+                ptMax[0] = pt[0];
+            }
+            if (pt[1] < ptMin[1]) {
+                ptMin[1] = pt[1];
+            }
+            if (pt[1] > ptMax[1]) {
+                ptMax[1] = pt[1];
+            }
+        }
+        var parentPoint = shape.parentPoint;
+        var orient = shape.orient;
+        var midPoint = computeMidPoints(parentPoint, orient, ptMax);
+
+         ctx.moveTo(parentPoint[0], parentPoint[1]);
+         ctx.lineTo(midPoint[0], midPoint[1]);
+         if (orient === 'TB' || orient === 'BT') {
+             ctx.moveTo(ptMin[0], midPoint[1]);
+             ctx.lineTo(ptMax[0], midPoint[1]);
+         }
+         else if (orient === 'LR' || orient === 'RL') {
+             ctx.moveTo(midPoint[0], ptMin[1]);
+             ctx.lineTo(midPoint[0], ptMax[1]);
+         }
+         for (var i = 0; i < points.length; i++) {
+             var point = points[i];
+             ctx.moveTo(point[0], point[1]);
+             if (orient === 'TB' || orient === 'BT') {
+                 ctx.lineTo(point[0], midPoint[1]);
+             }
+             else if (orient === 'LR' || orient === 'RL') {
+                 ctx.lineTo(midPoint[0], point[1]);
+             }
+         }
+    }
+});
+
+function computeMidPoints(parentPoint, orient, ptMax) {
+    var midPoint = [];
+    switch (orient) {
+        case 'TB':
+            midPoint[0] = parentPoint[0];
+            midPoint[1] = parentPoint[1] + (ptMax[1] - parentPoint[1]) / 2;
+            break;
+        case 'BT':
+            midPoint[0] = parentPoint[0];
+            midPoint[1] = ptMax[1] + (parentPoint[1] - ptMax[1]) / 2;
+            break;
+        case 'LR':
+            midPoint[0] = parentPoint[0] + (ptMax[0] - parentPoint[0]) / 2;
+            midPoint[1] = parentPoint[1];
+            break;
+        case 'RL':
+            midPoint[0] = ptMax[0] + (parentPoint[0] - ptMax[0]) / 2;
+            midPoint[1] = parentPoint[1];
+    }
+    return midPoint;
+}
+
 export default echarts.extendChartView({
 
     type: 'tree',
@@ -87,6 +162,7 @@ export default echarts.extendChartView({
         var seriesScope = {
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
+            edgeLayout: seriesModel.get('edgeLayout'),
             orient: seriesModel.getOrient(),
             curvature: seriesModel.get('lineStyle.curveness'),
             symbolRotate: seriesModel.get('symbolRotate'),
@@ -388,22 +464,64 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         });
     }
 
-    if (node.parentNode && node.parentNode !== virtualRoot) {
+    drawEdge(
+        seriesModel, node, virtualRoot, symbolEl,
+        sourceOldLayout, sourceLayout, targetLayout, group, seriesScope
+    );
+
+}
+
+function drawEdge(
+    seriesModel, node, virtualRoot, symbolEl, sourceOldLayout, sourceLayout,
+    targetLayout, group, seriesScope
+    ) {
+        var edgeLayout = seriesScope.edgeLayout;
         var edge = symbolEl.__edge;
-        if (!edge) {
-            edge = symbolEl.__edge = new graphic.BezierCurve({
-                shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
-                style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
-            });
+        if (edgeLayout === 'curve') {
+            if (node.parentNode && node.parentNode !== virtualRoot) {
+                if (!edge) {
+                    edge = symbolEl.__edge = new graphic.BezierCurve({
+                        shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
+                        style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                    });
+                }
+
+                graphic.updateProps(edge, {
+                    shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
+                    style: {opacity: 1}
+                }, seriesModel);
+            }
         }
+        else if (edgeLayout === 'polyline' && seriesScope.layout === 'orthogonal') {
+            if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
+                var children = node.children;
+                var childPoints = [];
+                for (var i = 0; i < children.length; i++) {
+                    var layout = children[i].getLayout();
+                    childPoints.push([layout.x, layout.y]);
+                }
 
-        graphic.updateProps(edge, {
-            shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
-            style: {opacity: 1}
-        }, seriesModel);
-
+                if (!edge) {
+                    edge = symbolEl.__edge = new TreeShape({
+                        shape: {
+                            parentPoint: [targetLayout.x, targetLayout.y],
+                            childPoints: [[targetLayout.x, targetLayout.y]],
+                            orient: seriesScope.orient
+                        },
+                        style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                    });
+                }
+                graphic.updateProps(edge, {
+                    shape: {
+                        parentPoint: [targetLayout.x, targetLayout.y],
+                        childPoints: childPoints,
+                        orient: seriesScope.orient
+                    },
+                    style: {opacity: 1}
+                }, seriesModel);
+            }
+        }
         group.add(edge);
-    }
 }
 
 function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
@@ -413,6 +531,7 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
     var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
+    var edgeLayout = seriesScope.edgeLayout;
     var sourceLayout;
     while (sourceLayout = source.getLayout(), sourceLayout == null) {
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
@@ -427,16 +546,60 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
 
     symbolEl.fadeOut(null, {keepLabel: true});
 
-    var edge = symbolEl.__edge;
+    var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
+    var sourceEdge = sourceSymbolEl.__edge;
+    var edge = symbolEl.__edge || (source.isExpand === false ? sourceEdge : undefined);
+    var edgeLayout = seriesScope.edgeLayout;
+
     if (edge) {
-        graphic.updateProps(edge, {
-            shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
-            style: {
-                opacity: 0
+        if (edgeLayout === 'curve') {
+            graphic.updateProps(edge, {
+                shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
+                style: {
+                    opacity: 0
+                }
+            }, seriesModel, function () {
+                group.remove(edge);
+            });
+        }
+        else if (edgeLayout === 'polyline' && seriesScope.layout === 'orthogonal') {
+            graphic.updateProps(edge, {
+                shape: {
+                    parentPoint: [sourceLayout.x, sourceLayout.y],
+                    childPoints: [[sourceLayout.x, sourceLayout.y]],
+                    orient: seriesScope.orient
+                },
+                style: {
+                    opacity: 0
+                }
+            }, seriesModel, function () {
+                group.remove(edge);
+            });
+        }
+    }
+    else if (sourceEdge) {
+        var filterChilPoints = [];
+        var children = source.children;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i] !== node) {
+                var nodeLayout = children[i].getLayout();
+                filterChilPoints.push([nodeLayout.x, nodeLayout.y]);
             }
-        }, seriesModel, function () {
-            group.remove(edge);
-        });
+        }
+        graphic.updateProps(sourceEdge, {
+            shape: {
+                parentPoint: [sourceLayout.x, sourceLayout.y],
+                childPoints: filterChilPoints,
+                orient: seriesScope.orient
+            },
+            style: {
+                opacity: 1
+            }
+        }, seriesModel);
+
+        graphic.updateProps(sourceSymbolEl, {
+            position: [sourceLayout.x, sourceLayout.y]
+        }, seriesModel);
     }
 }
 

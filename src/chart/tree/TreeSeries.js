@@ -139,6 +139,9 @@ export default SeriesModel.extend({
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
 
+        // value can be 'polyline'
+        edgeLayout: 'curve',
+
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
 
