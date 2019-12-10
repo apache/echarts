@@ -140,7 +140,7 @@ export default SeriesModel.extend({
         layout: 'orthogonal',
 
         // value can be 'polyline'
-        edgeLayout: 'curve',
+        edgeShape: 'curve',
 
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,

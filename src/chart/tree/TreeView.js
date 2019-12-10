@@ -162,7 +162,7 @@ export default echarts.extendChartView({
         var seriesScope = {
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
-            edgeLayout: seriesModel.get('edgeLayout'),
+            edgeShape: seriesModel.get('edgeShape'),
             orient: seriesModel.getOrient(),
             curvature: seriesModel.get('lineStyle.curveness'),
             symbolRotate: seriesModel.get('symbolRotate'),
@@ -475,9 +475,9 @@ function drawEdge(
     seriesModel, node, virtualRoot, symbolEl, sourceOldLayout, sourceLayout,
     targetLayout, group, seriesScope
     ) {
-        var edgeLayout = seriesScope.edgeLayout;
+        var edgeShape = seriesScope.edgeShape;
         var edge = symbolEl.__edge;
-        if (edgeLayout === 'curve') {
+        if (edgeShape === 'curve') {
             if (node.parentNode && node.parentNode !== virtualRoot) {
                 if (!edge) {
                     edge = symbolEl.__edge = new graphic.BezierCurve({
@@ -492,7 +492,7 @@ function drawEdge(
                 }, seriesModel);
             }
         }
-        else if (edgeLayout === 'polyline' && seriesScope.layout === 'orthogonal') {
+        else if (edgeShape === 'polyline' && seriesScope.layout === 'orthogonal') {
             if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
                 var children = node.children;
                 var childPoints = [];
@@ -531,7 +531,7 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
     var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
-    var edgeLayout = seriesScope.edgeLayout;
+    var edgeShape = seriesScope.edgeShape;
     var sourceLayout;
     while (sourceLayout = source.getLayout(), sourceLayout == null) {
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
@@ -549,10 +549,10 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
     var sourceEdge = sourceSymbolEl.__edge;
     var edge = symbolEl.__edge || (source.isExpand === false ? sourceEdge : undefined);
-    var edgeLayout = seriesScope.edgeLayout;
+    var edgeShape = seriesScope.edgeShape;
 
     if (edge) {
-        if (edgeLayout === 'curve') {
+        if (edgeShape === 'curve') {
             graphic.updateProps(edge, {
                 shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
                 style: {
@@ -562,7 +562,7 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
                 group.remove(edge);
             });
         }
-        else if (edgeLayout === 'polyline' && seriesScope.layout === 'orthogonal') {
+        else if (edgeShape === 'polyline' && seriesScope.layout === 'orthogonal') {
             graphic.updateProps(edge, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
