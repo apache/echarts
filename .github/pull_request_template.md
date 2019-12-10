@@ -1,3 +1,7 @@
+<!-- Please fill in the following information to help us review your PR more efficiently. -->
+
+## Brief Information
+
 This pull request is in the type of:
 
 - [ ] bug fixing
@@ -8,7 +12,7 @@ This pull request is in the type of:
 
 ### What does this PR do?
 
-<!-- USE ONCE SENTENSE TO DESCRIBE WHAT THIS PR DOES. -->
+<!-- USE ONCE SENTENCE TO DESCRIBE WHAT THIS PR DOES. -->
 
 
 
@@ -16,6 +20,9 @@ This pull request is in the type of:
 
 - #xxxx: ...
 
+
+
+## Details
 
 ### Before: What was the problem?
 
@@ -33,10 +40,11 @@ This pull request is in the type of:
 
 
 
+## Usage
+
 ### Are there any API changes?
 
 - [ ] The API has been changed.
-- [x] The API has not been changed.
 
 <!-- LIST THE API CHANGES HERE -->
 
@@ -44,12 +52,14 @@ This pull request is in the type of:
 
 ### Related test cases or examples to use the new APIs
 
+NA.
 
+
+
+## Others
 
 ### Merging options
 
 - [ ] Please squash the commits into a single one when merge.
-
-
 
 ### Other information
