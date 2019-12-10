@@ -17,18 +17,21 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+const echarts = require('../../../../lib/echarts');
+const gridComponent = require('../../../../lib/component/grid');
+const timelineComponent = require('../../../../lib/component/timeline');
+const line = require('../../../../lib/chart/line');
+const bar = require('../../../../lib/chart/bar');
+const pie = require('../../../../lib/chart/pie');
+const utHelper = require('../../core/utHelper');
 
 describe('timelineOptions', function() {
 
-    var utHelper = window.utHelper;
+    var requireItems = [echarts, timelineComponent, gridComponent, line, bar, pie];
 
-    var testCase = utHelper.prepare([
-        'echarts/src/component/grid',
-        'echarts/src/chart/line',
-        'echarts/src/chart/pie',
-        'echarts/src/chart/bar',
-        'echarts/src/component/timeline'
-    ]);
+    var context = utHelper.genContext({
+        requireItems: requireItems
+    });
 
     function getData0(chart, seriesIndex) {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
@@ -38,7 +41,18 @@ describe('timelineOptions', function() {
         return chart.getModel().getComponent('series', seriesIndex);
     }
 
-    testCase.createChart()('timeline_setOptionOnceMore_baseOption', function () {
+    var chart = '';
+    var createResult = '';
+    beforeEach(function () {
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+    });
+
+    afterEach(function () {
+        utHelper.removeChart(createResult);
+    });
+
+    it('timeline_setOptionOnceMore_baseOption', function () {
         var option = {
             baseOption: {
                 timeline: {
@@ -64,7 +78,6 @@ describe('timelineOptions', function() {
                 }
             ]
         };
-        var chart = this.chart;
         chart.setOption(option);
 
         expect(getData0(chart, 0)).toEqual(11);
@@ -90,7 +103,7 @@ describe('timelineOptions', function() {
 
 
 
-    testCase.createChart()('timeline_setOptionOnceMore_substitudeTimelineOptions', function () {
+    it('timeline_setOptionOnceMore_substitudeTimelineOptions', function () {
         var option = {
             baseOption: {
                 timeline: {
@@ -123,7 +136,6 @@ describe('timelineOptions', function() {
                 }
             ]
         };
-        var chart = this.chart;
         chart.setOption(option);
 
         var ecModel = chart.getModel();

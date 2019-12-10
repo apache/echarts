@@ -17,19 +17,13 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
+const Source = require('../../../../lib/data/Source');
+const List = require('../../../../lib/data/List');
 describe('List', function () {
-
-    var utHelper = window.utHelper;
-
-    var testCase = utHelper.prepare([
-        'echarts/src/data/List',
-        'echarts/src/data/Source'
-    ]);
 
     describe('Data Manipulation', function () {
 
-        testCase('initData 1d', function (List) {
+        it('initData 1d', function () {
             var list = new List(['x', 'y']);
             list.initData([10, 20, 30]);
             expect(list.get('x', 0)).toEqual(10);
@@ -38,21 +32,21 @@ describe('List', function () {
             expect(list.get('y', 1)).toEqual(20);
         });
 
-        testCase('initData 2d', function (List) {
+        it('initData 2d', function () {
             var list = new List(['x', 'y']);
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.get('x', 1)).toEqual(20);
             expect(list.get('y', 1)).toEqual(25);
         });
 
-        testCase('initData 2d yx', function (List) {
+        it('initData 2d yx', function () {
             var list = new List(['y', 'x']);
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.get('x', 1)).toEqual(25);
             expect(list.get('y', 1)).toEqual(20);
         });
 
-        testCase('Data with option 1d', function (List) {
+        it('Data with option 1d', function () {
             var list = new List(['x', 'y']);
             list.initData([1, {
                 value: 2,
@@ -62,13 +56,13 @@ describe('List', function () {
             expect(list.getItemModel(0).get('somProp')).toBeNull();
         });
 
-        testCase('Empty data', function (List) {
+        it('Empty data', function () {
             var list = new List(['x', 'y']);
             list.initData([1, '-']);
             expect(list.get('y', 1)).toBeNaN();
         });
 
-        testCase('getRawValue', function (List) {
+        it('getRawValue', function () {
             var list1 = new List(['x', 'y']);
             // here construct a new list2 because if we only use one list
             // to call initData() twice, list._chunkCount will be accumulated
@@ -82,7 +76,7 @@ describe('List', function () {
             expect(list2.getItemModel(1).option).toEqual([20, 25]);
         });
 
-        testCase('indexOfRawIndex', function (List) {
+        it('indexOfRawIndex', function () {
             var list = new List(['x']);
             list.initData([]);
             expect(list.indexOfRawIndex(1)).toEqual(-1);
@@ -110,14 +104,14 @@ describe('List', function () {
             expect(list3.indexOfRawIndex(2)).toEqual(0);
         });
 
-        testCase('getDataExtent', function (List) {
+        it('getDataExtent', function () {
             var list = new List(['x', 'y']);
             list.initData([1, 2, 3]);
             expect(list.getDataExtent('x')).toEqual([1, 3]);
             expect(list.getDataExtent('y')).toEqual([1, 3]);
         });
 
-        testCase('Data types', function (List) {
+        it('Data types', function () {
             var list = new List([{
                 name: 'x',
                 type: 'int'
@@ -130,7 +124,7 @@ describe('List', function () {
             expect(list.get('y', 0)).toBeCloseTo(1.1, 5);
         });
 
-        testCase('map', function (List) {
+        it('map', function () {
             var list = new List(['x', 'y']);
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.map(['x', 'y'], function (x, y) {
@@ -140,7 +134,7 @@ describe('List', function () {
             })).toEqual([12, 22, 32]);
         });
 
-        testCase('mapArray', function (List) {
+        it('mapArray', function () {
             var list = new List(['x', 'y']);
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.mapArray(['x', 'y'], function (x, y) {
@@ -148,7 +142,7 @@ describe('List', function () {
             })).toEqual([[10, 15], [20, 25], [30, 35]]);
         });
 
-        testCase('filterSelf', function (List) {
+        it('filterSelf', function () {
             var list = new List(['x', 'y']);
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.filterSelf(['x', 'y'], function (x, y) {
@@ -158,7 +152,7 @@ describe('List', function () {
             })).toEqual([20]);
         });
 
-        testCase('dataProvider', function (List, Source) {
+        it('dataProvider', function () {
             var list = new List(['x', 'y']);
             var typedArray = new Float32Array([10, 10, 20, 20]);
             var source = Source.seriesDataToSource(typedArray);
@@ -182,7 +176,7 @@ describe('List', function () {
     });
 
     describe('Data read', function () {
-        testCase('indicesOfNearest', function (List) {
+        it('indicesOfNearest', function () {
             var list = new List(['value']);
             // ---- index: 0   1   2   3   4   5   6   7
             list.initData([10, 20, 30, 35, 40, 40, 35, 50]);

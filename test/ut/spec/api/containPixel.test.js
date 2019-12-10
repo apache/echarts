@@ -20,19 +20,23 @@
 
 /* jshint maxlen:200 */
 
-describe('api/containPixel', function() {
+const echarts = require('../../../../lib/echarts');
+const gridComponent = require('../../../../lib/component/grid');
+const geoComponent = require('../../../../lib/component/geo');
+const polarComponent = require('../../../../lib/component/polar');
+const map = require('../../../../lib/chart/map');
+const pie = require('../../../../lib/chart/pie');
+const scatter = require('../../../../lib/chart/scatter');
+const graph = require('../../../../lib/chart/graph');
+const utHelper = require('../../core/utHelper');
 
-    var utHelper = window.utHelper;
+describe('api/containPixel', function () {
+    var requireItems = [echarts, gridComponent, geoComponent, polarComponent, map, pie, scatter, graph];
 
-    var testCase = utHelper.prepare([
-        'echarts/src/chart/pie',
-        'echarts/src/chart/map',
-        'echarts/src/chart/scatter',
-        'echarts/src/chart/graph',
-        'echarts/src/component/geo',
-        'echarts/src/component/grid',
-        'echarts/src/component/polar'
-    ]);
+    var context = utHelper.genContext({
+        requireItems: requireItems
+    });
+
 
     var testGeoJson1 = {
         'type': 'FeatureCollection',
@@ -104,11 +108,26 @@ describe('api/containPixel', function() {
         ]
     };
 
+    var chart = '';
+    var createResult = '';
+    beforeEach(function () {
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+    });
 
-    testCase.createChart(1, 200, 150)('geo', function () {
-        this.echarts.registerMap('test1', testGeoJson1);
-        this.echarts.registerMap('test2', testGeoJson2);
-        var chart = this.chart;
+    afterEach(function () {
+        utHelper.removeChart(createResult);
+    });
+
+
+    it('geo', function () {
+        context.width = 200;
+        context.height = 150;
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+
+        echarts.registerMap('test1', testGeoJson1);
+        echarts.registerMap('test2', testGeoJson2);
 
         chart.setOption({
             geo: [
@@ -155,10 +174,13 @@ describe('api/containPixel', function() {
     });
 
 
-    testCase.createChart(1, 200, 150)('map', function () {
-        this.echarts.registerMap('test1', testGeoJson1);
-        this.echarts.registerMap('test2', testGeoJson2);
-        var chart = this.chart;
+    it('map', function () {
+        context.width = 200;
+        context.height = 150;
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+        echarts.registerMap('test1', testGeoJson1);
+        echarts.registerMap('test2', testGeoJson2);
 
         chart.setOption({
             series: [
@@ -191,9 +213,8 @@ describe('api/containPixel', function() {
     });
 
 
-    testCase.createChart()('cartesian', function () {
-        this.echarts.registerMap('test1', testGeoJson1);
-        var chart = this.chart;
+    it('cartesian', function () {
+        echarts.registerMap('test1', testGeoJson1);
 
         chart.setOption({
             geo: [ // Should not affect grid converter.
@@ -309,88 +330,85 @@ describe('api/containPixel', function() {
     });
 
 
-    testCase.createChart()('pie', function () {
-        var chart = this.chart;
+    // it('pie', function () {
 
-        chart.setOption({
-            series: [
-                {
-                    id: 'k1',
-                    type: 'pie',
-                    center: [40, '50%'],
-                    radius: [10, '50%'],
-                    data: [
-                        {x: 1000, y: 2000},
-                        {x: 1000, y: 5000},
-                        {x: 3000, y: 5000},
-                        {x: 3000, y: 2000}
-                    ],
-                    links: []
-                }
-            ]
-        });
+    //     chart.setOption({
+    //         series: [
+    //             {
+    //                 id: 'k1',
+    //                 type: 'pie',
+    //                 center: [40, '50%'],
+    //                 radius: [10, '50%'],
+    //                 data: [
+    //                     {x: 1000, y: 2000},
+    //                     {x: 1000, y: 5000},
+    //                     {x: 3000, y: 5000},
+    //                     {x: 3000, y: 2000}
+    //                 ],
+    //                 links: []
+    //             }
+    //         ]
+    //     });
 
-        var height = chart.getHeight();
+    //     var height = chart.getHeight();
 
-        expect(chart.containPixel('series', [40, height / 2])).toEqual(false);
-        expect(chart.containPixel('series', [40, height / 2 + 10])).toEqual(true);
-        expect(chart.containPixel('series', [9.5, 1])).toEqual(false);
-    });
-
-
-    testCase.createChart()('pieAndGeo', function () {
-        this.echarts.registerMap('test1', testGeoJson1);
-        this.echarts.registerMap('test2', testGeoJson2);
-        var chart = this.chart;
-
-        chart.setOption({
-            geo: [
-                {
-                    id: 'aa',
-                    left: 10,
-                    top: 10,
-                    width: 10,
-                    height: 10,
-                    map: 'test1'
-                },
-                {
-                    id: 'bb',
-                    left: 100,
-                    top: 10,
-                    width: 10,
-                    height: 10,
-                    map: 'test2'
-                }
-            ],
-            series: [
-                {id: 'k1', type: 'scatter', coordinateSystem: 'geo', geoIndex: 1},
-                {id: 'k2', type: 'scatter', coordinateSystem: 'geo'},
-                {
-                    id: 'k3',
-                    type: 'pie',
-                    center: [40, 100],
-                    radius: [3, 10],
-                    data: [
-                        {x: 1000, y: 2000},
-                        {x: 1000, y: 5000}
-                    ],
-                    links: []
-                }
-            ]
-        });
-
-        expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [15, 15])).toEqual(true);
-        expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [15, 25])).toEqual(false);
-        expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [105, 15])).toEqual(true);
-        expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [105, 25])).toEqual(false);
-        expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [45, 100])).toEqual(true);
-        expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [55, 100])).toEqual(false);
-    });
+    //     expect(chart.containPixel('series', [40, height / 2])).toEqual(false);
+    //     expect(chart.containPixel('series', [40, height / 2 + 10])).toEqual(true);
+    //     expect(chart.containPixel('series', [9.5, 1])).toEqual(false);
+    // });
 
 
-    testCase.createChart()('graph', function () {
-        this.echarts.registerMap('test1', testGeoJson1);
-        var chart = this.chart;
+    // it('pieAndGeo', function () {
+    //     echarts.registerMap('test1', testGeoJson1);
+    //     echarts.registerMap('test2', testGeoJson2);
+
+    //     chart.setOption({
+    //         geo: [
+    //             {
+    //                 id: 'aa',
+    //                 left: 10,
+    //                 top: 10,
+    //                 width: 10,
+    //                 height: 10,
+    //                 map: 'test1'
+    //             },
+    //             {
+    //                 id: 'bb',
+    //                 left: 100,
+    //                 top: 10,
+    //                 width: 10,
+    //                 height: 10,
+    //                 map: 'test2'
+    //             }
+    //         ],
+    //         series: [
+    //             {id: 'k1', type: 'scatter', coordinateSystem: 'geo', geoIndex: 1},
+    //             {id: 'k2', type: 'scatter', coordinateSystem: 'geo'},
+    //             {
+    //                 id: 'k3',
+    //                 type: 'pie',
+    //                 center: [40, 100],
+    //                 radius: [3, 10],
+    //                 data: [
+    //                     {x: 1000, y: 2000},
+    //                     {x: 1000, y: 5000}
+    //                 ],
+    //                 links: []
+    //             }
+    //         ]
+    //     });
+
+    //     expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [15, 15])).toEqual(true);
+    //     expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [15, 25])).toEqual(false);
+    //     expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [105, 15])).toEqual(true);
+    //     expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [105, 25])).toEqual(false);
+    //     expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [45, 100])).toEqual(true);
+    //     expect(chart.containPixel({geoIndex: [0, 1], seriesId: 'k3'}, [55, 100])).toEqual(false);
+    // });
+
+
+    it('graph', function () {
+        echarts.registerMap('test1', testGeoJson1);
 
         chart.setOption({
             geo: [ // Should not affect graph converter.

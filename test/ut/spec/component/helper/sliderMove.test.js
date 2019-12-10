@@ -17,16 +17,12 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
+const sliderMove = require('../../../../../lib/component/helper/sliderMove');
 describe('component/helper/sliderMove', function () {
-
-    var utHelper = window.utHelper;
-
-    var testCase = utHelper.prepare(['echarts/src/component/helper/sliderMove']);
 
     describe('sliderMove', function () {
 
-        testCase('normalize', function (sliderMove) {
+        it('normalize', function () {
             // Return input handleEnds
             var inputHandleEnds = [22, 50];
             var outputHandleEnds = sliderMove(0, inputHandleEnds, [20, 50], 0);
@@ -60,7 +56,7 @@ describe('component/helper/sliderMove', function () {
             expect(sliderMove(0, [-10, 14], [1, 101], 'all', 10, 55)).toEqual([1, 25]);
         });
 
-        testCase('rigid_move', function (sliderMove) {
+        it('rigid_move', function () {
 
             expect(sliderMove(2, [20, 30], [10, 50], 'all')).toEqual([22, 32]);
             expect(sliderMove(200, [20, 30], [10, 50], 'all')).toEqual([40, 50]);
@@ -69,7 +65,7 @@ describe('component/helper/sliderMove', function () {
 
         });
 
-        testCase('cross', function (sliderMove) {
+        it('cross', function () {
 
             expect(sliderMove(2, [20, 25], [10, 50], 0)).toEqual([22, 25]);
             expect(sliderMove(200, [20, 25], [10, 50], 0)).toEqual([50, 25]);
@@ -83,7 +79,7 @@ describe('component/helper/sliderMove', function () {
 
         });
 
-        testCase('minSpan_push', function (sliderMove) {
+        it('minSpan_push', function () {
 
             expect(sliderMove(1, [20, 25], [10, 50], 0, 3)).toEqual([21, 25]);
             expect(sliderMove(4, [20, 25], [10, 50], 0, 3)).toEqual([24, 27]);
@@ -104,7 +100,7 @@ describe('component/helper/sliderMove', function () {
             expect(sliderMove(-5, [20, 20], [10, 50], 1, 0)).toEqual([15, 15]);
         });
 
-        testCase('maxSpan_pull', function (sliderMove) {
+        it('maxSpan_pull', function () {
 
             expect(sliderMove(-8, [20, 25], [10, 50], 0, null, 4)).toEqual([12, 16]);
             expect(sliderMove(14, [20, 25], [10, 50], 0, null, 4)).toEqual([34, 30]);

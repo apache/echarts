@@ -17,19 +17,11 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
+const completeDimensions = require('../../../../lib/data/helper/completeDimensions');
+const Source = require('../../../../lib/data/Source');
+const sourceType = require('../../../../lib/data/helper/sourceType');
 
 describe('completeDimensions', function () {
-
-    var utHelper = window.utHelper;
-
-    var testCase = utHelper.prepare([
-        'echarts/src/data/helper/completeDimensions',
-        'echarts/src/data/Source',
-        'echarts/src/data/helper/sourceType',
-    ]);
-
-
 
     function doCompleteDimensions(completeDimensions, sysDims, data, opt) {
         var result = completeDimensions(sysDims, data, opt);
@@ -44,7 +36,7 @@ describe('completeDimensions', function () {
         return result;
     }
 
-    testCase('namesMoreThanDimCount', function (completeDimensions, Source, sourceType) {
+    it('namesMoreThanDimCount', function () {
         var sysDims = [
             {
                 'name': 'x',
@@ -252,7 +244,7 @@ describe('completeDimensions', function () {
     });
 
 
-    testCase('differentData', function (completeDimensions) {
+    it('differentData', function () {
         function doTest(sysDims, data, opt, result) {
             expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
         }
@@ -379,7 +371,7 @@ describe('completeDimensions', function () {
 
 
 
-    testCase('differentSysDims', function (completeDimensions) {
+    it('differentSysDims', function () {
         function doTest(sysDims, data, opt, result) {
             expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
         }
@@ -587,7 +579,7 @@ describe('completeDimensions', function () {
 
 
 
-    testCase('dimsDef', function (completeDimensions) {
+    it('dimsDef', function () {
         function doTest(sysDims, data, opt, result) {
             expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
         }
@@ -683,7 +675,7 @@ describe('completeDimensions', function () {
 
 
 
-    testCase('encodeDef', function (completeDimensions) {
+    it('encodeDef', function () {
         function doTest(sysDims, data, opt, result) {
             expect(doCompleteDimensions(completeDimensions, sysDims, data, opt)).toEqual(result);
         }

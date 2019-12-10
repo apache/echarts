@@ -17,19 +17,32 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+const echarts = require('../../../../../lib/echarts');
+const gridComponent = require('../../../../../lib/component/grid');
+const scatter = require('../../../../../lib/chart/scatter');
+const visualMap = require('../../../../../lib/component/visualMap');
+const utHelper = require('../../../core/utHelper');
 
-describe('vsiaulMap_setOption', function() {
+describe('vsiaulMap_setOption', function () {
+    var requireItems = [echarts, gridComponent, scatter, visualMap];
 
-    var utHelper = window.utHelper;
+    var context = utHelper.genContext({
+        requireItems: requireItems
+    });
 
-    var testCase = utHelper.prepare([
-        'echarts/src/component/grid',
-        'echarts/src/chart/scatter',
-        'echarts/src/component/visualMap'
-    ]);
+    var chart = '';
+    var createResult = '';
+    beforeEach(function () {
+        createResult = utHelper.createChart(context, echarts);
+        chart = createResult.charts[0];
+    });
 
-    testCase.createChart()('defaultTargetController', function () {
-        this.chart.setOption({
+    afterEach(function () {
+        utHelper.removeChart(createResult);
+    });
+
+    it('defaultTargetController', function (done) {
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -40,16 +53,17 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
         expect(option.visualMap[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
         expect(option.visualMap[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
         expect(option.visualMap[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        done();
     });
 
-    testCase.createChart()('ec2ColorCompatiable', function () {
-        this.chart.setOption({
+    it('ec2ColorCompatiable', function (done) {
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -58,16 +72,17 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
         expect(option.visualMap[0].color).toEqual(['yellow', 'blue', 'red']);
         expect(option.visualMap[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
         expect(option.visualMap[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
+        done();
     });
 
-    testCase.createChart()('remainVisualProp', function () {
-        this.chart.setOption({
+    it('remainVisualProp', function (done) {
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -78,28 +93,29 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        this.chart.setOption({
+        chart.setOption({
             visualMap: {}
         });
 
-        expectTheSame(this.chart.getOption());
+        expectTheSame(chart.getOption());
 
-        this.chart.setOption({
+        chart.setOption({
             series: [{data: [[44, 55]]}] // visualMap depends series
         });
 
-        expectTheSame(this.chart.getOption());
+        expectTheSame(chart.getOption());
 
         function expectTheSame(option) {
             expect(option.visualMap.length).toEqual(1);
             expect(option.visualMap[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
             expect(option.visualMap[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
             expect(option.visualMap[0].controller.inRange.color).toEqual(['red', 'blue', 'yellow']);
+            done();
         }
     });
 
-    testCase.createChart()('eraseAllVisualProps_notRelative', function () {
-        this.chart.setOption({
+    it('eraseAllVisualProps_notRelative', function (done) {
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -111,9 +127,9 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
-        this.chart.setOption({
+        chart.setOption({
             visualMap: {
                 inRange: {
                     symbolSize: [0.4, 0.6]
@@ -121,7 +137,7 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
         expect(option.visualMap[0].inRange.hasOwnProperty('color')).toEqual(false);
@@ -129,12 +145,13 @@ describe('vsiaulMap_setOption', function() {
         expect(option.visualMap[0].controller.inRange.hasOwnProperty('color')).toEqual(false);
         expect(option.visualMap[0].inRange.symbolSize).toEqual([0.4, 0.6]);
         expect(option.visualMap[0].target.inRange.symbolSize).toEqual([0.4, 0.6]);
+        done();
         // Do not compare controller.inRange.symbolSize, which will be amplified to controller size.
         // expect(option.visualMap[0].controller.inRange.symbolSize).toEqual([?, ?]);
     });
 
-    testCase.createChart()('eraseAllVisualProps_reletive', function () {
-        this.chart.setOption({
+    it('eraseAllVisualProps_reletive', function (done) {
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -146,7 +163,7 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        this.chart.setOption({
+        chart.setOption({
             visualMap: {
                 inRange: {
                     colorAlpha: [0.4, 0.6]
@@ -154,7 +171,7 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
         expect(option.visualMap[0].inRange.hasOwnProperty('color')).toEqual(false);
@@ -164,13 +181,13 @@ describe('vsiaulMap_setOption', function() {
         expect(option.visualMap[0].target.inRange.colorAlpha).toEqual([0.4, 0.6]);
         expect(option.visualMap[0].controller.inRange.colorAlpha).toEqual([0.4, 0.6]);
 
-        this.chart.setOption({
+        chart.setOption({
             visualMap: {
                 color: ['red', 'blue', 'green']
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
         expect(option.visualMap[0].target.inRange.hasOwnProperty('colorAlpha')).toEqual(false);
@@ -178,7 +195,7 @@ describe('vsiaulMap_setOption', function() {
         expect(option.visualMap[0].target.inRange.color).toEqual(['green', 'blue', 'red']);
         expect(option.visualMap[0].controller.inRange.color).toEqual(['green', 'blue', 'red']);
 
-        this.chart.setOption({
+        chart.setOption({
             visualMap: {
                 controller: {
                     outOfRange: {
@@ -188,7 +205,7 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(option.visualMap.length).toEqual(1);
         expect(!!option.visualMap[0].target.inRange).toEqual(true);
@@ -202,10 +219,11 @@ describe('vsiaulMap_setOption', function() {
         expect(onlyColor).toEqual(true);
         expect(inRangeColor).toEqual(['#f6efa6', '#d88273', '#bf444c']);
         expect(option.visualMap[0].controller.outOfRange.symbol).toEqual(['diamond']);
+        done();
     });
 
-    testCase.createChart()('setOpacityWhenUseColor', function () {
-        this.chart.setOption({
+    it('setOpacityWhenUseColor', function (done) {
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -216,13 +234,16 @@ describe('vsiaulMap_setOption', function() {
             }
         });
 
-        var option = this.chart.getOption();
+        var option = chart.getOption();
 
         expect(!!option.visualMap[0].target.outOfRange.opacity).toEqual(true);
+        done();
     });
 
-    testCase.createChart(2)('normalizeVisualRange', function () {
-        this.charts[0].setOption({
+    it('normalizeVisualRange', function (done) {
+        createResult = utHelper.createChart(context, echarts, 2);
+        var charts = createResult.charts;
+        charts[0].setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -238,7 +259,7 @@ describe('vsiaulMap_setOption', function() {
             ]
         });
 
-        var ecModel = this.charts[0].getModel();
+        var ecModel = charts[0].getModel();
 
         function getVisual(idx, visualType) {
             return ecModel.getComponent('visualMap', idx)
@@ -265,6 +286,7 @@ describe('vsiaulMap_setOption', function() {
         expect(getVisual(5, 'color')).toEqual(makeCategoryVisual('red'));
         expect(getVisual(6, 'color')).toEqual(makeCategoryVisual(null, 'red'));
         expect(getVisual(7, 'opacity')).toEqual(makeCategoryVisual(0.4));
+        done();
     });
 
 });
