@@ -16,10 +16,11 @@ This pull request is in the type of:
 
 
 
-### Related issues
+### Fixed issues
 
+<!--
 - #xxxx: ...
-
+-->
 
 
 ## Details
