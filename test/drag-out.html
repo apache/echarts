@@ -44,7 +44,7 @@ under the License.
                 position: fixed;
                 right: 5px;
                 top: 5px;
-                width: 120px;
+                width: 140px;
                 height: 120px;
                 box-shadow: 0 0 5px #fff;
                 border: 2px solid green;
@@ -72,9 +72,90 @@ under the License.
             <div id="live-info-content"></div>
         </div>
 
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
         <div id="parent-of-main0">
             <div id="main0"></div>
         </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
         <div id="main1"></div>
         <div id="main2"></div>
 
@@ -84,16 +165,20 @@ under the License.
         <script>
             var _liveInfoPanel = document.getElementById('live-info-panel');
             var _liveInfoContent = document.getElementById('live-info-content');;
+            var _liveMsg = [];
             function _printLiveInfo(msg) {
-                _liveInfoContent.innerHTML = testHelper.encodeHTML(msg).replace(/\n/g, '<br>');
+                _liveMsg.push(testHelper.encodeHTML(msg));
+                _liveMsg = _liveMsg.slice(Math.max(0, _liveMsg.length - 9));
+                _liveInfoContent.innerHTML = _liveMsg.join('<br>');
             }
             function _printEvent(event) {
-                _printLiveInfo([
-                    'type: ' + event.type,
-                    'x: ' + event.offsetX,
-                    'y: ' + event.offsetY,
-                    'isFromLocal: ' + !!event.zrIsFromLocal
-                ].join('\n'));
+                var x = event.offsetX;
+                var y = event.offsetY;
+                x = x != null ? x.toFixed(1) : '-';
+                y = y != null ? y.toFixed(1) : '-';
+                _printLiveInfo(
+                    event.type + ' [' + x + ',' + x + ']'
+                );
             }
         </script>
 
@@ -110,6 +195,11 @@ under the License.
                 xAxis: {},
                 yAxis: {},
                 brush: {},
+                tooltip: {
+                    enterable: true,
+                    alwaysShowContent: true,
+                    position: [10, 10]
+                },
                 series: {
                     type: 'line',
                     data: [[11, 22]]
@@ -120,32 +210,18 @@ under the License.
                 title: [
                     '[ Test this case in **PC** / **Touch device** / **WeApp(no document)** ]',
                     '(1) Before anything clicked, **mousemove** / **click** on both inside and outside echarts.',
-                    '**Live Info Panel** should have nothing.',
-                    '(2) Click "mount page event listeners"',
-                    '**mousemove** / **click** on both inside and outside echarts.',
-                    '**Live Info Panel** should display mouse **xy** and **isFromLocal** correctly.',
+                    '**Live Info Panel** should have mouse events.',
+                    '(2) **mousemove** / **click** on both inside and outside echarts.',
+                    '**Live Info Panel** should display mouse **xy** correctly.',
+                    'drag outside and release, "globalout" event should be displayed fianly (only PC)',
                     '(3) Click "add stopPropagation on parent"',
-                    'Move outside echarts, **Live Info Panel** should have nothing changed.',
-                    'Move inside echarts, **Live Info Panel** should have page event.'
+                    'drag outside should be as usual.',
+                    'Move inside and outside echarts, **Live Info Panel** should have mouse event.'
                 ],
                 option: option,
                 width: 300,
                 height: 200,
                 buttons: [{
-                    text: 'mount page event listeners',
-                    onclick: function () {
-                        if (mounted) {
-                            return;
-                        }
-                        mounted = true;
-                        zr.on('pagemousemove', function (event) {
-                            _printEvent(event)
-                        });
-                        zr.on('pagemouseup', function (event) {
-                            _printEvent(event)
-                        });
-                    }
-                }, {
                     text: 'add stopPropagation on parent',
                     onclick: function () {
                         var parent = document.getElementById('parent-of-main0');
@@ -160,6 +236,15 @@ under the License.
             var mounted;
             if (chart) {
                 zr = chart.getZr();
+                zr.on('mousemove', function (event) {
+                    _printEvent(event)
+                });
+                zr.on('mouseup', function (event) {
+                    _printEvent(event)
+                });
+                zr.on('globalout', function (event) {
+                    _printEvent(event)
+                });
             }
         });
         </script>
