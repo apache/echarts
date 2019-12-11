@@ -19,27 +19,14 @@
 */
 
 /* jshint maxlen:200 */
-const echarts = require('../../../../lib/echarts');
-const gridComponent = require('../../../../lib/component/grid');
-const geoComponent = require('../../../../lib/component/geo');
-const map = require('../../../../lib/chart/map');
-const scatter = require('../../../../lib/chart/scatter');
-const graph = require('../../../../lib/chart/graph');
-const utHelper = require('../../core/utHelper');
+var utHelper = require('../../core/utHelper');
+var echarts = require('../../../../index');
 
 describe('api/converter', function () {
-
-    var requireItems = [echarts, gridComponent, geoComponent, map, scatter, graph];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
-
 
     var DELTA = 1E-3;
 
     function pointEquals(p1, p2) {
-        console.log(p1, p2);
         if (p1 instanceof Array && p2 instanceof Array) {
             return Math.abs(p1[0] - p2[0]) < DELTA && Math.abs(p1[1] - p2[1]) < DELTA;
         }
@@ -117,23 +104,21 @@ describe('api/converter', function () {
             }
         ]
     };
+    echarts.registerMap('converter_test_geo_1', testGeoJson1);
+    echarts.registerMap('converter_test_geo_2', testGeoJson2);
 
-    var chart = '';
-    var createResult = '';
+    var chart;
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = utHelper.createChart();
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        chart.dispose();
     });
 
 
     it('geo', function () {
-        echarts.registerMap('test1', testGeoJson1);
-        echarts.registerMap('test2', testGeoJson2);
-
+        // TODO Needs namespace
         chart.setOption({
             geo: [
                 {
@@ -142,7 +127,7 @@ describe('api/converter', function () {
                     right: 20,
                     top: 30,
                     bottom: 40,
-                    map: 'test1'
+                    map: 'converter_test_geo_1'
                 },
                 {
                     id: 'bb',
@@ -150,7 +135,7 @@ describe('api/converter', function () {
                     right: 20,
                     top: 30,
                     bottom: 40,
-                    map: 'test2'
+                    map: 'converter_test_geo_2'
                 }
             ],
             series: [
@@ -159,7 +144,7 @@ describe('api/converter', function () {
                 { // Should not be affected by map.
                     id: 'm1',
                     type: 'map',
-                    map: 'test1',
+                    map: 'converter_test_geo_1',
                     left: 10,
                     right: 20,
                     top: 30,
@@ -189,9 +174,6 @@ describe('api/converter', function () {
 
 
     it('map', function () {
-        echarts.registerMap('test1', testGeoJson1);
-        echarts.registerMap('test2', testGeoJson2);
-
         chart.setOption({
             geo: [ // Should not be affected by geo
                 {
@@ -200,14 +182,14 @@ describe('api/converter', function () {
                     right: 20,
                     top: 30,
                     bottom: 40,
-                    map: 'test1'
+                    map: 'converter_test_geo_1'
                 }
             ],
             series: [
                 {
                     id: 'k1',
                     type: 'map',
-                    map: 'test1',
+                    map: 'converter_test_geo_1',
                     left: 10,
                     right: 20,
                     top: 30,
@@ -216,7 +198,7 @@ describe('api/converter', function () {
                 {
                     id: 'k2',
                     type: 'map',
-                    map: 'test2',
+                    map: 'converter_test_geo_2',
                     left: 10,
                     right: 20,
                     top: 30,
@@ -234,12 +216,11 @@ describe('api/converter', function () {
 
 
     it('cartesian', function () {
-        echarts.registerMap('test1', testGeoJson1);
 
         chart.setOption({
             geo: [ // Should not affect grid converter.
                 {
-                    map: 'test1'
+                    map: 'converter_test_geo_1'
                 }
             ],
             grid: [
@@ -365,12 +346,10 @@ describe('api/converter', function () {
 
 
     it('graph', function () {
-        echarts.registerMap('test1', testGeoJson1);
-
         chart.setOption({
             geo: [ // Should not affect graph converter.
                 {
-                    map: 'test1'
+                    map: 'converter_test_geo_1'
                 }
             ],
             series: [

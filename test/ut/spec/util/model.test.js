@@ -20,13 +20,13 @@
 
 const modelUtil = require('../../../../lib/util/model');
 
-describe('util/model', function() {
+describe('util/model', function () {
 
 
     describe('compressBatches', function () {
 
         function item(seriesId, dataIndex) {
-            return {seriesId: seriesId, dataIndex: dataIndex};
+            return {seriesId, dataIndex};
         }
 
         it('base', function () {

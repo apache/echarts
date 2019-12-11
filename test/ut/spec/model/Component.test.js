@@ -19,7 +19,7 @@
 */
 const ComponentModel = require('../../../../lib/model/Component');
 
-describe('Component', function() {
+describe('Component', function () {
 
 
     describe('topologicalTravel', function () {

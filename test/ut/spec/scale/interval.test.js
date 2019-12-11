@@ -18,30 +18,19 @@
 * under the License.
 */
 
-const echarts = require('../../../../lib/echarts');
 const scaleHelper = require('../../../../lib/scale/helper');
 const numberUtil = require('../../../../lib/util/number');
-const gridComponent = require('../../../../lib/component/grid');
-const line = require('../../../../lib/chart/line');
-const bar = require('../../../../lib/chart/bar');
+const IntervalScale = require('../../../../lib/scale/Interval');
 const utHelper = require('../../core/utHelper');
 
-describe('scale_interval', function() {
-    var requireItems = [echarts, scaleHelper, numberUtil, gridComponent, line, bar];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
-
-    var chart = '';
-    var createResult = '';
+describe('scale_interval', function () {
+    var chart;
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = utHelper.createChart();
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        chart.dispose();
     });
 
 
@@ -121,17 +110,8 @@ describe('scale_interval', function() {
 
     describe('ticks', function () {
 
-        // testCase.createChart()('randomCover', function (scaleHelper) {
-        //     doRandomTest(scaleHelper, 10, 5);
-        // });
-
         function randomNumber(quantity) {
             return (Math.random() - 0.5) * Math.pow(10, (Math.random() - 0.5) * quantity);
-        }
-
-        function check(cond) {
-            expect(cond).toEqual(true);
-            return +cond;
         }
 
         function doSingleTest(extent, splitNumber) {
@@ -140,38 +120,35 @@ describe('scale_interval', function() {
             var interval = result.interval;
             var niceTickExtent = result.niceTickExtent;
 
-            var fails = [];
+            expect(interval).toBeFinite();
+            expect(intervalPrecision).toBeFinite();
+            expect(niceTickExtent[0]).toBeFinite();
+            expect(niceTickExtent[1]).toBeFinite();
 
-            !check(utHelper.isValueFinite(interval)) && fails.push(0);
-            !check(utHelper.isValueFinite(intervalPrecision)) && fails.push(1);
-            !check(utHelper.isValueFinite(niceTickExtent[0])) && fails.push(2);
-            !check(utHelper.isValueFinite(niceTickExtent[1])) && fails.push(3);
-            !check(niceTickExtent[0] >= extent[0]) && fails.push(4);
-            !check(niceTickExtent[1] <= extent[1]) && fails.push(5);
-            !check(niceTickExtent[1] >= niceTickExtent[0]) && fails.push(6);
+            expect(niceTickExtent[0]).toBeGeaterThanOrEqualTo(extent[0]);
+            expect(niceTickExtent[1]).not.toBeGreaterThan(extent[1]);
+            expect(niceTickExtent[1]).toBeGeaterThanOrEqualTo(niceTickExtent[1]);
 
-            var ticks = scaleHelper.intervalScaleGetTicks(interval, extent, niceTickExtent, intervalPrecision);
-            !check(ticks.length > 0) && fails.push(7);
-            !check(ticks[0] === extent[0] && ticks[ticks.length - 1] === extent[1]) && fails.push(8);
+            var interval = new IntervalScale();
+            interval.setExtent(extent[0], extent[1]);
+            interval.niceExtent({
+                fixMin: true,
+                fixMax: true,
+                splitNumber
+            });
+            var ticks = interval.getTicks();
 
-            var ticksOK = 1;
+            expect(ticks).not.toBeEmptyArray();
+            expect(ticks[0]).toEqual(extent[0]);
+            expect(ticks[ticks.length - 1]).toEqual(extent[1]);
+
             for (var i = 1; i < ticks.length; i++) {
-                ticksOK &= check(ticks[i - 1] < ticks[i]);
+                expect(ticks[i - 1]).not.toBeGeaterThanOrEqualTo(ticks[i]);
+
                 if (ticks[i] !== extent[0] && ticks[i] !== extent[1]) {
                     var tickPrecision = numberUtil.getPrecisionSafe(ticks[i]);
-                    ticksOK &= check(tickPrecision <= intervalPrecision);
+                    expect(tickPrecision).not.toBeGreaterThan(intervalPrecision);
                 }
-            }
-            !ticksOK && fails.push(9);
-
-            // check precision rounding error ????????????
-
-            if (fails.length) {
-                print(
-                    'FAIL:[' + fails
-                    + ']  extent:[' + extent + '] niceTickExtent:[' + niceTickExtent + '] ticks:['
-                    + ticks + '] '
-                );
             }
         }
 

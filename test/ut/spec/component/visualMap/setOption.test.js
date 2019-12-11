@@ -17,28 +17,16 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const echarts = require('../../../../../lib/echarts');
-const gridComponent = require('../../../../../lib/component/grid');
-const scatter = require('../../../../../lib/chart/scatter');
-const visualMap = require('../../../../../lib/component/visualMap');
 const utHelper = require('../../../core/utHelper');
 
 describe('vsiaulMap_setOption', function () {
-    var requireItems = [echarts, gridComponent, scatter, visualMap];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
-
-    var chart = '';
-    var createResult = '';
+    var chart;
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = utHelper.createChart();
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        chart.dispose();
     });
 
     it('defaultTargetController', function (done) {
@@ -241,9 +229,7 @@ describe('vsiaulMap_setOption', function () {
     });
 
     it('normalizeVisualRange', function (done) {
-        createResult = utHelper.createChart(context, echarts, 2);
-        var charts = createResult.charts;
-        charts[0].setOption({
+        chart.setOption({
             xAxis: {},
             yAxis: {},
             series: [{type: 'scatter', data: [[12, 223]]}],
@@ -259,7 +245,7 @@ describe('vsiaulMap_setOption', function () {
             ]
         });
 
-        var ecModel = charts[0].getModel();
+        var ecModel = chart.getModel();
 
         function getVisual(idx, visualType) {
             return ecModel.getComponent('visualMap', idx)

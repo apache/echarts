@@ -27,6 +27,9 @@ module.exports = {
         'jest-canvas-mock',
         '<rootDir>/test/ut/core/setup.js'
     ],
+    setupFilesAfterEnv: [
+        '<rootDir>/test/ut/core/extendExpect.js'
+    ],
     testMatch: [
         '**/spec/api/*.test.js',
         '**/spec/component/**/*.test.js',

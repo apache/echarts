@@ -17,22 +17,9 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const echarts = require('../../../../lib/echarts');
-const gridComponent = require('../../../../lib/component/grid');
-const timelineComponent = require('../../../../lib/component/timeline');
-const line = require('../../../../lib/chart/line');
-const bar = require('../../../../lib/chart/bar');
-const pie = require('../../../../lib/chart/pie');
 const utHelper = require('../../core/utHelper');
 
-describe('timelineOptions', function() {
-
-    var requireItems = [echarts, timelineComponent, gridComponent, line, bar, pie];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
-
+describe('timelineOptions', function () {
     function getData0(chart, seriesIndex) {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
     }
@@ -41,15 +28,13 @@ describe('timelineOptions', function() {
         return chart.getModel().getComponent('series', seriesIndex);
     }
 
-    var chart = '';
-    var createResult = '';
+    var chart;
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = utHelper.createChart();
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        chart.dispose();
     });
 
     it('timeline_setOptionOnceMore_baseOption', function () {
