@@ -232,37 +232,38 @@ describe('util/number', function () {
             expect(+numberUtil.parseDate(1330819200000.01)).toEqual(1330819200000);
 
             // ISO string
-            expect(+numberUtil.parseDate('2012-03')).toEqual(1330531200000);
-            expect(+numberUtil.parseDate('2012-03-04')).toEqual(1330790400000);
-            expect(+numberUtil.parseDate('2012-03-04 05')).toEqual(1330808400000);
-            expect(+numberUtil.parseDate('2012-03-04T05')).toEqual(1330808400000);
-            expect(+numberUtil.parseDate('2012-03-04 05:06')).toEqual(1330808760000);
-            expect(+numberUtil.parseDate('2012-03-04T05:06')).toEqual(1330808760000);
-            expect(+numberUtil.parseDate('2012-03-04 05:06:07')).toEqual(1330808767000);
-            expect(+numberUtil.parseDate('2012-03-04T05:06:07')).toEqual(1330808767000);
-            expect(+numberUtil.parseDate('2012-03-04T05:06:07.123')).toEqual(1330808767123);
-            expect(+numberUtil.parseDate('2012-03-04T05:06:07,123')).toEqual(1330808767123);
-            expect(+numberUtil.parseDate('2012-03-04T05:06:07.12')).toEqual(1330808767012);
-            expect(+numberUtil.parseDate('2012-03-04T05:06:07.1')).toEqual(1330808767001);
-            expect(+numberUtil.parseDate('2012-03-04T05:06:07,123Z')).toEqual(1330837567123);
+            expect(+numberUtil.parseDate('2012-03')).toEqual(+new Date('2012-03-01T00:00:00'));
+            expect(+numberUtil.parseDate('2012-03-04')).toEqual(+new Date('2012-03-04T00:00:00'));
+            expect(+numberUtil.parseDate('2012-03-04 05')).toEqual(+new Date('2012-03-04T05:00:00'));
+            expect(+numberUtil.parseDate('2012-03-04T05')).toEqual(+new Date('2012-03-04T05:00:00'));
+            expect(+numberUtil.parseDate('2012-03-04 05:06')).toEqual(+new Date('2012-03-04T05:06:00'));
+            expect(+numberUtil.parseDate('2012-03-04T05:06')).toEqual(+new Date('2012-03-04T05:06:00'));
+            expect(+numberUtil.parseDate('2012-03-04 05:06:07')).toEqual(+new Date('2012-03-04T05:06:07'));
+            expect(+numberUtil.parseDate('2012-03-04T05:06:07')).toEqual(+new Date('2012-03-04T05:06:07'));
+            expect(+numberUtil.parseDate('2012-03-04T05:06:07.123')).toEqual(+new Date('2012-03-04T05:06:07.123'));
+            expect(+numberUtil.parseDate('2012-03-04T05:06:07,123')).toEqual(+new Date('2012-03-04T05:06:07.123'));
+            // TODO new Date('2012-03-04T05:06:07.12') is same to '2012-03-04T05:06:07.120', not '2012-03-04T05:06:07.012'
+            expect(+numberUtil.parseDate('2012-03-04T05:06:07.12')).toEqual(+new Date('2012-03-04T05:06:07.012'));
+            expect(+numberUtil.parseDate('2012-03-04T05:06:07.1')).toEqual(+new Date('2012-03-04T05:06:07.001'));
+            expect(+numberUtil.parseDate('2012-03-04T05:06:07,123Z')).toEqual(+new Date('2012-03-04T05:06:07.123Z'));
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123+0800')).toEqual(1330808767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123+08:00')).toEqual(1330808767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123-0700')).toEqual(1330862767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123-07:00')).toEqual(1330862767123);
 
             // Other string
-            expect(+numberUtil.parseDate('2012')).toEqual(1325347200000);
-            expect(+numberUtil.parseDate('2012/03')).toEqual(1330531200000);
-            expect(+numberUtil.parseDate('2012/03/04')).toEqual(1330790400000);
-            expect(+numberUtil.parseDate('2012-3-4')).toEqual(1330790400000);
-            expect(+numberUtil.parseDate('2012/3')).toEqual(1330531200000);
-            expect(+numberUtil.parseDate('2012/3/4')).toEqual(1330790400000);
-            expect(+numberUtil.parseDate('2012/3/4 2:05')).toEqual(1330797900000);
-            expect(+numberUtil.parseDate('2012/03/04 2:05')).toEqual(1330797900000);
-            expect(+numberUtil.parseDate('2012/3/4 2:05:08')).toEqual(1330797908000);
-            expect(+numberUtil.parseDate('2012/03/04 2:05:08')).toEqual(1330797908000);
-            expect(+numberUtil.parseDate('2012/3/4 2:05:08.123')).toEqual(1330797908123);
-            expect(+numberUtil.parseDate('2012/03/04 2:05:08.123')).toEqual(1330797908123);
+            expect(+numberUtil.parseDate('2012')).toEqual(+new Date('2012-01-01T00:00:00'));
+            expect(+numberUtil.parseDate('2012/03')).toEqual(+new Date('2012-03-01T00:00:00'));
+            expect(+numberUtil.parseDate('2012/03/04')).toEqual(+new Date('2012-03-04T00:00:00'));
+            expect(+numberUtil.parseDate('2012-3-4')).toEqual(+new Date('2012-03-04T00:00:00'));
+            expect(+numberUtil.parseDate('2012/3')).toEqual(+new Date('2012-03-01T00:00:00'));
+            expect(+numberUtil.parseDate('2012/3/4')).toEqual(+new Date('2012-03-04T00:00:00'));
+            expect(+numberUtil.parseDate('2012/3/4 2:05')).toEqual(+new Date('2012-03-04T02:05:00'));
+            expect(+numberUtil.parseDate('2012/03/04 2:05')).toEqual(+new Date('2012-03-04T02:05:00'));
+            expect(+numberUtil.parseDate('2012/3/4 2:05:08')).toEqual(+new Date('2012-03-04T02:05:08'));
+            expect(+numberUtil.parseDate('2012/03/04 2:05:08')).toEqual(+new Date('2012-03-04T02:05:08'));
+            expect(+numberUtil.parseDate('2012/3/4 2:05:08.123')).toEqual(+new Date('2012-03-04T02:05:08.123'));
+            expect(+numberUtil.parseDate('2012/03/04 2:05:08.123')).toEqual(+new Date('2012-03-04T02:05:08.123'));
         });
     });
 
