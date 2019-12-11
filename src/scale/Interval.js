@@ -101,7 +101,7 @@ var IntervalScale = Scale.extend({
 
         if (extent[0] < niceTickExtent[0]) {
             if (expandToNicedExtent) {
-                ticks.push(roundNumber(niceTickExtent[0] - interval));
+                ticks.push(roundNumber(niceTickExtent[0] - interval, intervalPrecision));
             }
             else {
                 ticks.push(extent[0]);
@@ -127,7 +127,7 @@ var IntervalScale = Scale.extend({
         var lastNiceTick = ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1];
         if (extent[1] > lastNiceTick) {
             if (expandToNicedExtent) {
-                ticks.push(lastNiceTick + interval);
+                ticks.push(roundNumber(lastNiceTick + interval, intervalPrecision));
             }
             else {
                 ticks.push(extent[1]);
