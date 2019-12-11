@@ -38,7 +38,6 @@ module.exports = {
         '**/spec/scale/*.test.js',
         '**/spec/util/*.test.js',
         '!**/spec/api/containPixel.test.js',
-        '!**/spec/component/graphic/setOption.test.js',
-        '!**/spec/model/Component.test.js'
+        '!**/spec/component/graphic/setOption.test.js'
     ]
 };

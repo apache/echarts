@@ -21,36 +21,48 @@ const ComponentModel = require('../../../../lib/model/Component');
 
 describe('Component', function () {
 
+    let idx = 0;
+
+    function makeTypes(count) {
+        let arr = [];
+        for (let i = 0; i < count; i++) {
+            arr.push('type_' + idx++);
+        }
+        return arr;
+    }
 
     describe('topologicalTravel', function () {
 
         it('topologicalTravel_base', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'a1'});
-            ComponentModel.extend({type: 'a2'});
+            var [m1, a1, a2] = makeTypes(3);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: a1});
+            ComponentModel.extend({type: a2});
             var result = [];
             var allList = ComponentModel.getAllClassMainTypes();
-            ComponentModel.topologicalTravel(['m1', 'a1', 'a2'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m1, a1, a2], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset','a1', 'a2']]]);
+            expect(result).toEqual([[a2, ['dataset']], [a1, ['dataset']], [m1, ['dataset', a1, a2]]]);
         });
 
         it('topologicalTravel_a1IsAbsent', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'a2'});
+            var [m1, a1, a2] = makeTypes(3);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: a2});
             var allList = ComponentModel.getAllClassMainTypes();
             var result = [];
-            ComponentModel.topologicalTravel(['m1', 'a2'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m1, a2], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', ['dataset']], ['m1', ['dataset', 'a1', 'a2']]]);
+            expect(result).toEqual([[a2, ['dataset']], [m1, ['dataset', a1, a2]]]);
         });
 
         it('topologicalTravel_empty', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'a1'});
-            ComponentModel.extend({type: 'a2'});
+            var [m1, a1, a2] = makeTypes(3);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: a1});
+            ComponentModel.extend({type: a2});
             var allList = ComponentModel.getAllClassMainTypes();
             var result = [];
             ComponentModel.topologicalTravel([], allList, function (componentType, dependencies) {
@@ -60,94 +72,100 @@ describe('Component', function () {
         });
 
         it('topologicalTravel_isolate', function () {
-            ComponentModel.extend({type: 'a2'});
-            ComponentModel.extend({type: 'a1'});
-            ComponentModel.extend({type: 'm1', dependencies: ['a2']});
+            var [m1, a1, a2] = makeTypes(3);
+            ComponentModel.extend({type: a2});
+            ComponentModel.extend({type: a1});
+            ComponentModel.extend({type: m1, dependencies: [a2]});
             var allList = ComponentModel.getAllClassMainTypes();
             var result = [];
-            ComponentModel.topologicalTravel(['a1', 'a2', 'm1'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([a1, a2, m1], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a1', ['dataset']], ['a2', ['dataset']], ['m1', ['dataset','a2']]]);
+            expect(result).toEqual([[a1, ['dataset']], [a2, ['dataset']], [m1, ['dataset',a2]]]);
         });
 
         it('topologicalTravel_diamond', function () {
-            ComponentModel.extend({type: 'a1', dependencies: []});
-            ComponentModel.extend({type: 'a2', dependencies: ['a1']});
-            ComponentModel.extend({type: 'a3', dependencies: ['a1']});
-            ComponentModel.extend({type: 'm1', dependencies: ['a2', 'a3']});
+            var [m1, a1, a2, a3] = makeTypes(4);
+            ComponentModel.extend({type: a1, dependencies: []});
+            ComponentModel.extend({type: a2, dependencies: [a1]});
+            ComponentModel.extend({type: a3, dependencies: [a1]});
+            ComponentModel.extend({type: m1, dependencies: [a2, a3]});
             var allList = ComponentModel.getAllClassMainTypes();
             var result = [];
-            ComponentModel.topologicalTravel(['m1', 'a1', 'a2', 'a3'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m1, a1, a2, a3], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a1', ['dataset']], ['a3', ['dataset', 'a1']], ['a2', ['dataset', 'a1']], ['m1', ['dataset', 'a2', 'a3']]]);
+            expect(result).toEqual([[a1, ['dataset']], [a3, ['dataset', a1]], [a2, ['dataset', a1]], [m1, ['dataset', a2, a3]]]);
         });
 
         it('topologicalTravel_loop', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'm2', dependencies: ['m1', 'a2']});
-            ComponentModel.extend({type: 'a1', dependencies: ['m2', 'a2', 'a3']});
-            ComponentModel.extend({type: 'a2'});
-            ComponentModel.extend({type: 'a3'});
+            var [m1, m2, a1, a2, a3] = makeTypes(5);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: m2, dependencies: [m1, a2]});
+            ComponentModel.extend({type: a1, dependencies: [m2, a2, a3]});
+            ComponentModel.extend({type: a2});
+            ComponentModel.extend({type: a3});
             var allList = ComponentModel.getAllClassMainTypes();
             expect(function () {
-                ComponentModel.topologicalTravel(['m1', 'm2', 'a1'], allList);
+                ComponentModel.topologicalTravel([m1, m2, a1], allList);
             }).toThrowError(/Circl/);
         });
 
         it('topologicalTravel_multipleEchartsInstance', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'a1'});
-            ComponentModel.extend({type: 'a2'});
+            var [m1, m2, a1, a2] = makeTypes(4);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: a1});
+            ComponentModel.extend({type: a2});
             var allList = ComponentModel.getAllClassMainTypes();
             var result = [];
-            ComponentModel.topologicalTravel(['m1', 'a1', 'a2'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m1, a1, a2], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset', 'a1', 'a2']]]);
+            expect(result).toEqual([[a2, ['dataset']], [a1, ['dataset']], [m1, ['dataset', a1, a2]]]);
 
             result = [];
-            ComponentModel.extend({type: 'm2', dependencies: ['a1', 'm1']});
+            ComponentModel.extend({type: m2, dependencies: [a1, m1]});
             var allList = ComponentModel.getAllClassMainTypes();
-            ComponentModel.topologicalTravel(['m2', 'm1', 'a1', 'a2'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m2, m1, a1, a2], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a2', ['dataset']], ['a1', ['dataset']], ['m1', ['dataset', 'a1', 'a2']], ['m2', ['dataset', 'a1', 'm1']]]);
+            expect(result).toEqual([[a2, ['dataset']], [a1, ['dataset']], [m1, ['dataset', a1, a2]], [m2, ['dataset', a1, m1]]]);
         });
 
         it('topologicalTravel_missingSomeNodeButHasDependencies', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'a2', dependencies: ['a3']});
-            ComponentModel.extend({type: 'a3'});
-            ComponentModel.extend({type: 'a4'});
+            var [m1, a1, a2, a3, a4] = makeTypes(5);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: a2, dependencies: [a3]});
+            ComponentModel.extend({type: a3});
+            ComponentModel.extend({type: a4});
             var result = [];
             var allList = ComponentModel.getAllClassMainTypes();
-            ComponentModel.topologicalTravel(['a3', 'm1'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([a3, m1], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a3', ['dataset']], ['a2', ['dataset', 'a3']], ['m1', ['dataset', 'a1', 'a2']]]);
+            expect(result).toEqual([[a3, ['dataset']], [a2, ['dataset', a3]], [m1, ['dataset', a1, a2]]]);
             var result = [];
             var allList = ComponentModel.getAllClassMainTypes();
-            ComponentModel.topologicalTravel(['m1', 'a3'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m1, a3], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a3', ['dataset']], ['a2', ['dataset', 'a3']], ['m1', ['dataset', 'a1', 'a2']]]);
+            expect(result).toEqual([[a3, ['dataset']], [a2, ['dataset', a3]], [m1, ['dataset', a1, a2]]]);
         });
 
         it('topologicalTravel_subType', function () {
-            ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});
-            ComponentModel.extend({type: 'a1.aaa', dependencies: ['a2']});
-            ComponentModel.extend({type: 'a1.bbb', dependencies: ['a3', 'a4']});
-            ComponentModel.extend({type: 'a2'});
-            ComponentModel.extend({type: 'a3'});
-            ComponentModel.extend({type: 'a4'});
+            var [m1, a1, a2, a3, a4] = makeTypes(5);
+            ComponentModel.extend({type: m1, dependencies: [a1, a2]});
+            ComponentModel.extend({type: a1 + '.aaa', dependencies: [a2]});
+            ComponentModel.extend({type: a1 + '.bbb', dependencies: [a3, a4]});
+            ComponentModel.extend({type: a2});
+            ComponentModel.extend({type: a3});
+            ComponentModel.extend({type: a4});
             var result = [];
             var allList = ComponentModel.getAllClassMainTypes();
-            ComponentModel.topologicalTravel(['m1', 'a1', 'a2', 'a4'], allList, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel([m1, a1, a2, a4], allList, function (componentType, dependencies) {
                 result.push([componentType, dependencies]);
             });
-            expect(result).toEqual([['a4', ['dataset']], ['a2', ['dataset']], ['a1', ['dataset', 'a2','a3','a4']], ['m1', ['dataset', 'a1', 'a2']]]);
+            expect(result).toEqual([[a4, ['dataset']], [a2, ['dataset']], [a1, ['dataset', a2, a3, a4]], [m1, ['dataset', a1, a2]]]);
         });
     });
 
