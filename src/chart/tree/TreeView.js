@@ -27,6 +27,7 @@ import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController from '../../component/helper/RoamController';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import { __DEV__ } from '../../config';
 
 var TreeShape = graphic.extendShape({
     shape: {
@@ -492,33 +493,40 @@ function drawEdge(
                 }, seriesModel);
             }
         }
-        else if (edgeShape === 'polyline' && seriesScope.layout === 'orthogonal') {
-            if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
-                var children = node.children;
-                var childPoints = [];
-                for (var i = 0; i < children.length; i++) {
-                    var childLayout = children[i].getLayout();
-                    childPoints.push([childLayout.x, childLayout.y]);
-                }
+        else if (edgeShape === 'polyline') {
+            if (seriesScope.layout === 'orthogonal') {
+                if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
+                    var children = node.children;
+                    var childPoints = [];
+                    for (var i = 0; i < children.length; i++) {
+                        var childLayout = children[i].getLayout();
+                        childPoints.push([childLayout.x, childLayout.y]);
+                    }
 
-                if (!edge) {
-                    edge = symbolEl.__edge = new TreeShape({
+                    if (!edge) {
+                        edge = symbolEl.__edge = new TreeShape({
+                            shape: {
+                                parentPoint: [targetLayout.x, targetLayout.y],
+                                childPoints: [[targetLayout.x, targetLayout.y]],
+                                orient: seriesScope.orient
+                            },
+                            style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                        });
+                    }
+                    graphic.updateProps(edge, {
                         shape: {
                             parentPoint: [targetLayout.x, targetLayout.y],
-                            childPoints: [[targetLayout.x, targetLayout.y]],
+                            childPoints: childPoints,
                             orient: seriesScope.orient
                         },
-                        style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
-                    });
+                        style: {opacity: 1}
+                    }, seriesModel);
                 }
-                graphic.updateProps(edge, {
-                    shape: {
-                        parentPoint: [targetLayout.x, targetLayout.y],
-                        childPoints: childPoints,
-                        orient: seriesScope.orient
-                    },
-                    style: {opacity: 1}
-                }, seriesModel);
+            }
+            else {
+                if (__DEV__) {
+                    throw new Error('The polyline edgeShape can only be used in orthogonal layout');
+                }
             }
         }
         group.add(edge);
