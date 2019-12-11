@@ -36,7 +36,7 @@ export default {
      * @param {Object} nameMap
      * @return {Object} source {regions, regionsMap, nameCoordMap, boundingRect}
      */
-    load: function (mapName, nameMap) {
+    load: function (mapName, nameMap, nameTag) {
         var regions = [];
         var regionsMap = createHashMap();
         var nameCoordMap = createHashMap();
@@ -44,7 +44,7 @@ export default {
         var mapRecords = retrieveMap(mapName);
 
         each(mapRecords, function (record) {
-            var singleSource = loaders[record.type].load(mapName, record);
+            var singleSource = loaders[record.type].load(mapName, record,nameTag);
 
             each(singleSource.regions, function (region) {
                 var regionName = region.name;

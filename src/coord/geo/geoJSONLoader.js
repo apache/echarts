@@ -36,7 +36,7 @@ export default {
      * @param {Object} mapRecord {specialAreas, geoJSON}
      * @return {Object} {regions, boundingRect}
      */
-    load: function (mapName, mapRecord) {
+    load: function (mapName, mapRecord, nameTag) {
 
         var parsed = inner(mapRecord).parsed;
 
@@ -50,7 +50,7 @@ export default {
 
         // https://jsperf.com/try-catch-performance-overhead
         try {
-            regions = geoJSON ? parseGeoJson(geoJSON) : [];
+            regions = geoJSON ? parseGeoJson(geoJSON, nameTag) : [];
         }
         catch (e) {
             throw new Error('Invalid geoJson format\n' + e.message);
