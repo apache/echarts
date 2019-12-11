@@ -17,22 +17,10 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-const echarts = require('../../../../lib/echarts');
-const gridComponent = require('../../../../lib/component/grid');
-const toolboxComponent = require('../../../../lib/component/toolbox');
-const dataZoomComponent = require('../../../../lib/component/dataZoom')
-const line = require('../../../../lib/chart/line');
-const bar = require('../../../../lib/chart/bar');
-const pie = require('../../../../lib/chart/pie');
+
 const utHelper = require('../../core/utHelper');
 
-describe('modelAndOptionMapping', function() {
-
-    var requireItems = [echarts, gridComponent, toolboxComponent, dataZoomComponent, line, bar, pie];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
+describe('modelAndOptionMapping', function () {
 
     function getData0(chart, seriesIndex) {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
@@ -94,15 +82,13 @@ describe('modelAndOptionMapping', function() {
     }
 
 
-    var chart = '';
-    var createResult = '';
+    var chart;
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = utHelper.createChart();
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        chart.dispose();
     });
 
     describe('idNoNameNo', function () {

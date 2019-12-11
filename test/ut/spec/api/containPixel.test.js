@@ -21,23 +21,9 @@
 /* jshint maxlen:200 */
 
 const echarts = require('../../../../lib/echarts');
-const gridComponent = require('../../../../lib/component/grid');
-const geoComponent = require('../../../../lib/component/geo');
-const polarComponent = require('../../../../lib/component/polar');
-const map = require('../../../../lib/chart/map');
-const pie = require('../../../../lib/chart/pie');
-const scatter = require('../../../../lib/chart/scatter');
-const graph = require('../../../../lib/chart/graph');
 const utHelper = require('../../core/utHelper');
 
 describe('api/containPixel', function () {
-    var requireItems = [echarts, gridComponent, geoComponent, polarComponent, map, pie, scatter, graph];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
-
-
     var testGeoJson1 = {
         'type': 'FeatureCollection',
         'features': [

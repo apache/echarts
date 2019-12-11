@@ -18,15 +18,6 @@
 * under the License.
 */
 
-const echarts = require('../../../../lib/echarts');
-const gridComponent = require('../../../../lib/component/grid');
-const geoComponent = require('../../../../lib/component/geo');
-const polarComponent = require('../../../../lib/component/polar');
-const visuleMapComponent = require('../../../../lib/component/visualMap');
-const dataZoomComponent = require('../../../../lib/component/dataZoom');
-const pie = require('../../../../lib/chart/pie');
-const scatter = require('../../../../lib/chart/scatter');
-const graph = require('../../../../lib/chart/graph');
 const utHelper = require('../../core/utHelper');
 
 /* jshint maxlen:200 */
@@ -38,24 +29,15 @@ describe('api/getVisual', function () {
     // each of which should test visual map.
     // symbol and symbolSize should be tested.
 
-    var requireItems = [echarts, gridComponent, geoComponent, polarComponent, visuleMapComponent, dataZoomComponent, pie, scatter, graph];
-
-    var context = utHelper.genContext({
-        requireItems: requireItems
-    });
-
-    var chart = '';
-    var createResult = '';
+    var chart;
     beforeEach(function () {
-        createResult = utHelper.createChart(context, echarts);
-        chart = createResult.charts[0];
+        chart = utHelper.createChart();
     });
 
     afterEach(function () {
-        utHelper.removeChart(createResult);
+        chart.dispose();
     });
     it('scatter', function () {
-
         chart.setOption({
             xAxis: {},
             yAxis: {},
@@ -128,8 +110,6 @@ describe('api/getVisual', function () {
             ]
         });
 
-        var width = chart.getWidth();
-
         expect(chart.getVisual({dataIndex: 1}, 'color')).toEqual('#000');
 
         expect(chart.getVisual({dataIndex: 0, seriesIndex: 1}, 'color')).toEqual('#fff');
@@ -179,8 +159,6 @@ describe('api/getVisual', function () {
                 }
             ]
         });
-
-        var width = chart.getWidth();
 
         expect(chart.getVisual({dataIndex: 4, seriesId: 'k2'}, 'color')).toEqual('#ff0');
         expect(chart.getVisual({dataIndexInside: 0, seriesId: 'k2'}, 'color')).toEqual('#ff0');

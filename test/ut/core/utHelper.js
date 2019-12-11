@@ -21,68 +21,31 @@
  * @public
  * @type {Object}
  */
+var echarts = require('../../../index');
+
 var utHelper = {};
 
 var nativeSlice = Array.prototype.slice;
 
-/**
- * @public
- */
-utHelper.genContext = function (props, originalContext) {
-    var context = {};
-    if (originalContext) {
-        for (var key in originalContext) {
-            if (originalContext.hasOwnProperty(key)) {
-                context[key] = originalContext[key];
-            }
-        }
-    }
-    if (props) {
-        for (var key in props) {
-            if (props.hasOwnProperty(key)) {
-                context[key] = props[key];
-            }
-        }
-    }
-    return context;
+utHelper.createChart = function (width, height, theme, opts) {
+    var el = document.createElement('div');
+    el.style.cssText = [
+        'visibility:hidden',
+        'width:' + (width || '500') + 'px',
+        'height:' + (height || '400') + 'px',
+        'position:absolute',
+        'bottom:0',
+        'right:0'
+    ].join(';');
+    var chart = echarts.init(el, theme, opts);
+    return chart;
 };
 
 /**
  * @public
  */
-utHelper.createChart = function (context, echarts) {
-    context.chartCount || (context.chartCount = 1);
-    var els = [];
-    var charts = [];
-    for (var i = 0; i < context.chartCount; i++) {
-        var el = document.createElement('div');
-        document.body.appendChild(el);
-        el.style.cssText = [
-            'visibility:hidden',
-            'width:' + (context.width || '500') + 'px',
-            'height:' + (context.height || '400') + 'px',
-            'position:absolute',
-            'bottom:0',
-            'right:0'
-        ].join(';');
-        els.push(el);
-        charts.push(echarts.init(el, null, {}));
-    }
-    return {charts: charts, els: els};
-};
-
-/**
- * @public
- */
-utHelper.removeChart = function (createResult) {
-    for (var i = 0; i < createResult.charts.length; i++) {
-        var chart = createResult.charts[i];
-        chart && chart.dispose();
-    }
-    for (var i = 0; i < createResult.els.length; i++) {
-        var el = createResult.els[i];
-        el && document.body.removeChild(el);
-    }
+utHelper.removeChart = function (chart) {
+    chart.dispose();
 };
 
 /**
@@ -153,66 +116,6 @@ utHelper.bind = function (func, context) {
 };
 
 /**
- * Load javascript script
- *
- * @param {string} resource Like 'xx/xx/xx.js';
- */
-utHelper.loadScript = function (url, id, callback) {
-    var head = utHelper.getHeadEl();
-
-    var script = document.createElement('script');
-    script.setAttribute('type', 'text/javascript');
-    script.setAttribute('charset', 'utf-8');
-    if (id) {
-        script.setAttribute('id', id);
-    }
-    script.setAttribute('src', url);
-
-    // @see jquery
-    // Attach handlers for all browsers
-    script.onload = script.onreadystatechange = function () {
-
-        if (!script.readyState || /loaded|complete/.test(script.readyState)) {
-            // Handle memory leak in IE
-            script.onload = script.onreadystatechange = null;
-            // Dereference the script
-            script = undefined;
-            callback && callback();
-        }
-    };
-
-    // Use insertBefore instead of appendChild  to circumvent an IE6 bug.
-    // This arises when a base node is used (jquery #2709 and #4378).
-    head.insertBefore(script, head.firstChild);
-};
-
-/**
- * Reset package loader, where esl is cleaned and reloaded.
- *
- * @public
- */
-// utHelper.resetAMDLoader = function (then) {
-//     // Clean esl
-//     var eslEl = utHelper.g('esl');
-//     if (eslEl) {
-//         utHelper.removeEl(eslEl);
-//     }
-//     var eslConfig = utHelper.g('esl');
-//     if (eslConfig) {
-//         utHelper.removeEl(eslConfig);
-//     }
-//     context.define = null;
-//     context.require = null;
-
-//     // Import esl.
-//     utHelper.loadScript('../lib/esl.js', 'esl', function () {
-//         utHelper.loadScript('lib/config.js', 'config', function () {
-//             then();
-//         });
-//     });
-// };
-
-/**
  * @public
  */
 utHelper.isValueFinite = function (val) {
@@ -269,27 +172,6 @@ utHelper.getViewGroup = function (chart, mainType, index) {
     return component ? chart[
         mainType === 'series' ? '_chartsMap' : '_componentsMap'
     ][component.__viewId].group : null;
-};
-
-/**
- * @public
- */
-utHelper.printElement = function (el) {
-    var result = {};
-    var props = ['position', 'scale', 'rotation', 'style', 'shape'];
-    for (var i = 0; i < props.length; i++) {
-        result[props[i]] = el[props[i]];
-    }
-    return global.JSON.stringify(result, null, 4);
-};
-
-/**
- * @public
- */
-utHelper.print = function (str) {
-    if (typeof console !== 'undefined') {
-        console.log(str);
-    }
 };
 
 module.exports = utHelper;
