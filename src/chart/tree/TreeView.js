@@ -465,15 +465,15 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     }
 
     drawEdge(
-        seriesModel, node, virtualRoot, symbolEl,
-        sourceOldLayout, sourceLayout, targetLayout, group, seriesScope
+        seriesModel, node, virtualRoot, symbolEl, sourceOldLayout,
+        sourceLayout, targetLayout, group, seriesScope
     );
 
 }
 
 function drawEdge(
-    seriesModel, node, virtualRoot, symbolEl, sourceOldLayout, sourceLayout,
-    targetLayout, group, seriesScope
+    seriesModel, node, virtualRoot, symbolEl, sourceOldLayout,
+    sourceLayout, targetLayout, group, seriesScope
     ) {
         var edgeShape = seriesScope.edgeShape;
         var edge = symbolEl.__edge;
@@ -497,8 +497,8 @@ function drawEdge(
                 var children = node.children;
                 var childPoints = [];
                 for (var i = 0; i < children.length; i++) {
-                    var layout = children[i].getLayout();
-                    childPoints.push([layout.x, layout.y]);
+                    var childLayout = children[i].getLayout();
+                    childPoints.push([childLayout.x, childLayout.y]);
                 }
 
                 if (!edge) {
@@ -576,30 +576,6 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
                 group.remove(edge);
             });
         }
-    }
-    else if (sourceEdge) {
-        var filterChilPoints = [];
-        var children = source.children;
-        for (var i = 0; i < children.length; i++) {
-            if (children[i] !== node) {
-                var nodeLayout = children[i].getLayout();
-                filterChilPoints.push([nodeLayout.x, nodeLayout.y]);
-            }
-        }
-        graphic.updateProps(sourceEdge, {
-            shape: {
-                parentPoint: [sourceLayout.x, sourceLayout.y],
-                childPoints: filterChilPoints,
-                orient: seriesScope.orient
-            },
-            style: {
-                opacity: 1
-            }
-        }, seriesModel);
-
-        graphic.updateProps(sourceSymbolEl, {
-            position: [sourceLayout.x, sourceLayout.y]
-        }, seriesModel);
     }
 }
 
