@@ -33,7 +33,8 @@ var TreeShape = graphic.extendShape({
     shape: {
         parentPoint: [],
         childPoints: [],
-        orient: ''
+        orient: '',
+        splitLocation: 0
     },
 
     buildPath: function (ctx, shape) {
@@ -57,7 +58,8 @@ var TreeShape = graphic.extendShape({
         }
         var parentPoint = shape.parentPoint;
         var orient = shape.orient;
-        var midPoint = computeMidPoints(parentPoint, orient, ptMax);
+        var location = shape.splitLocation;
+        var midPoint = computeMidPoints(parentPoint, orient, ptMax, location);
 
          ctx.moveTo(parentPoint[0], parentPoint[1]);
          ctx.lineTo(midPoint[0], midPoint[1]);
@@ -82,23 +84,23 @@ var TreeShape = graphic.extendShape({
     }
 });
 
-function computeMidPoints(parentPoint, orient, ptMax) {
+function computeMidPoints(parentPoint, orient, ptMax, location) {
     var midPoint = [];
     switch (orient) {
         case 'TB':
             midPoint[0] = parentPoint[0];
-            midPoint[1] = parentPoint[1] + (ptMax[1] - parentPoint[1]) / 2;
+            midPoint[1] = parentPoint[1] + (ptMax[1] - parentPoint[1]) * location;
             break;
         case 'BT':
             midPoint[0] = parentPoint[0];
-            midPoint[1] = ptMax[1] + (parentPoint[1] - ptMax[1]) / 2;
+            midPoint[1] = ptMax[1] + (parentPoint[1] - ptMax[1]) * (1 - location);
             break;
         case 'LR':
-            midPoint[0] = parentPoint[0] + (ptMax[0] - parentPoint[0]) / 2;
+            midPoint[0] = parentPoint[0] + (ptMax[0] - parentPoint[0]) * location;
             midPoint[1] = parentPoint[1];
             break;
         case 'RL':
-            midPoint[0] = ptMax[0] + (parentPoint[0] - ptMax[0]) / 2;
+            midPoint[0] = ptMax[0] + (parentPoint[0] - ptMax[0]) * (1 - location);
             midPoint[1] = parentPoint[1];
     }
     return midPoint;
@@ -164,6 +166,7 @@ export default echarts.extendChartView({
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
             edgeShape: seriesModel.get('edgeShape'),
+            edgeSplitLocation: seriesModel.get('edgeSplitLocation'),
             orient: seriesModel.getOrient(),
             curvature: seriesModel.get('lineStyle.curveness'),
             symbolRotate: seriesModel.get('symbolRotate'),
@@ -508,7 +511,8 @@ function drawEdge(
                             shape: {
                                 parentPoint: [targetLayout.x, targetLayout.y],
                                 childPoints: [[targetLayout.x, targetLayout.y]],
-                                orient: seriesScope.orient
+                                orient: seriesScope.orient,
+                                splitLocation: seriesScope.edgeSplitLocation
                             },
                             style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
                         });
@@ -516,8 +520,7 @@ function drawEdge(
                     graphic.updateProps(edge, {
                         shape: {
                             parentPoint: [targetLayout.x, targetLayout.y],
-                            childPoints: childPoints,
-                            orient: seriesScope.orient
+                            childPoints: childPoints
                         },
                         style: {opacity: 1}
                     }, seriesModel);
@@ -574,8 +577,7 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
             graphic.updateProps(edge, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
-                    childPoints: [[sourceLayout.x, sourceLayout.y]],
-                    orient: seriesScope.orient
+                    childPoints: [[sourceLayout.x, sourceLayout.y]]
                 },
                 style: {
                     opacity: 0
