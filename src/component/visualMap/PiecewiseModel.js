@@ -369,6 +369,30 @@ var PiecewiseModel = VisualMapModel.extend({
             }
         }, this);
 
+        // stop needs to have something
+        if (!stops.length) {
+            // get value axis
+            var cartesian = visualMapModel.ecModel.getComponent('series').coordinateSystem;
+            var baseAxis = cartesian.getBaseAxis();
+            var valueAxis = cartesian.getOtherAxis(baseAxis);
+            var extent = valueAxis.scale.getExtent();
+            zrUtil.each(pieceList, function (piece) {
+                for (var i = 0; i < piece.interval.length; i++) {
+                    // Because CanvasRenderingContext2D doesn't support Infinity
+                    // So set stop value to axis end.
+                    var value = piece.interval[i] === -Infinity
+                        ? extent[0]
+                        : piece.interval[i] === Infinity
+                        ? extent[1]
+                        : piece.interval[i];
+                    stops.push({
+                        value: value,
+                        color: piece.visual.color
+                    });
+                }
+            });
+        }
+
         return {stops: stops, outerColors: outerColors};
     }
 
