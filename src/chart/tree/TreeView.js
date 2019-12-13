@@ -28,13 +28,14 @@ import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController from '../../component/helper/RoamController';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import { __DEV__ } from '../../config';
+import {parsePercent} from '../../util/number';
 
 var TreeShape = graphic.extendShape({
     shape: {
         parentPoint: [],
         childPoints: [],
         orient: '',
-        splitLocation: 0
+        forkPosition: ''
     },
 
     buildPath: function (ctx, shape) {
@@ -58,7 +59,7 @@ var TreeShape = graphic.extendShape({
         }
         var parentPoint = shape.parentPoint;
         var orient = shape.orient;
-        var location = shape.splitLocation;
+        var location = parsePercent(shape.forkPosition, 1);
         var midPoint = computeMidPoints(parentPoint, orient, ptMax, location);
 
          ctx.moveTo(parentPoint[0], parentPoint[1]);
@@ -166,7 +167,7 @@ export default echarts.extendChartView({
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
             edgeShape: seriesModel.get('edgeShape'),
-            edgeSplitLocation: seriesModel.get('edgeSplitLocation'),
+            edgeForkPosition: seriesModel.get('edgeForkPosition'),
             orient: seriesModel.getOrient(),
             curvature: seriesModel.get('lineStyle.curveness'),
             symbolRotate: seriesModel.get('symbolRotate'),
@@ -512,7 +513,7 @@ function drawEdge(
                                 parentPoint: [targetLayout.x, targetLayout.y],
                                 childPoints: [[targetLayout.x, targetLayout.y]],
                                 orient: seriesScope.orient,
-                                splitLocation: seriesScope.edgeSplitLocation
+                                forkPosition: seriesScope.edgeForkPosition
                             },
                             style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
                         });
@@ -559,7 +560,14 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
 
     var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
     var sourceEdge = sourceSymbolEl.__edge;
-    var edge = symbolEl.__edge || (source.isExpand === false ? sourceEdge : undefined);
+
+    // 1. when expand the sub tree, delete the children node should delete the edge of
+    // the source at the same time. because the polyline edge shape is only owned by the source.
+    // 2.when the node is the only children of the source, delete the node should delete the edge of
+    // the source at the same time. the same reason as above.
+    var edge = symbolEl.__edge
+        || ((source.isExpand === false || source.children.length === 1) ? sourceEdge : undefined);
+
     var edgeShape = seriesScope.edgeShape;
 
     if (edge) {

@@ -142,7 +142,7 @@ export default SeriesModel.extend({
         // value can be 'polyline'
         edgeShape: 'curve',
 
-        edgeSplitLocation: 0.5,
+        edgeForkPosition: '50%',
 
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
