@@ -38,6 +38,11 @@ var TreeShape = graphic.extendShape({
         forkPosition: ''
     },
 
+    style: {
+        stroke: '#000',
+        fill: null
+    },
+
     buildPath: function (ctx, shape) {
         var ptMin = [Infinity, Infinity];
         var ptMax = [-Infinity, -Infinity];
@@ -62,26 +67,35 @@ var TreeShape = graphic.extendShape({
         var location = parsePercent(shape.forkPosition, 1);
         var midPoint = computeMidPoints(parentPoint, orient, ptMax, location);
 
-         ctx.moveTo(parentPoint[0], parentPoint[1]);
-         ctx.lineTo(midPoint[0], midPoint[1]);
-         if (orient === 'TB' || orient === 'BT') {
-             ctx.moveTo(ptMin[0], midPoint[1]);
-             ctx.lineTo(ptMax[0], midPoint[1]);
-         }
-         else if (orient === 'LR' || orient === 'RL') {
-             ctx.moveTo(midPoint[0], ptMin[1]);
-             ctx.lineTo(midPoint[0], ptMax[1]);
-         }
-         for (var i = 0; i < points.length; i++) {
-             var point = points[i];
-             ctx.moveTo(point[0], point[1]);
-             if (orient === 'TB' || orient === 'BT') {
-                 ctx.lineTo(point[0], midPoint[1]);
-             }
-             else if (orient === 'LR' || orient === 'RL') {
-                 ctx.lineTo(midPoint[0], point[1]);
-             }
-         }
+        ctx.moveTo(parentPoint[0], parentPoint[1]);
+        ctx.lineTo(midPoint[0], midPoint[1]);
+        if (orient === 'TB' || orient === 'BT') {
+            ctx.moveTo(ptMin[0], ptMin[1]);
+            ctx.lineTo(ptMin[0], midPoint[1]);
+            ctx.lineTo(ptMax[0], midPoint[1]);
+            ctx.lineTo(ptMax[0], ptMax[1]);
+        }
+        else if (orient === 'LR' || orient === 'RL') {
+            ctx.moveTo(ptMin[0], ptMin[1]);
+            ctx.lineTo(midPoint[0], ptMin[1]);
+            ctx.lineTo(midPoint[0], ptMax[1]);
+            ctx.lineTo(ptMax[0], ptMax[1]);
+        }
+        for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+            if (orient === 'TB' || orient === 'BT') {
+                if (point[0] !== ptMin[0] && point[0] !== ptMax[0]) {
+                    ctx.moveTo(point[0], point[1]);
+                    ctx.lineTo(point[0], midPoint[1]);
+                }
+            }
+            else if (orient === 'LR' || orient === 'RL') {
+                if (point[1] !== ptMin[1] && point[1] !== ptMax[1]) {
+                    ctx.moveTo(point[0], point[1]);
+                    ctx.lineTo(midPoint[0], point[1]);
+                }
+            }
+        }
     }
 });
 

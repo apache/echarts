@@ -184,6 +184,10 @@ under the License.
                             edgeForkPosition: '63%',
                             initialTreeDepth: 3,
 
+                            lineStyle: {
+                                width: 4
+                            },
+
                             label: {
                                 backgroundColor: '#fff',
                                 position: 'left',
@@ -207,6 +211,7 @@ under the License.
                 };
 
                 var chart = testHelper.create(echarts, 'main0', {
+                    title: 'The corners of the two outermost edges of the subtree should be continuous, not jagged',
                     option: option,
                     height: 900
                 });
