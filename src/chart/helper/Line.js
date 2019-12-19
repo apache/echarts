@@ -143,7 +143,9 @@ function updateSymbolAndLabelBeforeLineUpdate() {
         var textVerticalAlign;
         var textOrigin;
 
-        var distance = label.__labelDistance * invScale;
+        var distance = label.__labelDistance;
+        var distanceX = distance[0] * invScale;
+        var distanceY = distance[1] * invScale;
         var halfPercent = percent / 2;
         var tangent = line.tangentAt(halfPercent);
         var n = [tangent[1], -tangent[0]];
@@ -168,14 +170,14 @@ function updateSymbolAndLabelBeforeLineUpdate() {
             case 'insideMiddleTop':
             case 'insideEndTop':
             case 'middle':
-                dy = -distance;
+                dy = -distanceY;
                 textVerticalAlign = 'bottom';
                 break;
 
             case 'insideStartBottom':
             case 'insideMiddleBottom':
             case 'insideEndBottom':
-                dy = distance;
+                dy = distanceY;
                 textVerticalAlign = 'top';
                 break;
 
@@ -186,13 +188,13 @@ function updateSymbolAndLabelBeforeLineUpdate() {
 
         switch (label.__position) {
             case 'end':
-                textPosition = [d[0] * distance + toPos[0], d[1] * distance + toPos[1]];
+                textPosition = [d[0] * distanceX + toPos[0], d[1] * distanceY + toPos[1]];
                 textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
                 textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
                 break;
 
             case 'start':
-                textPosition = [-d[0] * distance + fromPos[0], -d[1] * distance + fromPos[1]];
+                textPosition = [-d[0] * distanceX + fromPos[0], -d[1] * distanceY + fromPos[1]];
                 textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
                 textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
                 break;
@@ -200,9 +202,9 @@ function updateSymbolAndLabelBeforeLineUpdate() {
             case 'insideStartTop':
             case 'insideStart':
             case 'insideStartBottom':
-                textPosition = [distance * dir + fromPos[0], fromPos[1] + dy];
+                textPosition = [distanceX * dir + fromPos[0], fromPos[1] + dy];
                 textAlign = tangent[0] < 0 ? 'right' : 'left';
-                textOrigin = [-distance * dir, -dy];
+                textOrigin = [-distanceX * dir, -dy];
                 break;
 
             case 'insideMiddleTop':
@@ -217,9 +219,9 @@ function updateSymbolAndLabelBeforeLineUpdate() {
             case 'insideEndTop':
             case 'insideEnd':
             case 'insideEndBottom':
-                textPosition = [-distance * dir + toPos[0], toPos[1] + dy];
+                textPosition = [-distanceX * dir + toPos[0], toPos[1] + dy];
                 textAlign = tangent[0] >= 0 ? 'right' : 'left';
-                textOrigin = [distance * dir, -dy];
+                textOrigin = [distanceX * dir, -dy];
                 break;
         }
 
@@ -407,7 +409,12 @@ lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
         label.__verticalAlign = labelStyle.textVerticalAlign;
         // 'start', 'middle', 'end'
         label.__position = labelModel.get('position') || 'middle';
-        label.__labelDistance = labelModel.get('distance');
+
+        var distance = labelModel.get('distance');
+        if (!zrUtil.isArray(distance)) {
+            distance = [distance, distance];
+        }
+        label.__labelDistance = distance;
     }
 
     if (emphasisText != null) {
