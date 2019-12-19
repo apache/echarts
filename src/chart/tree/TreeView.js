@@ -44,82 +44,43 @@ var TreeShape = graphic.extendShape({
     },
 
     buildPath: function (ctx, shape) {
-        var ptMin = [Infinity, Infinity];
-        var ptMax = [-Infinity, -Infinity];
-        var points = shape.childPoints;
-        for (var i = 0; i < points.length; i++) {
-            var pt = points[i];
-            if (pt[0] < ptMin[0]) {
-                ptMin[0] = pt[0];
-            }
-            if (pt[0] > ptMax[0]) {
-                ptMax[0] = pt[0];
-            }
-            if (pt[1] < ptMin[1]) {
-                ptMin[1] = pt[1];
-            }
-            if (pt[1] > ptMax[1]) {
-                ptMax[1] = pt[1];
-            }
-        }
+        var childPoints = shape.childPoints;
+        var childLen = childPoints.length;
         var parentPoint = shape.parentPoint;
+        var firstChildPos = childPoints[0];
+        var lastChildPos = childPoints[childLen - 1];
+
+        if (childLen === 1) {
+            ctx.moveTo(parentPoint[0], parentPoint[1]);
+            ctx.lineTo(firstChildPos[0], firstChildPos[1]);
+            return;
+        }
+
         var orient = shape.orient;
-        var location = parsePercent(shape.forkPosition, 1);
-        var midPoint = computeMidPoints(parentPoint, orient, ptMax, location);
+        var forkDim = (orient === 'TB' || orient === 'BT') ? 0 : 1;
+        var otherDim = 1 - forkDim;
+        var forkPosition = parsePercent(shape.forkPosition, 1);
+        var tmpPoint = [];
+        tmpPoint[forkDim] = parentPoint[forkDim];
+        tmpPoint[otherDim] = parentPoint[otherDim] + (lastChildPos[otherDim] - parentPoint[otherDim]) * forkPosition;
 
         ctx.moveTo(parentPoint[0], parentPoint[1]);
-        ctx.lineTo(midPoint[0], midPoint[1]);
-        if (orient === 'TB' || orient === 'BT') {
-            ctx.moveTo(ptMin[0], ptMin[1]);
-            ctx.lineTo(ptMin[0], midPoint[1]);
-            ctx.lineTo(ptMax[0], midPoint[1]);
-            ctx.lineTo(ptMax[0], ptMax[1]);
-        }
-        else if (orient === 'LR' || orient === 'RL') {
-            ctx.moveTo(ptMin[0], ptMin[1]);
-            ctx.lineTo(midPoint[0], ptMin[1]);
-            ctx.lineTo(midPoint[0], ptMax[1]);
-            ctx.lineTo(ptMax[0], ptMax[1]);
-        }
-        for (var i = 0; i < points.length; i++) {
-            var point = points[i];
-            if (orient === 'TB' || orient === 'BT') {
-                if (point[0] !== ptMin[0] && point[0] !== ptMax[0]) {
-                    ctx.moveTo(point[0], point[1]);
-                    ctx.lineTo(point[0], midPoint[1]);
-                }
-            }
-            else if (orient === 'LR' || orient === 'RL') {
-                if (point[1] !== ptMin[1] && point[1] !== ptMax[1]) {
-                    ctx.moveTo(point[0], point[1]);
-                    ctx.lineTo(midPoint[0], point[1]);
-                }
-            }
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        ctx.moveTo(firstChildPos[0], firstChildPos[1]);
+        tmpPoint[forkDim] = firstChildPos[forkDim];
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        tmpPoint[forkDim] = lastChildPos[forkDim];
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        ctx.lineTo(lastChildPos[0], lastChildPos[1]);
+
+        for (var i = 1; i < childLen - 1; i++) {
+            var point = childPoints[i];
+            ctx.moveTo(point[0], point[1]);
+            tmpPoint[forkDim] = point[forkDim];
+            ctx.lineTo(tmpPoint[0], tmpPoint[1]);
         }
     }
 });
-
-function computeMidPoints(parentPoint, orient, ptMax, location) {
-    var midPoint = [];
-    switch (orient) {
-        case 'TB':
-            midPoint[0] = parentPoint[0];
-            midPoint[1] = parentPoint[1] + (ptMax[1] - parentPoint[1]) * location;
-            break;
-        case 'BT':
-            midPoint[0] = parentPoint[0];
-            midPoint[1] = ptMax[1] + (parentPoint[1] - ptMax[1]) * (1 - location);
-            break;
-        case 'LR':
-            midPoint[0] = parentPoint[0] + (ptMax[0] - parentPoint[0]) * location;
-            midPoint[1] = parentPoint[1];
-            break;
-        case 'RL':
-            midPoint[0] = ptMax[0] + (parentPoint[0] - ptMax[0]) * (1 - location);
-            midPoint[1] = parentPoint[1];
-    }
-    return midPoint;
-}
 
 export default echarts.extendChartView({
 
@@ -493,61 +454,62 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
 function drawEdge(
     seriesModel, node, virtualRoot, symbolEl, sourceOldLayout,
     sourceLayout, targetLayout, group, seriesScope
-    ) {
-        var edgeShape = seriesScope.edgeShape;
-        var edge = symbolEl.__edge;
-        if (edgeShape === 'curve') {
-            if (node.parentNode && node.parentNode !== virtualRoot) {
+) {
+
+    var edgeShape = seriesScope.edgeShape;
+    var edge = symbolEl.__edge;
+    if (edgeShape === 'curve') {
+        if (node.parentNode && node.parentNode !== virtualRoot) {
+            if (!edge) {
+                edge = symbolEl.__edge = new graphic.BezierCurve({
+                    shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
+                    style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                });
+            }
+
+            graphic.updateProps(edge, {
+                shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
+                style: {opacity: 1}
+            }, seriesModel);
+        }
+    }
+    else if (edgeShape === 'polyline') {
+        if (seriesScope.layout === 'orthogonal') {
+            if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
+                var children = node.children;
+                var childPoints = [];
+                for (var i = 0; i < children.length; i++) {
+                    var childLayout = children[i].getLayout();
+                    childPoints.push([childLayout.x, childLayout.y]);
+                }
+
                 if (!edge) {
-                    edge = symbolEl.__edge = new graphic.BezierCurve({
-                        shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
+                    edge = symbolEl.__edge = new TreeShape({
+                        shape: {
+                            parentPoint: [targetLayout.x, targetLayout.y],
+                            childPoints: [[targetLayout.x, targetLayout.y]],
+                            orient: seriesScope.orient,
+                            forkPosition: seriesScope.edgeForkPosition
+                        },
                         style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
                     });
                 }
-
                 graphic.updateProps(edge, {
-                    shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
+                    shape: {
+                        parentPoint: [targetLayout.x, targetLayout.y],
+                        childPoints: childPoints
+                    },
                     style: {opacity: 1}
                 }, seriesModel);
             }
         }
-        else if (edgeShape === 'polyline') {
-            if (seriesScope.layout === 'orthogonal') {
-                if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
-                    var children = node.children;
-                    var childPoints = [];
-                    for (var i = 0; i < children.length; i++) {
-                        var childLayout = children[i].getLayout();
-                        childPoints.push([childLayout.x, childLayout.y]);
-                    }
-
-                    if (!edge) {
-                        edge = symbolEl.__edge = new TreeShape({
-                            shape: {
-                                parentPoint: [targetLayout.x, targetLayout.y],
-                                childPoints: [[targetLayout.x, targetLayout.y]],
-                                orient: seriesScope.orient,
-                                forkPosition: seriesScope.edgeForkPosition
-                            },
-                            style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
-                        });
-                    }
-                    graphic.updateProps(edge, {
-                        shape: {
-                            parentPoint: [targetLayout.x, targetLayout.y],
-                            childPoints: childPoints
-                        },
-                        style: {opacity: 1}
-                    }, seriesModel);
-                }
-            }
-            else {
-                if (__DEV__) {
-                    throw new Error('The polyline edgeShape can only be used in orthogonal layout');
-                }
+        else {
+            if (__DEV__) {
+                throw new Error('The polyline edgeShape can only be used in orthogonal layout');
             }
         }
-        group.add(edge);
+    }
+    group.add(edge);
 }
 
 function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
