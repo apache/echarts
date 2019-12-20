@@ -25,26 +25,22 @@ under the License.
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
-        <style>
-            html, body, #main {
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                height: 100%;
-            }
-        </style>
-        <div id="main"></div>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
         <script>
             require([
                 'echarts'
                 ], function (echarts) {
-                    var chart = echarts.init(document.getElementById('main'), null, {
-                    });
 
                     window.onresize = function () {
-                        chart.resize();
+                        chart0.resize();
+                        chart1.resize();
                     };
 
                     var data = {
@@ -84,76 +80,104 @@ under the License.
                         ]
                     };
 
-                    chart.setOption({
+                    function getOption(edgeShape, id) {
+                        return {
+                            tooltip: {
+                                trigger: 'item',
+                                triggerOn: 'mousemove'
+                            },
 
-                        tooltip: {
-                            trigger: 'item',
-                            triggerOn: 'mousemove'
-                        },
+                            legend: {
+                                top: '2%',
+                                left: '3%',
+                                orient: 'vertical',
+                                data: [{
+                                    name: 'tree1',
+                                    icon: 'rectangle'
+                                }],
+                                borderColor: '#c23531'
+                            },
 
-                        legend: {
-                            top: '2%',
-                            left: '3%',
-                            orient: 'vertical',
-                            data: [{
-                                name: 'tree1',
-                                icon: 'rectangle'
-                            }],
-                            borderColor: '#c23531'
-                        },
+                            series:[
+                                {
+                                    type: 'tree',
+                                    id: id,
+                                    name: 'tree1',
+                                    data: [data],
+                                    // Used to test when the data is null whether it is work well.
+                                    // data: [],
 
-                        series:[
-                            {
-                                type: 'tree',
-                                id: '2',
-                                name: 'tree1',
-                                data: [data],
-                                // Used to test when the data is null whether it is work well.
-                                // data: [],
+                                    top: '20%',
+                                    left: '30%',
+                                    bottom: '22%',
+                                    right: '20%',
 
-                                top: '20%',
-                                left: '30%',
-                                bottom: '22%',
-                                right: '20%',
+                                    roam: true,
 
-                                roam: true,
+                                    edgeShape: edgeShape,
 
-                                symbolSize: 15,
-                                orient: 'RL',
+                                    symbolSize: 15,
+                                    orient: 'RL',
 
-                                label: {
-                                    position: 'right',
-                                    verticalAlign: 'middle',
-                                    align: 'left',
-                                    formatter: '{b}: {c}'
-                                },
-
-                                leaves: {
                                     label: {
-                                        position: 'left',
+                                        position: 'right',
                                         verticalAlign: 'middle',
-                                        align: 'right',
-                                        formatter: function (params) {
-                                            return params.data.name + params.dataIndex;
-                                        }
-                                    }
-                                },
+                                        align: 'left',
+                                        formatter: '{b}: {c}'
+                                    },
 
-                                expandAndCollapse: true,
-                                animationDuration: 550,
-                                animationDurationUpdate: 750
-                            }
-                        ]
+                                    leaves: {
+                                        label: {
+                                            position: 'left',
+                                            verticalAlign: 'middle',
+                                            align: 'right',
+                                            formatter: function (params) {
+                                                return params.data.name + params.dataIndex;
+                                            }
+                                        }
+                                    },
+
+                                    expandAndCollapse: true,
+                                    animationDuration: 550,
+                                    animationDurationUpdate: 750
+                                }
+                            ]
+                        }
+                    }
+
+                    var chart0 = testHelper.create(echarts, 'main0', {
+                        title: [
+                            '[edgeShape: **curve**]'
+                        ],
+                        option: getOption('curve', '0'),
+                        height: 500
+                    });
+
+                    var chart1 = testHelper.create(echarts, 'main1', {
+                        title: [
+                            '[edgeShape: **polyline**]'
+                        ],
+                        option: getOption('polyline', '1'),
+                        height: 500
                     });
 
                     setTimeout(function() {
                         var cloneData = echarts.util.clone(data);
                         var appendNode = cloneData.children[1].children.splice(2, 1);
                         cloneData.children.push(appendNode[0]);
-                        chart.setOption({
+
+                        chart0.setOption({
                             series: [{
                                 type: 'tree',
-                                id: '2',
+                                id: '0',
+                                data: [cloneData]
+                            }]
+                        }, false);
+
+                        chart1.setOption({
+                            series: [{
+                                type: 'tree',
+                                id: '1',
                                 data: [cloneData]
                             }]
                         }, false);
