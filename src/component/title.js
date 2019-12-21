@@ -226,7 +226,7 @@ echarts.extendComponentView({
                 r: titleModel.get('borderRadius')
             },
             style: style,
-            subPixelOptimize: true,
+            subPixelOptimize: false,
             silent: true
         });
 
