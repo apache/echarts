@@ -177,6 +177,7 @@ effectLineProto.updateSymbolPosition = function (symbol) {
     var cp1 = symbol.__cp1;
     var t = symbol.__t;
     var pos = symbol.position;
+    var lastPos = Array.from(pos);
     var quadraticAt = curveUtil.quadraticAt;
     var quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
     pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
@@ -187,7 +188,27 @@ effectLineProto.updateSymbolPosition = function (symbol) {
     var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
 
     symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
-
+    // enable continuity trail for 'line', 'rect', 'roundRect' symbolType
+    if (this._symbolType === 'line' || this._symbolType === 'rect' || this._symbolType === 'roundRect') {
+        if (
+            lastPos[0] !== 0 && lastPos[1] !== 0
+            && lastPos[0] !== p2[0] && lastPos[1] !== p2[1]
+            ) {
+            var scaleY = vec2.dist(lastPos, pos);
+            // Enhance ME: currently fix incorrect line segment when zooming or first segment of trail by this way
+            if (scaleY < this.getLineLength(symbol) / ((this._period / 1000) * 30)) {
+                symbol.attr('scale', [symbol.scale[0], scaleY * 1.05 ]);
+            }
+            // make sure the last segment render within endPoint, this may cause (lastPos[0] !== p2[0] && lastPos[1] !== p2[1]) failed
+            if (t === 1) {
+                pos[0] = lastPos[0] + (pos[0] - lastPos[0]) / 2;
+                pos[1] = lastPos[1] + (pos[1] - lastPos[1]) / 2;
+            }
+        }
+        else {
+            symbol.attr('scale', [symbol.scale[0], symbol.scale[0]]);
+        }
+    }
     symbol.ignore = false;
 };
 
