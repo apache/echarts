@@ -32,6 +32,9 @@ var PieSeries = echarts.extendSeriesModel({
 
     // Overwrite
     init: function (option) {
+        // To process series data...
+        option = this.processOptionSeriesValue(option);
+
         PieSeries.superApply(this, 'init', arguments);
 
         // Enable legend selection for each data item
@@ -43,6 +46,28 @@ var PieSeries = echarts.extendSeriesModel({
         this.updateSelectedMap(this._createSelectableList());
 
         this._defaultLabelLine(option);
+    },
+
+    processOptionSeriesValue: function (option) {
+        var data = option.data;
+
+        for(var i = 0; i < data.length; i++){
+            if(data[i].value instanceof Array){
+                //visualMap component fix me
+                // if(data[i].value[0] instanceof Array){
+                //     if(option.visualMap && option.visualMap instanceof Array){
+                //         for(var j = 0; j < option.visualMap.length; j++){
+                //             option.visualMap[j]['value'] = data[i].value[j][1]; //set second number to visualMap...
+                //         }
+                //     }
+                // }
+                data[i].value = data[i].value.reduce(function(a, b) {
+                    return a + b;
+                });
+            }
+        }
+
+        return option;
     },
 
     // Overwrite
