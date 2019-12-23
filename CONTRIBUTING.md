@@ -39,11 +39,11 @@ About our release plan, we will release a mior version at the end of every month
 
 ## Pull Requests
 
-Wiki: [How to make a pull request?](https://github.com/apache/incubator-echarts/wiki/How-to-make-a-pull-request%3F#git-message-standard)
+Wiki: [How to make a pull request](https://github.com/apache/incubator-echarts/wiki/How-to-make-a-pull-request)
 
 ## How to Debug ECharts
 
-Wiki: [How to debug?](https://github.com/apache/incubator-echarts/wiki/How-to-debug%3F#5-run-test-cases)
+Wiki: [How to build ECharts](https://github.com/apache/incubator-echarts/wiki/How-to-build-ECharts)
 
 ## Some hints about using code from other authors
 
