@@ -43,7 +43,7 @@ Wiki: [How to make a pull request](https://github.com/apache/incubator-echarts/w
 
 ## How to Debug ECharts
 
-Wiki: [How to build ECharts](https://github.com/apache/incubator-echarts/wiki/How-to-build-ECharts)
+Wiki: [How to setup the dev environment](https://github.com/apache/incubator-echarts/wiki/How-to-setup-the-dev-environment)
 
 ## Some hints about using code from other authors
 
