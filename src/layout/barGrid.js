@@ -420,11 +420,6 @@ export function layout(seriesType, ecModel) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
 
-            // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
-            // if (isNaN(value) || isNaN(baseValue)) {
-            //     continue;
-            // }
-
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
 
@@ -472,7 +467,6 @@ export function layout(seriesType, ecModel) {
                 }
                 stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
-            console.log(x, y, width, height);
 
             data.setItemLayout(idx, {
                 x: x,

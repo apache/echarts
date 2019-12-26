@@ -107,7 +107,6 @@ export default echarts.extendChartView({
         var oldData = this._data;
 
         var coord = seriesModel.coordinateSystem;
-        var coordRect = coord.grid.getRect();
         var baseAxis = coord.getBaseAxis();
         var isHorizontalOrRadial;
 
@@ -131,6 +130,8 @@ export default echarts.extendChartView({
 
         var backgroundModel = seriesModel.getModel('backgroundStyle');
         var backgroundColor = backgroundModel.get('color');
+
+        // Not create background element for transparent one to improve efficiency
         var drawBackground = backgroundColor !== 'transparent' && backgroundColor !== 'none';
 
         var backgroundGroup = group.childOfName('background');
@@ -153,10 +154,9 @@ export default echarts.extendChartView({
                     that._renderBackground(
                         backgroundGroup,
                         dataIndex,
-                        coord.type === 'polar',
+                        coord,
                         isHorizontalOrRadial,
                         layout,
-                        coordRect,
                         backgroundModel,
                         animationModel
                     );
@@ -195,10 +195,9 @@ export default echarts.extendChartView({
                     that._renderBackground(
                         backgroundGroup,
                         oldIndex,
-                        coord.type === 'polar',
+                        coord,
                         isHorizontalOrRadial,
                         layout,
-                        coordRect,
                         backgroundModel,
                         animationModel
                     );
@@ -273,24 +272,39 @@ export default echarts.extendChartView({
     _renderBackground: function (
         backgroundGroup,
         dataIndex,
-        isPolar,
+        coord,
         isHorizontalOrRadial,
         layout,
-        coordRect,
         backgroundModel,
         animationModel
     ) {
+        var coordLayout;
+        var isPolar = coord.type === 'polar';
+        if (isPolar) {
+            coordLayout = coord.getArea();
+        }
+        else {
+            coordLayout = coord.grid.getRect();
+        }
+
         var bgEl = backgroundGroup.childOfName(dataIndex + '');
         if (bgEl) {
             graphic.updateProps(bgEl, {
-                shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordRect),
+                shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
                 style: backgroundModel.getBarItemStyle()
             }, animationModel, dataIndex);
         }
         else {
-            if (!isPolar) {
+            if (isPolar) {
+                bgEl = new graphic.Sector({
+                    shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
+                    silent: true,
+                    z2: 0
+                });
+            }
+            else {
                 bgEl = new graphic.Rect({
-                    shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordRect),
+                    shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
                     silent: true,
                     z2: 0
                 });
@@ -301,16 +315,23 @@ export default echarts.extendChartView({
         }
     },
 
-    _getBackgroundShape: function (isPolar, isHorizontalOrRadial, layout, coordRect) {
+    _getBackgroundShape: function (isPolar, isHorizontalOrRadial, layout, coordLayout) {
         if (isPolar) {
-
+            return {
+                cx: coordLayout.cx,
+                cy: coordLayout.cy,
+                r0: isHorizontalOrRadial ? coordLayout.r0 : layout.r0,
+                r: isHorizontalOrRadial ? coordLayout.r : layout.r,
+                startAngle: isHorizontalOrRadial ? layout.startAngle : 0,
+                endAngle: isHorizontalOrRadial ? layout.endAngle : Math.PI * 2
+            };
         }
         else {
             return {
-                x: isHorizontalOrRadial ? layout.x : coordRect.x,
-                y: isHorizontalOrRadial ? coordRect.y : layout.y,
-                width: isHorizontalOrRadial ? layout.width : coordRect.width,
-                height: isHorizontalOrRadial ? coordRect.height : layout.height
+                x: isHorizontalOrRadial ? layout.x : coordLayout.x,
+                y: isHorizontalOrRadial ? coordLayout.y : layout.y,
+                width: isHorizontalOrRadial ? layout.width : coordLayout.width,
+                height: isHorizontalOrRadial ? coordLayout.height : layout.height
             };
         }
     },
