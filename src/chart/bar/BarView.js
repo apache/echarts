@@ -25,6 +25,7 @@ import {setLabel} from './helper';
 import Model from '../../model/Model';
 import barItemStyle from './barItemStyle';
 import Path from 'zrender/src/graphic/Path';
+import Group from 'zrender/src/container/Group';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -106,6 +107,7 @@ export default echarts.extendChartView({
         var oldData = this._data;
 
         var coord = seriesModel.coordinateSystem;
+        var coordRect = coord.grid.getRect();
         var baseAxis = coord.getBaseAxis();
         var isHorizontalOrRadial;
 
@@ -127,14 +129,42 @@ export default echarts.extendChartView({
 
         var roundCap = seriesModel.get('roundCap', true);
 
+        var backgroundModel = seriesModel.getModel('backgroundStyle');
+        var backgroundColor = backgroundModel.get('color');
+        var drawBackground = backgroundColor !== 'transparent' && backgroundColor !== 'none';
+
+        var backgroundGroup = group.childOfName('background');
+        if (backgroundGroup && !drawBackground) {
+            group.remove(backgroundGroup);
+        }
+        else if (!backgroundGroup) {
+            backgroundGroup = new Group();
+            backgroundGroup.name = 'background';
+            group.add(backgroundGroup);
+        }
+
+        var that = this;
         data.diff(oldData)
             .add(function (dataIndex) {
+                var itemModel = data.getItemModel(dataIndex);
+                var layout = getLayout[coord.type](data, dataIndex, itemModel);
+
+                if (drawBackground) {
+                    that._renderBackground(
+                        backgroundGroup,
+                        dataIndex,
+                        coord.type === 'polar',
+                        isHorizontalOrRadial,
+                        layout,
+                        coordRect,
+                        backgroundModel,
+                        animationModel
+                    );
+                }
+
                 if (!data.hasValue(dataIndex)) {
                     return;
                 }
-
-                var itemModel = data.getItemModel(dataIndex);
-                var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (needsClip) {
                     // Clip will modify the layout params.
@@ -158,15 +188,27 @@ export default echarts.extendChartView({
                 );
             })
             .update(function (newIndex, oldIndex) {
-                var el = oldData.getItemGraphicEl(oldIndex);
+                var itemModel = data.getItemModel(newIndex);
+                var layout = getLayout[coord.type](data, newIndex, itemModel);
 
+                if (drawBackground) {
+                    that._renderBackground(
+                        backgroundGroup,
+                        oldIndex,
+                        coord.type === 'polar',
+                        isHorizontalOrRadial,
+                        layout,
+                        coordRect,
+                        backgroundModel,
+                        animationModel
+                    );
+                }
+
+                var el = oldData.getItemGraphicEl(oldIndex);
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     return;
                 }
-
-                var itemModel = data.getItemModel(newIndex);
-                var layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (needsClip) {
                     var isClipped = clip[coord.type](coordSysClipArea, layout);
@@ -228,9 +270,59 @@ export default echarts.extendChartView({
         createLarge(seriesModel, this.group, true);
     },
 
+    _renderBackground: function (
+        backgroundGroup,
+        dataIndex,
+        isPolar,
+        isHorizontalOrRadial,
+        layout,
+        coordRect,
+        backgroundModel,
+        animationModel
+    ) {
+        var bgEl = backgroundGroup.childOfName(dataIndex + '');
+        if (bgEl) {
+            graphic.updateProps(bgEl, {
+                shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordRect),
+                style: backgroundModel.getBarItemStyle()
+            }, animationModel, dataIndex);
+        }
+        else {
+            if (!isPolar) {
+                bgEl = new graphic.Rect({
+                    shape: this._getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordRect),
+                    silent: true,
+                    z2: 0
+                });
+            }
+            bgEl.useStyle(backgroundModel.getBarItemStyle());
+            bgEl.name = dataIndex + '';
+            backgroundGroup.add(bgEl);
+        }
+    },
+
+    _getBackgroundShape: function (isPolar, isHorizontalOrRadial, layout, coordRect) {
+        if (isPolar) {
+
+        }
+        else {
+            return {
+                x: isHorizontalOrRadial ? layout.x : coordRect.x,
+                y: isHorizontalOrRadial ? coordRect.y : layout.y,
+                width: isHorizontalOrRadial ? layout.width : coordRect.width,
+                height: isHorizontalOrRadial ? coordRect.height : layout.height
+            };
+        }
+    },
+
     dispose: zrUtil.noop,
 
     remove: function (ecModel) {
+        var backgroundGroup = this.group.childOfName('background');
+        if (backgroundGroup) {
+            this.group.remove(backgroundGroup);
+        }
+
         this._clear(ecModel);
     },
 
@@ -308,7 +400,12 @@ var elementCreator = {
         dataIndex, layout, isHorizontal,
         animationModel, isUpdate
     ) {
-        var rect = new graphic.Rect({shape: zrUtil.extend({}, layout)});
+        var rect = new graphic.Rect({
+            shape: zrUtil.extend({}, layout),
+            z2: 1
+        });
+
+        rect.name = 'item';
 
         // Animation
         if (animationModel) {
@@ -338,8 +435,11 @@ var elementCreator = {
         var ShapeClass = (!isRadial && roundCap) ? Sausage : graphic.Sector;
 
         var sector = new ShapeClass({
-            shape: zrUtil.defaults({clockwise: clockwise}, layout)
+            shape: zrUtil.defaults({clockwise: clockwise}, layout),
+            z2: 1
         });
+
+        sector.name = 'item';
 
         // Animation
         if (animationModel) {
@@ -460,7 +560,10 @@ function updateStyle(
 // In case width or height are too small.
 function getLineWidth(itemModel, rawLayout) {
     var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
-    return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
+    // width or height may be NaN for empty data
+    var width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
+    var height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);
+    return Math.min(lineWidth, width, height);
 }
 
 
