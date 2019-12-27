@@ -57,7 +57,40 @@ export default function (seriesType, ecModel, api, payload) {
             !isNaN(value) && validDataCount++;
         });
 
-        var sum = data.getSum(valueDim);
+        var sum = 0;
+        var max = data._rawExtent[1];   
+        var tempMax = 0;                
+        var trueValueArray = [];        
+        var extent = data.getDataExtent(valueDim);
+
+        if(data && data._rawData && data._rawData._data && data._rawData._data.length && data._rawData._data.length > 0){
+            var dataArray = data._rawData._data;
+            for(var i = 0; i < dataArray.length; i++){
+                if(dataArray[i].value instanceof Array){
+                    tempMax = 0;
+                    for(var j = 0; j < dataArray[i].value.length; j++){
+                        tempMax += dataArray[i].value[j];
+                    }     
+                    sum += tempMax;
+                    if(tempMax > max){
+                        data._rawExtent[1] = tempMax;
+                    }
+                    trueValueArray.push(tempMax);
+                }else{
+                    if(!isNaN(dataArray[i].value)){
+                        sum += dataArray[i].value;
+                        trueValueArray.push(dataArray[i].value);
+                    }else{
+                        if(!isNaN(dataArray[i])){
+                            sum += dataArray[i];
+                            trueValueArray.push(dataArray[i]);
+                        }
+                    }
+                }
+            }
+        }
+        extent[0] = 0;
+
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
@@ -65,10 +98,6 @@ export default function (seriesType, ecModel, api, payload) {
 
         var roseType = seriesModel.get('roseType');
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
-
-        // [0...max]
-        var extent = data.getDataExtent(valueDim);
-        extent[0] = 0;
 
         // In the case some sector angle is smaller than minAngle
         var restAngle = PI2;
@@ -79,7 +108,7 @@ export default function (seriesType, ecModel, api, payload) {
 
         data.each(valueDim, function (value, idx) {
             var angle;
-            if (isNaN(value)) {
+            if (isNaN(trueValueArray[idx])) {
                 data.setItemLayout(idx, {
                     angle: NaN,
                     startAngle: NaN,
@@ -98,7 +127,7 @@ export default function (seriesType, ecModel, api, payload) {
             // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？
             if (roseType !== 'area') {
                 angle = (sum === 0 && stillShowZeroSum)
-                    ? unitRadian : (value * unitRadian);
+                    ? unitRadian : (trueValueArray[idx] * unitRadian);
             }
             else {
                 angle = PI2 / validDataCount;
@@ -109,7 +138,7 @@ export default function (seriesType, ecModel, api, payload) {
                 restAngle -= minAngle;
             }
             else {
-                valueSumLargerThanMinAngle += value;
+                valueSumLargerThanMinAngle += trueValueArray[idx];
             }
 
             var endAngle = currentAngle + dir * angle;
@@ -122,7 +151,7 @@ export default function (seriesType, ecModel, api, payload) {
                 cy: cy,
                 r0: r0,
                 r: roseType
-                    ? linearMap(value, extent, [r0, r])
+                    ? linearMap(trueValueArray[idx], extent, [r0, r])
                     : r
             });
 
@@ -137,7 +166,7 @@ export default function (seriesType, ecModel, api, payload) {
             if (restAngle <= 1e-3) {
                 var angle = PI2 / validDataCount;
                 data.each(valueDim, function (value, idx) {
-                    if (!isNaN(value)) {
+                    if (!isNaN(trueValueArray[idx])) {
                         var layout = data.getItemLayout(idx);
                         layout.angle = angle;
                         layout.startAngle = startAngle + dir * idx * angle;
@@ -152,7 +181,7 @@ export default function (seriesType, ecModel, api, payload) {
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         var angle = layout.angle === minAngle
-                            ? minAngle : value * unitRadian;
+                            ? minAngle : trueValueArray[idx] * unitRadian;
                         layout.startAngle = currentAngle;
                         layout.endAngle = currentAngle + dir * angle;
                         currentAngle += dir * angle;

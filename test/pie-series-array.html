@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -19,173 +18,200 @@ under the License.
 -->
 
 <html>
-    <head>
-        <meta charset="utf-8">
-        <script src="lib/esl.js"></script>
-        <script src="lib/config.js"></script>
-        <script src="lib/dat.gui.min.js"></script>
-    </head>
-    <body>
-        <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                background-image: url(old_mathematics.png);
-                background-repeat: repeat;
-            }
-        </style>
-        <div id="main"></div>
-        <script>
 
-            require([
-                'echarts'
-                // 'echarts/chart/pie',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox'
-            ], function (echarts) {
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/dat.gui.min.js"></script>
+</head>
 
-                var mainEl = document.getElementById('main');
-                var chart = echarts.init(mainEl);
-                var colorList = [
-                    '#c23531', '#2f4554', '#61a0a8',
-                    '#d48265', '#91c7ae','#749f83',
-                    '#ca8622', '#bda29a','#6e7074',
-                    '#546570', '#c4ccd3'
-                ];
+<body>
+    <style>
+        html,
+        body,
+        #main {
+            width: 100%;
+            height: 100%;
+            background-image: url(old_mathematics.png);
+            background-repeat: repeat;
+        }
+    </style>
+    <div id="main"></div>
+    <script>
 
-                var data = [
-                    {value: [100,100,100], name: '直接访问'},
-                    {value: 310, name: '邮件营销'},
-                    {value: 234, name: '联盟广告'},
-                    {value: 135, name: '视频广告'},
-                    {value: 1548, name: '搜索引擎'}
-                ];
-                var legendData = [];
+        require([
+            'echarts'
+            // 'echarts/chart/pie',
+            // 'echarts/component/legend',
+            // 'echarts/component/grid',
+            // 'echarts/component/tooltip',
+            // 'echarts/component/toolbox'
+        ], function (echarts) {
 
-                echarts.util.each(data, function (item, index) {
-                    item.itemStyle = {
-                        normal: {color: colorList[index]}
-                    };
-                    legendData.push(item.name);
-                });
+            var mainEl = document.getElementById('main');
+            var chart = echarts.init(mainEl);
+            var colorList = [
+                '#c23531', '#2f4554', '#61a0a8',
+                '#d48265', '#91c7ae', '#749f83',
+                '#ca8622', '#bda29a', '#6e7074',
+                '#546570', '#c4ccd3'
+            ];
 
-                chart.setOption({
-                    legend: {
-                        data: legendData,
-                        formatter: function (name) {
-                            return name.replace(/\n/g, ' + ');
-                        }
+            var data = [
+                {value: [100, 100, 100], name: '直接访问'},
+                {value: 310, name: '邮件营销'},
+                {value: 234, name: '联盟广告'},
+                {value: 135, name: '视频广告'},
+                {value: 1548, name: '搜索引擎'}
+            ];
+            var legendData = [];
+
+            echarts.util.each(data, function (item, index) {
+                item.itemStyle = {
+                    normal: {color: colorList[index]}
+                };
+                legendData.push(item.name);
+            });
+
+            chart.setOption({
+                title: {
+                    text: '某站点用户访问来源',
+                    // subtext: '纯属虚构',
+                    x: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
+                },
+                series: [{
+                    name: '访问来源',
+                    hoverAnimation: true, //鼠标悬停事件
+                    type: 'pie',
+                    radius: '55%',
+                    center: ['50%', '40%'],
+                    data: [{
+                        value: [100, 100, 100],
+                        name: '直接访问'
                     },
-                    toolbox: {
-                        left: 'left',
-                        feature: {
-                            dataView: {},
-                            saveAsImage: {}
-                        }
+                    {
+                        value: 310,
+                        name: '邮件营销'
                     },
-                    tooltip: {},
-                    series: [{
-                        name: 'pie',
-                        type: 'pie',
-                        selectedMode: 'single',
-                        selectedOffset: 30,
-                        clockwise: true,
-                        label: {
-                            normal: {
-                                textStyle: {
-                                    fontSize: 18,
-                                    color: '#333'
-                                }
-                            }
+                    {
+                        value: 234,
+                        name: '联盟广告'
+                    },
+                    {
+                        value: 135,
+                        name: '视频广告'
+                    },
+                    {
+                        value: 1548,
+                        name: '搜索引擎'
+                    }
+                    ],
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
                         },
-                        labelLine: {
-                            normal: {
-                                lineStyle: {
-                                    color: '#333'
-                                }
-                            }
-                        },
-                        data: data
-                    }]
-                });
-
-                var dragging;
-                var draggingDataIndex;
-                var dx;
-                var dy;
-                var zr = chart.getZr();
-
-                chart.on('mousedown', function (params) {
-                    draggingDataIndex = getHoveredDataIndex(params);
-                    if (draggingDataIndex != null) {
-
-                        var srcSector = params.event.target;
-                        dragging = new echarts.graphic.Sector({
-                            shape: echarts.util.extend({}, srcSector.shape),
-                            style: {
-                                fill: srcSector.style.fill,
-                                opacity: 0.5
+                        normal: {
+                            label: {
+                                show: true,
+                                formatter: "{b} \n {c0} ({d}%)"
                             },
-                            silent: true,
-                            z: 10000
-                        });
+                            labelLine: {
+                                show: true
+                            }
 
-                        dx = params.event.offsetX - srcSector.shape.cx;
-                        dy = params.event.offsetY - srcSector.shape.cy;
-
-                        zr.add(dragging);
-                    }
-                });
-
-                chart.on('mouseup', function (params) {
-                    if (dragging) {
-                        var targetDataIndex = getHoveredDataIndex(params);
-                        if (targetDataIndex != null
-                            && targetDataIndex !== draggingDataIndex
-                        ) {
-                            data[targetDataIndex].value += data[draggingDataIndex].value;
-                            data[targetDataIndex].name += '\n' + data[draggingDataIndex].name;
-                            legendData[targetDataIndex] = data[targetDataIndex].name;
-                            data.splice(draggingDataIndex, 1);
-                            legendData.splice(draggingDataIndex, 1);
-                            chart.setOption({
-                                legend: {data: legendData},
-                                series: {data: data}
-                            });
                         }
                     }
-                });
+                }]
+            });
 
-                mainEl.addEventListener('mousemove', function (e) {
-                    var box = mainEl.getBoundingClientRect();
-                    var zrX = e.clientX - box.left;
-                    var zrY = e.clientY - box.top;
+            var dragging;
+            var draggingDataIndex;
+            var dx;
+            var dy;
+            var zr = chart.getZr();
 
-                    if (dragging) {
-                        dragging.setShape({
-                            cx: zrX - dx,
-                            cy: zrY - dy
+            chart.on('mousedown', function (params) {
+                draggingDataIndex = getHoveredDataIndex(params);
+                if (draggingDataIndex != null) {
+
+                    var srcSector = params.event.target;
+                    dragging = new echarts.graphic.Sector({
+                        shape: echarts.util.extend({}, srcSector.shape),
+                        style: {
+                            fill: srcSector.style.fill,
+                            opacity: 0.5
+                        },
+                        silent: true,
+                        z: 10000
+                    });
+
+                    dx = params.event.offsetX - srcSector.shape.cx;
+                    dy = params.event.offsetY - srcSector.shape.cy;
+
+                    zr.add(dragging);
+                }
+            });
+
+            chart.on('mouseup', function (params) {
+                if (dragging) {
+                    var targetDataIndex = getHoveredDataIndex(params);
+                    if (targetDataIndex != null
+                        && targetDataIndex !== draggingDataIndex
+                    ) {
+                        data[targetDataIndex].value += data[draggingDataIndex].value;
+                        data[targetDataIndex].name += '\n' + data[draggingDataIndex].name;
+                        legendData[targetDataIndex] = data[targetDataIndex].name;
+                        data.splice(draggingDataIndex, 1);
+                        legendData.splice(draggingDataIndex, 1);
+                        chart.setOption({
+                            legend: {data: legendData},
+                            series: {data: data}
                         });
                     }
-                });
-
-                document.addEventListener('mouseup', function (e) {
-                    if (dragging) {
-                        zr.remove(dragging);
-                        dragging = null;
-                    }
-                });
-
-                function getHoveredDataIndex(params) {
-                    return params.componentType === 'series'
-                        && params.componentSubType === 'pie'
-                        && params.dataIndex;
                 }
+            });
 
-            })
+            mainEl.addEventListener('mousemove', function (e) {
+                var box = mainEl.getBoundingClientRect();
+                var zrX = e.clientX - box.left;
+                var zrY = e.clientY - box.top;
 
-        </script>
-    </body>
+                if (dragging) {
+                    dragging.setShape({
+                        cx: zrX - dx,
+                        cy: zrY - dy
+                    });
+                }
+            });
+
+            document.addEventListener('mouseup', function (e) {
+                if (dragging) {
+                    zr.remove(dragging);
+                    dragging = null;
+                }
+            });
+
+            function getHoveredDataIndex(params) {
+                return params.componentType === 'series'
+                    && params.componentSubType === 'pie'
+                    && params.dataIndex;
+            }
+
+        })
+
+    </script>
+</body>
+
 </html>
