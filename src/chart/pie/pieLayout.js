@@ -58,9 +58,9 @@ export default function (seriesType, ecModel, api, payload) {
         });
 
         var sum = 0;
-        var max = data._rawExtent[1];   
-        var tempMax = 0;                
-        var trueValueArray = [];        
+        var max = data._rawExtent[1];
+        var tempMax = 0;
+        var trueValueArray = [];
         var extent = data.getDataExtent(valueDim);
 
         if(data && data._rawData && data._rawData._data && data._rawData._data.length && data._rawData._data.length > 0){
@@ -70,7 +70,7 @@ export default function (seriesType, ecModel, api, payload) {
                     tempMax = 0;
                     for(var j = 0; j < dataArray[i].value.length; j++){
                         tempMax += dataArray[i].value[j];
-                    }     
+                    }
                     sum += tempMax;
                     if(tempMax > max){
                         data._rawExtent[1] = tempMax;
@@ -178,7 +178,7 @@ export default function (seriesType, ecModel, api, payload) {
                 unitRadian = restAngle / valueSumLargerThanMinAngle;
                 currentAngle = startAngle;
                 data.each(valueDim, function (value, idx) {
-                    if (!isNaN(value)) {
+                    if (!isNaN(trueValueArray[idx])) {
                         var layout = data.getItemLayout(idx);
                         var angle = layout.angle === minAngle
                             ? minAngle : trueValueArray[idx] * unitRadian;
