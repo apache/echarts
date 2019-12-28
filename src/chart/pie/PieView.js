@@ -171,7 +171,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     toggleItemSelected(
         this,
         data.getItemLayout(idx),
-        seriesModel.isSelected(null, idx),
+        seriesModel.isSelected(data.getName(idx)),
         seriesModel.get('selectedOffset'),
         seriesModel.get('animation')
     );
