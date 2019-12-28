@@ -65,7 +65,7 @@ let getLangFileInfo = getPlugin.getLangFileInfo = function (lang) {
 
     if (lang) {
         if (/^[a-zA-Z]{2}$/.test(lang)) {
-            absolutePath = resolve(__dirname, '../', 'src/lang' + lang.toUpperCase() + '.js')
+            absolutePath = resolve(__dirname, '../', 'src/lang' + lang.toUpperCase() + '.js');
         }
         else {
             isOuter = true;

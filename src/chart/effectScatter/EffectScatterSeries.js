@@ -27,7 +27,7 @@ export default SeriesModel.extend({
     dependencies: ['grid', 'polar'],
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(this.getSource(), this);
+        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     },
 
     brushSelector: 'point',

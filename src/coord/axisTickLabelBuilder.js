@@ -20,7 +20,11 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import {makeInner} from '../util/model';
-import {makeLabelFormatter} from './axisHelper';
+import {
+    makeLabelFormatter,
+    getOptionCategoryInterval,
+    shouldShowAllLabels
+} from './axisHelper';
 
 var inner = makeInner();
 
@@ -239,12 +243,16 @@ export function calculateCategoryInterval(axis) {
     var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
 
     var cache = inner(axis.model);
+    var axisExtent = axis.getExtent();
     var lastAutoInterval = cache.lastAutoInterval;
     var lastTickCount = cache.lastTickCount;
 
     // Use cache to keep interval stable while moving zoom window,
     // otherwise the calculated interval might jitter when the zoom
     // window size is close to the interval-changing size.
+    // For example, if all of the axis labels are `a, b, c, d, e, f, g`.
+    // The jitter will cause that sometimes the displayed labels are
+    // `a, d, g` (interval: 2) sometimes `a, c, e`(interval: 1).
     if (lastAutoInterval != null
         && lastTickCount != null
         && Math.abs(lastAutoInterval - interval) <= 1
@@ -252,6 +260,10 @@ export function calculateCategoryInterval(axis) {
         // Always choose the bigger one, otherwise the critical
         // point is not the same when zooming in or zooming out.
         && lastAutoInterval > interval
+        // If the axis change is caused by chart resize, the cache should not
+        // be used. Otherwise some hiden labels might not be shown again.
+        && cache.axisExtend0 === axisExtent[0]
+        && cache.axisExtend1 === axisExtent[1]
     ) {
         interval = lastAutoInterval;
     }
@@ -260,6 +272,8 @@ export function calculateCategoryInterval(axis) {
     else {
         cache.lastTickCount = tickCount;
         cache.lastAutoInterval = interval;
+        cache.axisExtend0 = axisExtent[0];
+        cache.axisExtend1 = axisExtent[1];
     }
 
     return interval;
@@ -304,12 +318,11 @@ function makeLabelsByNumericCategoryInterval(axis, categoryInterval, onlyTick) {
     // suitable for splitLine and splitArea rendering.
     // (2) Scales except category always contain min max label so
     // do not need to perform this process.
-    var showMinMax = {
-        min: labelModel.get('showMinLabel'),
-        max: labelModel.get('showMaxLabel')
-    };
+    var showAllLabel = shouldShowAllLabels(axis);
+    var includeMinLabel = labelModel.get('showMinLabel') || showAllLabel;
+    var includeMaxLabel = labelModel.get('showMaxLabel') || showAllLabel;
 
-    if (showMinMax.min && startTick !== ordinalExtent[0]) {
+    if (includeMinLabel && startTick !== ordinalExtent[0]) {
         addItem(ordinalExtent[0]);
     }
 
@@ -319,7 +332,7 @@ function makeLabelsByNumericCategoryInterval(axis, categoryInterval, onlyTick) {
         addItem(tickValue);
     }
 
-    if (showMinMax.max && tickValue !== ordinalExtent[1]) {
+    if (includeMaxLabel && tickValue - step !== ordinalExtent[1]) {
         addItem(ordinalExtent[1]);
     }
 
@@ -359,10 +372,4 @@ function makeLabelsByCustomizedCategoryInterval(axis, categoryInterval, onlyTick
     });
 
     return result;
-}
-
-// Can be null|'auto'|number|function
-function getOptionCategoryInterval(model) {
-    var interval = model.get('interval');
-    return interval == null ? 'auto' : interval;
 }

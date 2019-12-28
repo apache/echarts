@@ -26,19 +26,23 @@ import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
+import {getNodeGlobalScale} from './graphHelper';
 
+var FOCUS_ADJACENCY = '__focusNodeAdjacency';
+var UNFOCUS_ADJACENCY = '__unfocusNodeAdjacency';
 
 var nodeOpacityPath = ['itemStyle', 'opacity'];
 var lineOpacityPath = ['lineStyle', 'opacity'];
 
 function getItemOpacity(item, opacityPath) {
-    return item.getVisual('opacity') || item.getModel().get(opacityPath);
+    var opacity = item.getVisual('opacity');
+    return opacity != null ? opacity : item.getModel().get(opacityPath);
 }
 
 function fadeOutItem(item, opacityPath, opacityRatio) {
     var el = item.getGraphicEl();
-
     var opacity = getItemOpacity(item, opacityPath);
+
     if (opacityRatio != null) {
         opacity == null && (opacity = 1);
         opacity *= opacityRatio;
@@ -46,8 +50,12 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 
     el.downplay && el.downplay();
     el.traverse(function (child) {
-        if (child.type !== 'group') {
-            child.setStyle('opacity', opacity);
+        if (!child.isGroup) {
+            var opct = child.lineLabelOriginalOpacity;
+            if (opct == null || opacityRatio != null) {
+                opct = opacity;
+            }
+            child.setStyle('opacity', opct);
         }
     });
 }
@@ -55,13 +63,13 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
 function fadeInItem(item, opacityPath) {
     var opacity = getItemOpacity(item, opacityPath);
     var el = item.getGraphicEl();
-
-    el.highlight && el.highlight();
+    // Should go back to normal opacity first, consider hoverLayer,
+    // where current state is copied to elMirror, and support
+    // emphasis opacity here.
     el.traverse(function (child) {
-        if (child.type !== 'group') {
-            child.setStyle('opacity', opacity);
-        }
+        !child.isGroup && child.setStyle('opacity', opacity);
     });
+    el.highlight && el.highlight();
 }
 
 export default echarts.extendChartView({
@@ -86,10 +94,10 @@ export default echarts.extendChartView({
     },
 
     render: function (seriesModel, ecModel, api) {
+        var graphView = this;
         var coordSys = seriesModel.coordinateSystem;
 
         this._model = seriesModel;
-        this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
 
         var symbolDraw = this._symbolDraw;
         var lineDraw = this._lineDraw;
@@ -109,7 +117,7 @@ export default echarts.extendChartView({
             }
         }
         // Fix edge contact point with node
-        adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         var data = seriesModel.getData();
         symbolDraw.updateData(data);
@@ -151,24 +159,21 @@ export default echarts.extendChartView({
             }
             el.setDraggable(draggable && forceLayout);
 
-            el.off('mouseover', el.__focusNodeAdjacency);
-            el.off('mouseout', el.__unfocusNodeAdjacency);
+            el[FOCUS_ADJACENCY] && el.off('mouseover', el[FOCUS_ADJACENCY]);
+            el[UNFOCUS_ADJACENCY] && el.off('mouseout', el[UNFOCUS_ADJACENCY]);
 
             if (itemModel.get('focusNodeAdjacency')) {
-                el.on('mouseover', el.__focusNodeAdjacency = function () {
+                el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                    graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
                         dataIndex: el.dataIndex
                     });
                 });
-                el.on('mouseout', el.__unfocusNodeAdjacency = function () {
-                    api.dispatchAction({
-                        type: 'unfocusNodeAdjacency',
-                        seriesId: seriesModel.id
-                    });
+                el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
+                    graphView._dispatchUnfocus(api);
                 });
-
             }
 
         }, this);
@@ -176,22 +181,20 @@ export default echarts.extendChartView({
         data.graph.eachEdge(function (edge) {
             var el = edge.getGraphicEl();
 
-            el.off('mouseover', el.__focusNodeAdjacency);
-            el.off('mouseout', el.__unfocusNodeAdjacency);
+            el[FOCUS_ADJACENCY] && el.off('mouseover', el[FOCUS_ADJACENCY]);
+            el[UNFOCUS_ADJACENCY] && el.off('mouseout', el[UNFOCUS_ADJACENCY]);
 
             if (edge.getModel().get('focusNodeAdjacency')) {
-                el.on('mouseover', el.__focusNodeAdjacency = function () {
+                el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                    graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
                         edgeDataIndex: edge.dataIndex
                     });
                 });
-                el.on('mouseout', el.__unfocusNodeAdjacency = function () {
-                    api.dispatchAction({
-                        type: 'unfocusNodeAdjacency',
-                        seriesId: seriesModel.id
-                    });
+                el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
+                    graphView._dispatchUnfocus(api);
                 });
             }
         });
@@ -201,6 +204,8 @@ export default echarts.extendChartView({
         var cx = data.getLayout('cx');
         var cy = data.getLayout('cy');
         data.eachItemGraphicEl(function (el, idx) {
+            var itemModel = data.getItemModel(idx);
+            var labelRotate = itemModel.get('label.rotate') || 0;
             var symbolPath = el.getSymbolPath();
             if (circularRotateLabel) {
                 var pos = data.getItemLayout(idx);
@@ -213,17 +218,25 @@ export default echarts.extendChartView({
                     rad = rad - Math.PI;
                 }
                 var textPosition = isLeft ? 'left' : 'right';
-                symbolPath.setStyle({
-                    textRotation: -rad,
-                    textPosition: textPosition,
-                    textOrigin: 'center'
-                });
-                symbolPath.hoverStyle && (symbolPath.hoverStyle.textPosition = textPosition);
+                graphic.modifyLabelStyle(
+                    symbolPath,
+                    {
+                        textRotation: -rad,
+                        textPosition: textPosition,
+                        textOrigin: 'center'
+                    },
+                    {
+                        textPosition: textPosition
+                    }
+                );
             }
             else {
-                symbolPath.setStyle({
-                    textRotation: 0
-                });
+                graphic.modifyLabelStyle(
+                    symbolPath,
+                    {
+                        textRotation: labelRotate *= Math.PI / 180
+                    }
+                );
             }
         });
 
@@ -233,10 +246,31 @@ export default echarts.extendChartView({
     dispose: function () {
         this._controller && this._controller.dispose();
         this._controllerHost = {};
+        this._clearTimer();
+    },
+
+    _dispatchUnfocus: function (api, opt) {
+        var self = this;
+        this._clearTimer();
+        this._unfocusDelayTimer = setTimeout(function () {
+            self._unfocusDelayTimer = null;
+            api.dispatchAction({
+                type: 'unfocusNodeAdjacency',
+                seriesId: self._model.id
+            });
+        }, 500);
+
+    },
+
+    _clearTimer: function () {
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
+        }
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var edgeDataIndex = payload.edgeDataIndex;
@@ -274,7 +308,7 @@ export default echarts.extendChartView({
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getData().graph;
+        var graph = seriesModel.getData().graph;
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);
@@ -340,7 +374,7 @@ export default echarts.extendChartView({
                     originY: e.originY
                 });
                 this._updateNodeAndLinkScale();
-                adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+                adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
                 this._lineDraw.updateLayout();
             }, this);
     },
@@ -349,7 +383,7 @@ export default echarts.extendChartView({
         var seriesModel = this._model;
         var data = seriesModel.getData();
 
-        var nodeScale = this._getNodeGlobalScale(seriesModel);
+        var nodeScale = getNodeGlobalScale(seriesModel);
         var invScale = [nodeScale, nodeScale];
 
         data.eachItemGraphicEl(function (el, idx) {
@@ -357,25 +391,8 @@ export default echarts.extendChartView({
         });
     },
 
-    _getNodeGlobalScale: function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys.type !== 'view') {
-            return 1;
-        }
-
-        var nodeScaleRatio = this._nodeScaleRatio;
-
-        var groupScale = coordSys.scale;
-        var groupZoom = (groupScale && groupScale[0]) || 1;
-        // Scale node when zoom changes
-        var roamZoom = coordSys.getZoom();
-        var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
-
-        return nodeScale / groupZoom;
-    },
-
     updateLayout: function (seriesModel) {
-        adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         this._symbolDraw.updateLayout();
         this._lineDraw.updateLayout();

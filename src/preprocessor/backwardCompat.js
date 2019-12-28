@@ -80,15 +80,20 @@ export default function (option, isTheme) {
 
         var seriesType = seriesOpt.type;
 
-        if (seriesType === 'pie' || seriesType === 'gauge') {
+        if (seriesType === 'line') {
+            if (seriesOpt.clipOverflow != null) {
+                seriesOpt.clip = seriesOpt.clipOverflow;
+            }
+        }
+        else if (seriesType === 'pie' || seriesType === 'gauge') {
             if (seriesOpt.clockWise != null) {
                 seriesOpt.clockwise = seriesOpt.clockWise;
             }
         }
-        if (seriesType === 'gauge') {
+        else if (seriesType === 'gauge') {
             var pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
-                && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
+                && set(seriesOpt, 'itemStyle.color', pointerColor);
         }
 
         compatLayoutProperties(seriesOpt);

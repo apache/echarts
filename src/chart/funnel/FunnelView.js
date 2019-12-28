@@ -37,21 +37,18 @@ function FunnelPiece(data, idx) {
     this.add(labelLine);
     this.add(text);
 
-    this.updateData(data, idx, true);
+    this.highDownOnUpdate = function (fromState, toState) {
+        if (toState === 'emphasis') {
+            labelLine.ignore = labelLine.hoverIgnore;
+            text.ignore = text.hoverIgnore;
+        }
+        else {
+            labelLine.ignore = labelLine.normalIgnore;
+            text.ignore = text.normalIgnore;
+        }
+    };
 
-    // Hover to change label and labelLine
-    function onEmphasis() {
-        labelLine.ignore = labelLine.hoverIgnore;
-        text.ignore = text.hoverIgnore;
-    }
-    function onNormal() {
-        labelLine.ignore = labelLine.normalIgnore;
-        text.ignore = text.normalIgnore;
-    }
-    this.on('emphasis', onEmphasis)
-        .on('normal', onNormal)
-        .on('mouseover', onEmphasis)
-        .on('mouseout', onNormal);
+    this.updateData(data, idx, true);
 }
 
 var funnelPieceProto = FunnelPiece.prototype;

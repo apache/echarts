@@ -38,7 +38,8 @@ export default MarkerModel.extend({
         },
         label: {
             show: true,
-            position: 'end'
+            position: 'end',
+            distance: 5
         },
         lineStyle: {
             type: 'dashed'

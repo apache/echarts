@@ -204,6 +204,99 @@ under the License.
             },
             z: 100
         }]
+    }, {
+        type: 'group',
+        id: 'bl',
+        width: '100%',
+        height: '100%',
+        children: [{
+            type: 'rect',
+            right: 0,
+            bottom: 0,
+            shape: {
+                width: 200,
+                height: 100
+            },
+            style: {
+                stroke: 'blue',
+                fill: 'blue',
+                lineWidth: 2
+            }
+        }, {
+            type: 'rect',
+            position: [10, 20],
+            shape: {
+                width: 50,
+                height: 150
+            },
+            style: {
+                stroke: 'blue',
+                fill: 'blue',
+                lineWidth: 2
+            }
+        }, {
+            type: 'group',
+            width: '50%',
+            height: '50%',
+            children: [{
+                type: 'rect',
+                shape: {
+                    width: 100,
+                    height: 100
+                },
+                style: {
+                    stroke: 'blue',
+                    fill: 'blue',
+                    lineWidth: 2
+                },
+                right: 0,
+                bottom: 0
+            }]
+        }]
+    }, {
+        type: 'rect',
+        right: 0,
+        bottom: 0,
+        shape: {
+            width: 200,
+            height: 100
+        },
+        style: {
+            stroke: 'orange',
+            fill: 'transparent',
+            lineWidth: 2
+        }
+    }, {
+        type: 'rect',
+        position: [10, 20],
+        shape: {
+            width: 50,
+            height: 150
+        },
+        style: {
+            stroke: 'orange',
+            fill: 'transparent',
+            lineWidth: 2
+        }
+    }, {
+        type: 'rect',
+        shape: {
+            width: 100,
+            height: 100
+        },
+        style: {
+            stroke: 'orange',
+            fill: 'transparent',
+            lineWidth: 2
+        },
+        right: '50%',
+        bottom: '50%'
+    }, {
+        type: 'text',
+        position: [220, 20],
+        style: {
+            text: '蓝色矩形应与橙色矩形同一位置'
+        }
     }]
 }
             </textarea>

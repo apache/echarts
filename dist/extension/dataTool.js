@@ -317,8 +317,12 @@ function map(obj, cb, context) {
 * under the License.
 */
 
-// GEXF File Parser
-// http://gexf.net/1.2draft/gexf-12draft-primer.pdf
+/**
+ * This is a parse of GEXF.
+ *
+ * The spec of GEXF:
+ * https://gephi.org/gexf/1.2draft/gexf-12draft-primer.pdf
+ */
 
 function parse(xml) {
     var doc;
@@ -393,7 +397,7 @@ function parseNodes(parent, attributesMap) {
             // z
         }
         if (vizColorDom) {
-            node.itemStyle.normal.color = 'rgb(' +[
+            node.itemStyle.normal.color = 'rgb(' + [
                 getAttr(vizColorDom, 'r') | 0,
                 getAttr(vizColorDom, 'g') | 0,
                 getAttr(vizColorDom, 'b') | 0
@@ -424,7 +428,7 @@ function parseNodes(parent, attributesMap) {
                             attValue = parseFloat(attValue);
                             break;
                         case 'boolean':
-                            attValue = attValue.toLowerCase() == 'true';
+                            attValue = attValue.toLowerCase() === 'true';
                             break;
                         default:
                     }
@@ -483,16 +487,17 @@ function getAttr(el, attrName) {
     return el.getAttribute(attrName);
 }
 
-function getChildByTagName (parent, tagName) {
+function getChildByTagName(parent, tagName) {
     var node = parent.firstChild;
 
     while (node) {
         if (
-            node.nodeType != 1 ||
-            node.nodeName.toLowerCase() != tagName.toLowerCase()
+            node.nodeType !== 1
+            || node.nodeName.toLowerCase() !== tagName.toLowerCase()
         ) {
             node = node.nextSibling;
-        } else {
+        }
+        else {
             return node;
         }
     }
@@ -500,11 +505,11 @@ function getChildByTagName (parent, tagName) {
     return null;
 }
 
-function getChildrenByTagName (parent, tagName) {
+function getChildrenByTagName(parent, tagName) {
     var node = parent.firstChild;
     var children = [];
     while (node) {
-        if (node.nodeName.toLowerCase() == tagName.toLowerCase()) {
+        if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
             children.push(node);
         }
         node = node.nextSibling;
@@ -535,6 +540,15 @@ var gexf = (Object.freeze || Object)({
 * KIND, either express or implied.  See the License for the
 * specific language governing permissions and limitations
 * under the License.
+*/
+
+/*
+* A third-party license is embeded for some of the code in this file:
+* The method "quantile" was copied from "d3.js".
+* (See more details in the comment of the method below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
 */
 
 /**
@@ -569,6 +583,13 @@ var gexf = (Object.freeze || Object)({
  */
 
 
+/**
+ * asc sort arr.
+ * The input arr will be modified.
+ *
+ * @param {Array} arr
+ * @return {Array} The input arr.
+ */
 function asc(arr) {
     arr.sort(function (a, b) {
         return a - b;
@@ -654,6 +675,15 @@ function asc(arr) {
 
 
 /**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
+ * @return {number}
+ */
+
+
+/**
  * find a “nice” number approximately equal to x. Round the number if round = true,
  * take ceiling if round = false. The primary observation is that the “nicest”
  * numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
@@ -667,39 +697,9 @@ function asc(arr) {
 
 
 /**
- * BSD 3-Clause
- *
- * Copyright (c) 2010-2015, Michael Bostock
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * * The name Michael Bostock may not be used to endorse or promote products
- *   derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL MICHAEL BOSTOCK BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * @see <https://github.com/mbostock/d3/blob/master/src/arrays/quantile.js>
- * @see <http://en.wikipedia.org/wiki/Quantile>
+ * This code was copied from "d3.js"
+ * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.
+ * See the license statement at the head of this file.
  * @param {Array.<number>} ascArr
  */
 function quantile(ascArr, p) {

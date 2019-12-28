@@ -19,6 +19,7 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import Cartesian from './Cartesian';
 
 function Cartesian2D(name) {
@@ -130,6 +131,23 @@ Cartesian2D.prototype = {
      */
     getOtherAxis: function (axis) {
         return this.getAxis(axis.dim === 'x' ? 'y' : 'x');
+    },
+
+    /**
+     * Get rect area of cartesian.
+     * Area will have a contain function to determine if a point is in the coordinate system.
+     * @return {BoundingRect}
+     */
+    getArea: function () {
+        var xExtent = this.getAxis('x').getGlobalExtent();
+        var yExtent = this.getAxis('y').getGlobalExtent();
+        var x = Math.min(xExtent[0], xExtent[1]);
+        var y = Math.min(yExtent[0], yExtent[1]);
+        var width = Math.max(xExtent[0], xExtent[1]) - x;
+        var height = Math.max(yExtent[0], yExtent[1]) - y;
+
+        var rect = new BoundingRect(x, y, width, height);
+        return rect;
     }
 
 };

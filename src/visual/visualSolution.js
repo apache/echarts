@@ -195,7 +195,7 @@ export function incrementalApplyVisual(stateList, visualMappings, getValueState,
 
             // Consider performance
             if (rawDataItem && rawDataItem.visualMap === false) {
-                return;
+                continue;
             }
 
             var value = dim != null

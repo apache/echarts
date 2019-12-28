@@ -30,7 +30,7 @@ import legendFilter from './legend/legendFilter';
 import Component from '../model/Component';
 
 // Series Filter
-echarts.registerProcessor(legendFilter);
+echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
 
 Component.registerSubTypeDefaulter('legend', function () {
     // Default 'plain' when no type specified.

@@ -47,7 +47,7 @@ export default function (ecModel) {
                 simpleLayout(graphSeries);
             }
             else if (initLayout === 'circular') {
-                circularLayout(graphSeries);
+                circularLayout(graphSeries, 'value');
             }
 
             var nodeDataExtent = nodeData.getDataExtent('value');
@@ -83,11 +83,13 @@ export default function (ecModel) {
                 if (isNaN(d)) {
                     d = (edgeLength[0] + edgeLength[1]) / 2;
                 }
+                var edgeModel = edge.getModel();
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
-                    curveness: edge.getModel().get('lineStyle.curveness') || 0
+                    curveness: edgeModel.get('lineStyle.curveness') || 0,
+                    ignoreForceLayout: edgeModel.get('ignoreForceLayout')
                 };
             });
 
@@ -95,7 +97,8 @@ export default function (ecModel) {
             var rect = coordSys.getBoundingRect();
             var forceInstance = forceLayout(nodes, edges, {
                 rect: rect,
-                gravity: forceModel.get('gravity')
+                gravity: forceModel.get('gravity'),
+                friction: forceModel.get('friction')
             });
             var oldStep = forceInstance.step;
             forceInstance.step = function (cb) {

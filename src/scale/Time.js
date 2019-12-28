@@ -18,10 +18,15 @@
 */
 
 /*
-* The `scaleLevels` references to d3.js. The use of the source
-* code of this file is also subject to the terms and consitions
-* of its license (BSD-3Clause, see <echarts/src/licenses/LICENSE-d3>).
+* A third-party license is embeded for some of the code in this file:
+* The "scaleLevels" was originally copied from "d3.js" with some
+* modifications made for this project.
+* (See more details in the comment on the definition of "scaleLevels" below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
 */
+
 
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
@@ -171,7 +176,12 @@ zrUtil.each(['contain', 'normalize'], function (methodName) {
     };
 });
 
-// Steps from d3, see the license statement at the top of this file.
+/**
+ * This implementation was originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/time/scale.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ */
 var scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s

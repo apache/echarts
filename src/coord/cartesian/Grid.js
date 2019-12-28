@@ -62,7 +62,7 @@ function Grid(gridModel, ecModel, api) {
     this._coordsList = [];
 
     /**
-     * @type {Object.<string, module:echarts/coord/cartesian/Axis2D>}
+     * @type {Object.<string, Array.<module:echarts/coord/cartesian/Axis2D>>}
      * @private
      */
     this._axesMap = {};
@@ -422,20 +422,14 @@ gridProto._initCartesian = function (gridModel, ecModel, api) {
                 // Fix position
                 if (axisPosition !== 'top' && axisPosition !== 'bottom') {
                     // Default bottom of X
-                    axisPosition = 'bottom';
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
-                    }
+                    axisPosition = axisPositionUsed.bottom ? 'top' : 'bottom';
                 }
             }
             else {
                 // Fix position
                 if (axisPosition !== 'left' && axisPosition !== 'right') {
                     // Default left of Y
-                    axisPosition = 'left';
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'left' ? 'right' : 'left';
-                    }
+                    axisPosition = axisPositionUsed.left ? 'right' : 'left';
                 }
             }
             axisPositionUsed[axisPosition] = true;

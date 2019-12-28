@@ -63,6 +63,11 @@ export default echarts.extendComponentView({
             var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
             var feature;
 
+            // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
+            if (payload && payload.newTitle != null) {
+                featureOpt.title = payload.newTitle;
+            }
+
             if (featureName && !oldName) { // Create
                 if (isUserFeatureName(featureName)) {
                     feature = {
@@ -157,6 +162,33 @@ export default echarts.extendComponentView({
                 path.setStyle(iconStyleModel.getItemStyle());
                 path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
 
+                // Text position calculation
+                path.setStyle({
+                    text: titles[iconName],
+                    textAlign: iconStyleEmphasisModel.get('textAlign'),
+                    textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
+                    textPadding: iconStyleEmphasisModel.get('textPadding'),
+                    textFill: null
+                });
+
+                var tooltipModel = toolboxModel.getModel('tooltip');
+                if (tooltipModel && tooltipModel.get('show')) {
+                    path.attr('tooltip', zrUtil.extend({
+                        content: titles[iconName],
+                        formatter: tooltipModel.get('formatter', true)
+                            || function () {
+                                return titles[iconName];
+                            },
+                        formatterParams: {
+                            componentType: 'toolbox',
+                            name: iconName,
+                            title: titles[iconName],
+                            $vars: ['name', 'title']
+                        },
+                        position: tooltipModel.get('position', true) || 'bottom'
+                    }, tooltipModel.option));
+                }
+
                 graphic.setHoverStyle(path);
 
                 if (toolboxModel.get('showTitle')) {
@@ -164,16 +196,20 @@ export default echarts.extendComponentView({
                     path.on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                            var defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                                ? (toolboxModel.get('right') == null ? 'right' : 'left')
+                                : (toolboxModel.get('bottom') == null ? 'bottom' : 'top');
                             path.setStyle({
-                                text: titles[iconName],
-                                textPosition: hoverStyle.textPosition || 'bottom',
-                                textFill: hoverStyle.fill || hoverStyle.stroke || '#000',
-                                textAlign: hoverStyle.textAlign || 'center'
+                                textFill: iconStyleEmphasisModel.get('textFill')
+                                    || hoverStyle.fill || hoverStyle.stroke || '#000',
+                                textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
+                                textPosition: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
                             });
                         })
                         .on('mouseout', function () {
                             path.setStyle({
-                                textFill: null
+                                textFill: null,
+                                textBackgroundColor: null
                             });
                         });
                 }

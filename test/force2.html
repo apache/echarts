@@ -41,21 +41,11 @@ under the License.
                 'echarts',
 
                 'extension/dataTool'
-
-                // 'echarts/chart/graph',
-
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/geo',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
             ], function (echarts, dataTool) {
 
                 var gexf = dataTool.gexf;
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                var chart = echarts.init(document.getElementById('main');
 
                 $.get('./data/les-miserables.gexf', function (xml) {
                     var graph = gexf.parse(xml);

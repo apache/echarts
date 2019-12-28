@@ -21,8 +21,9 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
 import AxisView from './AxisView';
+import AxisBuilder from './AxisBuilder';
 
-var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
+var elementList = ['axisLine', 'axisLabel', 'axisTick', 'minorTick', 'splitLine', 'minorSplitLine', 'splitArea'];
 
 function getAxisLineShape(polar, rExtent, angle) {
     rExtent[1] > rExtent[0] && (rExtent = rExtent.slice().reverse());
@@ -71,6 +72,8 @@ export default AxisView.extend({
         var radiusExtent = polar.getRadiusAxis().getExtent();
 
         var ticksAngles = angleAxis.getTicksCoords();
+        var minorTickAngles = angleAxis.getMinorTicksCoords();
+
         var labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem) {
             var labelItem = zrUtil.clone(labelItem);
             labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
@@ -84,7 +87,7 @@ export default AxisView.extend({
             if (angleAxisModel.get(name + '.show')
                 && (!angleAxis.scale.isBlank() || name === 'axisLine')
             ) {
-                this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent, labels);
+                this['_' + name](angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent, labels);
             }
         }, this);
     },
@@ -95,25 +98,44 @@ export default AxisView.extend({
     _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
         var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
-        var circle = new graphic.Circle({
-            shape: {
-                cx: polar.cx,
-                cy: polar.cy,
-                r: radiusExtent[getRadiusIdx(polar)]
-            },
-            style: lineStyleModel.getLineStyle(),
-            z2: 1,
-            silent: true
-        });
-        circle.style.fill = null;
+        // extent id of the axis radius (r0 and r)
+        var rId = getRadiusIdx(polar);
+        var r0Id = rId ? 0 : 1;
 
-        this.group.add(circle);
+        var shape;
+        if (radiusExtent[r0Id] === 0) {
+            shape = new graphic.Circle({
+                shape: {
+                    cx: polar.cx,
+                    cy: polar.cy,
+                    r: radiusExtent[rId]
+                },
+                style: lineStyleModel.getLineStyle(),
+                z2: 1,
+                silent: true
+            });
+        }
+        else {
+            shape = new graphic.Ring({
+                shape: {
+                    cx: polar.cx,
+                    cy: polar.cy,
+                    r: radiusExtent[rId],
+                    r0: radiusExtent[r0Id]
+                },
+                style: lineStyleModel.getLineStyle(),
+                z2: 1,
+                silent: true
+            });
+        }
+        shape.style.fill = null;
+        this.group.add(shape);
     },
 
     /**
      * @private
      */
-    _axisTick: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
+    _axisTick: function (angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
         var tickModel = angleAxisModel.getModel('axisTick');
 
         var tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
@@ -139,12 +161,51 @@ export default AxisView.extend({
     /**
      * @private
      */
-    _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent, labels) {
+    _minorTick: function (angleAxisModel, polar, tickAngles, minorTickAngles, radiusExtent) {
+        if (!minorTickAngles.length) {
+            return;
+        }
+
+        var tickModel = angleAxisModel.getModel('axisTick');
+        var minorTickModel = angleAxisModel.getModel('minorTick');
+
+        var tickLen = (tickModel.get('inside') ? -1 : 1) * minorTickModel.get('length');
+        var radius = radiusExtent[getRadiusIdx(polar)];
+
+        var lines = [];
+
+        for (var i = 0; i < minorTickAngles.length; i++) {
+            for (let k = 0; k < minorTickAngles[i].length; k++) {
+                lines.push(new graphic.Line({
+                    shape: getAxisLineShape(polar, [radius, radius + tickLen], minorTickAngles[i][k].coord)
+                }));
+            }
+        }
+
+        this.group.add(graphic.mergePath(
+            lines, {
+                style: zrUtil.defaults(
+                    minorTickModel.getModel('lineStyle').getLineStyle(),
+                    zrUtil.defaults(
+                        tickModel.getLineStyle(), {
+                            stroke: angleAxisModel.get('axisLine.lineStyle.color')
+                        }
+                    )
+                )
+            }
+        ));
+    },
+
+    /**
+     * @private
+     */
+    _axisLabel: function (angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent, labels) {
         var rawCategoryData = angleAxisModel.getCategories(true);
 
         var commonLabelModel = angleAxisModel.getModel('axisLabel');
 
         var labelMargin = commonLabelModel.get('margin');
+        var triggerEvent = angleAxisModel.get('triggerEvent');
 
         // Use length of ticksAngles because it may remove the last tick to avoid overlapping
         zrUtil.each(labels, function (labelItem, idx) {
@@ -167,7 +228,9 @@ export default AxisView.extend({
                 );
             }
 
-            var textEl = new graphic.Text({silent: true});
+            var textEl = new graphic.Text({
+                silent: AxisBuilder.isLabelSilent(angleAxisModel)
+            });
             this.group.add(textEl);
             graphic.setTextStyle(textEl.style, labelModel, {
                 x: p[0],
@@ -177,13 +240,21 @@ export default AxisView.extend({
                 textAlign: labelTextAlign,
                 textVerticalAlign: labelTextVerticalAlign
             });
+
+            // Pack data for mouse event
+            if (triggerEvent) {
+                textEl.eventData = AxisBuilder.makeAxisEventDataBase(angleAxisModel);
+                textEl.eventData.targetType = 'axisLabel';
+                textEl.eventData.value = labelItem.rawLabel;
+            }
+
         }, this);
     },
 
     /**
      * @private
      */
-    _splitLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
+    _splitLine: function (angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
         var splitLineModel = angleAxisModel.getModel('splitLine');
         var lineStyleModel = splitLineModel.getModel('lineStyle');
         var lineColors = lineStyleModel.get('color');
@@ -217,7 +288,35 @@ export default AxisView.extend({
     /**
      * @private
      */
-    _splitArea: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
+    _minorSplitLine: function (angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
+        if (!minorTickAngles.length) {
+            return;
+        }
+
+        var minorSplitLineModel = angleAxisModel.getModel('minorSplitLine');
+        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+
+        var lines = [];
+
+        for (var i = 0; i < minorTickAngles.length; i++) {
+            for (let k = 0; k < minorTickAngles[i].length; k++) {
+                lines.push(new graphic.Line({
+                    shape: getAxisLineShape(polar, radiusExtent, minorTickAngles[i][k].coord)
+                }));
+            }
+        }
+
+        this.group.add(graphic.mergePath(lines, {
+            style: lineStyleModel.getLineStyle(),
+            silent: true,
+            z: angleAxisModel.get('z')
+        }));
+    },
+
+    /**
+     * @private
+     */
+    _splitArea: function (angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
         if (!ticksAngles.length) {
             return;
         }

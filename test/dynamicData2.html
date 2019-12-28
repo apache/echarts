@@ -48,9 +48,7 @@ under the License.
                     return (Math.random() + 3).toFixed(3);
                 }
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
 
 
@@ -98,9 +96,16 @@ option = {
     },
     yAxis: {
         type: 'value',
-        boundaryGap: [0, '100%'],
+        // boundaryGap: [0, '100%'],
+        max: 'dataMax',
         splitLine: {
             show: false
+        },
+        minorSplitLine: {
+            show: true
+        },
+        minorTick: {
+            show: true
         }
     },
     series: [{

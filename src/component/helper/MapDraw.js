@@ -25,7 +25,7 @@ import * as graphic from '../../util/graphic';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 
-function getFixedItemStyle(model, scale) {
+function getFixedItemStyle(model) {
     var itemStyle = model.getItemStyle();
     var areaColor = model.get('areaColor');
 
@@ -181,19 +181,13 @@ MapDraw.prototype = {
         var regionsGroup = this._regionsGroup;
         var group = this.group;
 
-        var scale = geo.scale;
-        var transform = {
-            position: geo.position,
-            scale: scale
-        };
+        if (geo._roamTransformable.transform) {
+            group.transform = geo._roamTransformable.transform.slice();
+            group.decomposeTransform();
+        }
 
-        // No animation when first draw or in action
-        if (!regionsGroup.childAt(0) || payload) {
-            group.attr(transform);
-        }
-        else {
-            graphic.updateProps(group, transform, mapOrGeoModel);
-        }
+        var scale = geo._rawTransformable.scale;
+        var position = geo._rawTransformable.position;
 
         regionsGroup.removeAll();
 
@@ -204,7 +198,6 @@ MapDraw.prototype = {
         var nameMap = zrUtil.createHashMap();
 
         zrUtil.each(geo.regions, function (region) {
-
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
             // colonies). And it is not appropriate to merge them in geo, which
@@ -214,6 +207,7 @@ MapDraw.prototype = {
                 || nameMap.set(region.name, new graphic.Group());
 
             var compoundPath = new graphic.CompoundPath({
+                segmentIgnoreThreshold: 1,
                 shape: {
                     paths: []
                 }
@@ -224,8 +218,8 @@ MapDraw.prototype = {
 
             var itemStyleModel = regionModel.getModel(itemStyleAccessPath);
             var hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
-            var itemStyle = getFixedItemStyle(itemStyleModel, scale);
-            var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
+            var itemStyle = getFixedItemStyle(itemStyleModel);
+            var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
 
             var labelModel = regionModel.getModel(labelAccessPath);
             var hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
@@ -244,20 +238,38 @@ MapDraw.prototype = {
                 }
             }
 
+            var transformPoint = function (point) {
+                return [
+                    point[0] * scale[0] + position[0],
+                    point[1] * scale[1] + position[1]
+                ];
+            };
+
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
                     return;
                 }
+                var points = [];
+                for (var i = 0; i < geometry.exterior.length; ++i) {
+                    points.push(transformPoint(geometry.exterior[i]));
+                }
                 compoundPath.shape.paths.push(new graphic.Polygon({
+                    segmentIgnoreThreshold: 1,
                     shape: {
-                        points: geometry.exterior
+                        points: points
                     }
                 }));
 
-                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); i++) {
+                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
+                    var interior = geometry.interiors[i];
+                    var points = [];
+                    for (var j = 0; j < interior.length; ++j) {
+                        points.push(transformPoint(interior[j]));
+                    }
                     compoundPath.shape.paths.push(new graphic.Polygon({
+                        segmentIgnoreThreshold: 1,
                         shape: {
-                            points: geometry.interiors[i]
+                            points: points
                         }
                     }));
                 }
@@ -266,6 +278,7 @@ MapDraw.prototype = {
             compoundPath.setStyle(itemStyle);
             compoundPath.style.strokeNoScale = true;
             compoundPath.culling = true;
+
             // Label
             var showLabel = labelModel.get('show');
             var hoverShowLabel = hoverLabelModel.get('show');
@@ -279,7 +292,7 @@ MapDraw.prototype = {
             if (
                 (isGeo || isDataNaN && (showLabel || hoverShowLabel))
                 || (itemLayout && itemLayout.showLabel)
-                ) {
+            ) {
                 var query = !isGeo ? dataIdx : region.name;
                 var labelFetcher;
 
@@ -289,8 +302,12 @@ MapDraw.prototype = {
                 }
 
                 var textEl = new graphic.Text({
-                    position: region.center.slice(),
-                    scale: [1 / scale[0], 1 / scale[1]],
+                    position: transformPoint(region.center.slice()),
+                    // FIXME
+                    // label rotation is not support yet in geo or regions of series-map
+                    // that has no data. The rotation will be effected by this `scale`.
+                    // So needed to change to RectText?
+                    scale: [1 / group.scale[0], 1 / group.scale[1]],
                     z2: 10,
                     silent: true
                 });
@@ -332,11 +349,8 @@ MapDraw.prototype = {
             var groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
             groupRegions.push(region);
 
-            graphic.setHoverStyle(
-                regionGroup,
-                hoverItemStyle,
-                {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')}
-            );
+            regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
+            graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
             regionsGroup.add(regionGroup);
         });
