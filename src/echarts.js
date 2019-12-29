@@ -327,6 +327,13 @@ echartsProto._onframe = function () {
 };
 
 /**
+ * @return {Object}
+ */
+echartsProto.getHandlers = function () {
+    return this._$handlers;
+};
+
+/**
  * @return {HTMLElement}
  */
 echartsProto.getDom = function () {
@@ -1681,6 +1688,14 @@ echartsProto.clear = function () {
     if (this._disposed) {
         disposedWarning(this.id);
         return;
+    }
+
+    // clear all events
+    var handlers = this.getHandlers();
+    for (var handler in handlers) {
+        if (Object.prototype.hasOwnProperty.call(handlers, handler)) {
+            this.off(handler);
+        }
     }
     this.setOption({ series: [] }, true);
 };
