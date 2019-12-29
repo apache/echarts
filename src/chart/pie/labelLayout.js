@@ -336,7 +336,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
             inside: isLabelInside,
             labelDistance: labelDistance,
             labelAlignTo: labelAlignTo,
-            labelMargin:labelMargin,
+            labelMargin: labelMargin,
             bleedMargin: bleedMargin,
             textRect: textRect,
             text: text,
