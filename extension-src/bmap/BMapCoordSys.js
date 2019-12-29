@@ -35,7 +35,7 @@ function BMapCoordSys(bmap, api) {
     this._projection = new BMap.MercatorProjection();
 }
 
-BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
+BMapCoordSys.prototype.dimensions = ['lng', 'lat', 'value'];
 
 BMapCoordSys.prototype.setZoom = function (zoom) {
     this._zoom = zoom;
