@@ -61,7 +61,7 @@ export default BaseBarSeries.extend({
 
         backgroundStyle: {
             color: 'transparent',
-            borderColor: '#000',
+            borderColor: null,
             borderWidth: '0',
             borderType: 'solid',
             barBorderRadius: 0,
