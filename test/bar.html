@@ -234,14 +234,24 @@ under the License.
                         stack: 'one',
                         itemStyle: itemStyle,
                         cursor: 'move',
-                        data: data1
+                        data: data1,
+                        backgroundStyle: {
+                            color: 'rgba(194, 52, 49, 0.5)',
+                            borderWidth: 1,
+                            borderColor: 'blue',
+                            shadowBlur: 10,
+                            shadowColor: '#000'
+                        }
                     }, {
                         name: 'bar2',
                         type: 'bar',
                         stack: 'one',
                         itemStyle: itemStyle,
                         cursor: 'default',
-                        data: data2
+                        data: data2,
+                        backgroundStyle: {
+                            color: 'rgba(255, 255, 255, 0.5)'
+                        }
                     }, {
                         name: 'bar3',
                         type: 'bar',
