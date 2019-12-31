@@ -182,7 +182,7 @@ MapDraw.prototype = {
         var group = this.group;
 
         if (geo._roamTransformable.transform) {
-            group.transform = geo._roamTransformable.transform.slice();
+            group.transform = Array.prototype.slice.call(geo._roamTransformable.transform);
             group.decomposeTransform();
         }
 
