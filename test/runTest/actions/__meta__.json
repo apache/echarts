@@ -79,6 +79,7 @@
   "graph": 2,
   "graph-grid": 1,
   "graph-simple": 2,
+  "graphic-draggable": 1,
   "heatmap": 1,
   "heatmap-map": 1,
   "homepage3": 1,
