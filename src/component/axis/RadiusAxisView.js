@@ -112,7 +112,7 @@ export default AxisView.extend({
         var lines = [];
 
         for (var i = 0; i < minorTicksCoords.length; i++) {
-            for (let k = 0; k < minorTicksCoords[i].length; k++) {
+            for (var k = 0; k < minorTicksCoords[i].length; k++) {
                 lines.push(new graphic.Circle({
                     shape: {
                         cx: polar.cx,

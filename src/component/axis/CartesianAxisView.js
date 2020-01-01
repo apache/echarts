@@ -168,7 +168,7 @@ var CartesianAxisView = AxisView.extend({
 
 
         for (var i = 0; i < minorTicksCoords.length; i++) {
-            for (let k = 0; k < minorTicksCoords[i].length; k++) {
+            for (var k = 0; k < minorTicksCoords[i].length; k++) {
                 var tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
 
                 if (isHorizontal) {
