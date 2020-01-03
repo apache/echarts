@@ -69,8 +69,8 @@ function markerTypeCalculatorWithExtent(
 
     var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
-    coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex);
-
+    coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
+    var coordArrValue = data.get(targetDataDim, dataIndex);
     // Make it simple, do not visit all stacked value to count precision.
     var precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
@@ -78,7 +78,7 @@ function markerTypeCalculatorWithExtent(
         coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
     }
 
-    return coordArr;
+    return [coordArr,coordArrValue];
 }
 
 var curry = zrUtil.curry;
@@ -141,12 +141,15 @@ export function dataTransform(seriesModel, item) {
             var otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
             var targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
-            item.coord = markerTypeCalculator[item.type](
+            var coordInfo = markerTypeCalculator[item.type](
                 data, axisInfo.baseDataDim, axisInfo.valueDataDim,
                 otherCoordIndex, targetCoordIndex
             );
-            // Force to use the value of calculated value.
-            item.value = item.coord[targetCoordIndex];
+            item.coord = coordInfo[0]
+            // Force to use the value of calculated value. 
+            // let item use the value without stack. 
+            item.value = coordInfo[1]
+
         }
         else {
             // FIXME Only has one of xAxis and yAxis.
