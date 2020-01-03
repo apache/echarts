@@ -92,7 +92,7 @@ export default {
                 );
 
                 data.setItemLayout(dataIndex, {
-                    sign: getSign(data, dataIndex, openVal, closeVal, closeDim),
+                    sign: getSign(openVal, closeVal),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
                     ends: ends,
@@ -168,7 +168,7 @@ export default {
                     continue;
                 }
 
-                points[offset++] = getSign(data, dataIndex, openVal, closeVal, closeDim);
+                points[offset++] = getSign(openVal, closeVal);
 
                 tmpIn[cDimIdx] = axisDimVal;
 
@@ -186,7 +186,7 @@ export default {
     }
 };
 
-function getSign(data, dataIndex, openVal, closeVal, closeDim) {
+function getSign(openVal, closeVal) {
     var sign;
     if (openVal > closeVal) {
         sign = -1;
@@ -195,11 +195,7 @@ function getSign(data, dataIndex, openVal, closeVal, closeDim) {
         sign = 1;
     }
     else {
-        sign = dataIndex > 0
-            // If close === open, compare with close of last record
-            ? (data.get(closeDim, dataIndex - 1) <= closeVal ? 1 : -1)
-            // No record of previous, set to be positive
-            : 1;
+        sign = 0;
     }
 
     return sign;
