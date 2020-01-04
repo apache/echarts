@@ -26757,8 +26757,10 @@ var theme = {
             normal: {
                 color: '#FD1050',
                 color0: '#0CF49B',
+                color1: '#FFF',
                 borderColor: '#FD1050',
-                borderColor0: '#0CF49B'
+                borderColor0: '#0CF49B',
+                borderColor1: '#FFF'
             }
         }
     }
@@ -50940,6 +50942,11 @@ SeriesModel.extend({
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
 
+        // value can be 'polyline'
+        edgeShape: 'curve',
+
+        edgeForkPosition: '50%',
+
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
 
@@ -51344,6 +51351,58 @@ function defaultSeparation(node1, node2) {
 * under the License.
 */
 
+var TreeShape = extendShape({
+    shape: {
+        parentPoint: [],
+        childPoints: [],
+        orient: '',
+        forkPosition: ''
+    },
+
+    style: {
+        stroke: '#000',
+        fill: null
+    },
+
+    buildPath: function (ctx, shape) {
+        var childPoints = shape.childPoints;
+        var childLen = childPoints.length;
+        var parentPoint = shape.parentPoint;
+        var firstChildPos = childPoints[0];
+        var lastChildPos = childPoints[childLen - 1];
+
+        if (childLen === 1) {
+            ctx.moveTo(parentPoint[0], parentPoint[1]);
+            ctx.lineTo(firstChildPos[0], firstChildPos[1]);
+            return;
+        }
+
+        var orient = shape.orient;
+        var forkDim = (orient === 'TB' || orient === 'BT') ? 0 : 1;
+        var otherDim = 1 - forkDim;
+        var forkPosition = parsePercent$1(shape.forkPosition, 1);
+        var tmpPoint = [];
+        tmpPoint[forkDim] = parentPoint[forkDim];
+        tmpPoint[otherDim] = parentPoint[otherDim] + (lastChildPos[otherDim] - parentPoint[otherDim]) * forkPosition;
+
+        ctx.moveTo(parentPoint[0], parentPoint[1]);
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        ctx.moveTo(firstChildPos[0], firstChildPos[1]);
+        tmpPoint[forkDim] = firstChildPos[forkDim];
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        tmpPoint[forkDim] = lastChildPos[forkDim];
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        ctx.lineTo(lastChildPos[0], lastChildPos[1]);
+
+        for (var i = 1; i < childLen - 1; i++) {
+            var point = childPoints[i];
+            ctx.moveTo(point[0], point[1]);
+            tmpPoint[forkDim] = point[forkDim];
+            ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+        }
+    }
+});
+
 extendChartView({
 
     type: 'tree',
@@ -51403,6 +51462,8 @@ extendChartView({
         var seriesScope = {
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
+            edgeShape: seriesModel.get('edgeShape'),
+            edgeForkPosition: seriesModel.get('edgeForkPosition'),
             orient: seriesModel.getOrient(),
             curvature: seriesModel.get('lineStyle.curveness'),
             symbolRotate: seriesModel.get('symbolRotate'),
@@ -51704,22 +51765,72 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         });
     }
 
-    if (node.parentNode && node.parentNode !== virtualRoot) {
-        var edge = symbolEl.__edge;
-        if (!edge) {
-            edge = symbolEl.__edge = new BezierCurve({
-                shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
-                style: defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
-            });
+    drawEdge(
+        seriesModel, node, virtualRoot, symbolEl, sourceOldLayout,
+        sourceLayout, targetLayout, group, seriesScope
+    );
+
+}
+
+function drawEdge(
+    seriesModel, node, virtualRoot, symbolEl, sourceOldLayout,
+    sourceLayout, targetLayout, group, seriesScope
+) {
+
+    var edgeShape = seriesScope.edgeShape;
+    var edge = symbolEl.__edge;
+    if (edgeShape === 'curve') {
+        if (node.parentNode && node.parentNode !== virtualRoot) {
+            if (!edge) {
+                edge = symbolEl.__edge = new BezierCurve({
+                    shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
+                    style: defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                });
+            }
+
+            updateProps(edge, {
+                shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
+                style: {opacity: 1}
+            }, seriesModel);
         }
-
-        updateProps(edge, {
-            shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
-            style: {opacity: 1}
-        }, seriesModel);
-
-        group.add(edge);
     }
+    else if (edgeShape === 'polyline') {
+        if (seriesScope.layout === 'orthogonal') {
+            if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
+                var children = node.children;
+                var childPoints = [];
+                for (var i = 0; i < children.length; i++) {
+                    var childLayout = children[i].getLayout();
+                    childPoints.push([childLayout.x, childLayout.y]);
+                }
+
+                if (!edge) {
+                    edge = symbolEl.__edge = new TreeShape({
+                        shape: {
+                            parentPoint: [targetLayout.x, targetLayout.y],
+                            childPoints: [[targetLayout.x, targetLayout.y]],
+                            orient: seriesScope.orient,
+                            forkPosition: seriesScope.edgeForkPosition
+                        },
+                        style: defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                    });
+                }
+                updateProps(edge, {
+                    shape: {
+                        parentPoint: [targetLayout.x, targetLayout.y],
+                        childPoints: childPoints
+                    },
+                    style: {opacity: 1}
+                }, seriesModel);
+            }
+        }
+        else {
+            if (__DEV__) {
+                throw new Error('The polyline edgeShape can only be used in orthogonal layout');
+            }
+        }
+    }
+    group.add(edge);
 }
 
 function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) {
@@ -51729,6 +51840,7 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
     var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
+    var edgeShape = seriesScope.edgeShape;
     var sourceLayout;
     while (sourceLayout = source.getLayout(), sourceLayout == null) {
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
@@ -51743,16 +51855,42 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
 
     symbolEl.fadeOut(null, {keepLabel: true});
 
-    var edge = symbolEl.__edge;
+    var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
+    var sourceEdge = sourceSymbolEl.__edge;
+
+    // 1. when expand the sub tree, delete the children node should delete the edge of
+    // the source at the same time. because the polyline edge shape is only owned by the source.
+    // 2.when the node is the only children of the source, delete the node should delete the edge of
+    // the source at the same time. the same reason as above.
+    var edge = symbolEl.__edge
+        || ((source.isExpand === false || source.children.length === 1) ? sourceEdge : undefined);
+
+    var edgeShape = seriesScope.edgeShape;
+
     if (edge) {
-        updateProps(edge, {
-            shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
-            style: {
-                opacity: 0
-            }
-        }, seriesModel, function () {
-            group.remove(edge);
-        });
+        if (edgeShape === 'curve') {
+            updateProps(edge, {
+                shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
+                style: {
+                    opacity: 0
+                }
+            }, seriesModel, function () {
+                group.remove(edge);
+            });
+        }
+        else if (edgeShape === 'polyline' && seriesScope.layout === 'orthogonal') {
+            updateProps(edge, {
+                shape: {
+                    parentPoint: [sourceLayout.x, sourceLayout.y],
+                    childPoints: [[sourceLayout.x, sourceLayout.y]]
+                },
+                style: {
+                    opacity: 0
+                }
+            }, seriesModel, function () {
+                group.remove(edge);
+            });
+        }
     }
 }
 
@@ -56398,39 +56536,90 @@ function updateSymbolAndLabelBeforeLineUpdate() {
         var textPosition;
         var textAlign;
         var textVerticalAlign;
+        var textOrigin;
 
-        var distance$$1 = 5 * invScale;
-        // End
-        if (label.__position === 'end') {
-            textPosition = [d[0] * distance$$1 + toPos[0], d[1] * distance$$1 + toPos[1]];
-            textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
-            textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
+        var distance$$1 = label.__labelDistance;
+        var distanceX = distance$$1[0] * invScale;
+        var distanceY = distance$$1[1] * invScale;
+        var halfPercent = percent / 2;
+        var tangent = line.tangentAt(halfPercent);
+        var n = [tangent[1], -tangent[0]];
+        var cp = line.pointAt(halfPercent);
+        if (n[1] > 0) {
+            n[0] = -n[0];
+            n[1] = -n[1];
         }
-        // Middle
-        else if (label.__position === 'middle') {
-            var halfPercent = percent / 2;
-            var tangent = line.tangentAt(halfPercent);
-            var n = [tangent[1], -tangent[0]];
-            var cp = line.pointAt(halfPercent);
-            if (n[1] > 0) {
-                n[0] = -n[0];
-                n[1] = -n[1];
-            }
-            textPosition = [cp[0] + n[0] * distance$$1, cp[1] + n[1] * distance$$1];
-            textAlign = 'center';
-            textVerticalAlign = 'bottom';
+        var dir = tangent[0] < 0 ? -1 : 1;
+
+        if (label.__position !== 'start' && label.__position !== 'end') {
             var rotation = -Math.atan2(tangent[1], tangent[0]);
             if (toPos[0] < fromPos[0]) {
                 rotation = Math.PI + rotation;
             }
             label.attr('rotation', rotation);
         }
-        // Start
-        else {
-            textPosition = [-d[0] * distance$$1 + fromPos[0], -d[1] * distance$$1 + fromPos[1]];
-            textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
-            textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
+
+        var dy;
+        switch (label.__position) {
+            case 'insideStartTop':
+            case 'insideMiddleTop':
+            case 'insideEndTop':
+            case 'middle':
+                dy = -distanceY;
+                textVerticalAlign = 'bottom';
+                break;
+
+            case 'insideStartBottom':
+            case 'insideMiddleBottom':
+            case 'insideEndBottom':
+                dy = distanceY;
+                textVerticalAlign = 'top';
+                break;
+
+            default:
+                dy = 0;
+                textVerticalAlign = 'middle';
         }
+
+        switch (label.__position) {
+            case 'end':
+                textPosition = [d[0] * distanceX + toPos[0], d[1] * distanceY + toPos[1]];
+                textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
+                textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
+                break;
+
+            case 'start':
+                textPosition = [-d[0] * distanceX + fromPos[0], -d[1] * distanceY + fromPos[1]];
+                textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
+                textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
+                break;
+
+            case 'insideStartTop':
+            case 'insideStart':
+            case 'insideStartBottom':
+                textPosition = [distanceX * dir + fromPos[0], fromPos[1] + dy];
+                textAlign = tangent[0] < 0 ? 'right' : 'left';
+                textOrigin = [-distanceX * dir, -dy];
+                break;
+
+            case 'insideMiddleTop':
+            case 'insideMiddle':
+            case 'insideMiddleBottom':
+            case 'middle':
+                textPosition = [cp[0], cp[1] + dy];
+                textAlign = 'center';
+                textOrigin = [0, -dy];
+                break;
+
+            case 'insideEndTop':
+            case 'insideEnd':
+            case 'insideEndBottom':
+                textPosition = [-distanceX * dir + toPos[0], toPos[1] + dy];
+                textAlign = tangent[0] >= 0 ? 'right' : 'left';
+                textOrigin = [distanceX * dir, -dy];
+                break;
+        }
+
         label.attr({
             style: {
                 // Use the user specified text align and baseline first
@@ -56438,7 +56627,8 @@ function updateSymbolAndLabelBeforeLineUpdate() {
                 textAlign: label.__textAlign || textAlign
             },
             position: textPosition,
-            scale: [invScale, invScale]
+            scale: [invScale, invScale],
+            origin: textOrigin
         });
     }
 }
@@ -56614,6 +56804,12 @@ lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
         label.__verticalAlign = labelStyle.textVerticalAlign;
         // 'start', 'middle', 'end'
         label.__position = labelModel.get('position') || 'middle';
+
+        var distance$$1 = labelModel.get('distance');
+        if (!isArray(distance$$1)) {
+            distance$$1 = [distance$$1, distance$$1];
+        }
+        label.__labelDistance = distance$$1;
     }
 
     if (emphasisText != null) {
@@ -57308,7 +57504,7 @@ extendChartView({
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var edgeDataIndex = payload.edgeDataIndex;
@@ -57346,7 +57542,7 @@ extendChartView({
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getData().graph;
+        var graph = seriesModel.getData().graph;
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);
@@ -61599,8 +61795,12 @@ function resetCursor(controller, e, localCursorPoint) {
 }
 
 function preventDefault(e) {
-    var rawE = e.event;
-    rawE.preventDefault && rawE.preventDefault();
+    // Just be worried about bring some side effect to the world
+    // out of echarts, we do not `preventDefault` for globalout.
+    if (e.zrIsFromLocal) {
+        var rawE = e.event;
+        rawE.preventDefault && rawE.preventDefault();
+    }
 }
 
 function mainShapeContain(cover, x, y) {
@@ -61696,6 +61896,9 @@ var pointerHandlers = {
                 this._dragging = true;
                 this._track = [localCursorPoint.slice()];
             }
+
+            // Mount page handlers only when needed to minimize unexpected side-effect.
+            mountHandlers(this._zr, this._pageHandlers);
         }
     },
 
@@ -61706,7 +61909,12 @@ var pointerHandlers = {
         var localCursorPoint = this.group.transformCoordToLocal(x, y);
 
         resetCursor(this, e, localCursorPoint);
+    }
+};
 
+var pageMouseHandlers = {
+
+    pagemousemove: function (e) {
         if (this._dragging) {
             preventDefault(e);
             var eventParams = updateCoverByMouse(this, e, localCursorPoint, false);
@@ -61714,7 +61922,7 @@ var pointerHandlers = {
         }
     },
 
-    mouseup: function (e) {
+    pagemouseup: function (e) {
         handleDragEnd(this, e);
     }
 };
@@ -61736,6 +61944,8 @@ function handleDragEnd(controller, e) {
 
         // trigger event shoule be at final, after procedure will be nested.
         eventParams && trigger$1(controller, eventParams);
+
+        unmountHandlers(controller._zr, controller._pageHandlers);
     }
 }
 
@@ -62862,6 +63072,17 @@ var SankeySeries = SeriesModel.extend({
         }
     },
 
+    // Override Series.getDataParams()
+    getDataParams: function (dataIndex, dataType) {
+        var params = SankeySeries.superCall(this, 'getDataParams', dataIndex, dataType);
+        if (params.value == null && dataType === 'node') {
+            var node = this.getGraph().getNodeByIndex(dataIndex);
+            var nodeValue = node.getLayout().value;
+            params.value = nodeValue;
+        }
+        return params;
+    },
+
     defaultOption: {
         zlevel: 0,
         z: 2,
@@ -62922,7 +63143,7 @@ var SankeySeries = SeriesModel.extend({
                 show: true
             },
             lineStyle: {
-                opacity: 0.6
+                opacity: 0.5
             }
         },
 
@@ -62953,7 +63174,9 @@ var SankeySeries = SeriesModel.extend({
 */
 
 var nodeOpacityPath$1 = ['itemStyle', 'opacity'];
+var hoverNodeOpacityPath = ['emphasis', 'itemStyle', 'opacity'];
 var lineOpacityPath$1 = ['lineStyle', 'opacity'];
+var hoverLineOpacityPath = ['emphasis', 'lineStyle', 'opacity'];
 
 function getItemOpacity$1(item, opacityPath) {
     return item.getVisual('opacity') || item.getModel().get(opacityPath);
@@ -62961,8 +63184,8 @@ function getItemOpacity$1(item, opacityPath) {
 
 function fadeOutItem$1(item, opacityPath, opacityRatio) {
     var el = item.getGraphicEl();
-
     var opacity = getItemOpacity$1(item, opacityPath);
+
     if (opacityRatio != null) {
         opacity == null && (opacity = 1);
         opacity *= opacityRatio;
@@ -62980,12 +63203,14 @@ function fadeInItem$1(item, opacityPath) {
     var opacity = getItemOpacity$1(item, opacityPath);
     var el = item.getGraphicEl();
 
-    el.highlight && el.highlight();
     el.traverse(function (child) {
         if (child.type !== 'group') {
             child.setStyle('opacity', opacity);
         }
     });
+
+    // Support emphasis here.
+    el.highlight && el.highlight();
 }
 
 var SankeyShape = extendShape({
@@ -63023,6 +63248,14 @@ var SankeyShape = extendShape({
             );
         }
         ctx.closePath();
+    },
+
+    highlight: function () {
+        this.trigger('emphasis');
+    },
+
+    downplay: function () {
+        this.trigger('normal');
     }
 });
 
@@ -63205,8 +63438,19 @@ extendChartView({
                 el.cursor = 'move';
             }
 
+            el.highlight = function () {
+                this.trigger('emphasis');
+            };
+
+            el.downplay = function () {
+                this.trigger('normal');
+            };
+
+            el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
+            el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
+
             if (itemModel.get('focusNodeAdjacency')) {
-                el.off('mouseover').on('mouseover', function () {
+                el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._clearTimer();
                         api.dispatchAction({
@@ -63216,7 +63460,8 @@ extendChartView({
                         });
                     }
                 });
-                el.off('mouseout').on('mouseout', function () {
+
+                el.on('mouseout', el.unfocusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._dispatchUnfocus(api);
                     }
@@ -63226,8 +63471,12 @@ extendChartView({
 
         edgeData.eachItemGraphicEl(function (el, dataIndex) {
             var edgeModel = edgeData.getItemModel(dataIndex);
+
+            el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
+            el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
+
             if (edgeModel.get('focusNodeAdjacency')) {
-                el.off('mouseover').on('mouseover', function () {
+                el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._clearTimer();
                         api.dispatchAction({
@@ -63237,7 +63486,8 @@ extendChartView({
                         });
                     }
                 });
-                el.off('mouseout').on('mouseout', function () {
+
+                el.on('mouseout', el.unfocusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._dispatchUnfocus(api);
                     }
@@ -63278,7 +63528,7 @@ extendChartView({
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var itemModel = data.getItemModel(dataIndex);
@@ -63298,15 +63548,15 @@ extendChartView({
         });
 
         if (node) {
-            fadeInItem$1(node, nodeOpacityPath$1);
+            fadeInItem$1(node, hoverNodeOpacityPath);
             var focusNodeAdj = itemModel.get('focusNodeAdjacency');
             if (focusNodeAdj === 'outEdges') {
                 each$1(node.outEdges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem$1(edge, lineOpacityPath$1);
-                    fadeInItem$1(edge.node2, nodeOpacityPath$1);
+                    fadeInItem$1(edge, hoverLineOpacityPath);
+                    fadeInItem$1(edge.node2, hoverNodeOpacityPath);
                 });
             }
             else if (focusNodeAdj === 'inEdges') {
@@ -63314,8 +63564,8 @@ extendChartView({
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem$1(edge, lineOpacityPath$1);
-                    fadeInItem$1(edge.node1, nodeOpacityPath$1);
+                    fadeInItem$1(edge, hoverLineOpacityPath);
+                    fadeInItem$1(edge.node1, hoverNodeOpacityPath);
                 });
             }
             else if (focusNodeAdj === 'allEdges') {
@@ -63323,21 +63573,21 @@ extendChartView({
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem$1(edge, lineOpacityPath$1);
-                    fadeInItem$1(edge.node1, nodeOpacityPath$1);
-                    fadeInItem$1(edge.node2, nodeOpacityPath$1);
+                    fadeInItem$1(edge, hoverLineOpacityPath);
+                    (edge.node1 !== node) && fadeInItem$1(edge.node1, hoverNodeOpacityPath);
+                    (edge.node2 !== node) && fadeInItem$1(edge.node2, hoverNodeOpacityPath);
                 });
             }
         }
         if (edge) {
-            fadeInItem$1(edge, lineOpacityPath$1);
-            fadeInItem$1(edge.node1, nodeOpacityPath$1);
-            fadeInItem$1(edge.node2, nodeOpacityPath$1);
+            fadeInItem$1(edge, hoverLineOpacityPath);
+            fadeInItem$1(edge.node1, hoverNodeOpacityPath);
+            fadeInItem$1(edge.node2, hoverNodeOpacityPath);
         }
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getGraph();
+        var graph = seriesModel.getGraph();
 
         graph.eachNode(function (node) {
             fadeOutItem$1(node, nodeOpacityPath$1);
@@ -64690,11 +64940,13 @@ var CandlestickSeries = SeriesModel.extend({
         itemStyle: {
             color: '#c23531', // 阳线 positive
             color0: '#314656', // 阴线 negative     '#c23531', '#314656'
+            color1: '#000',  // 十字星 neutral
             borderWidth: 1,
             // FIXME
             // ec2中使用的是lineStyle.color 和 lineStyle.color0
             borderColor: '#c23531',
-            borderColor0: '#314656'
+            borderColor0: '#314656',
+            borderColor1: '#000'
         },
 
         emphasis: {
@@ -64757,7 +65009,7 @@ mixin(CandlestickSeries, seriesModelMixin, true);
 
 var NORMAL_ITEM_STYLE_PATH$1 = ['itemStyle'];
 var EMPHASIS_ITEM_STYLE_PATH$1 = ['emphasis', 'itemStyle'];
-var SKIP_PROPS = ['color', 'color0', 'borderColor', 'borderColor0'];
+var SKIP_PROPS = ['color', 'color0', 'borderColor', 'borderColor0', 'color1', 'borderColor1'];
 
 var CandlestickView = Chart.extend({
 
@@ -65118,8 +65370,10 @@ var preprocessor = function (option) {
 
 var positiveBorderColorQuery = ['itemStyle', 'borderColor'];
 var negativeBorderColorQuery = ['itemStyle', 'borderColor0'];
+var neutralBorderColorQuery = ['itemStyle', 'borderColor1'];
 var positiveColorQuery = ['itemStyle', 'color'];
 var negativeColorQuery = ['itemStyle', 'color0'];
+var neutralColorQuery = ['itemStyle', 'color1'];
 
 var candlestickVisual = {
 
@@ -65139,8 +65393,10 @@ var candlestickVisual = {
             legendSymbol: 'roundRect',
             colorP: getColor(1, seriesModel),
             colorN: getColor(-1, seriesModel),
+            colorNeutralColor: getColor(0, seriesModel),
             borderColorP: getBorderColor(1, seriesModel),
-            borderColorN: getBorderColor(-1, seriesModel)
+            borderColorN: getBorderColor(-1, seriesModel),
+            borderColorNeutralColor: getBorderColor(0, seriesModel)
         });
 
         // Only visible series has each data be visual encoded
@@ -65168,15 +65424,47 @@ var candlestickVisual = {
         }
 
         function getColor(sign, model) {
+            var colorQuery = getColorOrBorderColorQuery(sign, 'color');
+
             return model.get(
-                sign > 0 ? positiveColorQuery : negativeColorQuery
+                colorQuery
             );
         }
 
         function getBorderColor(sign, model) {
+            var borderColorQuery = getColorOrBorderColorQuery(sign, 'borderColor');
+
             return model.get(
-                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
+                borderColorQuery
             );
+        }
+
+        function getColorOrBorderColorQuery(sign, colorType) {
+            var colorQuery;
+            var colorAndBorderColor = {
+                color: {
+                    neutral: neutralColorQuery,
+                    positive: positiveColorQuery,
+                    negative: negativeColorQuery
+                },
+                borderColor: {
+                    neutral: neutralBorderColorQuery,
+                    positive: positiveBorderColorQuery,
+                    negative: negativeBorderColorQuery
+                }
+            };
+
+            if (sign === 0) {
+                colorQuery = colorAndBorderColor[colorType].neutral;
+            }
+            else if (sign > 0) {
+                colorQuery = colorAndBorderColor[colorType].positive;
+            }
+            else {
+                colorQuery = colorAndBorderColor[colorType].negative;
+            }
+
+            return colorQuery;
         }
 
     }
@@ -65272,7 +65560,7 @@ var candlestickLayout = {
                 );
 
                 data.setItemLayout(dataIndex, {
-                    sign: getSign(data, dataIndex, openVal, closeVal, closeDim),
+                    sign: getSign(openVal, closeVal),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
                     ends: ends,
@@ -65348,7 +65636,7 @@ var candlestickLayout = {
                     continue;
                 }
 
-                points[offset++] = getSign(data, dataIndex, openVal, closeVal, closeDim);
+                points[offset++] = getSign(openVal, closeVal);
 
                 tmpIn[cDimIdx] = axisDimVal;
 
@@ -65366,7 +65654,7 @@ var candlestickLayout = {
     }
 };
 
-function getSign(data, dataIndex, openVal, closeVal, closeDim) {
+function getSign(openVal, closeVal) {
     var sign;
     if (openVal > closeVal) {
         sign = -1;
@@ -65375,11 +65663,7 @@ function getSign(data, dataIndex, openVal, closeVal, closeDim) {
         sign = 1;
     }
     else {
-        sign = dataIndex > 0
-            // If close === open, compare with close of last record
-            ? (data.get(closeDim, dataIndex - 1) <= closeVal ? 1 : -1)
-            // No record of previous, set to be positive
-            : 1;
+        sign = 0;
     }
 
     return sign;
@@ -84826,7 +85110,7 @@ extendComponentView({
                 r: titleModel.get('borderRadius')
             },
             style: style,
-            subPixelOptimize: true,
+            subPixelOptimize: !!style.lineWidth,
             silent: true
         });
 
@@ -86875,7 +87159,8 @@ MarkerModel.extend({
         },
         label: {
             show: true,
-            position: 'end'
+            position: 'end',
+            distance: 5
         },
         lineStyle: {
             type: 'dashed'
