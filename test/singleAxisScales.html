@@ -108,7 +108,10 @@ under the License.
             singleAxis: [{
                 type: 'value',
                 id: 'a',
-                height: height
+                height: height,
+                splitArea: {
+                    show: true
+                }
             }, {
                 type: 'category',
                 id: 'b',
@@ -116,6 +119,9 @@ under the License.
                 height: height,
                 axisPointer: {
                     type: 'shadow'
+                },
+                splitArea: {
+                    show: true
                 },
                 top: '27%'
             }, {
@@ -128,10 +134,16 @@ under the License.
                         show: true
                     }
                 },
+                splitArea: {
+                    show: true
+                },
                 top: '55%'
             }, {
                 type: 'time',
                 id: 'd',
+                splitArea: {
+                    show: true
+                },
                 height: height,
                 top: '77%'
             }],
