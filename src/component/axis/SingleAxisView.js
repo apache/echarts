@@ -23,6 +23,7 @@ import AxisBuilder from './AxisBuilder';
 import * as graphic from '../../util/graphic';
 import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
 import AxisView from './AxisView';
+import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -54,16 +55,19 @@ var SingleAxisView = AxisView.extend({
         group.add(this._axisGroup);
         group.add(axisBuilder.getGroup());
 
-        var gridModel = axisModel.getCoordSysModel();
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get(name + '.show')) {
-                this['_' + name](axisModel, gridModel);
+                this['_' + name](axisModel);
             }
         }, this);
 
         graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
 
         SingleAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
+    },
+
+    remove: function () {
+        rectCoordAxisHandleRemove(this);
     },
 
     _splitLine: function (axisModel) {
@@ -136,97 +140,8 @@ var SingleAxisView = AxisView.extend({
         }
     },
 
-    /**
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-     * @param {module:echarts/coord/cartesian/GridModel} gridModel
-     * @private
-     */
-    _splitArea: function (axisModel, gridModel) {
-        var axis = axisModel.axis;
-
-        if (axis.scale.isBlank()) {
-            return;
-        }
-
-        var splitAreaModel = axisModel.getModel('splitArea');
-        var areaStyleModel = splitAreaModel.getModel('areaStyle');
-        var areaColors = areaStyleModel.get('color');
-
-        var gridRect = gridModel.coordinateSystem.getRect();
-
-        var ticksCoords = axis.getTicksCoords({
-            tickModel: splitAreaModel,
-            clamp: true
-        });
-
-        if (!ticksCoords.length) {
-            return;
-        }
-
-        // For Making appropriate splitArea animation, the color and anid
-        // should be corresponding to previous one if possible.
-        var areaColorsLen = areaColors.length;
-        var lastSplitAreaColors = this._splitAreaColors;
-        var newSplitAreaColors = zrUtil.createHashMap();
-        var colorIndex = 0;
-        if (lastSplitAreaColors) {
-            for (var i = 0; i < ticksCoords.length; i++) {
-                var cIndex = lastSplitAreaColors.get(ticksCoords[i].tickValue);
-                if (cIndex != null) {
-                    colorIndex = (cIndex + (areaColorsLen - 1) * i) % areaColorsLen;
-                    break;
-                }
-            }
-        }
-
-        var prev = axis.toGlobalCoord(ticksCoords[0].coord);
-
-        var areaStyle = areaStyleModel.getAreaStyle();
-        areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
-
-        for (var i = 1; i < ticksCoords.length; i++) {
-            var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
-
-            var x;
-            var y;
-            var width;
-            var height;
-            if (axis.isHorizontal()) {
-                x = prev;
-                y = gridRect.y;
-                width = tickCoord - x;
-                height = gridRect.height;
-                prev = x + width;
-            }
-            else {
-                x = gridRect.x;
-                y = prev;
-                width = gridRect.width;
-                height = tickCoord - y;
-                prev = y + height;
-            }
-
-            var tickValue = ticksCoords[i - 1].tickValue;
-            tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
-
-            this._axisGroup.add(new graphic.Rect({
-                anid: tickValue != null ? 'area_' + tickValue : null,
-                shape: {
-                    x: x,
-                    y: y,
-                    width: width,
-                    height: height
-                },
-                style: zrUtil.defaults({
-                    fill: areaColors[colorIndex]
-                }, areaStyle),
-                silent: true
-            }));
-
-            colorIndex = (colorIndex + 1) % areaColorsLen;
-        }
-
-        this._splitAreaColors = newSplitAreaColors;
+    _splitArea: function (axisModel) {
+        rectCoordAxisBuildSplitArea(this, this._axisGroup, axisModel, axisModel);
     }
 });
 
