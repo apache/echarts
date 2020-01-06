@@ -78,7 +78,7 @@ function markerTypeCalculatorWithExtent(
         coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
     }
 
-    return [coordArr,coordArrValue];
+    return [coordArr, coordArrValue];
 }
 
 var curry = zrUtil.curry;
@@ -146,8 +146,8 @@ export function dataTransform(seriesModel, item) {
                 otherCoordIndex, targetCoordIndex
             );
             item.coord = coordInfo[0]
-            // Force to use the value of calculated value. 
-            // let item use the value without stack. 
+            // Force to use the value of calculated value.
+            // let item use the value without stack.
             item.value = coordInfo[1]
 
         }
