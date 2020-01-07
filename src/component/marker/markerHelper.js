@@ -145,10 +145,10 @@ export function dataTransform(seriesModel, item) {
                 data, axisInfo.baseDataDim, axisInfo.valueDataDim,
                 otherCoordIndex, targetCoordIndex
             );
-            item.coord = coordInfo[0]
+            item.coord = coordInfo[0];
             // Force to use the value of calculated value.
             // let item use the value without stack.
-            item.value = coordInfo[1]
+            item.value = coordInfo[1];
 
         }
         else {
