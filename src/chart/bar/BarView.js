@@ -143,7 +143,7 @@ export default echarts.extendChartView({
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel);
+                    var bgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
                     bgEls.push(bgEl);
                 }
