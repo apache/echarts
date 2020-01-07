@@ -128,44 +128,23 @@ export default echarts.extendChartView({
 
         var roundCap = seriesModel.get('roundCap', true);
 
+        var drawBackground = seriesModel.get('showBackground');
         var backgroundModel = seriesModel.getModel('backgroundStyle');
-        var backgroundColor = backgroundModel.get('color');
 
-        // Not create background element for transparent one to improve efficiency
-        var drawBackground = backgroundColor !== 'transparent' && backgroundColor !== 'none';
+        var bgEls = [];
+        var oldBgEls = this._backgroundEls || [];
 
-        var backgroundGroup = group.childOfName('background');
-        if (backgroundGroup && !drawBackground) {
-            group.remove(backgroundGroup);
-        }
-        else if (!backgroundGroup) {
-            backgroundGroup = new Group();
-            backgroundGroup.name = 'background';
-            group.add(backgroundGroup);
-        }
         var oldLargeBackgroundEl = group.childOfName('largeBackground');
-        if (oldLargeBackgroundEl) {
-            // Always remove large background because it is supposed to be rerendered.
-            group.remove(oldLargeBackgroundEl);
-        }
+        group.remove(oldLargeBackgroundEl);
 
-        var that = this;
         data.diff(oldData)
             .add(function (dataIndex) {
                 var itemModel = data.getItemModel(dataIndex);
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    that._renderBackground(
-                        backgroundGroup,
-                        null,
-                        dataIndex,
-                        coord,
-                        isHorizontalOrRadial,
-                        layout,
-                        backgroundModel,
-                        animationModel
-                    );
+                    var bgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel);
+                    bgEls.push(bgEl);
                 }
 
                 if (!data.hasValue(dataIndex)) {
@@ -198,20 +177,15 @@ export default echarts.extendChartView({
                 var layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
-                    that._renderBackground(
-                        backgroundGroup,
-                        oldIndex,
-                        newIndex,
-                        coord,
-                        isHorizontalOrRadial,
-                        layout,
-                        backgroundModel,
-                        animationModel
-                    );
-                }
-                else {
-                    var bgEl = backgroundGroup.childOfName(oldIndex + '');
-                    backgroundGroup.remove(bgEl);
+                    var bgEl = oldBgEls[oldIndex];
+                    bgEls.push(bgEl);
+
+                    var newBgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel);
+                    var props = {
+                        shape: newBgEl.shape,
+                        style: newBgEl.style
+                    };
+                    graphic.updateProps(bgEl, props, animationModel, newIndex);
                 }
 
                 var el = oldData.getItemGraphicEl(oldIndex);
@@ -247,11 +221,6 @@ export default echarts.extendChartView({
                 );
             })
             .remove(function (dataIndex) {
-                var bgEl = backgroundGroup.childOfName(dataIndex + '');
-                if (bgEl) {
-                    backgroundGroup.remove(bgEl);
-                }
-
                 var el = oldData.getItemGraphicEl(dataIndex);
                 if (coord.type === 'cartesian2d') {
                     el && removeRect(dataIndex, animationModel, el);
@@ -261,6 +230,15 @@ export default echarts.extendChartView({
                 }
             })
             .execute();
+
+        var bgGroup = group.childOfName('background') || new Group({ name: 'background' });
+        bgGroup.removeAll();
+
+        for (var i = 0; i < bgEls.length; ++i) {
+            bgGroup.add(bgEls[i]);
+        }
+        group.add(bgGroup);
+        this._backgroundEls = bgEls;
 
         this._data = data;
     },
@@ -285,54 +263,6 @@ export default echarts.extendChartView({
         createLarge(seriesModel, this.group, true);
     },
 
-    _renderBackground: function (
-        backgroundGroup,
-        oldIndex,
-        newIndex,
-        coord,
-        isHorizontalOrRadial,
-        layout,
-        backgroundModel,
-        animationModel
-    ) {
-        var coordLayout;
-        var isPolar = coord.type === 'polar';
-        if (isPolar) {
-            coordLayout = coord.getArea();
-        }
-        else {
-            coordLayout = coord.grid.getRect();
-        }
-
-        var bgEl = oldIndex != null && backgroundGroup.childOfName(oldIndex + '');
-        if (bgEl) {
-            backgroundGroup.remove(bgEl);
-            graphic.updateProps(bgEl, {
-                shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
-                style: backgroundModel.getBarItemStyle()
-            }, animationModel, newIndex);
-        }
-        else {
-            if (isPolar) {
-                bgEl = new graphic.Sector({
-                    shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
-                    silent: true,
-                    z2: 0
-                });
-            }
-            else {
-                bgEl = new graphic.Rect({
-                    shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
-                    silent: true,
-                    z2: 0
-                });
-            }
-            bgEl.useStyle(backgroundModel.getBarItemStyle());
-        }
-        bgEl.name = newIndex + '';
-        backgroundGroup.add(bgEl);
-    },
-
     dispose: zrUtil.noop,
 
     remove: function (ecModel) {
@@ -345,6 +275,7 @@ export default echarts.extendChartView({
         if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
             group.remove(group.childOfName('background'));
             group.remove(group.childOfName('largeBackground'));
+            this._backgroundEls = [];
 
             data.eachItemGraphicEl(function (el) {
                 if (el.type === 'sector') {
@@ -749,3 +680,32 @@ function getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout) 
     }
 }
 
+function getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel) {
+    var coordLayout;
+    var isPolar = coord.type === 'polar';
+    if (isPolar) {
+        coordLayout = coord.getArea();
+    }
+    else {
+        coordLayout = coord.grid.getRect();
+    }
+
+    var bgEl;
+    if (isPolar) {
+        bgEl = new graphic.Sector({
+            shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
+            silent: true,
+            z2: 0
+        });
+    }
+    else {
+        bgEl = new graphic.Rect({
+            shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
+            silent: true,
+            z2: 0
+        });
+    }
+
+    bgEl.useStyle(backgroundModel.getBarItemStyle());
+    return bgEl;
+}

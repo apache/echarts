@@ -235,12 +235,11 @@ under the License.
                         itemStyle: itemStyle,
                         cursor: 'move',
                         data: data1,
+                        showBackground: true,
                         backgroundStyle: {
                             color: 'rgba(194, 52, 49, 0.5)',
                             borderWidth: 1,
-                            borderColor: 'blue',
-                            shadowBlur: 10,
-                            shadowColor: '#000'
+                            borderColor: 'blue'
                         }
                     }, {
                         name: 'bar2',
@@ -249,8 +248,10 @@ under the License.
                         itemStyle: itemStyle,
                         cursor: 'default',
                         data: data2,
+                        showBackground: true,
                         backgroundStyle: {
-                            color: 'rgba(255, 255, 255, 0.5)'
+                            shadowBlur: 10,
+                            shadowColor: '#000'
                         }
                     }, {
                         name: 'bar3',
