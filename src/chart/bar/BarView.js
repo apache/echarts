@@ -144,6 +144,7 @@ export default echarts.extendChartView({
 
                 if (drawBackground) {
                     var bgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel);
+                    bgEl.useStyle(backgroundModel.getBarItemStyle());
                     bgEls.push(bgEl);
                 }
 
@@ -178,14 +179,11 @@ export default echarts.extendChartView({
 
                 if (drawBackground) {
                     var bgEl = oldBgEls[oldIndex];
+                    bgEl.useStyle(backgroundModel.getBarItemStyle());
                     bgEls.push(bgEl);
 
-                    var newBgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel);
-                    var props = {
-                        shape: newBgEl.shape,
-                        style: newBgEl.style
-                    };
-                    graphic.updateProps(bgEl, props, animationModel, newIndex);
+                    var newBgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout);
+                    graphic.updateProps(bgEl, {shape: newBgEl.shape}, animationModel, newIndex);
                 }
 
                 var el = oldData.getItemGraphicEl(oldIndex);
@@ -680,7 +678,7 @@ function getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout) 
     }
 }
 
-function getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel) {
+function getBackgroundEl(coord, isHorizontalOrRadial, layout) {
     var coordLayout;
     var isPolar = coord.type === 'polar';
     if (isPolar) {
@@ -705,7 +703,5 @@ function getBackgroundEl(coord, isHorizontalOrRadial, layout, backgroundModel) {
             z2: 0
         });
     }
-
-    bgEl.useStyle(backgroundModel.getBarItemStyle());
     return bgEl;
 }
