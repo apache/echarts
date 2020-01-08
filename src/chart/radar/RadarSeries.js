@@ -76,8 +76,8 @@ var RadarSeries = SeriesModel.extend({
 
             for (var i = 0, len = values.length; i < len; i++) {
                 if (!isNaN(values[i])) {
-                    var indicatorAxis = coordSys._indicatorAxes[i];
-                    return coordSys.coordToPoint(indicatorAxis.dataToCoord(values[i]), i);
+                    var indicatorAxes = coordSys.getIndicatorAxes();
+                    return coordSys.coordToPoint(indicatorAxes[i].dataToCoord(values[i]), i);
                 }
             }
         }
