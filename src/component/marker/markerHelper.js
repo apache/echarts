@@ -65,9 +65,9 @@ function markerTypeCalculatorWithExtent(
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
 
-    var value = numCalculate(data, calcDataDim, mlType);
+    var value = numCalculate(data, targetDataDim, mlType);
 
-    var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
+    var dataIndex = data.indicesOfNearest(targetDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
     coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
     var coordArrValue = data.get(targetDataDim, dataIndex);
