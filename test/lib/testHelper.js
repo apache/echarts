@@ -1,3 +1,23 @@
+
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 (function (context) {
 
     var DEFAULT_DATA_TABLE_LIMIT = 8;
@@ -21,6 +41,7 @@
     /**
      * @param {Object} opt
      * @param {string|Array.<string>} [opt.title] If array, each item is on a single line.
+     *        Can use '**abc**', means <strong>abc</strong>.
      * @param {Option} opt.option
      * @param {Object} [opt.info] info object to display.
      * @param {string} [opt.infoKey='option']
@@ -32,8 +53,10 @@
      * @param {boolean} [opt.draggable]
      * @param {boolean} [opt.lazyUpdate]
      * @param {boolean} [opt.notMerge]
+     * @param {boolean} [opt.autoResize=true]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
+     * @param {boolean} [opt.recordCanvas] 'ut/lib/canteen.js' is required.
      */
     testHelper.create = function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
@@ -48,6 +71,7 @@
         var buttonsContainer = document.createElement('div');
         var dataTableContainer = document.createElement('div');
         var infoContainer = document.createElement('div');
+        var recordCanvasContainer = document.createElement('div');
 
         title.setAttribute('title', dom.getAttribute('id'));
 
@@ -58,12 +82,14 @@
         buttonsContainer.className = 'test-buttons';
         dataTableContainer.className = 'test-data-table';
         infoContainer.className = 'test-info';
+        recordCanvasContainer.className = 'record-canvas';
 
         if (opt.info) {
             dom.className += ' test-chart-block-has-right';
             infoContainer.className += ' test-chart-block-right';
         }
 
+        left.appendChild(recordCanvasContainer);
         left.appendChild(buttonsContainer);
         left.appendChild(dataTableContainer);
         left.appendChild(chartContainer);
@@ -79,7 +105,9 @@
                 optTitle = optTitle.join('\n');
             }
             title.innerHTML = '<div class="test-title-inner">'
-                + testHelper.encodeHTML(optTitle).replace(/\n/g, '<br>')
+                + testHelper.encodeHTML(optTitle)
+                    .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>')
                 + '</div>';
         }
 
@@ -119,11 +147,70 @@
             infoContainer.innerHTML = createObjectHTML(opt.info, opt.infoKey || 'option');
         }
 
+        if (opt.recordCanvas) {
+            recordCanvasContainer.innerHTML = ''
+                + '<button>Show Canvas Record</button>'
+                + '<button>Clear Canvas Record</button>'
+                + '<div class="content-area"><textarea></textarea><br><button>Close</button></div>';
+            var buttons = recordCanvasContainer.getElementsByTagName('button');
+            var canvasRecordButton = buttons[0];
+            var clearButton = buttons[1];
+            var closeButton = buttons[2];
+            var recordArea = recordCanvasContainer.getElementsByTagName('textarea')[0];
+            var contentAraa = recordArea.parentNode;
+            canvasRecordButton.addEventListener('click', function () {
+                var content = [];
+                eachCtx(function (zlevel, ctx) {
+                    content.push('Layer zlevel: ' + zlevel, '\n\n');
+                    if (typeof ctx.stack !== 'function') {
+                        alert('Missing: <script src="ut/lib/canteen.js"></script>');
+                        return;
+                    }
+                    var stack = ctx.stack();
+                    for (var i = 0; i < stack.length; i++) {
+                        var line = stack[i];
+                        content.push(JSON.stringify(line), '\n');
+                    }
+                });
+                contentAraa.style.display = 'block';
+                recordArea.value = content.join('');
+            });
+            clearButton.addEventListener('click', function () {
+                eachCtx(function (zlevel, ctx) {
+                    ctx.clear();
+                });
+                recordArea.value = 'Cleared.';
+            });
+            closeButton.addEventListener('click', function () {
+                contentAraa.style.display = 'none';
+            });
+        }
+
+        function eachCtx(cb) {
+            var layers = chart.getZr().painter.getLayers();
+            for (var zlevel in layers) {
+                if (layers.hasOwnProperty(zlevel)) {
+                    var layer = layers[zlevel];
+                    var canvas = layer.dom;
+                    var ctx = canvas.getContext('2d');
+                    cb(zlevel, ctx);
+                }
+            }
+        }
+
         return chart;
     };
 
     /**
-     * opt: {boolean}: lazyUpdate, {boolean}: notMerge, {number}: height, {Object}: {width, height, draggable}
+     * @param {ECharts} echarts
+     * @param {HTMLElement|string} domOrId
+     * @param {Object} option
+     * @param {boolean|number} opt If number, means height
+     * @param {boolean} opt.lazyUpdate
+     * @param {boolean} opt.notMerge
+     * @param {number} opt.width
+     * @param {number} opt.height
+     * @param {boolean} opt.draggable
      */
     testHelper.createChart = function (echarts, domOrId, option, opt) {
         if (typeof opt === 'number') {
@@ -146,14 +233,24 @@
             var chart = echarts.init(dom);
 
             if (opt.draggable) {
-                window.draggable.init(dom, chart, {throttle: 70, addPlaceholder: true});
+                if (!window.draggable) {
+                    throw new Error(
+                        'Pleasse add the script in HTML: \n'
+                        + '<script src="lib/draggable.js"></script>'
+                    );
+                }
+                window.draggable.init(dom, chart, {throttle: 70});
             }
 
             option && chart.setOption(option, {
                 lazyUpdate: opt.lazyUpdate,
                 notMerge: opt.notMerge
             });
-            testHelper.resizable(chart);
+
+            var isAutoResize = opt.autoResize == null ? true : opt.autoResize;
+            if (isAutoResize) {
+                testHelper.resizable(chart);
+            }
 
             return chart;
         }
@@ -161,10 +258,24 @@
 
 
     testHelper.resizable = function (chart) {
+        var dom = chart.getDom();
+        var width = dom.clientWidth;
+        var height = dom.clientHeight;
+        function resize() {
+            var newWidth = dom.clientWidth;
+            var newHeight = dom.clientHeight;
+            if (width !== newWidth || height !== newHeight) {
+                chart.resize();
+                width = newWidth;
+                height = newHeight;
+            }
+        }
         if (window.attachEvent) {
+            // Use builtin resize in IE
             window.attachEvent('onresize', chart.resize);
-        } else if (window.addEventListener) {
-            window.addEventListener('resize', chart.resize, false);
+        }
+        else if (window.addEventListener) {
+            window.addEventListener('resize', resize, false);
         }
     };
 

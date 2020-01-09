@@ -1,6 +1,21 @@
-/**
- * @file Create data struct and define tree view's series model
- */
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
@@ -32,7 +47,18 @@ export default SeriesModel.extend({
 
         treeOption.leaves = leaves;
 
-        var tree = Tree.createTree(root, this, treeOption);
+        var tree = Tree.createTree(root, this, treeOption, beforeLink);
+
+        function beforeLink(nodeData) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                var node = tree.getNodeByDataIndex(idx);
+                var leavesModel = node.getLeavesModel();
+                if (!node.children.length || !node.isExpand) {
+                    model.parentModel = leavesModel;
+                }
+                return model;
+            });
+        }
 
         var treeDepth = 0;
 
@@ -48,6 +74,7 @@ export default SeriesModel.extend({
 
         tree.root.eachNode('preorder', function (node) {
             var item = node.hostTree.data.getRawDataItem(node.dataIndex);
+            // Add item.collapsed != null, because users can collapse node original in the series.data.
             node.isExpand = (item && item.collapsed != null)
                 ? !item.collapsed
                 : node.depth <= expandTreeDepth;
@@ -55,9 +82,9 @@ export default SeriesModel.extend({
 
         return tree.data;
     },
-    
+
     /**
-     * make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
+     * Make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
      * @returns {string} orient
      */
     getOrient: function () {
@@ -69,6 +96,14 @@ export default SeriesModel.extend({
             orient = 'TB';
         }
         return orient;
+    },
+
+    setZoom: function (zoom) {
+        this.option.zoom = zoom;
+    },
+
+    setCenter: function (center) {
+        this.option.center = center;
     },
 
     /**
@@ -93,6 +128,7 @@ export default SeriesModel.extend({
     defaultOption: {
         zlevel: 0,
         z: 2,
+        coordinateSystem: 'view',
 
         // the position of the whole view
         left: '12%',
@@ -102,6 +138,22 @@ export default SeriesModel.extend({
 
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
+
+        // value can be 'polyline'
+        edgeShape: 'curve',
+
+        edgeForkPosition: '50%',
+
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+
+        // Symbol size scale ratio in roam
+        nodeScaleRatio: 0.4,
+
+        // Default on center of graph
+        center: null,
+
+        zoom: 1,
 
         // The orient of orthoginal layout, can be setted to 'LR', 'TB', 'RL', 'BT'.
         // and the backward compatibility configuration 'horizontal = LR', 'vertical = TB'.

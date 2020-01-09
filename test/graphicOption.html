@@ -1,4 +1,24 @@
-<!DOCTYPE>
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
 <html>
     <head>
         <meta charset="utf-8">
@@ -184,6 +204,99 @@
             },
             z: 100
         }]
+    }, {
+        type: 'group',
+        id: 'bl',
+        width: '100%',
+        height: '100%',
+        children: [{
+            type: 'rect',
+            right: 0,
+            bottom: 0,
+            shape: {
+                width: 200,
+                height: 100
+            },
+            style: {
+                stroke: 'blue',
+                fill: 'blue',
+                lineWidth: 2
+            }
+        }, {
+            type: 'rect',
+            position: [10, 20],
+            shape: {
+                width: 50,
+                height: 150
+            },
+            style: {
+                stroke: 'blue',
+                fill: 'blue',
+                lineWidth: 2
+            }
+        }, {
+            type: 'group',
+            width: '50%',
+            height: '50%',
+            children: [{
+                type: 'rect',
+                shape: {
+                    width: 100,
+                    height: 100
+                },
+                style: {
+                    stroke: 'blue',
+                    fill: 'blue',
+                    lineWidth: 2
+                },
+                right: 0,
+                bottom: 0
+            }]
+        }]
+    }, {
+        type: 'rect',
+        right: 0,
+        bottom: 0,
+        shape: {
+            width: 200,
+            height: 100
+        },
+        style: {
+            stroke: 'orange',
+            fill: 'transparent',
+            lineWidth: 2
+        }
+    }, {
+        type: 'rect',
+        position: [10, 20],
+        shape: {
+            width: 50,
+            height: 150
+        },
+        style: {
+            stroke: 'orange',
+            fill: 'transparent',
+            lineWidth: 2
+        }
+    }, {
+        type: 'rect',
+        shape: {
+            width: 100,
+            height: 100
+        },
+        style: {
+            stroke: 'orange',
+            fill: 'transparent',
+            lineWidth: 2
+        },
+        right: '50%',
+        bottom: '50%'
+    }, {
+        type: 'text',
+        position: [220, 20],
+        style: {
+            text: '蓝色矩形应与橙色矩形同一位置'
+        }
     }]
 }
             </textarea>

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../config';
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
@@ -5,6 +24,19 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import * as graphicUtil from '../util/graphic';
 import * as layoutUtil from '../util/layout';
+import {parsePercent} from '../util/number';
+
+var _nonShapeGraphicElements = {
+
+    // Reserved but not supported in graphic component.
+    path: null,
+    compoundPath: null,
+
+    // Supported in graphic component.
+    group: graphicUtil.Group,
+    image: graphicUtil.Image,
+    text: graphicUtil.Text
+};
 
 // -------------
 // Preprocessor
@@ -67,6 +99,8 @@ var GraphicModel = echarts.extendComponentModel({
         //          This mode is similar to css behavior, which is useful when you
         //          want an element to be able to overflow its container. (Consider
         //          a rotated circle needs to be located in a corner.)
+        // info: custom info. enables user to mount some info on elements and use them
+        //      in event handlers. Update them only when user specified, otherwise, remain.
 
         // Note: elements is always behind its ancestors in this elements array.
         elements: [],
@@ -245,7 +279,7 @@ echarts.extendComponentView({
         }
         this._lastGraphicModel = graphicModel;
 
-        this._updateElements(graphicModel, api);
+        this._updateElements(graphicModel);
         this._relocate(graphicModel, api);
     },
 
@@ -254,9 +288,8 @@ echarts.extendComponentView({
      *
      * @private
      * @param {Object} graphicModel graphic model
-     * @param {module:echarts/ExtensionAPI} api extension API
      */
-    _updateElements: function (graphicModel, api) {
+    _updateElements: function (graphicModel) {
         var elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
 
         if (!elOptionsToUpdate) {
@@ -274,9 +307,8 @@ echarts.extendComponentView({
             var parentId = elOption.parentId;
             var targetElParent = parentId != null ? elMap.get(parentId) : rootGroup;
 
-            if (elOption.type === 'text') {
-                var elOptionStyle = elOption.style;
-
+            var elOptionStyle = elOption.style;
+            if (elOption.type === 'text' && elOptionStyle) {
                 // In top/bottom mode, textVerticalAlign should not be used, which cause
                 // inaccurately locating.
                 if (elOption.hv && elOption.hv[1]) {
@@ -319,8 +351,9 @@ echarts.extendComponentView({
 
             var el = elMap.get(id);
             if (el) {
-                el.__ecGraphicWidth = elOption.width;
-                el.__ecGraphicHeight = elOption.height;
+                el.__ecGraphicWidthOption = elOption.width;
+                el.__ecGraphicHeightOption = elOption.height;
+                setEventData(el, graphicModel, elOption);
             }
         });
     },
@@ -336,6 +369,29 @@ echarts.extendComponentView({
         var elOptions = graphicModel.option.elements;
         var rootGroup = this.group;
         var elMap = this._elMap;
+        var apiWidth = api.getWidth();
+        var apiHeight = api.getHeight();
+
+        // Top-down to calculate percentage width/height of group
+        for (var i = 0; i < elOptions.length; i++) {
+            var elOption = elOptions[i];
+            var el = elMap.get(elOption.id);
+
+            if (!el || !el.isGroup) {
+                continue;
+            }
+            var parentEl = el.parent;
+            var isParentRoot = parentEl === rootGroup;
+            // Like 'position:absolut' in css, default 0.
+            el.__ecGraphicWidth = parsePercent(
+                el.__ecGraphicWidthOption,
+                isParentRoot ? apiWidth : parentEl.__ecGraphicWidth
+            ) || 0;
+            el.__ecGraphicHeight = parsePercent(
+                el.__ecGraphicHeightOption,
+                isParentRoot ? apiHeight : parentEl.__ecGraphicHeight
+            ) || 0;
+        }
 
         // Bottom-up tranvese all elements (consider ec resize) to locate elements.
         for (var i = elOptions.length - 1; i >= 0; i--) {
@@ -349,14 +405,18 @@ echarts.extendComponentView({
             var parentEl = el.parent;
             var containerInfo = parentEl === rootGroup
                 ? {
-                    width: api.getWidth(),
-                    height: api.getHeight()
+                    width: apiWidth,
+                    height: apiHeight
                 }
-                : { // Like 'position:absolut' in css, default 0.
-                    width: parentEl.__ecGraphicWidth || 0,
-                    height: parentEl.__ecGraphicHeight || 0
+                : {
+                    width: parentEl.__ecGraphicWidth,
+                    height: parentEl.__ecGraphicHeight
                 };
 
+            // PENDING
+            // Currently, when `bounding: 'all'`, the union bounding rect of the group
+            // does not include the rect of [0, 0, group.width, group.height], which
+            // is probably weird for users. Should we make a break change for it?
             layoutUtil.positionElement(
                 el, elOption, containerInfo, null,
                 {hv: elOption.hv, boundingMode: elOption.bounding}
@@ -392,7 +452,11 @@ function createEl(id, targetElParent, elOption, elMap) {
         zrUtil.assert(graphicType, 'graphic type MUST be set');
     }
 
-    var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
+    var Clz = _nonShapeGraphicElements.hasOwnProperty(graphicType)
+        // Those graphic elements are not shapes. They should not be
+        // overwritten by users, so do them first.
+        ? _nonShapeGraphicElements[graphicType]
+        : graphicUtil.getShapeClass(graphicType);
 
     if (__DEV__) {
         zrUtil.assert(Clz, 'graphic type can not be found');
@@ -509,5 +573,23 @@ function setLayoutInfoToExist(existItem, newElOption) {
     if (existItem.type === 'group') {
         existItem.width == null && (existItem.width = newElOption.width = 0);
         existItem.height == null && (existItem.height = newElOption.height = 0);
+    }
+}
+
+function setEventData(el, graphicModel, elOption) {
+    var eventData = el.eventData;
+    // Simple optimize for large amount of elements that no need event.
+    if (!el.silent && !el.ignore && !eventData) {
+        eventData = el.eventData = {
+            componentType: 'graphic',
+            componentIndex: graphicModel.componentIndex,
+            name: el.name
+        };
+    }
+
+    // `elOption.info` enables user to mount some info on
+    // elements and use them in event handlers.
+    if (eventData) {
+        eventData.info = el.info;
     }
 }

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 // Only create one roam controller for each coordinate system.
 // one roam controller might be refered by two inside data zoom
 // components (for example, one for x and one for y). When user
@@ -8,7 +27,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import RoamController from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
 
-var curry = zrUtil.curry;
 
 var ATTR = '\0_ec_dataZoom_roams';
 
@@ -21,11 +39,11 @@ var ATTR = '\0_ec_dataZoom_roams';
  * @param {Function} dataZoomInfo.containsPoint
  * @param {Array.<string>} dataZoomInfo.allCoordIds
  * @param {string} dataZoomInfo.dataZoomId
- * @param {number} dataZoomInfo.throttleRate
- * @param {Function} dataZoomInfo.panGetRange
- * @param {Function} dataZoomInfo.zoomGetRange
- * @param {boolean} [dataZoomInfo.zoomLock]
- * @param {boolean} [dataZoomInfo.disabled]
+ * @param {Object} dataZoomInfo.getRange
+ * @param {Function} dataZoomInfo.getRange.pan
+ * @param {Function} dataZoomInfo.getRange.zoom
+ * @param {Function} dataZoomInfo.getRange.scrollMove
+ * @param {boolean} dataZoomInfo.dataZoomModel
  */
 export function register(api, dataZoomInfo) {
     var store = giveStore(api);
@@ -72,7 +90,7 @@ export function register(api, dataZoomInfo) {
     throttleUtil.createOrUpdate(
         record,
         'dispatchAction',
-        dataZoomInfo.throttleRate,
+        dataZoomInfo.dataZoomModel.get('throttle', true),
         'fixRate'
     );
 }
@@ -100,20 +118,6 @@ export function unregister(api, dataZoomId) {
 /**
  * @public
  */
-export function shouldRecordRange(payload, dataZoomId) {
-    if (payload && payload.type === 'dataZoom' && payload.batch) {
-        for (var i = 0, len = payload.batch.length; i < len; i++) {
-            if (payload.batch[i].dataZoomId === dataZoomId) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-/**
- * @public
- */
 export function generateCoordId(coordModel) {
     return coordModel.type + '\0_' + coordModel.id;
 }
@@ -131,8 +135,31 @@ function giveStore(api) {
 
 function createController(api, newRecord) {
     var controller = new RoamController(api.getZr());
-    controller.on('pan', curry(onPan, newRecord));
-    controller.on('zoom', curry(onZoom, newRecord));
+
+    zrUtil.each(['pan', 'zoom', 'scrollMove'], function (eventName) {
+        controller.on(eventName, function (event) {
+            var batch = [];
+
+            zrUtil.each(newRecord.dataZoomInfos, function (info) {
+                // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
+                // moveOnMouseWheel, ...) enabled.
+                if (!event.isAvailableBehavior(info.dataZoomModel.option)) {
+                    return;
+                }
+
+                var method = (info.getRange || {})[eventName];
+                var range = method && method(newRecord.controller, event);
+
+                !info.dataZoomModel.get('disabled', true) && range && batch.push({
+                    dataZoomId: info.dataZoomId,
+                    start: range[0],
+                    end: range[1]
+                });
+            });
+
+            batch.length && newRecord.dispatchAction(batch);
+        });
+    });
 
     return controller;
 }
@@ -144,33 +171,6 @@ function cleanStore(store) {
             delete store[coordId];
         }
     });
-}
-
-function onPan(record, dx, dy, oldX, oldY, newX, newY) {
-    wrapAndDispatch(record, function (info) {
-        return info.panGetRange(record.controller, dx, dy, oldX, oldY, newX, newY);
-    });
-}
-
-function onZoom(record, scale, mouseX, mouseY) {
-    wrapAndDispatch(record, function (info) {
-        return info.zoomGetRange(record.controller, scale, mouseX, mouseY);
-    });
-}
-
-function wrapAndDispatch(record, getRange) {
-    var batch = [];
-
-    zrUtil.each(record.dataZoomInfos, function (info) {
-        var range = getRange(info);
-        !info.disabled && range && batch.push({
-            dataZoomId: info.dataZoomId,
-            start: range[0],
-            end: range[1]
-        });
-    });
-
-    record.dispatchAction(batch);
 }
 
 /**
@@ -188,7 +188,6 @@ function dispatchAction(api, batch) {
  */
 function mergeControllerParams(dataZoomInfos) {
     var controlType;
-    var opt = {};
     // DO NOT use reserved word (true, false, undefined) as key literally. Even if encapsulated
     // as string, it is probably revert to reserved word by compress tool. See #7411.
     var prefix = 'type_';
@@ -198,17 +197,34 @@ function mergeControllerParams(dataZoomInfos) {
         'type_false': 0,
         'type_undefined': -1
     };
+    var preventDefaultMouseMove = true;
+
     zrUtil.each(dataZoomInfos, function (dataZoomInfo) {
-        var oneType = dataZoomInfo.disabled ? false : dataZoomInfo.zoomLock ? 'move' : true;
+        var dataZoomModel = dataZoomInfo.dataZoomModel;
+        var oneType = dataZoomModel.get('disabled', true)
+            ? false
+            : dataZoomModel.get('zoomLock', true)
+            ? 'move'
+            : true;
         if (typePriority[prefix + oneType] > typePriority[prefix + controlType]) {
             controlType = oneType;
         }
-        // Do not support that different 'shift'/'ctrl'/'alt' setting used in one coord sys.
-        zrUtil.extend(opt, dataZoomInfo.roamControllerOpt);
+
+        // Prevent default move event by default. If one false, do not prevent. Otherwise
+        // users may be confused why it does not work when multiple insideZooms exist.
+        preventDefaultMouseMove &= dataZoomModel.get('preventDefaultMouseMove', true);
     });
 
     return {
         controlType: controlType,
-        opt: opt
+        opt: {
+            // RoamController will enable all of these functionalities,
+            // and the final behavior is determined by its event listener
+            // provided by each inside zoom.
+            zoomOnMouseWheel: true,
+            moveOnMouseMove: true,
+            moveOnMouseWheel: true,
+            preventDefaultMouseMove: !!preventDefaultMouseMove
+        }
     };
 }

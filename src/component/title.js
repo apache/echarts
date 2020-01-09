@@ -1,3 +1,23 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+import * as zrUtil from 'zrender/src/core/util';
 import * as echarts from '../echarts';
 import * as graphic from '../util/graphic';
 import {getLayoutRect} from '../util/layout';
@@ -43,7 +63,8 @@ echarts.extendComponentModel({
         // 垂直对齐
         // 'auto' | 'top' | 'bottom' | 'middle'
         // 默认根据 top 位置判断是上对齐还是下对齐
-        // textBaseline: null
+        // textVerticalAlign: null
+        // textBaseline: null // The same as textVerticalAlign.
 
         backgroundColor: 'rgba(0,0,0,0)',
 
@@ -88,7 +109,9 @@ echarts.extendComponentView({
         var subtextStyleModel = titleModel.getModel('subtextStyle');
 
         var textAlign = titleModel.get('textAlign');
-        var textBaseline = titleModel.get('textBaseline');
+        var textVerticalAlign = zrUtil.retrieve2(
+            titleModel.get('textBaseline'), titleModel.get('textVerticalAlign')
+        );
 
         var textEl = new graphic.Text({
             style: graphic.setTextStyle({}, textStyleModel, {
@@ -113,9 +136,10 @@ echarts.extendComponentView({
 
         var link = titleModel.get('link');
         var sublink = titleModel.get('sublink');
+        var triggerEvent = titleModel.get('triggerEvent', true);
 
-        textEl.silent = !link;
-        subTextEl.silent = !sublink;
+        textEl.silent = !link && !triggerEvent;
+        subTextEl.silent = !sublink && !triggerEvent;
 
         if (link) {
             textEl.on('click', function () {
@@ -127,6 +151,13 @@ echarts.extendComponentView({
                 window.open(sublink, '_' + titleModel.get('subtarget'));
             });
         }
+
+        textEl.eventData = subTextEl.eventData = triggerEvent
+            ? {
+                componentType: 'title',
+                componentIndex: titleModel.componentIndex
+            }
+            : null;
 
         group.add(textEl);
         subText && group.add(subTextEl);
@@ -157,25 +188,25 @@ echarts.extendComponentView({
                 layoutRect.x += layoutRect.width / 2;
             }
         }
-        if (!textBaseline) {
-            textBaseline = titleModel.get('top') || titleModel.get('bottom');
-            if (textBaseline === 'center') {
-                textBaseline = 'middle';
+        if (!textVerticalAlign) {
+            textVerticalAlign = titleModel.get('top') || titleModel.get('bottom');
+            if (textVerticalAlign === 'center') {
+                textVerticalAlign = 'middle';
             }
-            if (textBaseline === 'bottom') {
+            if (textVerticalAlign === 'bottom') {
                 layoutRect.y += layoutRect.height;
             }
-            else if (textBaseline === 'middle') {
+            else if (textVerticalAlign === 'middle') {
                 layoutRect.y += layoutRect.height / 2;
             }
 
-            textBaseline = textBaseline || 'top';
+            textVerticalAlign = textVerticalAlign || 'top';
         }
 
         group.attr('position', [layoutRect.x, layoutRect.y]);
         var alignStyle = {
             textAlign: textAlign,
-            textVerticalAlign: textBaseline
+            textVerticalAlign: textVerticalAlign
         };
         textEl.setStyle(alignStyle);
         subTextEl.setStyle(alignStyle);
@@ -195,9 +226,9 @@ echarts.extendComponentView({
                 r: titleModel.get('borderRadius')
             },
             style: style,
+            subPixelOptimize: true,
             silent: true
         });
-        graphic.subPixelOptimizeRect(rect);
 
         group.add(rect);
     }

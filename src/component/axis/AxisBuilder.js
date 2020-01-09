@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {retrieve, defaults, extend, each} from 'zrender/src/core/util';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
@@ -6,17 +25,10 @@ import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
+import {shouldShowAllLabels} from '../../coord/axisHelper';
 
 
 var PI = Math.PI;
-
-function makeAxisEventDataBase(axisModel) {
-    var eventData = {
-        componentType: axisModel.mainType
-    };
-    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
-    return eventData;
-}
 
 /**
  * A final axis is translated and rotated from a "standard axis".
@@ -53,8 +65,6 @@ function makeAxisEventDataBase(axisModel) {
  * @param {string} [opt.axisName] default get from axisModel.
  * @param {number} [opt.axisNameAvailableWidth]
  * @param {number} [opt.labelRotate] by degree, default get from axisModel.
- * @param {number} [opt.labelInterval] Default label interval when label
- *                                     interval from model is null or 'auto'.
  * @param {number} [opt.strokeContainThreshold] Default label interval when label
  * @param {number} [opt.nameTruncateMaxWidth]
  */
@@ -150,10 +160,10 @@ var builders = {
             axisModel.getModel('axisLine.lineStyle').getLineStyle()
         );
 
-        this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+        this.group.add(new graphic.Line({
             // Id for animation
             anid: 'line',
-
+            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -164,7 +174,7 @@ var builders = {
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
-        })));
+        }));
 
         var arrows = axisModel.get('axisLine.symbol');
         var arrowSize = axisModel.get('axisLine.symbolSize');
@@ -220,7 +230,8 @@ var builders = {
                     symbol.attr({
                         rotation: point.rotate,
                         position: pos,
-                        silent: true
+                        silent: true,
+                        z2: 11
                     });
                     this.group.add(symbol);
                 }
@@ -235,10 +246,12 @@ var builders = {
         var axisModel = this.axisModel;
         var opt = this.opt;
 
-        var tickEls = buildAxisTick(this, axisModel, opt);
+        var ticksEls = buildAxisMajorTicks(this, axisModel, opt);
         var labelEls = buildAxisLabel(this, axisModel, opt);
 
-        fixMinMaxLabelShow(axisModel, labelEls, tickEls);
+        fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
+
+        buildAxisMinorTicks(this, axisModel, opt);
     },
 
     /**
@@ -335,7 +348,7 @@ var builders = {
 
             position: pos,
             rotation: labelLayout.rotation,
-            silent: isSilent(axisModel),
+            silent: isLabelSilent(axisModel),
             z2: 1,
             tooltip: (tooltipOpt && tooltipOpt.show)
                 ? extend({
@@ -353,8 +366,10 @@ var builders = {
             textFont: textFont,
             textFill: textStyleModel.getTextColor()
                 || axisModel.get('axisLine.lineStyle.color'),
-            textAlign: labelLayout.textAlign,
-            textVerticalAlign: labelLayout.textVerticalAlign
+            textAlign: textStyleModel.get('align')
+                || labelLayout.textAlign,
+            textVerticalAlign: textStyleModel.get('verticalAlign')
+                || labelLayout.textVerticalAlign
         });
 
         if (axisModel.get('triggerEvent')) {
@@ -372,6 +387,15 @@ var builders = {
         textEl.decomposeTransform();
     }
 
+};
+
+var makeAxisEventDataBase = AxisBuilder.makeAxisEventDataBase = function (axisModel) {
+    var eventData = {
+        componentType: axisModel.mainType,
+        componentIndex: axisModel.componentIndex
+    };
+    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
+    return eventData;
 };
 
 /**
@@ -451,16 +475,20 @@ function endTextLayout(opt, textPosition, textRotate, extent) {
     };
 }
 
-function isSilent(axisModel) {
+var isLabelSilent = AxisBuilder.isLabelSilent = function (axisModel) {
     var tooltipOpt = axisModel.get('tooltip');
     return axisModel.get('silent')
         // Consider mouse cursor, add these restrictions.
         || !(
             axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
         );
-}
+};
 
 function fixMinMaxLabelShow(axisModel, labelEls, tickEls) {
+    if (shouldShowAllLabels(axisModel.axis)) {
+        return;
+    }
+
     // If min or max are user set, we need to check
     // If the tick on min(max) are overlap on their neighbour tick
     // If they are overlapped, we need to hide the min(max) tick label
@@ -542,121 +570,106 @@ function isNameLocationCenter(nameLocation) {
     return nameLocation === 'middle' || nameLocation === 'center';
 }
 
-/**
- * @static
- */
-var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick = function (
-    axis,
-    i,
-    interval,
-    ticksCnt,
-    showMinLabel,
-    showMaxLabel
-) {
-    if (i === 0 && showMinLabel || i === ticksCnt - 1 && showMaxLabel) {
-        return false;
-    }
 
-    // FIXME
-    // Have not consider label overlap (if label is too long) yet.
-
-    var rawTick;
-    var scale = axis.scale;
-    return scale.type === 'ordinal'
-        && (
-            typeof interval === 'function'
-                ? (
-                    rawTick = scale.getTicks()[i],
-                    !interval(rawTick, scale.getLabel(rawTick))
-                )
-                : i % (interval + 1)
-        );
-};
-
-/**
- * @static
- */
-var getInterval = AxisBuilder.getInterval = function (model, labelInterval) {
-    var interval = model.get('interval');
-    if (interval == null || interval == 'auto') {
-        interval = labelInterval;
-    }
-    return interval;
-};
-
-function buildAxisTick(axisBuilder, axisModel, opt) {
-    var axis = axisModel.axis;
-
-    if (!axisModel.get('axisTick.show') || axis.scale.isBlank()) {
-        return;
-    }
-
-    var tickModel = axisModel.getModel('axisTick');
-
-    var lineStyleModel = tickModel.getModel('lineStyle');
-    var tickLen = tickModel.get('length');
-
-    var tickInterval = getInterval(tickModel, opt.labelInterval);
-    var ticksCoords = axis.getTicksCoords(tickModel.get('alignWithLabel'));
-    // FIXME
-    // Corresponds to ticksCoords ?
-    var ticks = axis.scale.getTicks();
-
-    var showMinLabel = axisModel.get('axisLabel.showMinLabel');
-    var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
-
+function createTicks(ticksCoords, tickTransform, tickEndCoord, tickLineStyle, aniid) {
+    var tickEls = [];
     var pt1 = [];
     var pt2 = [];
-    var matrix = axisBuilder._transform;
-
-    var tickEls = [];
-
-    var ticksCnt = ticksCoords.length;
-    for (var i = 0; i < ticksCnt; i++) {
-        // Only ordinal scale support tick interval
-        if (ifIgnoreOnTick(
-            axis, i, tickInterval, ticksCnt,
-            showMinLabel, showMaxLabel
-        )) {
-            continue;
-        }
-
-        var tickCoord = ticksCoords[i];
+    for (var i = 0; i < ticksCoords.length; i++) {
+        var tickCoord = ticksCoords[i].coord;
 
         pt1[0] = tickCoord;
         pt1[1] = 0;
         pt2[0] = tickCoord;
-        pt2[1] = opt.tickDirection * tickLen;
+        pt2[1] = tickEndCoord;
 
-        if (matrix) {
-            v2ApplyTransform(pt1, pt1, matrix);
-            v2ApplyTransform(pt2, pt2, matrix);
+        if (tickTransform) {
+            v2ApplyTransform(pt1, pt1, tickTransform);
+            v2ApplyTransform(pt2, pt2, tickTransform);
         }
         // Tick line, Not use group transform to have better line draw
-        var tickEl = new graphic.Line(graphic.subPixelOptimizeLine({
+        var tickEl = new graphic.Line({
             // Id for animation
-            anid: 'tick_' + ticks[i],
-
+            anid: aniid + '_' + ticksCoords[i].tickValue,
+            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
                 x2: pt2[0],
                 y2: pt2[1]
             },
-            style: defaults(
-                lineStyleModel.getLineStyle(),
-                {
-                    stroke: axisModel.get('axisLine.lineStyle.color')
-                }
-            ),
+            style: tickLineStyle,
             z2: 2,
             silent: true
-        }));
-        axisBuilder.group.add(tickEl);
+        });
         tickEls.push(tickEl);
     }
-
     return tickEls;
+}
+
+function buildAxisMajorTicks(axisBuilder, axisModel, opt) {
+    var axis = axisModel.axis;
+
+    var tickModel = axisModel.getModel('axisTick');
+
+    if (!tickModel.get('show') || axis.scale.isBlank()) {
+        return;
+    }
+
+    var lineStyleModel = tickModel.getModel('lineStyle');
+    var tickEndCoord = opt.tickDirection * tickModel.get('length');
+
+    var ticksCoords = axis.getTicksCoords();
+
+    var ticksEls = createTicks(ticksCoords, axisBuilder._transform, tickEndCoord, defaults(
+        lineStyleModel.getLineStyle(),
+        {
+            stroke: axisModel.get('axisLine.lineStyle.color')
+        }
+    ), 'ticks');
+
+    for (var i = 0; i < ticksEls.length; i++) {
+        axisBuilder.group.add(ticksEls[i]);
+    }
+
+    return ticksEls;
+}
+
+function buildAxisMinorTicks(axisBuilder, axisModel, opt) {
+    var axis = axisModel.axis;
+
+    var minorTickModel = axisModel.getModel('minorTick');
+
+    if (!minorTickModel.get('show') || axis.scale.isBlank()) {
+        return;
+    }
+
+    var minorTicksCoords = axis.getMinorTicksCoords();
+    if (!minorTicksCoords.length) {
+        return;
+    }
+
+    var lineStyleModel = minorTickModel.getModel('lineStyle');
+    var tickEndCoord = opt.tickDirection * minorTickModel.get('length');
+
+    var minorTickLineStyle = defaults(
+        lineStyleModel.getLineStyle(),
+        defaults(
+            axisModel.getModel('axisTick').getLineStyle(),
+            {
+                stroke: axisModel.get('axisLine.lineStyle.color')
+            }
+        )
+    );
+
+    for (var i = 0; i < minorTicksCoords.length; i++) {
+        var minorTicksEls = createTicks(
+            minorTicksCoords[i], axisBuilder._transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
+        );
+        for (var k = 0; k < minorTicksEls.length; k++) {
+            axisBuilder.group.add(minorTicksEls[k]);
+        }
+    }
 }
 
 function buildAxisLabel(axisBuilder, axisModel, opt) {
@@ -669,8 +682,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
 
     var labelModel = axisModel.getModel('axisLabel');
     var labelMargin = labelModel.get('margin');
-    var ticks = axis.scale.getTicks();
-    var labels = axisModel.getFormattedLabels();
+    var labels = axis.getViewLabels();
 
     // Special label rotate.
     var labelRotation = (
@@ -678,43 +690,36 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
     ) * PI / 180;
 
     var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
-    var rawCategoryData = axisModel.getCategories(true);
+    var rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
 
     var labelEls = [];
-    var silent = isSilent(axisModel);
+    var silent = isLabelSilent(axisModel);
     var triggerEvent = axisModel.get('triggerEvent');
 
-    var showMinLabel = axisModel.get('axisLabel.showMinLabel');
-    var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
-
-    each(ticks, function (tickVal, index) {
-        if (ifIgnoreOnTick(
-            axis, index, opt.labelInterval, ticks.length,
-            showMinLabel, showMaxLabel
-        )) {
-            return;
-        }
+    each(labels, function (labelItem, index) {
+        var tickValue = labelItem.tickValue;
+        var formattedLabel = labelItem.formattedLabel;
+        var rawLabel = labelItem.rawLabel;
 
         var itemLabelModel = labelModel;
-        if (rawCategoryData && rawCategoryData[tickVal] && rawCategoryData[tickVal].textStyle) {
+        if (rawCategoryData && rawCategoryData[tickValue] && rawCategoryData[tickValue].textStyle) {
             itemLabelModel = new Model(
-                rawCategoryData[tickVal].textStyle, labelModel, axisModel.ecModel
+                rawCategoryData[tickValue].textStyle, labelModel, axisModel.ecModel
             );
         }
 
         var textColor = itemLabelModel.getTextColor()
             || axisModel.get('axisLine.lineStyle.color');
 
-        var tickCoord = axis.dataToCoord(tickVal);
+        var tickCoord = axis.dataToCoord(tickValue);
         var pos = [
             tickCoord,
             opt.labelOffset + opt.labelDirection * labelMargin
         ];
-        var labelStr = axis.scale.getLabel(tickVal);
 
         var textEl = new graphic.Text({
             // Id for animation
-            anid: 'label_' + tickVal,
+            anid: 'label_' + tickValue,
             position: pos,
             rotation: labelLayout.rotation,
             silent: silent,
@@ -722,7 +727,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
         });
 
         graphic.setTextStyle(textEl.style, itemLabelModel, {
-            text: labels[index],
+            text: formattedLabel,
             textAlign: itemLabelModel.getShallow('align', true)
                 || labelLayout.textAlign,
             textVerticalAlign: itemLabelModel.getShallow('verticalAlign', true)
@@ -733,11 +738,15 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
                     // (1) In category axis with data zoom, tick is not the original
                     // index of axis.data. So tick should not be exposed to user
                     // in category axis.
-                    // (2) Compatible with previous version, which always returns labelStr.
-                    // But in interval scale labelStr is like '223,445', which maked
-                    // user repalce ','. So we modify it to return original val but remain
+                    // (2) Compatible with previous version, which always use formatted label as
+                    // input. But in interval scale the formatted label is like '223,445', which
+                    // maked user repalce ','. So we modify it to return original val but remain
                     // it as 'string' to avoid error in replacing.
-                    axis.type === 'category' ? labelStr : axis.type === 'value' ? tickVal + '' : tickVal,
+                    axis.type === 'category'
+                        ? rawLabel
+                        : axis.type === 'value'
+                        ? tickValue + ''
+                        : tickValue,
                     index
                 )
                 : textColor
@@ -747,7 +756,7 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
         if (triggerEvent) {
             textEl.eventData = makeAxisEventDataBase(axisModel);
             textEl.eventData.targetType = 'axisLabel';
-            textEl.eventData.value = labelStr;
+            textEl.eventData.value = rawLabel;
         }
 
         // FIXME

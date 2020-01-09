@@ -1,14 +1,44 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/*
+* A third-party license is embeded for some of the code in this file:
+* The tree layoutHelper implementation was originally copied from
+* "d3.js"(https://github.com/d3/d3-hierarchy) with
+* some modifications made for this project.
+* (see more details in the comment of the specific method below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the licence of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
+*/
+
 /**
  * @file The layout algorithm of node-link tree diagrams. Here we using Reingold-Tilford algorithm to drawing
  *       the tree.
- * @see https://github.com/d3/d3-hierarchy
  */
 
 import * as layout from '../../util/layout';
 
 /**
- * Initialize all computational message for following algorithm
- * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree
+ * Initialize all computational message for following algorithm.
+ *
+ * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree.
  */
 export function init(root) {
     root.hierNode = {
@@ -49,17 +79,23 @@ export function init(root) {
 }
 
 /**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * Computes a preliminary x coordinate for node. Before that, this function is
  * applied recursively to the children of node, as well as the function
  * apportion(). After spacing out the children by calling executeShifts(), the
  * node is placed to the midpoint of its outermost children.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @param {Function} separation
  */
 export function firstWalk(node, separation) {
     var children = node.isExpand ? node.children : [];
     var siblings = node.parentNode.children;
-    var subtreeW = node.hierNode.i ? siblings[node.hierNode.i -1] : null;
+    var subtreeW = node.hierNode.i ? siblings[node.hierNode.i - 1] : null;
     if (children.length) {
         executeShifts(node);
         var midPoint = (children[0].hierNode.prelim + children[children.length - 1].hierNode.prelim) / 2;
@@ -74,12 +110,23 @@ export function firstWalk(node, separation) {
     else if (subtreeW) {
         node.hierNode.prelim = subtreeW.hierNode.prelim + separation(node, subtreeW);
     }
-    node.parentNode.hierNode.defaultAncestor = apportion(node, subtreeW, node.parentNode.hierNode.defaultAncestor || siblings[0], separation);
+    node.parentNode.hierNode.defaultAncestor = apportion(
+        node,
+        subtreeW,
+        node.parentNode.hierNode.defaultAncestor || siblings[0],
+        separation
+    );
 }
 
 
 /**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * Computes all real x-coordinates by summing up the modifiers recursively.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  */
 export function secondWalk(node) {
@@ -94,7 +141,8 @@ export function separation(cb) {
 }
 
 /**
- * Transform the common coordinate to radial coordinate
+ * Transform the common coordinate to radial coordinate.
+ *
  * @param  {number} x
  * @param  {number} y
  * @return {Object}
@@ -108,7 +156,8 @@ export function radialCoordinate(x, y) {
 }
 
 /**
- * Get the layout position of the whole view
+ * Get the layout position of the whole view.
+ *
  * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
  * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
  * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
@@ -125,6 +174,12 @@ export function getViewRect(seriesModel, api) {
 /**
  * All other shifts, applied to the smaller subtrees between w- and w+, are
  * performed by this function.
+ *
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  */
 function executeShifts(node) {
@@ -142,6 +197,11 @@ function executeShifts(node) {
 }
 
 /**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
  * The core of the algorithm. Here, a new subtree is combined with the
  * previous subtrees. Threads are used to traverse the inside and outside
  * contours of the left and right subtree up to the highest common level.
@@ -149,6 +209,7 @@ function executeShifts(node) {
  * one of the greatest uncommon ancestors using the function nextAncestor()
  * and call moveSubtree() to shift the subtree and prepare the shifts of
  * smaller subtrees. Finally, we add a new thread (if necessary).
+ *
  * @param  {module:echarts/data/Tree~TreeNode} subtreeV
  * @param  {module:echarts/data/Tree~TreeNode} subtreeW
  * @param  {module:echarts/data/Tree~TreeNode} ancestor
@@ -202,6 +263,7 @@ function apportion(subtreeV, subtreeW, ancestor, separation) {
  * This function is used to traverse the right contour of a subtree.
  * It returns the rightmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @return {module:echarts/data/Tree~TreeNode}
  */
@@ -214,6 +276,7 @@ function nextRight(node) {
  * This function is used to traverse the left contour of a subtree (or a subforest).
  * It returns the leftmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @return {module:echarts/data/Tree~TreeNode}
  */
@@ -225,6 +288,7 @@ function nextLeft(node) {
 /**
  * If nodeInLeft’s ancestor is a sibling of node, returns nodeInLeft’s ancestor.
  * Otherwise, returns the specified ancestor.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} nodeInLeft
  * @param  {module:echarts/data/Tree~TreeNode} node
  * @param  {module:echarts/data/Tree~TreeNode} ancestor
@@ -236,12 +300,19 @@ function nextAncestor(nodeInLeft, node, ancestor) {
 }
 
 /**
- * Shifts the current subtree rooted at wr. This is done by increasing prelim(w+) and modifier(w+) by shift.
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ *
+ * Shifts the current subtree rooted at wr.
+ * This is done by increasing prelim(w+) and modifier(w+) by shift.
+ *
  * @param  {module:echarts/data/Tree~TreeNode} wl
  * @param  {module:echarts/data/Tree~TreeNode} wr
  * @param  {number} shift [description]
  */
-function moveSubtree(wl, wr,shift) {
+function moveSubtree(wl, wr, shift) {
     var change = shift / (wr.hierNode.i - wl.hierNode.i);
     wr.hierNode.change -= change;
     wr.hierNode.shift += shift;
@@ -250,6 +321,12 @@ function moveSubtree(wl, wr,shift) {
     wl.hierNode.change += change;
 }
 
+/**
+ * The implementation of this function was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ */
 function defaultSeparation(node1, node2) {
     return node1.parentNode === node2.parentNode ? 1 : 2;
 }

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
@@ -431,23 +450,20 @@ var SliderZoomView = DataZoomView.extend({
             draggable: true,
             cursor: getCursor(this._orient),
             drift: bind(this._onDragMove, this, 'all'),
-            onmousemove: function (e) {
-                // Fot mobile devicem, prevent screen slider on the button.
-                eventTool.stop(e.event);
-            },
             ondragstart: bind(this._showDataInfo, this, true),
             ondragend: bind(this._onDragEnd, this),
             onmouseover: bind(this._showDataInfo, this, true),
             onmouseout: bind(this._showDataInfo, this, false),
             style: {
                 fill: dataZoomModel.get('fillerColor'),
-                textPosition : 'inside'
+                textPosition: 'inside'
             }
         }));
 
         // Frame border.
-        barGroup.add(new Rect(graphic.subPixelOptimizeRect({
+        barGroup.add(new Rect({
             silent: true,
+            subPixelOptimize: true,
             shape: {
                 x: 0,
                 y: 0,
@@ -460,7 +476,7 @@ var SliderZoomView = DataZoomView.extend({
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                 fill: 'rgba(0,0,0,0)'
             }
-        })));
+        }));
 
         each([0, 1], function (handleIndex) {
             var path = graphic.createIcon(
@@ -469,10 +485,6 @@ var SliderZoomView = DataZoomView.extend({
                     cursor: getCursor(this._orient),
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
-                    onmousemove: function (e) {
-                        // Fot mobile devicem, prevent screen slider on the button.
-                        eventTool.stop(e.event);
-                    },
                     ondragend: bind(this._onDragEnd, this),
                     onmouseover: bind(this._showDataInfo, this, true),
                     onmouseout: bind(this._showDataInfo, this, false)
@@ -529,6 +541,7 @@ var SliderZoomView = DataZoomView.extend({
      * @private
      * @param {(number|string)} handleIndex 0 or 1 or 'all'
      * @param {number} delta
+     * @return {boolean} changed
      */
     _updateInterval: function (handleIndex, delta) {
         var dataZoomModel = this.dataZoomModel;
@@ -548,10 +561,13 @@ var SliderZoomView = DataZoomView.extend({
                 ? linearMap(minMaxSpan.maxSpan, percentExtent, viewExtend, true) : null
         );
 
-        this._range = asc([
+        var lastRange = this._range;
+        var range = this._range = asc([
             linearMap(handleEnds[0], viewExtend, percentExtent, true),
             linearMap(handleEnds[1], viewExtend, percentExtent, true)
         ]);
+
+        return !lastRange || lastRange[0] !== range[0] || lastRange[1] !== range[1];
     },
 
     /**
@@ -690,20 +706,25 @@ var SliderZoomView = DataZoomView.extend({
         handleLabels[1].attr('invisible', !showOrHide);
     },
 
-    _onDragMove: function (handleIndex, dx, dy) {
+    _onDragMove: function (handleIndex, dx, dy, event) {
         this._dragging = true;
+
+        // For mobile device, prevent screen slider on the button.
+        eventTool.stop(event.event);
 
         // Transform dx, dy to bar coordination.
         var barTransform = this._displayables.barGroup.getLocalTransform();
         var vertex = graphic.applyTransform([dx, dy], barTransform, true);
 
-        this._updateInterval(handleIndex, vertex[0]);
+        var changed = this._updateInterval(handleIndex, vertex[0]);
 
         var realtime = this.dataZoomModel.get('realtime');
 
         this._updateView(!realtime);
 
-        realtime && this._dispatchZoomAction();
+        // Avoid dispatch dataZoom repeatly but range not changed,
+        // which cause bad visual effect when progressive enabled.
+        changed && realtime && this._dispatchZoomAction();
     },
 
     _onDragEnd: function () {
@@ -729,9 +750,9 @@ var SliderZoomView = DataZoomView.extend({
         var handleEnds = this._handleEnds;
         var center = (handleEnds[0] + handleEnds[1]) / 2;
 
-        this._updateInterval('all', localPoint[0] - center);
+        var changed = this._updateInterval('all', localPoint[0] - center);
         this._updateView();
-        this._dispatchZoomAction();
+        changed && this._dispatchZoomAction();
     },
 
     /**

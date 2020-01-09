@@ -1,6 +1,24 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
-import {makeInner} from '../../util/model';
-import {getCoordSysDefineBySeries} from '../../model/referHelper';
+import {makeInner, getDataItemValue} from '../../util/model';
 import {
     createHashMap,
     each,
@@ -13,7 +31,6 @@ import {
     extend,
     assert
 } from 'zrender/src/core/util';
-import {getDataItemValue} from '../../util/model';
 import Source from '../Source';
 
 import {
@@ -26,6 +43,12 @@ import {
     SERIES_LAYOUT_BY_ROW
 } from './sourceType';
 
+// The result of `guessOrdinal`.
+export var BE_ORDINAL = {
+    Must: 1, // Encounter string but not '-' and not number-like.
+    Might: 2, // Encounter string but number-like.
+    Not: 3 // Other cases
+};
 
 var inner = makeInner();
 
@@ -43,6 +66,10 @@ export function detectSourceFormat(datasetModel) {
     }
     else if (isArray(data)) {
         // FIXME Whether tolerate null in top level array?
+        if (data.length === 0) {
+            sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
+        }
+
         for (var i = 0, len = data.length; i < len; i++) {
             var item = data[i];
 
@@ -156,14 +183,6 @@ export function prepareSource(seriesModel) {
         data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine
     );
 
-    // Note: dataset option does not have `encode`.
-    var encodeDefine = seriesOption.encode;
-    if (!encodeDefine && datasetModel) {
-        encodeDefine = makeDefaultEncode(
-            seriesModel, datasetModel, data, sourceFormat, seriesLayoutBy, completeResult
-        );
-    }
-
     inner(seriesModel).source = new Source({
         data: data,
         fromDataset: fromDataset,
@@ -172,7 +191,8 @@ export function prepareSource(seriesModel) {
         dimensionsDefine: completeResult.dimensionsDefine,
         startIndex: completeResult.startIndex,
         dimensionsDetectCount: completeResult.dimensionsDetectCount,
-        encodeDefine: encodeDefine
+        // Note: dataset option does not have `encode`.
+        encodeDefine: seriesOption.encode
     });
 }
 
@@ -184,7 +204,6 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
 
     var dimensionsDetectCount;
     var startIndex;
-    var findPotentialName;
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
         // Rule: Most of the first line are string: it is header.
@@ -227,13 +246,11 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
     else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
         if (!dimensionsDefine) {
             dimensionsDefine = objectRowsCollectDimensions(data);
-            findPotentialName = true;
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
         if (!dimensionsDefine) {
             dimensionsDefine = [];
-            findPotentialName = true;
             each(data, function (colArr, key) {
                 dimensionsDefine.push(key);
             });
@@ -249,21 +266,10 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
         }
     }
 
-    var potentialNameDimIndex;
-    if (findPotentialName) {
-        each(dimensionsDefine, function (dim, idx) {
-            if ((isObject(dim) ? dim.name : dim) === 'name') {
-                potentialNameDimIndex = idx;
-            }
-        });
-    }
-
     return {
         startIndex: startIndex,
         dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine),
-        dimensionsDetectCount: dimensionsDetectCount,
-        potentialNameDimIndex: potentialNameDimIndex
-        // TODO: potentialIdDimIdx
+        dimensionsDetectCount: dimensionsDetectCount
     };
 }
 
@@ -337,103 +343,198 @@ function objectRowsCollectDimensions(data) {
     }
 }
 
-// ??? TODO merge to completedimensions, where also has
-// default encode making logic. And the default rule
-// should depends on series? consider 'map'.
-function makeDefaultEncode(
-    seriesModel, datasetModel, data, sourceFormat, seriesLayoutBy, completeResult
-) {
-    var coordSysDefine = getCoordSysDefineBySeries(seriesModel);
+/**
+ * [The strategy of the arrengment of data dimensions for dataset]:
+ * "value way": all axes are non-category axes. So series one by one take
+ *     several (the number is coordSysDims.length) dimensions from dataset.
+ *     The result of data arrengment of data dimensions like:
+ *     | ser0_x | ser0_y | ser1_x | ser1_y | ser2_x | ser2_y |
+ * "category way": at least one axis is category axis. So the the first data
+ *     dimension is always mapped to the first category axis and shared by
+ *     all of the series. The other data dimensions are taken by series like
+ *     "value way" does.
+ *     The result of data arrengment of data dimensions like:
+ *     | ser_shared_x | ser0_y | ser1_y | ser2_y |
+ *
+ * @param {Array.<Object|string>} coordDimensions [{name: <string>, type: <string>, dimsDef: <Array>}, ...]
+ * @param {module:model/Series} seriesModel
+ * @param {module:data/Source} source
+ * @return {Object} encode Never be `null/undefined`.
+ */
+export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, source) {
     var encode = {};
-    // var encodeTooltip = [];
-    // var encodeLabel = [];
+
+    var datasetModel = getDatasetModel(seriesModel);
+    // Currently only make default when using dataset, util more reqirements occur.
+    if (!datasetModel || !coordDimensions) {
+        return encode;
+    }
+
     var encodeItemName = [];
     var encodeSeriesName = [];
-    var seriesType = seriesModel.subType;
 
-    // ??? TODO refactor: provide by series itself.
-    // Consider the case: 'map' series is based on geo coordSys,
-    // 'graph', 'heatmap' can be based on cartesian. But can not
-    // give default rule simply here.
-    var nSeriesMap = createHashMap(['pie', 'map', 'funnel']);
-    var cSeriesMap = createHashMap([
-        'line', 'bar', 'pictorialBar', 'scatter', 'effectScatter', 'candlestick', 'boxplot'
-    ]);
+    var ecModel = seriesModel.ecModel;
+    var datasetMap = inner(ecModel).datasetMap;
+    var key = datasetModel.uid + '_' + source.seriesLayoutBy;
 
-    // Usually in this case series will use the first data
-    // dimension as the "value" dimension, or other default
-    // processes respectively.
-    if (coordSysDefine && cSeriesMap.get(seriesType) != null) {
-        var ecModel = seriesModel.ecModel;
-        var datasetMap = inner(ecModel).datasetMap;
-        var key = datasetModel.uid + '_' + seriesLayoutBy;
-        var datasetRecord = datasetMap.get(key)
-            || datasetMap.set(key, {categoryWayDim: 1, valueWayDim: 0});
+    var baseCategoryDimIndex;
+    var categoryWayValueDimStart;
+    coordDimensions = coordDimensions.slice();
+    each(coordDimensions, function (coordDimInfo, coordDimIdx) {
+        !isObject(coordDimInfo) && (coordDimensions[coordDimIdx] = {name: coordDimInfo});
+        if (coordDimInfo.type === 'ordinal' && baseCategoryDimIndex == null) {
+            baseCategoryDimIndex = coordDimIdx;
+            categoryWayValueDimStart = getDataDimCountOnCoordDim(coordDimensions[coordDimIdx]);
+        }
+        encode[coordDimInfo.name] = [];
+    });
 
-        // TODO
-        // Auto detect first time axis and do arrangement.
-        each(coordSysDefine.coordSysDims, function (coordDim) {
-            // In value way.
-            if (coordSysDefine.firstCategoryDimIndex == null) {
-                var dataDim = datasetRecord.valueWayDim++;
-                encode[coordDim] = dataDim;
+    var datasetRecord = datasetMap.get(key)
+        || datasetMap.set(key, {categoryWayDim: categoryWayValueDimStart, valueWayDim: 0});
 
-                // ??? TODO give a better default series name rule?
-                // especially when encode x y specified.
-                // consider: when mutiple series share one dimension
-                // category axis, series name should better use
-                // the other dimsion name. On the other hand, use
-                // both dimensions name.
+    // TODO
+    // Auto detect first time axis and do arrangement.
+    each(coordDimensions, function (coordDimInfo, coordDimIdx) {
+        var coordDimName = coordDimInfo.name;
+        var count = getDataDimCountOnCoordDim(coordDimInfo);
 
-                encodeSeriesName.push(dataDim);
-                // encodeTooltip.push(dataDim);
-                // encodeLabel.push(dataDim);
-            }
-            // In category way, category axis.
-            else if (coordSysDefine.categoryAxisMap.get(coordDim)) {
-                encode[coordDim] = 0;
-                encodeItemName.push(0);
-            }
-            // In category way, non-category axis.
-            else {
-                var dataDim = datasetRecord.categoryWayDim++;
-                encode[coordDim] = dataDim;
-                // encodeTooltip.push(dataDim);
-                // encodeLabel.push(dataDim);
-                encodeSeriesName.push(dataDim);
+        // In value way.
+        if (baseCategoryDimIndex == null) {
+            var start = datasetRecord.valueWayDim;
+            pushDim(encode[coordDimName], start, count);
+            pushDim(encodeSeriesName, start, count);
+            datasetRecord.valueWayDim += count;
+
+            // ??? TODO give a better default series name rule?
+            // especially when encode x y specified.
+            // consider: when mutiple series share one dimension
+            // category axis, series name should better use
+            // the other dimsion name. On the other hand, use
+            // both dimensions name.
+        }
+        // In category way, the first category axis.
+        else if (baseCategoryDimIndex === coordDimIdx) {
+            pushDim(encode[coordDimName], 0, count);
+            pushDim(encodeItemName, 0, count);
+        }
+        // In category way, the other axis.
+        else {
+            var start = datasetRecord.categoryWayDim;
+            pushDim(encode[coordDimName], start, count);
+            pushDim(encodeSeriesName, start, count);
+            datasetRecord.categoryWayDim += count;
+        }
+    });
+
+    function pushDim(dimIdxArr, idxFrom, idxCount) {
+        for (var i = 0; i < idxCount; i++) {
+            dimIdxArr.push(idxFrom + i);
+        }
+    }
+
+    function getDataDimCountOnCoordDim(coordDimInfo) {
+        var dimsDef = coordDimInfo.dimsDef;
+        return dimsDef ? dimsDef.length : 1;
+    }
+
+    encodeItemName.length && (encode.itemName = encodeItemName);
+    encodeSeriesName.length && (encode.seriesName = encodeSeriesName);
+
+    return encode;
+}
+
+/**
+ * Work for data like [{name: ..., value: ...}, ...].
+ *
+ * @param {module:model/Series} seriesModel
+ * @param {module:data/Source} source
+ * @return {Object} encode Never be `null/undefined`.
+ */
+export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
+    var encode = {};
+
+    var datasetModel = getDatasetModel(seriesModel);
+    // Currently only make default when using dataset, util more reqirements occur.
+    if (!datasetModel) {
+        return encode;
+    }
+
+    var sourceFormat = source.sourceFormat;
+    var dimensionsDefine = source.dimensionsDefine;
+
+    var potentialNameDimIndex;
+    if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS || sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
+        each(dimensionsDefine, function (dim, idx) {
+            if ((isObject(dim) ? dim.name : dim) === 'name') {
+                potentialNameDimIndex = idx;
             }
         });
     }
-    // Do not make a complex rule! Hard to code maintain and not necessary.
-    // ??? TODO refactor: provide by series itself.
-    // [{name: ..., value: ...}, ...] like:
-    else if (nSeriesMap.get(seriesType) != null) {
-        // Find the first not ordinal. (5 is an experience value)
-        var firstNotOrdinal;
-        for (var i = 0; i < 5 && firstNotOrdinal == null; i++) {
-            if (!doGuessOrdinal(
-                data, sourceFormat, seriesLayoutBy,
-                completeResult.dimensionsDefine, completeResult.startIndex, i
-            )) {
-                firstNotOrdinal = i;
+
+    // idxResult: {v, n}.
+    var idxResult = (function () {
+
+        var idxRes0 = {};
+        var idxRes1 = {};
+        var guessRecords = [];
+
+        // 5 is an experience value.
+        for (var i = 0, len = Math.min(5, dimCount); i < len; i++) {
+            var guessResult = doGuessOrdinal(
+                source.data, sourceFormat, source.seriesLayoutBy,
+                dimensionsDefine, source.startIndex, i
+            );
+            guessRecords.push(guessResult);
+            var isPureNumber = guessResult === BE_ORDINAL.Not;
+
+            // [Strategy of idxRes0]: find the first BE_ORDINAL.Not as the value dim,
+            // and then find a name dim with the priority:
+            // "BE_ORDINAL.Might|BE_ORDINAL.Must" > "other dim" > "the value dim itself".
+            if (isPureNumber && idxRes0.v == null && i !== potentialNameDimIndex) {
+                idxRes0.v = i;
+            }
+            if (idxRes0.n == null
+                || (idxRes0.n === idxRes0.v)
+                || (!isPureNumber && guessRecords[idxRes0.n] === BE_ORDINAL.Not)
+            ) {
+                idxRes0.n = i;
+            }
+            if (fulfilled(idxRes0) && guessRecords[idxRes0.n] !== BE_ORDINAL.Not) {
+                return idxRes0;
+            }
+
+            // [Strategy of idxRes1]: if idxRes0 not satisfied (that is, no BE_ORDINAL.Not),
+            // find the first BE_ORDINAL.Might as the value dim,
+            // and then find a name dim with the priority:
+            // "other dim" > "the value dim itself".
+            // That is for backward compat: number-like (e.g., `'3'`, `'55'`) can be
+            // treated as number.
+            if (!isPureNumber) {
+                if (guessResult === BE_ORDINAL.Might && idxRes1.v == null && i !== potentialNameDimIndex) {
+                    idxRes1.v = i;
+                }
+                if (idxRes1.n == null || (idxRes1.n === idxRes1.v)) {
+                    idxRes1.n = i;
+                }
             }
         }
-        if (firstNotOrdinal != null) {
-            encode.value = firstNotOrdinal;
-            var nameDimIndex = completeResult.potentialNameDimIndex
-                || Math.max(firstNotOrdinal - 1, 0);
-            // By default, label use itemName in charts.
-            // So we dont set encodeLabel here.
-            encodeSeriesName.push(nameDimIndex);
-            encodeItemName.push(nameDimIndex);
-            // encodeTooltip.push(firstNotOrdinal);
-        }
-    }
 
-    // encodeTooltip.length && (encode.tooltip = encodeTooltip);
-    // encodeLabel.length && (encode.label = encodeLabel);
-    encodeItemName.length && (encode.itemName = encodeItemName);
-    encodeSeriesName.length && (encode.seriesName = encodeSeriesName);
+        function fulfilled(idxResult) {
+            return idxResult.v != null && idxResult.n != null;
+        }
+
+        return fulfilled(idxRes0) ? idxRes0 : fulfilled(idxRes1) ? idxRes1 : null;
+    })();
+
+    if (idxResult) {
+        encode.value = idxResult.v;
+        // `potentialNameDimIndex` has highest priority.
+        var nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n;
+        // By default, label use itemName in charts.
+        // So we dont set encodeLabel here.
+        encode.itemName = [nameDimIndex];
+        encode.seriesName = [nameDimIndex];
+    }
 
     return encode;
 }
@@ -461,7 +562,7 @@ function getDatasetModel(seriesModel) {
  *
  * @param {module:echars/data/Source} source
  * @param {number} dimIndex
- * @return {boolean} Whether ordinal.
+ * @return {BE_ORDINAL} guess result.
  */
 export function guessOrdinal(source, dimIndex) {
     return doGuessOrdinal(
@@ -475,6 +576,7 @@ export function guessOrdinal(source, dimIndex) {
 }
 
 // dimIndex may be overflow source data.
+// return {BE_ORDINAL}
 function doGuessOrdinal(
     data, sourceFormat, seriesLayoutBy, dimensionsDefine, startIndex, dimIndex
 ) {
@@ -483,15 +585,26 @@ function doGuessOrdinal(
     var maxLoop = 5;
 
     if (isTypedArray(data)) {
-        return false;
+        return BE_ORDINAL.Not;
     }
 
     // When sourceType is 'objectRows' or 'keyedColumns', dimensionsDefine
     // always exists in source.
     var dimName;
+    var dimType;
     if (dimensionsDefine) {
-        dimName = dimensionsDefine[dimIndex];
-        dimName = isObject(dimName) ? dimName.name : dimName;
+        var dimDefItem = dimensionsDefine[dimIndex];
+        if (isObject(dimDefItem)) {
+            dimName = dimDefItem.name;
+            dimType = dimDefItem.type;
+        }
+        else if (isString(dimDefItem)) {
+            dimName = dimDefItem;
+        }
+    }
+
+    if (dimType != null) {
+        return dimType === 'ordinal' ? BE_ORDINAL.Must : BE_ORDINAL.Not;
     }
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
@@ -514,7 +627,7 @@ function doGuessOrdinal(
     }
     else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
         if (!dimName) {
-            return;
+            return BE_ORDINAL.Not;
         }
         for (var i = 0; i < data.length && i < maxLoop; i++) {
             var item = data[i];
@@ -525,11 +638,11 @@ function doGuessOrdinal(
     }
     else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
         if (!dimName) {
-            return;
+            return BE_ORDINAL.Not;
         }
         var sample = data[dimName];
         if (!sample || isTypedArray(sample)) {
-            return false;
+            return BE_ORDINAL.Not;
         }
         for (var i = 0; i < sample.length && i < maxLoop; i++) {
             if ((result = detectValue(sample[i])) != null) {
@@ -542,7 +655,7 @@ function doGuessOrdinal(
             var item = data[i];
             var val = getDataItemValue(item);
             if (!isArray(val)) {
-                return false;
+                return BE_ORDINAL.Not;
             }
             if ((result = detectValue(val[dimIndex])) != null) {
                 return result;
@@ -551,15 +664,16 @@ function doGuessOrdinal(
     }
 
     function detectValue(val) {
+        var beStr = isString(val);
         // Consider usage convenience, '1', '2' will be treated as "number".
         // `isFinit('')` get `true`.
         if (val != null && isFinite(val) && val !== '') {
-            return false;
+            return beStr ? BE_ORDINAL.Might : BE_ORDINAL.Not;
         }
-        else if (isString(val) && val !== '-') {
-            return true;
+        else if (beStr && val !== '-') {
+            return BE_ORDINAL.Must;
         }
     }
 
-    return false;
+    return BE_ORDINAL.Not;
 }

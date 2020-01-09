@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';
@@ -15,12 +34,12 @@ export default SeriesModel.extend({
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this);
+        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     },
 
     defaultOption: {
-        zlevel: 0,                  // 一级层叠
-        z: 2,                       // 二级层叠
+        zlevel: 0,
+        z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
@@ -32,7 +51,7 @@ export default SeriesModel.extend({
         // polarIndex: 0,
 
         // If clip the overflow value
-        clipOverflow: true,
+        clip: true,
         // cursor: null,
 
         label: {
@@ -58,22 +77,21 @@ export default SeriesModel.extend({
         // Disabled if step is true
         smooth: false,
         smoothMonotone: null,
-        // 拐点图形类型
         symbol: 'emptyCircle',
-        // 拐点图形大小
         symbolSize: 4,
-        // 拐点图形旋转控制
         symbolRotate: null,
 
-        // 是否显示 symbol, 只有在 tooltip hover 的时候显示
         showSymbol: true,
-        // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
-        showAllSymbol: false,
+        // `false`: follow the label interval strategy.
+        // `true`: show all symbols.
+        // `'auto'`: If possible, show all symbols, otherwise
+        //           follow the label interval strategy.
+        showAllSymbol: 'auto',
 
-        // 是否连接断点
+        // Whether to connect break point.
         connectNulls: false,
 
-        // 数据过滤，'average', 'max', 'min', 'sum'
+        // Sampling for large data. Can be: 'average', 'max', 'min', 'sum'.
         sampling: 'none',
 
         animationEasing: 'linear',

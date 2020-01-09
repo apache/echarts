@@ -1,9 +1,37 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/*
+* A third-party license is embeded for some of the code in this file:
+* The method "quantile" was copied from "d3.js".
+* (See more details in the comment of the method below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 
 var RADIAN_EPSILON = 1e-4;
 
 function _trim(str) {
-    return str.replace(/^\s+/, '').replace(/\s+$/, '');
+    return str.replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -113,6 +141,13 @@ export function round(x, precision, returnStr) {
     return returnStr ? x : +x;
 }
 
+/**
+ * asc sort arr.
+ * The input arr will be modified.
+ *
+ * @param {Array} arr
+ * @return {Array} The input arr.
+ */
 export function asc(arr) {
     arr.sort(function (a, b) {
         return a - b;
@@ -261,7 +296,9 @@ export function isRadianAroundZero(val) {
     return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
 }
 
+/* eslint-disable */
 var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
+/* eslint-enable */
 
 /**
  * @param {string|Date|number} value These values can be accepted:
@@ -349,8 +386,28 @@ export function quantity(val) {
     return Math.pow(10, quantityExponent(val));
 }
 
-function quantityExponent(val) {
-    return Math.floor(Math.log(val) / Math.LN10);
+/**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
+ * @return {number}
+ */
+export function quantityExponent(val) {
+    if (val === 0) {
+        return 0;
+    }
+
+    var exp = Math.floor(Math.log(val) / Math.LN10);
+    /**
+     * exp is expected to be the rounded-down result of the base-10 log of val.
+     * But due to the precision loss with Math.log(val), we need to restore it
+     * using 10^exp to make sure we can get val back from exp. #11249
+     */
+    if (val / Math.pow(10, exp) >= 10) {
+        exp++;
+    }
+    return exp;
 }
 
 /**
@@ -370,24 +427,58 @@ export function nice(val, round) {
     var f = val / exp10; // 1 <= f < 10
     var nf;
     if (round) {
-        if (f < 1.5) { nf = 1; }
-        else if (f < 2.5) { nf = 2; }
-        else if (f < 4) { nf = 3; }
-        else if (f < 7) { nf = 5; }
-        else { nf = 10; }
+        if (f < 1.5) {
+            nf = 1;
+        }
+        else if (f < 2.5) {
+            nf = 2;
+        }
+        else if (f < 4) {
+            nf = 3;
+        }
+        else if (f < 7) {
+            nf = 5;
+        }
+        else {
+            nf = 10;
+        }
     }
     else {
-        if (f < 1) { nf = 1; }
-        else if (f < 2) { nf = 2; }
-        else if (f < 3) { nf = 3; }
-        else if (f < 5) { nf = 5; }
-        else { nf = 10; }
+        if (f < 1) {
+            nf = 1;
+        }
+        else if (f < 2) {
+            nf = 2;
+        }
+        else if (f < 3) {
+            nf = 3;
+        }
+        else if (f < 5) {
+            nf = 5;
+        }
+        else {
+            nf = 10;
+        }
     }
     val = nf * exp10;
 
     // Fix 3 * 0.1 === 0.30000000000000004 issue (see IEEE 754).
     // 20 is the uppper bound of toFixed.
     return exponent >= -20 ? +val.toFixed(exponent < 0 ? -exponent : 0) : val;
+}
+
+/**
+ * This code was copied from "d3.js"
+ * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.
+ * See the license statement at the head of this file.
+ * @param {Array.<number>} ascArr
+ */
+export function quantile(ascArr, p) {
+    var H = (ascArr.length - 1) * p + 1;
+    var h = Math.floor(H);
+    var v = +ascArr[h - 1];
+    var e = H - h;
+    return e ? v + e * (ascArr[h] - v) : v;
 }
 
 /**

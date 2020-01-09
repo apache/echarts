@@ -1,10 +1,23 @@
-/**
- * @file defines echarts Heatmap Chart
- * @author Ovilia (me@zhangwenli.com)
- * Inspired by https://github.com/mourner/simpleheat
- *
- * @module
- */
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/* global Uint8ClampedArray */
 
 import * as zrUtil from 'zrender/src/core/util';
 
@@ -35,7 +48,7 @@ Heatmap.prototype = {
      * @param {number} width canvas width
      * @param {number} height canvas height
      */
-    update: function(data, width, height, normalize, colorFunc, isInRange) {
+    update: function (data, width, height, normalize, colorFunc, isInRange) {
         var brush = this._getBrush();
         var gradientInRange = this._getGradient(data, colorFunc, 'inRange');
         var gradientOutOfRange = this._getGradient(data, colorFunc, 'outOfRange');
@@ -76,7 +89,7 @@ Heatmap.prototype = {
         var maxOpacity = this.maxOpacity;
         var diffOpacity = maxOpacity - minOpacity;
 
-        while(offset < pixelLen) {
+        while (offset < pixelLen) {
             var alpha = pixels[offset + 3] / 256;
             var gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
             // Simple optimize to ignore the empty data
@@ -103,7 +116,7 @@ Heatmap.prototype = {
      * @private
      * @returns {Object} circle brush canvas
      */
-    _getBrush: function() {
+    _getBrush: function () {
         var brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
         // set brush size
         var r = this.pointSize + this.blurSize;

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * @module echarts/coord/geo/Region
  */
@@ -8,7 +27,7 @@ import * as vec2 from 'zrender/src/core/vector';
 import * as polygonContain from 'zrender/src/contain/polygon';
 
 /**
- * @param {string} name
+ * @param {string|Region} name
  * @param {Array} geometries
  * @param {Array.<number>} cp
  */
@@ -121,7 +140,7 @@ Region.prototype = {
             width = aspect * height;
         }
         else if (!height) {
-            height = width / aspect ;
+            height = width / aspect;
         }
         var target = new BoundingRect(x, y, width, height);
         var transform = rect.calculateTransform(target);
@@ -149,6 +168,14 @@ Region.prototype = {
             rect.x + rect.width / 2,
             rect.y + rect.height / 2
         ];
+    },
+
+    cloneShallow: function (name) {
+        name == null && (name = this.name);
+        var newRegion = new Region(name, this.geometries, this.center);
+        newRegion._rect = this._rect;
+        newRegion.transformTo = null; // Simply avoid to be called.
+        return newRegion;
     }
 };
 

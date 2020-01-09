@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            body {
+                background: #000 !important;
+            }
+            .test-chart {
+                margin: 80px auto 80px auto !important;
+                background: #fff !important;
+            }
+            #live-info-panel {
+                position: fixed;
+                right: 5px;
+                top: 5px;
+                width: 140px;
+                height: 120px;
+                box-shadow: 0 0 5px #fff;
+                border: 2px solid green;
+                z-index: 999999;
+                color: #fff;
+                font-size: 10px;
+                background: #000;
+            }
+            #live-info-panel .title {
+                font-size: 10px;
+                color: yellow;
+                text-align: center;
+            }
+            #live-info-panel #live-info-content {
+                padding: 2px 3px;
+            }
+            #parent-of-main0 {
+                overflow: hidden;
+            }
+        </style>
+
+
+        <div id="live-info-panel">
+            <div class="title">Live Info Panel</div>
+            <div id="live-info-content"></div>
+        </div>
+
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+<div>
+        <div id="parent-of-main0">
+            <div id="main0"></div>
+        </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+
+        <script>
+            var _liveInfoPanel = document.getElementById('live-info-panel');
+            var _liveInfoContent = document.getElementById('live-info-content');;
+            var _liveMsg = [];
+            function _printLiveInfo(msg) {
+                _liveMsg.push(testHelper.encodeHTML(msg));
+                _liveMsg = _liveMsg.slice(Math.max(0, _liveMsg.length - 9));
+                _liveInfoContent.innerHTML = _liveMsg.join('<br>');
+            }
+            function _printEvent(event) {
+                var x = event.offsetX;
+                var y = event.offsetY;
+                x = x != null ? x.toFixed(1) : '-';
+                y = y != null ? y.toFixed(1) : '-';
+                _printLiveInfo(
+                    event.type + ' [' + x + ',' + x + ']'
+                );
+            }
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                brush: {},
+                tooltip: {
+                    enterable: true,
+                    alwaysShowContent: true,
+                    position: [10, 10]
+                },
+                series: {
+                    type: 'line',
+                    data: [[11, 22]]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    '[ Test this case in **PC** / **Touch device** / **WeApp(no document)** ]',
+                    '(1) Before anything clicked, **mousemove** / **click** on both inside and outside echarts.',
+                    '**Live Info Panel** should have mouse events.',
+                    '(2) **mousemove** / **click** on both inside and outside echarts.',
+                    '**Live Info Panel** should display mouse **xy** correctly.',
+                    'drag outside and release, "globalout" event should be displayed fianly (only PC)',
+                    '(3) Click "add stopPropagation on parent"',
+                    'drag outside should be as usual.',
+                    'Move inside and outside echarts, **Live Info Panel** should have mouse event.'
+                ],
+                option: option,
+                width: 300,
+                height: 200,
+                buttons: [{
+                    text: 'add stopPropagation on parent',
+                    onclick: function () {
+                        var parent = document.getElementById('parent-of-main0');
+                        parent.addEventListener('mousemove', function (event) {
+                            event.stopPropagation();
+                        });
+                    }
+                }]
+            });
+
+            var zr;
+            var mounted;
+            if (chart) {
+                zr = chart.getZr();
+                zr.on('mousemove', function (event) {
+                    _printEvent(event)
+                });
+                zr.on('mouseup', function (event) {
+                    _printEvent(event)
+                });
+                zr.on('globalout', function (event) {
+                    _printEvent(event)
+                });
+            }
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                toolbox: {
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: {
+                    left: 100
+                },
+                brush: {},
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                visualMap: {
+                    type: 'continuous',
+                    calculable: true,
+                    left: 0,
+                    top: 20,
+                    min: 0,
+                    max: 50,
+                    itemHeight: 80
+                },
+                series: {
+                    type: 'line',
+                    data: [[11, 22], [33, 44], [42, 11], [52, 33]]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Drag **toolbox.dataZoom** / **dataZoom-slider** / **brush**',
+                    'to the **top** / **right** / **bottom** / **left** of the **black area** (out of echarts)',
+                    'and then mouseup or go back.',
+                    'Should act like listening to document `mousemove` and `mouseup`'
+                ],
+                option: option,
+                width: 350,
+                height: 260,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'map/js/china'], function (echarts) {
+                var testGeoJson1 = {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        {
+                            'geometry': {
+                                'type': 'Polygon',
+                                'coordinates': [
+                                    [
+                                        [
+                                            2000,
+                                            3000
+                                        ],
+                                        [
+                                            5000,
+                                            3000
+                                        ],
+                                        [
+                                            5000,
+                                            8000
+                                        ],
+                                        [
+                                            2000,
+                                            8000
+                                        ]
+                                    ]
+                                ]
+                            },
+                            'properties': {
+                                'name': 'Some Area',
+                                'childNum': 1
+                            }
+                        }
+                    ]
+                };
+                echarts.registerMap('test1', testGeoJson1);
+
+                var data = [];
+                var step = 200;
+                var lngStart = 2000;
+                var latStart = 4000;
+                for (var i = 0; i < 10; i++) {
+                    for (var j = 0; j < 20; j++) {
+                        data.push({
+                            value: [lngStart + j * step, latStart + i * step],
+                            symbolSize: 5 + j * 2
+                        });
+                    }
+                }
+
+                var option = {
+                    geo: [{
+                        map: 'test1',
+                        zoom: 8,
+                        roam: true
+                    }],
+                    brush: {
+                        geoIndex: 0
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'geo',
+                        symbol: 'roundRect',
+                        symbolSize: 30,
+                        data: data
+                    }, {
+                        type: 'bar',
+                        data: []
+                    }],
+                    xAxis: {},
+                    yAxis: {},
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'brush out of the area, the points that out of the chart area should be selected.',
+                    ],
+                    option: option,
+                    width: 350,
+                    height: 260
+                });
+
+                if (!chart) {
+                    return;
+                }
+
+                chart.on('brushselected', function (params) {
+                    var selectedDataIndices = fetchSelected(params);
+                    txtEl.style.text = 'selected data indices: ' + selectedDataIndices.join(', ');
+                    txtEl.dirty();
+                });
+
+                function fetchSelected(params) {
+                    var selectedDataIndices = [];
+                    for (var i = 0; i < params.batch.length; i++) {
+                        var item = params.batch[i];
+                        var selected = item.selected;
+                        for (var j = 0; j < selected.length; j++) {
+                            selectedDataIndices = selectedDataIndices.concat(selected[j].dataIndex);
+                        }
+                    }
+                    return selectedDataIndices;
+                }
+
+                var txtEl = new echarts.graphic.Text({
+                    style: {
+                        x: 10,
+                        y: 10,
+                        color: 'blue',
+                        fontSize: 9
+                    },
+                    z: 9999
+                });
+                var zr = chart.getZr();
+                zr.add(txtEl);
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+    </body>
+</html>
+

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../../util/number';
 
@@ -108,86 +127,71 @@ function layoutSingleSeries(seriesModel, offset, boxWidth) {
     var coordSys = seriesModel.coordinateSystem;
     var data = seriesModel.getData();
     var halfWidth = boxWidth / 2;
-    var chartLayout = seriesModel.get('layout');
-    var variableDim = chartLayout === 'horizontal' ? 0 : 1;
-    var constDim = 1 - variableDim;
+    var cDimIdx = seriesModel.get('layout') === 'horizontal' ? 0 : 1;
+    var vDimIdx = 1 - cDimIdx;
     var coordDims = ['x', 'y'];
-    var vDims = [];
-    var cDim;
-
-    zrUtil.each(data.dimensions, function (dimName) {
-        var dimInfo = data.getDimensionInfo(dimName);
-        var coordDim = dimInfo.coordDim;
-        if (coordDim === coordDims[constDim]) {
-            vDims.push(dimName);
-        }
-        else if (coordDim === coordDims[variableDim]) {
-            cDim = dimName;
-        }
-    });
+    var cDim = data.mapDimension(coordDims[cDimIdx]);
+    var vDims = data.mapDimension(coordDims[vDimIdx], true);
 
     if (cDim == null || vDims.length < 5) {
         return;
     }
 
-    data.each([cDim].concat(vDims), function () {
-        var args = arguments;
-        var axisDimVal = args[0];
-        var idx = args[vDims.length + 1];
+    for (var dataIndex = 0; dataIndex < data.count(); dataIndex++) {
+        var axisDimVal = data.get(cDim, dataIndex);
 
-        var median = getPoint(args[3]);
-        var end1 = getPoint(args[1]);
-        var end5 = getPoint(args[5]);
-        var whiskerEnds = [
-            [end1, getPoint(args[2])],
-            [end5, getPoint(args[4])]
-        ];
-        layEndLine(end1);
-        layEndLine(end5);
-        layEndLine(median);
+        var median = getPoint(axisDimVal, vDims[2], dataIndex);
+        var end1 = getPoint(axisDimVal, vDims[0], dataIndex);
+        var end2 = getPoint(axisDimVal, vDims[1], dataIndex);
+        var end4 = getPoint(axisDimVal, vDims[3], dataIndex);
+        var end5 = getPoint(axisDimVal, vDims[4], dataIndex);
 
-        var bodyEnds = [];
-        addBodyEnd(whiskerEnds[0][1], 0);
-        addBodyEnd(whiskerEnds[1][1], 1);
+        var ends = [];
+        addBodyEnd(ends, end2, 0);
+        addBodyEnd(ends, end4, 1);
 
-        data.setItemLayout(idx, {
-            chartLayout: chartLayout,
-            initBaseline: median[constDim],
-            median: median,
-            bodyEnds: bodyEnds,
-            whiskerEnds: whiskerEnds
+        ends.push(end1, end2, end5, end4);
+        layEndLine(ends, end1);
+        layEndLine(ends, end5);
+        layEndLine(ends, median);
+
+        data.setItemLayout(dataIndex, {
+            initBaseline: median[vDimIdx],
+            ends: ends
         });
+    }
 
-        function getPoint(val) {
-            var p = [];
-            p[variableDim] = axisDimVal;
-            p[constDim] = val;
-            var point;
-            if (isNaN(axisDimVal) || isNaN(val)) {
-                point = [NaN, NaN];
-            }
-            else {
-                point = coordSys.dataToPoint(p);
-                point[variableDim] += offset;
-            }
-            return point;
+    function getPoint(axisDimVal, dimIdx, dataIndex) {
+        var val = data.get(dimIdx, dataIndex);
+        var p = [];
+        p[cDimIdx] = axisDimVal;
+        p[vDimIdx] = val;
+        var point;
+        if (isNaN(axisDimVal) || isNaN(val)) {
+            point = [NaN, NaN];
         }
+        else {
+            point = coordSys.dataToPoint(p);
+            point[cDimIdx] += offset;
+        }
+        return point;
+    }
 
-        function addBodyEnd(point, start) {
-            var point1 = point.slice();
-            var point2 = point.slice();
-            point1[variableDim] += halfWidth;
-            point2[variableDim] -= halfWidth;
-            start
-                ? bodyEnds.push(point1, point2)
-                : bodyEnds.push(point2, point1);
-        }
+    function addBodyEnd(ends, point, start) {
+        var point1 = point.slice();
+        var point2 = point.slice();
+        point1[cDimIdx] += halfWidth;
+        point2[cDimIdx] -= halfWidth;
+        start
+            ? ends.push(point1, point2)
+            : ends.push(point2, point1);
+    }
 
-        function layEndLine(endCenter) {
-            var line = [endCenter.slice(), endCenter.slice()];
-            line[0][variableDim] -= halfWidth;
-            line[1][variableDim] += halfWidth;
-            whiskerEnds.push(line);
-        }
-    });
+    function layEndLine(ends, endCenter) {
+        var from = endCenter.slice();
+        var to = endCenter.slice();
+        from[cDimIdx] -= halfWidth;
+        to[cDimIdx] += halfWidth;
+        ends.push(from, to);
+    }
 }

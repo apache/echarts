@@ -1,12 +1,8 @@
 # Test Guide
 
-
-
 ## Functional Test
 
 Open `./*.html` files in Web Browsers.
-
-
 
 ## Unit Test
 

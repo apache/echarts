@@ -1,3 +1,23 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
@@ -32,14 +52,9 @@
 
             require([
                 'echarts'
-                // 'zrender/core/util',
-                // 'echarts/chart/bar',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/timeline'
             ], function (echarts) {
                 var zrUtil = echarts.util;
+
                 makeChart({
                     timeline: {
                         label: {
@@ -63,7 +78,8 @@
                         symbolRotate: 30
                     }
                 });
-                makeChart({timeline: {inverse: true, controlStyle: {position: 'right'}}});
+
+                makeChart({timeline: {inverse: true, controlStyle: {position: 'right'}}, width: 400});
 
                 makeChart({timeline: {orient: 'vertical', x: 0, y: 10, width: 55, height: '80%'}});
                 makeChart({timeline: {orient: 'vertical', inverse: true, rewind: true, x: 0, y: 10, width: 55, height: '80%'}});
@@ -118,7 +134,11 @@
                     var containerEl = document.getElementById('main');
                     var el = document.createElement('div');
                     el.className = 'block';
-                    el.innerHTML = '<div class="ec"></div><label>'
+                    var widthString = '';
+                    if (opt.width != null) {
+                        widthString = ' style="width:' + opt.width + 'px" ';
+                    }
+                    el.innerHTML = '<div class="ec" ' + widthString + '></div><label>'
                         + encodeHTML(JSON.stringify(opt)) + '</label>';
                     containerEl.appendChild(el);
 

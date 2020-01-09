@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import * as eventTool from 'zrender/src/core/event';
@@ -691,8 +710,8 @@ var ContinuousView = VisualMapView.extend({
 
         var resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
 
-        this._dispatchHighDown('downplay', helper.convertDataIndex(resultBatches[0]));
-        this._dispatchHighDown('highlight', helper.convertDataIndex(resultBatches[1]));
+        this._dispatchHighDown('downplay', helper.makeHighDownBatch(resultBatches[0], visualMapModel));
+        this._dispatchHighDown('highlight', helper.makeHighDownBatch(resultBatches[1], visualMapModel));
     },
 
     /**
@@ -736,7 +755,7 @@ var ContinuousView = VisualMapView.extend({
         this._hideIndicator();
 
         var indices = this._hoverLinkDataIndices;
-        this._dispatchHighDown('downplay', helper.convertDataIndex(indices));
+        this._dispatchHighDown('downplay', helper.makeHighDownBatch(indices, this.visualMapModel));
 
         indices.length = 0;
     },

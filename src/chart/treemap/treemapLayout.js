@@ -1,3 +1,32 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/*
+* A third-party license is embeded for some of the code in this file:
+* The treemap layout implementation was originally copied from
+* "d3.js" with some modifications made for this project.
+* (See more details in the comment of the method "squarify" below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
@@ -124,8 +153,13 @@ export default {
 
 /**
  * Layout treemap with squarify algorithm.
- * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
- * @see https://github.com/mbostock/d3/blob/master/src/layout/treemap.js
+ * The original presentation of this algorithm
+ * was made by Mark Bruls, Kees Huizing, and Jarke J. van Wijk
+ * <https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf>.
+ * The implementation of this algorithm was originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/layout/treemap.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
  *
  * @protected
  * @param {module:echarts/data/Tree~TreeNode} node
@@ -311,7 +345,7 @@ function sort(viewChildren, orderBy) {
     if (orderBy) {
         viewChildren.sort(function (a, b) {
             var diff = orderBy === 'asc'
-                ?  a.getValue() - b.getValue() : b.getValue() - a.getValue();
+                ? a.getValue() - b.getValue() : b.getValue() - a.getValue();
             return diff === 0
                 ? (orderBy === 'asc'
                     ? a.dataIndex - b.dataIndex : b.dataIndex - a.dataIndex

@@ -1,3 +1,23 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
@@ -26,7 +46,6 @@
             }
         </style>
 
-        <h1>No scroll, left not set (should be center)</h1>
         <div class="chart" id="plain"></div>
         <h1>No scroll, width 300, right: 10</h1>
         <div class="chart" id="plain2"></div>
@@ -48,9 +67,14 @@
         <div class="chart" id="scroll-v2"></div>
 
         <div id="legendHoverLink"></div>
-
+        <div id="multi-pie"></div>
+        <div id="icon-circle"></div>
+        <div id="only-single-item"></div>
+        <div id="vary-size"></div>
+        <div id="index-to-no-name"></div>
 
         <script>
+
             function makeSeries(seriesCount, categoryCount) {
                 var series = [];
                 var legendData = [];
@@ -127,8 +151,19 @@
 
                 var option = {
                     legend: {
+                        selector: true,
+                        selectorLabel: {
+                            color: 'yellow',
+                            borderColor: 'green',
+                            backgroundColor: 'blue'
+                        },
+                        emphasis: {
+                            selectorLabel: {
+                                backgroundColor: 'red'
+                            }
+                        },
                         data: seriesInfo.legendData,
-                        backgroundColor: 'rgba(0,100,50,0.2)'
+                        // backgroundColor: 'rgba(0,100,50,0.2)'
                     },
                     tooltip: {
                     },
@@ -143,7 +178,13 @@
                     series: seriesInfo.series
                 };
 
-                testHelper.createChart(echarts, 'plain', option);
+                testHelper.create(echarts, 'plain', {
+                    title: [
+                        'No scroll, left not set (should be center)',
+                        'color: yellow, borderColor: green, backgroundColor: blue, emphasis backgroundColor: red'
+                    ],
+                    option: option
+                });
             })
         </script>
 
@@ -193,6 +234,7 @@
                     legend: {
                         right: 10,
                         width: 300,
+                        selector: true,
                         data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)'
                     },
@@ -268,6 +310,7 @@
                 var option = {
                     legend: {
                         bottom: 20,
+                        selector: true,
                         data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)'
                     },
@@ -334,6 +377,7 @@
                     legend: {
                         orient: 'vertical',
                         right: 20,
+                        selector: true,
                         data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)'
                     },
@@ -401,6 +445,7 @@
                         orient: 'vertical',
                         left: 20,
                         top: 'center',
+                        selector: true,
                         height: 150,
                         data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)'
@@ -466,11 +511,13 @@
                 var option = {
                     legend: [{
                         type: 'scroll',
+                        selector: true,
                         data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)'
                     }, {
                         type: 'scroll',
                         bottom: 0,
+                        selector: true,
                         data: seriesInfo.legendData,
                         backgroundColor: 'rgba(0,100,50,0.2)',
                         pageButtonPosition: 'start'
@@ -539,6 +586,7 @@
                         type: 'scroll',
                         width: '80%',
                         right: 30,
+                        selector: true,
                         data: seriesInfo.legendData,
                         pageIconSize: 50,
                         pageIconColor: 'red',
@@ -617,6 +665,7 @@
                         right: 30,
                         left: 30,
                         data: seriesInfo.legendData,
+                        selector: true,
                         pageIconSize: 5,
                         pageIconColor: 'red',
                         pageIconInactiveColor: 'green',
@@ -695,6 +744,7 @@
                     legend: {
                         type: 'scroll',
                         orient: 'vertical',
+                        selector: true,
                         bottom: 0,
                         right: 30,
                         data: seriesInfo.legendData
@@ -760,6 +810,7 @@
                     legend: {
                         type: 'scroll',
                         orient: 'vertical',
+                        selector: true,
                         top: 'middle',
                         left: 10,
                         height: '50%',
@@ -788,17 +839,6 @@
                 testHelper.createChart(echarts, 'scroll-v2', option, {draggable: true, width: 400});
             })
         </script>
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -855,13 +895,280 @@
                     ]
                 }
 
-                chart = myChart = testHelper.create(echarts, legendHoverLink, {
+                chart = myChart = testHelper.create(echarts, 'legendHoverLink', {
                     title: 'legendHoverLink is disabled on pie',
                     option: option
                 });
             });
 
         </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['a', 'b', 'c'],
+                        selector: true
+                    },
+                    series: [
+                        {
+                            name: 'AAA',
+                            type: 'pie',
+                            center: ['75%', '50%'],
+                            radius: '30%',
+                            data: [
+                                {name: 'a', value: 12},
+                                {name: 'b', value: 34},
+                                {name: 'c', value: 56}
+                            ]
+                        },
+                        {
+                            name: 'BBB',
+                            type: 'pie',
+                            center: ['25%', '50%'],
+                            radius: '30%',
+                            data: [
+                                {name: 'a', value: 12},
+                                {name: 'b', value: 34},
+                                {name: 'c', value: 56}
+                            ]
+                        }
+                    ]
+                }
+
+                chart = myChart = testHelper.create(echarts, 'multi-pie', {
+                    title: 'Hover legend, the segments of BOTH pie should be hightlighted',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 30; i++) {
+                    data.push({name: i + '', value: Math.random()});
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        type: 'scroll',
+                        selector: true,
+                        top: 10,
+                        left: 0,
+                        data: echarts.util.map(data, function (item) {
+                            return {
+                                name: item.name,
+                                icon: 'circle'
+                            };
+                        })
+                    },
+                    series: [{
+                        type: 'pie',
+                        data: data
+                    }]
+                };
+
+                testHelper.create(echarts, 'icon-circle', {
+                    title: 'The first icon should not be overflow',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 6; i++) {
+                    data.push({name: i + '哈哈哈嘿嘿嘿', value: Math.random()});
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        type: 'scroll',
+                        top: 10,
+                        left: 50,
+                        width: 105,
+                        data: echarts.util.map(data, function (item) {
+                            return {
+                                name: item.name,
+                                icon: 'circle'
+                            };
+                        })
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: 20,
+                        label: {show: false},
+                        labelLine: {show: false},
+                        data: data
+                    }]
+                };
+
+                testHelper.create(echarts, 'only-single-item', {
+                    title: 'Page up/down should be normal when only single item displayed',
+                    option: option,
+                    draggable: true
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 26; i++) {
+                    var name = '';
+                    var nameNumber = Math.floor(Math.random() * 10);
+                    for (var j = 0; j < nameNumber; j++) {
+                        name += j;
+                    }
+                    data.push({
+                        name: name,
+                        value: Math.random()
+                    });
+                }
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        selector: true,
+                        itemGap: 30,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    }],
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    series: {
+                        type: 'pie',
+                        label: {show: false},
+                        labelLine: {show: false},
+                        radius: 30,
+                        data: data
+                    }
+                };
+
+                testHelper.create(echarts, 'vary-size', {
+                    option: option,
+                    draggable: true
+                });
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var seriesInfo = makeSeries(50, 3);
+                var series = seriesInfo.series.slice();
+                series.shift();
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        selector: true,
+                        data: seriesInfo.legendData
+                    }],
+                    tooltip: {
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                    },
+                    series: series
+                };
+
+                testHelper.create(echarts, 'index-to-no-name', {
+                    option: option,
+                    title: [
+                        'Pager should be OK when legend 0 (legendData index 0) is not be displayed.',
+                        'should be at **page 1** at the beginning'
+                    ],
+                    draggable: true
+                });
+            })
+        </script>
+
 
     </body>
 </html>

@@ -1,4 +1,23 @@
-import {assert} from 'zrender/src/core/util';
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+import {assert, isArray} from 'zrender/src/core/util';
 import { __DEV__ } from '../config';
 
 /**
@@ -38,6 +57,8 @@ var taskProto = Task.prototype;
  * @param {Object} performArgs
  * @param {number} [performArgs.step] Specified step.
  * @param {number} [performArgs.skip] Skip customer perform call.
+ * @param {number} [performArgs.modBy] Sampling window size.
+ * @param {number} [performArgs.modDataCount] Sampling count.
  */
 taskProto.perform = function (performArgs) {
     var upTask = this._upstream;
@@ -60,11 +81,29 @@ taskProto.perform = function (performArgs) {
         planResult = this._plan(this.context);
     }
 
+    // Support sharding by mod, which changes the render sequence and makes the rendered graphic
+    // elements uniformed distributed when progress, especially when moving or zooming.
+    var lastModBy = normalizeModBy(this._modBy);
+    var lastModDataCount = this._modDataCount || 0;
+    var modBy = normalizeModBy(performArgs && performArgs.modBy);
+    var modDataCount = performArgs && performArgs.modDataCount || 0;
+    if (lastModBy !== modBy || lastModDataCount !== modDataCount) {
+        planResult = 'reset';
+    }
+
+    function normalizeModBy(val) {
+        !(val >= 1) && (val = 1); // jshint ignore:line
+        return val;
+    }
+
     var forceFirstProgress;
     if (this._dirty || planResult === 'reset') {
         this._dirty = false;
         forceFirstProgress = reset(this, skip);
     }
+
+    this._modBy = modBy;
+    this._modDataCount = modDataCount;
 
     var step = performArgs && performArgs.step;
 
@@ -92,9 +131,17 @@ taskProto.perform = function (performArgs) {
             this._dueEnd
         );
 
-        !skip && (forceFirstProgress || start < end) && (
-            this._progress({start: start, end: end}, this.context)
-        );
+        if (!skip && (forceFirstProgress || start < end)) {
+            var progress = this._progress;
+            if (isArray(progress)) {
+                for (var i = 0; i < progress.length; i++) {
+                    doProgress(this, progress[i], start, end, modBy, modDataCount);
+                }
+            }
+            else {
+                doProgress(this, progress, start, end, modBy, modDataCount);
+            }
+        }
 
         this._dueIndex = end;
         // If no `outputDueEnd`, assume that output data and
@@ -120,14 +167,60 @@ taskProto.perform = function (performArgs) {
     return this.unfinished();
 };
 
+var iterator = (function () {
+
+    var end;
+    var current;
+    var modBy;
+    var modDataCount;
+    var winCount;
+
+    var it = {
+        reset: function (s, e, sStep, sCount) {
+            current = s;
+            end = e;
+
+            modBy = sStep;
+            modDataCount = sCount;
+            winCount = Math.ceil(modDataCount / modBy);
+
+            it.next = (modBy > 1 && modDataCount > 0) ? modNext : sequentialNext;
+        }
+    };
+
+    return it;
+
+    function sequentialNext() {
+        return current < end ? current++ : null;
+    }
+
+    function modNext() {
+        var dataIndex = (current % winCount) * modBy + Math.ceil(current / winCount);
+        var result = current >= end
+            ? null
+            : dataIndex < modDataCount
+            ? dataIndex
+            // If modDataCount is smaller than data.count() (consider `appendData` case),
+            // Use normal linear rendering mode.
+            : current;
+        current++;
+        return result;
+    }
+})();
+
 taskProto.dirty = function () {
     this._dirty = true;
     this._onDirty && this._onDirty(this.context);
 };
 
-/**
- * @param {Object} [params]
- */
+function doProgress(taskIns, progress, start, end, modBy, modDataCount) {
+    iterator.reset(start, end, modBy, modDataCount);
+    taskIns._callingProgress = progress;
+    taskIns._callingProgress({
+        start: start, end: end, count: end - start, next: iterator.next
+    }, taskIns.context);
+}
+
 function reset(taskIns, skip) {
     taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
     taskIns._settedOutputEnd = null;
@@ -141,9 +234,14 @@ function reset(taskIns, skip) {
             forceFirstProgress = progress.forceFirstProgress;
             progress = progress.progress;
         }
+        // To simplify no progress checking, array must has item.
+        if (isArray(progress) && !progress.length) {
+            progress = null;
+        }
     }
 
     taskIns._progress = progress;
+    taskIns._modBy = taskIns._modDataCount = null;
 
     var downstream = taskIns._downstream;
     downstream && downstream.dirty();

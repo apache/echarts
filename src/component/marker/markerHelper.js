@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
@@ -41,7 +60,7 @@ function markerTypeCalculatorWithExtent(
 ) {
     var coordArr = [];
 
-    var stacked = isDimensionStacked(data, targetDataDim, otherDataDim);
+    var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
     var calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
@@ -50,8 +69,8 @@ function markerTypeCalculatorWithExtent(
 
     var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
-    coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex);
-
+    coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
+    var coordArrValue = data.get(targetDataDim, dataIndex);
     // Make it simple, do not visit all stacked value to count precision.
     var precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
@@ -59,7 +78,7 @@ function markerTypeCalculatorWithExtent(
         coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
     }
 
-    return coordArr;
+    return [coordArr, coordArrValue];
 }
 
 var curry = zrUtil.curry;
@@ -122,12 +141,15 @@ export function dataTransform(seriesModel, item) {
             var otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
             var targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
-            item.coord = markerTypeCalculator[item.type](
+            var coordInfo = markerTypeCalculator[item.type](
                 data, axisInfo.baseDataDim, axisInfo.valueDataDim,
                 otherCoordIndex, targetCoordIndex
             );
+            item.coord = coordInfo[0];
             // Force to use the value of calculated value.
-            item.value = item.coord[targetCoordIndex];
+            // let item use the value without stack.
+            item.value = coordInfo[1];
+
         }
         else {
             // FIXME Only has one of xAxis and yAxis.

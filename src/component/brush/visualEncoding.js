@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
@@ -16,16 +35,19 @@ var PRIORITY_BRUSH = echarts.PRIORITY.VISUAL.BRUSH;
  */
 echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
     ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
-
         payload && payload.type === 'takeGlobalCursor' && brushModel.setBrushOption(
             payload.key === 'brush' ? payload.brushOption : {brushType: false}
         );
+    });
+    layoutCovers(ecModel);
+});
 
+export function layoutCovers(ecModel) {
+    ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
         var brushTargetManager = brushModel.brushTargetManager = new BrushTargetManager(brushModel.option, ecModel);
-
         brushTargetManager.setInputRanges(brushModel.areas, ecModel);
     });
-});
+}
 
 /**
  * Register the visual encoding if this modules required.

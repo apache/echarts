@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+            #info {
+                position: fixed;
+                left: 0;
+                top: 0;
+                background: #333;
+                color: #fff;
+                padding: 2px 5px;
+                z-index: 9999;
+                box-shadow: 0 0 2px #333;
+            }
+        </style>
+
+        <br>
+        <br>
+        <br>
+
+        <div id="info"></div>
+
+        <div id="mainb1"></div>
+        <div id="mainb2"></div>
+        <div id="mainb3"></div>
+        <div id="mainb4"></div>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+        <div id="main7"></div>
+        <div id="main8"></div>
+
+        <div id="maina1"></div>
+        <div id="maina2"></div>
+        <div id="maina3"></div>
+
+
+
+        <script>
+            var USE_HOVER_LAYER_KEY = '__EC_TEST_USE_HOVER_LAYER_KEY___';
+
+            var useHoverLayer = getUseHoverLayer();
+            var hoverLayerThreshold = useHoverLayer ? 0 : null;
+            var infoEl = document.getElementById('info');
+            genInfo();
+
+            function setUseHoverLayer(useHoverLayer) {
+                window.localStorage.setItem(USE_HOVER_LAYER_KEY, useHoverLayer ? 'true' : '');
+            }
+            function getUseHoverLayer() {
+                return !!window.localStorage.getItem(USE_HOVER_LAYER_KEY);
+            }
+
+            function genInfo(zrRefreshTimestamp) {
+                infoEl.innerHTML = [
+                    '<span style="color:yellow">'
+                        + (useHoverLayer ? 'Using HoverLayer' : 'NOT using HoverLayer')
+                    + '</span>',
+                    'hoverLayerThreshold: ' + hoverLayerThreshold,
+                    'zr refresh base layer at: <span style="color:yellow">' + (zrRefreshTimestamp || null) + '</span>'
+                ].join('<br>');
+            }
+
+            function genHoverLayerBtns() {
+                return [{
+                    text: 'NOT use hoverLayer',
+                    onclick: function () {
+                        setUseHoverLayer(false);
+                        location.reload();
+                    }
+                }, {
+                    text: 'Use hoverLayer',
+                    onclick: function () {
+                        setUseHoverLayer(true);
+                        location.reload();
+                    }
+                }]
+            }
+
+            var originalCreate = testHelper.create;
+            testHelper.create = function (echarts, dom, opt) {
+                if (opt.option.hoverLayerThreshold === void 0) {
+                    throw new Error('"hoverLayerThreshold" should be set');
+                }
+
+                var buttons = opt.buttons || [];
+                opt.buttons = buttons = genHoverLayerBtns().concat(buttons);
+                var chart = originalCreate.call(this, echarts, dom, opt);
+
+                if (chart) {
+                    var zr = chart.getZr();
+                    var originalRefreshImmediately = zr.refreshImmediately;
+                    zr.refreshImmediately = function () {
+                        var result = originalRefreshImmediately.apply(this, arguments);
+                        // Make sure refreshImmediately is not called when `useHoverLayer`.
+                        genInfo(+new Date());
+                        return result;
+                    };
+                }
+
+                return chart;
+            }
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false},
+                        axisLabel: {show: false}
+                    },
+                    yAxis: {
+                        axisLine: {show: false},
+                        axisTick: {show: false},
+                        splitLine: {show: false},
+                        axisLabel: {show: false}
+                    },
+                    series: {
+                        type: 'line',
+                        markPoint: {
+                            data: [{
+                                type: 'max',
+                                name: 'a'
+                            }]
+                        },
+                        data: [[12,34]]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'maina1', {
+                    option: option,
+                    height: 150,
+                    title: [
+                        'Only a pin displayed',
+                        'The text of the "pin" should be **inside**',
+                        'Hover "pin", should be normal'
+                    ]
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    backgroundColor: '#eee',
+                    animation: false,
+                    grid: {left: 400, top: 50},
+                    xAxis: {},
+                    yAxis: {},
+                    visualMap: {
+                        type: 'piecewise',
+                        orient: 'horizontal',
+                        top: 10,
+                        left: 0,
+                        pieces: [
+                            {min: 1000, color: 'red'},
+                            {min: 600, max: 1000, color: 'blue'},
+                            {min: 0, max: 600, color: 'green'}
+                        ],
+                        outOfRange: {
+                            color: '#aaa'
+                        }
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'none',
+                        renderItem: function (params, api) {
+                            var pos = [api.value(0), api.value(1)];
+                            return {
+                                type: 'circle',
+                                shape: {cx: pos[0], cy: pos[1], r: 20},
+                                style: api.style({lineWidth: 1, stroke: '#777'})
+                            };
+                        },
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbolSize: 20,
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'maina2', {
+                    title: [
+                        '`visualMap.hoverLink` is the by default (`true`)',
+                        '**Click** a visualMap item, and then **mouseout**. The hover style of the circles should be OK.'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    backgroundColor: '#eee',
+                    animation: false,
+                    grid: {left: 400, top: 50},
+                    xAxis: {},
+                    yAxis: {},
+                    visualMap: {
+                        type: 'piecewise',
+                        orient: 'horizontal',
+                        top: 10,
+                        left: 0,
+                        pieces: [
+                            {min: 1000, color: 'red'},
+                            {min: 600, max: 1000, color: 'blue'},
+                            {min: 0, max: 600, color: 'green'}
+                        ],
+                        outOfRange: {
+                            color: '#aaa'
+                        },
+                        hoverLink: false
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'none',
+                        renderItem: function (params, api) {
+                            var pos = [api.value(0), api.value(1)];
+                            return {
+                                type: 'circle',
+                                shape: {cx: pos[0], cy: pos[1], r: 20},
+                                style: api.style({lineWidth: 1, stroke: '#777'})
+                            };
+                        },
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbolSize: 20,
+                        data: [
+                            [100, 100, 0],
+                            [200, 100, 800],
+                            [300, 100, 1500]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'maina3', {
+                    title: [
+                        '`visualMap.hoverLink` is `false`',
+                        '**mouseover** a circle, and then **click** the coresponding visualMap item',
+                        'and then **mouseover** the circle again, and then **mouseout**.',
+                        'The hover style of the circles should be OK.'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    grid: {
+                        right: 120
+                    },
+                    visualMap: {
+                        min: 100,
+                        max: 800,
+                        top: 10,
+                        right: 10,
+                        splitNumber: 3,
+                        type: 'piecewise',
+                        demension: 1,
+                        hoverLink: true,
+                        inRange: {
+                            color: ['blue', 'red']
+                        },
+                        outOfRange: {
+                            color: 'black'
+                        }
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        data: [
+                            [12, 331], [55, 131], [55, 531]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbol: 'rect',
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            formatter: 'label inside\nhover red\n{c}'
+                        },
+                        emphasis: {
+                            label: {
+                                color: 'red'
+                            }
+                        },
+                        data: [
+                            [112, 331], [115, 131], [165, 531]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbol: 'triangle',
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            formatter: 'label inside\n{c}'
+                        },
+                        emphasis: {
+                            label: {
+                                position: 'top',
+                                formatter: 'hover become top\n{c}'
+                            }
+                        },
+                        data: [
+                            [212, 331], [215, 131], [265, 531]
+                        ]
+                    }, {
+                        type: 'scatter',
+                        symbol: 'rect',
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            formatter: 'label stroke orange hover blue\n{c}',
+                            textBorderWidth: 3,
+                            textBorderColor: 'orange'
+                        },
+                        emphasis: {
+                            label: {
+                                formatter: 'hover become stroke blue',
+                                textBorderColor: 'blue'
+                            }
+                        },
+                        data: [
+                            [312, 51]
+                        ]
+                    }, {
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            var coords = api.coord([312, 351]);
+                            return {
+                                type: 'rect',
+                                shape: {
+                                    x: coords[0],
+                                    y: coords[1],
+                                    width: 50,
+                                    height: 50
+                                },
+                                // check api.style
+                                style: api.style({
+                                    text: 'label stroke orange hover blue',
+                                    textStrokeWidth: 2,
+                                    textStroke: 'orange'
+                                }),
+                                styleEmphasis: api.styleEmphasis({
+                                    textStroke: 'blue'
+                                })
+                            };
+                        },
+                        data: [
+                            [312, 151]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb1', {
+                    title: [
+                        'visualMap should be normal (and hoverLink should **scale circles**)',
+                        '(inRange: has color, outOfRange: "black")',
+                        'Click visualMap when hoverlink, circle color should be changed, but **keep scaled**.',
+                        'Click button highlight dataIndex 0, only "middle blue" highlighted',
+                        'Then hover **blue** visualMap, all blue highlighted, and then unhover, "middle blue" should keep highlighted'
+                    ],
+                    option: option,
+                    height: 300,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                dataIndex: 0
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        data: [
+                            [12, 131],
+                            [55, 431],
+                            [55, 331]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb2', {
+                    title: [
+                        'setOption onclick and hover animation should be normal:',
+                        'click any symbol, all symbols should become blue'
+                    ],
+                    option: option,
+                    height: 200
+                });
+
+                chart && chart.on('click', function () {
+                    chart.setOption({
+                        color: ['blue']
+                    });
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 100,
+                        data: [
+                            {value: [0, 0], itemStyle: {color: 'blue'}},
+                            {value: [0, 1], itemStyle: {color: 'red'}}
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb3', {
+                    title: [
+                        'hover the blue symbol, the z2 can be top',
+                        'unhover, **z2 should be back** to bottom'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    series: [{
+                        type: 'graph',
+                        symbolSize: 20,
+                        focusNodeAdjacency: true,
+                        data: [
+                            {value: 100, name: 'aa', x: 100, y: 200},
+                            {value: 150, name: 'bb', x: 450, y: 300},
+                            {value: 200, name: 'cc', x: 200, y: 100},
+                            {value: 250, name: 'dd', x: 450, y: 250,
+                                emphasis: {
+                                    itemStyle: {
+                                        color: 'blue'
+                                    }
+                                }
+                            }
+                        ],
+                        links: [
+                            {source: 'aa', target: 'bb'},
+                            {source: 'aa', target: 'dd'},
+                            {source: 'cc', target: 'bb'}
+                        ],
+                        lineStyle: {
+                            color: 'green',
+                            type: 'dashed', // [4, 6],
+                            width: 3
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                color: 'orange',
+                                type: 'solid',
+                                width: 8
+                            }
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'mainb4', {
+                    title: [
+                        'normal style is **line: green dashed width 3, node: red**,',
+                        'should become **line: orange solid width 8, node: only "dd" blue** when hovered'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                        splitNumber: 2,
+                        scale: true
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        emphasis: {
+                            label: {
+                                show: true
+                            }
+                        },
+                        data: [[12, 331221], [55, 331221]]
+                    }]
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    title: [
+                        'normal no label, hover show label inside',
+                        'TEST: hover twice, should be normal',
+                        'zrBaseLayer should not be refreshed if NOT using hoverLayer'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                        splitNumber: 2,
+                        scale: true
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        label: {
+                            show: true
+                        },
+                        itemStyle: {
+                            color: 'green',
+                            opacity: 1
+                        },
+                        emphasis: {
+                            label: {
+                                position: 'top'
+                            }
+                        },
+                        data: [[12, 331221], [20, 331221], [55, 331221]]
+                    }]
+                };
+
+                testHelper.create(echarts, 'main1', {
+                    title: [
+                        'normal label inside, hover label outside top.',
+                        'lifted color should be able to restore after hover twice.'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                        splitNumber: 2,
+                        scale: true
+                    },
+                    series: [{
+                        type: 'scatter',
+                        symbolSize: 30,
+                        label: {
+                            show: true
+                        },
+                        itemStyle: {
+                            color: 'green',
+                            opacity: 1
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: 'red'
+                            },
+                            label: {
+                                position: 'top'
+                            }
+                        },
+                        data: [[12, 331221], [55, 331221]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'normal style: green',
+                        'trigger hover by API (red, text top).',
+                        'Test mouse hover and leave, should NOT return to normal.',
+                        'Only click downplay to return normal'
+                    ],
+                    option: option,
+                    height: 200,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                        splitNumber: 2,
+                        scale: true
+                    },
+                    series: [{
+                        type: 'scatter',
+                        id: 's',
+                        symbolSize: 30,
+                        label: {
+                            show: true
+                        },
+                        itemStyle: {
+                            color: 'green',
+                            opacity: 1
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: 'red'
+                            },
+                            label: {
+                                position: 'top'
+                            }
+                        },
+                        data: [[12, 331221], [55, 331221]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'trigger hover by API (red, text top).',
+                        'setOption to change hoverStyle.'
+                    ],
+                    option: option,
+                    height: 200,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'setOption to modify hoverStyle yellow',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    id: 's',
+                                    emphasis: {
+                                        itemStyle: {
+                                            color: 'yellow'
+                                        },
+                                        label: {
+                                            fontSize: 30
+                                        }
+                                    }
+                                }]
+                            });
+                        }
+                    }, {
+                        text: 'setOption to modify hoverStyle blue',
+                        onclick: function () {
+                            chart.setOption({
+                                series: [{
+                                    id: 's',
+                                    emphasis: {
+                                        itemStyle: {
+                                            color: 'blue'
+                                        },
+                                        label: {
+                                            fontSize: 50
+                                        }
+                                    }
+                                }]
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                        splitNumber: 2,
+                        scale: true
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            return {
+                                type: 'group',
+                                children: [{
+                                    type: 'rect',
+                                    shape: {x: 100, y: 30, width: 100, height: 50},
+                                    style: {fill: '#333'}
+                                }, {
+                                    type: 'rect',
+                                    shape: {x: 130, y: 50, width: 100, height: 50},
+                                    style: {fill: '#555'}
+                                }, {
+                                    type: 'rect',
+                                    shape: {x: 160, y: 70, width: 100, height: 50},
+                                    style: {fill: '#777'}
+                                }]
+                            };
+                        },
+                        data: [[12, 331221], [55, 331221]]
+                    }]
+                };
+
+                testHelper.create(echarts, 'main4', {
+                    title: [
+                        'custom series: all highlighted when hover, keep z correct'
+                    ],
+                    option: option,
+                    height: 200
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                        splitNumber: 2,
+                        scale: true
+                    },
+                    series: [{
+                        type: 'line',
+                        symbolSize: 20,
+                        data: [[21, 22], [44, 11]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: [
+                        'Test default symbol hover style (scale) (Only test **Not use hoverLayer**)',
+                        'trigger hover by API: **should scaled**.',
+                        'Test mouse hover and leave, should NOT return to normal.',
+                        'Only click downplay to return normal'
+                    ],
+                    option: option,
+                    height: 200,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    series: [{
+                        type: 'pie',
+                        data: [
+                            {value: 12, name: 'Click this sector:\nit keep color-lifted and scaled'},
+                            {value: 15, name: 'zxcv'},
+                            {value: 17, name: 'Click this sector:\nit becomes yellow, keep color-lifted and scaled'}
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'Pie **hightlight priority** of API and mouse:',
+                        'Hover on sector, **should scaled and color lifted**.',
+                        'trigger hover by API: **should scaled and color-lifted**.',
+                        'Test mouse hover and leave, should NOT return to normal.',
+                        'Only click downplay to return normal',
+                        'Click the red sector, it **keep scaled and color-lifted**',
+                        'Only click downplay to return normal'
+                    ],
+                    option: option,
+                    height: 200,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }]
+                });
+
+                chart && chart.on('click', function (e) {
+                    if (e.dataIndex === 0) {
+                        chart.dispatchAction({
+                            type: 'highlight',
+                            seriesIndex: 0,
+                            dataIndex: 0
+                        });
+                    }
+                    else if (e.dataIndex === 2) {
+                        option.series[0].data[2].itemStyle = {color: 'yellow'};
+                        chart.setOption(option);
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    hoverLayerThreshold: hoverLayerThreshold,
+                    tooltip: {},
+                    series: [{
+                        type: 'funnel',
+                        label: {
+                            show: false
+                        },
+                        emphasis: {
+                            label: {show: true}
+                        },
+                        data: [
+                            {value: 12, name: 'poiu'},
+                            {value: 15, name: 'zxcv'},
+                            {value: 17, name: 'casdf'}
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main7', {
+                    title: [
+                        'Click button highlight dataIndex 0 show label',
+                        'Then hover and unhover the sector, highlight state will not changed'
+                    ],
+                    option: option,
+                    height: 200,
+                    buttons: [{
+                        text: 'highlight dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'highlight',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }, {
+                        text: 'downplay dataIndex 0',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'downplay',
+                                seriesIndex: 0,
+                                dataIndex: 0
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            $.get('../map/json/china.json', function (chinaJson) {
+                if (typeof chinaJson === 'string') {
+                    chinaJson = eval('(' + chinaJson + ')');
+                }
+                require(['echarts'], function (echarts) {
+                    echarts.registerMap('china', chinaJson);
+                    var option = {
+                        hoverLayerThreshold: hoverLayerThreshold,
+                        tooltip: {},
+                        legend: {},
+                        geo: [{
+                            type: 'map',
+                            map: 'china',
+                            roam: true,
+                            scaleLimit: {
+                                min: 1.5,
+                                max: 10
+                            },
+                            selectedMode: 'multiple'
+                        }]
+                    };
+
+                    var chart = testHelper.create(echarts, 'main8', {
+                        title: [
+                            'Click button toggleSelected 内蒙古',
+                            'Then hover and unhover the region, highlight state will not changed'
+                        ],
+                        option: option,
+                        height: 400,
+                        buttons: [{
+                            text: 'toggleSelected 内蒙古',
+                            onclick: function () {
+                                chart.dispatchAction({
+                                    type: 'geoToggleSelect',
+                                    geoIndex: 0,
+                                    name: '内蒙古'
+                                });
+                            }
+                        }]
+                    });
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+    </body>
+</html>

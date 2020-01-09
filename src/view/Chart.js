@@ -1,8 +1,28 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {each} from 'zrender/src/core/util';
 import Group from 'zrender/src/container/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
+import * as graphicUtil from '../util/graphic';
 import {createTask} from '../stream/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 
@@ -99,6 +119,7 @@ Chart.prototype = {
 
     /**
      * Render in progressive mode.
+     * @param  {Object} params See taskParams in `stream/task.js`
      * @param  {module:echarts/model/Series} seriesModel
      * @param  {module:echarts/model/Global} ecModel
      * @param  {module:echarts/ExtensionAPI} api
@@ -114,7 +135,7 @@ Chart.prototype = {
      * @param  {Object} payload
      * @return {Object} {update: true}
      */
-    updateTransform: null
+    updateTransform: null,
 
     /**
      * The view contains the given point.
@@ -124,47 +145,65 @@ Chart.prototype = {
      */
     // containPoint: function () {}
 
+    /**
+     * @param {string} eventType
+     * @param {Object} query
+     * @param {module:zrender/Element} targetEl
+     * @param {Object} packedEvent
+     * @return {boolen} Pass only when return `true`.
+     */
+    filterForExposedEvent: null
+
 };
 
 var chartProto = Chart.prototype;
-chartProto.updateView
-    = chartProto.updateLayout
-    = chartProto.updateVisual
-    = function (seriesModel, ecModel, api, payload) {
+chartProto.updateView =
+chartProto.updateLayout =
+chartProto.updateVisual =
+    function (seriesModel, ecModel, api, payload) {
         this.render(seriesModel, ecModel, api, payload);
     };
 
 /**
  * Set state of single element
- * @param  {module:zrender/Element} el
- * @param  {string} state
+ * @param {module:zrender/Element} el
+ * @param {string} state 'normal'|'emphasis'
+ * @param {number} highlightDigit
  */
-function elSetState(el, state) {
+function elSetState(el, state, highlightDigit) {
     if (el) {
-        el.trigger(state);
-        if (el.type === 'group') {
-            for (var i = 0; i < el.childCount(); i++) {
-                elSetState(el.childAt(i), state);
+        el.trigger(state, highlightDigit);
+        if (el.isGroup
+            // Simple optimize.
+            && !graphicUtil.isHighDownDispatcher(el)
+        ) {
+            for (var i = 0, len = el.childCount(); i < len; i++) {
+                elSetState(el.childAt(i), state, highlightDigit);
             }
         }
     }
 }
+
 /**
- * @param  {module:echarts/data/List} data
- * @param  {Object} payload
- * @param  {string} state 'normal'|'emphasis'
+ * @param {module:echarts/data/List} data
+ * @param {Object} payload
+ * @param {string} state 'normal'|'emphasis'
  */
 function toggleHighlight(data, payload, state) {
     var dataIndex = modelUtil.queryDataIndex(data, payload);
 
+    var highlightDigit = (payload && payload.highlightKey != null)
+        ? graphicUtil.getHighlightDigit(payload.highlightKey)
+        : null;
+
     if (dataIndex != null) {
         each(modelUtil.normalizeToArray(dataIndex), function (dataIdx) {
-            elSetState(data.getItemGraphicEl(dataIdx), state);
+            elSetState(data.getItemGraphicEl(dataIdx), state, highlightDigit);
         });
     }
     else {
         data.eachItemGraphicEl(function (el) {
-            elSetState(el, state);
+            elSetState(el, state, highlightDigit);
         });
     }
 }
@@ -189,11 +228,11 @@ function renderTaskReset(context) {
     var api = context.api;
     var payload = context.payload;
     // ???! remove updateView updateVisual
-    var canProgressiveRender = seriesModel.pipelineContext.canProgressiveRender;
+    var progressiveRender = seriesModel.pipelineContext.progressiveRender;
     var view = context.view;
 
     var updateMethod = payload && inner(payload).updateMethod;
-    var methodName = canProgressiveRender
+    var methodName = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod

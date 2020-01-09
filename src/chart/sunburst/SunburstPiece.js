@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 
@@ -23,6 +42,8 @@ function SunburstPiece(node, seriesModel, ecModel) {
     var sector = new graphic.Sector({
         z2: DEFAULT_SECTOR_Z
     });
+    sector.seriesIndex = seriesModel.seriesIndex;
+
     var text = new graphic.Text({
         z2: DEFAULT_TEXT_Z,
         silent: node.getModel('label').get('silent')
@@ -65,10 +86,15 @@ SunburstPieceProto.updateData = function (
 
     var itemModel = node.getModel();
     var layout = node.getLayout();
+    // if (!layout) {
+    //     console.log(node.getLayout());
+    // }
     var sectorShape = zrUtil.extend({}, layout);
     sectorShape.label = null;
 
     var visualColor = getNodeColor(node, seriesModel, ecModel);
+
+    fillDefaultColor(node, seriesModel, visualColor);
 
     var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
     var style;
@@ -177,7 +203,7 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
 
     var text = zrUtil.retrieve(
         seriesModel.getFormattedLabel(
-            this.node.dataIndex, 'normal', null, null, 'label'
+            this.node.dataIndex, state, null, null, 'label'
         ),
         this.node.name
     );
@@ -266,7 +292,8 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
         else if (rotate < -Math.PI / 2) {
             rotate += Math.PI;
         }
-    } else if (typeof rotateType === 'number') {
+    }
+    else if (typeof rotateType === 'number') {
         rotate = rotateType * Math.PI / 180;
     }
     label.attr('rotation', rotate);
@@ -386,4 +413,10 @@ function isNodeHighlighted(node, activeNode, policy) {
     else {
         return node === activeNode || node.isDescendantOf(activeNode);
     }
+}
+
+// Fix tooltip callback function params.color incorrect when pick a default color
+function fillDefaultColor(node, seriesModel, color) {
+    var data = seriesModel.getData();
+    data.setItemVisual(node.dataIndex, 'color', color);
 }

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * @deprecated
  * Use `echarts/data/helper/createDimensions` instead.
@@ -5,15 +24,20 @@
 
 import {createHashMap, each, isString, defaults, extend, isObject, clone} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
-import {guessOrdinal} from './sourceHelper';
+import {guessOrdinal, BE_ORDINAL} from './sourceHelper';
 import Source from '../Source';
 import {OTHER_DIMENSIONS} from './dimensionHelper';
+import DataDimensionInfo from '../DataDimensionInfo';
 
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
  *
- * Complete the dimensions array, by user defined `dimension` and `encode`,
- * and guessing from the data structure.
+ * This method builds the relationship between:
+ * + "what the coord sys or series requires (see `sysDims`)",
+ * + "what the user defines (in `encode` and `dimensions`, see `opt.dimsDef` and `opt.encodeDef`)"
+ * + "what the data source provids (see `source`)".
+ *
+ * Some guess strategy will be adapted if user does not define something.
  * If no 'value' dimension specified, the first no-named dimension will be
  * named as 'value'.
  *
@@ -21,7 +45,7 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  *      provides not only dim template, but also default order.
  *      properties: 'name', 'type', 'displayName'.
  *      `name` of each item provides default coord name.
- *      [{dimsDef: [string...]}, ...] dimsDef of sysDim item provides default dim name, and
+ *      [{dimsDef: [string|Object, ...]}, ...] dimsDef of sysDim item provides default dim name, and
  *                                    provide dims count that the sysDim required.
  *      [{ordinalMeta}] can be specified.
  * @param {module:echarts/data/Source|Array|Object} source or data (for compatibal with pervious)
@@ -29,32 +53,20 @@ import {OTHER_DIMENSIONS} from './dimensionHelper';
  * @param {Array.<Object|string>} [opt.dimsDef] option.series.dimensions User defined dimensions
  *      For example: ['asdf', {name, type}, ...].
  * @param {Object|HashMap} [opt.encodeDef] option.series.encode {x: 2, y: [3, 1], tooltip: [1, 2], label: 3}
+ * @param {Function} [opt.encodeDefaulter] Called if no `opt.encodeDef` exists.
+ *      If not specified, auto find the next available data dim.
+ *      param source {module:data/Source}
+ *      param dimCount {number}
+ *      return {Object} encode Never be `null/undefined`.
  * @param {string} [opt.generateCoord] Generate coord dim with the given name.
- *                 If not specified, extra dim names will be:
- *                 'value', 'value0', 'value1', ...
+ *      If not specified, extra dim names will be:
+ *      'value', 'value0', 'value1', ...
  * @param {number} [opt.generateCoordCount] By default, the generated dim name is `generateCoord`.
- *                 If `generateCoordCount` specified, the generated dim names will be:
- *                 `generateCoord` + 0, `generateCoord` + 1, ...
- *                 can be Infinity, indicate that use all of the remain columns.
+ *      If `generateCoordCount` specified, the generated dim names will be:
+ *      `generateCoord` + 0, `generateCoord` + 1, ...
+ *      can be Infinity, indicate that use all of the remain columns.
  * @param {number} [opt.dimCount] If not specified, guess by the first data item.
- * @param {number} [opt.encodeDefaulter] If not specified, auto find the next available data dim.
- * @return {Array.<Object>} [{
- *      name: string mandatory,
- *      displayName: string, the origin name in dimsDef, see source helper.
- *                 If displayName given, the tooltip will displayed vertically.
- *      coordDim: string mandatory,
- *      coordDimIndex: number mandatory,
- *      type: string optional,
- *      otherDims: { never null/undefined
- *          tooltip: number optional,
- *          label: number optional,
- *          itemName: number optional,
- *          seriesName: number optional,
- *      },
- *      isExtraCoord: boolean true if coord is generated
- *          (not specified in encode and not series specified)
- *      other props ...
- * }]
+ * @return {Array.<module:data/DataDimensionInfo>}
  */
 function completeDimensions(sysDims, source, opt) {
     if (!Source.isInstance(source)) {
@@ -64,7 +76,6 @@ function completeDimensions(sysDims, source, opt) {
     opt = opt || {};
     sysDims = (sysDims || []).slice();
     var dimsDef = (opt.dimsDef || []).slice();
-    var encodeDef = createHashMap(opt.encodeDef);
     var dataDimNameMap = createHashMap();
     var coordDimNameMap = createHashMap();
     // var valueCandidate;
@@ -78,7 +89,7 @@ function completeDimensions(sysDims, source, opt) {
             {}, isObject(dimsDef[i]) ? dimsDef[i] : {name: dimsDef[i]}
         );
         var userDimName = dimDefItem.name;
-        var resultItem = result[i] = {otherDims: {}};
+        var resultItem = result[i] = new DataDimensionInfo();
         // Name will be applied later for avoiding duplication.
         if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
             // Only if `series.dimensions` is defined in option
@@ -91,9 +102,24 @@ function completeDimensions(sysDims, source, opt) {
         dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
     }
 
+    var encodeDef = opt.encodeDef;
+    if (!encodeDef && opt.encodeDefaulter) {
+        encodeDef = opt.encodeDefaulter(source, dimCount);
+    }
+    encodeDef = createHashMap(encodeDef);
+
     // Set `coordDim` and `coordDimIndex` by `encodeDef` and normalize `encodeDef`.
     encodeDef.each(function (dataDims, coordDim) {
         dataDims = normalizeToArray(dataDims).slice();
+
+        // Note: It is allowed that `dataDims.length` is `0`, e.g., options is
+        // `{encode: {x: -1, y: 1}}`. Should not filter anything in
+        // this case.
+        if (dataDims.length === 1 && !isString(dataDims[0]) && dataDims[0] < 0) {
+            encodeDef.set(coordDim, false);
+            return;
+        }
+
         var validDataDims = encodeDef.set(coordDim, []);
         each(dataDims, function (resultDimIdx, idx) {
             // The input resultDimIdx can be dim name or index.
@@ -125,11 +151,19 @@ function completeDimensions(sysDims, source, opt) {
             // `coordDimIndex` should not be set directly.
             sysDimItemDimsDef = sysDimItem.dimsDef;
             sysDimItemOtherDims = sysDimItem.otherDims;
-            sysDimItem.name = sysDimItem.coordDim = sysDimItem.coordDimIndex
-                = sysDimItem.dimsDef = sysDimItem.otherDims = null;
+            sysDimItem.name = sysDimItem.coordDim = sysDimItem.coordDimIndex =
+                sysDimItem.dimsDef = sysDimItem.otherDims = null;
         }
 
-        var dataDims = normalizeToArray(encodeDef.get(coordDim));
+        var dataDims = encodeDef.get(coordDim);
+
+        // negative resultDimIdx means no need to mapping.
+        if (dataDims === false) {
+            return;
+        }
+
+        var dataDims = normalizeToArray(dataDims);
+
         // dimensions provides default dim sequences.
         if (!dataDims.length) {
             for (var i = 0; i < (sysDimItemDimsDef && sysDimItemDimsDef.length || 1); i++) {
@@ -145,7 +179,10 @@ function completeDimensions(sysDims, source, opt) {
             var resultItem = result[resultDimIdx];
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
-                resultItem.name = resultItem.displayName = sysDimItemDimsDef[coordDimIndex];
+                var sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];
+                !isObject(sysDimItemDimsDefItem) && (sysDimItemDimsDefItem = {name: sysDimItemDimsDefItem});
+                resultItem.name = resultItem.displayName = sysDimItemDimsDefItem.name;
+                resultItem.defaultTooltip = sysDimItemDimsDefItem.defaultTooltip;
             }
             // FIXME refactor, currently only used in case: {otherDims: {tooltip: false}}
             sysDimItemOtherDims && defaults(resultItem.otherDims, sysDimItemOtherDims);
@@ -172,7 +209,7 @@ function completeDimensions(sysDims, source, opt) {
 
     // Set dim `name` and other `coordDim` and other props.
     for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
-        var resultItem = result[resultDimIdx] = result[resultDimIdx] || {};
+        var resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
         var coordDim = resultItem.coordDim;
 
         if (coordDim == null) {
@@ -191,7 +228,28 @@ function completeDimensions(sysDims, source, opt) {
             dataDimNameMap
         ));
 
-        if (resultItem.type == null && guessOrdinal(source, resultDimIdx, resultItem.name)) {
+        if (resultItem.type == null
+            && (
+                guessOrdinal(source, resultDimIdx, resultItem.name) === BE_ORDINAL.Must
+                // Consider the case:
+                // {
+                //    dataset: {source: [
+                //        ['2001', 123],
+                //        ['2002', 456],
+                //        ...
+                //        ['The others', 987],
+                //    ]},
+                //    series: {type: 'pie'}
+                // }
+                // The first colum should better be treated as a "ordinal" although it
+                // might not able to be detected as an "ordinal" by `guessOrdinal`.
+                || (resultItem.isExtraCoord
+                    && (resultItem.otherDims.itemName != null
+                        || resultItem.otherDims.seriesName != null
+                    )
+                )
+            )
+        ) {
             resultItem.type = 'ordinal';
         }
     }

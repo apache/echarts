@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import Eventful from 'zrender/src/mixin/Eventful';
 import * as eventTool from 'zrender/src/core/event';
@@ -55,8 +74,9 @@ function RoamController(zr) {
      *                          which can be null/undefined or true/false
      *                          or 'pan/move' or 'zoom'/'scale'
      * @param {Object} [opt]
-     * @param {Object} [opt.zoomOnMouseWheel=true]
-     * @param {Object} [opt.moveOnMouseMove=true]
+     * @param {Object} [opt.zoomOnMouseWheel=true] The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+     * @param {Object} [opt.moveOnMouseMove=true] The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+     * @param {Object} [opt.moveOnMouseWheel=false] The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
      * @param {Object} [opt.preventDefaultMouseMove=true] When pan.
      */
     this.enable = function (controlType, opt) {
@@ -67,6 +87,8 @@ function RoamController(zr) {
         this._opt = zrUtil.defaults(zrUtil.clone(opt) || {}, {
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
+            // By default, wheel do not trigger move.
+            moveOnMouseWheel: false,
             preventDefaultMouseMove: true
         });
 
@@ -108,7 +130,7 @@ zrUtil.mixin(RoamController, Eventful);
 
 
 function mousedown(e) {
-    if (eventTool.notLeftMouse(e)
+    if (eventTool.isMiddleOrRightButtonOnMouseUpDown(e)
         || (e.target && e.target.draggable)
     ) {
         return;
@@ -127,9 +149,8 @@ function mousedown(e) {
 }
 
 function mousemove(e) {
-    if (eventTool.notLeftMouse(e)
-        || !checkKeyBinding(this, 'moveOnMouseMove', e)
-        || !this._dragging
+    if (!this._dragging
+        || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
         || e.gestureEvent === 'pinch'
         || interactionMutex.isTaken(this._zr, 'globalPan')
     ) {
@@ -150,51 +171,103 @@ function mousemove(e) {
 
     this._opt.preventDefaultMouseMove && eventTool.stop(e.event);
 
-    this.trigger('pan', dx, dy, oldX, oldY, x, y);
+    trigger(this, 'pan', 'moveOnMouseMove', e, {
+        dx: dx, dy: dy, oldX: oldX, oldY: oldY, newX: x, newY: y
+    });
 }
 
 function mouseup(e) {
-    if (!eventTool.notLeftMouse(e)) {
+    if (!eventTool.isMiddleOrRightButtonOnMouseUpDown(e)) {
         this._dragging = false;
     }
 }
 
 function mousewheel(e) {
+    var shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
+    var shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
+    var wheelDelta = e.wheelDelta;
+    var absWheelDeltaDelta = Math.abs(wheelDelta);
+    var originX = e.offsetX;
+    var originY = e.offsetY;
+
     // wheelDelta maybe -0 in chrome mac.
-    if (!checkKeyBinding(this, 'zoomOnMouseWheel', e) || e.wheelDelta === 0) {
+    if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
         return;
     }
 
-    // Convenience:
-    // Mac and VM Windows on Mac: scroll up: zoom out.
-    // Windows: scroll up: zoom in.
-    var zoomDelta = e.wheelDelta > 0 ? 1.1 : 1 / 1.1;
-    zoom.call(this, e, zoomDelta, e.offsetX, e.offsetY);
+    // If both `shouldZoom` and `shouldMove` is true, trigger
+    // their event both, and the final behavior is determined
+    // by event listener themselves.
+
+    if (shouldZoom) {
+        // Convenience:
+        // Mac and VM Windows on Mac: scroll up: zoom out.
+        // Windows: scroll up: zoom in.
+
+        // FIXME: Should do more test in different environment.
+        // wheelDelta is too complicated in difference nvironment
+        // (https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel),
+        // although it has been normallized by zrender.
+        // wheelDelta of mouse wheel is bigger than touch pad.
+        var factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
+        var scale = wheelDelta > 0 ? factor : 1 / factor;
+        checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
+            scale: scale, originX: originX, originY: originY
+        });
+    }
+
+    if (shouldMove) {
+        // FIXME: Should do more test in different environment.
+        var absDelta = Math.abs(wheelDelta);
+        // wheelDelta of mouse wheel is bigger than touch pad.
+        var scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
+        checkPointerAndTrigger(this, 'scrollMove', 'moveOnMouseWheel', e, {
+            scrollDelta: scrollDelta, originX: originX, originY: originY
+        });
+    }
 }
 
 function pinch(e) {
     if (interactionMutex.isTaken(this._zr, 'globalPan')) {
         return;
     }
-    var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
-    zoom.call(this, e, zoomDelta, e.pinchX, e.pinchY);
+    var scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
+    checkPointerAndTrigger(this, 'zoom', null, e, {
+        scale: scale, originX: e.pinchX, originY: e.pinchY
+    });
 }
 
-function zoom(e, zoomDelta, zoomX, zoomY) {
-    if (this.pointerChecker && this.pointerChecker(e, zoomX, zoomY)) {
+function checkPointerAndTrigger(controller, eventName, behaviorToCheck, e, contollerEvent) {
+    if (controller.pointerChecker
+        && controller.pointerChecker(e, contollerEvent.originX, contollerEvent.originY)
+    ) {
         // When mouse is out of roamController rect,
         // default befavoius should not be be disabled, otherwise
         // page sliding is disabled, contrary to expectation.
         eventTool.stop(e.event);
 
-        this.trigger('zoom', zoomDelta, zoomX, zoomY);
+        trigger(controller, eventName, behaviorToCheck, e, contollerEvent);
     }
 }
 
-function checkKeyBinding(roamController, prop, e) {
-    var setting = roamController._opt[prop];
-    return setting
-        && (!zrUtil.isString(setting) || e.event[setting + 'Key']);
+function trigger(controller, eventName, behaviorToCheck, e, contollerEvent) {
+    // Also provide behavior checker for event listener, for some case that
+    // multiple components share one listener.
+    contollerEvent.isAvailableBehavior = zrUtil.bind(isAvailableBehavior, null, behaviorToCheck, e);
+    controller.trigger(eventName, contollerEvent);
+}
+
+// settings: {
+//     zoomOnMouseWheel
+//     moveOnMouseMove
+//     moveOnMouseWheel
+// }
+// The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+function isAvailableBehavior(behaviorToCheck, e, settings) {
+    var setting = settings[behaviorToCheck];
+    return !behaviorToCheck || (
+        setting && (!zrUtil.isString(setting) || e.event[setting + 'Key'])
+    );
 }
 
 export default RoamController;

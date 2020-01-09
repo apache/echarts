@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
@@ -5,25 +24,56 @@ import * as graphic from '../../util/graphic';
 import {setLabel} from './helper';
 import Model from '../../model/Model';
 import barItemStyle from './barItemStyle';
-
+import Path from 'zrender/src/graphic/Path';
+import {throttle} from '../../util/throttle';
+import {createClipPath} from '../helper/createClipPathFromCoordSys';
+import Sausage from '../../util/shape/sausage';
 
 var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
+var _eventPos = [0, 0];
 
 // FIXME
 // Just for compatible with ec2.
 zrUtil.extend(Model.prototype, barItemStyle);
+
+function getClipArea(coord, data) {
+    var coordSysClipArea = coord.getArea && coord.getArea();
+    if (coord.type === 'cartesian2d') {
+        var baseAxis = coord.getBaseAxis();
+        // When boundaryGap is false or using time axis. bar may exceed the grid.
+        // We should not clip this part.
+        // See test/bar2.html
+        if (baseAxis.type !== 'category' || !baseAxis.onBand) {
+            var expandWidth = data.getLayout('bandWidth');
+            if (baseAxis.isHorizontal()) {
+                coordSysClipArea.x -= expandWidth;
+                coordSysClipArea.width += expandWidth * 2;
+            }
+            else {
+                coordSysClipArea.y -= expandWidth;
+                coordSysClipArea.height += expandWidth * 2;
+            }
+        }
+    }
+
+    return coordSysClipArea;
+}
 
 export default echarts.extendChartView({
 
     type: 'bar',
 
     render: function (seriesModel, ecModel, api) {
+        this._updateDrawMode(seriesModel);
+
         var coordinateSystemType = seriesModel.get('coordinateSystem');
 
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
         ) {
-            this._render(seriesModel, ecModel, api);
+            this._isLargeDraw
+                ? this._renderLarge(seriesModel, ecModel, api)
+                : this._renderNormal(seriesModel, ecModel, api);
         }
         else if (__DEV__) {
             console.warn('Only cartesian2d and polar supported for bar.');
@@ -32,9 +82,25 @@ export default echarts.extendChartView({
         return this.group;
     },
 
-    dispose: zrUtil.noop,
+    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+        this._clear();
+        this._updateDrawMode(seriesModel);
+    },
 
-    _render: function (seriesModel, ecModel, api) {
+    incrementalRender: function (params, seriesModel, ecModel, api) {
+        // Do not support progressive in normal mode.
+        this._incrementalRenderLarge(params, seriesModel);
+    },
+
+    _updateDrawMode: function (seriesModel) {
+        var isLargeDraw = seriesModel.pipelineContext.large;
+        if (this._isLargeDraw == null || isLargeDraw ^ this._isLargeDraw) {
+            this._isLargeDraw = isLargeDraw;
+            this._clear();
+        }
+    },
+
+    _renderNormal: function (seriesModel, ecModel, api) {
         var group = this.group;
         var data = seriesModel.getData();
         var oldData = this._data;
@@ -52,6 +118,15 @@ export default echarts.extendChartView({
 
         var animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
 
+        var needsClip = seriesModel.get('clip', true);
+        var coordSysClipArea = getClipArea(coord, data);
+        // If there is clipPath created in large mode. Remove it.
+        group.removeClipPath();
+        // We don't use clipPath in normal mode because we needs a perfect animation
+        // And don't want the label are clipped.
+
+        var roundCap = seriesModel.get('roundCap', true);
+
         data.diff(oldData)
             .add(function (dataIndex) {
                 if (!data.hasValue(dataIndex)) {
@@ -60,8 +135,19 @@ export default echarts.extendChartView({
 
                 var itemModel = data.getItemModel(dataIndex);
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
+
+                if (needsClip) {
+                    // Clip will modify the layout params.
+                    // And return a boolean to determine if the shape are fully clipped.
+                    var isClipped = clip[coord.type](coordSysClipArea, layout);
+                    if (isClipped) {
+                        group.remove(el);
+                        return;
+                    }
+                }
+
                 var el = elementCreator[coord.type](
-                    data, dataIndex, itemModel, layout, isHorizontalOrRadial, animationModel
+                    dataIndex, layout, isHorizontalOrRadial, animationModel, false, roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -82,12 +168,20 @@ export default echarts.extendChartView({
                 var itemModel = data.getItemModel(newIndex);
                 var layout = getLayout[coord.type](data, newIndex, itemModel);
 
+                if (needsClip) {
+                    var isClipped = clip[coord.type](coordSysClipArea, layout);
+                    if (isClipped) {
+                        group.remove(el);
+                        return;
+                    }
+                }
+
                 if (el) {
                     graphic.updateProps(el, {shape: layout}, animationModel, newIndex);
                 }
                 else {
                     el = elementCreator[coord.type](
-                        data, newIndex, itemModel, layout, isHorizontalOrRadial, animationModel, true
+                        newIndex, layout, isHorizontalOrRadial, animationModel, true, roundCap
                     );
                 }
 
@@ -114,31 +208,104 @@ export default echarts.extendChartView({
         this._data = data;
     },
 
-    remove: function (ecModel, api) {
+    _renderLarge: function (seriesModel, ecModel, api) {
+        this._clear();
+        createLarge(seriesModel, this.group);
+
+        // Use clipPath in large mode.
+        var clipPath = seriesModel.get('clip', true)
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        if (clipPath) {
+            this.group.setClipPath(clipPath);
+        }
+        else {
+            this.group.removeClipPath();
+        }
+    },
+
+    _incrementalRenderLarge: function (params, seriesModel) {
+        createLarge(seriesModel, this.group, true);
+    },
+
+    dispose: zrUtil.noop,
+
+    remove: function (ecModel) {
+        this._clear(ecModel);
+    },
+
+    _clear: function (ecModel) {
         var group = this.group;
         var data = this._data;
-        if (ecModel.get('animation')) {
-            if (data) {
-                data.eachItemGraphicEl(function (el) {
-                    if (el.type === 'sector') {
-                        removeSector(el.dataIndex, ecModel, el);
-                    }
-                    else {
-                        removeRect(el.dataIndex, ecModel, el);
-                    }
-                });
-            }
+        if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
+            data.eachItemGraphicEl(function (el) {
+                if (el.type === 'sector') {
+                    removeSector(el.dataIndex, ecModel, el);
+                }
+                else {
+                    removeRect(el.dataIndex, ecModel, el);
+                }
+            });
         }
         else {
             group.removeAll();
         }
+        this._data = null;
     }
+
 });
+
+var mathMax = Math.max;
+var mathMin = Math.min;
+
+var clip = {
+    cartesian2d: function (coordSysBoundingRect, layout) {
+        var signWidth = layout.width < 0 ? -1 : 1;
+        var signHeight = layout.height < 0 ? -1 : 1;
+        // Needs positive width and height
+        if (signWidth < 0) {
+            layout.x += layout.width;
+            layout.width = -layout.width;
+        }
+        if (signHeight < 0) {
+            layout.y += layout.height;
+            layout.height = -layout.height;
+        }
+
+        var x = mathMax(layout.x, coordSysBoundingRect.x);
+        var x2 = mathMin(layout.x + layout.width, coordSysBoundingRect.x + coordSysBoundingRect.width);
+        var y = mathMax(layout.y, coordSysBoundingRect.y);
+        var y2 = mathMin(layout.y + layout.height, coordSysBoundingRect.y + coordSysBoundingRect.height);
+
+        layout.x = x;
+        layout.y = y;
+        layout.width = x2 - x;
+        layout.height = y2 - y;
+
+        var clipped = layout.width < 0 || layout.height < 0;
+
+        // Reverse back
+        if (signWidth < 0) {
+            layout.x += layout.width;
+            layout.width = -layout.width;
+        }
+        if (signHeight < 0) {
+            layout.y += layout.height;
+            layout.height = -layout.height;
+        }
+
+        return clipped;
+    },
+
+    polar: function (coordSysClipArea) {
+        return false;
+    }
+};
 
 var elementCreator = {
 
     cartesian2d: function (
-        data, dataIndex, itemModel, layout, isHorizontal,
+        dataIndex, layout, isHorizontal,
         animationModel, isUpdate
     ) {
         var rect = new graphic.Rect({shape: zrUtil.extend({}, layout)});
@@ -159,15 +326,18 @@ var elementCreator = {
     },
 
     polar: function (
-        data, dataIndex, itemModel, layout, isRadial,
-        animationModel, isUpdate
+        dataIndex, layout, isRadial,
+        animationModel, isUpdate, roundCap
     ) {
         // Keep the same logic with bar in catesion: use end value to control
         // direction. Notice that if clockwise is true (by default), the sector
         // will always draw clockwisely, no matter whether endAngle is greater
         // or less than startAngle.
         var clockwise = layout.startAngle < layout.endAngle;
-        var sector = new graphic.Sector({
+
+        var ShapeClass = (!isRadial && roundCap) ? Sausage : graphic.Sector;
+
+        var sector = new ShapeClass({
             shape: zrUtil.defaults({clockwise: clockwise}, layout)
         });
 
@@ -240,11 +410,18 @@ var getLayout = {
     }
 };
 
+function isZeroOnPolar(layout) {
+    return layout.startAngle != null
+        && layout.endAngle != null
+        && layout.startAngle === layout.endAngle;
+}
+
 function updateStyle(
     el, data, dataIndex, itemModel, layout, seriesModel, isHorizontal, isPolar
 ) {
     var color = data.getItemVisual(dataIndex, 'color');
     var opacity = data.getItemVisual(dataIndex, 'opacity');
+    var stroke = data.getVisual('borderColor');
     var itemStyleModel = itemModel.getModel('itemStyle');
     var hoverStyle = itemModel.getModel('emphasis.itemStyle').getBarItemStyle();
 
@@ -254,7 +431,8 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            fill: color,
+            stroke: isZeroOnPolar(layout) ? 'none' : stroke,
+            fill: isZeroOnPolar(layout) ? 'none' : color,
             opacity: opacity
         },
         itemStyleModel.getBarItemStyle()
@@ -273,7 +451,9 @@ function updateStyle(
             seriesModel, dataIndex, labelPositionOutside
         );
     }
-
+    if (isZeroOnPolar(layout)) {
+        hoverStyle.fill = hoverStyle.stroke = 'none';
+    }
     graphic.setHoverStyle(el, hoverStyle);
 }
 
@@ -282,3 +462,104 @@ function getLineWidth(itemModel, rawLayout) {
     var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
     return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
 }
+
+
+var LargePath = Path.extend({
+
+    type: 'largeBar',
+
+    shape: {points: []},
+
+    buildPath: function (ctx, shape) {
+        // Drawing lines is more efficient than drawing
+        // a whole line or drawing rects.
+        var points = shape.points;
+        var startPoint = this.__startPoint;
+        var baseDimIdx = this.__baseDimIdx;
+
+        for (var i = 0; i < points.length; i += 2) {
+            startPoint[baseDimIdx] = points[i + baseDimIdx];
+            ctx.moveTo(startPoint[0], startPoint[1]);
+            ctx.lineTo(points[i], points[i + 1]);
+        }
+    }
+});
+
+function createLarge(seriesModel, group, incremental) {
+    // TODO support polar
+    var data = seriesModel.getData();
+    var startPoint = [];
+    var baseDimIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
+    startPoint[1 - baseDimIdx] = data.getLayout('valueAxisStart');
+
+    var el = new LargePath({
+        shape: {points: data.getLayout('largePoints')},
+        incremental: !!incremental,
+        __startPoint: startPoint,
+        __baseDimIdx: baseDimIdx,
+        __largeDataIndices: data.getLayout('largeDataIndices'),
+        __barWidth: data.getLayout('barWidth')
+    });
+    group.add(el);
+    setLargeStyle(el, seriesModel, data);
+
+    // Enable tooltip and user mouse/touch event handlers.
+    el.seriesIndex = seriesModel.seriesIndex;
+
+    if (!seriesModel.get('silent')) {
+        el.on('mousedown', largePathUpdateDataIndex);
+        el.on('mousemove', largePathUpdateDataIndex);
+    }
+}
+
+// Use throttle to avoid frequently traverse to find dataIndex.
+var largePathUpdateDataIndex = throttle(function (event) {
+    var largePath = this;
+    var dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
+    largePath.dataIndex = dataIndex >= 0 ? dataIndex : null;
+}, 30, false);
+
+function largePathFindDataIndex(largePath, x, y) {
+    var baseDimIdx = largePath.__baseDimIdx;
+    var valueDimIdx = 1 - baseDimIdx;
+    var points = largePath.shape.points;
+    var largeDataIndices = largePath.__largeDataIndices;
+    var barWidthHalf = Math.abs(largePath.__barWidth / 2);
+    var startValueVal = largePath.__startPoint[valueDimIdx];
+
+    _eventPos[0] = x;
+    _eventPos[1] = y;
+    var pointerBaseVal = _eventPos[baseDimIdx];
+    var pointerValueVal = _eventPos[1 - baseDimIdx];
+    var baseLowerBound = pointerBaseVal - barWidthHalf;
+    var baseUpperBound = pointerBaseVal + barWidthHalf;
+
+    for (var i = 0, len = points.length / 2; i < len; i++) {
+        var ii = i * 2;
+        var barBaseVal = points[ii + baseDimIdx];
+        var barValueVal = points[ii + valueDimIdx];
+        if (
+            barBaseVal >= baseLowerBound && barBaseVal <= baseUpperBound
+            && (
+                startValueVal <= barValueVal
+                    ? (pointerValueVal >= startValueVal && pointerValueVal <= barValueVal)
+                    : (pointerValueVal >= barValueVal && pointerValueVal <= startValueVal)
+            )
+        ) {
+            return largeDataIndices[i];
+        }
+    }
+
+    return -1;
+}
+
+function setLargeStyle(el, seriesModel, data) {
+    var borderColor = data.getVisual('borderColor') || data.getVisual('color');
+    var itemStyle = seriesModel.getModel('itemStyle').getItemStyle(['color', 'borderColor']);
+
+    el.useStyle(itemStyle);
+    el.style.fill = null;
+    el.style.stroke = borderColor;
+    el.style.lineWidth = data.getLayout('barWidth');
+}
+

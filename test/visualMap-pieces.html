@@ -1,4 +1,24 @@
-<!DOCTYPE>
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
 <html>
     <head>
         <meta charset="utf-8">
@@ -29,10 +49,8 @@
 
 
 
-        <h1>map</h1>
         <div class="chart" id="map"></div>
 
-        <h1>line symbol (check toggle normally)</h1>
         <div class="chart" id="line-symbol"></div>
 
 
@@ -127,12 +145,12 @@
                                 {name: '河南',value: Math.round(Math.random()*2000)},
                                 {name: '云南',value: 123},
                                 {name: '辽宁',value: 305},
-                                {name: '黑龙江',value: Math.round(Math.random()*2000), visualMap: false},
-                                {name: '湖南',value: 200},
+                                {name: '黑龙江', value: Math.round(Math.random()*2000), visualMap: false},
+                                {name: '湖南', value: 200},
                                 {name: '安徽',value: Math.round(Math.random()*2000)},
                                 {name: '山东',value: Math.round(Math.random()*2000)},
                                 {name: '新疆',value: Math.round(Math.random()*2000)},
-                                {name: '江苏',value: Math.round(Math.random()*2000)},
+                                {name: '江苏', itemStyle: {color: 'red'}, value: Math.round(Math.random()*2000), visualMap: false},
                                 {name: '浙江',value: Math.round(Math.random()*2000)},
                                 {name: '江西',value: Math.round(Math.random()*2000)},
                                 {name: '湖北',value: Math.round(Math.random()*2000)},
@@ -158,7 +176,16 @@
                     ]
                 };
 
-                testHelper.createChart(echarts, 'map', option);
+                var chart = testHelper.create(echarts, 'map', {
+                    title: [
+                        'All provinces should be "blue", except that',
+                        '北京 is "black"',
+                        '黑龙江 is "grey" (visualMap: false)',
+                        '江苏 is "red" (visualMap: false)'
+                    ],
+                    option: option
+                });
+
             })
 
         </script>
@@ -252,8 +279,10 @@
                     ]
                 };
 
-
-                testHelper.createChart(echarts, 'line-symbol', option);
+                var chart = testHelper.create(echarts, 'line-symbol', {
+                    title: 'line symbol (check toggle normally)',
+                    option: option
+                });
             });
 
         </script>

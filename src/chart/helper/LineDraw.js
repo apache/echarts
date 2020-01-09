@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * @module echarts/chart/helper/LineDraw
  */
@@ -87,6 +106,12 @@ function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScop
 
 lineDrawProto.updateLayout = function () {
     var lineData = this._lineData;
+
+    // Do not support update layout in incremental mode.
+    if (!lineData) {
+        return;
+    }
+
     lineData.eachItemGraphicEl(function (el, idx) {
         el.updateLayout(lineData, idx);
     }, this);
@@ -111,7 +136,9 @@ lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
         if (lineNeedsDraw(itemLayout)) {
             var el = new this._ctor(lineData, idx, this._seriesScope);
             el.traverse(updateIncrementalAndHover);
+
             this.group.add(el);
+            lineData.setItemGraphicEl(idx, el);
         }
     }
 };

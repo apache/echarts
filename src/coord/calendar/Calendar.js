@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
@@ -181,7 +200,10 @@ Calendar.prototype = {
         var date = dayInfo.formatedDate;
 
         // if not in range return [NaN, NaN]
-        if (clamp && !(dayInfo.time >= range.start.time && dayInfo.time <= range.end.time)) {
+        if (clamp && !(
+            dayInfo.time >= range.start.time
+            && dayInfo.time < range.end.time + PROXIMATE_ONE_DAY
+        )) {
             return [NaN, NaN];
         }
 
@@ -375,7 +397,7 @@ Calendar.prototype = {
         }
 
         var weeks = Math.floor((allDay + range[0].day + 6) / 7);
-        var nthWeek = reversed ? -weeks + 1: weeks - 1;
+        var nthWeek = reversed ? -weeks + 1 : weeks - 1;
 
         reversed && range.reverse();
 
@@ -419,9 +441,9 @@ Calendar.prototype = {
     }
 };
 
-Calendar.dimensions =  Calendar.prototype.dimensions;
+Calendar.dimensions = Calendar.prototype.dimensions;
 
-Calendar.getDimensionsInfo =  Calendar.prototype.getDimensionsInfo;
+Calendar.getDimensionsInfo = Calendar.prototype.getDimensionsInfo;
 
 Calendar.create = function (ecModel, api) {
     var calendarList = [];

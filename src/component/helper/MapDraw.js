@@ -1,10 +1,31 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
+import geoSourceManager from '../../coord/geo/geoSourceManager';
+import {getUID} from '../../util/component';
 
-function getFixedItemStyle(model, scale) {
+function getFixedItemStyle(model) {
     var itemStyle = model.getItemStyle();
     var areaColor = model.get('areaColor');
 
@@ -17,17 +38,17 @@ function getFixedItemStyle(model, scale) {
     return itemStyle;
 }
 
-function updateMapSelectHandler(mapDraw, mapOrGeoModel, group, api, fromView) {
-    group.off('click');
-    group.off('mousedown');
+function updateMapSelectHandler(mapDraw, mapOrGeoModel, regionsGroup, api, fromView) {
+    regionsGroup.off('click');
+    regionsGroup.off('mousedown');
 
     if (mapOrGeoModel.get('selectedMode')) {
 
-        group.on('mousedown', function () {
+        regionsGroup.on('mousedown', function () {
             mapDraw._mouseDownFlag = true;
         });
 
-        group.on('click', function (e) {
+        regionsGroup.on('click', function (e) {
             if (!mapDraw._mouseDownFlag) {
                 return;
             }
@@ -54,14 +75,14 @@ function updateMapSelectHandler(mapDraw, mapOrGeoModel, group, api, fromView) {
 
             api.dispatchAction(action);
 
-            updateMapSelected(mapOrGeoModel, group);
+            updateMapSelected(mapOrGeoModel, regionsGroup);
         });
     }
 }
 
-function updateMapSelected(mapOrGeoModel, group) {
+function updateMapSelected(mapOrGeoModel, regionsGroup) {
     // FIXME
-    group.eachChild(function (otherRegionEl) {
+    regionsGroup.eachChild(function (otherRegionEl) {
         zrUtil.each(otherRegionEl.__regions, function (region) {
             otherRegionEl.trigger(mapOrGeoModel.isSelected(region.name) ? 'emphasis' : 'normal');
         });
@@ -76,6 +97,12 @@ function updateMapSelected(mapOrGeoModel, group) {
 function MapDraw(api, updateGroup) {
 
     var group = new graphic.Group();
+
+    /**
+     * @type {string}
+     * @private
+     */
+    this.uid = getUID('ec_map_draw');
 
     /**
      * @type {module:echarts/component/helper/RoamController}
@@ -108,6 +135,26 @@ function MapDraw(api, updateGroup) {
      * @type {booelan}
      */
     this._mouseDownFlag;
+
+    /**
+     * @type {string}
+     */
+    this._mapName;
+
+    /**
+     * @type {boolean}
+     */
+    this._initialized;
+
+    /**
+     * @type {module:zrender/container/Group}
+     */
+    group.add(this._regionsGroup = new graphic.Group());
+
+    /**
+     * @type {module:zrender/container/Group}
+     */
+    group.add(this._backgroundGroup = new graphic.Group());
 }
 
 MapDraw.prototype = {
@@ -129,23 +176,20 @@ MapDraw.prototype = {
 
         var geo = mapOrGeoModel.coordinateSystem;
 
+        this._updateBackground(geo);
+
+        var regionsGroup = this._regionsGroup;
         var group = this.group;
 
-        var scale = geo.scale;
-        var groupNewProp = {
-            position: geo.position,
-            scale: scale
-        };
-
-        // No animation when first draw or in action
-        if (!group.childAt(0) || payload) {
-            group.attr(groupNewProp);
-        }
-        else {
-            graphic.updateProps(group, groupNewProp, mapOrGeoModel);
+        if (geo._roamTransformable.transform) {
+            group.transform = Array.prototype.slice.call(geo._roamTransformable.transform);
+            group.decomposeTransform();
         }
 
-        group.removeAll();
+        var scale = geo._rawTransformable.scale;
+        var position = geo._rawTransformable.position;
+
+        regionsGroup.removeAll();
 
         var itemStyleAccessPath = ['itemStyle'];
         var hoverItemStyleAccessPath = ['emphasis', 'itemStyle'];
@@ -154,7 +198,6 @@ MapDraw.prototype = {
         var nameMap = zrUtil.createHashMap();
 
         zrUtil.each(geo.regions, function (region) {
-
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
             // colonies). And it is not appropriate to merge them in geo, which
@@ -164,6 +207,7 @@ MapDraw.prototype = {
                 || nameMap.set(region.name, new graphic.Group());
 
             var compoundPath = new graphic.CompoundPath({
+                segmentIgnoreThreshold: 1,
                 shape: {
                     paths: []
                 }
@@ -174,8 +218,8 @@ MapDraw.prototype = {
 
             var itemStyleModel = regionModel.getModel(itemStyleAccessPath);
             var hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
-            var itemStyle = getFixedItemStyle(itemStyleModel, scale);
-            var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
+            var itemStyle = getFixedItemStyle(itemStyleModel);
+            var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
 
             var labelModel = regionModel.getModel(labelAccessPath);
             var hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
@@ -194,20 +238,38 @@ MapDraw.prototype = {
                 }
             }
 
+            var transformPoint = function (point) {
+                return [
+                    point[0] * scale[0] + position[0],
+                    point[1] * scale[1] + position[1]
+                ];
+            };
+
             zrUtil.each(region.geometries, function (geometry) {
                 if (geometry.type !== 'polygon') {
                     return;
                 }
+                var points = [];
+                for (var i = 0; i < geometry.exterior.length; ++i) {
+                    points.push(transformPoint(geometry.exterior[i]));
+                }
                 compoundPath.shape.paths.push(new graphic.Polygon({
+                    segmentIgnoreThreshold: 1,
                     shape: {
-                        points: geometry.exterior
+                        points: points
                     }
                 }));
 
-                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); i++) {
+                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
+                    var interior = geometry.interiors[i];
+                    var points = [];
+                    for (var j = 0; j < interior.length; ++j) {
+                        points.push(transformPoint(interior[j]));
+                    }
                     compoundPath.shape.paths.push(new graphic.Polygon({
+                        segmentIgnoreThreshold: 1,
                         shape: {
-                            points: geometry.interiors[i]
+                            points: points
                         }
                     }));
                 }
@@ -216,6 +278,7 @@ MapDraw.prototype = {
             compoundPath.setStyle(itemStyle);
             compoundPath.style.strokeNoScale = true;
             compoundPath.culling = true;
+
             // Label
             var showLabel = labelModel.get('show');
             var hoverShowLabel = hoverLabelModel.get('show');
@@ -229,7 +292,7 @@ MapDraw.prototype = {
             if (
                 (isGeo || isDataNaN && (showLabel || hoverShowLabel))
                 || (itemLayout && itemLayout.showLabel)
-                ) {
+            ) {
                 var query = !isGeo ? dataIdx : region.name;
                 var labelFetcher;
 
@@ -239,8 +302,12 @@ MapDraw.prototype = {
                 }
 
                 var textEl = new graphic.Text({
-                    position: region.center.slice(),
-                    scale: [1 / scale[0], 1 / scale[1]],
+                    position: transformPoint(region.center.slice()),
+                    // FIXME
+                    // label rotation is not support yet in geo or regions of series-map
+                    // that has no data. The rotation will be effected by this `scale`.
+                    // So needed to change to RectText?
+                    scale: [1 / group.scale[0], 1 / group.scale[1]],
                     z2: 10,
                     silent: true
                 });
@@ -272,6 +339,7 @@ MapDraw.prototype = {
                 // Package custom mouse event for geo component
                 compoundPath.eventData = {
                     componentType: 'geo',
+                    componentIndex: mapOrGeoModel.componentIndex,
                     geoIndex: mapOrGeoModel.componentIndex,
                     name: region.name,
                     region: (regionModel && regionModel.option) || {}
@@ -281,26 +349,38 @@ MapDraw.prototype = {
             var groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
             groupRegions.push(region);
 
-            graphic.setHoverStyle(
-                regionGroup,
-                hoverItemStyle,
-                {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')}
-            );
+            regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
+            graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
-            group.add(regionGroup);
+            regionsGroup.add(regionGroup);
         });
 
         this._updateController(mapOrGeoModel, ecModel, api);
 
-        updateMapSelectHandler(this, mapOrGeoModel, group, api, fromView);
+        updateMapSelectHandler(this, mapOrGeoModel, regionsGroup, api, fromView);
 
-        updateMapSelected(mapOrGeoModel, group);
+        updateMapSelected(mapOrGeoModel, regionsGroup);
     },
 
     remove: function () {
-        this.group.removeAll();
+        this._regionsGroup.removeAll();
+        this._backgroundGroup.removeAll();
         this._controller.dispose();
+        this._mapName && geoSourceManager.removeGraphic(this._mapName, this.uid);
+        this._mapName = null;
         this._controllerHost = {};
+    },
+
+    _updateBackground: function (geo) {
+        var mapName = geo.map;
+
+        if (this._mapName !== mapName) {
+            zrUtil.each(geoSourceManager.makeGraphic(mapName, this.uid), function (root) {
+                this._backgroundGroup.add(root);
+            }, this);
+        }
+
+        this._mapName = mapName;
     },
 
     _updateController: function (mapOrGeoModel, ecModel, api) {
@@ -324,32 +404,31 @@ MapDraw.prototype = {
             return action;
         }
 
-        controller.off('pan').on('pan', function (dx, dy) {
+        controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
-            roamHelper.updateViewOnPan(controllerHost, dx, dy);
+            roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
-                dx: dx,
-                dy: dy
+                dx: e.dx,
+                dy: e.dy
             }));
         }, this);
 
-        controller.off('zoom').on('zoom', function (zoom, mouseX, mouseY) {
+        controller.off('zoom').on('zoom', function (e) {
             this._mouseDownFlag = false;
 
-            roamHelper.updateViewOnZoom(controllerHost, zoom, mouseX, mouseY);
+            roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
-                zoom: zoom,
-                originX: mouseX,
-                originY: mouseY
+                zoom: e.scale,
+                originX: e.originX,
+                originY: e.originY
             }));
 
             if (this._updateGroup) {
-                var group = this.group;
-                var scale = group.scale;
-                group.traverse(function (el) {
+                var scale = this.group.scale;
+                this._regionsGroup.traverse(function (el) {
                     if (el.type === 'text') {
                         el.attr('scale', [1 / scale[0], 1 / scale[1]]);
                     }

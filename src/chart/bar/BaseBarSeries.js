@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
 
@@ -6,7 +25,7 @@ export default SeriesModel.extend({
     type: 'series.__base_bar__',
 
     getInitialData: function (option, ecModel) {
-        return createListFromArray(this.getSource(), this);
+        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     },
 
     getMarkerPosition: function (value) {
@@ -41,7 +60,16 @@ export default SeriesModel.extend({
         barMinAngle: 0,
         // cursor: null,
 
+        large: false,
+        largeThreshold: 400,
+        progressive: 3e3,
+        progressiveChunkMode: 'mod',
+
         // barMaxWidth: null,
+
+        // In cartesian, the default value is 1. Otherwise null.
+        // barMinWidth: null,
+
         // 默认自适应
         // barWidth: null,
         // 柱间距离，默认为柱形宽度的30%，可设固定值

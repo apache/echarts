@@ -1,3 +1,23 @@
+
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Simple draggable tool, just for demo or testing.
  * Use jquery.
@@ -18,31 +38,39 @@
          * @param {boolean} [opt.lockX=false]
          * @param {boolean} [opt.lockY=false]
          * @param {number} [opt.throttle=false]
-         * @param {boolean} [opt.addPlaceholder=false]
+         * @param {Function} [opt.onDrag]
          * @return {type}  description
          */
         init: function (mainEl, chart, opt) {
             opt = opt || {};
 
-            var chartResize = chart ? $.proxy(chart.resize, chart) : function () {};
+            var onDrag = opt.onDrag || $.proxy(chart.resize, chart);
+
+            var onDragThrottled = chart ? onDrag : function () {};
             if (opt.throttle) {
-                chartResize = throttle(chartResize, opt.throttle, true, false);
+                onDragThrottled = throttle(onDragThrottled, opt.throttle, true, false);
             }
 
             var mainEl = $(mainEl);
             var id = mainEl.attr('data-draggable-id');
 
-            if (opt.addPlaceholder) {
-                var width = mainEl.outerWidth();
-                var height = mainEl.outerHeight();
-                $('<div></div>').css({
-                    width: width,
-                    height: height,
-                    margin: 0,
-                    padding: 0,
-                    visibility: 'hidden'
-                }).insertAfter(mainEl);
-            }
+            var width = mainEl.outerWidth();
+            var height = mainEl.outerHeight();
+            var mainStyle = mainEl[0].style;
+            var placeholder = $('<div></div>').css({
+                position: mainStyle.position,
+                width: width,
+                height: height,
+                top: mainStyle.top,
+                bottom: mainStyle.bottom,
+                left: mainStyle.left,
+                right: mainStyle.right,
+                borderWidth: 0,
+                margin: 0,
+                padding: 0,
+                visibility: 'hidden'
+            });
+            placeholder.insertAfter(mainEl);
 
             if (id == null) {
                 id = +Math.random();
@@ -88,8 +116,6 @@
 
             mainEl.css({
                 'position': 'absolute',
-                'left': mainEl[0].offsetLeft + 'px',
-                'top': mainEl[0].offsetTop + 'px',
                 'width': mainEl[0].offsetWidth + 'px',
                 'height': mainEl[0].offsetHeight + 'px',
                 'border-style': 'solid',
@@ -101,21 +127,8 @@
 
             mainEl.parent().append(controlEl);
 
+            var locationMaker = createLocationMaker(mainEl);
             var controlSize = controlEl[0].offsetWidth;
-
-            var boxSizing = mainEl.css('box-sizing');
-
-            var borderBoxBroder = boxSizing === 'border-box' ? 2 * BORDER_WIDTH : 0;
-            var mainContentWidth = opt.width || (mainEl.width() + borderBoxBroder);
-            var mainContentHeight = opt.height || (mainEl.height() + borderBoxBroder);
-
-            var mainOffset = mainEl.offset();
-            resize(
-                mainOffset.left + mainContentWidth + BORDER_WIDTH,
-                mainOffset.top + mainContentHeight + BORDER_WIDTH,
-                true
-            );
-
             var dragging = false;
 
             controlEl.on('mousedown', function () {
@@ -132,7 +145,31 @@
                 dragging = false;
             });
 
+            relocate(opt.width, opt.height);
 
+            // A temporarily way to handle the reflow.
+            // Where the position should be sync to the placeholder.
+            $(function () {
+                setTimeout(function () {
+                    relocate();
+                }, 0);
+            });
+
+            function relocate(width, height) {
+                mainEl.css({
+                    'left': locationMaker.left(placeholder[0].offsetLeft) + 'px',
+                    'top': locationMaker.top(placeholder[0].offsetTop) + 'px',
+                });
+                var mainContentWidth = width != null ? width : locationMaker.width(mainEl.width());
+                var mainContentHeight = height != null ? height : locationMaker.height(mainEl.height());
+
+                var mainOffset = mainEl.offset();
+                resize(
+                    mainOffset.left + mainContentWidth + BORDER_WIDTH,
+                    mainOffset.top + mainContentHeight + BORDER_WIDTH,
+                    true
+                );
+            }
 
             function resize(x, y, isInit) {
                 var mainOffset = mainEl.offset();
@@ -147,7 +184,7 @@
                     );
                     mainEl.css(
                         'width',
-                        (mainContentWidth + borderBoxBroder) + 'px'
+                        locationMaker.width(mainContentWidth) + 'px'
                     );
                 }
 
@@ -158,16 +195,35 @@
                     );
                     mainEl.css(
                         'height',
-                        (mainContentHeight + borderBoxBroder) + 'px'
+                        locationMaker.height(mainContentHeight) + 'px'
                     );
                 }
 
                 label.text(Math.round(mainContentWidth) + ' x ' + Math.round(mainContentHeight));
 
-                chartResize();
+                onDragThrottled();
             }
         }
     };
+
+    function createLocationMaker(mainEl) {
+        var isBorderBox = mainEl.css('box-sizing') === 'border-box';
+
+        return {
+            width: function (w) {
+                return w + (isBorderBox ? 2 * BORDER_WIDTH : 0);
+            },
+            height: function (h) {
+                return h + (isBorderBox ? 2 * BORDER_WIDTH : 0);
+            },
+            left: function (l) {
+                return l - (isBorderBox ? 0: BORDER_WIDTH);
+            },
+            top: function (t) {
+                return t - (isBorderBox ? 0: BORDER_WIDTH);
+            }
+        };
+    }
 
     function throttle(fn, delay, trailing, debounce) {
 

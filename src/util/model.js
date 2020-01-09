@@ -1,4 +1,24 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
+import env from 'zrender/src/core/env';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -503,4 +523,39 @@ export function getAttribute(dom, key) {
     return dom.getAttribute
         ? dom.getAttribute(key)
         : dom[key];
+}
+
+export function getTooltipRenderMode(renderModeOption) {
+    if (renderModeOption === 'auto') {
+        // Using html when `document` exists, use richText otherwise
+        return env.domSupported ? 'html' : 'richText';
+    }
+    else {
+        return renderModeOption || 'html';
+    }
+}
+
+/**
+ * Group a list by key.
+ *
+ * @param {Array} array
+ * @param {Function} getKey
+ *        param {*} Array item
+ *        return {string} key
+ * @return {Object} Result
+ *        {Array}: keys,
+ *        {module:zrender/core/util/HashMap} buckets: {key -> Array}
+ */
+export function groupData(array, getKey) {
+    var buckets = zrUtil.createHashMap();
+    var keys = [];
+
+    zrUtil.each(array, function (item) {
+        var key = getKey(item);
+        (buckets.get(key)
+            || (keys.push(key), buckets.set(key, []))
+        ).push(item);
+    });
+
+    return {keys: keys, buckets: buckets};
 }

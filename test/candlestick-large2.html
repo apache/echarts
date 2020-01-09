@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/frameInsight.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="panel0"></div>
+        <div id="duration"></div>
+
+
+
+
+
+        <script>
+
+        require(['echarts'], function (echarts) {
+
+            // The data count is from a real requirement.
+            var rawDataCount = 2e5;
+            // var rawDataCount = 2e2;
+
+            function run() {
+                var data = generateOHLC(rawDataCount);
+                init(data);
+            }
+
+            function generateOHLC(count) {
+                var data = [];
+
+                var xValue = +new Date(2011, 0, 1);
+                var minute = 60 * 1000;
+                var baseValue = Math.random() * 12000;
+                var boxVals = new Array(4);
+                var dayRange = 12;
+
+                for (var i = 0; i < count; i++) {
+                    baseValue = baseValue + Math.random() * 20 - 10;
+
+                    for (var j = 0; j < 4; j++) {
+                        boxVals[j] = (Math.random() - 0.5) * dayRange + baseValue;
+                    }
+                    boxVals.sort();
+
+                    var idxRandom = Math.random();
+                    var openIdx = Math.round(Math.random() * 3);
+                    var closeIdx = Math.round(Math.random() * 2);
+                    if (closeIdx === openIdx) {
+                        closeIdx++;
+                    }
+                    var volumn = boxVals[3] * (1000 + Math.random() * 500);
+
+                    // ['open', 'close', 'lowest', 'highest', 'volumn']
+                    // [1, 4, 3, 2]
+                    data[i] = [
+                        echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', xValue += minute),
+                        +boxVals[openIdx].toFixed(2), // open
+                        +boxVals[3].toFixed(2), // highest
+                        +boxVals[0].toFixed(2), // lowest
+                        +boxVals[closeIdx].toFixed(2),  // close
+                        volumn.toFixed(0),
+                        getSign(data, i, +boxVals[openIdx], +boxVals[closeIdx], 4) // sign
+                    ];
+                }
+
+                return data;
+
+                function getSign(data, dataIndex, openVal, closeVal, closeDimIdx) {
+                    var sign;
+                    if (openVal > closeVal) {
+                        sign = -1;
+                    }
+                    else if (openVal < closeVal) {
+                        sign = 1;
+                    }
+                    else {
+                        sign = dataIndex > 0
+                            // If close === open, compare with close of last record
+                            ? (data[dataIndex - 1][closeDimIdx] <= closeVal ? 1 : -1)
+                            // No record of previous, set to be positive
+                            : 1;
+                    }
+
+                    return sign;
+                }
+            }
+
+            function calculateMA(dayCount, data) {
+                var result = [];
+                for (var i = 0, len = data.length; i < len; i++) {
+                    if (i < dayCount) {
+                        result.push('-');
+                        continue;
+                    }
+                    var sum = 0;
+                    for (var j = 0; j < dayCount; j++) {
+                        sum += data[i - j][2];
+                    }
+                    result.push(+(sum / dayCount).toFixed(3));
+                }
+                return result;
+            }
+
+            function init(rawData) {
+
+                frameInsight.init(echarts, 'duration');
+
+                var upColor = '#ec0000';
+                var upBorderColor = '#8A0000';
+                var downColor = '#00da3c';
+                var downBorderColor = '#008F28';
+
+                var option = {
+                    dataset: {
+                        source: rawData
+                    },
+                    backgroundColor: '#eee',
+                    legend: {
+                        left: 0
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
+                            // brush: {
+                            //     type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
+                            // }
+                        }
+                    },
+                    // brush: {
+                    //     xAxisIndex: 'all',
+                    //     brushLink: 'all',
+                    //     outOfBrush: {
+                    //         colorAlpha: 0.1
+                    //     }
+                    // },
+                    grid: [
+                        {
+                            left: '10%',
+                            right: '10%',
+                            height: 300
+                        },
+                        {
+                            left: '10%',
+                            right: '10%',
+                            height: 70,
+                            bottom: 80
+                        }
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category',
+                            scale: true,
+                            boundaryGap : false,
+                            // inverse: true,
+                            axisLine: {onZero: false},
+                            splitLine: {show: false},
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax'
+                        },
+                        {
+                            type: 'category',
+                            gridIndex: 1,
+                            scale: true,
+                            boundaryGap : false,
+                            axisLine: {onZero: false},
+                            axisTick: {show: false},
+                            splitLine: {show: false},
+                            axisLabel: {show: false},
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax'
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            scale: true,
+                            splitArea: {
+                                show: true
+                            }
+                        },
+                        {
+                            scale: true,
+                            gridIndex: 1,
+                            splitNumber: 2,
+                            axisLabel: {show: false},
+                            axisLine: {show: false},
+                            axisTick: {show: false},
+                            splitLine: {show: false}
+                        }
+                    ],
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            xAxisIndex: [0, 1],
+                            start: 10,
+                            end: 100
+                        },
+                        {
+                            show: true,
+                            xAxisIndex: [0, 1],
+                            type: 'slider',
+                            bottom: 10,
+                            start: 10,
+                            end: 100
+                        }
+                    ],
+                    visualMap: {
+                        show: false,
+                        seriesIndex: 1,
+                        dimension: 6,
+                        pieces: [{
+                            value: 1,
+                            color: upColor
+                        }, {
+                            value: -1,
+                            color: downColor
+                        }]
+                    },
+                    series: [
+                        {
+                            name: 'Data Amount: ' + echarts.format.addCommas(rawDataCount),
+                            type: 'candlestick',
+                            itemStyle: {
+                                color: upColor,
+                                color0: downColor,
+                                borderColor: upBorderColor,
+                                borderColor0: downBorderColor
+                            },
+                            encode: {
+                                x: 0,
+                                y: [1, 4, 3, 2]
+                            }
+                        },
+                        {
+                            name: 'Volumn',
+                            type: 'bar',
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            itemStyle: {
+                                color: '#7fbe9e'
+                            },
+                            large: true,
+                            encode: {
+                                x: 0,
+                                y: 5
+                            }
+                        }
+                    ]
+                };
+
+                var panel = document.getElementById('panel0');
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Progressive by mod',
+                        '(1) Check click legend',
+                        '(2) Check visualMap after zoomed to normal mode'
+                    ],
+                    option: option,
+                    height: 550
+                });
+
+                // chart && chart.on('brushSelected', renderBrushed);
+
+                // function renderBrushed(params) {
+                //     var sum = 0;
+                //     var min = Infinity;
+                //     var max = -Infinity;
+                //     var countBySeries = [];
+                //     var brushComponent = params.batch[0];
+
+                //     var rawIndices = brushComponent.selected[0].dataIndex;
+                //     for (var i = 0; i < rawIndices.length; i++) {
+                //         var val = data.values[rawIndices[i]][1];
+                //         sum += val;
+                //         min = Math.min(val, min);
+                //         max = Math.max(val, max);
+                //     }
+
+                //     panel.innerHTML = [
+                //         '<h3>STATISTICS:</h3>',
+                //         'SUM of open: ' + (sum / rawIndices.length).toFixed(4) + '<br>',
+                //         'MIN of open: ' + min.toFixed(4) + '<br>',
+                //         'MAX of open: ' + max.toFixed(4) + '<br>'
+                //     ].join(' ');
+
+                // }
+
+                // chart && chart.dispatchAction({
+                //     type: 'brush',
+                //     areas: [
+                //         {
+                //             brushType: 'lineX',
+                //             coordRange: ['2016-06-02', '2016-06-20'],
+                //             xAxisIndex: 0
+                //         }
+                //     ]
+                // });
+
+            }
+
+            run();
+
+        });
+
+        </script>
+
+
+
+    </body>
+</html>

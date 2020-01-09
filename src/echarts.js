@@ -1,14 +1,21 @@
-
-/*!
- * ECharts, a free, powerful charting and visualization library.
- *
- * Copyright (c) 2017, Baidu Inc.
- * All rights reserved.
- *
- * LICENSE
- * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
- */
-
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 import {__DEV__} from './config';
 import * as zrender from 'zrender/src/zrender';
 import * as zrUtil from 'zrender/src/core/util';
@@ -36,6 +43,7 @@ import Scheduler from './stream/Scheduler';
 import lightTheme from './theme/light';
 import darkTheme from './theme/dark';
 import './component/dataset';
+import mapDataStorage from './coord/geo/mapDataStorage';
 
 var assert = zrUtil.assert;
 var each = zrUtil.each;
@@ -43,20 +51,24 @@ var isFunction = zrUtil.isFunction;
 var isObject = zrUtil.isObject;
 var parseClassType = ComponentModel.parseClassType;
 
-export var version = '4.0.4';
+export var version = '4.6.0';
 
 export var dependencies = {
-    zrender: '4.0.3'
+    zrender: '4.2.0'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
 
 var PRIORITY_PROCESSOR_FILTER = 1000;
+var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
+var PRIORITY_PROCESSOR_DATASTACK = 900;
 var PRIORITY_PROCESSOR_STATISTIC = 5000;
 
 var PRIORITY_VISUAL_LAYOUT = 1000;
+var PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
 var PRIORITY_VISUAL_GLOBAL = 2000;
 var PRIORITY_VISUAL_CHART = 3000;
+var PRIORITY_VISUAL_POST_CHART_LAYOUT = 3500;
 var PRIORITY_VISUAL_COMPONENT = 4000;
 // FIXME
 // necessary?
@@ -65,12 +77,15 @@ var PRIORITY_VISUAL_BRUSH = 5000;
 export var PRIORITY = {
     PROCESSOR: {
         FILTER: PRIORITY_PROCESSOR_FILTER,
+        SERIES_FILTER: PRIORITY_PROCESSOR_SERIES_FILTER,
         STATISTIC: PRIORITY_PROCESSOR_STATISTIC
     },
     VISUAL: {
         LAYOUT: PRIORITY_VISUAL_LAYOUT,
+        PROGRESSIVE_LAYOUT: PRIORITY_VISUAL_PROGRESSIVE_LAYOUT,
         GLOBAL: PRIORITY_VISUAL_GLOBAL,
         CHART: PRIORITY_VISUAL_CHART,
+        POST_CHART_LAYOUT: PRIORITY_VISUAL_POST_CHART_LAYOUT,
         COMPONENT: PRIORITY_VISUAL_COMPONENT,
         BRUSH: PRIORITY_VISUAL_BRUSH
     }
@@ -86,8 +101,13 @@ var OPTION_UPDATED = '__optionUpdated';
 var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
 
-function createRegisterEventWithLowercaseName(method) {
+function createRegisterEventWithLowercaseName(method, ignoreDisposed) {
     return function (eventName, handler, context) {
+        if (!ignoreDisposed && this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
         // Event name is all lowercase
         eventName = eventName && eventName.toLowerCase();
         Eventful.prototype[method].call(this, eventName, handler, context);
@@ -100,9 +120,9 @@ function createRegisterEventWithLowercaseName(method) {
 function MessageCenter() {
     Eventful.call(this);
 }
-MessageCenter.prototype.on = createRegisterEventWithLowercaseName('on');
-MessageCenter.prototype.off = createRegisterEventWithLowercaseName('off');
-MessageCenter.prototype.one = createRegisterEventWithLowercaseName('one');
+MessageCenter.prototype.on = createRegisterEventWithLowercaseName('on', true);
+MessageCenter.prototype.off = createRegisterEventWithLowercaseName('off', true);
+MessageCenter.prototype.one = createRegisterEventWithLowercaseName('one', true);
 zrUtil.mixin(MessageCenter, Eventful);
 
 /**
@@ -152,7 +172,7 @@ function ECharts(dom, theme, opts) {
     });
 
     /**
-     * Expect 60 pfs.
+     * Expect 60 fps.
      * @type {Function}
      * @private
      */
@@ -214,7 +234,7 @@ function ECharts(dom, theme, opts) {
      */
     this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
 
-    Eventful.call(this);
+    Eventful.call(this, this._ecEventProcessor = new EventProcessor());
 
     /**
      * @type {module:echarts~MessageCenter}
@@ -338,6 +358,10 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
     if (__DEV__) {
         assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
     }
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
 
     var silent;
     if (isObject(notMerge)) {
@@ -351,7 +375,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
     if (!this._model || notMerge) {
         var optionManager = new OptionManager(this._api);
         var theme = this._theme;
-        var ecModel = this._model = new GlobalModel(null, null, theme, optionManager);
+        var ecModel = this._model = new GlobalModel();
         ecModel.scheduler = this._scheduler;
         ecModel.init(null, null, theme, optionManager);
     }
@@ -383,7 +407,7 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
  * @DEPRECATED
  */
 echartsProto.setTheme = function () {
-    console.log('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+    console.error('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
 };
 
 /**
@@ -473,6 +497,11 @@ echartsProto.getSvgDataUrl = function () {
  * @param {string} [opts.excludeComponents]
  */
 echartsProto.getDataURL = function (opts) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     opts = opts || {};
     var excludeComponents = opts.excludeComponents;
     var ecModel = this._model;
@@ -513,6 +542,11 @@ echartsProto.getDataURL = function (opts) {
  * @param {string} [opts.backgroundColor]
  */
 echartsProto.getConnectedDataURL = function (opts) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     if (!env.canvasSupported) {
         return;
     }
@@ -556,6 +590,21 @@ echartsProto.getConnectedDataURL = function (opts) {
         targetCanvas.width = width;
         targetCanvas.height = height;
         var zr = zrender.init(targetCanvas);
+
+        // Background between the charts
+        if (opts.connectedBackgroundColor) {
+            zr.add(new graphic.Rect({
+                shape: {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height
+                },
+                style: {
+                    fill: opts.connectedBackgroundColor
+                }
+            }));
+        }
 
         each(canvasList, function (item) {
             var img = new graphic.Image({
@@ -617,6 +666,11 @@ echartsProto.convertToPixel = zrUtil.curry(doConvertPixel, 'convertToPixel');
 echartsProto.convertFromPixel = zrUtil.curry(doConvertPixel, 'convertFromPixel');
 
 function doConvertPixel(methodName, finder, value) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     var ecModel = this._model;
     var coordSysList = this._coordSysMgr.getCoordinateSystems();
     var result;
@@ -657,6 +711,11 @@ function doConvertPixel(methodName, finder, value) {
  * @return {boolean} result
  */
 echartsProto.containPixel = function (finder, value) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     var ecModel = this._model;
     var result;
 
@@ -791,13 +850,16 @@ var updateMethods = {
 
         scheduler.performDataProcessorTasks(ecModel, payload);
 
-        coordSysMgr.update(ecModel, api);
-
         // Current stream render is not supported in data process. So we can update
         // stream modes after data processing, where the filtered data is used to
-        // deteming whether use progressive rendering. And we update stream modes
-        // after coordinate system updated, then full coord info can be fetched.
+        // deteming whether use progressive rendering.
         updateStreamModes(this, ecModel);
+
+        // We update stream modes before coordinate system updated, then the modes info
+        // can be fetched when coord sys updating (consider the barGrid extent fix). But
+        // the drawback is the full coord info can not be fetched. Fortunately this full
+        // coord is not requied in stream mode updater currently.
+        coordSysMgr.update(ecModel, api);
 
         clearColorPalette(ecModel);
         scheduler.performVisualTasks(ecModel, payload);
@@ -1026,6 +1088,10 @@ echartsProto.resize = function (opts) {
     if (__DEV__) {
         assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
     }
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
 
     this._zr.resize(opts);
 
@@ -1068,6 +1134,11 @@ function updateStreamModes(ecIns, ecModel) {
  * @param  {Object} [cfg]
  */
 echartsProto.showLoading = function (name, cfg) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     if (isObject(name)) {
         cfg = name;
         name = '';
@@ -1092,6 +1163,11 @@ echartsProto.showLoading = function (name, cfg) {
  * Hide loading effect
  */
 echartsProto.hideLoading = function () {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     this._loadingFX && this._zr.remove(this._loadingFX);
     this._loadingFX = null;
 };
@@ -1115,10 +1191,15 @@ echartsProto.makeActionFromEvent = function (eventObj) {
  * @param {boolean} [opt.flush=undefined]
  *                  true: Flush immediately, and then pixel in canvas can be fetched
  *                      immediately. Caution: it might affect performance.
- *                  false: Not not flush.
+ *                  false: Not flush.
  *                  undefined: Auto decide whether perform flush.
  */
 echartsProto.dispatchAction = function (payload, opt) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     if (!isObject(opt)) {
         opt = {silent: !!opt};
     }
@@ -1287,6 +1368,11 @@ function bindRenderedEvent(zr, ecIns) {
  * @param {Array|TypedArray} params.data
  */
 echartsProto.appendData = function (params) {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
+
     var seriesIndex = params.seriesIndex;
     var ecModel = this.getModel();
     var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
@@ -1312,9 +1398,9 @@ echartsProto.appendData = function (params) {
  * Register event
  * @method
  */
-echartsProto.on = createRegisterEventWithLowercaseName('on');
-echartsProto.off = createRegisterEventWithLowercaseName('off');
-echartsProto.one = createRegisterEventWithLowercaseName('one');
+echartsProto.on = createRegisterEventWithLowercaseName('on', false);
+echartsProto.off = createRegisterEventWithLowercaseName('off', false);
+echartsProto.one = createRegisterEventWithLowercaseName('one', false);
 
 /**
  * Prepare view instances of charts and components
@@ -1472,7 +1558,7 @@ function renderSeries(ecIns, ecModel, api, payload, dirtyMap) {
     scheduler.unfinished |= unfinished;
 
     // If use hover layer
-    updateHoverLayerStatus(ecIns._zr, ecModel);
+    updateHoverLayerStatus(ecIns, ecModel);
 
     // Add aria
     aria(ecIns._zr.dom, ecModel);
@@ -1495,31 +1581,83 @@ var MOUSE_EVENT_NAMES = [
  */
 echartsProto._initEvents = function () {
     each(MOUSE_EVENT_NAMES, function (eveName) {
-        this._zr.on(eveName, function (e) {
+        var handler = function (e) {
             var ecModel = this.getModel();
             var el = e.target;
             var params;
+            var isGlobalOut = eveName === 'globalout';
 
             // no e.target when 'globalout'.
-            if (eveName === 'globalout') {
+            if (isGlobalOut) {
                 params = {};
             }
             else if (el && el.dataIndex != null) {
                 var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
-                params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
+                params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType, el) || {};
             }
             // If element has custom eventData of components
             else if (el && el.eventData) {
                 params = zrUtil.extend({}, el.eventData);
             }
 
+            // Contract: if params prepared in mouse event,
+            // these properties must be specified:
+            // {
+            //    componentType: string (component main type)
+            //    componentIndex: number
+            // }
+            // Otherwise event query can not work.
+
             if (params) {
+                var componentType = params.componentType;
+                var componentIndex = params.componentIndex;
+                // Special handling for historic reason: when trigger by
+                // markLine/markPoint/markArea, the componentType is
+                // 'markLine'/'markPoint'/'markArea', but we should better
+                // enable them to be queried by seriesIndex, since their
+                // option is set in each series.
+                if (componentType === 'markLine'
+                    || componentType === 'markPoint'
+                    || componentType === 'markArea'
+                ) {
+                    componentType = 'series';
+                    componentIndex = params.seriesIndex;
+                }
+                var model = componentType && componentIndex != null
+                    && ecModel.getComponent(componentType, componentIndex);
+                var view = model && this[
+                    model.mainType === 'series' ? '_chartsMap' : '_componentsMap'
+                ][model.__viewId];
+
+                if (__DEV__) {
+                    // `event.componentType` and `event[componentTpype + 'Index']` must not
+                    // be missed, otherwise there is no way to distinguish source component.
+                    // See `dataFormat.getDataParams`.
+                    if (!isGlobalOut && !(model && view)) {
+                        console.warn('model or view can not be found by params');
+                    }
+                }
+
                 params.event = e;
                 params.type = eveName;
+
+                this._ecEventProcessor.eventInfo = {
+                    targetEl: el,
+                    packedEvent: params,
+                    model: model,
+                    view: view
+                };
+
                 this.trigger(eveName, params);
             }
-
-        }, this);
+        };
+        // Consider that some component (like tooltip, brush, ...)
+        // register zr event handler, but user event handler might
+        // do anything, such as call `setOption` or `dispatchAction`,
+        // which probably update any of the content and probably
+        // cause problem if it is called previous other inner handlers.
+        handler.zrEventfulCallAtLast = true;
+        this._zr.on(eveName, handler, this);
     }, this);
 
     each(eventActionMap, function (actionType, eventType) {
@@ -1540,6 +1678,10 @@ echartsProto.isDisposed = function () {
  * Clear
  */
 echartsProto.clear = function () {
+    if (this._disposed) {
+        disposedWarning(this.id);
+        return;
+    }
     this.setOption({ series: [] }, true);
 };
 
@@ -1548,9 +1690,7 @@ echartsProto.clear = function () {
  */
 echartsProto.dispose = function () {
     if (this._disposed) {
-        if (__DEV__) {
-            console.warn('Instance ' + this.id + ' has been disposed');
-        }
+        disposedWarning(this.id);
         return;
     }
     this._disposed = true;
@@ -1575,19 +1715,32 @@ echartsProto.dispose = function () {
 
 zrUtil.mixin(ECharts, Eventful);
 
-function updateHoverLayerStatus(zr, ecModel) {
+function disposedWarning(id) {
+    if (__DEV__) {
+        console.warn('Instance ' + id + ' has been disposed');
+    }
+}
+
+function updateHoverLayerStatus(ecIns, ecModel) {
+    var zr = ecIns._zr;
     var storage = zr.storage;
     var elCount = 0;
+
     storage.traverse(function (el) {
-        if (!el.isGroup) {
-            elCount++;
-        }
+        elCount++;
     });
+
     if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
-        storage.traverse(function (el) {
-            if (!el.isGroup) {
-                // Don't switch back.
-                el.useHoverLayer = true;
+        ecModel.eachSeries(function (seriesModel) {
+            if (seriesModel.preventUsingHoverLayer) {
+                return;
+            }
+            var chartView = ecIns._chartsMap[seriesModel.__viewId];
+            if (chartView.__alive) {
+                chartView.group.traverse(function (el) {
+                    // Don't switch back.
+                    el.useHoverLayer = true;
+                });
             }
         });
     }
@@ -1656,6 +1809,127 @@ function createExtensionAPI(ecInstance) {
     });
 }
 
+
+/**
+ * @class
+ * Usage of query:
+ * `chart.on('click', query, handler);`
+ * The `query` can be:
+ * + The component type query string, only `mainType` or `mainType.subType`,
+ *   like: 'xAxis', 'series', 'xAxis.category' or 'series.line'.
+ * + The component query object, like:
+ *   `{seriesIndex: 2}`, `{seriesName: 'xx'}`, `{seriesId: 'some'}`,
+ *   `{xAxisIndex: 2}`, `{xAxisName: 'xx'}`, `{xAxisId: 'some'}`.
+ * + The data query object, like:
+ *   `{dataIndex: 123}`, `{dataType: 'link'}`, `{name: 'some'}`.
+ * + The other query object (cmponent customized query), like:
+ *   `{element: 'some'}` (only available in custom series).
+ *
+ * Caveat: If a prop in the `query` object is `null/undefined`, it is the
+ * same as there is no such prop in the `query` object.
+ */
+function EventProcessor() {
+    // These info required: targetEl, packedEvent, model, view
+    this.eventInfo;
+}
+EventProcessor.prototype = {
+    constructor: EventProcessor,
+
+    normalizeQuery: function (query) {
+        var cptQuery = {};
+        var dataQuery = {};
+        var otherQuery = {};
+
+        // `query` is `mainType` or `mainType.subType` of component.
+        if (zrUtil.isString(query)) {
+            var condCptType = parseClassType(query);
+            // `.main` and `.sub` may be ''.
+            cptQuery.mainType = condCptType.main || null;
+            cptQuery.subType = condCptType.sub || null;
+        }
+        // `query` is an object, convert to {mainType, index, name, id}.
+        else {
+            // `xxxIndex`, `xxxName`, `xxxId`, `name`, `dataIndex`, `dataType` is reserved,
+            // can not be used in `compomentModel.filterForExposedEvent`.
+            var suffixes = ['Index', 'Name', 'Id'];
+            var dataKeys = {name: 1, dataIndex: 1, dataType: 1};
+            zrUtil.each(query, function (val, key) {
+                var reserved = false;
+                for (var i = 0; i < suffixes.length; i++) {
+                    var propSuffix = suffixes[i];
+                    var suffixPos = key.lastIndexOf(propSuffix);
+                    if (suffixPos > 0 && suffixPos === key.length - propSuffix.length) {
+                        var mainType = key.slice(0, suffixPos);
+                        // Consider `dataIndex`.
+                        if (mainType !== 'data') {
+                            cptQuery.mainType = mainType;
+                            cptQuery[propSuffix.toLowerCase()] = val;
+                            reserved = true;
+                        }
+                    }
+                }
+                if (dataKeys.hasOwnProperty(key)) {
+                    dataQuery[key] = val;
+                    reserved = true;
+                }
+                if (!reserved) {
+                    otherQuery[key] = val;
+                }
+            });
+        }
+
+        return {
+            cptQuery: cptQuery,
+            dataQuery: dataQuery,
+            otherQuery: otherQuery
+        };
+    },
+
+    filter: function (eventType, query, args) {
+        // They should be assigned before each trigger call.
+        var eventInfo = this.eventInfo;
+
+        if (!eventInfo) {
+            return true;
+        }
+
+        var targetEl = eventInfo.targetEl;
+        var packedEvent = eventInfo.packedEvent;
+        var model = eventInfo.model;
+        var view = eventInfo.view;
+
+        // For event like 'globalout'.
+        if (!model || !view) {
+            return true;
+        }
+
+        var cptQuery = query.cptQuery;
+        var dataQuery = query.dataQuery;
+
+        return check(cptQuery, model, 'mainType')
+            && check(cptQuery, model, 'subType')
+            && check(cptQuery, model, 'index', 'componentIndex')
+            && check(cptQuery, model, 'name')
+            && check(cptQuery, model, 'id')
+            && check(dataQuery, packedEvent, 'name')
+            && check(dataQuery, packedEvent, 'dataIndex')
+            && check(dataQuery, packedEvent, 'dataType')
+            && (!view.filterForExposedEvent || view.filterForExposedEvent(
+                eventType, query.otherQuery, targetEl, packedEvent
+            ));
+
+        function check(query, host, prop, propOnHost) {
+            return query[prop] == null || host[propOnHost || prop] === query[prop];
+        }
+    },
+
+    afterTrigger: function () {
+        // Make sure the eventInfo wont be used in next trigger.
+        this.eventInfo = null;
+    }
+};
+
+
 /**
  * @type {Object} key: actionType.
  * @inner
@@ -1710,8 +1984,6 @@ var idBase = new Date() - 0;
 var groupIdBase = new Date() - 0;
 var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 
-var mapDataStores = {};
-
 function enableConnect(chart) {
     var STATUS_PENDING = 0;
     var STATUS_UPDATING = 1;
@@ -1758,7 +2030,7 @@ function enableConnect(chart) {
  * @param {Object} [theme]
  * @param {Object} opts
  * @param {number} [opts.devicePixelRatio] Use window.devicePixelRatio by default
- * @param {string} [opts.renderer] Currently only 'canvas' is supported.
+ * @param {string} [opts.renderer] Can choose 'canvas' or 'svg' to render the chart.
  * @param {number} [opts.width] Use clientWidth of the input `dom` by default.
  *                              Can be 'auto' (the same as null/undefined)
  * @param {number} [opts.height] Use clientHeight of the input `dom` by default.
@@ -1797,7 +2069,10 @@ export function init(dom, theme, opts) {
                 || (!dom.clientHeight && (!opts || opts.height == null))
             )
         ) {
-            console.warn('Can\'t get dom width or height');
+            console.warn('Can\'t get DOM width or height. Please check '
+            + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
+            + 'For example, you may need to call this in the callback '
+            + 'of window.onload.');
         }
     }
 
@@ -1856,7 +2131,7 @@ export function dispose(chart) {
     if (typeof chart === 'string') {
         chart = instances[chart];
     }
-    else if (!(chart instanceof ECharts)){
+    else if (!(chart instanceof ECharts)) {
         // Try to treat as dom
         chart = getInstanceByDom(chart);
     }
@@ -2105,10 +2380,10 @@ export function setCanvasCreator(creator) {
 
 /**
  * @param {string} mapName
- * @param {Object|string} geoJson
+ * @param {Array.<Object>|Object|string} geoJson
  * @param {Object} [specialAreas]
  *
- * @example
+ * @example GeoJSON
  *     $.get('USA.json', function (geoJson) {
  *         echarts.registerMap('USA', geoJson);
  *         // Or
@@ -2117,20 +2392,20 @@ export function setCanvasCreator(creator) {
  *             specialAreas: {}
  *         })
  *     });
+ *
+ *     $.get('airport.svg', function (svg) {
+ *         echarts.registerMap('airport', {
+ *             svg: svg
+ *         }
+ *     });
+ *
+ *     echarts.registerMap('eu', [
+ *         {svg: eu-topographic.svg},
+ *         {geoJSON: eu.json}
+ *     ])
  */
 export function registerMap(mapName, geoJson, specialAreas) {
-    if (geoJson.geoJson && !geoJson.features) {
-        specialAreas = geoJson.specialAreas;
-        geoJson = geoJson.geoJson;
-    }
-    if (typeof geoJson === 'string') {
-        geoJson = (typeof JSON !== 'undefined' && JSON.parse)
-            ? JSON.parse(geoJson) : (new Function('return (' + geoJson + ');'))();
-    }
-    mapDataStores[mapName] = {
-        geoJson: geoJson,
-        specialAreas: specialAreas
-    };
+    mapDataStorage.registerMap(mapName, geoJson, specialAreas);
 }
 
 /**
@@ -2138,12 +2413,17 @@ export function registerMap(mapName, geoJson, specialAreas) {
  * @return {Object}
  */
 export function getMap(mapName) {
-    return mapDataStores[mapName];
+    // For backward compatibility, only return the first one.
+    var records = mapDataStorage.retrieveMap(mapName);
+    return records && records[0] && {
+        geoJson: records[0].geoJSON,
+        specialAreas: records[0].specialAreas
+    };
 }
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);
-registerProcessor(PRIORITY_PROCESSOR_STATISTIC, dataStack);
+registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStack);
 registerLoading('default', loadingDefault);
 
 // Default actions

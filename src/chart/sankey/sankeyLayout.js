@@ -1,11 +1,25 @@
-/**
- * @file The layout algorithm of sankey view
- * @author  Deqing Li(annong035@gmail.com)
- */
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
 import * as layout from '../../util/layout';
-import nest from '../../util/array/nest';
 import * as zrUtil from 'zrender/src/core/util';
+import {groupData} from '../../util/model';
 
 export default function (ecModel, api, payload) {
 
@@ -32,10 +46,13 @@ export default function (ecModel, api, payload) {
             return node.getLayout().value === 0;
         });
 
-        var iterations = filteredNodes.length !== 0
-            ? 0 : seriesModel.get('layoutIterations');
+        var iterations = filteredNodes.length !== 0 ? 0 : seriesModel.get('layoutIterations');
 
-        layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations);
+        var orient = seriesModel.get('orient');
+
+        var nodeAlign = seriesModel.get('nodeAlign');
+
+        layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign);
     });
 }
 
@@ -55,10 +72,10 @@ function getViewRect(seriesModel, api) {
     );
 }
 
-function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations) {
-    computeNodeBreadths(nodes, nodeWidth, width);
-    computeNodeDepths(nodes, edges, height, nodeGap, iterations);
-    computeEdgeDepths(nodes);
+function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign) {
+    computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign);
+    computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient);
+    computeEdgeDepths(nodes, orient);
 }
 
 /**
@@ -76,50 +93,134 @@ function computeNodeValues(nodes) {
 }
 
 /**
- * Compute the x-position for each node
+ * Compute the x-position for each node.
+ *
+ * Here we use Kahn algorithm to detect cycle when we traverse
+ * the node to computer the initial x position.
  *
  * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
  * @param  {number} nodeWidth  the dx of the node
  * @param  {number} width  the whole width of the area to draw the view
  */
-function computeNodeBreadths(nodes, nodeWidth, width) {
-    var remainNodes = nodes;
-    var nextNode = null;
+function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign) {
+    // Used to mark whether the edge is deleted. if it is deleted,
+    // the value is 0, otherwise it is 1.
+    var remainEdges = [];
+    // Storage each node's indegree.
+    var indegreeArr = [];
+    //Used to storage the node with indegree is equal to 0.
+    var zeroIndegrees = [];
+    var nextTargetNode = [];
     var x = 0;
     var kx = 0;
 
-    while (remainNodes.length) {
-        nextNode = [];
-        for (var i = 0, len = remainNodes.length; i < len; i++) {
-            var node = remainNodes[i];
-            node.setLayout({x: x}, true);
-            node.setLayout({dx: nodeWidth}, true);
-            for (var j = 0, lenj = node.outEdges.length; j < lenj; j++) {
-                nextNode.push(node.outEdges[j].node2);
+    for (var i = 0; i < edges.length; i++) {
+        remainEdges[i] = 1;
+    }
+    for (i = 0; i < nodes.length; i++) {
+        indegreeArr[i] = nodes[i].inEdges.length;
+        if (indegreeArr[i] === 0) {
+            zeroIndegrees.push(nodes[i]);
+        }
+    }
+    var maxNodeDepth = -1;
+    // Traversing nodes using topological sorting to calculate the
+    // horizontal(if orient === 'horizontal') or vertical(if orient === 'vertical')
+    // position of the nodes.
+    while (zeroIndegrees.length) {
+        for (var idx = 0; idx < zeroIndegrees.length; idx++) {
+            var node = zeroIndegrees[idx];
+            var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+            var isItemDepth = item.depth != null && item.depth >= 0;
+            if (isItemDepth && item.depth > maxNodeDepth) {
+                maxNodeDepth = item.depth;
+            }
+            node.setLayout({depth: isItemDepth ? item.depth : x}, true);
+            orient === 'vertical'
+                ? node.setLayout({dy: nodeWidth}, true)
+                : node.setLayout({dx: nodeWidth}, true);
+
+            for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
+                var edge = node.outEdges[edgeIdx];
+                var indexEdge = edges.indexOf(edge);
+                remainEdges[indexEdge] = 0;
+                var targetNode = edge.node2;
+                var nodeIndex = nodes.indexOf(targetNode);
+                if (--indegreeArr[nodeIndex] === 0 && nextTargetNode.indexOf(targetNode) < 0) {
+                    nextTargetNode.push(targetNode);
+                }
             }
         }
-        remainNodes = nextNode;
         ++x;
+        zeroIndegrees = nextTargetNode;
+        nextTargetNode = [];
     }
 
-    moveSinksRight(nodes, x);
-    kx = (width - nodeWidth) / (x - 1);
+    for (i = 0; i < remainEdges.length; i++) {
+        if (remainEdges[i] === 1) {
+            throw new Error('Sankey is a DAG, the original data has cycle!');
+        }
+    }
 
-    scaleNodeBreadths(nodes, kx);
+    var maxDepth = maxNodeDepth > x - 1 ? maxNodeDepth : x - 1;
+    if (nodeAlign && nodeAlign !== 'left') {
+        adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth);
+    }
+    var kx = orient === 'vertical'
+                ? (height - nodeWidth) / maxDepth
+                : (width - nodeWidth) / maxDepth;
+
+    scaleNodeBreadths(nodes, kx, orient);
+}
+
+function isNodeDepth(node) {
+    var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+    return item.depth != null && item.depth >= 0;
+}
+
+function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
+    if (nodeAlign === 'right') {
+        var nextSourceNode = [];
+        var remainNodes = nodes;
+        var nodeHeight = 0;
+        while (remainNodes.length) {
+            for (var i = 0; i < remainNodes.length; i++) {
+                var node = remainNodes[i];
+                node.setLayout({skNodeHeight: nodeHeight}, true);
+                for (var j = 0; j < node.inEdges.length; j++) {
+                    var edge = node.inEdges[j];
+                    if (nextSourceNode.indexOf(edge.node1) < 0) {
+                        nextSourceNode.push(edge.node1);
+                    }
+                }
+            }
+            remainNodes = nextSourceNode;
+            nextSourceNode = [];
+            ++nodeHeight;
+        }
+
+        zrUtil.each(nodes, function (node) {
+            if (!isNodeDepth(node)) {
+                node.setLayout({depth: Math.max(0, maxDepth - node.getLayout().skNodeHeight)}, true);
+            }
+        });
+    }
+    else if (nodeAlign === 'justify') {
+        moveSinksRight(nodes, maxDepth);
+    }
 }
 
 /**
  * All the node without outEgdes are assigned maximum x-position and
  *     be aligned in the last column.
  *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
- * @param {number} x  value (x-1) use to assign to node without outEdges
- *     as x-position
+ * @param {module:echarts/data/Graph~Node} nodes.  node of sankey view.
+ * @param {number} maxDepth.  use to assign to node without outEdges as x-position.
  */
-function moveSinksRight(nodes, x) {
+function moveSinksRight(nodes, maxDepth) {
     zrUtil.each(nodes, function (node) {
-        if (!node.outEdges.length) {
-            node.setLayout({x: x - 1}, true);
+        if (!isNodeDepth(node) && !node.outEdges.length) {
+            node.setLayout({depth: maxDepth}, true);
         }
     });
 }
@@ -130,10 +231,12 @@ function moveSinksRight(nodes, x) {
  * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
  * @param {number} kx   multiple used to scale nodes
  */
-function scaleNodeBreadths(nodes, kx) {
+function scaleNodeBreadths(nodes, kx, orient) {
     zrUtil.each(nodes, function (node) {
-        var nodeX = node.getLayout().x * kx;
-        node.setLayout({x: nodeX}, true);
+        var nodeDepth = node.getLayout().depth * kx;
+        orient === 'vertical'
+            ? node.setLayout({y: nodeDepth}, true)
+            : node.setLayout({x: nodeDepth}, true);
     });
 }
 
@@ -147,29 +250,38 @@ function scaleNodeBreadths(nodes, kx) {
  *     in the same column.
  * @param {number} iterations  the number of iterations for the algorithm
  */
-function computeNodeDepths(nodes, edges, height, nodeGap, iterations) {
-    var nodesByBreadth = nest()
-        .key(function (d) {
-            return d.getLayout().x;
-        })
-        .sortKeys(ascending)
-        .entries(nodes)
-        .map(function (d) {
-            return d.values;
-        });
+function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient) {
+    var nodesByBreadth = prepareNodesByBreadth(nodes, orient);
 
-    initializeNodeDepth(nodes, nodesByBreadth, edges, height, nodeGap);
-    resolveCollisions(nodesByBreadth, nodeGap, height);
+    initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient);
+    resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
 
     for (var alpha = 1; iterations > 0; iterations--) {
         // 0.99 is a experience parameter, ensure that each iterations of
         // changes as small as possible.
         alpha *= 0.99;
-        relaxRightToLeft(nodesByBreadth, alpha);
-        resolveCollisions(nodesByBreadth, nodeGap, height);
-        relaxLeftToRight(nodesByBreadth, alpha);
-        resolveCollisions(nodesByBreadth, nodeGap, height);
+        relaxRightToLeft(nodesByBreadth, alpha, orient);
+        resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
+        relaxLeftToRight(nodesByBreadth, alpha, orient);
+        resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
     }
+}
+
+function prepareNodesByBreadth(nodes, orient) {
+    var nodesByBreadth = [];
+    var keyAttr = orient === 'vertical' ? 'y' : 'x';
+
+    var groupResult = groupData(nodes, function (node) {
+        return node.getLayout()[keyAttr];
+    });
+    groupResult.keys.sort(function (a, b) {
+        return a - b;
+    });
+    zrUtil.each(groupResult.keys, function (key) {
+        nodesByBreadth.push(groupResult.buckets.get(key));
+    });
+
+    return nodesByBreadth;
 }
 
 /**
@@ -182,33 +294,39 @@ function computeNodeDepths(nodes, edges, height, nodeGap, iterations) {
  * @param {number} height  the whole height of the area to draw the view
  * @param {number} nodeGap  the vertical distance between two nodes
  */
-function initializeNodeDepth(nodes, nodesByBreadth, edges, height, nodeGap) {
-    var kyArray = [];
+function initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient) {
+    var minKy = Infinity;
     zrUtil.each(nodesByBreadth, function (nodes) {
         var n = nodes.length;
         var sum = 0;
         zrUtil.each(nodes, function (node) {
             sum += node.getLayout().value;
         });
-        var ky = (height - (n - 1) * nodeGap) / sum;
-        kyArray.push(ky);
-    });
+        var ky = orient === 'vertical'
+                    ? (width - (n - 1) * nodeGap) / sum
+                    : (height - (n - 1) * nodeGap) / sum;
 
-    kyArray.sort(function (a, b) {
-        return a - b;
+        if (ky < minKy) {
+            minKy = ky;
+        }
     });
-    var ky0 = kyArray[0];
 
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node, i) {
-            node.setLayout({y: i}, true);
-            var nodeDy = node.getLayout().value * ky0;
-            node.setLayout({dy: nodeDy}, true);
+            var nodeDy = node.getLayout().value * minKy;
+            if (orient === 'vertical') {
+                node.setLayout({x: i}, true);
+                node.setLayout({dx: nodeDy}, true);
+            }
+            else {
+                node.setLayout({y: i}, true);
+                node.setLayout({dy: nodeDy}, true);
+            }
         });
     });
 
     zrUtil.each(edges, function (edge) {
-        var edgeDy = +edge.getValue() * ky0;
+        var edgeDy = +edge.getValue() * minKy;
         edge.setLayout({dy: edgeDy}, true);
     });
 }
@@ -221,40 +339,49 @@ function initializeNodeDepth(nodes, nodesByBreadth, edges, height, nodeGap) {
  * @param {number} nodeGap  the vertical distance between two nodes
  * @param {number} height  the whole height of the area to draw the view
  */
-function resolveCollisions(nodesByBreadth, nodeGap, height) {
+function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
+    var keyAttr = orient === 'vertical' ? 'x' : 'y';
     zrUtil.each(nodesByBreadth, function (nodes) {
+        nodes.sort(function (a, b) {
+            return a.getLayout()[keyAttr] - b.getLayout()[keyAttr];
+        });
+        var nodeX;
         var node;
         var dy;
         var y0 = 0;
         var n = nodes.length;
-        var i;
-
-        nodes.sort(ascendingDepth);
-
-        for (i = 0; i < n; i++) {
+        var nodeDyAttr = orient === 'vertical' ? 'dx' : 'dy';
+        for (var i = 0; i < n; i++) {
             node = nodes[i];
-            dy = y0 - node.getLayout().y;
+            dy = y0 - node.getLayout()[keyAttr];
             if (dy > 0) {
-                var nodeY = node.getLayout().y + dy;
-                node.setLayout({y: nodeY}, true);
+                nodeX = node.getLayout()[keyAttr] + dy;
+                orient === 'vertical'
+                    ? node.setLayout({x: nodeX}, true)
+                    : node.setLayout({y: nodeX}, true);
             }
-            y0 = node.getLayout().y + node.getLayout().dy + nodeGap;
+            y0 = node.getLayout()[keyAttr] + node.getLayout()[nodeDyAttr] + nodeGap;
         }
-
-        // if the bottommost node goes outside the bounds, push it back up
-        dy = y0 - nodeGap - height;
+        var viewWidth = orient === 'vertical' ? width : height;
+        // If the bottommost node goes outside the bounds, push it back up
+        dy = y0 - nodeGap - viewWidth;
         if (dy > 0) {
-            var nodeY = node.getLayout().y - dy;
-            node.setLayout({y: nodeY}, true);
-            y0 = node.getLayout().y;
+            nodeX = node.getLayout()[keyAttr] - dy;
+            orient === 'vertical'
+                ? node.setLayout({x: nodeX}, true)
+                : node.setLayout({y: nodeX}, true);
+
+            y0 = nodeX;
             for (i = n - 2; i >= 0; --i) {
                 node = nodes[i];
-                dy = node.getLayout().y + node.getLayout().dy + nodeGap - y0;
+                dy = node.getLayout()[keyAttr] + node.getLayout()[nodeDyAttr] + nodeGap - y0;
                 if (dy > 0) {
-                    nodeY = node.getLayout().y - dy;
-                    node.setLayout({y: nodeY}, true);
+                    nodeX = node.getLayout()[keyAttr] - dy;
+                    orient === 'vertical'
+                        ? node.setLayout({x: nodeX}, true)
+                        : node.setLayout({y: nodeX}, true);
                 }
-                y0 = node.getLayout().y;
+                y0 = node.getLayout()[keyAttr];
             }
         }
     });
@@ -267,20 +394,54 @@ function resolveCollisions(nodesByBreadth, nodeGap, height) {
  *     group by the array of all sankey nodes based on the node x-position.
  * @param {number} alpha  parameter used to adjust the nodes y-position
  */
-function relaxRightToLeft(nodesByBreadth, alpha) {
+function relaxRightToLeft(nodesByBreadth, alpha, orient) {
     zrUtil.each(nodesByBreadth.slice().reverse(), function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.outEdges.length) {
-                var y = sum(node.outEdges, weightedTarget) / sum(node.outEdges, getEdgeValue);
-                var nodeY = node.getLayout().y + (y - center(node)) * alpha;
-                node.setLayout({y: nodeY}, true);
+                var y = sum(node.outEdges, weightedTarget, orient)
+                        / sum(node.outEdges, getEdgeValue, orient);
+                if (orient === 'vertical') {
+                    var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
+                    node.setLayout({x: nodeX}, true);
+                }
+                else {
+                    var nodeY = node.getLayout().y + (y - center(node, orient)) * alpha;
+                    node.setLayout({y: nodeY}, true);
+                }
             }
         });
     });
 }
 
-function weightedTarget(edge) {
-    return center(edge.node2) * edge.getValue();
+function weightedTarget(edge, orient) {
+    return center(edge.node2, orient) * edge.getValue();
+}
+
+function weightedSource(edge, orient) {
+    return center(edge.node1, orient) * edge.getValue();
+}
+
+function center(node, orient) {
+    return orient === 'vertical'
+            ? node.getLayout().x + node.getLayout().dx / 2
+            : node.getLayout().y + node.getLayout().dy / 2;
+}
+
+function getEdgeValue(edge) {
+    return edge.getValue();
+}
+
+function sum(array, f, orient) {
+    var sum = 0;
+    var len = array.length;
+    var i = -1;
+    while (++i < len) {
+        var value = +f.call(array, array[i], orient);
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    }
+    return sum;
 }
 
 /**
@@ -290,20 +451,23 @@ function weightedTarget(edge) {
  *     group by the array of all sankey nodes based on the node x-position.
  * @param {number} alpha  parameter used to adjust the nodes y-position
  */
-function relaxLeftToRight(nodesByBreadth, alpha) {
+function relaxLeftToRight(nodesByBreadth, alpha, orient) {
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.inEdges.length) {
-                var y = sum(node.inEdges, weightedSource) / sum(node.inEdges, getEdgeValue);
-                var nodeY = node.getLayout().y + (y - center(node)) * alpha;
-                node.setLayout({y: nodeY}, true);
+                var y = sum(node.inEdges, weightedSource, orient)
+                        / sum(node.inEdges, getEdgeValue, orient);
+                if (orient === 'vertical') {
+                    var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
+                    node.setLayout({x: nodeX}, true);
+                }
+                else {
+                    var nodeY = node.getLayout().y + (y - center(node, orient)) * alpha;
+                    node.setLayout({y: nodeY}, true);
+                }
             }
         });
     });
-}
-
-function weightedSource(edge) {
-    return center(edge.node1) * edge.getValue();
 }
 
 /**
@@ -311,10 +475,15 @@ function weightedSource(edge) {
  *
  * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
  */
-function computeEdgeDepths(nodes) {
+function computeEdgeDepths(nodes, orient) {
+    var keyAttr = orient === 'vertical' ? 'x' : 'y';
     zrUtil.each(nodes, function (node) {
-        node.outEdges.sort(ascendingTargetDepth);
-        node.inEdges.sort(ascendingSourceDepth);
+        node.outEdges.sort(function (a, b) {
+            return a.node2.getLayout()[keyAttr] - b.node2.getLayout()[keyAttr];
+        });
+        node.inEdges.sort(function (a, b) {
+            return a.node1.getLayout()[keyAttr] - b.node1.getLayout()[keyAttr];
+        });
     });
     zrUtil.each(nodes, function (node) {
         var sy = 0;
@@ -328,41 +497,4 @@ function computeEdgeDepths(nodes) {
             ty += edge.getLayout().dy;
         });
     });
-}
-
-function ascendingTargetDepth(a, b) {
-    return a.node2.getLayout().y - b.node2.getLayout().y;
-}
-
-function ascendingSourceDepth(a, b) {
-    return a.node1.getLayout().y - b.node1.getLayout().y;
-}
-
-function sum(array, f) {
-    var sum = 0;
-    var len = array.length;
-    var i = -1;
-    while (++i < len) {
-        var value = +f.call(array, array[i], i);
-        if (!isNaN(value)) {
-            sum += value;
-        }
-    }
-    return sum;
-}
-
-function center(node) {
-    return node.getLayout().y + node.getLayout().dy / 2;
-}
-
-function ascendingDepth(a, b) {
-    return a.getLayout().y - b.getLayout().y;
-}
-
-function ascending(a, b) {
-    return a < b ? -1 : a > b ? 1 : a === b ? 0 : NaN;
-}
-
-function getEdgeValue(edge) {
-    return edge.getValue();
 }

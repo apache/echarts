@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw from '../../chart/helper/SymbolDraw';
 import * as numberUtil from '../../util/number';
@@ -83,18 +102,28 @@ export default MarkerView.extend({
 
         mpData.each(function (idx) {
             var itemModel = mpData.getItemModel(idx);
+            var symbol = itemModel.getShallow('symbol');
             var symbolSize = itemModel.getShallow('symbolSize');
-            if (typeof symbolSize === 'function') {
-                // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
-                symbolSize = symbolSize(
-                    mpModel.getRawValue(idx), mpModel.getDataParams(idx)
-                );
+            var isFnSymbol = zrUtil.isFunction(symbol);
+            var isFnSymbolSize = zrUtil.isFunction(symbolSize);
+
+            if (isFnSymbol || isFnSymbolSize) {
+                var rawIdx = mpModel.getRawValue(idx);
+                var dataParams = mpModel.getDataParams(idx);
+                if (isFnSymbol) {
+                    symbol = symbol(rawIdx, dataParams);
+                }
+                if (isFnSymbolSize) {
+                    // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
+                    symbolSize = symbolSize(rawIdx, dataParams);
+                }
             }
+
             mpData.setItemVisual(idx, {
+                symbol: symbol,
                 symbolSize: symbolSize,
                 color: itemModel.get('itemStyle.color')
-                    || seriesData.getVisual('color'),
-                symbol: itemModel.getShallow('symbol')
+                    || seriesData.getVisual('color')
             });
         });
 
@@ -134,7 +163,7 @@ function createList(coordSys, seriesModel, mpModel) {
         });
     }
     else {
-        coordDimsInfos =[{
+        coordDimsInfos = [{
             name: 'value',
             type: 'float'
         }];

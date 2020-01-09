@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Provide effect for line
  * @module echarts/chart/helper/EffectLine
@@ -68,6 +87,7 @@ effectLineProto._updateEffectSymbol = function (lineData, idx) {
     symbol.attr('scale', size);
 
     this._symbolType = symbolType;
+    this._symbolScale = size;
 
     this._updateEffectAnimation(lineData, effectModel, idx);
 };
@@ -158,6 +178,7 @@ effectLineProto.updateSymbolPosition = function (symbol) {
     var cp1 = symbol.__cp1;
     var t = symbol.__t;
     var pos = symbol.position;
+    var lastPos = [pos[0], pos[1]];
     var quadraticAt = curveUtil.quadraticAt;
     var quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
     pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
@@ -168,7 +189,27 @@ effectLineProto.updateSymbolPosition = function (symbol) {
     var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
 
     symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
-
+    // enable continuity trail for 'line', 'rect', 'roundRect' symbolType
+    if (this._symbolType === 'line' || this._symbolType === 'rect' || this._symbolType === 'roundRect') {
+        if (symbol.__lastT !== undefined && symbol.__lastT < symbol.__t) {
+            var scaleY = vec2.dist(lastPos, pos) * 1.05;
+            symbol.attr('scale', [symbol.scale[0], scaleY]);
+            // make sure the last segment render within endPoint
+            if (t === 1) {
+                pos[0] = lastPos[0] + (pos[0] - lastPos[0]) / 2;
+                pos[1] = lastPos[1] + (pos[1] - lastPos[1]) / 2;
+            }
+        }
+        else if (symbol.__lastT === 1) {
+            // After first loop, symbol.__t does NOT start with 0, so connect p1 to pos directly.
+            var scaleY = 2 * vec2.dist(p1, pos);
+            symbol.attr('scale', [symbol.scale[0], scaleY ]);
+        }
+        else {
+            symbol.attr('scale', this._symbolScale);
+        }
+    }
+    symbol.__lastT = symbol.__t;
     symbol.ignore = false;
 };
 

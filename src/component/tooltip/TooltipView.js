@@ -1,7 +1,27 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import TooltipContent from './TooltipContent';
+import TooltipRichContent from './TooltipRichContent';
 import * as formatUtil from '../../util/format';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
@@ -11,6 +31,7 @@ import Model from '../../model/Model';
 import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
+import { getTooltipRenderMode } from '../../util/model';
 
 var bind = zrUtil.bind;
 var each = zrUtil.each;
@@ -28,7 +49,21 @@ export default echarts.extendComponentView({
         if (env.node) {
             return;
         }
-        var tooltipContent = new TooltipContent(api.getDom(), api);
+
+        var tooltipModel = ecModel.getComponent('tooltip');
+        var renderMode = tooltipModel.get('renderMode');
+        this._renderMode = getTooltipRenderMode(renderMode);
+
+        var tooltipContent;
+        if (this._renderMode === 'html') {
+            tooltipContent = new TooltipContent(api.getDom(), api);
+            this._newLine = '<br/>';
+        }
+        else {
+            tooltipContent = new TooltipRichContent(api);
+            this._newLine = '\n';
+        }
+
         this._tooltipContent = tooltipContent;
 
         this._event = {};
@@ -37,7 +72,7 @@ export default echarts.extendComponentView({
     },
 
     render: function (tooltipModel, ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
 
@@ -125,7 +160,7 @@ export default echarts.extendComponentView({
                 // Show tip next tick after other charts are rendered
                 // In case highlight action has wrong result
                 // FIXME
-                self.manuallyShowTip(tooltipModel, ecModel, api, {
+                !api.isDisposed() && self.manuallyShowTip(tooltipModel, ecModel, api, {
                     x: self._lastX,
                     y: self._lastY
                 });
@@ -332,6 +367,11 @@ export default echarts.extendComponentView({
             globalTooltipModel
         ]);
 
+        var renderMode = this._renderMode;
+        var newLine = this._newLine;
+
+        var markers = {};
+
         each(dataByCoordSys, function (itemCoordSys) {
             // var coordParamList = [];
             // var coordDefaultHTML = [];
@@ -372,7 +412,18 @@ export default echarts.extendComponentView({
 
                     if (dataParams) {
                         singleParamsList.push(dataParams);
-                        seriesDefaultHTML.push(series.formatTooltip(dataIndex, true));
+                        var seriesTooltip = series.formatTooltip(dataIndex, true, null, renderMode);
+
+                        var html;
+                        if (zrUtil.isObject(seriesTooltip)) {
+                            html = seriesTooltip.html;
+                            var newMarkers = seriesTooltip.markers;
+                            zrUtil.merge(markers, newMarkers);
+                        }
+                        else {
+                            html = seriesTooltip;
+                        }
+                        seriesDefaultHTML.push(html);
                     }
                 });
 
@@ -381,16 +432,21 @@ export default echarts.extendComponentView({
                 // (1) shold be the first data which has name?
                 // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
                 var firstLine = valueLabel;
-                singleDefaultHTML.push(
-                    (firstLine ? formatUtil.encodeHTML(firstLine) + '<br />' : '')
-                    + seriesDefaultHTML.join('<br />')
-                );
+                if (renderMode !== 'html') {
+                    singleDefaultHTML.push(seriesDefaultHTML.join(newLine));
+                }
+                else {
+                    singleDefaultHTML.push(
+                        (firstLine ? formatUtil.encodeHTML(firstLine) + newLine : '')
+                        + seriesDefaultHTML.join(newLine)
+                    );
+                }
             });
         }, this);
 
         // In most case, the second axis is shown upper than the first one.
         singleDefaultHTML.reverse();
-        singleDefaultHTML = singleDefaultHTML.join('<br /><br />');
+        singleDefaultHTML = singleDefaultHTML.join(this._newLine + this._newLine);
 
         var positionExpr = e.position;
         this._showOrMove(singleTooltipModel, function () {
@@ -406,7 +462,7 @@ export default echarts.extendComponentView({
             else {
                 this._showTooltipContent(
                     singleTooltipModel, singleDefaultHTML, singleParamsList, Math.random(),
-                    point[0], point[1], positionExpr
+                    point[0], point[1], positionExpr, undefined, markers
                 );
             }
         });
@@ -442,13 +498,24 @@ export default echarts.extendComponentView({
         }
 
         var params = dataModel.getDataParams(dataIndex, dataType);
-        var defaultHtml = dataModel.formatTooltip(dataIndex, false, dataType);
+        var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
+        var defaultHtml;
+        var markers;
+        if (zrUtil.isObject(seriesTooltip)) {
+            defaultHtml = seriesTooltip.html;
+            markers = seriesTooltip.markers;
+        }
+        else {
+            defaultHtml = seriesTooltip;
+            markers = null;
+        }
+
         var asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
         this._showOrMove(tooltipModel, function () {
             this._showTooltipContent(
                 tooltipModel, defaultHtml, params, asyncTicket,
-                e.event.pageX, e.event.pageY, e.position, e.target
+                e.event.pageX, e.event.pageY, e.position, e.target, markers
             );
         });
 
@@ -496,7 +563,7 @@ export default echarts.extendComponentView({
     },
 
     _showTooltipContent: function (
-        tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, el
+        tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, el, markers
     ) {
         // Reset ticket
         this._ticket = '';
@@ -517,7 +584,7 @@ export default echarts.extendComponentView({
         else if (typeof formatter === 'function') {
             var callback = bind(function (cbTicket, html) {
                 if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html);
+                    tooltipContent.setContent(html, markers, tooltipModel);
                     this._updatePosition(
                         tooltipModel, positionExpr, x, y, tooltipContent, params, el
                     );
@@ -527,7 +594,7 @@ export default echarts.extendComponentView({
             html = formatter(params, asyncTicket, callback);
         }
 
-        tooltipContent.setContent(html);
+        tooltipContent.setContent(html, markers, tooltipModel);
         tooltipContent.show(tooltipModel);
 
         this._updatePosition(
@@ -591,7 +658,7 @@ export default echarts.extendComponentView({
         }
         else {
             var pos = refixTooltipPosition(
-                x, y, content.el, viewWidth, viewHeight, align ? null : 20, vAlign ? null : 20
+                x, y, content, viewWidth, viewHeight, align ? null : 20, vAlign ? null : 20
             );
             x = pos[0];
             y = pos[1];
@@ -602,7 +669,7 @@ export default echarts.extendComponentView({
 
         if (tooltipModel.get('confine')) {
             var pos = confineTooltipPosition(
-                x, y, content.el, viewWidth, viewHeight
+                x, y, content, viewWidth, viewHeight
             );
             x = pos[0];
             y = pos[1];
@@ -629,16 +696,16 @@ export default echarts.extendComponentView({
                 var lastIndices = lastItem.seriesDataIndices || [];
                 var newIndices = thisItem.seriesDataIndices || [];
 
-                contentNotChanged &=
-                    lastItem.value === thisItem.value
+                contentNotChanged
+                    &= lastItem.value === thisItem.value
                     && lastItem.axisType === thisItem.axisType
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
                 contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
                     var newIdxItem = newIndices[j];
-                    contentNotChanged &=
-                        lastIdxItem.seriesIndex === newIdxItem.seriesIndex
+                    contentNotChanged
+                        &= lastIdxItem.seriesIndex === newIdxItem.seriesIndex
                         && lastIdxItem.dataIndex === newIdxItem.dataIndex;
                 });
             });
@@ -663,7 +730,7 @@ export default echarts.extendComponentView({
     },
 
     dispose: function (ecModel, api) {
-        if (env.node || env.wxa) {
+        if (env.node) {
             return;
         }
         this._tooltipContent.dispose();
@@ -702,8 +769,8 @@ function makeDispatchAction(payload, api) {
     return payload.dispatchAction || zrUtil.bind(api.dispatchAction, api);
 }
 
-function refixTooltipPosition(x, y, el, viewWidth, viewHeight, gapH, gapV) {
-    var size = getOuterSize(el);
+function refixTooltipPosition(x, y, content, viewWidth, viewHeight, gapH, gapV) {
+    var size = content.getOuterSize();
     var width = size.width;
     var height = size.height;
 
@@ -726,8 +793,8 @@ function refixTooltipPosition(x, y, el, viewWidth, viewHeight, gapH, gapV) {
     return [x, y];
 }
 
-function confineTooltipPosition(x, y, el, viewWidth, viewHeight) {
-    var size = getOuterSize(el);
+function confineTooltipPosition(x, y, content, viewWidth, viewHeight) {
+    var size = content.getOuterSize();
     var width = size.width;
     var height = size.height;
 
@@ -737,25 +804,6 @@ function confineTooltipPosition(x, y, el, viewWidth, viewHeight) {
     y = Math.max(y, 0);
 
     return [x, y];
-}
-
-function getOuterSize(el) {
-    var width = el.clientWidth;
-    var height = el.clientHeight;
-
-    // Consider browser compatibility.
-    // IE8 does not support getComputedStyle.
-    if (document.defaultView && document.defaultView.getComputedStyle) {
-        var stl = document.defaultView.getComputedStyle(el);
-        if (stl) {
-            width += parseInt(stl.paddingLeft, 10) + parseInt(stl.paddingRight, 10)
-                + parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
-            height += parseInt(stl.paddingTop, 10) + parseInt(stl.paddingBottom, 10)
-                + parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);
-        }
-    }
-
-    return {width: width, height: height};
 }
 
 function calcTooltipPosition(position, rect, contentSize) {

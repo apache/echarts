@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../util/number';
 import {isDimensionStacked} from '../data/helper/dataStackHelper';
@@ -7,8 +26,8 @@ function getSeriesStackId(seriesModel) {
         || '__ec_stack_' + seriesModel.seriesIndex;
 }
 
-function getAxisKey(axis) {
-    return axis.dim;
+function getAxisKey(polar, axis) {
+    return axis.dim + polar.model.componentIndex;
 }
 
 /**
@@ -17,9 +36,6 @@ function getAxisKey(axis) {
  * @param {module:echarts/ExtensionAPI} api
  */
 function barLayoutPolar(seriesType, ecModel, api) {
-
-    var width = api.getWidth();
-    var height = api.getHeight();
 
     var lastStackCoords = {};
 
@@ -35,6 +51,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
     );
 
     ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+
         // Check series coordinate, do layout for polar only
         if (seriesModel.coordinateSystem.type !== 'polar') {
             return;
@@ -43,17 +60,16 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var data = seriesModel.getData();
         var polar = seriesModel.coordinateSystem;
         var baseAxis = polar.getBaseAxis();
+        var axisKey = getAxisKey(polar, baseAxis);
 
         var stackId = getSeriesStackId(seriesModel);
-        var columnLayoutInfo
-            = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+        var columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
         var columnOffset = columnLayoutInfo.offset;
         var columnWidth = columnLayoutInfo.width;
         var valueAxis = polar.getOtherAxis(baseAxis);
 
-        var center = seriesModel.get('center') || ['50%', '50%'];
-        var cx = parsePercent(center[0], width);
-        var cy = parsePercent(center[1], height);
+        var cx = seriesModel.coordinateSystem.cx;
+        var cy = seriesModel.coordinateSystem.cy;
 
         var barMinHeight = seriesModel.get('barMinHeight') || 0;
         var barMinAngle = seriesModel.get('barMinAngle') || 0;
@@ -62,7 +78,9 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim, baseDim);
+        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        var clampLayout = baseAxis.dim !== 'radius'
+            || !seriesModel.get('roundCap', true);
 
         var valueAxisStart = valueAxis.getExtent()[0];
 
@@ -114,8 +132,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
             }
             // tangential sector
             else {
-                // angleAxis must be clamped.
-                var angleSpan = valueAxis.dataToAngle(value, true) - valueAxisStart;
+                var angleSpan = valueAxis.dataToAngle(value, clampLayout) - valueAxisStart;
                 var radius = baseAxis.dataToRadius(baseValue);
 
                 if (Math.abs(angleSpan) < barMinAngle) {
@@ -169,13 +186,14 @@ function calRadialBar(barSeries, api) {
         var polar = seriesModel.coordinateSystem;
 
         var baseAxis = polar.getBaseAxis();
+        var axisKey = getAxisKey(polar, baseAxis);
 
         var axisExtent = baseAxis.getExtent();
         var bandWidth = baseAxis.type === 'category'
             ? baseAxis.getBandWidth()
             : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
 
-        var columnsOnAxis = columnsMap[getAxisKey(baseAxis)] || {
+        var columnsOnAxis = columnsMap[axisKey] || {
             bandWidth: bandWidth,
             remainedWidth: bandWidth,
             autoWidthCount: 0,
@@ -184,7 +202,7 @@ function calRadialBar(barSeries, api) {
             stacks: {}
         };
         var stacks = columnsOnAxis.stacks;
-        columnsMap[getAxisKey(baseAxis)] = columnsOnAxis;
+        columnsMap[axisKey] = columnsOnAxis;
 
         var stackId = getSeriesStackId(seriesModel);
 

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 // TODO clockwise
 
 import * as zrUtil from 'zrender/src/core/util';
@@ -9,6 +28,7 @@ import {
     niceScaleExtent
 } from '../axisHelper';
 import CoordinateSystem from '../../CoordinateSystem';
+import LogScale from '../../scale/Log';
 
 function Radar(radarModel, ecModel, api) {
 
@@ -21,7 +41,8 @@ function Radar(radarModel, ecModel, api) {
 
     this._indicatorAxes = zrUtil.map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
         var dim = 'indicator_' + idx;
-        var indicatorAxis = new IndicatorAxis(dim, new IntervalScale());
+        var indicatorAxis = new IndicatorAxis(dim,
+            (indicatorModel.get('axisType') === 'log') ? new LogScale() : new IntervalScale());
         indicatorAxis.name = indicatorModel.get('name');
         // Inject model and axis
         indicatorAxis.model = indicatorModel;
@@ -47,6 +68,11 @@ function Radar(radarModel, ecModel, api) {
      * @readOnly
      */
     this.r;
+    /**
+     * @type {number}
+     * @readOnly
+     */
+    this.r0;
     /**
      * @type {number}
      * @readOnly
@@ -96,7 +122,7 @@ Radar.prototype.pointToData = function (pt) {
         }
     }
 
-    return [closestAxisIdx, +(closestAxis && closestAxis.coodToData(radius))];
+    return [closestAxisIdx, +(closestAxis && closestAxis.coordToData(radius))];
 };
 
 Radar.prototype.resize = function (radarModel, api) {
@@ -109,10 +135,16 @@ Radar.prototype.resize = function (radarModel, api) {
 
     this.startAngle = radarModel.get('startAngle') * Math.PI / 180;
 
-    this.r = numberUtil.parsePercent(radarModel.get('radius'), viewSize);
+    // radius may be single value like `20`, `'80%'`, or array like `[10, '80%']`
+    var radius = radarModel.get('radius');
+    if (typeof radius === 'string' || typeof radius === 'number') {
+        radius = [0, radius];
+    }
+    this.r0 = numberUtil.parsePercent(radius[0], viewSize);
+    this.r = numberUtil.parsePercent(radius[1], viewSize);
 
     zrUtil.each(this._indicatorAxes, function (indicatorAxis, idx) {
-        indicatorAxis.setExtent(0, this.r);
+        indicatorAxis.setExtent(this.r0, this.r);
         var angle = (this.startAngle + idx * Math.PI * 2 / this._indicatorAxes.length);
         // Normalize to [-PI, PI]
         angle = Math.atan2(Math.sin(angle), Math.cos(angle));

@@ -1,3 +1,24 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/* global Float32Array */
+
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';
@@ -13,6 +34,8 @@ var LargeSymbolPath = graphic.extendShape({
     },
 
     symbolProxy: null,
+
+    softClipShape: null,
 
     buildPath: function (path, shape) {
         var points = shape.points;
@@ -33,6 +56,9 @@ var LargeSymbolPath = graphic.extendShape({
             var y = points[i++];
 
             if (isNaN(x) || isNaN(y)) {
+                continue;
+            }
+            if (this.softClipShape && !this.softClipShape.contain(x, y)) {
                 continue;
             }
 
@@ -61,6 +87,9 @@ var LargeSymbolPath = graphic.extendShape({
             var x = points[i++];
             var y = points[i++];
             if (isNaN(x) || isNaN(y)) {
+                continue;
+            }
+            if (this.softClipShape && !this.softClipShape.contain(x, y)) {
                 continue;
             }
             // fillRect is faster than building a rect path and draw.
@@ -114,8 +143,10 @@ largeSymbolProto.isPersistent = function () {
 /**
  * Update symbols draw by new data
  * @param {module:echarts/data/List} data
+ * @param {Object} opt
+ * @param {Object} [opt.clipShape]
  */
-largeSymbolProto.updateData = function (data) {
+largeSymbolProto.updateData = function (data, opt) {
     this.group.removeAll();
     var symbolEl = new LargeSymbolPath({
         rectHover: true,
@@ -125,7 +156,7 @@ largeSymbolProto.updateData = function (data) {
     symbolEl.setShape({
         points: data.getLayout('symbolPoints')
     });
-    this._setCommon(symbolEl, data);
+    this._setCommon(symbolEl, data, false, opt);
     this.group.add(symbolEl);
 
     this._incremental = null;
@@ -166,7 +197,7 @@ largeSymbolProto.incrementalPrepareUpdate = function (data) {
     }
 };
 
-largeSymbolProto.incrementalUpdate = function (taskParams, data) {
+largeSymbolProto.incrementalUpdate = function (taskParams, data, opt) {
     var symbolEl;
     if (this._incremental) {
         symbolEl = new LargeSymbolPath();
@@ -186,12 +217,13 @@ largeSymbolProto.incrementalUpdate = function (taskParams, data) {
     symbolEl.setShape({
         points: data.getLayout('symbolPoints')
     });
-    this._setCommon(symbolEl, data, !!this._incremental);
+    this._setCommon(symbolEl, data, !!this._incremental, opt);
 };
 
-largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
+largeSymbolProto._setCommon = function (symbolEl, data, isIncremental, opt) {
     var hostModel = data.hostModel;
 
+    opt = opt || {};
     // TODO
     // if (data.hasItemVisual.symbolSize) {
     //     // TODO typed array?
@@ -207,6 +239,7 @@ largeSymbolProto._setCommon = function (symbolEl, data, isIncremental) {
     symbolEl.setShape('size', (size instanceof Array) ? size : [size, size]);
     // }
 
+    symbolEl.softClipShape = opt.clipShape || null;
     // Create symbolProxy to build path for each data
     symbolEl.symbolProxy = createSymbol(
         data.getVisual('symbol'), 0, 0, 0, 0

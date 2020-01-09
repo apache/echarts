@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BrushController from '../../helper/BrushController';
@@ -35,6 +54,7 @@ function DataZoom(model, ecModel, api) {
 
 DataZoom.defaultOption = {
     show: true,
+    filterMode: 'filter',
     // Icon group
     icon: {
         zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
@@ -251,6 +271,8 @@ echarts.registerPreprocessor(function (option) {
 
         if (toolboxOpt && toolboxOpt.feature) {
             var dataZoomOpt = toolboxOpt.feature.dataZoom;
+            // FIXME: If add dataZoom when setOption in merge mode,
+            // no axis info to be added. See `test/dataZoom-extreme.html`
             addForAxis('xAxis', dataZoomOpt);
             addForAxis('yAxis', dataZoomOpt);
         }
@@ -265,7 +287,7 @@ echarts.registerPreprocessor(function (option) {
         var axisIndicesName = axisName + 'Index';
         var givenAxisIndices = dataZoomOpt[axisIndicesName];
         if (givenAxisIndices != null
-            && givenAxisIndices != 'all'
+            && givenAxisIndices !== 'all'
             && !zrUtil.isArray(givenAxisIndices)
         ) {
             givenAxisIndices = (givenAxisIndices === false || givenAxisIndices === 'none') ? [] : [givenAxisIndices];
@@ -273,7 +295,7 @@ echarts.registerPreprocessor(function (option) {
 
         forEachComponent(axisName, function (axisOpt, axisIndex) {
             if (givenAxisIndices != null
-                && givenAxisIndices != 'all'
+                && givenAxisIndices !== 'all'
                 && zrUtil.indexOf(givenAxisIndices, axisIndex) === -1
             ) {
                 return;
@@ -281,6 +303,8 @@ echarts.registerPreprocessor(function (option) {
             var newOpt = {
                 type: 'select',
                 $fromToolbox: true,
+                // Default to be filter
+                filterMode: dataZoomOpt.filterMode || 'filter',
                 // Id for merge mapping.
                 id: DATA_ZOOM_ID_BASE + axisName + axisIndex
             };

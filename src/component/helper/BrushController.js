@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Eventful from 'zrender/src/mixin/Eventful';
@@ -161,7 +180,8 @@ function BrushController(zr) {
      * @type {Object}
      */
     this._handlers = {};
-    each(mouseHandlers, function (handler, eventName) {
+
+    each(pointerHandlers, function (handler, eventName) {
         this._handlers[eventName] = zrUtil.bind(handler, this);
     }, this);
 }
@@ -357,9 +377,7 @@ function doEnableBrush(controller, brushOption) {
         interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid);
     }
 
-    each(controller._handlers, function (handler, eventName) {
-        zr.on(eventName, handler);
-    });
+    mountHandlers(zr, controller._handlers);
 
     controller._brushType = brushOption.brushType;
     controller._brushOption = zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
@@ -370,11 +388,21 @@ function doDisableBrush(controller) {
 
     interactionMutex.release(zr, MUTEX_RESOURCE_KEY, controller._uid);
 
-    each(controller._handlers, function (handler, eventName) {
-        zr.off(eventName, handler);
-    });
+    unmountHandlers(zr, controller._handlers);
 
     controller._brushType = controller._brushOption = null;
+}
+
+function mountHandlers(zr, handlers) {
+    each(handlers, function (handler, eventName) {
+        zr.on(eventName, handler);
+    });
+}
+
+function unmountHandlers(zr, handlers) {
+    each(handlers, function (handler, eventName) {
+        zr.off(eventName, handler);
+    });
 }
 
 function createCover(controller, brushOption) {
@@ -690,8 +718,14 @@ function pointsToRect(points) {
 }
 
 function resetCursor(controller, e, localCursorPoint) {
-    // Check active
-    if (!controller._brushType) {
+    if (
+        // Check active
+        !controller._brushType
+        // resetCursor should be always called when mouse is in zr area,
+        // but not called when mouse is out of zr area to avoid bad influence
+        // if `mousemove`, `mouseup` are triggered from `document` event.
+        || isOutsideZrArea(controller, e)
+    ) {
         return;
     }
 
@@ -795,13 +829,13 @@ function determineBrushType(brushType, panel) {
     return brushType;
 }
 
-var mouseHandlers = {
+var pointerHandlers = {
 
     mousedown: function (e) {
         if (this._dragging) {
             // In case some browser do not support globalOut,
             // and release mose out side the browser.
-            handleDragEnd.call(this, e);
+            handleDragEnd(this, e);
         }
         else if (!e.target || !e.target.draggable) {
 
@@ -820,43 +854,50 @@ var mouseHandlers = {
     },
 
     mousemove: function (e) {
-        var localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
+        var x = e.offsetX;
+        var y = e.offsetY;
+
+        var localCursorPoint = this.group.transformCoordToLocal(x, y);
 
         resetCursor(this, e, localCursorPoint);
 
         if (this._dragging) {
-
             preventDefault(e);
-
             var eventParams = updateCoverByMouse(this, e, localCursorPoint, false);
-
             eventParams && trigger(this, eventParams);
         }
     },
 
-    mouseup: handleDragEnd //,
-
-    // FIXME
-    // in tooltip, globalout should not be triggered.
-    // globalout: handleDragEnd
+    mouseup: function (e) {
+        handleDragEnd(this, e);
+    }
 };
 
-function handleDragEnd(e) {
-    if (this._dragging) {
 
+function handleDragEnd(controller, e) {
+    if (controller._dragging) {
         preventDefault(e);
 
-        var localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
-        var eventParams = updateCoverByMouse(this, e, localCursorPoint, true);
+        var x = e.offsetX;
+        var y = e.offsetY;
 
-        this._dragging = false;
-        this._track = [];
-        this._creatingCover = null;
+        var localCursorPoint = controller.group.transformCoordToLocal(x, y);
+        var eventParams = updateCoverByMouse(controller, e, localCursorPoint, true);
+
+        controller._dragging = false;
+        controller._track = [];
+        controller._creatingCover = null;
 
         // trigger event shoule be at final, after procedure will be nested.
-        eventParams && trigger(this, eventParams);
+        eventParams && trigger(controller, eventParams);
     }
 }
+
+function isOutsideZrArea(controller, x, y) {
+    var zr = controller._zr;
+    return x < 0 || x > zr.getWidth() || y < 0 || y > zr.getHeight();
+}
+
 
 /**
  * key: brushType

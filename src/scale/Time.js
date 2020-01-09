@@ -1,3 +1,33 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/*
+* A third-party license is embeded for some of the code in this file:
+* The "scaleLevels" was originally copied from "d3.js" with some
+* modifications made for this project.
+* (See more details in the comment on the definition of "scaleLevels" below.)
+* The use of the source code of this file is also subject to the terms
+* and consitions of the license of "d3.js" (BSD-3Clause, see
+* </licenses/LICENSE-d3>).
+*/
+
+
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
 // (except time zone is specified in time string). And `format.formateTime` returns
@@ -31,7 +61,7 @@ var bisect = function (a, x, lo, hi) {
             lo = mid + 1;
         }
         else {
-            hi  = mid;
+            hi = mid;
         }
     }
     return lo;
@@ -146,7 +176,12 @@ zrUtil.each(['contain', 'normalize'], function (methodName) {
     };
 });
 
-// Steps from d3
+/**
+ * This implementation was originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/time/scale.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ */
 var scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s
@@ -176,8 +211,8 @@ var scaleLevels = [
     ['month', ONE_DAY * 31],           // 1M
     ['week', ONE_DAY * 42],            // 6w
     ['month', ONE_DAY * 62],           // 2M
-    ['week', ONE_DAY * 42],            // 10w
-    ['quarter', ONE_DAY * 380 / 4],    // 3M
+    ['week', ONE_DAY * 70],            // 10w
+    ['quarter', ONE_DAY * 95],         // 3M
     ['month', ONE_DAY * 31 * 4],       // 4M
     ['month', ONE_DAY * 31 * 5],       // 5M
     ['half-year', ONE_DAY * 380 / 2],  // 6M

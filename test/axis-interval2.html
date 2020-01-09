@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #a60;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+        <div class="chart" id="main0"></div>
+        <div class="chart" id="main1"></div>
+        <div class="chart" id="main2"></div>
+        <div class="chart" id="main3"></div>
+        <div class="chart" id="main4"></div>
+        <div class="chart" id="main5"></div>
+        <div class="chart" id="main6"></div>
+        <div class="chart" id="main6.5"></div>
+        <div class="chart" id="main7"></div>
+        <div class="chart" id="main8"></div>
+        <div class="chart" id="main9"></div>
+        <div class="chart" id="main10"></div>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                var count = 100;
+                for (var i = 0; i < count; i++) {
+
+                    if (i === 14 || i === 20) {
+                        xAxisData.push({
+                            value: '类目' + i,
+                            textStyle: {
+                                color: 'red'
+                            }
+                        });
+                    } else {
+                        xAxisData.push('类目' + i);
+                    }
+
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        borderColor: 'white',
+                        borderWidth: 3,
+                        lineStyle: {
+                            width: 1
+                        }
+                    }
+                };
+
+                // var rawData = [[0.877,1.384,0,0,0,1.422,1.363,0.867,0.782,1.025,0.819,0.638,1.192,0.56,1.17,1.056,0.804,0.657,1.157,0.906,1.462,0.856,1.384,0.978,0.766,0.683,1.383,0.65,1.343,1.303,1.298,0.812,0.665,1.182,0.528,0.613,1.101,0.959,0.997,1.381,1.172,1.01,1.23,0.596,1.256,1.406,1.172,0.85,1.194,1.313,1.142,0.985,1.059,1.07,1.205,1.359,0.93,0.514,1.197,1.259,1.225,1.371,0.825,0.967,0.569,1.432,0.892,1.36,0.644,1.096,1.006,0.613,0.549,1.263,1.203,0.556,1.044,1.338,0.8,1.137,1.164,1.44,0.995,0.989,1.098,0.563,0.768,0.584,0.794,1.33,0.687,0.89,1.317,1.466,1.01,0.886,0.964,1.244,1.421,0.922],[1.369,1.092,1.446,1.472,0.873,1.093,1.136,1.057,0.832,0.633,1.054,1.169,0.727,0.674,1.361,0.842,0.762,0.621,0.964,0.87,1.425,0.543,0.877,0.779,0.568,1.352,1.065,1.381,0.938,0.805,0.686,0.994,1.485,0.915,0.504,1.141,1.167,1.101,1.423,0.789,0.942,0.863,1.02,1.443,0.732,1.197,0.993,0.738,0.923,1.355,0.796,0.707,0.729,1.27,1.034,0.704,1.375,1.377,0.953,0.555,1.211,1.37,1.399,1.183,0.591,0.803,0.969,0.866,1.086,1.35,1.378,0.834,1.048,1.084,1.267,0.965,1.064,0.954,1.39,0.564,0.742,1.033,1.293,0.74,0.709,0.962,0.863,1.455,0.894,0.876,0.827,0.662,1.33,0.857,0.71,1.423,1.131,1.224,0.725,1.446],[0.895,1.487,0.63,1.245,1.184,0.738,0.905,1.299,1.16,0.904,0.902,1.231,0.919,1.067,1.319,0.939,1.424,1.348,0.537,0.519,0.542,1.091,1.351,1.337,0.674,1.112,1.218,1.317,0.62,0.686,0.683,1.273,1.096,1.324,1.448,1.157,0.8,0.878,0.83,1.069,1.261,0.968,1.043,0.55,0.73,0.886,0.8,0.943,0.597,0.93,0.794,1.43,0.941,1.376,0.647,0.848,1.273,0.853,0.585,0.899,0.649,1.217,1.097,1.273,1.165,0.648,0.622,1.111,0.626,0.75,1.477,1.13,0.6,0.855,1.463,1.414,1.487,0.992,0.948,1.333,0.791,0.654,0.511,1.471,0.626,1.286,0.547,1.082,1.195,1.29,0.794,1.294,1.136,0.807,0.647,1.415,0.674,0.869,1.437,0.711]];
+                // data1 = rawData[0];
+                // data2 = rawData[1];
+                // data3 = rawData[2];
+
+                var option = {
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    visualMap: null, // 用于测试 option 中含有null的情况。
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            // showMaxLabel: true,
+                            // showMinLabel: true
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%'
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            textStyle: {
+                                color: 'red'
+                            }
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        // start: 10,
+                        // end: 12
+                        startValue: 11,
+                        endValue: 85
+                    }, {
+                        type: 'slider',
+                        // start: 10,
+                        // end: 12
+                        startValue: 11,
+                        endValue: 85
+                    }],
+                    // animationDurationUpdate: 2000,
+                    // animation: false,
+                    series: [
+                        null,  // 用于测试 option 中含有null的情况。
+                        {
+                            name: 'line',
+                            type: 'line',
+                            stack: 'all',
+                            symbol: 'path://M164,210.677v33.47l154.656,66.356L468,243.681v-33.004H164L164,210.677z M164,282.255L164,282.255v134.76h304V282.061l-149.012,66.615L164,282.255L164,282.255z',
+                            symbolKeepAspect: true,
+                            symbolSize: 40,
+                            data: data1,
+                            itemStyle: itemStyle,
+                            label: {
+                                normal: {
+                                    show: true,
+                                    fontSize: 12
+                                }
+                            },
+                            lineStyle: {
+                                normal: {
+                                    shadowBlur: 4,
+                                    shadowOffsetX: 3,
+                                    shadowOffsetY: 3
+                                }
+                            },
+                            step: 'end'
+                        },
+                        {
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'outside'
+                                }
+                            },
+                            name: 'line2',
+                            type: 'line',
+                            stack: 'all',
+                            symbol: 'circle',
+                            symbolSize: 10,
+                            data: data2,
+                            itemStyle: itemStyle,
+                            step: 'end'
+                        },
+                        {
+                            name: 'line3',
+                            type: 'line',
+                            stack: 'all',
+                            symbol: 'triangle',
+                            symbolSize: 10,
+                            data: data3,
+                            itemStyle: itemStyle,
+                            step: 'end'
+                        }
+                    ]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        '(0) Move the slider zoom, check the tick and symbol animation stable (not change ticks selection)',
+                        '(1) Adjust (zoom) the slider zoom to the extent of just change the tick interval.',
+                        '(2) Move the slider zoom, CHECK whether the interval is stable (no jitter).'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data2.push(-Math.random().toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        barBorderRadius: 5,
+                        label: {
+                            show: true,
+                            position: 'outside'
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position: 'outside'
+                        },
+                        barBorderColor: '#fff',
+                        barBorderWidth: 1,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0,0,0,0.5)'
+                    }
+                };
+
+                var option = {
+                    backgroundColor: '#eef',
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        data: xAxisData,
+                        name: '横轴',
+                        silent: false,
+                        inverse: true,
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        // axisTick: {
+                        //     show: false
+                        // },
+                        axisLine: {
+                            onZero: true,
+                            // lineStyle: {
+                            //     width: 40
+                            // }
+                        },
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'green'
+                            }
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        inverse: true,
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        axisTick: {
+                            show: false
+                        },
+                        // splitLine: {
+                        //     show: false
+                        // },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {}],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        itemStyle: itemStyle,
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar2',
+                        type: 'bar',
+                        stack: 'one',
+                        itemStyle: itemStyle,
+                        cursor: 'default',
+                        data: data2
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        itemStyle: itemStyle,
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        '(0) Zoom and check the splitLine(green) and splitArea when axis interval exists',
+                        '(1) Check not split a single data item when odd category tick interval'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data2.push(-Math.random().toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        barBorderRadius: 5,
+                        label: {
+                            show: true,
+                            position: 'outside'
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position: 'outside'
+                        },
+                        barBorderColor: '#fff',
+                        barBorderWidth: 1,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0,0,0,0.5)'
+                    }
+                };
+
+                var option = {
+                    backgroundColor: '#eef',
+                    legend: {
+                    },
+                    tooltip: {
+                    },
+                    xAxis: {
+                        data: xAxisData,
+                        name: '横轴',
+                        silent: false,
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        // axisTick: {
+                        //     show: false
+                        // },
+                        axisLine: {
+                            onZero: true
+                        },
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'green'
+                            }
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        inverse: true,
+                        // axisLabel: {
+                        //     show: false
+                        // },
+                        axisTick: {
+                            show: false
+                        },
+                        // splitLine: {
+                        //     show: false
+                        // },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    animationDurationUpdate: 800,
+                    dataZoom: [{
+                        type: 'inside',
+                        startValue: 17,
+                        endValue: 24,
+                        zoomLock: true
+                    }, {
+                        startValue: 17,
+                        endValue: 24,
+                        zoomLock: true
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        itemStyle: itemStyle,
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar2',
+                        type: 'bar',
+                        stack: 'one',
+                        itemStyle: itemStyle,
+                        cursor: 'default',
+                        data: data2
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        itemStyle: itemStyle,
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        '(0) Move and check splitArea and splitLine(green) animation (zoom locked)'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        barBorderRadius: 5,
+                        label: {
+                            show: true,
+                            position: 'outside'
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            position: 'outside'
+                        },
+                        barBorderColor: '#fff',
+                        barBorderWidth: 1,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0,0,0,0.5)'
+                    }
+                };
+
+                var option = {
+                    backgroundColor: '#eef',
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        data: xAxisData,
+                        name: '横轴',
+                        silent: false,
+                        axisLine: {
+                            onZero: true
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        axisTick: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        startValue: 17,
+                        endValue: 24,
+                        zoomLock: true
+                    }, {
+                        startValue: 17,
+                        endValue: 24,
+                        zoomLock: true
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        itemStyle: itemStyle,
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        itemStyle: itemStyle,
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'alignWithTick: default (false), and boundaryGap: default (true)'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        data: xAxisData,
+                        axisTick: {
+                            interval: 4,
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        axisTick: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        startValue: 17,
+                        endValue: 24
+                    }, {
+                        startValue: 17,
+                        endValue: 24
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'axisTick.interval is different from axisLabel.interval'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: [{
+                        data: xAxisData,
+                        name: 'axisLabel.interval is function',
+                        nameLocation: 'middle',
+                        nameGap: 20,
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                            interval: function (categoryIdx, categoryValue) {
+                                return categoryIdx % 5 === 0;
+                            }
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    }, {
+                        data: xAxisData,
+                        name: 'axisTick.interval is function',
+                        nameLocation: 'middle',
+                        nameGap: 20,
+                        gridIndex: 1,
+                        axisTick: {
+                            interval: function (categoryIdx, categoryValue) {
+                                return categoryIdx % 5 === 0;
+                            },
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                        axisTick: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    }, {
+                        gridIndex: 1,
+                        axisTick: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    }],
+                    grid: [{
+                        bottom: '60%'
+                    }, {
+                        top: '52%',
+                        bottom: 80
+                    }],
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: [0, 1],
+                        startValue: 17,
+                        endValue: 24
+                    }, {
+                        xAxisIndex: [0, 1],
+                        startValue: 17,
+                        endValue: 24
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data3
+                    }, {
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one1',
+                        cursor: 'move',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two1',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main5', {
+                    title: [
+                        'axisLabel.interval and axisTick.interval are function'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        data: xAxisData,
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        startValue: 17,
+                        endValue: 24
+                    }, {
+                        startValue: 17,
+                        endValue: 24
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        stack: 'two',
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'Only axisTick show, zoom and check axis tick.'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        startValue: 17,
+                        endValue: 84
+                    }, {
+                        type: 'inside',
+                        xAxisIndex: 1,
+                        startValue: 17,
+                        endValue: 84
+                    }, {
+                        xAxisIndex: [0, 1],
+                        startValue: 17,
+                        endValue: 84
+                    }],
+                    xAxis: [{
+                        data: xAxisData,
+                        // axisTick: {
+                        //     alignWithLabel: true
+                        // },
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }, {
+                        data: xAxisData,
+                        gridIndex: 1,
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                    }, {
+                        gridIndex: 1,
+                        axisLabel: {
+                            showMaxLabel: false
+                        }
+                    }],
+                    grid: [{
+                        bottom: '50%'
+                    }, {
+                        top: '50%'
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'line',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }, {
+                        name: 'bar3',
+                        type: 'line',
+                        stack: 'two',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        data: data3
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main6.5', {
+                    title: [
+                        'The first grid has no label, the second grid has label.',
+                        'splitLine and axisTick should be the same between the two grids.'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: true
+                        },
+                        min: -300,
+                        max: 333333
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        stack: 'one',
+                        cursor: 'move'
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main7', {
+                    title: [
+                        'No data but has xAxis.min and xAxis.max, should no ticks and labels.',
+                        'label.show: false, should no dead loop.'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        splitArea: {
+                            interval: 3,
+                            show: true,
+                            areaStyle: {
+                                color: ['blue', 'red']
+                            }
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                    }],
+                    series: []
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main8', {
+                    title: [
+                        'Check splitArea correct for indivisible interval.',
+                        'Move left handle of the dataZoom and check splitArea correct'
+                    ],
+                    option: option,
+                    info: {xAxis: option.xAxis}
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0
+                    }, {
+                    }],
+                    grid: {
+                        top: 10,
+                        left: 100
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                        type: 'category',
+                        axisLabel: {
+                            formatter: 'GOOD {value}',
+                            fontSize: 20
+                        }
+                    }, {
+                        axisLabel: {
+                            showMaxLabel: false
+                        }
+                    }],
+                    series: [{
+                        type: 'scatter',
+                        data: [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main9', {
+                    title: [
+                        'Drag to resize the yAxis util labels changes, and then drag back.',
+                        'Labels of yAxis should be able to back too the original state.'
+                    ],
+                    width: 300,
+                    height: 300,
+                    option: option,
+                    draggable: true
+                });
+
+            });
+
+        </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('c' + i);
+                    data1.push((Math.random() * 5).toFixed(2));
+                }
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        start: 14.63022259346915,
+                        end: 77.06506102371338
+                    }, {
+                        start: 14.63022259346915,
+                        end: 77.06506102371338
+                    }],
+                    xAxis: [{
+                        data: xAxisData,
+                        splitArea: {
+                            show: true
+                        },
+                        splitLine: {
+                            show: true
+                        }
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        name: 'bar',
+                        type: 'line',
+                        stack: 'one',
+                        cursor: 'move',
+                        data: data1
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main10', {
+                    title: [
+                        'The dataZoom window range is at the critical value of changing axis interval from 2 to 3.',
+                        'Move the dataZoom bar, the **xAxis labels should be stable**.',
+                        'That is, xAxis labels should not be sometimes [c21, c24, c27] sometimes [c20, c24, c28]'
+                    ],
+                    option: option,
+                    // Should be fixed this width to make the dataZoom window range at the critical value.
+                    width: 653,
+                    height: 300,
+                    autoResize: false
+                });
+
+            });
+
+        </script>
+
+
+
+
+
+
+    </body>
+</html>

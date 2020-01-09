@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
@@ -32,6 +51,20 @@ export default echarts.extendComponentView({
          * @type {module:zrender/Element}
          */
         this._backgroundEl;
+
+        /**
+         * @private
+         * @type {module:zrender/container/Group}
+         */
+        this.group.add(this._selectorGroup = new Group());
+
+        /**
+         * If first rendering, `contentGroup.position` is [0, 0], which
+         * does not make sense and may cause unexepcted animation if adopted.
+         * @private
+         * @type {boolean}
+         */
+        this._isFirstRender = true;
     },
 
     /**
@@ -42,9 +75,18 @@ export default echarts.extendComponentView({
     },
 
     /**
+     * @protected
+     */
+    getSelectorGroup: function () {
+        return this._selectorGroup;
+    },
+
+    /**
      * @override
      */
     render: function (legendModel, ecModel, api) {
+        var isFirstRender = this._isFirstRender;
+        this._isFirstRender = false;
 
         this.resetInner();
 
@@ -53,14 +95,21 @@ export default echarts.extendComponentView({
         }
 
         var itemAlign = legendModel.get('align');
+        var orient = legendModel.get('orient');
         if (!itemAlign || itemAlign === 'auto') {
             itemAlign = (
                 legendModel.get('left') === 'right'
-                && legendModel.get('orient') === 'vertical'
+                && orient === 'vertical'
             ) ? 'right' : 'left';
         }
 
-        this.renderInner(itemAlign, legendModel, ecModel, api);
+        var selector = legendModel.get('selector', true);
+        var selectorPosition = legendModel.get('selectorPosition', true);
+        if (selector && (!selectorPosition || selectorPosition === 'auto')) {
+            selectorPosition = orient === 'horizontal' ? 'end' : 'start';
+        }
+
+        this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         // Perform layout.
         var positionInfo = legendModel.getBoxLayoutParams();
@@ -68,7 +117,8 @@ export default echarts.extendComponentView({
         var padding = legendModel.get('padding');
 
         var maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
-        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize);
+
+        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
         // Place mainGroup, based on the calculated `mainRect`.
         var layoutRect = layoutUtil.getLayoutRect(
@@ -90,12 +140,13 @@ export default echarts.extendComponentView({
     resetInner: function () {
         this.getContentGroup().removeAll();
         this._backgroundEl && this.group.remove(this._backgroundEl);
+        this.getSelectorGroup().removeAll();
     },
 
     /**
      * @protected
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api) {
+    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
         var contentGroup = this.getContentGroup();
         var legendDrawnMap = zrUtil.createHashMap();
         var selectMode = legendModel.get('selectedMode');
@@ -124,15 +175,22 @@ export default echarts.extendComponentView({
                 return;
             }
 
-            // Series legend
+            // Legend to control series.
             if (seriesModel) {
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
+                var borderColor = data.getVisual('borderColor');
 
                 // If color is a callback function
                 if (typeof color === 'function') {
                     // Use the first data
                     color = color(seriesModel.getDataParams(0));
+                }
+
+                 // If borderColor is a callback function
+                if (typeof borderColor === 'function') {
+                    // Use the first data
+                    borderColor = borderColor(seriesModel.getDataParams(0));
                 }
 
                 // Using rect symbol defaultly
@@ -142,47 +200,51 @@ export default echarts.extendComponentView({
                 var itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
-                    itemAlign, color,
+                    itemAlign, color, borderColor,
                     selectMode
                 );
 
-                itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                    .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api, excludeSeriesId))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api, excludeSeriesId));
+                itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
+                    .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
+                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 legendDrawnMap.set(name, true);
             }
             else {
-                // Data legend of pie, funnel
+                // Legend to control data. In pie and funnel.
                 ecModel.eachRawSeries(function (seriesModel) {
+
                     // In case multiple series has same data name
                     if (legendDrawnMap.get(name)) {
                         return;
                     }
 
-                    if (seriesModel.legendDataProvider) {
-                        var data = seriesModel.legendDataProvider();
-                        var idx = data.indexOfName(name);
-                        if (idx < 0) {
+                    if (seriesModel.legendVisualProvider) {
+                        var provider = seriesModel.legendVisualProvider;
+                        if (!provider.containName(name)) {
                             return;
                         }
 
-                        var color = data.getItemVisual(idx, 'color');
+                        var idx = provider.indexOfName(name);
+
+                        var color = provider.getItemVisual(idx, 'color');
+                        var borderColor = provider.getItemVisual(idx, 'borderColor');
 
                         var legendSymbolType = 'roundRect';
 
                         var itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
-                            itemAlign, color,
+                            itemAlign, color, borderColor,
                             selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
-                        itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                            // FIXME Should not specify the series name
-                            .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api, excludeSeriesId))
-                            .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api, excludeSeriesId));
+                        itemGroup.on('click', curry(dispatchSelectAction, null, name, api, excludeSeriesId))
+                            // Should not specify the series name, consider legend controls
+                            // more than one pie series.
+                            .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
+                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
                         legendDrawnMap.set(name, true);
                     }
@@ -192,21 +254,69 @@ export default echarts.extendComponentView({
 
             if (__DEV__) {
                 if (!legendDrawnMap.get(name)) {
-                    console.warn(name + ' series not exists. Legend data should be same with series name or data name.');
+                    console.warn(
+                        name + ' series not exists. Legend data should be same with series name or data name.'
+                    );
                 }
             }
         }, this);
+
+        if (selector) {
+            this._createSelector(selector, legendModel, api, orient, selectorPosition);
+        }
+    },
+
+    _createSelector: function (selector, legendModel, api, orient, selectorPosition) {
+        var selectorGroup = this.getSelectorGroup();
+
+        each(selector, function (selectorItem) {
+            createSelectorButton(selectorItem);
+        });
+
+        function createSelectorButton(selectorItem) {
+            var type = selectorItem.type;
+
+            var labelText = new graphic.Text({
+                style: {
+                    x: 0,
+                    y: 0,
+                    align: 'center',
+                    verticalAlign: 'middle'
+                },
+                onclick: function () {
+                    api.dispatchAction({
+                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect'
+                    });
+                }
+            });
+
+            selectorGroup.add(labelText);
+
+            var labelModel = legendModel.getModel('selectorLabel');
+            var emphasisLabelModel = legendModel.getModel('emphasis.selectorLabel');
+
+            graphic.setLabelStyle(
+                labelText.style, labelText.hoverStyle = {}, labelModel, emphasisLabelModel,
+                {
+                    defaultText: selectorItem.title,
+                    isRectText: false
+                }
+            );
+            graphic.setHoverStyle(labelText);
+        }
     },
 
     _createItem: function (
         name, dataIndex, itemModel, legendModel,
         legendSymbolType, symbolType,
-        itemAlign, color, selectMode
+        itemAlign, color, borderColor, selectMode
     ) {
         var itemWidth = legendModel.get('itemWidth');
         var itemHeight = legendModel.get('itemHeight');
         var inactiveColor = legendModel.get('inactiveColor');
+        var inactiveBorderColor = legendModel.get('inactiveBorderColor');
         var symbolKeepAspect = legendModel.get('symbolKeepAspect');
+        var legendModelItemStyle = legendModel.getModel('itemStyle');
 
         var isSelected = legendModel.isSelected(name);
         var itemGroup = new Group();
@@ -220,7 +330,7 @@ export default echarts.extendComponentView({
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-        itemGroup.add(createSymbol(
+        var legendSymbol = createSymbol(
             legendSymbolType,
             0,
             0,
@@ -229,20 +339,25 @@ export default echarts.extendComponentView({
             isSelected ? color : inactiveColor,
             // symbolKeepAspect default true for legend
             symbolKeepAspect == null ? true : symbolKeepAspect
-        ));
+        );
+        itemGroup.add(
+            setSymbolStyle(
+                legendSymbol, legendSymbolType, legendModelItemStyle,
+                borderColor, inactiveBorderColor, isSelected
+            )
+        );
 
         // Compose symbols
         // PENDING
         if (!itemIcon && symbolType
             // At least show one symbol, can't be all none
-            && ((symbolType !== legendSymbolType) || symbolType == 'none')
+            && ((symbolType !== legendSymbolType) || symbolType === 'none')
         ) {
             var size = itemHeight * 0.8;
             if (symbolType === 'none') {
                 symbolType = 'circle';
             }
-            // Put symbol in the center
-            itemGroup.add(createSymbol(
+            var legendSymbolCenter = createSymbol(
                 symbolType,
                 (itemWidth - size) / 2,
                 (itemHeight - size) / 2,
@@ -251,7 +366,14 @@ export default echarts.extendComponentView({
                 isSelected ? color : inactiveColor,
                 // symbolKeepAspect default true for legend
                 symbolKeepAspect == null ? true : symbolKeepAspect
-            ));
+            );
+            // Put symbol in the center
+            itemGroup.add(
+                setSymbolStyle(
+                    legendSymbolCenter, symbolType, legendModelItemStyle,
+                    borderColor, inactiveBorderColor, isSelected
+                )
+            );
         }
 
         var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
@@ -315,8 +437,9 @@ export default echarts.extendComponentView({
     /**
      * @protected
      */
-    layoutInner: function (legendModel, itemAlign, maxSize) {
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
         var contentGroup = this.getContentGroup();
+        var selectorGroup = this.getSelectorGroup();
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -328,40 +451,106 @@ export default echarts.extendComponentView({
         );
 
         var contentRect = contentGroup.getBoundingRect();
-        contentGroup.attr('position', [-contentRect.x, -contentRect.y]);
+        var contentPos = [-contentRect.x, -contentRect.y];
 
-        return this.group.getBoundingRect();
+        if (selector) {
+            // Place buttons in selectorGroup
+            layoutUtil.box(
+                // Buttons in selectorGroup always layout horizontally
+                'horizontal',
+                selectorGroup,
+                legendModel.get('selectorItemGap', true)
+            );
+
+            var selectorRect = selectorGroup.getBoundingRect();
+            var selectorPos = [-selectorRect.x, -selectorRect.y];
+            var selectorButtonGap = legendModel.get('selectorButtonGap', true);
+
+            var orientIdx = legendModel.getOrient().index;
+            var wh = orientIdx === 0 ? 'width' : 'height';
+            var hw = orientIdx === 0 ? 'height' : 'width';
+            var yx = orientIdx === 0 ? 'y' : 'x';
+
+            if (selectorPosition === 'end') {
+                selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
+            }
+            else {
+                contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
+            }
+
+            //Always align selector to content as 'middle'
+            selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
+            selectorGroup.attr('position', selectorPos);
+            contentGroup.attr('position', contentPos);
+
+            var mainRect = {x: 0, y: 0};
+            mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
+            mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
+            mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
+            return mainRect;
+        }
+        else {
+            contentGroup.attr('position', contentPos);
+            return this.group.getBoundingRect();
+        }
+    },
+
+    /**
+     * @protected
+     */
+    remove: function () {
+        this.getContentGroup().removeAll();
+        this._isFirstRender = true;
     }
 
 });
 
-function dispatchSelectAction(name, api) {
-    api.dispatchAction({
-        type: 'legendToggleSelect',
-        name: name
-    });
+function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, isSelected) {
+    var itemStyle;
+    if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
+        itemStyle = legendModelItemStyle.getItemStyle();
+        symbol.style.stroke = borderColor;
+        if (!isSelected) {
+            itemStyle.stroke = inactiveBorderColor;
+        }
+    }
+    else {
+        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
+    }
+    return symbol.setStyle(itemStyle);
 }
 
-function dispatchHighlightAction(seriesModel, dataName, api, excludeSeriesId) {
+function dispatchSelectAction(seriesName, dataName, api, excludeSeriesId) {
+    // downplay before unselect
+    dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId);
+    api.dispatchAction({
+        type: 'legendToggleSelect',
+        name: seriesName != null ? seriesName : dataName
+    });
+    // highlight after select
+    dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
+}
+
+function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'highlight',
-            seriesName: seriesModel.name,
+            seriesName: seriesName,
             name: dataName,
             excludeSeriesId: excludeSeriesId
         });
     }
 }
 
-function dispatchDownplayAction(seriesModel, dataName, api, excludeSeriesId) {
+function dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'downplay',
-            seriesName: seriesModel.name,
+            seriesName: seriesName,
             name: dataName,
             excludeSeriesId: excludeSeriesId
         });

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {forceLayout} from './forceHelper';
 import {simpleLayout} from './simpleLayoutHelper';
 import {circularLayout} from './circularLayoutHelper';
@@ -28,7 +47,7 @@ export default function (ecModel) {
                 simpleLayout(graphSeries);
             }
             else if (initLayout === 'circular') {
-                circularLayout(graphSeries);
+                circularLayout(graphSeries, 'value');
             }
 
             var nodeDataExtent = nodeData.getDataExtent('value');
@@ -64,11 +83,13 @@ export default function (ecModel) {
                 if (isNaN(d)) {
                     d = (edgeLength[0] + edgeLength[1]) / 2;
                 }
+                var edgeModel = edge.getModel();
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
-                    curveness: edge.getModel().get('lineStyle.curveness') || 0
+                    curveness: edgeModel.get('lineStyle.curveness') || 0,
+                    ignoreForceLayout: edgeModel.get('ignoreForceLayout')
                 };
             });
 
@@ -76,7 +97,8 @@ export default function (ecModel) {
             var rect = coordSys.getBoundingRect();
             var forceInstance = forceLayout(nodes, edges, {
                 rect: rect,
-                gravity: forceModel.get('gravity')
+                gravity: forceModel.get('gravity'),
+                friction: forceModel.get('friction')
             });
             var oldStep = forceInstance.step;
             forceInstance.step = function (cb) {

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 // Compatitable with 2.0
 
 import {each, isArray, isObject} from 'zrender/src/core/util';
@@ -61,15 +80,20 @@ export default function (option, isTheme) {
 
         var seriesType = seriesOpt.type;
 
-        if (seriesType === 'pie' || seriesType === 'gauge') {
+        if (seriesType === 'line') {
+            if (seriesOpt.clipOverflow != null) {
+                seriesOpt.clip = seriesOpt.clipOverflow;
+            }
+        }
+        else if (seriesType === 'pie' || seriesType === 'gauge') {
             if (seriesOpt.clockWise != null) {
                 seriesOpt.clockwise = seriesOpt.clockWise;
             }
         }
-        if (seriesType === 'gauge') {
+        else if (seriesType === 'gauge') {
             var pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
-                && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
+                && set(seriesOpt, 'itemStyle.color', pointerColor);
         }
 
         compatLayoutProperties(seriesOpt);

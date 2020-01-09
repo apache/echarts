@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Symbol with ripple effect
  * @module echarts/chart/helper/EffectSymbol
@@ -19,13 +38,14 @@ function normalizeSymbolSize(symbolSize) {
 }
 
 function updateRipplePath(rippleGroup, effectCfg) {
+    var color = effectCfg.rippleEffectColor || effectCfg.color;
     rippleGroup.eachChild(function (ripplePath) {
         ripplePath.attr({
             z: effectCfg.z,
             zlevel: effectCfg.zlevel,
             style: {
-                stroke: effectCfg.brushType === 'stroke' ? effectCfg.color : null,
-                fill: effectCfg.brushType === 'fill' ? effectCfg.color : null
+                stroke: effectCfg.brushType === 'stroke' ? color : null,
+                fill: effectCfg.brushType === 'fill' ? color : null
             }
         });
     });
@@ -62,9 +82,6 @@ effectSymbolProto.startEffectAnimation = function (effectCfg) {
     var rippleGroup = this.childAt(1);
 
     for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
-        // var ripplePath = createSymbol(
-        //     symbolType, -0.5, -0.5, 1, 1, color
-        // );
         // If width/height are set too small (e.g., set to 1) on ios10
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4136.
@@ -179,6 +196,7 @@ effectSymbolProto.updateData = function (data, idx) {
     effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
     effectCfg.symbolType = symbolType;
     effectCfg.color = color;
+    effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color');
 
     this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 

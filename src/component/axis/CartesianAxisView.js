@@ -1,26 +1,35 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import AxisBuilder from './AxisBuilder';
 import AxisView from './AxisView';
-import * as cartesianAxisHelper from './cartesianAxisHelper';
-
-var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
-var getInterval = AxisBuilder.getInterval;
+import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
+import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ];
 var selfBuilderAttrs = [
-    'splitArea', 'splitLine'
+    'splitArea', 'splitLine', 'minorSplitLine'
 ];
-
-// function getAlignWithLabel(model, axisModel) {
-//     var alignWithLabel = model.get('alignWithLabel');
-//     if (alignWithLabel === 'auto') {
-//         alignWithLabel = axisModel.get('axisTick.alignWithLabel');
-//     }
-//     return alignWithLabel;
-// }
 
 var CartesianAxisView = AxisView.extend({
 
@@ -56,7 +65,7 @@ var CartesianAxisView = AxisView.extend({
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get(name + '.show')) {
-                this['_' + name](axisModel, gridModel, layout.labelInterval);
+                this['_' + name](axisModel, gridModel);
             }
         }, this);
 
@@ -65,13 +74,16 @@ var CartesianAxisView = AxisView.extend({
         CartesianAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
     },
 
+    remove: function () {
+        rectCoordAxisHandleRemove(this);
+    },
+
     /**
      * @param {module:echarts/coord/cartesian/AxisModel} axisModel
      * @param {module:echarts/coord/cartesian/GridModel} gridModel
-     * @param {number|Function} labelInterval
      * @private
      */
-    _splitLine: function (axisModel, gridModel, labelInterval) {
+    _splitLine: function (axisModel, gridModel) {
         var axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -82,8 +94,6 @@ var CartesianAxisView = AxisView.extend({
         var lineStyleModel = splitLineModel.getModel('lineStyle');
         var lineColors = lineStyleModel.get('color');
 
-        var lineInterval = getInterval(splitLineModel, labelInterval);
-
         lineColors = zrUtil.isArray(lineColors) ? lineColors : [lineColors];
 
         var gridRect = gridModel.coordinateSystem.getRect();
@@ -91,28 +101,16 @@ var CartesianAxisView = AxisView.extend({
 
         var lineCount = 0;
 
-        var ticksCoords = axis.getTicksCoords(
-            // splitLineModel.get('alignWithLabel')
-        );
-        var ticks = axis.scale.getTicks();
-
-        var showMinLabel = axisModel.get('axisLabel.showMinLabel');
-        var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+        var ticksCoords = axis.getTicksCoords({
+            tickModel: splitLineModel
+        });
 
         var p1 = [];
         var p2 = [];
-        // Simple optimization
-        // Batching the lines if color are the same
+
         var lineStyle = lineStyleModel.getLineStyle();
         for (var i = 0; i < ticksCoords.length; i++) {
-            if (ifIgnoreOnTick(
-                axis, i, lineInterval, ticksCoords.length,
-                showMinLabel, showMaxLabel
-            )) {
-                continue;
-            }
-
-            var tickCoord = axis.toGlobalCoord(ticksCoords[i]);
+            var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
             if (isHorizontal) {
                 p1[0] = tickCoord;
@@ -128,9 +126,10 @@ var CartesianAxisView = AxisView.extend({
             }
 
             var colorIndex = (lineCount++) % lineColors.length;
-            this._axisGroup.add(new graphic.Line(graphic.subPixelOptimizeLine({
-                anid: 'line_' + ticks[i],
-
+            var tickValue = ticksCoords[i].tickValue;
+            this._axisGroup.add(new graphic.Line({
+                anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
+                subPixelOptimize: true,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -141,93 +140,74 @@ var CartesianAxisView = AxisView.extend({
                     stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
-            })));
+            }));
         }
     },
 
     /**
      * @param {module:echarts/coord/cartesian/AxisModel} axisModel
      * @param {module:echarts/coord/cartesian/GridModel} gridModel
-     * @param {number|Function} labelInterval
      * @private
      */
-    _splitArea: function (axisModel, gridModel, labelInterval) {
+    _minorSplitLine: function (axisModel, gridModel) {
         var axis = axisModel.axis;
 
-        if (axis.scale.isBlank()) {
-            return;
-        }
-
-        var splitAreaModel = axisModel.getModel('splitArea');
-        var areaStyleModel = splitAreaModel.getModel('areaStyle');
-        var areaColors = areaStyleModel.get('color');
+        var minorSplitLineModel = axisModel.getModel('minorSplitLine');
+        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
 
         var gridRect = gridModel.coordinateSystem.getRect();
+        var isHorizontal = axis.isHorizontal();
 
-        var ticksCoords = axis.getTicksCoords(
-            // splitAreaModel.get('alignWithLabel')
-        );
-        var ticks = axis.scale.getTicks();
-
-        var prevX = axis.toGlobalCoord(ticksCoords[0]);
-        var prevY = axis.toGlobalCoord(ticksCoords[0]);
-
-        var count = 0;
-
-        var areaInterval = getInterval(splitAreaModel, labelInterval);
-
-        var areaStyle = areaStyleModel.getAreaStyle();
-        areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
-
-        var showMinLabel = axisModel.get('axisLabel.showMinLabel');
-        var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
-
-        for (var i = 1; i < ticksCoords.length; i++) {
-            if (ifIgnoreOnTick(
-                axis, i, areaInterval, ticksCoords.length,
-                showMinLabel, showMaxLabel
-            ) && (i < ticksCoords.length - 1)) {
-                continue;
-            }
-
-            var tickCoord = axis.toGlobalCoord(ticksCoords[i]);
-
-            var x;
-            var y;
-            var width;
-            var height;
-            if (axis.isHorizontal()) {
-                x = prevX;
-                y = gridRect.y;
-                width = tickCoord - x;
-                height = gridRect.height;
-            }
-            else {
-                x = gridRect.x;
-                y = prevY;
-                width = gridRect.width;
-                height = tickCoord - y;
-            }
-
-            var colorIndex = (count++) % areaColors.length;
-            this._axisGroup.add(new graphic.Rect({
-                anid: 'area_' + ticks[i],
-
-                shape: {
-                    x: x,
-                    y: y,
-                    width: width,
-                    height: height
-                },
-                style: zrUtil.defaults({
-                    fill: areaColors[colorIndex]
-                }, areaStyle),
-                silent: true
-            }));
-
-            prevX = x + width;
-            prevY = y + height;
+        var minorTicksCoords = axis.getMinorTicksCoords();
+        if (!minorTicksCoords.length) {
+            return;
         }
+        var p1 = [];
+        var p2 = [];
+
+        var lineStyle = lineStyleModel.getLineStyle();
+
+
+        for (var i = 0; i < minorTicksCoords.length; i++) {
+            for (var k = 0; k < minorTicksCoords[i].length; k++) {
+                var tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
+
+                if (isHorizontal) {
+                    p1[0] = tickCoord;
+                    p1[1] = gridRect.y;
+                    p2[0] = tickCoord;
+                    p2[1] = gridRect.y + gridRect.height;
+                }
+                else {
+                    p1[0] = gridRect.x;
+                    p1[1] = tickCoord;
+                    p2[0] = gridRect.x + gridRect.width;
+                    p2[1] = tickCoord;
+                }
+
+                this._axisGroup.add(new graphic.Line({
+                    anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
+                    subPixelOptimize: true,
+                    shape: {
+                        x1: p1[0],
+                        y1: p1[1],
+                        x2: p2[0],
+                        y2: p2[1]
+                    },
+                    style: lineStyle,
+                    silent: true
+                }));
+            }
+        }
+    },
+
+    /**
+     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+     * @param {module:echarts/coord/cartesian/GridModel} gridModel
+     * @private
+     */
+    _splitArea: function (axisModel, gridModel) {
+        rectCoordAxisBuildSplitArea(this, this._axisGroup, axisModel, gridModel);
     }
 });
 

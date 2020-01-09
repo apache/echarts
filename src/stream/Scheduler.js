@@ -1,8 +1,27 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * @module echarts/stream/Scheduler
  */
 
-import {each, isFunction, createHashMap, noop} from 'zrender/src/core/util';
+import {each, map, isFunction, createHashMap, noop} from 'zrender/src/core/util';
 import {createTask} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
@@ -90,10 +109,14 @@ proto.getPerformArgs = function (task, isBlock) {
     var pCtx = pipeline.context;
     var incremental = !isBlock
         && pipeline.progressiveEnabled
-        && (!pCtx || pCtx.canProgressiveRender)
-        && task.__idxInPipeline > pipeline.bockIndex;
+        && (!pCtx || pCtx.progressiveRender)
+        && task.__idxInPipeline > pipeline.blockIndex;
 
-    return {step: incremental ? pipeline.step : null};
+    var step = incremental ? pipeline.step : null;
+    var modDataCount = pCtx && pCtx.modDataCount;
+    var modBy = modDataCount != null ? Math.ceil(modDataCount / step) : null;
+
+    return {step: step, modBy: modBy, modDataCount: modDataCount};
 };
 
 proto.getPipeline = function (pipelineId) {
@@ -112,19 +135,24 @@ proto.updateStreamModes = function (seriesModel, view) {
     var data = seriesModel.getData();
     var dataLen = data.count();
 
-    // `canProgressiveRender` means that can render progressively in each
+    // `progressiveRender` means that can render progressively in each
     // animation frame. Note that some types of series do not provide
     // `view.incrementalPrepareRender` but support `chart.appendData`. We
     // use the term `incremental` but not `progressive` to describe the
     // case that `chart.appendData`.
-    var canProgressiveRender = pipeline.progressiveEnabled
+    var progressiveRender = pipeline.progressiveEnabled
         && view.incrementalPrepareRender
         && dataLen >= pipeline.threshold;
 
     var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
 
+    // TODO: modDataCount should not updated if `appendData`, otherwise cause whole repaint.
+    // see `test/candlestick-large3.html`
+    var modDataCount = seriesModel.get('progressiveChunkMode') === 'mod' ? dataLen : null;
+
     seriesModel.pipelineContext = pipeline.context = {
-        canProgressiveRender: canProgressiveRender,
+        progressiveRender: progressiveRender,
+        modDataCount: modDataCount,
         large: large
     };
 };
@@ -144,8 +172,8 @@ proto.restorePipelines = function (ecModel) {
             threshold: seriesModel.getProgressiveThreshold(),
             progressiveEnabled: progressive
                 && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
-            bockIndex: -1,
-            step: progressive || 700, // ??? Temporarily number
+            blockIndex: -1,
+            step: Math.round(progressive || 700),
             count: 0
         });
 
@@ -264,7 +292,7 @@ proto.plan = function () {
         var task = pipeline.tail;
         do {
             if (task.__block) {
-                pipeline.bockIndex = task.__idxInPipeline;
+                pipeline.blockIndex = task.__idxInPipeline;
                 break;
             }
             task = task.getUpstream();
@@ -435,17 +463,20 @@ function seriesTaskReset(context) {
     var resetDefines = context.resetDefines = normalizeToArray(context.reset(
         context.model, context.ecModel, context.api, context.payload
     ));
-    if (resetDefines.length) {
-        return seriesTaskProgress;
-    }
+    return resetDefines.length > 1
+        ? map(resetDefines, function (v, idx) {
+            return makeSeriesTaskProgress(idx);
+        })
+        : singleSeriesTaskProgress;
 }
 
-function seriesTaskProgress(params, context) {
-    var data = context.data;
-    var resetDefines = context.resetDefines;
+var singleSeriesTaskProgress = makeSeriesTaskProgress(0);
 
-    for (var k = 0; k < resetDefines.length; k++) {
-        var resetDefine = resetDefines[k];
+function makeSeriesTaskProgress(resetDefineIdx) {
+    return function (params, context) {
+        var data = context.data;
+        var resetDefine = context.resetDefines[resetDefineIdx];
+
         if (resetDefine && resetDefine.dataEach) {
             for (var i = params.start; i < params.end; i++) {
                 resetDefine.dataEach(data, i);
@@ -454,7 +485,7 @@ function seriesTaskProgress(params, context) {
         else if (resetDefine && resetDefine.progress) {
             resetDefine.progress(params, data);
         }
-    }
+    };
 }
 
 function seriesTaskCount(context) {
@@ -521,10 +552,12 @@ ecModelMock.eachComponent = function (cond) {
 };
 
 function mockMethods(target, Clz) {
+    /* eslint-disable */
     for (var name in Clz.prototype) {
         // Do not use hasOwnProperty
         target[name] = noop;
     }
+    /* eslint-enable */
 }
 
 export default Scheduler;

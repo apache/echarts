@@ -1,15 +1,30 @@
-/**
- * @file  Define the themeRiver view's series model
- * @author Deqing Li(annong035@gmail.com)
- */
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
 import SeriesModel from '../../model/Series';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
+import {groupData} from '../../util/model';
 import {encodeHTML} from '../../util/format';
-import nest from '../../util/array/nest';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
 
 var DATA_NAME_INDEX = 2;
 
@@ -29,14 +44,15 @@ var ThemeRiverSeries = SeriesModel.extend({
      * @override
      */
     init: function (option) {
+        // eslint-disable-next-line
         ThemeRiverSeries.superApply(this, 'init', arguments);
 
         // Put this function here is for the sake of consistency of code style.
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
-        this.legendDataProvider = function () {
-            return this.getRawData();
-        };
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
     },
 
     /**
@@ -49,18 +65,12 @@ var ThemeRiverSeries = SeriesModel.extend({
         var rawDataLength = data.length;
 
         // grouped data by name
-        var dataByName = nest()
-            .key(function (dataItem) {
-                return dataItem[2];
-            })
-            .entries(data);
-
-        // data group in each layer
-        var layData = zrUtil.map(dataByName, function (d) {
-            return {
-                name: d.key,
-                dataList: d.values
-            };
+        var groupResult = groupData(data, function (item) {
+            return item[2];
+        });
+        var layData = [];
+        groupResult.buckets.each(function (items, key) {
+            layData.push({name: key, dataList: items});
         });
 
         var layerNum = layData.length;
@@ -181,36 +191,27 @@ var ThemeRiverSeries = SeriesModel.extend({
         for (var i = 0; i < lenCount; ++i) {
             indexArr[i] = i;
         }
-        // data group by name
-        var dataByName = nest()
-            .key(function (index) {
-                return data.get('name', index);
-            })
-            .entries(indexArr);
-
-        var layerSeries = zrUtil.map(dataByName, function (d) {
-            return {
-                name: d.key,
-                indices: d.values
-            };
-        });
 
         var timeDim = data.mapDimension('single');
 
-        for (var j = 0; j < layerSeries.length; ++j) {
-            layerSeries[j].indices.sort(comparer);
-        }
-
-        function comparer(index1, index2) {
-            return data.get(timeDim, index1) - data.get(timeDim, index2);
-        }
+        // data group by name
+        var groupResult = groupData(indexArr, function (index) {
+            return data.get('name', index);
+        });
+        var layerSeries = [];
+        groupResult.buckets.each(function (items, key) {
+            items.sort(function (index1, index2) {
+                return data.get(timeDim, index1) - data.get(timeDim, index2);
+            });
+            layerSeries.push({name: key, indices: items});
+        });
 
         return layerSeries;
     },
 
     /**
      * Get data indices for show tooltip content
-     *
+
      * @param {Array.<string>|string} dim  single coordinate dimension
      * @param {number} value axis value
      * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used
@@ -278,7 +279,6 @@ var ThemeRiverSeries = SeriesModel.extend({
 
         label: {
             margin: 4,
-            textAlign: 'right',
             show: true,
             position: 'left',
             color: '#000',

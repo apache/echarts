@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 import {map} from 'zrender/src/core/util';
 
@@ -17,18 +36,25 @@ export function prepareDataCoordInfo(coordSys, data, valueOrigin) {
     var baseDim = data.mapDimension(baseAxisDim);
     var baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
 
-    var stacked = isDimensionStacked(data, valueDim, baseDim);
-
-    var dataDimsForPoint = map(coordSys.dimensions, function (coordDim) {
+    var dims = map(coordSys.dimensions, function (coordDim) {
         return data.mapDimension(coordDim);
     });
 
+    var stacked;
+    var stackResultDim = data.getCalculationInfo('stackResultDimension');
+    if (stacked |= isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
+        dims[0] = stackResultDim;
+    }
+    if (stacked |= isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
+        dims[1] = stackResultDim;
+    }
+
     return {
-        dataDimsForPoint: dataDimsForPoint,
+        dataDimsForPoint: dims,
         valueStart: valueStart,
         valueAxisDim: valueAxisDim,
         baseAxisDim: baseAxisDim,
-        stacked: stacked,
+        stacked: !!stacked,
         valueDim: valueDim,
         baseDim: baseDim,
         baseDataOffset: baseDataOffset,

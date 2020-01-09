@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as eventTool from 'zrender/src/core/event';
@@ -89,7 +108,7 @@ function assembleSeriesWithCategoryAxis(series) {
         }
         tables.push(lines.join('\n'));
     });
-    return tables.join('\n\n' +  BLOCK_SPLITER + '\n\n');
+    return tables.join('\n\n' + BLOCK_SPLITER + '\n\n');
 }
 
 /**
@@ -381,25 +400,6 @@ DataView.prototype.onclick = function (ecModel, api) {
 
     !model.get('readOnly') && buttonContainer.appendChild(refreshButton);
     buttonContainer.appendChild(closeButton);
-
-    // http://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
-    eventTool.addEventListener(textarea, 'keydown', function (e) {
-        if ((e.keyCode || e.which) === 9) {
-            // get caret position/selection
-            var val = this.value;
-            var start = this.selectionStart;
-            var end = this.selectionEnd;
-
-            // set textarea value to: text before caret + tab + text after caret
-            this.value = val.substring(0, start) + ITEM_SPLITER + val.substring(end);
-
-            // put caret at right position again
-            this.selectionStart = this.selectionEnd = start + 1;
-
-            // prevent the focus lose
-            eventTool.stop(e);
-        }
-    });
 
     root.appendChild(header);
     root.appendChild(viewMain);

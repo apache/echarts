@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
@@ -35,9 +54,9 @@ var BrushModel = echarts.extendComponentModel({
             borderColor: 'rgba(120,140,180,0.8)'
         },
 
-        throttleType: 'fixRate',// Throttle in brushSelected event. 'fixRate' or 'debounce'.
-                                // If null, no throttle. Valid only in the first brush component
-        throttleDelay: 0,       // Unit: ms, 0 means every event will be triggered.
+        throttleType: 'fixRate', // Throttle in brushSelected event. 'fixRate' or 'debounce'.
+                                 // If null, no throttle. Valid only in the first brush component
+        throttleDelay: 0,        // Unit: ms, 0 means every event will be triggered.
 
         // FIXME
         // 试验效果
@@ -82,9 +101,15 @@ var BrushModel = echarts.extendComponentModel({
             thisOption, newOption, ['inBrush', 'outOfBrush']
         );
 
-        thisOption.inBrush = thisOption.inBrush || {};
+        var inBrush = thisOption.inBrush = thisOption.inBrush || {};
         // Always give default visual, consider setOption at the second time.
         thisOption.outOfBrush = thisOption.outOfBrush || {color: DEFAULT_OUT_OF_BRUSH_COLOR};
+
+        if (!inBrush.hasOwnProperty('liftZ')) {
+            // Bigger than the highlight z lift, otherwise it will
+            // be effected by the highlight z when brush.
+            inBrush.liftZ = 5;
+        }
     },
 
     /**

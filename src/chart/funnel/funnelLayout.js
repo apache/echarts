@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
 
@@ -24,7 +43,8 @@ function getSortedIndices(data, sort) {
     // Add custom sortable function & none sortable opetion by "options.sort"
     if (typeof sort === 'function') {
         indices.sort(sort);
-    } else if (sort !== 'none') {
+    }
+    else if (sort !== 'none') {
         indices.sort(function (a, b) {
             return isAscending ? valueArr[a] - valueArr[b] : valueArr[b] - valueArr[a];
         });
@@ -44,7 +64,8 @@ function labelLayout(data) {
         var points = layout.points;
 
         var isLabelInside = labelPosition === 'inner'
-            || labelPosition === 'inside' || labelPosition === 'center';
+            || labelPosition === 'inside' || labelPosition === 'center'
+            || labelPosition === 'insideLeft' || labelPosition === 'insideRight';
 
         var textAlign;
         var textX;
@@ -52,9 +73,21 @@ function labelLayout(data) {
         var linePoints;
 
         if (isLabelInside) {
-            textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
-            textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
-            textAlign = 'center';
+            if (labelPosition === 'insideLeft') {
+                textX = (points[0][0] + points[3][0]) / 2 + 5;
+                textY = (points[0][1] + points[3][1]) / 2;
+                textAlign = 'left';
+            }
+            else if (labelPosition === 'insideRight') {
+                textX = (points[1][0] + points[2][0]) / 2 - 5;
+                textY = (points[1][1] + points[2][1]) / 2;
+                textAlign = 'right';
+            }
+            else {
+                textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
+                textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
+                textAlign = 'center';
+            }
             linePoints = [
                 [textX, textY], [textX, textY]
             ];
@@ -68,6 +101,46 @@ function labelLayout(data) {
                 // Left side
                 x1 = (points[3][0] + points[0][0]) / 2;
                 y1 = (points[3][1] + points[0][1]) / 2;
+                x2 = x1 - labelLineLen;
+                textX = x2 - 5;
+                textAlign = 'right';
+            }
+            else if (labelPosition === 'right') {
+                // Right side
+                x1 = (points[1][0] + points[2][0]) / 2;
+                y1 = (points[1][1] + points[2][1]) / 2;
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'left';
+            }
+            else if (labelPosition === 'rightTop') {
+                // RightTop side
+                x1 = points[1][0];
+                y1 = points[1][1];
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'top';
+            }
+            else if (labelPosition === 'rightBottom') {
+                // RightBottom side
+                x1 = points[2][0];
+                y1 = points[2][1];
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'bottom';
+            }
+            else if (labelPosition === 'leftTop') {
+                // LeftTop side
+                x1 = points[0][0];
+                y1 = points[1][1];
+                x2 = x1 - labelLineLen;
+                textX = x2 - 5;
+                textAlign = 'right';
+            }
+            else if (labelPosition === 'leftBottom') {
+                // LeftBottom side
+                x1 = points[3][0];
+                y1 = points[2][1];
                 x2 = x1 - labelLineLen;
                 textX = x2 - 5;
                 textAlign = 'right';

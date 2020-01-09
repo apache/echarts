@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
@@ -92,34 +111,74 @@ var DataZoomModel = echarts.extendComponentModel({
         this._autoThrottle = true;
 
         /**
-         * 'percent' or 'value'
+         * It is `[rangeModeForMin, rangeModeForMax]`.
+         * The optional values for `rangeMode`:
+         * + `'value'` mode: the axis extent will always be determined by
+         *     `dataZoom.startValue` and `dataZoom.endValue`, despite
+         *     how data like and how `axis.min` and `axis.max` are.
+         * + `'percent'` mode: `100` represents 100% of the `[dMin, dMax]`,
+         *     where `dMin` is `axis.min` if `axis.min` specified, otherwise `data.extent[0]`,
+         *     and `dMax` is `axis.max` if `axis.max` specified, otherwise `data.extent[1]`.
+         *     Axis extent will be determined by the result of the percent of `[dMin, dMax]`.
+         *
+         * For example, when users are using dynamic data (update data periodically via `setOption`),
+         * if in `'value`' mode, the window will be kept in a fixed value range despite how
+         * data are appended, while if in `'percent'` mode, whe window range will be changed alone with
+         * the appended data (suppose `axis.min` and `axis.max` are not specified).
+         *
          * @private
          */
         this._rangePropMode = ['percent', 'percent'];
 
-        var rawOption = retrieveRaw(option);
+        var inputRawOption = retrieveRawOption(option);
+
+        /**
+         * Suppose a "main process" start at the point that model prepared (that is,
+         * model initialized or merged or method called in `action`).
+         * We should keep the `main process` idempotent, that is, given a set of values
+         * on `option`, we get the same result.
+         *
+         * But sometimes, values on `option` will be updated for providing users
+         * a "final calculated value" (`dataZoomProcessor` will do that). Those value
+         * should not be the base/input of the `main process`.
+         *
+         * So in that case we should save and keep the input of the `main process`
+         * separately, called `settledOption`.
+         *
+         * For example, consider the case:
+         * (Step_1) brush zoom the grid by `toolbox.dataZoom`,
+         *     where the original input `option.startValue`, `option.endValue` are earsed by
+         *     calculated value.
+         * (Step)2) click the legend to hide and show a series,
+         *     where the new range is calculated by the earsed `startValue` and `endValue`,
+         *     which brings incorrect result.
+         *
+         * @readOnly
+         */
+        this.settledOption = inputRawOption;
 
         this.mergeDefaultAndTheme(option, ecModel);
 
-        this.doInit(rawOption);
+        this.doInit(inputRawOption);
     },
 
     /**
      * @override
      */
     mergeOption: function (newOption) {
-        var rawOption = retrieveRaw(newOption);
+        var inputRawOption = retrieveRawOption(newOption);
 
         //FIX #2591
         zrUtil.merge(this.option, newOption, true);
+        zrUtil.merge(this.settledOption, inputRawOption, true);
 
-        this.doInit(rawOption);
+        this.doInit(inputRawOption);
     },
 
     /**
      * @protected
      */
-    doInit: function (rawOption) {
+    doInit: function (inputRawOption) {
         var thisOption = this.option;
 
         // Disable realtime view update if canvas is not supported.
@@ -127,16 +186,17 @@ var DataZoomModel = echarts.extendComponentModel({
             thisOption.realtime = false;
         }
 
-        this._setDefaultThrottle(rawOption);
+        this._setDefaultThrottle(inputRawOption);
 
-        updateRangeUse(this, rawOption);
+        updateRangeUse(this, inputRawOption);
 
+        var settledOption = this.settledOption;
         each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
             // start/end has higher priority over startValue/endValue if they
             // both set, but we should make chart.setOption({endValue: 1000})
             // effective, rather than chart.setOption({endValue: 1000, end: null}).
             if (this._rangePropMode[index] === 'value') {
-                thisOption[names[0]] = null;
+                thisOption[names[0]] = settledOption[names[0]] = null;
             }
             // Otherwise do nothing and use the merge result.
         }, this);
@@ -356,16 +416,16 @@ var DataZoomModel = echarts.extendComponentModel({
     /**
      * @private
      */
-    _setDefaultThrottle: function (rawOption) {
+    _setDefaultThrottle: function (inputRawOption) {
         // When first time user set throttle, auto throttle ends.
-        if (rawOption.hasOwnProperty('throttle')) {
+        if (inputRawOption.hasOwnProperty('throttle')) {
             this._autoThrottle = false;
         }
         if (this._autoThrottle) {
             var globalOption = this.ecModel.option;
-            this.option.throttle =
-                (globalOption.animation && globalOption.animationDurationUpdate > 0)
-                ? 100 : 20;
+            this.option.throttle = (
+                globalOption.animation && globalOption.animationDurationUpdate > 0
+            ) ? 100 : 20;
         }
     },
 
@@ -431,23 +491,42 @@ var DataZoomModel = echarts.extendComponentModel({
      * @param {number} [opt.end]
      * @param {number} [opt.startValue]
      * @param {number} [opt.endValue]
-     * @param {boolean} [ignoreUpdateRangeUsg=false]
      */
-    setRawRange: function (opt, ignoreUpdateRangeUsg) {
-        var option = this.option;
+    setRawRange: function (opt) {
+        var thisOption = this.option;
+        var settledOption = this.settledOption;
         each([['start', 'startValue'], ['end', 'endValue']], function (names) {
-            // If only one of 'start' and 'startValue' is not null/undefined, the other
-            // should be cleared, which enable clear the option.
-            // If both of them are not set, keep option with the original value, which
-            // enable use only set start but not set end when calling `dispatchAction`.
-            // The same as 'end' and 'endValue'.
+            // Consider the pair <start, startValue>:
+            // If one has value and the other one is `null/undefined`, we both set them
+            // to `settledOption`. This strategy enables the feature to clear the original
+            // value in `settledOption` to `null/undefined`.
+            // But if both of them are `null/undefined`, we do not set them to `settledOption`
+            // and keep `settledOption` with the original value. This strategy enables users to
+            // only set <end or endValue> but not set <start or startValue> when calling
+            // `dispatchAction`.
+            // The pair <end, endValue> is treated in the same way.
             if (opt[names[0]] != null || opt[names[1]] != null) {
-                option[names[0]] = opt[names[0]];
-                option[names[1]] = opt[names[1]];
+                thisOption[names[0]] = settledOption[names[0]] = opt[names[0]];
+                thisOption[names[1]] = settledOption[names[1]] = opt[names[1]];
             }
         }, this);
 
-        !ignoreUpdateRangeUsg && updateRangeUse(this, opt);
+        updateRangeUse(this, opt);
+    },
+
+    /**
+     * @public
+     * @param {Object} opt
+     * @param {number} [opt.start]
+     * @param {number} [opt.end]
+     * @param {number} [opt.startValue]
+     * @param {number} [opt.endValue]
+     */
+    setCalculatedRange: function (opt) {
+        var option = this.option;
+        each(['start', 'startValue', 'end', 'endValue'], function (name) {
+            option[name] = opt[name];
+        });
     },
 
     /**
@@ -521,7 +600,12 @@ var DataZoomModel = echarts.extendComponentModel({
 
 });
 
-function retrieveRaw(option) {
+/**
+ * Retrieve the those raw params from option, which will be cached separately.
+ * becasue they will be overwritten by normalized/calculated values in the main
+ * process.
+ */
+function retrieveRawOption(option) {
     var ret = {};
     each(
         ['start', 'end', 'startValue', 'endValue', 'throttle'],
@@ -532,13 +616,13 @@ function retrieveRaw(option) {
     return ret;
 }
 
-function updateRangeUse(dataZoomModel, rawOption) {
+function updateRangeUse(dataZoomModel, inputRawOption) {
     var rangePropMode = dataZoomModel._rangePropMode;
     var rangeModeInOption = dataZoomModel.get('rangeMode');
 
     each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
-        var percentSpecified = rawOption[names[0]] != null;
-        var valueSpecified = rawOption[names[1]] != null;
+        var percentSpecified = inputRawOption[names[0]] != null;
+        var valueSpecified = inputRawOption[names[1]] != null;
         if (percentSpecified && !valueSpecified) {
             rangePropMode[index] = 'percent';
         }

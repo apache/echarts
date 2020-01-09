@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * @module echarts/chart/helper/Symbol
  */
@@ -8,17 +27,6 @@ import * as graphic from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 
-
-function getSymbolSize(data, idx) {
-    var symbolSize = data.getItemVisual(idx, 'symbolSize');
-    return symbolSize instanceof Array
-        ? symbolSize.slice()
-        : [+symbolSize, +symbolSize];
-}
-
-function getScale(symbolSize) {
-    return [symbolSize[0] / 2, symbolSize[1] / 2];
-}
 
 /**
  * @constructor
@@ -33,6 +41,24 @@ function SymbolClz(data, idx, seriesScope) {
 }
 
 var symbolProto = SymbolClz.prototype;
+
+/**
+ * @public
+ * @static
+ * @param {module:echarts/data/List} data
+ * @param {number} dataIndex
+ * @return {Array.<number>} [width, height]
+ */
+var getSymbolSize = SymbolClz.getSymbolSize = function (data, idx) {
+    var symbolSize = data.getItemVisual(idx, 'symbolSize');
+    return symbolSize instanceof Array
+        ? symbolSize.slice()
+        : [+symbolSize, +symbolSize];
+};
+
+function getScale(symbolSize) {
+    return [symbolSize[0] / 2, symbolSize[1] / 2];
+}
 
 function driftSymbol(dx, dy) {
     this.parent.drift(dx, dy);
@@ -129,7 +155,7 @@ symbolProto.setZ = function (zlevel, z) {
 symbolProto.setDraggable = function (draggable) {
     var symbolPath = this.childAt(0);
     symbolPath.draggable = draggable;
-    symbolPath.cursor = draggable ? 'move' : 'pointer';
+    symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
 };
 
 /**
@@ -210,6 +236,15 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
             strokeNoScale: true
         });
     }
+    else {
+        symbolPath.setStyle({
+            opacity: null,
+            shadowBlur: null,
+            shadowOffsetX: null,
+            shadowOffsetY: null,
+            shadowColor: null
+        });
+    }
 
     var itemStyle = seriesScope && seriesScope.itemStyle;
     var hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
@@ -264,6 +299,19 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         elStyle.opacity = opacity;
     }
 
+    var liftZ = data.getItemVisual(idx, 'liftZ');
+    var z2Origin = symbolPath.__z2Origin;
+    if (liftZ != null) {
+        if (z2Origin == null) {
+            symbolPath.__z2Origin = symbolPath.z2;
+            symbolPath.z2 += liftZ;
+        }
+    }
+    else if (z2Origin != null) {
+        symbolPath.z2 = z2Origin;
+        symbolPath.__z2Origin = null;
+    }
+
     var useNameLabel = seriesScope && seriesScope.useNameLabel;
 
     graphic.setLabelStyle(
@@ -282,48 +330,43 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
     }
 
-    symbolPath.off('mouseover')
-        .off('mouseout')
-        .off('emphasis')
-        .off('normal');
-
+    symbolPath.__symbolOriginalScale = getScale(symbolSize);
     symbolPath.hoverStyle = hoverItemStyle;
+    symbolPath.highDownOnUpdate = (
+        hoverAnimation && seriesModel.isAnimationEnabled()
+    ) ? highDownOnUpdate : null;
 
-    // FIXME
-    // Do not use symbol.trigger('emphasis'), but use symbol.highlight() instead.
     graphic.setHoverStyle(symbolPath);
-
-    var scale = getScale(symbolSize);
-
-    if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-        var onEmphasis = function() {
-            // Do not support this hover animation util some scenario required.
-            // Animation can only be supported in hover layer when using `el.incremetal`.
-            if (this.incremental) {
-                return;
-            }
-            var ratio = scale[1] / scale[0];
-            this.animateTo({
-                scale: [
-                    Math.max(scale[0] * 1.1, scale[0] + 3),
-                    Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-                ]
-            }, 400, 'elasticOut');
-        };
-        var onNormal = function() {
-            if (this.incremental) {
-                return;
-            }
-            this.animateTo({
-                scale: scale
-            }, 400, 'elasticOut');
-        };
-        symbolPath.on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal);
-    }
 };
+
+function highDownOnUpdate(fromState, toState) {
+    // Do not support this hover animation util some scenario required.
+    // Animation can only be supported in hover layer when using `el.incremetal`.
+    if (this.incremental || this.useHoverLayer) {
+        return;
+    }
+
+    if (toState === 'emphasis') {
+        var scale = this.__symbolOriginalScale;
+        var ratio = scale[1] / scale[0];
+        var emphasisOpt = {
+            scale: [
+                Math.max(scale[0] * 1.1, scale[0] + 3),
+                Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
+            ]
+        };
+        // FIXME
+        // modify it after support stop specified animation.
+        // toState === fromState
+        //     ? (this.stopAnimation(), this.attr(emphasisOpt))
+        this.animateTo(emphasisOpt, 400, 'elasticOut');
+    }
+    else if (toState === 'normal') {
+        this.animateTo({
+            scale: this.__symbolOriginalScale
+        }, 400, 'elasticOut');
+    }
+}
 
 /**
  * @param {Function} cb

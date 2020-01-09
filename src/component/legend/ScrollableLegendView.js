@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Separate legend and scrollable legend to reduce package size.
  */
@@ -62,14 +81,17 @@ var ScrollableLegendView = LegendView.extend({
     /**
      * @override
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api) {
+    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
         var me = this;
 
         // Render content items.
-        ScrollableLegendView.superCall(this, 'renderInner', itemAlign, legendModel, ecModel, api);
+        ScrollableLegendView.superCall(this, 'renderInner', itemAlign,
+            legendModel, ecModel, api, selector, orient, selectorPosition);
 
         var controllerGroup = this._controllerGroup;
 
+        // FIXME: support be 'auto' adapt to size number text length,
+        // e.g., '3/12345' should not overlap with the control arrow button.
         var pageIconSize = legendModel.get('pageIconSize', true);
         if (!zrUtil.isArray(pageIconSize)) {
             pageIconSize = [pageIconSize, pageIconSize];
@@ -117,15 +139,58 @@ var ScrollableLegendView = LegendView.extend({
     /**
      * @override
      */
-    layoutInner: function (legendModel, itemAlign, maxSize) {
-        var contentGroup = this.getContentGroup();
-        var containerGroup = this._containerGroup;
-        var controllerGroup = this._controllerGroup;
+    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
+        var selectorGroup = this.getSelectorGroup();
 
         var orientIdx = legendModel.getOrient().index;
         var wh = WH[orientIdx];
+        var xy = XY[orientIdx];
         var hw = WH[1 - orientIdx];
         var yx = XY[1 - orientIdx];
+
+        selector && layoutUtil.box(
+            // Buttons in selectorGroup always layout horizontally
+            'horizontal',
+            selectorGroup,
+            legendModel.get('selectorItemGap', true)
+        );
+
+        var selectorButtonGap = legendModel.get('selectorButtonGap', true);
+        var selectorRect = selectorGroup.getBoundingRect();
+        var selectorPos = [-selectorRect.x, -selectorRect.y];
+
+        var processMaxSize = zrUtil.clone(maxSize);
+        selector && (processMaxSize[wh] = maxSize[wh] - selectorRect[wh] - selectorButtonGap);
+
+        var mainRect = this._layoutContentAndController(legendModel, isFirstRender,
+            processMaxSize, orientIdx, wh, hw, yx
+        );
+
+        if (selector) {
+            if (selectorPosition === 'end') {
+                selectorPos[orientIdx] += mainRect[wh] + selectorButtonGap;
+            }
+            else {
+                var offset = selectorRect[wh] + selectorButtonGap;
+                selectorPos[orientIdx] -= offset;
+                mainRect[xy] -= offset;
+            }
+            mainRect[wh] += selectorRect[wh] + selectorButtonGap;
+
+            selectorPos[1 - orientIdx] += mainRect[yx] + mainRect[hw] / 2 - selectorRect[hw] / 2;
+            mainRect[hw] = Math.max(mainRect[hw], selectorRect[hw]);
+            mainRect[yx] = Math.min(mainRect[yx], selectorRect[yx] + selectorPos[1 - orientIdx]);
+
+            selectorGroup.attr('position', selectorPos);
+        }
+
+        return mainRect;
+    },
+
+    _layoutContentAndController: function (legendModel, isFirstRender, maxSize, orientIdx, wh, hw, yx) {
+        var contentGroup = this.getContentGroup();
+        var containerGroup = this._containerGroup;
+        var controllerGroup = this._controllerGroup;
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -149,7 +214,11 @@ var ScrollableLegendView = LegendView.extend({
 
         var contentPos = [-contentRect.x, -contentRect.y];
         // Remain contentPos when scroll animation perfroming.
-        contentPos[orientIdx] = contentGroup.position[orientIdx];
+        // If first rendering, `contentGroup.position` is [0, 0], which
+        // does not make sense and may cause unexepcted animation if adopted.
+        if (!isFirstRender) {
+            contentPos[orientIdx] = contentGroup.position[orientIdx];
+        }
 
         // Layout container group based on 0.
         var containerPos = [0, 0];
@@ -181,11 +250,12 @@ var ScrollableLegendView = LegendView.extend({
         // Calculate `mainRect` and set `clipPath`.
         // mainRect should not be calculated by `this.group.getBoundingRect()`
         // for sake of the overflow.
-        var mainRect = this.group.getBoundingRect();
         var mainRect = {x: 0, y: 0};
+
         // Consider content may be overflow (should be clipped).
         mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];
         mainRect[hw] = Math.max(contentRect[hw], controllerRect[hw]);
+
         // `containerRect[yx] + containerPos[1 - orientIdx]` is 0.
         mainRect[yx] = Math.min(0, controllerRect[yx] + controllerPos[1 - orientIdx]);
 
@@ -200,7 +270,7 @@ var ScrollableLegendView = LegendView.extend({
             containerGroup.__rectSize = clipShape[wh];
         }
         else {
-            // Do not remove or ignore controller. Keep them set as place holders.
+            // Do not remove or ignore controller. Keep them set as placeholders.
             controllerGroup.eachChild(function (child) {
                 child.attr({invisible: true, silent: true});
             });
@@ -212,7 +282,7 @@ var ScrollableLegendView = LegendView.extend({
             contentGroup,
             {position: pageInfo.contentPosition},
             // When switch from "show controller" to "not show controller", view should be
-            // updated immediately without animation, otherwise causes weird efffect.
+            // updated immediately without animation, otherwise causes weird effect.
             showController ? legendModel : false
         );
 
@@ -268,111 +338,151 @@ var ScrollableLegendView = LegendView.extend({
      *  contentPosition: Array.<number>, null when data item not found.
      *  pageIndex: number, null when data item not found.
      *  pageCount: number, always be a number, can be 0.
-     *  pagePrevDataIndex: number, null when no next page.
-     *  pageNextDataIndex: number, null when no previous page.
+     *  pagePrevDataIndex: number, null when no previous page.
+     *  pageNextDataIndex: number, null when no next page.
      * }
      */
     _getPageInfo: function (legendModel) {
-        // Align left or top by the current dataIndex.
-        var currDataIndex = legendModel.get('scrollDataIndex', true);
+        var scrollDataIndex = legendModel.get('scrollDataIndex', true);
         var contentGroup = this.getContentGroup();
-        var contentRect = contentGroup.getBoundingRect();
         var containerRectSize = this._containerGroup.__rectSize;
-
         var orientIdx = legendModel.getOrient().index;
         var wh = WH[orientIdx];
-        var hw = WH[1 - orientIdx];
         var xy = XY[orientIdx];
-        var contentPos = contentGroup.position.slice();
 
-        var pageIndex;
-        var pagePrevDataIndex;
-        var pageNextDataIndex;
+        var targetItemIndex = this._findTargetItemIndex(scrollDataIndex);
+        var children = contentGroup.children();
+        var targetItem = children[targetItemIndex];
+        var itemCount = children.length;
+        var pCount = !itemCount ? 0 : 1;
 
-        var targetItemGroup;
-        if (this._showController) {
-            contentGroup.eachChild(function (child) {
-                if (child.__legendDataIndex === currDataIndex) {
-                    targetItemGroup = child;
-                }
-            });
+        var result = {
+            contentPosition: contentGroup.position.slice(),
+            pageCount: pCount,
+            pageIndex: pCount - 1,
+            pagePrevDataIndex: null,
+            pageNextDataIndex: null
+        };
+
+        if (!targetItem) {
+            return result;
         }
-        else {
-            targetItemGroup = contentGroup.childAt(0);
-        }
 
-        var pageCount = containerRectSize ? Math.ceil(contentRect[wh] / containerRectSize) : 0;
+        var targetItemInfo = getItemInfo(targetItem);
+        result.contentPosition[orientIdx] = -targetItemInfo.s;
 
-        if (targetItemGroup) {
-            var itemRect = targetItemGroup.getBoundingRect();
-            var itemLoc = targetItemGroup.position[orientIdx] + itemRect[xy];
-            contentPos[orientIdx] = -itemLoc - contentRect[xy];
-            pageIndex = Math.floor(
-                pageCount * (itemLoc + itemRect[xy] + containerRectSize / 2) / contentRect[wh]
-            );
-            pageIndex = (contentRect[wh] && pageCount)
-                ? Math.max(0, Math.min(pageCount - 1, pageIndex))
-                : -1;
+        // Strategy:
+        // (1) Always align based on the left/top most item.
+        // (2) It is user-friendly that the last item shown in the
+        // current window is shown at the begining of next window.
+        // Otherwise if half of the last item is cut by the window,
+        // it will have no chance to display entirely.
+        // (3) Consider that item size probably be different, we
+        // have calculate pageIndex by size rather than item index,
+        // and we can not get page index directly by division.
+        // (4) The window is to narrow to contain more than
+        // one item, we should make sure that the page can be fliped.
 
-            var winRect = {x: 0, y: 0};
-            winRect[wh] = containerRectSize;
-            winRect[hw] = contentRect[hw];
-            winRect[xy] = -contentPos[orientIdx] - contentRect[xy];
-
-            var startIdx;
-            var children = contentGroup.children();
-
-            contentGroup.eachChild(function (child, index) {
-                var itemRect = getItemRect(child);
-
-                if (itemRect.intersect(winRect)) {
-                    startIdx == null && (startIdx = index);
-                    // It is user-friendly that the last item shown in the
-                    // current window is shown at the begining of next window.
-                    pageNextDataIndex = child.__legendDataIndex;
+        for (var i = targetItemIndex + 1,
+            winStartItemInfo = targetItemInfo,
+            winEndItemInfo = targetItemInfo,
+            currItemInfo = null;
+            i <= itemCount;
+            ++i
+        ) {
+            currItemInfo = getItemInfo(children[i]);
+            if (
+                // Half of the last item is out of the window.
+                (!currItemInfo && winEndItemInfo.e > winStartItemInfo.s + containerRectSize)
+                // If the current item does not intersect with the window, the new page
+                // can be started at the current item or the last item.
+                || (currItemInfo && !intersect(currItemInfo, winStartItemInfo.s))
+            ) {
+                if (winEndItemInfo.i > winStartItemInfo.i) {
+                    winStartItemInfo = winEndItemInfo;
                 }
-
-                // If the last item is shown entirely, no next page.
-                if (index === children.length - 1
-                    && itemRect[xy] + itemRect[wh] <= winRect[xy] + winRect[wh]
-                ) {
-                    pageNextDataIndex = null;
+                else { // e.g., when page size is smaller than item size.
+                    winStartItemInfo = currItemInfo;
                 }
-            });
-
-            // Always align based on the left/top most item, so the left/top most
-            // item in the previous window is needed to be found here.
-            if (startIdx != null) {
-                var startItem = children[startIdx];
-                var startRect = getItemRect(startItem);
-                winRect[xy] = startRect[xy] + startRect[wh] - winRect[wh];
-
-                // If the first item is shown entirely, no previous page.
-                if (startIdx <= 0 && startRect[xy] >= winRect[xy]) {
-                    pagePrevDataIndex = null;
-                }
-                else {
-                    while (startIdx > 0 && getItemRect(children[startIdx - 1]).intersect(winRect)) {
-                        startIdx--;
+                if (winStartItemInfo) {
+                    if (result.pageNextDataIndex == null) {
+                        result.pageNextDataIndex = winStartItemInfo.i;
                     }
-                    pagePrevDataIndex = children[startIdx].__legendDataIndex;
+                    ++result.pageCount;
                 }
+            }
+            winEndItemInfo = currItemInfo;
+        }
+
+        for (var i = targetItemIndex - 1,
+            winStartItemInfo = targetItemInfo,
+            winEndItemInfo = targetItemInfo,
+            currItemInfo = null;
+            i >= -1;
+            --i
+        ) {
+            currItemInfo = getItemInfo(children[i]);
+            if (
+                // If the the end item does not intersect with the window started
+                // from the current item, a page can be settled.
+                (!currItemInfo || !intersect(winEndItemInfo, currItemInfo.s))
+                // e.g., when page size is smaller than item size.
+                && winStartItemInfo.i < winEndItemInfo.i
+            ) {
+                winEndItemInfo = winStartItemInfo;
+                if (result.pagePrevDataIndex == null) {
+                    result.pagePrevDataIndex = winStartItemInfo.i;
+                }
+                ++result.pageCount;
+                ++result.pageIndex;
+            }
+            winStartItemInfo = currItemInfo;
+        }
+
+        return result;
+
+        function getItemInfo(el) {
+            if (el) {
+                var itemRect = el.getBoundingRect();
+                var start = itemRect[xy] + el.position[orientIdx];
+                return {
+                    s: start,
+                    e: start + itemRect[wh],
+                    i: el.__legendDataIndex
+                };
             }
         }
 
-        return {
-            contentPosition: contentPos,
-            pageIndex: pageIndex,
-            pageCount: pageCount,
-            pagePrevDataIndex: pagePrevDataIndex,
-            pageNextDataIndex: pageNextDataIndex
-        };
-
-        function getItemRect(el) {
-            var itemRect = el.getBoundingRect().clone();
-            itemRect[xy] += el.position[orientIdx];
-            return itemRect;
+        function intersect(itemInfo, winStart) {
+            return itemInfo.e >= winStart && itemInfo.s <= winStart + containerRectSize;
         }
+    },
+
+    _findTargetItemIndex: function (targetDataIndex) {
+        if (!this._showController) {
+            return 0;
+        }
+
+        var index;
+        var contentGroup = this.getContentGroup();
+        var defaultIndex;
+
+        contentGroup.eachChild(function (child, idx) {
+            var legendDataIdx = child.__legendDataIndex;
+            // FIXME
+            // If the given targetDataIndex (from model) is illegal,
+            // we use defualtIndex. But the index on the legend model and
+            // action payload is still illegal. That case will not be
+            // changed until some scenario requires.
+            if (defaultIndex == null && legendDataIdx != null) {
+                defaultIndex = idx;
+            }
+            if (legendDataIdx === targetDataIndex) {
+                index = idx;
+            }
+        });
+
+        return index != null ? index : defaultIndex;
     }
 
 });

@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Calculate slider move result.
  * Usage:
@@ -10,8 +29,7 @@
  *              handleEnds will be modified in this method.
  * @param {Array.<number>} extent handleEnds is restricted by extent.
  *              extent[0] should less or equals than extent[1].
- * @param {number|string} handleIndex Can be 'all', means that both move the two handleEnds,
- *              where the input minSpan and maxSpan will not work.
+ * @param {number|string} handleIndex Can be 'all', means that both move the two handleEnds.
  * @param {number} [minSpan] The range of dataZoom can not be smaller than that.
  *              If not set, handle0 and cross handle1. If set as a non-negative
  *              number (including `0`), handles will push each other when reaching
@@ -20,9 +38,6 @@
  * @return {Array.<number>} The input handleEnds.
  */
 export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpan) {
-    // Normalize firstly.
-    handleEnds[0] = restrict(handleEnds[0], extent);
-    handleEnds[1] = restrict(handleEnds[1], extent);
 
     delta = delta || 0;
 
@@ -36,9 +51,14 @@ export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpa
         maxSpan = Math.max(maxSpan, minSpan != null ? minSpan : 0);
     }
     if (handleIndex === 'all') {
-        minSpan = maxSpan = Math.abs(handleEnds[1] - handleEnds[0]);
+        var handleSpan = Math.abs(handleEnds[1] - handleEnds[0]);
+        handleSpan = restrict(handleSpan, [0, extentSpan]);
+        minSpan = maxSpan = restrict(handleSpan, [minSpan, maxSpan]);
         handleIndex = 0;
     }
+
+    handleEnds[0] = restrict(handleEnds[0], extent);
+    handleEnds[1] = restrict(handleEnds[1], extent);
 
     var originalDistSign = getSpanSign(handleEnds, handleIndex);
 
@@ -55,7 +75,7 @@ export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpa
     if (minSpan != null && (
         currDistSign.sign !== originalDistSign.sign || currDistSign.span < minSpan
     )) {
-        // If minSpan exists, 'cross' is forbinden.
+        // If minSpan exists, 'cross' is forbidden.
         handleEnds[1 - handleIndex] = handleEnds[handleIndex] + originalDistSign.sign * minSpan;
     }
 
@@ -76,5 +96,8 @@ function getSpanSign(handleEnds, handleIndex) {
 }
 
 function restrict(value, extend) {
-    return Math.min(extend[1], Math.max(extend[0], value));
+    return Math.min(
+        extend[1] != null ? extend[1] : Infinity,
+        Math.max(extend[0] != null ? extend[0] : -Infinity, value)
+    );
 }

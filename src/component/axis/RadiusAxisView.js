@@ -1,3 +1,22 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import AxisBuilder from './AxisBuilder';
@@ -7,7 +26,7 @@ var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ];
 var selfBuilderAttrs = [
-    'splitLine', 'splitArea'
+    'splitLine', 'splitArea', 'minorSplitLine'
 ];
 
 export default AxisView.extend({
@@ -25,6 +44,7 @@ export default AxisView.extend({
         var polar = radiusAxis.polar;
         var angleAxis = polar.getAngleAxis();
         var ticksCoords = radiusAxis.getTicksCoords();
+        var minorTicksCoords = radiusAxis.getMinorTicksCoords();
         var axisAngle = angleAxis.getExtent()[0];
         var radiusExtent = radiusAxis.getExtent();
 
@@ -34,8 +54,8 @@ export default AxisView.extend({
         this.group.add(axisBuilder.getGroup());
 
         zrUtil.each(selfBuilderAttrs, function (name) {
-            if (radiusAxisModel.get(name +'.show') && !radiusAxis.scale.isBlank()) {
-                this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords);
+            if (radiusAxisModel.get(name + '.show') && !radiusAxis.scale.isBlank()) {
+                this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords);
             }
         }, this);
     },
@@ -60,9 +80,8 @@ export default AxisView.extend({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: ticksCoords[i]
-                },
-                silent: true
+                    r: ticksCoords[i].coord
+                }
             }));
         }
 
@@ -82,7 +101,43 @@ export default AxisView.extend({
     /**
      * @private
      */
+    _minorSplitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords) {
+        if (!minorTicksCoords.length) {
+            return;
+        }
+
+        var minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
+        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+
+        var lines = [];
+
+        for (var i = 0; i < minorTicksCoords.length; i++) {
+            for (var k = 0; k < minorTicksCoords[i].length; k++) {
+                lines.push(new graphic.Circle({
+                    shape: {
+                        cx: polar.cx,
+                        cy: polar.cy,
+                        r: minorTicksCoords[i][k].coord
+                    }
+                }));
+            }
+        }
+
+        this.group.add(graphic.mergePath(lines, {
+            style: zrUtil.defaults({
+                fill: null
+            }, lineStyleModel.getLineStyle()),
+            silent: true
+        }));
+    },
+
+    /**
+     * @private
+     */
     _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
+        if (!ticksCoords.length) {
+            return;
+        }
 
         var splitAreaModel = radiusAxisModel.getModel('splitArea');
         var areaStyleModel = splitAreaModel.getModel('areaStyle');
@@ -93,7 +148,7 @@ export default AxisView.extend({
 
         var splitAreas = [];
 
-        var prevRadius = ticksCoords[0];
+        var prevRadius = ticksCoords[0].coord;
         for (var i = 1; i < ticksCoords.length; i++) {
             var colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
@@ -102,13 +157,13 @@ export default AxisView.extend({
                     cx: polar.cx,
                     cy: polar.cy,
                     r0: prevRadius,
-                    r: ticksCoords[i],
+                    r: ticksCoords[i].coord,
                     startAngle: 0,
                     endAngle: Math.PI * 2
                 },
                 silent: true
             }));
-            prevRadius = ticksCoords[i];
+            prevRadius = ticksCoords[i].coord;
         }
 
         // Simple optimization

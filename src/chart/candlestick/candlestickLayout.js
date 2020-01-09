@@ -1,6 +1,28 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+/* global Float32Array */
+
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
-import {calculateCandleWidth} from './helper';
+import {parsePercent} from '../../util/number';
+import {retrieve2} from 'zrender/src/core/util';
 
 var LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
@@ -12,15 +34,11 @@ export default {
 
     reset: function (seriesModel) {
 
-        var pipelineContext = seriesModel.pipelineContext;
-        var isLargeRender = pipelineContext.large;
-
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
         var candleWidth = calculateCandleWidth(seriesModel, data);
-        var chartLayout = seriesModel.get('layout');
-        var cDimIdx = chartLayout === 'horizontal' ? 0 : 1;
-        var vDimIdx = 1 - cDimIdx;
+        var cDimIdx = 0;
+        var vDimIdx = 1;
         var coordDims = ['x', 'y'];
         var cDim = data.mapDimension(coordDims[cDimIdx]);
         var vDims = data.mapDimension(coordDims[vDimIdx], true);
@@ -29,20 +47,25 @@ export default {
         var lowestDim = vDims[2];
         var highestDim = vDims[3];
 
+        data.setLayout({
+            candleWidth: candleWidth,
+            // The value is experimented visually.
+            isSimpleBox: candleWidth <= 1.3
+        });
+
         if (cDim == null || vDims.length < 4) {
             return;
         }
 
-        return {progress: isLargeRender ? largeProgress : normalProgress};
-
+        return {
+            progress: seriesModel.pipelineContext.large
+                ? largeProgress : normalProgress
+        };
 
         function normalProgress(params, data) {
+            var dataIndex;
+            while ((dataIndex = params.next()) != null) {
 
-            for (var dataIndex = params.start; dataIndex < params.end; dataIndex++) {
-                layoutDataItem(dataIndex);
-            }
-
-            function layoutDataItem(dataIndex) {
                 var axisDimVal = data.get(cDim, dataIndex);
                 var openVal = data.get(openDim, dataIndex);
                 var closeVal = data.get(closeDim, dataIndex);
@@ -57,28 +80,22 @@ export default {
                 var lowestPoint = getPoint(lowestVal, axisDimVal);
                 var highestPoint = getPoint(highestVal, axisDimVal);
 
-                var whiskerEnds = [
-                    [
-                        subPixelOptimizePoint(highestPoint),
-                        subPixelOptimizePoint(ocHighPoint)
-                    ],
-                    [
-                        subPixelOptimizePoint(lowestPoint),
-                        subPixelOptimizePoint(ocLowPoint)
-                    ]
-                ];
+                var ends = [];
+                addBodyEnd(ends, ocHighPoint, 0);
+                addBodyEnd(ends, ocLowPoint, 1);
 
-                var bodyEnds = [];
-                addBodyEnd(bodyEnds, ocHighPoint, 0);
-                addBodyEnd(bodyEnds, ocLowPoint, 1);
+                ends.push(
+                    subPixelOptimizePoint(highestPoint),
+                    subPixelOptimizePoint(ocHighPoint),
+                    subPixelOptimizePoint(lowestPoint),
+                    subPixelOptimizePoint(ocLowPoint)
+                );
 
                 data.setItemLayout(dataIndex, {
-                    chartLayout: chartLayout,
                     sign: getSign(data, dataIndex, openVal, closeVal, closeDim),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
-                    bodyEnds: bodyEnds,
-                    whiskerEnds: whiskerEnds,
+                    ends: ends,
                     brushRect: makeBrushRect(lowestVal, highestVal, axisDimVal)
                 });
             }
@@ -92,7 +109,7 @@ export default {
                     : coordSys.dataToPoint(p);
             }
 
-            function addBodyEnd(bodyEnds, point, start) {
+            function addBodyEnd(ends, point, start) {
                 var point1 = point.slice();
                 var point2 = point.slice();
 
@@ -104,8 +121,8 @@ export default {
                 );
 
                 start
-                    ? bodyEnds.push(point1, point2)
-                    : bodyEnds.push(point2, point1);
+                    ? ends.push(point1, point2)
+                    : ends.push(point2, point1);
             }
 
             function makeBrushRect(lowestVal, highestVal, axisDimVal) {
@@ -130,15 +147,15 @@ export default {
         }
 
         function largeProgress(params, data) {
-            var segCount = params.end - params.start;
-            // Structure: [sign, x1, y1, x2, y2, sign, x1, y1, x2, y2, ...]
-            var points = new LargeArr(segCount * 5);
+            // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
+            var points = new LargeArr(params.count * 4);
+            var offset = 0;
+            var point;
+            var tmpIn = [];
+            var tmpOut = [];
+            var dataIndex;
 
-            for (
-                var dataIndex = params.start, offset = 0, point, tmpIn = [], tmpOut = [];
-                dataIndex < params.end;
-                dataIndex++
-            ) {
+            while ((dataIndex = params.next()) != null) {
                 var axisDimVal = data.get(cDim, dataIndex);
                 var openVal = data.get(openDim, dataIndex);
                 var closeVal = data.get(closeDim, dataIndex);
@@ -147,7 +164,7 @@ export default {
 
                 if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
                     points[offset++] = NaN;
-                    offset += 4;
+                    offset += 3;
                     continue;
                 }
 
@@ -159,16 +176,12 @@ export default {
                 point = coordSys.dataToPoint(tmpIn, null, tmpOut);
                 points[offset++] = point ? point[0] : NaN;
                 points[offset++] = point ? point[1] : NaN;
-
                 tmpIn[vDimIdx] = highestVal;
                 point = coordSys.dataToPoint(tmpIn, null, tmpOut);
-                points[offset++] = point ? point[0] : NaN;
                 points[offset++] = point ? point[1] : NaN;
             }
 
             data.setLayout('largePoints', points);
-            data.setLayout('candleWidth', candleWidth);
-            data.setLayout('candleWidth', candleWidth);
         }
     }
 };
@@ -190,4 +203,31 @@ function getSign(data, dataIndex, openVal, closeVal, closeDim) {
     }
 
     return sign;
+}
+
+function calculateCandleWidth(seriesModel, data) {
+    var baseAxis = seriesModel.getBaseAxis();
+    var extent;
+
+    var bandWidth = baseAxis.type === 'category'
+        ? baseAxis.getBandWidth()
+        : (
+            extent = baseAxis.getExtent(),
+            Math.abs(extent[1] - extent[0]) / data.count()
+        );
+
+    var barMaxWidth = parsePercent(
+        retrieve2(seriesModel.get('barMaxWidth'), bandWidth),
+        bandWidth
+    );
+    var barMinWidth = parsePercent(
+        retrieve2(seriesModel.get('barMinWidth'), 1),
+        bandWidth
+    );
+    var barWidth = seriesModel.get('barWidth');
+
+    return barWidth != null
+        ? parsePercent(barWidth, bandWidth)
+        // Put max outer to ensure bar visible in spite of overlap.
+        : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
 }

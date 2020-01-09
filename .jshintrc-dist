@@ -1,6 +1,6 @@
 {
     "bitwise": false,
-    "camelcase": true,
+    "camelcase": false,
     "curly": true,
     "eqeqeq": false,
     "forin": false,
