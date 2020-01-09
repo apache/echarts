@@ -138,7 +138,7 @@ function TooltipContent(container, api) {
     this._x = api.getWidth() / 2;
     this._y = api.getHeight() / 2;
 
-    container.appendChild(el);
+    document.body.appendChild(el);
 
     this._container = container;
 
@@ -292,6 +292,11 @@ TooltipContent.prototype = {
         return this._show;
     },
 
+
+    dispose: function () {
+        this.el.parentNode.removeChild(this.el)
+    },
+
     getOuterSize: function () {
         var width = this.el.clientWidth;
         var height = this.el.clientHeight;
@@ -308,6 +313,7 @@ TooltipContent.prototype = {
 
         return {width: width, height: height};
     }
+
 };
 
 export default TooltipContent;
