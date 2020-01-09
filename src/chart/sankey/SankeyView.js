@@ -458,8 +458,7 @@ function createGridClipShape(rect, seriesModel, cb) {
     });
     graphic.initProps(rectEl, {
         shape: {
-            width: rect.width + 20,
-            height: rect.height + 20
+            width: rect.width + 20
         }
     }, seriesModel, cb);
 
