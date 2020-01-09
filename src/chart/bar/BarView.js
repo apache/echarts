@@ -128,14 +128,11 @@ export default echarts.extendChartView({
 
         var roundCap = seriesModel.get('roundCap', true);
 
-        var drawBackground = seriesModel.get('showBackground');
+        var drawBackground = seriesModel.get('showBackground', true);
         var backgroundModel = seriesModel.getModel('backgroundStyle');
 
         var bgEls = [];
         var oldBgEls = this._backgroundEls || [];
-
-        var oldLargeBackgroundEl = group.childOfName('largeBackground');
-        group.remove(oldLargeBackgroundEl);
 
         data.diff(oldData)
             .add(function (dataIndex) {
@@ -143,9 +140,9 @@ export default echarts.extendChartView({
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout);
+                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, layout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    bgEls.push(bgEl);
+                    bgEls[dataIndex] = bgEl;
                 }
 
                 if (!data.hasValue(dataIndex)) {
@@ -180,10 +177,10 @@ export default echarts.extendChartView({
                 if (drawBackground) {
                     var bgEl = oldBgEls[oldIndex];
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    bgEls.push(bgEl);
+                    bgEls[newIndex] = bgEl;
 
-                    var newBgEl = getBackgroundEl(coord, isHorizontalOrRadial, layout);
-                    graphic.updateProps(bgEl, {shape: newBgEl.shape}, animationModel, newIndex);
+                    var shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
+                    graphic.updateProps(bgEl, { shape: shape }, animationModel, newIndex);
                 }
 
                 var el = oldData.getItemGraphicEl(oldIndex);
@@ -229,7 +226,7 @@ export default echarts.extendChartView({
             })
             .execute();
 
-        var bgGroup = group.childOfName('background') || new Group({ name: 'background' });
+        var bgGroup = this._backgroundEl || (this._backgroundEl = new Group());
         bgGroup.removeAll();
 
         for (var i = 0; i < bgEls.length; ++i) {
@@ -258,6 +255,7 @@ export default echarts.extendChartView({
     },
 
     _incrementalRenderLarge: function (params, seriesModel) {
+        this._removeBackground();
         createLarge(seriesModel, this.group, true);
     },
 
@@ -271,8 +269,7 @@ export default echarts.extendChartView({
         var group = this.group;
         var data = this._data;
         if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
-            group.remove(group.childOfName('background'));
-            group.remove(group.childOfName('largeBackground'));
+            this._removeBackground();
             this._backgroundEls = [];
 
             data.eachItemGraphicEl(function (el) {
@@ -288,6 +285,11 @@ export default echarts.extendChartView({
             group.removeAll();
         }
         this._data = null;
+    },
+
+    _removeBackground: function () {
+        this.group.remove(this._backgroundEl);
+        this._backgroundEl = null;
     }
 
 });
@@ -543,18 +545,8 @@ function createLarge(seriesModel, group, incremental) {
     var largeDataIndices = data.getLayout('largeDataIndices');
     var barWidth = data.getLayout('barWidth');
 
-    var oldLargeBackgroundEl = group.childOfName('largeBackground');
-    if (oldLargeBackgroundEl) {
-        group.remove(oldLargeBackgroundEl);
-    }
-    var oldBackgroundEl = group.childOfName('background');
-    if (oldBackgroundEl) {
-        group.remove(oldBackgroundEl);
-    }
-
     var backgroundModel = seriesModel.getModel('backgroundStyle');
-    var backgroundColor = backgroundModel.get('color');
-    var drawBackground = backgroundColor !== 'transparent' && backgroundColor !== 'none';
+    var drawBackground = seriesModel.get('showBackground', true);
 
     if (drawBackground) {
         var points = data.getLayout('largeBackgroundPoints');
@@ -572,7 +564,6 @@ function createLarge(seriesModel, group, incremental) {
             z2: 0
         });
         setLargeBackgroundStyle(bgEl, backgroundModel, data);
-        bgEl.name = 'largeBackground';
         group.add(bgEl);
     }
 
@@ -657,7 +648,16 @@ function setLargeBackgroundStyle(el, backgroundModel, data) {
     el.style.lineWidth = data.getLayout('barWidth');
 }
 
-function getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout) {
+function createBackgroundShape(isHorizontalOrRadial, layout, coord) {
+    var coordLayout;
+    var isPolar = coord.type === 'polar';
+    if (isPolar) {
+        coordLayout = coord.getArea();
+    }
+    else {
+        coordLayout = coord.grid.getRect();
+    }
+
     if (isPolar) {
         return {
             cx: coordLayout.cx,
@@ -678,30 +678,11 @@ function getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout) 
     }
 }
 
-function getBackgroundEl(coord, isHorizontalOrRadial, layout) {
-    var coordLayout;
-    var isPolar = coord.type === 'polar';
-    if (isPolar) {
-        coordLayout = coord.getArea();
-    }
-    else {
-        coordLayout = coord.grid.getRect();
-    }
-
-    var bgEl;
-    if (isPolar) {
-        bgEl = new graphic.Sector({
-            shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
-            silent: true,
-            z2: 0
-        });
-    }
-    else {
-        bgEl = new graphic.Rect({
-            shape: getBackgroundShape(isPolar, isHorizontalOrRadial, layout, coordLayout),
-            silent: true,
-            z2: 0
-        });
-    }
-    return bgEl;
+function createBackgroundEl(coord, isHorizontalOrRadial, layout) {
+    var ElementClz = coord.type === 'polar' ? graphic.Sector : graphic.Rect;
+    return new ElementClz({
+        shape: createBackgroundShape(isHorizontalOrRadial, layout, coord),
+        silent: true,
+        z2: 0
+    });
 }

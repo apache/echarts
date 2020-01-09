@@ -63,11 +63,11 @@ export default BaseBarSeries.extend({
         backgroundStyle: {
             color: 'rgba(180, 180, 180, 0.2)',
             borderColor: null,
-            borderWidth: '0',
+            borderWidth: 0,
             borderType: 'solid',
-            barBorderRadius: 0,
+            borderRadius: 0,
             shadowBlur: 0,
-            shadowColor: '',
+            shadowColor: null,
             shadowOffsetX: 0,
             shadowOffsetY: 0,
             opacity: 1

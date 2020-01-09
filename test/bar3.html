@@ -62,18 +62,10 @@ under the License.
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
-                    if (i % 5 === 0) {
-                        data0.push('-');
-                        data1.push('-');
-                        data2.push('-');
-                        data3.push('-');
-                    }
-                    else {
-                        data0.push(-Math.random().toFixed(2));
-                        data1.push((Math.random() * 5).toFixed(2));
-                        data2.push(-Math.random().toFixed(2));
-                        data3.push((Math.random() + 0.5).toFixed(2));
-                    }
+                    data0.push(-Math.random().toFixed(2));
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data2.push(-Math.random().toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
 
                     if (i === 9) {
                         data4.push(0.01);
@@ -162,11 +154,7 @@ under the License.
                         stack: 'one',
                         itemStyle: itemStyle,
                         label: label,
-                        data: data0,
-                        showBackground: true,
-                        backgroundStyle: {
-                            color: 'rgba(194, 52, 49, 0.2)'
-                        }
+                        data: data0
                     }, {
                         name: 'bar',
                         type: 'bar',
