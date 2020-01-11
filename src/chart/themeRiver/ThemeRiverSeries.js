@@ -63,51 +63,50 @@ var ThemeRiverSeries = SeriesModel.extend({
      */
     fixData: function (data) {
         var rawDataLength = data.length;
+        /**
+         * Make sure every layer data get the same keys.
+         * The value index tells which layer has visited.
+         * {
+         *  2014/01/01: -1
+         * }
+         */
+        var timeValueKeys = {};
 
         // grouped data by name
         var groupResult = groupData(data, function (item) {
+            if (!timeValueKeys[item[0]]) {
+                timeValueKeys[item[0]] = -1;
+            }
             return item[2];
         });
         var layData = [];
         groupResult.buckets.each(function (items, key) {
             layData.push({name: key, dataList: items});
         });
-
         var layerNum = layData.length;
-        var largestLayer = -1;
-        var index = -1;
-        for (var i = 0; i < layerNum; ++i) {
-            var len = layData[i].dataList.length;
-            if (len > largestLayer) {
-                largestLayer = len;
-                index = i;
-            }
-        }
 
         for (var k = 0; k < layerNum; ++k) {
-            if (k === index) {
-                continue;
-            }
             var name = layData[k].name;
-            for (var j = 0; j < largestLayer; ++j) {
-                var timeValue = layData[index].dataList[j][0];
-                var length = layData[k].dataList.length;
-                var keyIndex = -1;
-                for (var l = 0; l < length; ++l) {
-                    var value = layData[k].dataList[l][0];
-                    if (value === timeValue) {
-                        keyIndex = l;
-                        break;
-                    }
-                }
-                if (keyIndex === -1) {
-                    data[rawDataLength] = [];
-                    data[rawDataLength][0] = timeValue;
-                    data[rawDataLength][1] = 0;
-                    data[rawDataLength][2] = name;
-                    rawDataLength++;
+            for (var j = 0; j < layData[k].dataList.length; ++j) {
+                var timeValue = layData[k].dataList[j][0];
+                timeValueKeys[timeValue] = k;
+            }
 
+            var lostTimeValueKeys = [];
+            for (var key in timeValueKeys) {
+                if (timeValueKeys[key] !== k) {
+                    timeValueKeys[key] = k;
+                    lostTimeValueKeys.push(key);
                 }
+            }
+
+            while (lostTimeValueKeys.length) {
+                var key = lostTimeValueKeys.shift();
+                data[rawDataLength] = [];
+                data[rawDataLength][0] = key;
+                data[rawDataLength][1] = 0;
+                data[rawDataLength][2] = name;
+                rawDataLength++;
             }
         }
         return data;
