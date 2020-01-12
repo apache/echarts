@@ -56,7 +56,9 @@ export default echarts.extendComponentView({
 
         var tooltipContent;
         if (this._renderMode === 'html') {
-            tooltipContent = new TooltipContent(api.getDom(), api);
+            tooltipContent = new TooltipContent(api.getDom(), api, {
+                appendToBody: tooltipModel.get('appendToBody', true)
+            });
             this._newLine = '<br/>';
         }
         else {
@@ -65,10 +67,6 @@ export default echarts.extendComponentView({
         }
 
         this._tooltipContent = tooltipContent;
-
-        this._event = {};
-        this._viewWidth = document.body.clientWidth;
-        this._viewHeight = document.body.clientHeight;
     },
 
     render: function (tooltipModel, ecModel, api) {
@@ -130,7 +128,6 @@ export default echarts.extendComponentView({
                 // If 'none', it is not controlled by mouse totally.
                 if (triggerOn !== 'none') {
                     if (triggerOn.indexOf(currTrigger) >= 0) {
-                        this._event = e.event;
                         this._tryShow(e, dispatchAction);
                     }
                     else if (currTrigger === 'leave') {
@@ -206,8 +203,7 @@ export default echarts.extendComponentView({
             this._tryShow({
                 offsetX: payload.x,
                 offsetY: payload.y,
-                target: el,
-                event: this._event
+                target: el
             }, dispatchAction);
         }
         else if (dataByCoordSys) {
@@ -215,7 +211,6 @@ export default echarts.extendComponentView({
                 offsetX: payload.x,
                 offsetY: payload.y,
                 position: payload.position,
-                event: this._event,
                 dataByCoordSys: payload.dataByCoordSys,
                 tooltipOption: payload.tooltipOption
             }, dispatchAction);
@@ -234,8 +229,7 @@ export default echarts.extendComponentView({
                     offsetX: cx,
                     offsetY: cy,
                     position: payload.position,
-                    target: pointInfo.el,
-                    event: this._event
+                    target: pointInfo.el
                 }, dispatchAction);
             }
         }
@@ -252,8 +246,7 @@ export default echarts.extendComponentView({
                 offsetX: payload.x,
                 offsetY: payload.y,
                 position: payload.position,
-                target: api.getZr().findHover(payload.x, payload.y).target,
-                event: this._event
+                target: api.getZr().findHover(payload.x, payload.y).target
             }, dispatchAction);
         }
     },
@@ -320,8 +313,8 @@ export default echarts.extendComponentView({
         }
 
         // Save mouse x, mouse y. So we can try to keep showing the tip if chart is refreshed
-        this._lastX = e.event.pageX;
-        this._lastY = e.event.pageY;
+        this._lastX = e.offsetX;
+        this._lastY = e.offsetY;
 
         var dataByCoordSys = e.dataByCoordSys;
         if (dataByCoordSys && dataByCoordSys.length) {
@@ -359,7 +352,9 @@ export default echarts.extendComponentView({
     _showAxisTooltip: function (dataByCoordSys, e) {
         var ecModel = this._ecModel;
         var globalTooltipModel = this._tooltipModel;
-        var point = [e.event.pageX, e.event.pageY];
+
+        var point = [e.offsetX, e.offsetY];
+
         var singleDefaultHTML = [];
         var singleParamsList = [];
         var singleTooltipModel = buildTooltipModel([
@@ -515,7 +510,7 @@ export default echarts.extendComponentView({
         this._showOrMove(tooltipModel, function () {
             this._showTooltipContent(
                 tooltipModel, defaultHtml, params, asyncTicket,
-                e.event.pageX, e.event.pageY, e.position, e.target, markers
+                e.offsetX, e.offsetY, e.position, e.target, markers
             );
         });
 
@@ -551,7 +546,7 @@ export default echarts.extendComponentView({
         this._showOrMove(subTooltipModel, function () {
             this._showTooltipContent(
                 subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
-                asyncTicket, e.event.pageX, e.event.pageY, e.position, el
+                asyncTicket, e.offsetX, e.offsetY, e.position, el
             );
         });
 
@@ -613,8 +608,9 @@ export default echarts.extendComponentView({
      * @return {Array.<number>}
      */
     _updatePosition: function (tooltipModel, positionExpr, x, y, content, params, el) {
-        var viewWidth = this._viewWidth;
-        var viewHeight = this._viewHeight;
+        var viewWidth = this._api.getWidth();
+        var viewHeight = this._api.getHeight();
+
         positionExpr = positionExpr || tooltipModel.get('position');
 
         var contentSize = content.getSize();
