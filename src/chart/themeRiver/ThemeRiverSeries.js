@@ -92,22 +92,17 @@ var ThemeRiverSeries = SeriesModel.extend({
                 timeValueKeys[timeValue] = k;
             }
 
-            var lostTimeValueKeys = [];
-            for (var key in timeValueKeys) {
-                if (timeValueKeys[key] !== k) {
-                    timeValueKeys[key] = k;
-                    lostTimeValueKeys.push(key);
+            for (var timeValue in timeValueKeys) {
+                if (timeValueKeys[timeValue] !== k) {
+                    timeValueKeys[timeValue] = k;
+                    data[rawDataLength] = [];
+                    data[rawDataLength][0] = timeValue;
+                    data[rawDataLength][1] = 0;
+                    data[rawDataLength][2] = name;
+                    rawDataLength++;
                 }
             }
 
-            while (lostTimeValueKeys.length) {
-                var key = lostTimeValueKeys.shift();
-                data[rawDataLength] = [];
-                data[rawDataLength][0] = key;
-                data[rawDataLength][1] = 0;
-                data[rawDataLength][2] = name;
-                rawDataLength++;
-            }
         }
         return data;
     },
