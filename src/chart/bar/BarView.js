@@ -226,7 +226,7 @@ export default echarts.extendChartView({
             })
             .execute();
 
-        var bgGroup = this._backgroundEl || (this._backgroundEl = new Group());
+        var bgGroup = this._backgroundGroup || (this._backgroundGroup = new Group());
         bgGroup.removeAll();
 
         for (var i = 0; i < bgEls.length; ++i) {
@@ -288,8 +288,8 @@ export default echarts.extendChartView({
     },
 
     _removeBackground: function () {
-        this.group.remove(this._backgroundEl);
-        this._backgroundEl = null;
+        this.group.remove(this._backgroundGroup);
+        this._backgroundGroup = null;
     }
 
 });
