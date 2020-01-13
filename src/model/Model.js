@@ -47,10 +47,6 @@ function Model(option, parentModel, ecModel) {
      * @readOnly
      */
     this.parentModel = parentModel;
-    if (parentModel === true) {
-        console.log(option);
-        debugger;
-    }
 
     /**
      * @type {module:echarts/model/Global}
