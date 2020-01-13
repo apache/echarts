@@ -32,6 +32,7 @@ under the License.
             }
         </style>
         <div id="main"></div>
+        <div id="main1"></div>
         <script>
 
             require([
@@ -215,6 +216,81 @@ under the License.
                     console.log(params, params.data);
                 });
 
+            })
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main1'), null, {});
+
+                chart.setOption(
+                    {
+                        legend: {},
+                        tooltip: {},
+                        dataset: {
+                            source: [
+                                ['product', '2012', '2013', '2014', '2015'],
+                                ['Matcha Latte', 41.1, 130.4, 65.1, 53.3],
+                                ['Milk Tea', 86.5, 92.1, 85.7, 83.1],
+                                ['Cheese Cocoa', 124.1, 67.2, 79.5, 86.4]
+                            ]
+                        },
+                        xAxis: {
+                            type: 'category',
+                        },
+                        yAxis: {},
+                        series: [
+                            {
+                                type: 'bar',
+                                seriesLayoutBy: 'row',
+                                stack: '1',
+                                markPoint: {
+                                    data: [{
+                                            type: 'max',
+                                            name: '最大值'
+                                        },
+                                        {
+                                            type: 'min',
+                                            name: '最小值'
+                                        }
+                                    ]
+                                },
+                            },
+                            {
+                                type: 'bar',
+                                seriesLayoutBy: 'row',
+                                stack: '1',
+                                markPoint: {
+                                    data: [{
+                                            type: 'max',
+                                            name: '最大值'
+                                        },
+                                        {
+                                            type: 'min',
+                                            name: '最小值'
+                                        }
+                                    ]
+                                },
+                            },
+                            {
+                                type: 'bar',
+                                seriesLayoutBy: 'row',
+                                stack: '1',
+                                markPoint: {
+                                    data: [{
+                                            type: 'max',
+                                            name: '最大值'
+                                        },
+                                        {
+                                            type: 'min',
+                                            name: '最小值'
+                                        }
+                                    ]
+                                },
+                            }
+                        ]
+                    }
+                )
             })
 
         </script>
