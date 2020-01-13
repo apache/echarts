@@ -44,6 +44,10 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
 
         <script>
 
@@ -116,7 +120,8 @@ under the License.
                         name: 'bar',
                         type: 'bar',
                         stack: 'one',
-                        data: data[0]
+                        data: data[0],
+                        showBackground: true
                     }, {
                         show: false,
                         name: 'bar2',
@@ -154,9 +159,6 @@ under the License.
         </script>
 
 
-
-
-
         <script>
 
             require([
@@ -193,7 +195,11 @@ under the License.
                             ['yy', -44],
                             ['tt', 55],
                             ['rr', 66]
-                        ]
+                        ],
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'rgba(0, 0, 255, 0.2)'
+                        }
                     }, {
                         type: 'bar',
                         large: true,
@@ -209,30 +215,23 @@ under the License.
                             ['yy', -44],
                             ['tt', 55],
                             ['rr', 66]
-                        ]
+                        ],
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'rgba(0, 0, 255, 0.2)'
+                        }
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main1', {
                     option: option,
                     title: [
-                        'bar in large mode',
-                        'click bar should alert',
-                        'tooltip should be ok'
+                        'large mode'
                     ]
-                });
-
-                chart.on('click', function (param) {
-                    alert('seriesIndex: ' + param.seriesIndex + ' dataIndex: ' + param.dataIndex);
-                    console.log(param);
                 });
             });
 
         </script>
-
-
-
-
 
 
 
@@ -265,22 +264,18 @@ under the License.
                     tooltip: {},
                     series: [{
                         type: 'bar',
-                        large: true,
-                        largeThreshold: 2,
-                        progressive: 1,
-                        progressiveThreshold: 2,
                         data: [
                             ['mm', 33],
                             ['yy', -44],
                             ['tt', 55],
                             ['rr', 66]
-                        ]
+                        ],
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'rgba(0, 0, 255, 0.2)'
+                        }
                     }, {
                         type: 'bar',
-                        large: true,
-                        largeThreshold: 2,
-                        progressive: 1,
-                        progressiveThreshold: 2,
                         xAxisIndex: 1,
                         yAxisIndex: 1,
                         encode: {
@@ -292,22 +287,19 @@ under the License.
                             ['yy', -44],
                             ['tt', 55],
                             ['rr', 66]
-                        ]
+                        ],
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'rgba(0, 0, 255, 0.2)'
+                        }
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main2', {
                     option: option,
                     title: [
-                        'progressive bar in large mode',
-                        'click bar should alert',
-                        'tooltip should be ok'
+                        'normal bars'
                     ]
-                });
-
-                chart.on('click', function (param) {
-                    alert('seriesIndex: ' + param.seriesIndex + ' dataIndex: ' + param.dataIndex);
-                    console.log(param);
                 });
             });
 
@@ -315,5 +307,205 @@ under the License.
 
 
 
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/polar',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main3'));
+
+                var option = {
+                    angleAxis: {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                        z: 10
+                    },
+                    tooltip: {
+                    },
+                    radiusAxis: {
+                    },
+                    polar: {
+                        center: ['50%', '50%']
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [1, 2, '-', 3, 0, 5, 7],
+                        coordinateSystem: 'polar',
+                        barMaxWidth: '50%',
+                        barMinHeight: 10,
+                        showBackground: true
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    option: option,
+                    title: [
+                        'polar bars'
+                    ]
+                });
+            });
+        </script>
+
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/polar',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main4'));
+
+                var option = {
+                    angleAxis: {
+                        triggerEvent: true
+                    },
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                        z: 10,
+                        triggerEvent: true
+                    },
+                    polar: {
+                    },
+                    tooltip: {},
+                    series: [{
+                        type: 'bar',
+                        data: [1, '-', 4, 3, '-', 5, 7],
+                        coordinateSystem: 'polar',
+                        itemStyle: {
+                            normal: {
+                                color: '#00f'
+                            }
+                        },
+                        barWidth: '50%',
+                        showBackground: true
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    option: option,
+                    title: [
+                        'polar bars'
+                    ]
+                });
+            });
+        </script>
+
+        <script>
+
+            require([
+                'echarts',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main5'));
+
+                var option = {
+                    angleAxis: {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四'],
+                        z: 10
+                    },
+                    radiusAxis: {
+                    },
+                    polar: {
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [1, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        name: 'A',
+                        showBackground: true
+                    }, {
+                        type: 'bar',
+                        data: [2, 4, 6, 8],
+                        coordinateSystem: 'polar',
+                        name: 'B'
+                    }, {
+                        type: 'bar',
+                        data: [1, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        name: 'C'
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main5', {
+                    option: option,
+                    title: [
+                        'polar bars'
+                    ]
+                });
+            });
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'echarts/component/grid',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main6'));
+
+                var option = {
+                    angleAxis: {
+                        // clockwise: false
+                    },
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['周一', '周二', '周三', '周四'],
+                        z: 10
+                    },
+                    polar: {
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [1, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        name: 'A',
+                        showBackground: true
+                    }, {
+                        type: 'bar',
+                        data: [2, 4, 6, 8],
+                        coordinateSystem: 'polar',
+                        name: 'B'
+                    }, {
+                        type: 'bar',
+                        data: [1, 2, 3, 4],
+                        coordinateSystem: 'polar',
+                        name: 'C'
+                    }],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main6', {
+                    option: option,
+                    title: [
+                        'polar bars'
+                    ]
+                });
+            });
+        </script>
     </body>
 </html>

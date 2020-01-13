@@ -43,7 +43,6 @@ under the License.
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
-        <div id="main4"></div>
 
 
         <script>
@@ -305,61 +304,6 @@ under the License.
                 var chart = testHelper.create(echarts, 'main3', {
                     title: [
                         'label should be rotated'
-                    ],
-                    option: option
-                });
-            });
-
-        </script>
-
-
-
-
-
-
-
-
-        <script>
-
-            require([
-                'echarts'/*, 'map/js/china' */
-            ], function (echarts) {
-
-                var option = {
-                    series: [{
-                        type: 'pie',
-                        radius: [30,50],
-                        data: [{
-                            value: 2,
-                            name: 'This is a very long text, which is expected have ellipsis.'
-                        }, {
-                            value: 4,
-                            label: {
-                                formatter: 'This is also a very long text, which is expected have ellipsis.'
-                            },
-                            emphasis: {
-                                label: {
-                                    formatter: 'Changed to be another long text'
-                                }
-                            }
-                        }],
-                        center: ['50%', '55%'],
-                        label: {
-                            formatter: '{b}: {c}',
-                            position: 'outer',
-                            alignTo: 'edge',
-                            margin: 450
-                        },
-                        labelLine: {
-                            length: 10,
-                            length2: 10
-                        }
-                    }]
-                };
-
-                var chart = testHelper.create(echarts, 'main4', {
-                    title: [
-                        'label should use ellipsis for too long text'
                     ],
                     option: option
                 });
