@@ -121,7 +121,8 @@ under the License.
                             }
                         },
                         {
-                            name: 'b'
+                            name: 'b',
+                            value: 4
                         },
                         {
                             name: 'a1'
@@ -133,7 +134,8 @@ under the License.
                             name: 'c'
                         },
                         {
-                            name: 'e'
+                            name: 'e',
+                            value: 10
                         }
                     ],
                     links: [
@@ -208,9 +210,10 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main' , {
                     title: [
-                        '1. when hover on node a1 the edge a1-a is green with opacity 0.2 and the node a is yellow with opacity 0.6',
-                        '2. when hover on edge a1-a the color is green with opacity 0.2 and the node a is yellow with opacity 0.6',
-                        '3. when hover on node a the color is yellow with opacity 0.6 and the edge a1-a is green with opacity 0.2'
+                        "1. when hover on node 'a1' the edge 'a1-a' is green with opacity 0.2 and the node 'a' is yellow with opacity 0.6.",
+                        "2. when hover on edge 'a1-a' the color is green with opacity 0.2 and the node 'a' is yellow with opacity 0.6.",
+                        "3. when hover on node 'a' the color is yellow with opacity 0.6 and the edge 'a1-a' is green with opacity 0.2.",
+                        "4. node 'e' and node 'b''s value is customized which is longer than the max sum of inEdges or outEdges."
                     ],
                     option: option,
                     height: 700
