@@ -21,6 +21,13 @@ jobs:
         run: |
           npm install
           npm install -g jshint
+          npm install git+https://github.com/ecomfe/zrender.git
+      - name: build zrender
+        run: |
+          cd node_modules/zrender
+          npm install
+          npm run prepublish
+          cd ../..
       - name: jshint
         run: |
           jshint
