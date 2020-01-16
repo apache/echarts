@@ -165,7 +165,6 @@ export default function (seriesType, ecModel, api, payload) {
                 r: roseType
                     ? linearMap(trueValueArray[idx], extent, [r0, r])
                     : r
-                viewRect: viewRect
             });
 
             currentAngle = endAngle;
