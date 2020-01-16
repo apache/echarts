@@ -63,8 +63,8 @@ export default function (seriesType, ecModel, api, payload) {
         var trueValueArray = [];
         var extent = data.getDataExtent(valueDim);
 
-        if(data && data._rawData && data._rawData._data && data._rawData._data.length && data._rawData._data.length > 0){
-            var dataArray = data._rawData._data;
+        if(data.hostModel && data.hostModel.option && data.hostModel.option.data && data.hostModel.option.data.length && data.hostModel.option.data.length > 0){
+            var dataArray = data.hostModel.option.data;
             for(var i = 0; i < dataArray.length; i++){
                 if(dataArray[i].value instanceof Array){
                     tempMax = 0;
@@ -73,7 +73,7 @@ export default function (seriesType, ecModel, api, payload) {
                     }
                     sum += tempMax;
                     if(tempMax > max){
-                        data._rawExtent[1] = tempMax;
+                        extent[1] = tempMax;
                     }
                     trueValueArray.push(tempMax);
                 }else{
