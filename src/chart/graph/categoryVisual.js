@@ -31,11 +31,19 @@ export default function (ecModel) {
             var name = categoriesData.getName(idx);
             // Add prefix to avoid conflict with Object.prototype.
             categoryNameIdxMap['ec-' + name] = idx;
-
             var itemModel = categoriesData.getItemModel(idx);
+
             var color = itemModel.get('itemStyle.color')
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
+
+            var itemStyleList = ['opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'];
+            for (var i = 0; i < itemStyleList.length; i++) {
+                var itemStyle = itemModel.getShallow(itemStyleList[i], true);
+                if (itemStyle != null) {
+                    categoriesData.setItemVisual(idx, itemStyleList[i], itemStyle);
+                }
+            }
         });
 
         // Assign category color to visual
@@ -47,11 +55,16 @@ export default function (ecModel) {
                     if (typeof category === 'string') {
                         category = categoryNameIdxMap['ec-' + category];
                     }
-                    if (!data.getItemVisual(idx, 'color', true)) {
-                        data.setItemVisual(
-                            idx, 'color',
-                            categoriesData.getItemVisual(category, 'color')
-                        );
+
+                    var itemStyleList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'];
+
+                    for (var i = 0; i < itemStyleList.length; i++) {
+                        if (data.getItemVisual(idx, itemStyleList[i], true) == null) {
+                            data.setItemVisual(
+                                idx, itemStyleList[i],
+                                categoriesData.getItemVisual(category, itemStyleList[i])
+                            );
+                        }
                     }
                 }
             });

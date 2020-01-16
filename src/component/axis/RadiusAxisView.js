@@ -26,7 +26,7 @@ var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ];
 var selfBuilderAttrs = [
-    'splitLine', 'splitArea'
+    'splitLine', 'splitArea', 'minorSplitLine'
 ];
 
 export default AxisView.extend({
@@ -44,6 +44,7 @@ export default AxisView.extend({
         var polar = radiusAxis.polar;
         var angleAxis = polar.getAngleAxis();
         var ticksCoords = radiusAxis.getTicksCoords();
+        var minorTicksCoords = radiusAxis.getMinorTicksCoords();
         var axisAngle = angleAxis.getExtent()[0];
         var radiusExtent = radiusAxis.getExtent();
 
@@ -54,7 +55,7 @@ export default AxisView.extend({
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (radiusAxisModel.get(name + '.show') && !radiusAxis.scale.isBlank()) {
-                this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords);
+                this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords);
             }
         }, this);
     },
@@ -80,8 +81,7 @@ export default AxisView.extend({
                     cx: polar.cx,
                     cy: polar.cy,
                     r: ticksCoords[i].coord
-                },
-                silent: true
+                }
             }));
         }
 
@@ -96,6 +96,39 @@ export default AxisView.extend({
                 silent: true
             }));
         }
+    },
+
+    /**
+     * @private
+     */
+    _minorSplitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords) {
+        if (!minorTicksCoords.length) {
+            return;
+        }
+
+        var minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
+        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+
+        var lines = [];
+
+        for (var i = 0; i < minorTicksCoords.length; i++) {
+            for (let k = 0; k < minorTicksCoords[i].length; k++) {
+                lines.push(new graphic.Circle({
+                    shape: {
+                        cx: polar.cx,
+                        cy: polar.cy,
+                        r: minorTicksCoords[i][k].coord
+                    }
+                }));
+            }
+        }
+
+        this.group.add(graphic.mergePath(lines, {
+            style: zrUtil.defaults({
+                fill: null
+            }, lineStyleModel.getLineStyle()),
+            silent: true
+        }));
     },
 
     /**

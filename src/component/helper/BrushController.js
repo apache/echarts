@@ -180,8 +180,26 @@ function BrushController(zr) {
      * @type {Object}
      */
     this._handlers = {};
-    each(mouseHandlers, function (handler, eventName) {
-        this._handlers[eventName] = zrUtil.bind(handler, this);
+
+    /**
+     * @private
+     * @type {Object}
+     */
+    this._localHandlers = {};
+
+    /**
+     * @private
+     * @type {Object}
+     */
+    this._pageHandlers = {};
+
+    each(localMouseHandlers, function (handler, eventName) {
+        this._handlers[eventName] =
+            this._localHandlers[eventName] = zrUtil.bind(handler, this);
+    }, this);
+    each(pageMouseHandlers, function (handler, eventName) {
+        this._handlers[eventName] =
+            this._pageHandlers[eventName] = zrUtil.bind(handler, this);
     }, this);
 }
 
@@ -376,9 +394,7 @@ function doEnableBrush(controller, brushOption) {
         interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid);
     }
 
-    each(controller._handlers, function (handler, eventName) {
-        zr.on(eventName, handler);
-    });
+    mountHandlers(zr, controller._localHandlers);
 
     controller._brushType = brushOption.brushType;
     controller._brushOption = zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
@@ -389,11 +405,21 @@ function doDisableBrush(controller) {
 
     interactionMutex.release(zr, MUTEX_RESOURCE_KEY, controller._uid);
 
-    each(controller._handlers, function (handler, eventName) {
-        zr.off(eventName, handler);
-    });
+    unmountHandlers(zr, controller._handlers);
 
     controller._brushType = controller._brushOption = null;
+}
+
+function mountHandlers(zr, handlers) {
+    each(handlers, function (handler, eventName) {
+        zr.on(eventName, handler);
+    });
+}
+
+function unmountHandlers(zr, handlers) {
+    each(handlers, function (handler, eventName) {
+        zr.off(eventName, handler);
+    });
 }
 
 function createCover(controller, brushOption) {
@@ -738,8 +764,12 @@ function resetCursor(controller, e, localCursorPoint) {
 }
 
 function preventDefault(e) {
-    var rawE = e.event;
-    rawE.preventDefault && rawE.preventDefault();
+    // Just be worried about bring some side effect to the world
+    // out of echarts, we do not `preventDefault` for globalout.
+    if (e.zrIsFromLocal) {
+        var rawE = e.event;
+        rawE.preventDefault && rawE.preventDefault();
+    }
 }
 
 function mainShapeContain(cover, x, y) {
@@ -814,13 +844,13 @@ function determineBrushType(brushType, panel) {
     return brushType;
 }
 
-var mouseHandlers = {
+var localMouseHandlers = {
 
     mousedown: function (e) {
         if (this._dragging) {
             // In case some browser do not support globalOut,
             // and release mose out side the browser.
-            handleDragEnd.call(this, e);
+            handleDragEnd(this, e);
         }
         else if (!e.target || !e.target.draggable) {
 
@@ -835,46 +865,68 @@ var mouseHandlers = {
                 this._dragging = true;
                 this._track = [localCursorPoint.slice()];
             }
+
+            // Mount page handlers only when needed to minimize unexpected side-effect.
+            mountHandlers(this._zr, this._pageHandlers);
         }
     },
 
     mousemove: function (e) {
         var localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
-
+        // resetCursor should be always called when mouse is in zr area,
+        // but not called when mouse is out of zr area.
         resetCursor(this, e, localCursorPoint);
+    }
+};
 
+var pageMouseHandlers = {
+
+    pagemousemove: function (e) {
         if (this._dragging) {
+            var xy = getLocalMouseXY(e, this._zr);
+            var localCursorPoint = this.group.transformCoordToLocal(xy[0], xy[1]);
 
             preventDefault(e);
-
             var eventParams = updateCoverByMouse(this, e, localCursorPoint, false);
-
             eventParams && trigger(this, eventParams);
         }
     },
 
-    mouseup: handleDragEnd //,
-
-    // FIXME
-    // in tooltip, globalout should not be triggered.
-    // globalout: handleDragEnd
+    pagemouseup: function (e) {
+        handleDragEnd(this, e);
+    }
 };
 
-function handleDragEnd(e) {
-    if (this._dragging) {
-
+function handleDragEnd(controller, e) {
+    if (controller._dragging) {
         preventDefault(e);
 
-        var localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
-        var eventParams = updateCoverByMouse(this, e, localCursorPoint, true);
+        var xy = getLocalMouseXY(e, controller._zr);
+        var localCursorPoint = controller.group.transformCoordToLocal(xy[0], xy[1]);
+        var eventParams = updateCoverByMouse(controller, e, localCursorPoint, true);
 
-        this._dragging = false;
-        this._track = [];
-        this._creatingCover = null;
+        controller._dragging = false;
+        controller._track = [];
+        controller._creatingCover = null;
 
         // trigger event shoule be at final, after procedure will be nested.
-        eventParams && trigger(this, eventParams);
+        eventParams && trigger(controller, eventParams);
+
+        unmountHandlers(controller._zr, controller._pageHandlers);
     }
+}
+
+function getLocalMouseXY(event, zr) {
+    var x = event.offsetX;
+    var y = event.offsetY;
+    // var w = zr.getWidth();
+    // var h = zr.getHeight();
+    // x < 0 && (x = 0);
+    // x > w && (x = w);
+    // y < 0 && (y = 0);
+    // y > h && (y = h);
+
+    return [x, y];
 }
 
 /**

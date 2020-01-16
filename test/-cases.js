@@ -33,6 +33,7 @@
             'touch-test.html',
             'touch-candlestick.html',
             'tooltip-touch.html',
+            'ios13-z-bug.html',
             'bar.html',
             'line.html',
             'geoLine.html',

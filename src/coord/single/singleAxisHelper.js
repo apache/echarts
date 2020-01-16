@@ -57,9 +57,8 @@ export function layout(axisModel, opt) {
 
     var directionMap = {top: -1, bottom: 1, right: 1, left: -1};
 
-    layout.labelDirection = layout.tickDirection
-        = layout.nameDirection
-        = directionMap[axisPosition];
+    layout.labelDirection = layout.tickDirection =
+        layout.nameDirection = directionMap[axisPosition];
 
     if (axisModel.get('axisTick.inside')) {
         layout.tickDirection = -layout.tickDirection;

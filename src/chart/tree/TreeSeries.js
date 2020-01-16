@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * @file Create data struct and define tree view's series model
- * @author Deqing Li(annong035@gmail.com)
- */
-
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
 import {encodeHTML} from '../../util/format';
@@ -52,7 +47,18 @@ export default SeriesModel.extend({
 
         treeOption.leaves = leaves;
 
-        var tree = Tree.createTree(root, this, treeOption);
+        var tree = Tree.createTree(root, this, treeOption, beforeLink);
+
+        function beforeLink(nodeData) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                var node = tree.getNodeByDataIndex(idx);
+                var leavesModel = node.getLeavesModel();
+                if (!node.children.length || !node.isExpand) {
+                    model.parentModel = leavesModel;
+                }
+                return model;
+            });
+        }
 
         var treeDepth = 0;
 
@@ -133,7 +139,14 @@ export default SeriesModel.extend({
         // the layout of the tree, two value can be selected, 'orthogonal' or 'radial'
         layout: 'orthogonal',
 
-        roam: false, // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        // value can be 'polyline'
+        edgeShape: 'curve',
+
+        edgeForkPosition: '50%',
+
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.4,
 

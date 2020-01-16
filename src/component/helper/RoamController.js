@@ -130,7 +130,7 @@ zrUtil.mixin(RoamController, Eventful);
 
 
 function mousedown(e) {
-    if (eventTool.notLeftMouse(e)
+    if (eventTool.isMiddleOrRightButtonOnMouseUpDown(e)
         || (e.target && e.target.draggable)
     ) {
         return;
@@ -149,9 +149,8 @@ function mousedown(e) {
 }
 
 function mousemove(e) {
-    if (eventTool.notLeftMouse(e)
+    if (!this._dragging
         || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
-        || !this._dragging
         || e.gestureEvent === 'pinch'
         || interactionMutex.isTaken(this._zr, 'globalPan')
     ) {
@@ -178,7 +177,7 @@ function mousemove(e) {
 }
 
 function mouseup(e) {
-    if (!eventTool.notLeftMouse(e)) {
+    if (!eventTool.isMiddleOrRightButtonOnMouseUpDown(e)) {
         this._dragging = false;
     }
 }

@@ -32,7 +32,7 @@ under the License.
                 margin: 0;
             }
             #main {
-                width: 1000px;
+                width: 100%;
                 background: #fff;
             }
         </style>
@@ -95,7 +95,12 @@ under the License.
                         top: 'bottom',
                         align: 'right'
                     },
-                    tooltip: {},
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
                     dataZoom: {
                         start: 10,
                         end: 20

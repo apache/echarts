@@ -450,10 +450,6 @@ var SliderZoomView = DataZoomView.extend({
             draggable: true,
             cursor: getCursor(this._orient),
             drift: bind(this._onDragMove, this, 'all'),
-            onmousemove: function (e) {
-                // Fot mobile devicem, prevent screen slider on the button.
-                eventTool.stop(e.event);
-            },
             ondragstart: bind(this._showDataInfo, this, true),
             ondragend: bind(this._onDragEnd, this),
             onmouseover: bind(this._showDataInfo, this, true),
@@ -465,8 +461,9 @@ var SliderZoomView = DataZoomView.extend({
         }));
 
         // Frame border.
-        barGroup.add(new Rect(graphic.subPixelOptimizeRect({
+        barGroup.add(new Rect({
             silent: true,
+            subPixelOptimize: true,
             shape: {
                 x: 0,
                 y: 0,
@@ -479,7 +476,7 @@ var SliderZoomView = DataZoomView.extend({
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                 fill: 'rgba(0,0,0,0)'
             }
-        })));
+        }));
 
         each([0, 1], function (handleIndex) {
             var path = graphic.createIcon(
@@ -488,10 +485,6 @@ var SliderZoomView = DataZoomView.extend({
                     cursor: getCursor(this._orient),
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
-                    onmousemove: function (e) {
-                        // Fot mobile devicem, prevent screen slider on the button.
-                        eventTool.stop(e.event);
-                    },
                     ondragend: bind(this._onDragEnd, this),
                     onmouseover: bind(this._showDataInfo, this, true),
                     onmouseout: bind(this._showDataInfo, this, false)
@@ -713,8 +706,11 @@ var SliderZoomView = DataZoomView.extend({
         handleLabels[1].attr('invisible', !showOrHide);
     },
 
-    _onDragMove: function (handleIndex, dx, dy) {
+    _onDragMove: function (handleIndex, dx, dy, event) {
         this._dragging = true;
+
+        // For mobile device, prevent screen slider on the button.
+        eventTool.stop(event.event);
 
         // Transform dx, dy to bar coordination.
         var barTransform = this._displayables.barGroup.getLocalTransform();

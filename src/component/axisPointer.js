@@ -51,8 +51,8 @@ echarts.registerPreprocessor(function (option) {
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, function (ecModel, api) {
     // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
     // allAxesInfo should be updated when setOption performed.
-    ecModel.getComponent('axisPointer').coordSysAxesInfo
-        = axisPointerModelHelper.collect(ecModel, api);
+    ecModel.getComponent('axisPointer').coordSysAxesInfo =
+        axisPointerModelHelper.collect(ecModel, api);
 });
 
 // Broadcast to all views.
