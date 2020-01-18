@@ -361,6 +361,7 @@ Calendar.prototype = {
      * @return {Object}       obj
      */
     _getRangeInfo: function (range) {
+        // range中每个元素是个对象
         range = [
             this.getDateInfo(range[0]),
             this.getDateInfo(range[1])
@@ -372,6 +373,18 @@ Calendar.prototype = {
             range.reverse();
         }
 
+        // range[0]
+        // {
+        //     y: y,
+        //         m: m,
+        //     d: d,
+        //     day: day,
+        //     time: date.getTime(),
+        //     formatedDate: y + '-' + m + '-' + d,
+        //     date: date
+        // };
+
+        // 跨越了几天，包含头尾
         var allDay = Math.floor(range[1].time / PROXIMATE_ONE_DAY)
             - Math.floor(range[0].time / PROXIMATE_ONE_DAY) + 1;
 
@@ -384,13 +397,20 @@ Calendar.prototype = {
         // ```
         // will get wrong result because of DST. So we should fix it.
         var date = new Date(range[0].time);
+        // 开始的时间是周几
         var startDateNum = date.getDate();
+        // 结束的时间是周几
         var endDateNum = range[1].date.getDate();
+        // 应该结尾的那一天
         date.setDate(startDateNum + allDay - 1);
         // The bias can not over a month, so just compare date.
+        // 不等，则出现DST问题。等则无DST问题
         if (date.getDate() !== endDateNum) {
-            var sign = date.getTime() - range[1].time > 0 ? 1 : -1;
+            // sign记录调快还是调慢了。三月份那次，
+            // I only change '>' to '<'.
+            var sign = date.getTime() - range[1].time < 0 ? 1 : -1;
             while (date.getDate() !== endDateNum && (date.getTime() - range[1].time) * sign > 0) {
+                // 目的就是修改这个allday
                 allDay -= sign;
                 date.setDate(startDateNum + allDay - 1);
             }
