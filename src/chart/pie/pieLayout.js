@@ -67,8 +67,36 @@ export default function (seriesType, ecModel, api, payload) {
         data.each(valueDim, function (value) {
             !isNaN(value) && validDataCount++;
         });
+        
+        var trueArray = [];
+        // @override
+        data.getSum = function () {
+            var hostData = data.hostModel.option.data;
+            var sum = 0;
+            if (hostData) {
+                var tempValue = 0;
+                for (var i = 0, len = hostData.length; i < len; i++) {
+                    tempValue = 0;
+                    if(hostData[i].value instanceof Array){
+                        for(var j = 0; j < hostData[i].value.length; j++) {
+                            if(!isNaN(hostData[i].value[j])){
+                                tempValue += hostData[i].value[j];
+                            }
+                        }
+                        sum += tempValue;
+                    } else {
+                        if (!isNaN(hostData[i].value)) {
+                            sum += hostData[i].value;
+                            tempValue = hostData[i].value;
+                        }
+                    }
+                    trueArray.push(tempValue);
+                }
+            }
+            return sum;
+        };
 
-        var sum = data.getSum(valueDim);
+        var sum = data.getSum();
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
@@ -78,8 +106,17 @@ export default function (seriesType, ecModel, api, payload) {
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
-        var extent = data.getDataExtent(valueDim);
-        extent[0] = 0;
+        // @override
+        data.getDataExtent = function(arr){
+            var max = arr[0];
+            for(var k = 0; k < arr.length; k++) {
+                if(!isNaN(arr[k]) && arr[k] > max){
+                    max = arr[k];
+                }
+            }
+            return [0, max];
+        }
+        var extent = data.getDataExtent(trueArray);
 
         // In the case some sector angle is smaller than minAngle
         var restAngle = PI2;
@@ -87,9 +124,10 @@ export default function (seriesType, ecModel, api, payload) {
 
         var currentAngle = startAngle;
         var dir = clockwise ? 1 : -1;
-
+        var angle;
+        
         data.each(valueDim, function (value, idx) {
-            var angle;
+            value = trueArray[idx];
             if (isNaN(value)) {
                 data.setItemLayout(idx, {
                     angle: NaN,
@@ -150,6 +188,7 @@ export default function (seriesType, ecModel, api, payload) {
             if (restAngle <= 1e-3) {
                 var angle = PI2 / validDataCount;
                 data.each(valueDim, function (value, idx) {
+                    value = trueArray[idx];
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         layout.angle = angle;
@@ -162,6 +201,7 @@ export default function (seriesType, ecModel, api, payload) {
                 unitRadian = restAngle / valueSumLargerThanMinAngle;
                 currentAngle = startAngle;
                 data.each(valueDim, function (value, idx) {
+                    value = trueArray[idx];
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         var angle = layout.angle === minAngle

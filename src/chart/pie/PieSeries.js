@@ -85,6 +85,15 @@ var PieSeries = echarts.extendSeriesModel({
         data.each(data.mapDimension('value'), function (value) {
             valueList.push(value);
         });
+    
+        if(params.value instanceof Array){
+            valueList[params.dataIndex] = 0;
+            for(var i = 0; i < params.value.length; i++){
+                if(!isNaN(params.value[i])){
+                    valueList[params.dataIndex] += params.value[i];
+                }
+            }
+        }
 
         params.percent = getPercentWithPrecision(
             valueList,
