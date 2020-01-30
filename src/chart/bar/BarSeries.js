@@ -57,6 +57,20 @@ export default BaseBarSeries.extend({
 
         // If use caps on two sides of bars
         // Only available on tangential polar bar
-        roundCap: false
+        roundCap: false,
+
+        showBackground: false,
+        backgroundStyle: {
+            color: 'rgba(180, 180, 180, 0.2)',
+            borderColor: null,
+            borderWidth: 0,
+            borderType: 'solid',
+            borderRadius: 0,
+            shadowBlur: 0,
+            shadowColor: null,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            opacity: 1
+        }
     }
 });

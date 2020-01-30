@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as zrColor from 'zrender/src/tool/color';
 import * as eventUtil from 'zrender/src/core/event';
+import * as domUtil from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import * as formatUtil from '../../util/format';
 
@@ -121,24 +122,63 @@ function assembleCssText(tooltipModel) {
     return cssText.join(';') + ';';
 }
 
+// If not able to make, do not modify the input `out`.
+function makeStyleCoord(out, zr, appendToBody, zrX, zrY) {
+    var zrPainter = zr && zr.painter;
+
+    if (appendToBody) {
+        var zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
+        if (zrViewportRoot) {
+            // Some APPs might use scale on body, so we support CSS transform here.
+            domUtil.transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
+        }
+    }
+    else {
+        out[0] = zrX;
+        out[1] = zrY;
+        // xy should be based on canvas root. But tooltipContent is
+        // the sibling of canvas root. So padding of ec container
+        // should be considered here.
+        var viewportRootOffset = zrPainter && zrPainter.getViewportRootOffset();
+        if (viewportRootOffset) {
+            out[0] += viewportRootOffset.offsetLeft;
+            out[1] += viewportRootOffset.offsetTop;
+        }
+    }
+}
+
 /**
  * @alias module:echarts/component/tooltip/TooltipContent
+ * @param {HTMLElement} container
+ * @param {ExtensionAPI} api
+ * @param {Object} [opt]
+ * @param {boolean} [opt.appendToBody]
+ *        `false`: the DOM element will be inside the container. Default value.
+ *        `true`: the DOM element will be appended to HTML body, which avoid
+ *                some overflow clip but intrude outside of the container.
  * @constructor
  */
-function TooltipContent(container, api) {
+function TooltipContent(container, api, opt) {
     if (env.wxa) {
         return null;
     }
 
     var el = document.createElement('div');
-    var zr = this._zr = api.getZr();
-
+    el.domBelongToZr = true;
     this.el = el;
+    var zr = this._zr = api.getZr();
+    var appendToBody = this._appendToBody = opt && opt.appendToBody;
 
-    this._x = api.getWidth() / 2;
-    this._y = api.getHeight() / 2;
+    this._styleCoord = [0, 0];
 
-    container.appendChild(el);
+    makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
+
+    if (appendToBody) {
+        document.body.appendChild(el);
+    }
+    else {
+        container.appendChild(el);
+    }
 
     this._container = container;
 
@@ -172,7 +212,8 @@ function TooltipContent(container, api) {
             // Try trigger zrender event to avoid mouse
             // in and out shape too frequently
             var handler = zr.handler;
-            eventUtil.normalizeEvent(container, e, true);
+            var zrViewportRoot = zr.painter.getViewportRoot();
+            eventUtil.normalizeEvent(zrViewportRoot, e, true);
             handler.dispatch('mousemove', e);
         }
     };
@@ -217,12 +258,13 @@ TooltipContent.prototype = {
     show: function (tooltipModel) {
         clearTimeout(this._hideTimeout);
         var el = this.el;
+        var styleCoord = this._styleCoord;
 
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
-            + ';left:' + this._x + 'px;top:' + this._y + 'px;'
+            + ';left:' + styleCoord[0] + 'px;top:' + styleCoord[1] + 'px;'
             + (tooltipModel.get('extraCssText') || '');
 
         el.style.display = el.innerHTML ? 'block' : 'none';
@@ -250,23 +292,13 @@ TooltipContent.prototype = {
         return [el.clientWidth, el.clientHeight];
     },
 
-    moveTo: function (x, y) {
-        // xy should be based on canvas root. But tooltipContent is
-        // the sibling of canvas root. So padding of ec container
-        // should be considered here.
-        var zr = this._zr;
-        var viewportRootOffset;
-        if (zr && zr.painter && (viewportRootOffset = zr.painter.getViewportRootOffset())) {
-            x += viewportRootOffset.offsetLeft;
-            y += viewportRootOffset.offsetTop;
-        }
+    moveTo: function (zrX, zrY) {
+        var styleCoord = this._styleCoord;
+        makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
 
         var style = this.el.style;
-        style.left = x + 'px';
-        style.top = y + 'px';
-
-        this._x = x;
-        this._y = y;
+        style.left = styleCoord[0] + 'px';
+        style.top = styleCoord[1] + 'px';
     },
 
     hide: function () {
@@ -292,6 +324,10 @@ TooltipContent.prototype = {
         return this._show;
     },
 
+    dispose: function () {
+        this.el.parentNode.removeChild(this.el);
+    },
+
     getOuterSize: function () {
         var width = this.el.clientWidth;
         var height = this.el.clientHeight;
@@ -308,6 +344,7 @@ TooltipContent.prototype = {
 
         return {width: width, height: height};
     }
+
 };
 
 export default TooltipContent;

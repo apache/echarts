@@ -270,7 +270,7 @@ export default echarts.extendChartView({
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var edgeDataIndex = payload.edgeDataIndex;
@@ -308,7 +308,7 @@ export default echarts.extendChartView({
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getData().graph;
+        var graph = seriesModel.getData().graph;
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);

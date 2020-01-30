@@ -20,6 +20,7 @@
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BrushController from '../helper/BrushController';
+import {layoutCovers} from './visualEncoding';
 
 export default echarts.extendComponentView({
 
@@ -65,7 +66,13 @@ export default echarts.extendComponentView({
     /**
      * @override
      */
-    updateTransform: updateController,
+    updateTransform: function (brushModel, ecModel) {
+        // PENDING: `updateTransform` is a little tricky, whose layout need
+        // to be calculate mandatorily and other stages will not be performed.
+        // Take care the correctness of the logic. See #11754 .
+        layoutCovers(ecModel);
+        return updateController.apply(this, arguments);
+    },
 
     /**
      * @override

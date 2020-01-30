@@ -1124,7 +1124,7 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  * configuration in series.
  *
  * Caution: this method will stop previous animation.
- * So if do not use this method to one element twice before
+ * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
  *
  * @param {module:zrender/Element} el
@@ -1150,7 +1150,7 @@ export function updateProps(el, props, animatableModel, dataIndex, cb) {
  * configuration in series.
  *
  * Caution: this method will stop previous animation.
- * So if do not use this method to one element twice before
+ * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
  *
  * @param {module:zrender/Element} el

@@ -61,6 +61,28 @@ var RadarSeries = SeriesModel.extend({
             }).join('<br />');
     },
 
+    /**
+     * @implement
+     */
+    getTooltipPosition: function (dataIndex) {
+        if (dataIndex != null) {
+            var data = this.getData();
+            var coordSys = this.coordinateSystem;
+            var values = data.getValues(
+                zrUtil.map(coordSys.dimensions, function (dim) {
+                    return data.mapDimension(dim);
+                }), dataIndex, true
+            );
+
+            for (var i = 0, len = values.length; i < len; i++) {
+                if (!isNaN(values[i])) {
+                    var indicatorAxes = coordSys.getIndicatorAxes();
+                    return coordSys.coordToPoint(indicatorAxes[i].dataToCoord(values[i]), i);
+                }
+            }
+        }
+    },
+
     defaultOption: {
         zlevel: 0,
         z: 2,

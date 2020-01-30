@@ -9,7 +9,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 Now ECharts is an incubator project of Apache Software Foundation.
 Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
 
-**[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
+**[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/en/index.html)**
 
 [![Build Status](https://travis-ci.org/apache/incubator-echarts.svg?branch=master)](https://travis-ci.org/apache/incubator-echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) [![Last npm release](https://img.shields.io/npm/v/echarts)](https://www.npmjs.com/package/echarts)
 
@@ -94,7 +94,7 @@ If you wish to debug locally or make pull requests, please refer to [contributin
 
 + [Wordcloud 字符云](https://github.com/ecomfe/echarts-wordcloud)
 
-+ [Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension/bmap)
++ [Extension for Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension/bmap) An extension provides a wrapper of Baidu Map Service SDK. 
 
 + [vue-echarts](https://github.com/ecomfe/vue-echarts) ECharts component for Vue.js
 

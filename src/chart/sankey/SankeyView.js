@@ -22,7 +22,9 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 
 var nodeOpacityPath = ['itemStyle', 'opacity'];
+var hoverNodeOpacityPath = ['emphasis', 'itemStyle', 'opacity'];
 var lineOpacityPath = ['lineStyle', 'opacity'];
+var hoverLineOpacityPath = ['emphasis', 'lineStyle', 'opacity'];
 
 function getItemOpacity(item, opacityPath) {
     return item.getVisual('opacity') || item.getModel().get(opacityPath);
@@ -30,8 +32,8 @@ function getItemOpacity(item, opacityPath) {
 
 function fadeOutItem(item, opacityPath, opacityRatio) {
     var el = item.getGraphicEl();
-
     var opacity = getItemOpacity(item, opacityPath);
+
     if (opacityRatio != null) {
         opacity == null && (opacity = 1);
         opacity *= opacityRatio;
@@ -49,12 +51,14 @@ function fadeInItem(item, opacityPath) {
     var opacity = getItemOpacity(item, opacityPath);
     var el = item.getGraphicEl();
 
-    el.highlight && el.highlight();
     el.traverse(function (child) {
         if (child.type !== 'group') {
             child.setStyle('opacity', opacity);
         }
     });
+
+    // Support emphasis here.
+    el.highlight && el.highlight();
 }
 
 var SankeyShape = graphic.extendShape({
@@ -92,6 +96,14 @@ var SankeyShape = graphic.extendShape({
             );
         }
         ctx.closePath();
+    },
+
+    highlight: function () {
+        this.trigger('emphasis');
+    },
+
+    downplay: function () {
+        this.trigger('normal');
     }
 });
 
@@ -274,8 +286,19 @@ export default echarts.extendChartView({
                 el.cursor = 'move';
             }
 
+            el.highlight = function () {
+                this.trigger('emphasis');
+            };
+
+            el.downplay = function () {
+                this.trigger('normal');
+            };
+
+            el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
+            el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
+
             if (itemModel.get('focusNodeAdjacency')) {
-                el.off('mouseover').on('mouseover', function () {
+                el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._clearTimer();
                         api.dispatchAction({
@@ -285,7 +308,8 @@ export default echarts.extendChartView({
                         });
                     }
                 });
-                el.off('mouseout').on('mouseout', function () {
+
+                el.on('mouseout', el.unfocusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._dispatchUnfocus(api);
                     }
@@ -295,8 +319,12 @@ export default echarts.extendChartView({
 
         edgeData.eachItemGraphicEl(function (el, dataIndex) {
             var edgeModel = edgeData.getItemModel(dataIndex);
+
+            el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
+            el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
+
             if (edgeModel.get('focusNodeAdjacency')) {
-                el.off('mouseover').on('mouseover', function () {
+                el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._clearTimer();
                         api.dispatchAction({
@@ -306,7 +334,8 @@ export default echarts.extendChartView({
                         });
                     }
                 });
-                el.off('mouseout').on('mouseout', function () {
+
+                el.on('mouseout', el.unfocusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         sankeyView._dispatchUnfocus(api);
                     }
@@ -347,7 +376,7 @@ export default echarts.extendChartView({
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var itemModel = data.getItemModel(dataIndex);
@@ -367,15 +396,15 @@ export default echarts.extendChartView({
         });
 
         if (node) {
-            fadeInItem(node, nodeOpacityPath);
+            fadeInItem(node, hoverNodeOpacityPath);
             var focusNodeAdj = itemModel.get('focusNodeAdjacency');
             if (focusNodeAdj === 'outEdges') {
                 zrUtil.each(node.outEdges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node2, nodeOpacityPath);
+                    fadeInItem(edge, hoverLineOpacityPath);
+                    fadeInItem(edge.node2, hoverNodeOpacityPath);
                 });
             }
             else if (focusNodeAdj === 'inEdges') {
@@ -383,8 +412,8 @@ export default echarts.extendChartView({
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node1, nodeOpacityPath);
+                    fadeInItem(edge, hoverLineOpacityPath);
+                    fadeInItem(edge.node1, hoverNodeOpacityPath);
                 });
             }
             else if (focusNodeAdj === 'allEdges') {
@@ -392,21 +421,21 @@ export default echarts.extendChartView({
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, lineOpacityPath);
-                    fadeInItem(edge.node1, nodeOpacityPath);
-                    fadeInItem(edge.node2, nodeOpacityPath);
+                    fadeInItem(edge, hoverLineOpacityPath);
+                    (edge.node1 !== node) && fadeInItem(edge.node1, hoverNodeOpacityPath);
+                    (edge.node2 !== node) && fadeInItem(edge.node2, hoverNodeOpacityPath);
                 });
             }
         }
         if (edge) {
-            fadeInItem(edge, lineOpacityPath);
-            fadeInItem(edge.node1, nodeOpacityPath);
-            fadeInItem(edge.node2, nodeOpacityPath);
+            fadeInItem(edge, hoverLineOpacityPath);
+            fadeInItem(edge.node1, hoverNodeOpacityPath);
+            fadeInItem(edge.node2, hoverNodeOpacityPath);
         }
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getGraph();
+        var graph = seriesModel.getGraph();
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);
@@ -429,8 +458,7 @@ function createGridClipShape(rect, seriesModel, cb) {
     });
     graphic.initProps(rectEl, {
         shape: {
-            width: rect.width + 20,
-            height: rect.height + 20
+            width: rect.width + 20
         }
     }, seriesModel, cb);
 
