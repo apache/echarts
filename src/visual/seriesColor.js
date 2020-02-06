@@ -27,7 +27,11 @@ export default {
         var data = seriesModel.getData();
         var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.color').split('.');
         // Set in itemStyle
-        var color = seriesModel.get(colorAccessPath);
+        var color = seriesModel.get(colorAccessPath) // Set in itemStyle
+            || seriesModel.getColorFromPalette(
+                // TODO series count changed.
+                seriesModel.name, null, ecModel.getSeriesCount()
+            );  // Default color
         var colorCallback = (isFunction(color) && !(color instanceof Gradient))
             ? color : null;
 
