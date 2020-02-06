@@ -30,13 +30,6 @@ export default {
         var color = seriesModel.get(colorAccessPath);
         var colorCallback = (isFunction(color) && !(color instanceof Gradient))
             ? color : null;
-        // Default color
-        if (!color || colorCallback) {
-            color = seriesModel.getColorFromPalette(
-                // TODO series count changed.
-                seriesModel.name, null, ecModel.getSeriesCount()
-            );
-        }
 
         data.setVisual('color', color);
 
