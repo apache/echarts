@@ -550,6 +550,7 @@ echartsProto.getConnectedDataURL = function (opts) {
     if (!env.canvasSupported) {
         return;
     }
+    var isSvg = opts.type === 'svg';
     var groupId = this.group;
     var mathMin = Math.min;
     var mathMax = Math.max;
@@ -564,9 +565,9 @@ echartsProto.getConnectedDataURL = function (opts) {
 
         zrUtil.each(instances, function (chart, id) {
             if (chart.group === groupId) {
-                var canvas = chart.getRenderedCanvas(
-                    zrUtil.clone(opts)
-                );
+                var canvas = isSvg
+                    ? chart.getZr().painter.getSvgDom().innerHTML
+                    : chart.getRenderedCanvas(zrUtil.clone(opts));
                 var boundingRect = chart.getDom().getBoundingClientRect();
                 left = mathMin(boundingRect.left, left);
                 top = mathMin(boundingRect.top, top);
@@ -587,38 +588,61 @@ echartsProto.getConnectedDataURL = function (opts) {
         var width = right - left;
         var height = bottom - top;
         var targetCanvas = zrUtil.createCanvas();
-        targetCanvas.width = width;
-        targetCanvas.height = height;
-        var zr = zrender.init(targetCanvas);
-
-        // Background between the charts
-        if (opts.connectedBackgroundColor) {
-            zr.add(new graphic.Rect({
-                shape: {
-                    x: 0,
-                    y: 0,
-                    width: width,
-                    height: height
-                },
-                style: {
-                    fill: opts.connectedBackgroundColor
-                }
-            }));
-        }
-
-        each(canvasList, function (item) {
-            var img = new graphic.Image({
-                style: {
-                    x: item.left * dpr - left,
-                    y: item.top * dpr - top,
-                    image: item.dom
-                }
-            });
-            zr.add(img);
+        var zr = zrender.init(targetCanvas, {
+            renderer: isSvg ? 'svg' : 'canvas'
         });
-        zr.refreshImmediately();
+        zr.resize({
+            width: width,
+            height: height
+        });
 
-        return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+        if (isSvg) {
+            var content = '';
+            each(canvasList, function (item) {
+                var x = item.left - left;
+                var y = item.top - top;
+                content += '<g transform="translate(' + x + ","
+                    + y + ')">' + item.dom + '</g>';
+            });
+            zr.painter.getSvgRoot().innerHTML = content;
+
+            if (opts.connectedBackgroundColor) {
+                zr.painter.setBackgroundColor(opts.connectedBackgroundColor);
+            }
+
+            zr.refreshImmediately();
+            return zr.painter.pathToDataUrl();
+        }
+        else {
+            // Background between the charts
+            if (opts.connectedBackgroundColor) {
+                zr.add(new graphic.Rect({
+                    shape: {
+                        x: 0,
+                        y: 0,
+                        width: width,
+                        height: height
+                    },
+                    style: {
+                        fill: opts.connectedBackgroundColor
+                    }
+                }));
+            }
+
+            each(canvasList, function (item) {
+                var img = new graphic.Image({
+                    style: {
+                        x: item.left * dpr - left,
+                        y: item.top * dpr - top,
+                        image: item.dom
+                    }
+                });
+                zr.add(img);
+            });
+
+            zr.refreshImmediately();
+            return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+        }
     }
     else {
         return this.getDataURL(opts);
