@@ -402,7 +402,7 @@ var resetMethods = {
 
         if (thisOption.minOpen) {
             pieceList.push({
-                index: index++,
+                index: index,
                 interval: [-Infinity, dataExtent[0]],
                 close: [0, 0]
             });
