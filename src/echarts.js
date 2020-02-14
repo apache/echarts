@@ -473,7 +473,7 @@ echartsProto.getRenderedCanvas = function (opts) {
  * Get svg data url
  * @return {string}
  */
-echartsProto.getSvgDataUrl = function () {
+echartsProto.getSvgDataURL = function () {
     if (!env.svgSupported) {
         return;
     }
@@ -485,7 +485,7 @@ echartsProto.getSvgDataUrl = function () {
         el.stopAnimation(true);
     });
 
-    return zr.painter.pathToDataUrl();
+    return zr.painter.toDataURL();
 };
 
 /**
@@ -521,7 +521,7 @@ echartsProto.getDataURL = function (opts) {
     });
 
     var url = this._zr.painter.getType() === 'svg'
-        ? this.getSvgDataUrl()
+        ? this.getSvgDataURL()
         : this.getRenderedCanvas(opts).toDataURL(
             'image/' + (opts && opts.type || 'png')
         );
@@ -611,7 +611,7 @@ echartsProto.getConnectedDataURL = function (opts) {
             }
 
             zr.refreshImmediately();
-            return zr.painter.pathToDataUrl();
+            return zr.painter.toDataURL();
         }
         else {
             // Background between the charts
