@@ -21,15 +21,18 @@
 
 const fsExtra = require('fs-extra');
 const fs = require('fs');
-const {resolve} = require('path');
+const nodePath = require('path');
 const config = require('./config.js');
 const commander = require('commander');
-const {build, watch, color} = require('zrender/build/helper');
-const ecLangPlugin = require('./rollup-plugin-ec-lang');
+const chalk = require('chalk');
+const rollup = require('rollup');
+const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
-const recheckDEV = require('zrender/build/babel-plugin-transform-remove-dev').recheckDEV;
+const recheckDEV = require('./remove-dev').recheckDEV;
+const assert = require('assert');
 
-function run() {
+
+async function run() {
 
     /**
      * Tips for `commander`:
@@ -148,7 +151,7 @@ function run() {
         watch(config.createECharts(opt));
     }
     else if (isPrePublish) {
-        prePublish();
+        await prePublish();
     }
     else if (isRelease) {
         let configs = [];
@@ -180,21 +183,19 @@ function run() {
             config.createDataTool(true)
         );
 
-        build(configs)
-            .then(function () {
-                checkCode(configForCheck);
-                prePublish();
-            }).catch(handleBuildError);
+        await build(configs);
+
+        checkBundleCode(configForCheck);
+
+        await prePublish();
     }
     else {
         let cfg = config.createECharts(opt);
-        build([cfg])
-            .then(function () {
-                if (opt.removeDev) {
-                    checkCode(cfg);
-                }
-            })
-            .catch(handleBuildError);
+        await build([cfg]);
+
+        if (opt.removeDev) {
+            checkBundleCode(cfg);
+        }
     }
 }
 
@@ -207,18 +208,14 @@ function normalizeParams(opt) {
     }
 }
 
-function handleBuildError(err) {
-    console.log(err);
-}
-
-function checkCode(singleConfig) {
+function checkBundleCode(singleConfig) {
     // Make sure __DEV__ is eliminated.
     let code = fs.readFileSync(singleConfig.output.file, {encoding: 'utf-8'});
     if (!code) {
         throw new Error(`${singleConfig.output.file} is empty`);
     }
     recheckDEV(code);
-    console.log(color('fgGreen', 'dim')('Check code: correct.'));
+    console.log(chalk.green.dim('Check code: correct.'));
 }
 
 function validateIO(input, output) {
@@ -249,7 +246,233 @@ function validateLang(lang, output) {
  * @return {string} Absolute path.
  */
 function getPath(relativePath) {
-    return resolve(__dirname, '../', relativePath);
+    return nodePath.resolve(__dirname, '../', relativePath);
 }
 
-run();
+/**
+ * @param {Array.<Object>} configs A list of rollup configs:
+ *  See: <https://rollupjs.org/#big-list-of-options>
+ *  For example:
+ *  [
+ *      {
+ *          ...inputOptions,
+ *          output: [outputOptions],
+ *          watch: {chokidar, include, exclude}
+ *      },
+ *      ...
+ *  ]
+ */
+async function build(configs) {
+
+    ensureZRenderCode.prepare();
+
+    for (let singleConfig of configs) {
+        console.log(
+            chalk.cyan.dim('\nBundles '),
+            chalk.cyan(singleConfig.input),
+            chalk.cyan.dim('=>'),
+            chalk.cyan(singleConfig.output.file),
+            chalk.cyan.dim(' ...')
+        );
+
+        console.time('rollup build');
+        const bundle = await rollup.rollup(singleConfig);
+        console.timeEnd('rollup build');
+
+        await bundle.write(singleConfig.output);
+
+        console.log(
+            chalk.green.dim('Created '),
+            chalk.green(singleConfig.output.file),
+            chalk.green.dim(' successfully.')
+        );
+    }
+
+    ensureZRenderCode.clear();
+}
+
+/**
+ * @param {Object} singleConfig A single rollup config:
+ *  See: <https://rollupjs.org/#big-list-of-options>
+ *  For example:
+ *  {
+ *      ...inputOptions,
+ *      output: [outputOptions],
+ *      watch: {chokidar, include, exclude}
+ *  }
+ */
+function watch(singleConfig) {
+
+    // FIXME:TS call `ensureZRenderCode`
+    let watcher = rollup.watch(singleConfig);
+
+    watcher.on('event', function (event) {
+        // event.code can be one of:
+        //   START        — the watcher is (re)starting
+        //   BUNDLE_START — building an individual bundle
+        //   BUNDLE_END   — finished building a bundle
+        //   END          — finished building all bundles
+        //   ERROR        — encountered an error while bundling
+        //   FATAL        — encountered an unrecoverable error
+        if (event.code !== 'START' && event.code !== 'END') {
+            console.log(
+                chalk.blue('[' + getTimeString() + ']'),
+                chalk.blue.dim('build'),
+                event.code.replace(/_/g, ' ').toLowerCase()
+            );
+        }
+        if (event.code === 'ERROR' || event.code === 'FATAL') {
+            printCodeError(event.error);
+        }
+        if (event.code === 'BUNDLE_END') {
+            printWatchResult(event);
+        }
+        if (event.code === 'START') {
+            ensureZRenderCode.prepare();
+        }
+        if (event.code === 'END' || event.code === 'ERROR' || event.code === 'FATAL') {
+            ensureZRenderCode.clear();
+        }
+    });
+}
+
+function printWatchResult(event) {
+    console.log(
+        chalk.green.dim('Created'),
+        chalk.green(event.output.join(', ')),
+        chalk.green.dim('in'),
+        chalk.green(event.duration),
+        chalk.green.dim('ms.')
+    );
+}
+
+function printCodeError(error) {
+    console.log('\n' + error.code);
+    if (error.code === 'PARSE_ERROR') {
+        console.log(
+            'line',
+            chalk.cyan(error.loc.line),
+            'column',
+            chalk.cyan(error.loc.column),
+            'in',
+            chalk.cyan(error.loc.file)
+        );
+    }
+    if (error.frame) {
+        console.log('\n' + chalk.red(error.frame));
+    }
+    console.log(chalk.red.dim('\n' + error.stack));
+}
+
+function getTimeString() {
+    return (new Date()).toLocaleString();
+}
+
+
+// Symbol link do not work currently. So have to copy code manually.
+// See: https://github.com/ezolenko/rollup-plugin-typescript2/issues/188
+var ensureZRenderCode = (function () {
+
+    const nodeModulesZr = getPath('./node_modules/zrender');
+    // const nodeModulesZrDirTmp = getPath('./node_modules/zrender-dir-tmp');
+    const nodeModulesZrSymlinkTmp = getPath('./node_modules/zrender-symlink-tmp');
+    const nodeModulesZrSrcDir = getPath('./node_modules/zrender/src');
+    const zrSrcDir = getPath('../zrender/src')
+
+    let stats = 'cleared';
+
+    function doClear() {
+        if (!fs.existsSync(nodeModulesZrSymlinkTmp)
+            || !fs.lstatSync(nodeModulesZrSymlinkTmp).isSymbolicLink()
+        ) {
+            return;
+        }
+
+        if (fs.existsSync(nodeModulesZr)
+            && fs.lstatSync(nodeModulesZr).isDirectory()
+        ) {
+            console.log(chalk.blue(`rm -rf dir: ${nodeModulesZr}`));
+            // ensure save.
+            assert(nodeModulesZr.includes('node_modules') && nodeModulesZr.includes('zrender'));
+            fsExtra.removeSync(nodeModulesZr);
+        }
+
+        // recover the symbollink so that vs code can continue to visit the zrender source code.
+        console.log(chalk.blue(`mv symbol link: ${nodeModulesZrSymlinkTmp} => ${nodeModulesZr}`));
+        fs.renameSync(nodeModulesZrSymlinkTmp, nodeModulesZr);
+    }
+
+    return {
+        prepare: function () {
+            // Calling guard
+            assert(stats === 'cleared');
+            stats = 'prepared';
+
+            console.time('ensure zr code cost');
+            // In case that the last build terminated manually.
+            doClear();
+
+            if (!fs.existsSync(nodeModulesZr)
+                || !fs.lstatSync(nodeModulesZr).isSymbolicLink()
+            ) {
+                return;
+            }
+
+            if (!fs.existsSync(zrSrcDir)
+                || !fs.lstatSync(zrSrcDir).isDirectory()
+            ) {
+                throw new Error(`${zrSrcDir} does not exist.`);
+            }
+
+            console.log(chalk.blue(`mv symbol link: ${nodeModulesZr} => ${nodeModulesZrSymlinkTmp}`));
+            fs.renameSync(nodeModulesZr, nodeModulesZrSymlinkTmp);
+
+            fsExtra.ensureDirSync(nodeModulesZr);
+            fsExtra.copySync(zrSrcDir, nodeModulesZrSrcDir);
+            console.log(chalk.blue(`copied: ${nodeModulesZrSrcDir} => ${zrSrcDir}`));
+
+            console.timeEnd('ensure zr code cost');
+        },
+
+        clear: function () {
+            // Calling guard
+            assert(stats === 'prepared');
+            stats = 'cleared';
+
+            doClear();
+        }
+    }
+})();
+
+
+async function main() {
+    try {
+        await run();
+    }
+    catch (err) {
+
+        ensureZRenderCode.clear();
+
+        console.log(chalk.red('BUILD ERROR!'));
+
+        // rollup parse error.
+        if (err) {
+            if (err.loc) {
+                console.warn(chalk.red(`${err.loc.file} (${err.loc.line}:${err.loc.column})`));
+                console.warn(chalk.red(err.message));
+            }
+            if (err.frame) {
+                console.warn(chalk.red(err.frame));
+            }
+            console.log(chalk.red(err ? err.stack : err));
+
+            err.id != null && console.warn(chalk.red(`id: ${err.id}`));
+            err.hook != null && console.warn(chalk.red(`hook: ${err.hook}`));
+            err.code != null && console.warn(chalk.red(`code: ${err.code}`));
+            err.plugin != null && console.warn(chalk.red(`plugin: ${err.plugin}`));
+        }
+        // console.log(err);
+    }
+}
+
+main();

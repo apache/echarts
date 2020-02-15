@@ -17,38 +17,33 @@
 * under the License.
 */
 
-/**
- * Remove the code of `if (__DEV__) { ... }`.
- *
- * Usage:
- *
- * import ecRemoveDevPlugin from 'echats/build/rollup-plugin-ec-remove-dev';
- * let rollupConfig = {
- *     plugins: [
- *         ecRemoveDevPlugin(),
- *         ...
- *     ]
- * };
- */
-
 const babel = require('@babel/core');
-const removeDEVPlugin = require('zrender/build/babel-plugin-transform-remove-dev');
+const removeDEVBabelPlugin = require('./remove-dev-babel-plugin');
 
 /**
- * @param {Object} [opt]
- * @param {Object} [opt.sourcemap]
+ * @param {string} sourceCode
+ * @param {boolean} sourcemap
+ * @return {Object} {code: string, map: string}
  */
-module.exports = function ({sourcemap} = {}) {
+module.exports.transform = function (sourceCode, sourcemap) {
+    let {code, map} = babel.transformSync(sourceCode, {
+        plugins: [removeDEVBabelPlugin],
+        sourceMaps: sourcemap
+    });
 
-    return {
-        transform: function (sourceCode) {
+    return {code, map};
+};
 
-            let {code, map} = babel.transform(sourceCode, {
-                plugins: [removeDEVPlugin],
-                sourceMaps: sourcemap
-            });
-
-            return {code, map};
-        }
-    };
+/**
+ * @param {string} code
+ * @throws {Error} If check failed.
+ */
+module.exports.recheckDEV = function (code) {
+    let result = code.match(/.if\s*\([^()]*__DEV__/);
+    if (result
+        && result[0].indexOf('`if') < 0
+        && result[0].indexOf('if (typeof __DEV__') < 0
+    ) {
+        throw new Error('__DEV__ is not removed.');
+    }
 };

@@ -173,6 +173,8 @@ map/tool
 map/raw
 theme/thumb
 /lib
+/esm
+pre-publish-tmp
 todo
 **/*.log
 *.sublime-workspace
