@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * // Scale class management
  * @module echarts/scale/Scale

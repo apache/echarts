@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // FIXME step not support polar
 
 import {__DEV__} from '../../config';

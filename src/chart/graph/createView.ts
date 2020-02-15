@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // FIXME Where to create the simple view coordinate system
 import View from '../../coord/View';
 import {getLayoutRect} from '../../util/layout';

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import createRenderPlanner from '../helper/createRenderPlanner';
 
 var positiveBorderColorQuery = ['itemStyle', 'borderColor'];

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 
 // var arrayDiff = require('zrender/src/core/arrayDiff');

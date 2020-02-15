@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';

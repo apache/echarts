@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Parallel Coordinates
  * <https://en.wikipedia.org/wiki/Parallel_coordinates>

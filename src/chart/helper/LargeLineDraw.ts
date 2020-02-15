@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // TODO Batch by color
 
 import * as graphic from '../../util/graphic';

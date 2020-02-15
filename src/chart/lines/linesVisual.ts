@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 
 function normalize(a) {
     if (!(a instanceof Array)) {

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
 // import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';

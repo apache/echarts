@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {each} from 'zrender/src/core/util';
 import parseGeoJson from './parseGeoJson';
 import {makeInner} from '../../util/model';

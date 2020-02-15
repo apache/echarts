@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {onIrrelevantElement} from './cursorHelper';
 import * as graphicUtil from '../../util/graphic';

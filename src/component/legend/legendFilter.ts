@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 export default function (ecModel) {
 
     var legendModels = ecModel.findComponents({

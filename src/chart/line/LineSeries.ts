@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../../config';
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';

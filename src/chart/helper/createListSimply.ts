@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 import createDimensions from '../../data/helper/createDimensions';
 import List from '../../data/List';

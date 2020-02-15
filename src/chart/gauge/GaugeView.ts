@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';

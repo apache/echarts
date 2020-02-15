@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import SeriesModel from '../../model/Series';
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';

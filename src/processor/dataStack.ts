@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {createHashMap, each} from 'zrender/src/core/util';
 
 // (1) [Caution]: the logic is correct based on the premises:

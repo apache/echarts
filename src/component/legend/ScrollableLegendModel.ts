@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import LegendModel from './LegendModel';
 import {
     mergeLayoutParam,

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import VisualMapping from '../../visual/VisualMapping';
 import * as zrColor from 'zrender/src/tool/color';
 import * as zrUtil from 'zrender/src/core/util';

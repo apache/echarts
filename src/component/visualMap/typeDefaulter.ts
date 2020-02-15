@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import Component from '../../model/Component';
 
 Component.registerSubTypeDefaulter('visualMap', function (option) {

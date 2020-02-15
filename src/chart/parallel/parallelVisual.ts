@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 var opacityAccessPath = ['lineStyle', 'normal', 'opacity'];
 

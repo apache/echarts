@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Line path for bezier and straight line draw
  */

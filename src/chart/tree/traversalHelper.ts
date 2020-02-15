@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 /**
  * Traverse the tree from bottom to top and do something

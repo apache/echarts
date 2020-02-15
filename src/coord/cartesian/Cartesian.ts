@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Cartesian coordinate system
  * @module  echarts/coord/Cartesian

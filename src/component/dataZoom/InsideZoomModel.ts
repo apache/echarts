@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import DataZoomModel from './DataZoomModel';
 
 export default DataZoomModel.extend({

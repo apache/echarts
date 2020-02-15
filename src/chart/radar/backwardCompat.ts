@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Backward compat for radar chart in 2
 import * as zrUtil from 'zrender/src/core/util';
 

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Single coordinate system creator.
  */

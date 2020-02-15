@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 var IRRELEVANT_EXCLUDES = {'axisPointer': 1, 'tooltip': 1, 'brush': 1};
 

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Symbol factory
 
 import * as zrUtil from 'zrender/src/core/util';

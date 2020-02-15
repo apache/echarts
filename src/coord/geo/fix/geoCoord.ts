@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 var geoCoordMap = {
     'Russia': [100, 60],
     'United States': [-99, 38],

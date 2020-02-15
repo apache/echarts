@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 // import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';

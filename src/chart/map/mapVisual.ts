@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 export default function (ecModel) {
     ecModel.eachSeriesByType('map', function (seriesModel) {

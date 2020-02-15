@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import Path from 'zrender/src/graphic/Path';
 
 export default Path.extend({

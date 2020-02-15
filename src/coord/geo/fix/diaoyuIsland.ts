@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Fix for 钓鱼岛
 
 // var Region = require('../Region');

@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';

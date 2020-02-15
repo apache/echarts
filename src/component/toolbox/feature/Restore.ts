@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as echarts from '../../../echarts';
 import * as history from '../../dataZoom/history';
 import lang from '../../../lang';

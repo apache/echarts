@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../../config';
 import {each, createHashMap} from 'zrender/src/core/util';
 import mapDataStorage from './mapDataStorage';

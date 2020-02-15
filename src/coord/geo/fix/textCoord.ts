@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 var coordsOffsetMap = {
     '南海诸岛': [32, 80],
     // 全国

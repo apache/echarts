@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Grid 是在有直角坐标系的时候必须要存在的
 // 所以这里也要被 Cartesian2D 依赖
 

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * @module echarts/chart/helper/SymbolDraw
  */

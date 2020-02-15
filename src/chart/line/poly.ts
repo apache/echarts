@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Poly path support NaN point
 
 import Path from 'zrender/src/graphic/Path';

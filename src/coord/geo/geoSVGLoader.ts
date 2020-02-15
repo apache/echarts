@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {parseSVG, makeViewBoxTransform} from 'zrender/src/tool/parseSVG';
 import Group from 'zrender/src/container/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';

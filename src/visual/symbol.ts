@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {isFunction} from 'zrender/src/core/util';
 
 export default function (seriesType, defaultSymbolType, legendSymbol) {

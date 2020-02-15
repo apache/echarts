@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as polygonContain from 'zrender/src/contain/polygon';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {linePolygonIntersect} from '../../util/graphic';

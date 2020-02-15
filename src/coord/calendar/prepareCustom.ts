@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 export default function (coordSys) {
     var rect = coordSys.getRect();
     var rangeInfo = coordSys.getRangeInfo();

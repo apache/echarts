@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as formatUtil from '../../util/format';
 import BaseAxisPointer from './BaseAxisPointer';
 import * as graphic from '../../util/graphic';

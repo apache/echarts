@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 

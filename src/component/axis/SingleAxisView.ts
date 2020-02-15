@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from './AxisBuilder';

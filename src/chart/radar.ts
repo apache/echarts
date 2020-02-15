@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 import * as echarts from '../echarts';
 

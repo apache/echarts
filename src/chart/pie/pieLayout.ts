@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 import {parsePercent, linearMap} from '../../util/number';
 import * as layout from '../../util/layout';

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Data selectable mixin for chart series.
  * To eanble data select, option of series must have `selectedMode`.

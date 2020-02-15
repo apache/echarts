@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as echarts from '../../echarts';
 
 var ATTR = '\0_ec_interaction_mutex';

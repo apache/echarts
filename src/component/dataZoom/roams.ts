@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Only create one roam controller for each coordinate system.
 // one roam controller might be refered by two inside data zoom
 // components (for example, one for x and one for y). When user

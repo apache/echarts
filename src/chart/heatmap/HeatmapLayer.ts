@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /* global Uint8ClampedArray */
 
 import * as zrUtil from 'zrender/src/core/util';

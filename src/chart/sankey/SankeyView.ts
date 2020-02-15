@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as graphic from '../../util/graphic';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';

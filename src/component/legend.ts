@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 // Do not contain scrollable legend, for sake of file size.
 

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Grid is a region which contains at most 4 cartesian systems
  *

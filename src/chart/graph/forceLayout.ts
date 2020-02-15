@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {forceLayout} from './forceHelper';
 import {simpleLayout} from './simpleLayoutHelper';
 import {circularLayout} from './circularLayoutHelper';

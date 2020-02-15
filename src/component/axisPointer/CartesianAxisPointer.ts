@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import BaseAxisPointer from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // TODO Axis scale
 
 import {__DEV__} from '../../config';

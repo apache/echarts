@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Substitute `completeDimensions`.
  * `completeDimensions` is to be deprecated.

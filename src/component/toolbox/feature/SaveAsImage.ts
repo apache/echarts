@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /* global Uint8Array */
 
 import env from 'zrender/src/core/env';

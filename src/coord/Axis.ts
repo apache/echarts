@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {each, map} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision, round} from '../util/number';
 import {

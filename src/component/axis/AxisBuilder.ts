@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {retrieve, defaults, extend, each} from 'zrender/src/core/util';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';

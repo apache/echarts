@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Compatitable with 2.0
 
 import {each, isArray, isObject} from 'zrender/src/core/util';

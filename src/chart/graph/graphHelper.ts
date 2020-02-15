@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 export function getNodeGlobalScale(seriesModel) {
     var coordSys = seriesModel.coordinateSystem;
     if (coordSys.type !== 'view') {

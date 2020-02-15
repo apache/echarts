@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {each, createHashMap} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';

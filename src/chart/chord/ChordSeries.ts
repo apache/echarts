@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import createGraphFromNodeMatrix from '../helper/createGraphFromNodeMatrix';

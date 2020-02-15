@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as featureManager from '../featureManager';
 import lang from '../../../lang';

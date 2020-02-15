@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Parse and decode geo json
  * @module echarts/coord/geo/parseGeoJson

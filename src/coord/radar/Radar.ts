@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // TODO clockwise
 
 import * as zrUtil from 'zrender/src/core/util';

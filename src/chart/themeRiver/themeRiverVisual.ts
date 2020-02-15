@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {createHashMap} from 'zrender/src/core/util';
 
 export default function (ecModel) {

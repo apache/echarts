@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /*
 * A third-party license is embeded for some of the code in this file:
 * The treemap layout implementation was originally copied from

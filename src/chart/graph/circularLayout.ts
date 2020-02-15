@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {circularLayout} from './circularLayoutHelper';
 
 export default function (ecModel) {

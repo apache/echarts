@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as zrColor from 'zrender/src/tool/color';
 import * as eventUtil from 'zrender/src/core/event';

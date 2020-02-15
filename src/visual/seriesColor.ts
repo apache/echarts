@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import Gradient from 'zrender/src/graphic/Gradient';
 import {isFunction} from 'zrender/src/core/util';
 

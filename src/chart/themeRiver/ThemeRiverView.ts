@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as echarts from '../../echarts';
 import {Polygon} from '../line/poly';
 import * as graphic from '../../util/graphic';

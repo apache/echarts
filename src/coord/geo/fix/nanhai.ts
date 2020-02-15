@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Fix for 南海诸岛
 
 import * as zrUtil from 'zrender/src/core/util';

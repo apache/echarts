@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {each} from 'zrender/src/core/util';
 import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
 

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as graphic from '../../util/graphic';

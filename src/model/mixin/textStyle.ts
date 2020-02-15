@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as textContain from 'zrender/src/contain/text';
 import * as graphicUtil from '../../util/graphic';
 

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as graphic from '../../util/graphic';
 
 var sin = Math.sin;

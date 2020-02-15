@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import ComponentView from '../../view/Component';
 
 export default ComponentView.extend({

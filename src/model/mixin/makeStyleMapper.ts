@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // TODO Parse shadow style
 // TODO Only shallow path support
 import * as zrUtil from 'zrender/src/core/util';

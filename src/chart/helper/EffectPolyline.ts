@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Provide effect for line
  * @module echarts/chart/helper/EffectLine

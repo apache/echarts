@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Separate legend and scrollable legend to reduce package size.
  */

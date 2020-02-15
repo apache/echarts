@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Helper for model references.
  * There are many manners to refer axis/coordSys.

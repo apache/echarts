@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * @param {module:echarts/coord/View} view
  * @param {Object} payload

@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import BaseBarSeries from './BaseBarSeries';
 
 var PictorialBarSeries = BaseBarSeries.extend({

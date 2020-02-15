@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import DataZoomView from './DataZoomView';
 import sliderMove from '../helper/sliderMove';

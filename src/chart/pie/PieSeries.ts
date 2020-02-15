@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as echarts from '../../echarts';
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';

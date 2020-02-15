@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';

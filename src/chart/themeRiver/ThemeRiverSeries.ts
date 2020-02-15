@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import SeriesModel from '../../model/Series';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';

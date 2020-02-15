@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 
 import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';

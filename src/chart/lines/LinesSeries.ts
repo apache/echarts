@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /* global Uint32Array, Float64Array, Float32Array */
 
 import {__DEV__} from '../../config';

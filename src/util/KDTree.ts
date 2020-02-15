@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import quickSelect from './quickSelect';
 
 function Node(axis, data) {

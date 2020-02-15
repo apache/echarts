@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import MarkerModel from './MarkerModel';
 
 export default MarkerModel.extend({

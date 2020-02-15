@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import EffectSymbol from '../helper/EffectSymbol';

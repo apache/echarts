@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import lang from '../lang';
 import { retrieveRawValue } from '../data/helper/dataProvider';

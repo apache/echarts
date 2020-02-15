@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Layout helpers for each component positioning
 
 import * as zrUtil from 'zrender/src/core/util';

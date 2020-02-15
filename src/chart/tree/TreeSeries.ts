@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
 import {encodeHTML} from '../../util/format';

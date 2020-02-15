@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /* global Float32Array */
 
 import {subPixelOptimize} from '../../util/graphic';

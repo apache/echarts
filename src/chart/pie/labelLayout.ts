@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // FIXME emphasis label position is not same with normal label position
 
 import * as textContain from 'zrender/src/contain/text';

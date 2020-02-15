@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 import {map} from 'zrender/src/core/util';
 

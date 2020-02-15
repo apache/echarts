@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import MapDraw from '../helper/MapDraw';
 import * as echarts from '../../echarts';
 

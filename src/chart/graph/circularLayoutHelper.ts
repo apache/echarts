@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
 

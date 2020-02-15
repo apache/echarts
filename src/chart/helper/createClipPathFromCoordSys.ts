@@ -16,6 +16,9 @@
 * specific language governing permissions and limitations
 * under the License.
 */
+
+// @ts-nocheck
+
 import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
 

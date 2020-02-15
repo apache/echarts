@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Linear continuous scale
  * @module echarts/coord/scale/Ordinal

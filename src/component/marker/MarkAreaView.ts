@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // TODO Better on polar
 
 import * as zrUtil from 'zrender/src/core/util';

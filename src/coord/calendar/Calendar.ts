@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
