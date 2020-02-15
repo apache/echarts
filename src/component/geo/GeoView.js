@@ -39,12 +39,17 @@ export default echarts.extendComponentView({
             return;
         }
 
-        var mapDraw = this._mapDraw;
         if (geoModel.get('show')) {
-            mapDraw.draw(geoModel, ecModel, api, this, payload);
+            if (this._mapDraw.hasDraw) {
+                this._mapDraw.group.show();
+            }
+            else {
+                this._mapDraw.draw(geoModel, ecModel, api, this, payload);
+                this._mapDraw.hasDraw = true;
+            }
         }
         else {
-            this._mapDraw.group.removeAll();
+            this._mapDraw.group.hide();
         }
 
         this.group.silent = geoModel.get('silent');
