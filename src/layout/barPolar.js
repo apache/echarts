@@ -63,8 +63,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var axisKey = getAxisKey(polar, baseAxis);
 
         var stackId = getSeriesStackId(seriesModel);
-        var columnLayoutInfo
-            = barWidthAndOffset[axisKey][stackId];
+        var columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
         var columnOffset = columnLayoutInfo.offset;
         var columnWidth = columnLayoutInfo.width;
         var valueAxis = polar.getOtherAxis(baseAxis);
@@ -80,16 +79,14 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
         var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        var clampLayout = baseAxis.dim !== 'radius'
+            || !seriesModel.get('roundCap', true);
 
         var valueAxisStart = valueAxis.getExtent()[0];
 
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
-
-            if (isNaN(value)) {
-                continue;
-            }
 
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
@@ -131,8 +128,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
             }
             // tangential sector
             else {
-                // angleAxis must be clamped.
-                var angleSpan = valueAxis.dataToAngle(value, true) - valueAxisStart;
+                var angleSpan = valueAxis.dataToAngle(value, clampLayout) - valueAxisStart;
                 var radius = baseAxis.dataToRadius(baseValue);
 
                 if (Math.abs(angleSpan) < barMinAngle) {

@@ -53,14 +53,15 @@ var LogScale = Scale.extend({
     },
 
     /**
+     * @param {boolean} [expandToNicedExtent=false] If expand the ticks to niced extent.
      * @return {Array.<number>}
      */
-    getTicks: function () {
+    getTicks: function (expandToNicedExtent) {
         var originalScale = this._originalScale;
         var extent = this._extent;
         var originalExtent = originalScale.getExtent();
 
-        return zrUtil.map(intervalScaleProto.getTicks.call(this), function (val) {
+        return zrUtil.map(intervalScaleProto.getTicks.call(this, expandToNicedExtent), function (val) {
             var powVal = numberUtil.round(mathPow(this.base, val));
 
             // Fix #4158
@@ -74,6 +75,12 @@ var LogScale = Scale.extend({
             return powVal;
         }, this);
     },
+
+    /**
+     * @param {number} splitNumber
+     * @return {Array.<Array.<number>>}
+     */
+    getMinorTicks: intervalScaleProto.getMinorTicks,
 
     /**
      * @param {number} val

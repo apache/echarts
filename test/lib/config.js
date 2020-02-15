@@ -25,22 +25,33 @@
     // `true` by default for debugging.
     sourceMap == null && (sourceMap = true);
 
+    var params = {};
+    var parts = location.search.slice(1).split('&');
+    for (var i = 0; i < parts.length; ++i) {
+        var kv = parts[i].split('=');
+        params[kv[0]] = kv[1];
+    }
     // Set default renderer in dev mode from hash.
-    var matchResult = location.href.match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
-    if (matchResult) {
-        window.__ECHARTS__DEFAULT__RENDERER__ = matchResult[1];
+    if (params.__RENDERER__) {
+        window.__ECHARTS__DEFAULT__RENDERER__ = params.__RENDERER__;
     }
 
     // Set echarts source code.
-    var matchResult = location.href.match(/[?&]__ECDIST__=(webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
-    var ecDistPath = 'dist/echarts';
-    if (matchResult) {
+    var ecDistPath;
+    if (params.__ECDIST__) {
         ecDistPath = ({
             'webpack-req-ec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-ec',
             'webpack-req-eclibec': '../echarts-boilerplate/echarts-webpack/dist/webpack-req-eclibec',
             'webpackold-req-ec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-ec',
-            'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec',
-        })[matchResult[1]];
+            'webpackold-req-eclibec': '../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-eclibec'
+        })[params.__ECDIST__];
+        if (!ecDistPath && params.__ECDIST__.match(/[0-9.]/)) {
+            // Version number
+            ecDistPath = 'test/runTest/tmp/__version__/' + params.__ECDIST__ + '/echarts';
+        }
+    }
+    if (!ecDistPath) {
+        ecDistPath = 'dist/echarts';
     }
 
     if (typeof require !== 'undefined') {
@@ -76,6 +87,19 @@
             sourceMap: sourceMap
         });
     }
+
+    // Not let scrollbar affect page size.
+    // It will AFFECT interaction in the automatic testing.
+    if (typeof MutationObserver !== 'undefined') {
+        // Must be set as soon as possible(before chart is created)
+        var observer = new MutationObserver(function() {
+            if (document.body) {
+                document.body.style.cssText = 'overflow:overlay!important';
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.documentElement, {childList: true});
+    };
 
     // It is not a good solution.
     // Do not need it any more:

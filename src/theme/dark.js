@@ -63,6 +63,9 @@ var theme = {
             },
             crossStyle: {
                 color: contrastColor
+            },
+            label: {
+                color: '#000'
             }
         }
     },

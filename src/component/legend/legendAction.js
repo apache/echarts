@@ -33,6 +33,9 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
             // doesn't has the item, they will assume it is selected.
             legendModel[isSelected ? 'select' : 'unSelect'](payload.name);
         }
+        else if (methodName === 'allSelect' || methodName === 'inverseSelect') {
+            legendModel[methodName]();
+        }
         else {
             legendModel[methodName](payload.name);
             isSelected = legendModel.isSelected(payload.name);
@@ -55,10 +58,14 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
         });
     });
     // Return the event explicitly
-    return {
-        name: payload.name,
-        selected: selectedMap
-    };
+    return (methodName === 'allSelect' || methodName === 'inverseSelect')
+        ? {
+            selected: selectedMap
+        }
+        : {
+            name: payload.name,
+            selected: selectedMap
+        };
 }
 /**
  * @event legendToggleSelect
@@ -70,6 +77,16 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
 echarts.registerAction(
     'legendToggleSelect', 'legendselectchanged',
     zrUtil.curry(legendSelectActionHandler, 'toggleSelected')
+);
+
+echarts.registerAction(
+    'legendAllSelect', 'legendselectall',
+    zrUtil.curry(legendSelectActionHandler, 'allSelect')
+);
+
+echarts.registerAction(
+    'legendInverseSelect', 'legendinverseselect',
+    zrUtil.curry(legendSelectActionHandler, 'inverseSelect')
 );
 
 /**

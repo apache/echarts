@@ -58,9 +58,11 @@
 
     window.facePrint.objToStr = function (obj) {
         var msgArr = [];
+        /* eslint-disable */
         for (var key in obj) {
             msgArr.push(key + '=' + obj[key]);
         }
+        /* eslint-enable */
         return msgArr.join(', ');
     };
 

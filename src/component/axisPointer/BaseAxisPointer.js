@@ -128,8 +128,8 @@ BaseAxisPointer.prototype = {
         }
         this._lastGraphicKey = graphicKey;
 
-        var moveAnimation = this._moveAnimation
-            = this.determineAnimation(axisModel, axisPointerModel);
+        var moveAnimation = this._moveAnimation =
+            this.determineAnimation(axisModel, axisPointerModel);
 
         if (!group) {
             group = this._group = new graphic.Group();
@@ -238,7 +238,7 @@ BaseAxisPointer.prototype = {
      */
     updatePointerEl: function (group, elOption, updateProps) {
         var pointerEl = inner(group).pointerEl;
-        if (pointerEl) {
+        if (pointerEl && elOption.pointer) {
             pointerEl.setStyle(elOption.pointer.style);
             updateProps(pointerEl, {shape: elOption.pointer.shape});
         }

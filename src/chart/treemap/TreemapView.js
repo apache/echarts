@@ -187,6 +187,7 @@ export default echarts.extendChartView({
         var thisStorage = createStorage();
         var oldStorage = this._storage;
         var willInvisibleEls = [];
+
         var doRenderNode = zrUtil.curry(
             renderNode, seriesModel,
             thisStorage, oldStorage, reRoot,
@@ -685,6 +686,11 @@ function renderNode(
     // Start of closure variables available in "Procedures in renderNode".
 
     var thisLayout = thisNode.getLayout();
+    var data = seriesModel.getData();
+
+    // Only for enabling highlight/downplay. Clear firstly.
+    // Because some node will not be rendered.
+    data.setItemGraphicEl(thisNode.dataIndex, null);
 
     if (!thisLayout || !thisLayout.isInView) {
         return;
@@ -724,14 +730,36 @@ function renderNode(
         return group;
     }
 
+    var nodeModel = thisNode.getModel();
+
     // Background
     var bg = giveGraphic('background', Rect, depth, Z_BG);
     bg && renderBackground(group, bg, isParent && thisLayout.upperHeight);
 
     // No children, render content.
-    if (!isParent) {
+    if (isParent) {
+        // Because of the implementation about "traverse" in graphic hover style, we
+        // can not set hover listener on the "group" of non-leaf node. Otherwise the
+        // hover event from the descendents will be listenered.
+        if (graphic.isHighDownDispatcher(group)) {
+            graphic.setAsHighDownDispatcher(group, false);
+        }
+        if (bg) {
+            graphic.setAsHighDownDispatcher(bg, true);
+            // Only for enabling highlight/downplay.
+            data.setItemGraphicEl(thisNode.dataIndex, bg);
+        }
+    }
+    else {
         var content = giveGraphic('content', Rect, depth, Z_CONTENT);
         content && renderContent(group, content);
+
+        if (bg && graphic.isHighDownDispatcher(bg)) {
+            graphic.setAsHighDownDispatcher(bg, false);
+        }
+        graphic.setAsHighDownDispatcher(group, true);
+        // Only for enabling highlight/downplay.
+        data.setItemGraphicEl(thisNode.dataIndex, group);
     }
 
     return group;
@@ -746,10 +774,16 @@ function renderNode(
         bg.seriesIndex = seriesModel.seriesIndex;
 
         bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
-        var visualBorderColor = thisNode.getVisual('borderColor', true);
-        var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
 
-        updateStyle(bg, function () {
+        if (thisInvisible) {
+            // If invisible, do not set visual, otherwise the element will
+            // change immediately before animation. We think it is OK to
+            // remain its origin color when moving out of the view window.
+            processInvisible(content);
+        }
+        else {
+            var visualBorderColor = thisNode.getVisual('borderColor', true);
+            var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
             var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
@@ -769,8 +803,8 @@ function renderNode(
             }
 
             bg.setStyle(normalStyle);
-            graphic.setHoverStyle(bg, emphasisStyle);
-        });
+            graphic.setElementHoverStyle(bg, emphasisStyle);
+        }
 
         group.add(bg);
     }
@@ -791,8 +825,14 @@ function renderNode(
             height: contentHeight
         });
 
-        var visualColor = thisNode.getVisual('color', true);
-        updateStyle(content, function () {
+        if (thisInvisible) {
+            // If invisible, do not set visual, otherwise the element will
+            // change immediately before animation. We think it is OK to
+            // remain its origin color when moving out of the view window.
+            processInvisible(content);
+        }
+        else {
+            var visualColor = thisNode.getVisual('color', true);
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
             var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
@@ -800,32 +840,19 @@ function renderNode(
             prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
 
             content.setStyle(normalStyle);
-            graphic.setHoverStyle(content, emphasisStyle);
-        });
+            graphic.setElementHoverStyle(content, emphasisStyle);
+        }
 
         group.add(content);
     }
 
-    function updateStyle(element, cb) {
-        if (!thisInvisible) {
-            // If invisible, do not set visual, otherwise the element will
-            // change immediately before animation. We think it is OK to
-            // remain its origin color when moving out of the view window.
-            cb();
-
-            if (!element.__tmWillVisible) {
-                element.invisible = false;
-            }
-        }
-        else {
-            // Delay invisible setting utill animation finished,
-            // avoid element vanish suddenly before animation.
-            !element.invisible && willInvisibleEls.push(element);
-        }
+    function processInvisible(element) {
+        // Delay invisible setting utill animation finished,
+        // avoid element vanish suddenly before animation.
+        !element.invisible && willInvisibleEls.push(element);
     }
 
     function prepareText(normalStyle, emphasisStyle, visualColor, width, height, upperLabelRect) {
-        var nodeModel = thisNode.getModel();
         var text = zrUtil.retrieve(
             seriesModel.getFormattedLabel(
                 thisNode.dataIndex, 'normal', null, null, upperLabelRect ? 'upperLabel' : 'label'
@@ -922,6 +949,7 @@ function renderNode(
         // Fade in, user can be aware that these nodes are new.
         lastCfg.fadein = storageName !== 'nodeGroup';
     }
+
 }
 
 // We can not set all backgroud with the same z, Because the behaviour of

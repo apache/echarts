@@ -82,33 +82,31 @@ require("./lib/chart/sunburst");
 
 require("./lib/chart/custom");
 
-require("./lib/component/graphic");
-
 require("./lib/component/grid");
-
-require("./lib/component/legendScroll");
-
-require("./lib/component/tooltip");
-
-require("./lib/component/axisPointer");
 
 require("./lib/component/polar");
 
 require("./lib/component/geo");
 
-require("./lib/component/parallel");
-
 require("./lib/component/singleAxis");
 
-require("./lib/component/brush");
+require("./lib/component/parallel");
 
 require("./lib/component/calendar");
 
+require("./lib/component/graphic");
+
+require("./lib/component/toolbox");
+
+require("./lib/component/tooltip");
+
+require("./lib/component/axisPointer");
+
+require("./lib/component/brush");
+
 require("./lib/component/title");
 
-require("./lib/component/dataZoom");
-
-require("./lib/component/visualMap");
+require("./lib/component/timeline");
 
 require("./lib/component/markPoint");
 
@@ -116,9 +114,21 @@ require("./lib/component/markLine");
 
 require("./lib/component/markArea");
 
-require("./lib/component/timeline");
+require("./lib/component/legendScroll");
 
-require("./lib/component/toolbox");
+require("./lib/component/legend");
+
+require("./lib/component/dataZoom");
+
+require("./lib/component/dataZoomInside");
+
+require("./lib/component/dataZoomSlider");
+
+require("./lib/component/visualMap");
+
+require("./lib/component/visualMapContinuous");
+
+require("./lib/component/visualMapPiecewise");
 
 require("zrender/lib/vml/vml");
 

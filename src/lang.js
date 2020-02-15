@@ -17,8 +17,17 @@
 * under the License.
 */
 
+/**
+ * Language: (Simplified) Chinese.
+ */
 
 export default {
+    legend: {
+        selector: {
+            all: '全选',
+            inverse: '反选'
+        }
+    },
     toolbox: {
         brush: {
             title: {

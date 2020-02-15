@@ -1,0 +1,151 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <style>
+        html,
+        body,
+        #main {
+            width: 80%;
+            height: 100%;
+            margin: 0;
+        }
+
+        #main {
+            background: #fff;
+        }
+    </style>
+    <div id="main"></div>
+    <script>
+
+        require([
+            'echarts'
+            // 'echarts/chart/bar',
+            // 'echarts/component/polar',
+            // 'zrender/vml/vml'
+        ], function (echarts) {
+
+            var chart = echarts.init(document.getElementById('main'), null, {
+                // renderer: 'svg'
+            });
+            option = {
+                toolbox: {
+                    show: true,
+                    feature: {
+                        saveAsImage: {
+                            show: true,
+                            title: 'Save as Image',
+                            emphasis: {
+                                iconStyle: {
+                                    textFill: 'red'
+                                }
+                            }
+                        },
+                        restore: {
+                            show: true,
+                            title: 'Restore'
+                        }
+                    },
+                    left: '50%',
+                    top: 40,
+                    emphasis: {
+                        iconStyle: {
+                            textBackgroundColor: '#222',
+                            textFill: '#ddd',
+                            textBorderRadius: 3,
+                            textPadding: [5, 8],
+                            textPosition: 'top'
+                        }
+                    }
+                },
+                grid: [{
+                    left: 32,
+                    right: 32,
+                    top: 80,
+                    bottom: 15,
+                    containLabel: true
+                }],
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                xAxis: [{
+                    type: 'category',
+                    axisLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    axisLabel: {
+                        interval: 0,
+                        margin: 10,
+                        rotate: 30,
+                        color: '#666'
+                    },
+                    data: ['福田区', '罗湖区', '龙岗区']
+                }],
+                yAxis: [{
+                    type: 'value',
+                    axisLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                }],
+                series: [{
+                    type: 'bar',
+                    barWidth: 16,
+                    data: [210, 130, 66],
+                    itemStyle: {
+                        normal: {
+                            color: '#ccc'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontWeight: 'bold',
+                        color: '#000'
+                    }
+                }]
+            }
+            chart.setOption(option, true);
+
+            window.onresize = chart.resize;
+        });
+    </script>
+</body>
+
+</html>

@@ -93,10 +93,19 @@ under the License.
                         ]
                     }]
                 });
-
+                var theIndex = 2;
                 chart.on('click', function (params) {
-                    console.log(params)
-                })
+                    console.log(params);
+                    if (theIndex < 0) {
+                        theIndex = 2;
+                    }
+                    chart.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: theIndex
+                    });
+                    theIndex--;
+                });
             });
 
         </script>

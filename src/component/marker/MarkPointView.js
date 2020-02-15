@@ -102,18 +102,28 @@ export default MarkerView.extend({
 
         mpData.each(function (idx) {
             var itemModel = mpData.getItemModel(idx);
+            var symbol = itemModel.getShallow('symbol');
             var symbolSize = itemModel.getShallow('symbolSize');
-            if (typeof symbolSize === 'function') {
-                // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
-                symbolSize = symbolSize(
-                    mpModel.getRawValue(idx), mpModel.getDataParams(idx)
-                );
+            var isFnSymbol = zrUtil.isFunction(symbol);
+            var isFnSymbolSize = zrUtil.isFunction(symbolSize);
+
+            if (isFnSymbol || isFnSymbolSize) {
+                var rawIdx = mpModel.getRawValue(idx);
+                var dataParams = mpModel.getDataParams(idx);
+                if (isFnSymbol) {
+                    symbol = symbol(rawIdx, dataParams);
+                }
+                if (isFnSymbolSize) {
+                    // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
+                    symbolSize = symbolSize(rawIdx, dataParams);
+                }
             }
+
             mpData.setItemVisual(idx, {
+                symbol: symbol,
                 symbolSize: symbolSize,
                 color: itemModel.get('itemStyle.color')
-                    || seriesData.getVisual('color'),
-                symbol: itemModel.getShallow('symbol')
+                    || seriesData.getVisual('color')
             });
         });
 

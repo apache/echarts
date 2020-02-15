@@ -53,6 +53,7 @@
      * @param {boolean} [opt.draggable]
      * @param {boolean} [opt.lazyUpdate]
      * @param {boolean} [opt.notMerge]
+     * @param {boolean} [opt.autoResize=true]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      * @param {boolean} [opt.recordCanvas] 'ut/lib/canteen.js' is required.
@@ -232,14 +233,24 @@
             var chart = echarts.init(dom);
 
             if (opt.draggable) {
-                window.draggable.init(dom, chart, {throttle: 70, addPlaceholder: true});
+                if (!window.draggable) {
+                    throw new Error(
+                        'Pleasse add the script in HTML: \n'
+                        + '<script src="lib/draggable.js"></script>'
+                    );
+                }
+                window.draggable.init(dom, chart, {throttle: 70});
             }
 
             option && chart.setOption(option, {
                 lazyUpdate: opt.lazyUpdate,
                 notMerge: opt.notMerge
             });
-            testHelper.resizable(chart);
+
+            var isAutoResize = opt.autoResize == null ? true : opt.autoResize;
+            if (isAutoResize) {
+                testHelper.resizable(chart);
+            }
 
             return chart;
         }
@@ -247,10 +258,24 @@
 
 
     testHelper.resizable = function (chart) {
+        var dom = chart.getDom();
+        var width = dom.clientWidth;
+        var height = dom.clientHeight;
+        function resize() {
+            var newWidth = dom.clientWidth;
+            var newHeight = dom.clientHeight;
+            if (width !== newWidth || height !== newHeight) {
+                chart.resize();
+                width = newWidth;
+                height = newHeight;
+            }
+        }
         if (window.attachEvent) {
+            // Use builtin resize in IE
             window.attachEvent('onresize', chart.resize);
-        } else if (window.addEventListener) {
-            window.addEventListener('resize', chart.resize, false);
+        }
+        else if (window.addEventListener) {
+            window.addEventListener('resize', resize, false);
         }
     };
 

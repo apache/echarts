@@ -36,6 +36,7 @@ SaveAsImage.defaultOption = {
     type: 'png',
     // Default use option.backgroundColor
     // backgroundColor: '#fff',
+    connectedBackgroundColor: '#fff',
     name: '',
     excludeComponents: ['toolbox'],
     pixelRatio: 1,
@@ -49,11 +50,13 @@ var proto = SaveAsImage.prototype;
 proto.onclick = function (ecModel, api) {
     var model = this.model;
     var title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-    var type = model.get('type', true) || 'png';
+    var isSvg = api.getZr().painter.getType() === 'svg';
+    var type = isSvg ? 'svg' : model.get('type', true) || 'png';
     var url = api.getConnectedDataURL({
         type: type,
         backgroundColor: model.get('backgroundColor', true)
             || ecModel.get('backgroundColor') || '#fff',
+        connectedBackgroundColor: model.get('connectedBackgroundColor'),
         excludeComponents: model.get('excludeComponents'),
         pixelRatio: model.get('pixelRatio')
     });

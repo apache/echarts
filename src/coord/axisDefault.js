@@ -166,7 +166,7 @@ axisDefault.valueAxis = zrUtil.merge({
     // scale: false,
 
     // AxisTick and axisLabel and splitLine are caculated based on splitNumber.
-    splitNumber: 5
+    splitNumber: 5,
 
     // Interval specifies the span of the ticks is mandatorily.
     // interval: null
@@ -177,6 +177,30 @@ axisDefault.valueAxis = zrUtil.merge({
     // Specify max interval when auto calculate tick interval.
     // maxInterval: null
 
+    minorTick: {
+        // Minor tick, not available for cateogry axis.
+        show: false,
+        // Split number of minor ticks. The value should be in range of (0, 100)
+        splitNumber: 5,
+        // Lenght of minor tick
+        length: 3,
+
+        // Same inside with axisTick
+
+        // Line style
+        lineStyle: {
+            // Default to be same with axisTick
+        }
+    },
+
+    minorSplitLine: {
+        show: false,
+
+        lineStyle: {
+            color: '#eee',
+            width: 1
+        }
+    }
 }, defaultOption);
 
 axisDefault.timeAxis = zrUtil.defaults({
