@@ -613,18 +613,16 @@ export function getTooltipRenderMode(renderModeOption: TooltipRenderMode | 'auto
 
 /**
  * Group a list by key.
- *
- * @param {Array} array
- * @param {Function} getKey
- *        param {*} Array item
- *        return {string} key
- * @return {Object} Result
- *        {Array}: keys,
- *        {module:zrender/core/util/HashMap} buckets: {key -> Array}
  */
-export function groupData(array, getKey) {
-    var buckets = zrUtil.createHashMap();
-    var keys = [];
+export function groupData<T>(
+    array: T[],
+    getKey: (item: T) => string // return key
+): {
+    keys: string[],
+    buckets: zrUtil.HashMap<T[]> // hasmap key: the key returned by `getKey`.
+} {
+    var buckets = zrUtil.createHashMap<T[]>();
+    var keys = [] as string[];
 
     zrUtil.each(array, function (item) {
         var key = getKey(item);
