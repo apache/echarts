@@ -23,7 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
-import selectableMixin from '../../component/helper/selectableMixin';
+import {DataSelectableMixin} from '../../component/helper/selectableMixin';
 import geoCreator from './geoCreator';
 
 var GeoModel = ComponentModel.extend({
@@ -176,6 +176,6 @@ var GeoModel = ComponentModel.extend({
     }
 });
 
-zrUtil.mixin(GeoModel, selectableMixin);
+zrUtil.mixin(GeoModel, DataSelectableMixin.prototype);
 
 export default GeoModel;

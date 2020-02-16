@@ -1121,7 +1121,15 @@ class ECharts {
                     var classType = parseClassType(model.type);
                     var Clazz = isComponent
                         ? (ComponentView as ComponentViewConstructor).getClass(classType.main, classType.sub)
-                        : (ChartView as ChartViewConstructor).getClass(classType.sub);
+                        : (
+                            // FIXME:TS
+                            // (ChartView as ChartViewConstructor).getClass('series', classType.sub)
+                            // For backward compat, still support a chart type declared as only subType
+                            // like "liquidfill", but recommend "series.liquidfill"
+                            // But need a base class to make a type series.
+                            // ||
+                            (ChartView as ChartViewConstructor).getClass(classType.sub)
+                        );
 
                     if (__DEV__) {
                         assert(Clazz, classType.sub + ' does not exist.');

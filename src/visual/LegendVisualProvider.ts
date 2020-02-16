@@ -67,4 +67,3 @@ class LegendVisualProvider {
 }
 
 export default LegendVisualProvider;
-export type LegendVisualProviderType = typeof LegendVisualProvider;

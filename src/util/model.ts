@@ -23,7 +23,7 @@ import Component from '../model/Component';
 import GlobalModel, { QueryConditionKindB } from '../model/Global';
 import ComponentModel from '../model/Component';
 import List from '../data/List';
-import { Payload, ComponentOption, ComponentMainType, ComponentSubType, DisplayStatusHostOption, OptionDataItem, OptionDataPrimitive, TooltipRenderMode } from './types';
+import { Payload, ComponentOption, ComponentMainType, ComponentSubType, DisplayStateHostOption, OptionDataItem, OptionDataPrimitive, TooltipRenderMode } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 
 var each = zrUtil.each;
@@ -63,7 +63,7 @@ export function normalizeToArray<T>(value: T | T[]): T[] {
  *     }
  */
 export function defaultEmphasis(
-    opt: DisplayStatusHostOption,
+    opt: DisplayStateHostOption,
     key: string,
     subOpts: string[]
 ): void {

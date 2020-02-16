@@ -23,7 +23,7 @@ import {each, createHashMap, assert} from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
 import List from '../List';
 import {
-    DimensionName, DimensionIndex, VISUAL_DIMENSIONS, DimensionType
+    DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput
 } from '../../util/types';
 
 export type DimensionSummaryEncode = {
@@ -32,16 +32,6 @@ export type DimensionSummaryEncode = {
     [coordOrVisualDimName: string]:
         // index: coordDimIndex, value: dataDimName
         DimensionName[]
-};
-export type DimensionUserOuputEncode = {
-    [coordOrVisualDimName: string]:
-        // index: coordDimIndex, value: dataDimIndex
-        DimensionIndex[]
-};
-export type DimensionUserOuput = {
-    // The same as `data.dimensions`
-    dimensionNames: DimensionName[]
-    encode: DimensionUserOuputEncode
 };
 export type DimensionSummary = {
     encode: DimensionSummaryEncode,

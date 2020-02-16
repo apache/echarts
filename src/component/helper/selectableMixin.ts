@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Data selectable mixin for chart series.
  * To eanble data select, option of series must have `selectedMode`.
@@ -26,34 +24,49 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
+import Model from '../../model/Model';
 
-export default {
+export type SelectableTarget = {
+    name: string,
+    value: any,
+    selected: boolean
+};
+
+interface DataSelectableMixin extends Pick<Model, 'get'> {};
+
+class DataSelectableMixin {
+
+    private _targetList: SelectableTarget[];
+
+    // Key: target.name
+    private _selectTargetMap: zrUtil.HashMap<SelectableTarget>;
+
 
     /**
-     * @param {Array.<Object>} targetList [{name, value, selected}, ...]
+     * @param targetList [{name, value, selected}, ...]
      *        If targetList is an array, it should like [{name: ..., value: ...}, ...].
      *        If targetList is a "List", it must have coordDim: 'value' dimension and name.
      */
-    updateSelectedMap: function (targetList) {
+    updateSelectedMap(targetList?: SelectableTarget[]): void {
         this._targetList = zrUtil.isArray(targetList) ? targetList.slice() : [];
 
         this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
             targetMap.set(target.name, target);
             return targetMap;
         }, zrUtil.createHashMap());
-    },
+    }
 
     /**
      * Either name or id should be passed as input here.
      * If both of them are defined, id is used.
      *
-     * @param {string|undefined} name name of data
-     * @param {number|undefined} id dataIndex of data
+     * @param name name of data. Can be null/undefined.
+     * @param idx dataIndex of data. Can be null/undefined.
      */
     // PENGING If selectedMode is null ?
-    select: function (name, id) {
-        var target = id != null
-            ? this._targetList[id]
+    select(name?: string, idx?: number): void {
+        var target = idx != null
+            ? this._targetList[idx]
             : this._selectTargetMap.get(name);
         var selectedMode = this.get('selectedMode');
         if (selectedMode === 'single') {
@@ -62,52 +75,54 @@ export default {
             });
         }
         target && (target.selected = true);
-    },
+    }
 
     /**
      * Either name or id should be passed as input here.
      * If both of them are defined, id is used.
      *
-     * @param {string|undefined} name name of data
-     * @param {number|undefined} id dataIndex of data
+     * @param name name of data. Can be null/undefined.
+     * @param idx dataIndex of data. Can be null/undefined.
      */
-    unSelect: function (name, id) {
-        var target = id != null
-            ? this._targetList[id]
+    unSelect(name?: string, idx?: number): void {
+        var target = idx != null
+            ? this._targetList[idx]
             : this._selectTargetMap.get(name);
         // var selectedMode = this.get('selectedMode');
         // selectedMode !== 'single' && target && (target.selected = false);
         target && (target.selected = false);
-    },
+    }
 
     /**
      * Either name or id should be passed as input here.
      * If both of them are defined, id is used.
      *
-     * @param {string|undefined} name name of data
-     * @param {number|undefined} id dataIndex of data
+     * @param name name of data. Can be null/undefined.
+     * @param idx dataIndex of data. Can be null/undefined.
      */
-    toggleSelected: function (name, id) {
-        var target = id != null
-            ? this._targetList[id]
+    toggleSelected(name?: string, idx?: number): boolean {
+        var target = idx != null
+            ? this._targetList[idx]
             : this._selectTargetMap.get(name);
         if (target != null) {
-            this[target.selected ? 'unSelect' : 'select'](name, id);
+            this[target.selected ? 'unSelect' : 'select'](name, idx);
             return target.selected;
         }
-    },
+    }
 
     /**
      * Either name or id should be passed as input here.
      * If both of them are defined, id is used.
      *
-     * @param {string|undefined} name name of data
-     * @param {number|undefined} id dataIndex of data
+     * @param name name of data. Can be null/undefined.
+     * @param idx dataIndex of data. Can be null/undefined.
      */
-    isSelected: function (name, id) {
-        var target = id != null
-            ? this._targetList[id]
+    isSelected(name?: string, idx?: number): boolean {
+        var target = idx != null
+            ? this._targetList[idx]
             : this._selectTargetMap.get(name);
         return target && target.selected;
     }
-};
+}
+
+export {DataSelectableMixin};

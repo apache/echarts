@@ -40,7 +40,7 @@ import * as modelUtil from '../util/model';
 import Model from './Model';
 import ComponentModel, {ComponentModelConstructor} from './Component';
 import globalDefault from './globalDefault';
-import ColorPaletteMixin from './mixin/colorPalette';
+import {ColorPaletteMixin} from './mixin/colorPalette';
 import {resetSourceDefaulter} from '../data/helper/sourceHelper';
 import SeriesModel from './Series';
 import { Payload, OptionPreprocessor, ECOption, ECUnitOption, ThemeOption, ComponentOption, ComponentMainType, ComponentSubType } from '../util/types';

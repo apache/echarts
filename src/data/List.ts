@@ -30,13 +30,13 @@ import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
 import Source, { SourceConstructor } from './Source';
 import {DefaultDataProvider, DataProvider} from './helper/dataProvider';
-import {summarizeDimensions, DimensionSummary, DimensionUserOuput} from './helper/dimensionHelper';
+import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import DataDimensionInfo from './DataDimensionInfo';
 import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
-    ParsedDataValue, ParsedDataNumeric, OrdinalRawValueIndex
+    ParsedDataValue, ParsedDataNumeric, OrdinalRawValueIndex, DimensionUserOuput
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -330,10 +330,10 @@ class List {
      *        If idx is number, and not found, return null/undefined.
      *        If idx is `true`, and not found, return empty array (always return array).
      */
-    mapDimension<Idx extends (number | true)>(
-        coordDim: DimensionName,
-        idx?: Idx
-    ): (true extends Idx ? DimensionName[] : DimensionName) {
+    mapDimension(coordDim: DimensionName): DimensionName;
+    mapDimension(coordDim: DimensionName, idx: true): DimensionName[];
+    mapDimension(coordDim: DimensionName, idx: number): DimensionName;
+    mapDimension(coordDim: DimensionName, idx?: true | number): DimensionName | DimensionName[] {
         var dimensionsSummary = this._dimensionsSummary;
 
         if (idx == null) {

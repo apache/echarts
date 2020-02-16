@@ -83,6 +83,7 @@ class Component {
         seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ) => void | {update: true};
 
+    static registerClass: clazzUtil.ClassManager['registerClass'];
 };
 
 export type ComponentViewConstructor = typeof Component

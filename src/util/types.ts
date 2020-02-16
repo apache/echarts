@@ -37,6 +37,8 @@ import List, {ListDimensionType} from '../data/List';
 import { Dictionary } from 'zrender/src/core/types';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
+import Source from '../data/Source';
+import { TooltipMarker } from './format';
 
 
 
@@ -259,7 +261,6 @@ export type SourceFormat =
     | typeof SOURCE_FORMAT_TYPED_ARRAY
     | typeof SOURCE_FORMAT_UNKNOWN;
 
-// FIXME:TS remove it finally
 export var SERIES_LAYOUT_BY_COLUMN = 'column' as const;
 export var SERIES_LAYOUT_BY_ROW = 'row' as const;
 
@@ -369,13 +370,12 @@ export type OptionDataItem =
     | {value: ArrayLike<OptionDataPrimitive>}; // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataPrimitive = string | number | Date;
 
-// FIXME:TS in fact ModelOption can be any?
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
-export type DisplayStatus = 'normal' | 'emphasis';
-export type DisplayStatusHostOption = {
+export type DisplayState = 'normal' | 'emphasis';
+export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any
 };
@@ -393,6 +393,47 @@ export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue
 }
 export type OptionEncodeValue = DimensionIndex[] | DimensionIndex | DimensionName[] | DimensionName;
+export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
+
+export interface DataParamsUserOutput {
+    // component main type
+    componentType: string;
+    // component sub type
+    componentSubType: string;
+    componentIndex: number;
+    // series component sub type
+    seriesType?: string;
+    // series component index (the alias of `componentIndex` for series)
+    seriesIndex?: number;
+    seriesId?: string;
+    seriesName?: string;
+    name: string;
+    dataIndex: number;
+    data: any;
+    dataType?: string;
+    value: any;
+    color?: string;
+    borderColor?: string;
+    dimensionNames?: DimensionName[];
+    encode?: DimensionUserOuputEncode;
+    marker?: TooltipMarker;
+    status?: DisplayState;
+    dimensionIndex?: number;
+    percent?: number; // Only for chart like 'pie'
+
+    // Param name list for mapping `a`, `b`, `c`, `d`, `e`
+    $vars: string[];
+}
+export type DimensionUserOuputEncode = {
+    [coordOrVisualDimName: string]:
+        // index: coordDimIndex, value: dataDimIndex
+        DimensionIndex[]
+};
+export type DimensionUserOuput = {
+    // The same as `data.dimensions`
+    dimensionNames: DimensionName[]
+    encode: DimensionUserOuputEncode
+};
 
 export interface MediaQuery {
     minWidth?: number;

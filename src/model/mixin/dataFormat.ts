@@ -20,42 +20,12 @@
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl, TooltipMarker} from '../../util/format';
 import { getTooltipRenderMode } from '../../util/model';
-import { DataHost, DisplayStatus, DimensionName, TooltipRenderMode } from '../../util/types';
+import { DataHost, DisplayState, TooltipRenderMode, DataParamsUserOutput } from '../../util/types';
 import GlobalModel from '../Global';
 import Element from 'zrender/src/Element';
-import { DimensionUserOuputEncode } from '../../data/helper/dimensionHelper';
 
 var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
-
-interface DataParams {
-    // component main type
-    componentType: string;
-    // component sub type
-    componentSubType: string;
-    componentIndex: number;
-    // series component sub type
-    seriesType?: string;
-    // series component index (the alias of `componentIndex` for series)
-    seriesIndex?: number;
-    seriesId?: string;
-    seriesName?: string;
-    name: string;
-    dataIndex: number;
-    data: any;
-    dataType?: string;
-    value: any;
-    color?: string;
-    borderColor?: string;
-    dimensionNames?: DimensionName[];
-    encode?: DimensionUserOuputEncode;
-    marker?: TooltipMarker;
-    status?: DisplayStatus;
-    dimensionIndex?: number;
-
-    // Param name list for mapping `a`, `b`, `c`, `d`, `e`
-    $vars: string[];
-}
 
 interface DataFormatMixin extends DataHost {
     ecModel: GlobalModel;
@@ -76,7 +46,7 @@ class DataFormatMixin {
         dataIndex: number,
         dataType?: string,
         el?: Element // May be used in override.
-    ): DataParams {
+    ): DataParamsUserOutput {
 
         var data = this.getData(dataType);
         var rawValue = this.getRawValue(dataIndex, dataType);
@@ -132,7 +102,7 @@ class DataFormatMixin {
     getFormattedLabel(
         this: DataFormatMixin,
         dataIndex: number,
-        status?: DisplayStatus,
+        status?: DisplayState,
         dataType?: string,
         dimIndex?: number,
         labelProp?: string

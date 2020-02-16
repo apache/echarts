@@ -23,7 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 import {encodeHTML, addCommas} from '../../util/format';
-import dataSelectableMixin from '../../component/helper/selectableMixin';
+import {DataSelectableMixin} from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
@@ -263,6 +263,6 @@ var MapSeries = SeriesModel.extend({
 
 });
 
-zrUtil.mixin(MapSeries, dataSelectableMixin);
+zrUtil.mixin(MapSeries, DataSelectableMixin.prototype);
 
 export default MapSeries;

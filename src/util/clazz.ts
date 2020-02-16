@@ -189,11 +189,11 @@ function superApply(this: any, context: any, methodName: string, args: any): any
     return this.superClass.prototype[methodName].apply(context, args);
 }
 
-type Constructor = new (...args: any) => any;
+export type Constructor = new (...args: any) => any;
 type SubclassContainer = {[subType: string]: Constructor} & {[IS_CONTAINER]?: true};
 
 export interface ClassManager {
-    registerClass: (clz: Constructor, componentType: ComponentFullType) => Constructor;
+    registerClass: (clz: Constructor) => Constructor;
     getClass: (
         componentMainType: ComponentMainType, subType?: ComponentSubType, throwWhenNotFound?: boolean
     ) => Constructor;
@@ -232,12 +232,23 @@ export function enableClassManagement(
     } = {};
 
     target.registerClass = function (
-        clz: Constructor,
-        componentType: ComponentFullType
+        clz: Constructor
     ): Constructor {
-        if (componentType) {
-            checkClassType(componentType);
-            var componentTypeInfo = parseClassType(componentType);
+
+        // `type` should not be a "instance memeber".
+        // If using TS class, should better declared as `static type = 'series.pie'`.
+        // otherwise users have to mount `type` on prototype manually.
+        // For backward compat and enable instance visit type via `this.type`,
+        // we stil support fetch `type` from prototype.
+        var componentFullType = (clz as any).type || clz.prototype.type;
+
+        if (componentFullType) {
+            checkClassType(componentFullType);
+
+            // If only static type declared, we assign it to prototype mandatorily.
+            clz.prototype.type = componentFullType;
+
+            var componentTypeInfo = parseClassType(componentFullType);
 
             if (!componentTypeInfo.sub) {
                 if (__DEV__) {
@@ -336,7 +347,7 @@ export function enableClassManagement(
         if (originalExtend) {
             (target as any).extend = function (proto: any) {
                 var ExtendedClass = originalExtend.call(this, proto);
-                return target.registerClass(ExtendedClass, proto.type);
+                return target.registerClass(ExtendedClass);
             };
         }
     }

@@ -17,9 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import makeStyleMapper from './makeStyleMapper';
+import Model from '../Model';
 
 var getLineStyle = makeStyleMapper(
     [
@@ -33,16 +32,19 @@ var getLineStyle = makeStyleMapper(
     ]
 );
 
-export default {
-    getLineStyle: function (excludes) {
+interface LineStyleMixin extends Pick<Model, 'get'> {}
+
+class LineStyleMixin {
+
+    getLineStyle(excludes?: string[]) {
         var style = getLineStyle(this, excludes);
         // Always set lineDash whether dashed, otherwise we can not
         // erase the previous style when assigning to el.style.
-        style.lineDash = this.getLineDash(style.lineWidth);
+        (style as any).lineDash = this.getLineDash((style as any).lineWidth);
         return style;
-    },
+    }
 
-    getLineDash: function (lineWidth) {
+    getLineDash(lineWidth?: number) {
         if (lineWidth == null) {
             lineWidth = 1;
         }
@@ -61,3 +63,5 @@ export default {
             : [dotSize, dotSize];
     }
 };
+
+export {LineStyleMixin};

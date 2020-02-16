@@ -17,9 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import makeStyleMapper from './makeStyleMapper';
+import Model from '../Model';
 
 var getItemStyle = makeStyleMapper(
     [
@@ -36,17 +35,22 @@ var getItemStyle = makeStyleMapper(
     ]
 );
 
-export default {
-    getItemStyle: function (excludes, includes) {
+interface ItemStyleMixin extends Pick<Model, 'get'> {}
+
+class ItemStyleMixin {
+
+    getItemStyle(excludes?: string[], includes?: string[]) {
         var style = getItemStyle(this, excludes, includes);
         var lineDash = this.getBorderLineDash();
-        lineDash && (style.lineDash = lineDash);
+        lineDash && ((style as any).lineDash = lineDash);
         return style;
-    },
+    }
 
-    getBorderLineDash: function () {
+    getBorderLineDash() {
         var lineType = this.get('borderType');
         return (lineType === 'solid' || lineType == null) ? null
             : (lineType === 'dashed' ? [5, 5] : [1, 1]);
     }
-};
+}
+
+export {ItemStyleMixin};

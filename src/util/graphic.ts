@@ -559,7 +559,7 @@ function shouldSilent(el, e) {
  * @param {Function} [el.highDownOnUpdate] See `graphic.setAsHighDownDispatcher`.
  * @param {Object|boolean} [hoverStyle] See `graphic.setElementHoverStyle`.
  */
-export function setHoverStyle(el, hoverStyle) {
+export function setHoverStyle(el, hoverStyle?) {
     setAsHighDownDispatcher(el, true);
     traverseUpdate(el, setElementHoverStyle, hoverStyle);
 }
@@ -666,7 +666,7 @@ export function setLabelStyle(
     normalStyle, emphasisStyle,
     normalModel, emphasisModel,
     opt,
-    normalSpecified, emphasisSpecified
+    normalSpecified, emphasisSpecified?
 ) {
     opt = opt || EMPTY_OBJ;
     var labelFetcher = opt.labelFetcher;
@@ -1143,7 +1143,7 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
-export function updateProps(el, props, animatableModel, dataIndex, cb) {
+export function updateProps(el, props, animatableModel, dataIndex, cb?) {
     animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
 }
 
@@ -1161,7 +1161,7 @@ export function updateProps(el, props, animatableModel, dataIndex, cb) {
  * @param {number} [dataIndex]
  * @param {Function} cb
  */
-export function initProps(el, props, animatableModel, dataIndex, cb) {
+export function initProps(el, props, animatableModel, dataIndex, cb?) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
 }
 

@@ -36,7 +36,7 @@ function getNearestColorPalette(
     return colors[paletteNum - 1];
 }
 
-interface ColorPaletteMixin extends Model {}
+interface ColorPaletteMixin extends Pick<Model, 'get'> {}
 
 class ColorPaletteMixin {
 
@@ -87,4 +87,4 @@ class ColorPaletteMixin {
     }
 };
 
-export default ColorPaletteMixin
+export {ColorPaletteMixin};

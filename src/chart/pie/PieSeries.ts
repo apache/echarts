@@ -17,26 +17,32 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import dataSelectableMixin from '../../component/helper/selectableMixin';
+import {DataSelectableMixin, SelectableTarget} from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import SeriesModel from '../../model/Series';
+import { SeriesOption, DataParamsUserOutput, ParsedDataValue } from '../../util/types';
+import List from '../../data/List';
 
+export interface PieOption extends SeriesOption {
+    // FIXME:TS need more. [k: string]: any should be removed finally.
+    [k: string]: any
+}
 
-var PieSeries = echarts.extendSeriesModel({
+class PieSeries extends SeriesModel {
 
-    type: 'series.pie',
+    static type = 'series.pie';
 
-    // Overwrite
-    init: function (option) {
-        PieSeries.superApply(this, 'init', arguments);
+    /**
+     * @overwrite
+     */
+    init(option: PieOption): void {
+        super.init.apply(this, arguments as any);
 
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
@@ -47,23 +53,28 @@ var PieSeries = echarts.extendSeriesModel({
         this.updateSelectedMap(this._createSelectableList());
 
         this._defaultLabelLine(option);
-    },
+    }
 
-    // Overwrite
-    mergeOption: function (newOption) {
-        PieSeries.superCall(this, 'mergeOption', newOption);
+    /**
+     * @overwrite
+     */
+    mergeOption(): void {
+        super.mergeOption.apply(this, arguments as any);
 
         this.updateSelectedMap(this._createSelectableList());
-    },
+    }
 
-    getInitialData: function (option, ecModel) {
+    /**
+     * @overwrite
+     */
+    getInitialData(): List {
         return createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-    },
+    }
 
-    _createSelectableList: function () {
+    private _createSelectableList(): SelectableTarget[] {
         var data = this.getRawData();
         var valueDim = data.mapDimension('value');
         var targetList = [];
@@ -75,15 +86,17 @@ var PieSeries = echarts.extendSeriesModel({
             });
         }
         return targetList;
-    },
+    }
 
-    // Overwrite
-    getDataParams: function (dataIndex) {
+    /**
+     * @overwrite
+     */
+    getDataParams(dataIndex: number): DataParamsUserOutput {
         var data = this.getData();
-        var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
+        var params = super.getDataParams(dataIndex);
         // FIXME toFixed?
 
-        var valueList = [];
+        var valueList = [] as ParsedDataValue[];
         data.each(data.mapDimension('value'), function (value) {
             valueList.push(value);
         });
@@ -96,9 +109,9 @@ var PieSeries = echarts.extendSeriesModel({
 
         params.$vars.push('percent');
         return params;
-    },
+    }
 
-    _defaultLabelLine: function (option) {
+    private _defaultLabelLine(option: PieOption): void {
         // Extend labelLine emphasis
         modelUtil.defaultEmphasis(option, 'labelLine', ['show']);
 
@@ -109,9 +122,9 @@ var PieSeries = echarts.extendSeriesModel({
             && option.label.show;
         labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
             && option.emphasis.label.show;
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: PieOption = {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
@@ -201,8 +214,12 @@ var PieSeries = echarts.extendSeriesModel({
 
         animationEasing: 'cubicOut'
     }
-});
 
-zrUtil.mixin(PieSeries, dataSelectableMixin);
+}
+
+interface PieSeries extends DataSelectableMixin {}
+zrUtil.tsMixin(PieSeries, DataSelectableMixin);
+
+SeriesModel.registerClass(PieSeries);
 
 export default PieSeries;

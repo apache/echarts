@@ -17,18 +17,26 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
+import SeriesModel from '../../model/Series';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload, DisplayState } from '../../util/types';
+import List from '../../data/List';
+import PieSeries from './PieSeries';
+import { Dictionary } from 'zrender/src/core/types';
+import Element from 'zrender/src/Element';
 
-/**
- * @param {module:echarts/model/Series} seriesModel
- * @param {boolean} hasAnimation
- * @inner
- */
-function updateDataSelected(uid, seriesModel, hasAnimation, api) {
+function updateDataSelected(
+    this: PiePiece,
+    uid: string,
+    seriesModel: PieSeries,
+    hasAnimation: boolean,
+    api: ExtensionAPI
+): void {
     var data = seriesModel.getData();
     var dataIndex = this.dataIndex;
     var name = data.getName(dataIndex);
@@ -52,15 +60,13 @@ function updateDataSelected(uid, seriesModel, hasAnimation, api) {
     });
 }
 
-/**
- * @param {module:zrender/graphic/Sector} el
- * @param {Object} layout
- * @param {boolean} isSelected
- * @param {number} selectedOffset
- * @param {boolean} hasAnimation
- * @inner
- */
-function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation) {
+function toggleItemSelected(
+    el: Element,
+    layout: Dictionary<any>, // FIXME:TS make a type.
+    isSelected: boolean,
+    selectedOffset: number,
+    hasAnimation: boolean
+): void {
     var midAngle = (layout.startAngle + layout.endAngle) / 2;
 
     var dx = Math.cos(midAngle);
@@ -71,6 +77,7 @@ function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation
 
     hasAnimation
         // animateTo will stop revious animation like update transition
+        // @ts-ignore FIXME:TS zr?
         ? el.animate()
             .when(200, {
                 position: position
@@ -79,251 +86,273 @@ function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation
         : el.attr('position', position);
 }
 
+type PieceElementExtension = {
+    hoverIgnore?: boolean,
+    normalIgnore?: boolean,
+    ignore?: boolean
+};
+
 /**
  * Piece of pie including Sector, Label, LabelLine
- * @constructor
- * @extends {module:zrender/graphic/Group}
  */
-function PiePiece(data, idx) {
+class PiePiece extends graphic.Group {
 
-    graphic.Group.call(this);
+    // FIXME:TS add a type in `util/graphic.ts` for `highDownOnUpdate`.
+    highDownOnUpdate: any;
+    dataIndex: number;
 
-    var sector = new graphic.Sector({
-        z2: 2
-    });
-    var polyline = new graphic.Polyline();
-    var text = new graphic.Text();
-    this.add(sector);
-    this.add(polyline);
-    this.add(text);
+    constructor(data: List, idx: number) {
+        super();
 
-    this.updateData(data, idx, true);
-}
+        // @ts-ignore FIXME:TS modify zr?
+        var sector = new graphic.Sector({
+            z2: 2
+        });
+        var polyline = new graphic.Polyline();
+        var text = new graphic.Text();
+        this.add(sector);
+        this.add(polyline);
+        this.add(text);
 
-var piePieceProto = PiePiece.prototype;
-
-piePieceProto.updateData = function (data, idx, firstCreate) {
-
-    var sector = this.childAt(0);
-    var labelLine = this.childAt(1);
-    var labelText = this.childAt(2);
-
-    var seriesModel = data.hostModel;
-    var itemModel = data.getItemModel(idx);
-    var layout = data.getItemLayout(idx);
-    var sectorShape = zrUtil.extend({}, layout);
-    sectorShape.label = null;
-
-    var animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
-
-    if (firstCreate) {
-        sector.setShape(sectorShape);
-
-        var animationType = seriesModel.getShallow('animationType');
-        if (animationType === 'scale') {
-            sector.shape.r = layout.r0;
-            graphic.initProps(sector, {
-                shape: {
-                    r: layout.r
-                }
-            }, seriesModel, idx);
-        }
-        // Expansion
-        else {
-            sector.shape.endAngle = layout.startAngle;
-            graphic.updateProps(sector, {
-                shape: {
-                    endAngle: layout.endAngle
-                }
-            }, seriesModel, idx);
-        }
-
+        this.updateData(data, idx, true);
     }
-    else {
-        if (animationTypeUpdate === 'expansion') {
-            // Sectors are set to be target shape and an overlaying clipPath is used for animation
+
+    updateData(data: List, idx: number, firstCreate?: boolean): void {
+        var sector = this.childAt(0) as graphic.Sector;
+        var labelLine = this.childAt(1) as PieceElementExtension;
+        var labelText = this.childAt(2) as PieceElementExtension;
+
+        var seriesModel = data.hostModel as PieSeries;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var sectorShape = zrUtil.extend({}, layout);
+        // @ts-ignore FIXME:TS label?
+        sectorShape.label = null;
+
+        var animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
+
+        if (firstCreate) {
             sector.setShape(sectorShape);
-        }
-        else {
-            // Transition animation from the old shape
-            graphic.updateProps(sector, {
-                shape: sectorShape
-            }, seriesModel, idx);
-        }
-    }
 
-    // Update common style
-    var visualColor = data.getItemVisual(idx, 'color');
-
-    sector.useStyle(
-        zrUtil.defaults(
-            {
-                lineJoin: 'bevel',
-                fill: visualColor
-            },
-            itemModel.getModel('itemStyle').getItemStyle()
-        )
-    );
-    sector.hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
-
-    var cursorStyle = itemModel.getShallow('cursor');
-    cursorStyle && sector.attr('cursor', cursorStyle);
-
-    // Toggle selected
-    toggleItemSelected(
-        this,
-        data.getItemLayout(idx),
-        seriesModel.isSelected(data.getName(idx)),
-        seriesModel.get('selectedOffset'),
-        seriesModel.get('animation')
-    );
-
-    // Label and text animation should be applied only for transition type animation when update
-    var withAnimation = !firstCreate && animationTypeUpdate === 'transition';
-    this._updateLabel(data, idx, withAnimation);
-
-    this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
-        ? function (fromState, toState) {
-            if (toState === 'emphasis') {
-                labelLine.ignore = labelLine.hoverIgnore;
-                labelText.ignore = labelText.hoverIgnore;
-
-                // Sector may has animation of updating data. Force to move to the last frame
-                // Or it may stopped on the wrong shape
-                sector.stopAnimation(true);
-                sector.animateTo({
-                    shape: {
-                        r: layout.r + seriesModel.get('hoverOffset')
-                    }
-                }, 300, 'elasticOut');
-            }
-            else {
-                labelLine.ignore = labelLine.normalIgnore;
-                labelText.ignore = labelText.normalIgnore;
-
-                sector.stopAnimation(true);
-                sector.animateTo({
+            var animationType = seriesModel.getShallow('animationType');
+            if (animationType === 'scale') {
+                sector.shape.r = layout.r0;
+                graphic.initProps(sector, {
                     shape: {
                         r: layout.r
                     }
-                }, 300, 'elasticOut');
+                }, seriesModel, idx);
+            }
+            // Expansion
+            else {
+                sector.shape.endAngle = layout.startAngle;
+                graphic.updateProps(sector, {
+                    shape: {
+                        endAngle: layout.endAngle
+                    }
+                }, seriesModel, idx);
+            }
+
+        }
+        else {
+            if (animationTypeUpdate === 'expansion') {
+                // Sectors are set to be target shape and an overlaying clipPath is used for animation
+                sector.setShape(sectorShape);
+            }
+            else {
+                // Transition animation from the old shape
+                graphic.updateProps(sector, {
+                    shape: sectorShape
+                }, seriesModel, idx);
             }
         }
-        : null;
 
-    graphic.setHoverStyle(this);
-};
+        // Update common style
+        var visualColor = data.getItemVisual(idx, 'color');
 
-piePieceProto._updateLabel = function (data, idx, withAnimation) {
+        sector.useStyle(
+            zrUtil.defaults(
+                {
+                    lineJoin: 'bevel',
+                    fill: visualColor
+                },
+                itemModel.getModel('itemStyle').getItemStyle()
+            )
+        );
+        // @ts-ignore FIXME:TS make a type in util/graphic.ts to support `hoverStyle`.
+        sector.hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
 
-    var labelLine = this.childAt(1);
-    var labelText = this.childAt(2);
+        var cursorStyle = itemModel.getShallow('cursor');
+        // @ts-ignore FIXME:TS update zr.
+        cursorStyle && sector.attr('cursor', cursorStyle);
 
-    var seriesModel = data.hostModel;
-    var itemModel = data.getItemModel(idx);
-    var layout = data.getItemLayout(idx);
-    var labelLayout = layout.label;
-    var visualColor = data.getItemVisual(idx, 'color');
+        // Toggle selected
+        toggleItemSelected(
+            this,
+            data.getItemLayout(idx),
+            seriesModel.isSelected(data.getName(idx)),
+            seriesModel.get('selectedOffset'),
+            seriesModel.get('animation')
+        );
 
-    if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
-        labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
-        labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
-        return;
+        // Label and text animation should be applied only for transition type animation when update
+        var withAnimation = !firstCreate && animationTypeUpdate === 'transition';
+        this._updateLabel(data, idx, withAnimation);
+
+        this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+            ? function (fromState: DisplayState, toState: DisplayState): void {
+                if (toState === 'emphasis') {
+                    labelLine.ignore = labelLine.hoverIgnore;
+                    labelText.ignore = labelText.hoverIgnore;
+
+                    // Sector may has animation of updating data. Force to move to the last frame
+                    // Or it may stopped on the wrong shape
+                    sector.stopAnimation(true);
+                    sector.animateTo({
+                        shape: {
+                            r: layout.r + seriesModel.get('hoverOffset')
+                        }
+                    // @ts-ignore FIXME:TS modify zr
+                    }, 300, 'elasticOut');
+                }
+                else {
+                    labelLine.ignore = labelLine.normalIgnore;
+                    labelText.ignore = labelText.normalIgnore;
+
+                    sector.stopAnimation(true);
+                    sector.animateTo({
+                        shape: {
+                            r: layout.r
+                        }
+                    // @ts-ignore FIXME:TS modify zr
+                    }, 300, 'elasticOut');
+                }
+            }
+            : null;
+
+        graphic.setHoverStyle(this);
     }
 
-    var targetLineShape = {
-        points: labelLayout.linePoints || [
-            [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
-        ]
-    };
-    var targetTextStyle = {
-        x: labelLayout.x,
-        y: labelLayout.y
-    };
-    if (withAnimation) {
-        graphic.updateProps(labelLine, {
-            shape: targetLineShape
-        }, seriesModel, idx);
+    private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
 
-        graphic.updateProps(labelText, {
-            style: targetTextStyle
-        }, seriesModel, idx);
-    }
-    else {
-        labelLine.attr({
-            shape: targetLineShape
-        });
-        labelText.attr({
-            style: targetTextStyle
-        });
-    }
+        var labelLine = this.childAt(1) as (PieceElementExtension & graphic.Line);
+        var labelText = this.childAt(2) as (PieceElementExtension & graphic.Text);
 
-    labelText.attr({
-        rotation: labelLayout.rotation,
-        origin: [labelLayout.x, labelLayout.y],
-        z2: 10
-    });
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var labelLayout = layout.label;
+        var visualColor = data.getItemVisual(idx, 'color');
 
-    var labelModel = itemModel.getModel('label');
-    var labelHoverModel = itemModel.getModel('emphasis.label');
-    var labelLineModel = itemModel.getModel('labelLine');
-    var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
-    var visualColor = data.getItemVisual(idx, 'color');
-
-    graphic.setLabelStyle(
-        labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
-        {
-            labelFetcher: data.hostModel,
-            labelDataIndex: idx,
-            defaultText: labelLayout.text,
-            autoColor: visualColor,
-            useInsideStyle: !!labelLayout.inside
-        },
-        {
-            textAlign: labelLayout.textAlign,
-            textVerticalAlign: labelLayout.verticalAlign,
-            opacity: data.getItemVisual(idx, 'opacity')
+        if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
+            labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
+            labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
+            return;
         }
-    );
 
-    labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
-    labelText.hoverIgnore = !labelHoverModel.get('show');
+        var targetLineShape = {
+            points: labelLayout.linePoints || [
+                [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
+            ]
+        };
+        var targetTextStyle = {
+            x: labelLayout.x,
+            y: labelLayout.y
+        };
+        if (withAnimation) {
+            graphic.updateProps(labelLine, {
+                shape: targetLineShape
+            }, seriesModel, idx);
 
-    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
-    labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+            graphic.updateProps(labelText, {
+                style: targetTextStyle
+            }, seriesModel, idx);
+        }
+        else {
+            labelLine.attr({
+                // @ts-ignore FIXME:TS modify zr
+                shape: targetLineShape
+            });
+            labelText.attr({
+                // @ts-ignore FIXME:TS modify zr
+                style: targetTextStyle
+            });
+        }
 
-    // Default use item visual color
-    labelLine.setStyle({
-        stroke: visualColor,
-        opacity: data.getItemVisual(idx, 'opacity')
-    });
-    labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
+        labelText.attr({
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            // @ts-ignore FIXME:TS modify zr
+            z2: 10
+        });
 
-    labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+        var labelModel = itemModel.getModel('label');
+        var labelHoverModel = itemModel.getModel('emphasis.label');
+        var labelLineModel = itemModel.getModel('labelLine');
+        var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
+        var visualColor = data.getItemVisual(idx, 'color');
 
-    var smooth = labelLineModel.get('smooth');
-    if (smooth && smooth === true) {
-        smooth = 0.4;
+        graphic.setLabelStyle(
+            labelText.style,
+            // @ts-ignore FIXME:TS make a type in util/graphic.
+            labelText.hoverStyle = {},
+            labelModel,
+            labelHoverModel,
+            {
+                labelFetcher: data.hostModel,
+                labelDataIndex: idx,
+                defaultText: labelLayout.text,
+                autoColor: visualColor,
+                useInsideStyle: !!labelLayout.inside
+            },
+            {
+                textAlign: labelLayout.textAlign,
+                textVerticalAlign: labelLayout.verticalAlign,
+                opacity: data.getItemVisual(idx, 'opacity')
+            }
+        );
+
+        labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
+        labelText.hoverIgnore = !labelHoverModel.get('show');
+
+        labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
+        labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+
+        // Default use item visual color
+        labelLine.setStyle({
+            stroke: visualColor,
+            opacity: data.getItemVisual(idx, 'opacity')
+        });
+        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
+
+        // @ts-ignore FIXME:TS
+        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+
+        var smooth = labelLineModel.get('smooth');
+        if (smooth && smooth === true) {
+            smooth = 0.4;
+        }
+        labelLine.setShape({
+            smooth: smooth
+        });
     }
-    labelLine.setShape({
-        smooth: smooth
-    });
-};
-
-zrUtil.inherits(PiePiece, graphic.Group);
+}
 
 
 // Pie view
-var PieView = ChartView.extend({
+class PieView extends ChartView {
 
-    type: 'pie',
+    static type = 'pie';
 
-    init: function () {
+    private _sectorGroup: graphic.Group;
+    private _data: List;
+
+    init(): void {
         var sectorGroup = new graphic.Group();
         this._sectorGroup = sectorGroup;
-    },
+    }
 
-    render: function (seriesModel, ecModel, api, payload) {
+    render(seriesModel: PieSeries, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         if (payload && (payload.from === this.uid)) {
             return;
         }
@@ -347,6 +376,7 @@ var PieView = ChartView.extend({
                 var piePiece = new PiePiece(data, idx);
                 // Default expansion animation
                 if (isFirstRender && animationType !== 'scale') {
+                    // @ts-ignore FIXME:TS modify zr?
                     piePiece.eachChild(function (child) {
                         child.stopAnimation(true);
                     });
@@ -359,9 +389,10 @@ var PieView = ChartView.extend({
                 group.add(piePiece);
             })
             .update(function (newIdx, oldIdx) {
-                var piePiece = oldData.getItemGraphicEl(oldIdx);
+                var piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
 
                 if (!isFirstRender && animationTypeUpdate !== 'transition') {
+                    // @ts-ignore FIXME:TS modify zr?
                     piePiece.eachChild(function (child) {
                         child.stopAnimation(true);
                     });
@@ -402,13 +433,17 @@ var PieView = ChartView.extend({
         }
 
         this._data = data;
-    },
+    }
 
-    dispose: function () {},
+    dispose() {}
 
-    _createClipPath: function (
-        cx, cy, r, startAngle, clockwise, cb, seriesModel, isFirstRender
-    ) {
+    _createClipPath(
+        cx: number, cy: number, r: number,
+        startAngle: number, clockwise: boolean,
+        // @ts-ignore FIXME:TS make type in util.grpahic
+        cb,
+        seriesModel: PieSeries, isFirstRender: boolean
+    ): graphic.Sector {
         var clipPath = new graphic.Sector({
             shape: {
                 cx: cx,
@@ -429,12 +464,12 @@ var PieView = ChartView.extend({
         }, seriesModel, cb);
 
         return clipPath;
-    },
+    }
 
     /**
-     * @implement
+     * @implements
      */
-    containPoint: function (point, seriesModel) {
+    containPoint = function (point: number[], seriesModel: PieSeries): boolean {
         var data = seriesModel.getData();
         var itemLayout = data.getItemLayout(0);
         if (itemLayout) {
@@ -444,7 +479,8 @@ var PieView = ChartView.extend({
             return radius <= itemLayout.r && radius >= itemLayout.r0;
         }
     }
+}
 
-});
+ChartView.registerClass(PieView);
 
 export default PieView;

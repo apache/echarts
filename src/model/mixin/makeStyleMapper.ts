@@ -30,7 +30,7 @@ export default function (properties) {
             properties[i][1] = properties[i][0];
         }
     }
-    return function (model, excludes, includes) {
+    return function (model, excludes, includes?) {
         var style = {};
         for (var i = 0; i < properties.length; i++) {
             var propName = properties[i][1];

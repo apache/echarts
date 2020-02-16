@@ -31,10 +31,10 @@ import {
     CheckableConstructor
 } from '../util/clazz';
 
-import lineStyleMixin from './mixin/lineStyle';
 import areaStyleMixin from './mixin/areaStyle';
 import textStyleMixin from './mixin/textStyle';
-import itemStyleMixin from './mixin/itemStyle';
+import {LineStyleMixin} from './mixin/lineStyle';
+import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
 import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
@@ -254,9 +254,11 @@ type ModelConstructor = typeof Model
 enableClassExtend(Model as ModelConstructor);
 enableClassCheck(Model as ModelConstructor);
 
-mixin(Model, lineStyleMixin);
+interface Model extends LineStyleMixin, ItemStyleMixin {}
+
+zrUtil.tsMixin(Model, LineStyleMixin);
 mixin(Model, areaStyleMixin);
 mixin(Model, textStyleMixin);
-mixin(Model, itemStyleMixin);
+zrUtil.tsMixin(Model, ItemStyleMixin);
 
 export default Model;

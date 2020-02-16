@@ -32,7 +32,7 @@ import {
     SeriesOption, ComponentLayoutMode, TooltipRenderMode, AxisValue, ZRColor
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
-import ColorPaletteMixin from './mixin/colorPalette';
+import {ColorPaletteMixin} from './mixin/colorPalette';
 import DataFormatMixin from '../model/mixin/dataFormat';
 import Model from '../model/Model';
 import {
@@ -47,9 +47,9 @@ import {
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
-import { ExtendableConstructor, mountExtend } from '../util/clazz';
+import { ExtendableConstructor, mountExtend, ClassManager, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
-import { LegendVisualProviderType } from '../visual/LegendVisualProvider';
+import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
 import Source from '../data/Source';
 
@@ -66,6 +66,9 @@ class SeriesModel extends ComponentModel {
     // @readonly
     type: string;
 
+    // Should be implenented in subclass.
+    defaultOption: SeriesOption;
+
     // @readonly
     seriesIndex: number;
 
@@ -78,7 +81,7 @@ class SeriesModel extends ComponentModel {
     pipelineContext: PipelineContext;
 
     // legend visual provider to the legend component
-    legendVisualProvider: LegendVisualProviderType;
+    legendVisualProvider: LegendVisualProvider;
 
     // Access path of color for visual
     visualColorAccessPath: string;
@@ -540,6 +543,9 @@ class SeriesModel extends ComponentModel {
      */
     preventIncremental: () => boolean;
 
+    static registerClass(clz: Constructor): Constructor {
+        return ComponentModel.registerClass(clz);
+    }
 }
 
 interface SeriesModel extends DataFormatMixin, ColorPaletteMixin, DataHost {}

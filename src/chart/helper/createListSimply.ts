@@ -19,9 +19,10 @@
 
 // @ts-nocheck
 
-import createDimensions from '../../data/helper/createDimensions';
+import createDimensions, {CreateDimensionsParams} from '../../data/helper/createDimensions';
 import List from '../../data/List';
 import {extend, isArray} from 'zrender/src/core/util';
+import SeriesModel from '../../model/Series';
 
 /**
  * [Usage]:
@@ -32,14 +33,12 @@ import {extend, isArray} from 'zrender/src/core/util';
  *     coordDimensions: ['value'],
  *     dimensionsCount: 5
  * });
- *
- * @param {module:echarts/model/Series} seriesModel
- * @param {Object|Array.<string|Object>} opt opt or coordDimensions
- *        The options in opt, see `echarts/data/helper/createDimensions`
- * @param {Array.<string>} [nameList]
- * @return {module:echarts/data/List}
  */
-export default function (seriesModel, opt, nameList) {
+export default function (
+    seriesModel: SeriesModel,
+    opt: CreateDimensionsParams | CreateDimensionsParams['coordDimensions'],
+    nameList?: string[]
+): List {
     opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
 
     var source = seriesModel.getSource();

@@ -17,31 +17,42 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Substitute `completeDimensions`.
  * `completeDimensions` is to be deprecated.
  */
 import completeDimensions from './completeDimensions';
+import { DimensionDefinitionLoose, OptionEncode, OptionEncodeValue, EncodeDefaulter } from '../../util/types';
+import Source from '../Source';
+import List from '../List';
+import DataDimensionInfo from '../DataDimensionInfo';
+import { HashMap } from 'zrender/src/core/util';
+
+export type CreateDimensionsParams = {
+    coordDimensions?: DimensionDefinitionLoose[],
+    dimensionsDefine?: DimensionDefinitionLoose[],
+    encodeDefine?: HashMap<OptionEncodeValue> | OptionEncode,
+    dimensionsCount?: number,
+    encodeDefaulter?: EncodeDefaulter,
+    generateCoord?: boolean,
+    generateCoordCount?: number
+};
 
 /**
- * @param {module:echarts/data/Source|module:echarts/data/List} source or data.
- * @param {Object|Array} [opt]
- * @param {Array.<string|Object>} [opt.coordDimensions=[]]
- * @param {number} [opt.dimensionsCount]
- * @param {string} [opt.generateCoord]
- * @param {string} [opt.generateCoordCount]
- * @param {Array.<string|Object>} [opt.dimensionsDefine=source.dimensionsDefine] Overwrite source define.
- * @param {Object|HashMap} [opt.encodeDefine=source.encodeDefine] Overwrite source define.
- * @param {Function} [opt.encodeDefaulter] Make default encode if user not specified.
- * @return {Array.<Object>} dimensionsInfo
+ * @param opt.coordDimensions
+ * @param opt.dimensionsDefine By default `source.dimensionsDefine` Overwrite source define.
+ * @param opt.encodeDefine By default `source.encodeDefine` Overwrite source define.
+ * @param opt.encodeDefaulter Make default encode if user not specified.
  */
-export default function (source, opt) {
+export default function (
+    source: Source | List,
+    opt?: CreateDimensionsParams
+): DataDimensionInfo[] {
     opt = opt || {};
     return completeDimensions(opt.coordDimensions || [], source, {
-        dimsDef: opt.dimensionsDefine || source.dimensionsDefine,
-        encodeDef: opt.encodeDefine || source.encodeDefine,
+        // FIXME:TS detect whether source then call `.dimensionsDefine` and `.encodeDefine`?
+        dimsDef: opt.dimensionsDefine || (source as Source).dimensionsDefine,
+        encodeDef: opt.encodeDefine || (source as Source).encodeDefine,
         dimCount: opt.dimensionsCount,
         encodeDefaulter: opt.encodeDefaulter,
         generateCoord: opt.generateCoord,

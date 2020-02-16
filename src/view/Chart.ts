@@ -31,7 +31,7 @@ import ExtensionAPI from '../ExtensionAPI';
 import Element from 'zrender/src/Element';
 import {
     Payload, ViewRootGroup, ECEvent, EventQueryItem,
-    StageHandlerPlanReturn, DisplayStatus, StageHandlerProgressParams
+    StageHandlerPlanReturn, DisplayState, StageHandlerProgressParams
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
 import List from '../data/List';
@@ -180,13 +180,14 @@ class Chart {
         inner(payload).updateMethod = methodName;
     }
 
+    static registerClass: clazzUtil.ClassManager['registerClass'];
 };
 
 
 /**
  * Set state of single element
  */
-function elSetState(el: Element, state: DisplayStatus, highlightDigit: number) {
+function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
     if (el) {
         el.trigger(state, highlightDigit);
         if (el.isGroup
@@ -200,7 +201,7 @@ function elSetState(el: Element, state: DisplayStatus, highlightDigit: number) {
     }
 }
 
-function toggleHighlight(data: List, payload: Payload, state: DisplayStatus) {
+function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
     var dataIndex = modelUtil.queryDataIndex(data, payload);
 
     var highlightDigit = (payload && payload.highlightKey != null)

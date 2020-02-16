@@ -34,7 +34,7 @@ import * as layout from '../util/layout';
 import boxLayoutMixin from './mixin/boxLayout';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import GlobalModel from './Global';
-import { ComponentOption, ComponentMainType, ComponentSubType } from '../util/types';
+import { ComponentOption, ComponentMainType, ComponentSubType, ComponentFullType } from '../util/types';
 
 var inner = makeInner();
 
@@ -49,7 +49,7 @@ class ComponentModel extends Model {
     /**
      * @readonly
      */
-    type: string;
+    type: ComponentFullType;
 
     /**
      * @readonly
@@ -176,10 +176,12 @@ class ComponentModel extends Model {
      *     aaa: number
      * }
      * export class XxxModel extends Component {
-     *     readonly defaultOption: XxxOption = {
+     *     static type = 'xxx';
+     *     static defaultOption: XxxOption = {
      *         aaa: 123
      *     }
      * }
+     * Component.registerClass(XxxModel);
      * ```
      * ```ts
      * import {mergeOption} from '../model/util';
@@ -225,7 +227,8 @@ class ComponentModel extends Model {
         // in legacy env and auto merge defaultOption. So if using class
         // declaration, defaultOption should be merged manually.
         if (!isExtendedClass(ctor)) {
-            return ctor.prototype.defaultOption;
+            // When using ts class, defaultOption must be declared as static.
+            return (ctor as any).defaultOption;
         }
 
         // FIXME: remove this approach?
@@ -256,6 +259,7 @@ class ComponentModel extends Model {
         });
     }
 
+    static registerClass: ClassManager['registerClass'];
 }
 
 // Reset ComponentModel.extend, add preConstruct.
