@@ -40,16 +40,12 @@ export default echarts.extendComponentView({
         }
 
         if (geoModel.get('show')) {
-            if (this._mapDraw.hasDraw) {
-                this._mapDraw.group.show();
-            }
-            else {
-                this._mapDraw.draw(geoModel, ecModel, api, this, payload);
-                this._mapDraw.hasDraw = true;
-            }
+            this._mapDraw = new MapDraw(api, true);
+            this.group.add(this._mapDraw.group);
+            this._mapDraw.draw(geoModel, ecModel, api, this, payload);
         }
         else {
-            this._mapDraw.group.hide();
+            this._mapDraw.group.removeAll();
         }
 
         this.group.silent = geoModel.get('silent');
