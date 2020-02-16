@@ -392,7 +392,7 @@ var ensureZRenderCode = (function () {
             && fs.lstatSync(nodeModulesZr).isDirectory()
         ) {
             console.log(chalk.blue(`rm -rf dir: ${nodeModulesZr}`));
-            // ensure save.
+            // ensure save for rm -rf.
             assert(nodeModulesZr.includes('node_modules') && nodeModulesZr.includes('zrender'));
             fsExtra.removeSync(nodeModulesZr);
         }
@@ -436,9 +436,10 @@ var ensureZRenderCode = (function () {
 
         clear: function () {
             // Calling guard
-            assert(stats === 'prepared');
+            if (stats === 'cleared') {
+                return;
+            }
             stats = 'cleared';
-
             doClear();
         }
     }
@@ -450,11 +451,7 @@ async function main() {
         await run();
     }
     catch (err) {
-
-        ensureZRenderCode.clear();
-
         console.log(chalk.red('BUILD ERROR!'));
-
         // rollup parse error.
         if (err) {
             if (err.loc) {
@@ -472,6 +469,8 @@ async function main() {
             err.plugin != null && console.warn(chalk.red(`plugin: ${err.plugin}`));
         }
         // console.log(err);
+
+        ensureZRenderCode.clear();
     }
 }
 

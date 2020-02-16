@@ -1,7 +1,5 @@
-parserOptions:
-    # If using ES Module, ecmaVersion have to be set as `2015`.
-    ecmaVersion: 2015
-    sourceType: "module"
+parser: "@typescript-eslint/parser"
+plugins: ["@typescript-eslint"]
 env:
     browser: true
     node: true
