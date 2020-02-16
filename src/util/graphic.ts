@@ -17,13 +17,15 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as pathTool from 'zrender/src/tool/path';
 import * as colorTool from 'zrender/src/tool/color';
 import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import Path from 'zrender/src/graphic/Path';
-import Transformable from 'zrender/src/mixin/Transformable';
+import Transformable from 'zrender/src/core/Transformable';
 import ZImage from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';

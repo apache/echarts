@@ -27,11 +27,11 @@ var dev;
 
 // In browser
 if (typeof window !== 'undefined') {
-    dev = window.__DEV__;
+    dev = (window as any).__DEV__;
 }
 // In node
 else if (typeof global !== 'undefined') {
-    dev = global.__DEV__;
+    dev = (global as any).__DEV__;
 }
 
 if (typeof dev === 'undefined') {

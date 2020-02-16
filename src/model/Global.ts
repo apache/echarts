@@ -17,12 +17,6 @@
 * under the License.
 */
 
-/**
- * ECharts global model
- *
- * @module {echarts/model/Global}
- */
-
 
 /**
  * Caution: If the mechanism should be changed some day, these cases
@@ -40,44 +34,63 @@
 import {__DEV__} from '../config';
 import {
     each, filter, map, isArray, indexOf, isObject, isString,
-    createHashMap, assert, clone, merge, extend, mixin
+    createHashMap, assert, clone, merge, extend, tsMixin, HashMap
 } from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import Model from './Model';
-import ComponentModel from './Component';
+import ComponentModel, {ComponentModelConstructor} from './Component';
 import globalDefault from './globalDefault';
-import colorPaletteMixin from './mixin/colorPalette';
+import ColorPaletteMixin from './mixin/colorPalette';
 import {resetSourceDefaulter} from '../data/helper/sourceHelper';
+import SeriesModel from './Series';
+import { Payload, OptionPreprocessor, ECOption, ECUnitOption, ThemeOption, ComponentOption, ComponentMainType, ComponentSubType } from '../util/types';
+import OptionManager from './OptionManager';
+import Scheduler from '../stream/Scheduler';
+import { Dictionary } from 'zrender/src/core/types';
 
 var OPTION_INNER_KEY = '\0_ec_inner';
 
-/**
- * @alias module:echarts/model/Global
- *
- * @param {Object} option
- * @param {module:echarts/model/Model} parentModel
- * @param {Object} theme
- */
-var GlobalModel = Model.extend({
 
-    init: function (option, parentModel, theme, optionManager) {
+class GlobalModel extends Model {
+
+    // @readonly
+    option: ECUnitOption;
+
+    private _theme: Model;
+
+    private _optionManager: OptionManager;
+
+    private _componentsMap: HashMap<ComponentModel[]>;
+
+    /**
+     * Mapping between filtered series list and raw series list.
+     * key: filtered series indices, value: raw series indices.
+     */
+    private _seriesIndices: number[];
+
+    /**
+     * Key: seriesIndex
+     */
+    private _seriesIndicesMap: HashMap<any>;
+
+    // Injectable properties:
+    scheduler: Scheduler;
+
+
+    init(
+        option: ECOption,
+        parentModel: Model,
+        ecModel: GlobalModel,
+        theme: object,
+        optionManager: OptionManager
+    ): void {
         theme = theme || {};
-
         this.option = null; // Mark as not initialized.
-
-        /**
-         * @type {module:echarts/model/Model}
-         * @private
-         */
         this._theme = new Model(theme);
-
-        /**
-         * @type {module:echarts/model/OptionManager}
-         */
         this._optionManager = optionManager;
-    },
+    }
 
-    setOption: function (option, optionPreprocessorFuncs) {
+    setOption(option: ECOption, optionPreprocessorFuncs: OptionPreprocessor[]): void {
         assert(
             !(OPTION_INNER_KEY in option),
             'please use chart.getOption()'
@@ -86,16 +99,16 @@ var GlobalModel = Model.extend({
         this._optionManager.setOption(option, optionPreprocessorFuncs);
 
         this.resetOption(null);
-    },
+    }
 
     /**
-     * @param {string} type null/undefined: reset all.
-     *                      'recreate': force recreate all.
-     *                      'timeline': only reset timeline option
-     *                      'media': only reset media query option
-     * @return {boolean} Whether option changed.
+     * @param type null/undefined: reset all.
+     *        'recreate': force recreate all.
+     *        'timeline': only reset timeline option
+     *        'media': only reset media query option
+     * @return Whether option changed.
      */
-    resetOption: function (type) {
+    resetOption(type: string): boolean {
         var optionChanged = false;
         var optionManager = this._optionManager;
 
@@ -103,7 +116,7 @@ var GlobalModel = Model.extend({
             var baseOption = optionManager.mountOption(type === 'recreate');
 
             if (!this.option || type === 'recreate') {
-                initBase.call(this, baseOption);
+                initBase(this, baseOption);
             }
             else {
                 this.restoreData();
@@ -118,39 +131,40 @@ var GlobalModel = Model.extend({
 
         if (!type || type === 'recreate' || type === 'timeline') {
             var timelineOption = optionManager.getTimelineOption(this);
-            timelineOption && (this.mergeOption(timelineOption), optionChanged = true);
+            if (timelineOption) {
+                optionChanged = true;
+                this.mergeOption(timelineOption);
+            }
         }
 
         if (!type || type === 'recreate' || type === 'media') {
-            var mediaOptions = optionManager.getMediaOption(this, this._api);
+            var mediaOptions = optionManager.getMediaOption(this);
             if (mediaOptions.length) {
                 each(mediaOptions, function (mediaOption) {
-                    this.mergeOption(mediaOption, optionChanged = true);
+                    optionChanged = true;
+                    this.mergeOption(mediaOption);
                 }, this);
             }
         }
 
         return optionChanged;
-    },
+    }
 
-    /**
-     * @protected
-     */
-    mergeOption: function (newOption) {
+    mergeOption(newOption: ECUnitOption): void {
         var option = this.option;
         var componentsMap = this._componentsMap;
-        var newCptTypes = [];
+        var newCptTypes: ComponentMainType[] = [];
 
         resetSourceDefaulter(this);
 
         // If no component class, merge directly.
         // For example: color, animaiton options, etc.
-        each(newOption, function (componentOption, mainType) {
+        each(newOption, function (componentOption, mainType: ComponentMainType) {
             if (componentOption == null) {
                 return;
             }
 
-            if (!ComponentModel.hasClass(mainType)) {
+            if (!(ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
                 // globalSettingTask.dirty();
                 option[mainType] = option[mainType] == null
                     ? clone(componentOption)
@@ -161,11 +175,18 @@ var GlobalModel = Model.extend({
             }
         });
 
-        ComponentModel.topologicalTravel(
-            newCptTypes, ComponentModel.getAllClassMainTypes(), visitComponent, this
+        (ComponentModel as ComponentModelConstructor).topologicalTravel(
+            newCptTypes,
+            (ComponentModel as ComponentModelConstructor).getAllClassMainTypes(),
+            visitComponent,
+            this
         );
 
-        function visitComponent(mainType, dependencies) {
+        function visitComponent(
+            this: GlobalModel,
+            mainType: ComponentMainType,
+            dependencies: string | string[]
+        ): void {
 
             var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
@@ -176,7 +197,7 @@ var GlobalModel = Model.extend({
             modelUtil.makeIdAndName(mapResult);
 
             // Set mainType and complete subType.
-            each(mapResult, function (item, index) {
+            each(mapResult, function (item) {
                 var opt = item.option;
                 if (isObject(opt)) {
                     item.keyInfo.mainType = mainType;
@@ -208,7 +229,7 @@ var GlobalModel = Model.extend({
                     componentModel.optionUpdated({}, false);
                 }
                 else {
-                    var ComponentModelClass = ComponentModel.getClass(
+                    var ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
                         mainType, resultItem.keyInfo.subType, true
                     );
 
@@ -231,7 +252,7 @@ var GlobalModel = Model.extend({
                             newCptOption, this, this, extraOpt
                         );
                         extend(componentModel, extraOpt);
-                        componentModel.init(newCptOption, this, this, extraOpt);
+                        componentModel.init(newCptOption, this, this);
 
                         // Call optionUpdated after init.
                         // newCptOption has been used as componentModel.option
@@ -251,22 +272,20 @@ var GlobalModel = Model.extend({
             }
         }
 
-        this._seriesIndicesMap = createHashMap(
+        this._seriesIndicesMap = createHashMap<number>(
             this._seriesIndices = this._seriesIndices || []
         );
-    },
+    }
 
     /**
      * Get option for output (cloned option and inner info removed)
-     * @public
-     * @return {Object}
      */
-    getOption: function () {
+    getOption(): ECUnitOption {
         var option = clone(this.option);
 
         each(option, function (opts, mainType) {
-            if (ComponentModel.hasClass(mainType)) {
-                var opts = modelUtil.normalizeToArray(opts);
+            if ((ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
+                opts = modelUtil.normalizeToArray(opts);
                 for (var i = opts.length - 1; i >= 0; i--) {
                     // Remove options with inner id.
                     if (modelUtil.isIdInner(opts[i])) {
@@ -280,38 +299,23 @@ var GlobalModel = Model.extend({
         delete option[OPTION_INNER_KEY];
 
         return option;
-    },
+    }
 
-    /**
-     * @return {module:echarts/model/Model}
-     */
-    getTheme: function () {
+    getTheme(): Model {
         return this._theme;
-    },
+    }
 
     /**
-     * @param {string} mainType
-     * @param {number} [idx=0]
-     * @return {module:echarts/model/Component}
+     * @param idx 0 by default
      */
-    getComponent: function (mainType, idx) {
+    getComponent(mainType: string, idx?: number): ComponentModel {
         var list = this._componentsMap.get(mainType);
         if (list) {
             return list[idx || 0];
         }
-    },
+    }
 
-    /**
-     * If none of index and id and name used, return all components with mainType.
-     * @param {Object} condition
-     * @param {string} condition.mainType
-     * @param {string} [condition.subType] If ignore, only query by mainType
-     * @param {number|Array.<number>} [condition.index] Either input index or id or name.
-     * @param {string|Array.<string>} [condition.id] Either input index or id or name.
-     * @param {string|Array.<string>} [condition.name] Either input index or id or name.
-     * @return {Array.<module:echarts/model/Component>}
-     */
-    queryComponents: function (condition) {
+    queryComponents(condition: QueryConditionKindB): ComponentModel[] {
         var mainType = condition.mainType;
         if (!mainType) {
             return [];
@@ -342,14 +346,14 @@ var GlobalModel = Model.extend({
         else if (id != null) {
             var isIdArray = isArray(id);
             result = filter(cpts, function (cpt) {
-                return (isIdArray && indexOf(id, cpt.id) >= 0)
+                return (isIdArray && indexOf(id as string[], cpt.id) >= 0)
                     || (!isIdArray && cpt.id === id);
             });
         }
         else if (name != null) {
             var isNameArray = isArray(name);
             result = filter(cpts, function (cpt) {
-                return (isNameArray && indexOf(name, cpt.name) >= 0)
+                return (isNameArray && indexOf(name as string[], cpt.name) >= 0)
                     || (!isNameArray && cpt.name === name);
             });
         }
@@ -359,7 +363,7 @@ var GlobalModel = Model.extend({
         }
 
         return filterBySubType(result, condition);
-    },
+    }
 
     /**
      * The interface is different from queryComponents,
@@ -377,19 +381,8 @@ var GlobalModel = Model.extend({
      *     filter: function (model, index) {...}}
      * );
      * // result like [component0, componnet1, ...]
-     *
-     * @param {Object} condition
-     * @param {string} condition.mainType Mandatory.
-     * @param {string} [condition.subType] Optional.
-     * @param {Object} [condition.query] like {xxxIndex, xxxId, xxxName},
-     *        where xxx is mainType.
-     *        If query attribute is null/undefined or has no index/id/name,
-     *        do not filtering by query conditions, which is convenient for
-     *        no-payload situations or when target of action is global.
-     * @param {Function} [condition.filter] parameter: component, return boolean.
-     * @return {Array.<module:echarts/model/Component>}
      */
-    findComponents: function (condition) {
+    findComponents(condition: QueryConditionKindA): ComponentModel[] {
         var query = condition.query;
         var mainType = condition.mainType;
 
@@ -400,7 +393,7 @@ var GlobalModel = Model.extend({
 
         return doFilter(filterBySubType(result, condition));
 
-        function getQueryCond(q) {
+        function getQueryCond(q: QueryConditionKindA['query']): QueryConditionKindB {
             var indexAttr = mainType + 'Index';
             var idAttr = mainType + 'Id';
             var nameAttr = mainType + 'Name';
@@ -412,19 +405,19 @@ var GlobalModel = Model.extend({
                 ? {
                     mainType: mainType,
                     // subType will be filtered finally.
-                    index: q[indexAttr],
-                    id: q[idAttr],
-                    name: q[nameAttr]
+                    index: q[indexAttr] as (number | number[]),
+                    id: q[idAttr] as (string | string[]),
+                    name: q[nameAttr] as (string | string[])
                 }
                 : null;
         }
 
-        function doFilter(res) {
+        function doFilter(res: ComponentModel[]) {
             return condition.filter
                     ? filter(res, condition.filter)
                     : res;
         }
-    },
+    }
 
     /**
      * @usage
@@ -443,94 +436,90 @@ var GlobalModel = Model.extend({
      *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
      *     function (model, index) {...}
      * );
-     *
-     * @param {string|Object=} mainType When mainType is object, the definition
-     *                                  is the same as the method 'findComponents'.
-     * @param {Function} cb
-     * @param {*} context
      */
-    eachComponent: function (mainType, cb, context) {
+    eachComponent<T>(
+        cb: EachComponentAllCallback,
+        context?: T
+    ): void
+    eachComponent<T>(
+        mainType: string,
+        cb: EachComponentInMainTypeCallback,
+        context?: T
+    ): void
+    eachComponent<T>(
+        mainType: QueryConditionKindA,
+        cb: EachComponentInMainTypeCallback,
+        context?: T
+    ): void
+    eachComponent<T>(
+        mainType: string | QueryConditionKindA | EachComponentAllCallback,
+        cb?: EachComponentInMainTypeCallback | T,
+        context?: T
+    ) {
         var componentsMap = this._componentsMap;
 
         if (typeof mainType === 'function') {
-            context = cb;
-            cb = mainType;
+            var contextReal = cb as T;
+            var cbReal = mainType as EachComponentAllCallback;
             componentsMap.each(function (components, componentType) {
                 each(components, function (component, index) {
-                    cb.call(context, componentType, component, index);
+                    cbReal.call(contextReal, componentType, component, index);
                 });
             });
         }
         else if (isString(mainType)) {
-            each(componentsMap.get(mainType), cb, context);
+            each(componentsMap.get(mainType), cb as EachComponentInMainTypeCallback, context);
         }
         else if (isObject(mainType)) {
             var queryResult = this.findComponents(mainType);
-            each(queryResult, cb, context);
+            each(queryResult, cb as EachComponentInMainTypeCallback, context);
         }
-    },
+    }
 
-    /**
-     * @param {string} name
-     * @return {Array.<module:echarts/model/Series>}
-     */
-    getSeriesByName: function (name) {
-        var series = this._componentsMap.get('series');
+    getSeriesByName(name: string): SeriesModel[] {
+        var series = this._componentsMap.get('series') as SeriesModel[];
         return filter(series, function (oneSeries) {
             return oneSeries.name === name;
         });
-    },
+    }
 
-    /**
-     * @param {number} seriesIndex
-     * @return {module:echarts/model/Series}
-     */
-    getSeriesByIndex: function (seriesIndex) {
-        return this._componentsMap.get('series')[seriesIndex];
-    },
+    getSeriesByIndex(seriesIndex: number): SeriesModel {
+        return this._componentsMap.get('series')[seriesIndex] as SeriesModel;
+    }
 
     /**
      * Get series list before filtered by type.
      * FIXME: rename to getRawSeriesByType?
-     *
-     * @param {string} subType
-     * @return {Array.<module:echarts/model/Series>}
      */
-    getSeriesByType: function (subType) {
-        var series = this._componentsMap.get('series');
+    getSeriesByType(subType: ComponentSubType): SeriesModel[] {
+        var series = this._componentsMap.get('series') as SeriesModel[];
         return filter(series, function (oneSeries) {
             return oneSeries.subType === subType;
         });
-    },
+    }
 
-    /**
-     * @return {Array.<module:echarts/model/Series>}
-     */
-    getSeries: function () {
-        return this._componentsMap.get('series').slice();
-    },
+    getSeries(): SeriesModel[] {
+        return this._componentsMap.get('series').slice() as SeriesModel[];
+    }
 
-    /**
-     * @return {number}
-     */
-    getSeriesCount: function () {
+    getSeriesCount(): number {
         return this._componentsMap.get('series').length;
-    },
+    }
 
     /**
      * After filtering, series may be different
      * frome raw series.
-     *
-     * @param {Function} cb
-     * @param {*} context
      */
-    eachSeries: function (cb, context) {
+    eachSeries<T>(
+        cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
+        context?: T
+    ): void {
         assertSeriesInitialized(this);
         each(this._seriesIndices, function (rawSeriesIndex) {
-            var series = this._componentsMap.get('series')[rawSeriesIndex];
+            var series = this._componentsMap.get('series')[rawSeriesIndex] as SeriesModel;
             cb.call(context, series, rawSeriesIndex);
         }, this);
-    },
+    }
 
     /**
      * Iterate raw series before filtered.
@@ -538,91 +527,178 @@ var GlobalModel = Model.extend({
      * @param {Function} cb
      * @param {*} context
      */
-    eachRawSeries: function (cb, context) {
+    eachRawSeries<T>(
+        cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
+        context?: T
+    ): void {
         each(this._componentsMap.get('series'), cb, context);
-    },
+    }
 
     /**
      * After filtering, series may be different.
      * frome raw series.
-     *
-     * @param {string} subType.
-     * @param {Function} cb
-     * @param {*} context
      */
-    eachSeriesByType: function (subType, cb, context) {
+    eachSeriesByType<T>(
+        subType: ComponentSubType,
+        cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
+        context?: T
+    ): void {
         assertSeriesInitialized(this);
         each(this._seriesIndices, function (rawSeriesIndex) {
-            var series = this._componentsMap.get('series')[rawSeriesIndex];
+            var series = this._componentsMap.get('series')[rawSeriesIndex] as SeriesModel;
             if (series.subType === subType) {
                 cb.call(context, series, rawSeriesIndex);
             }
         }, this);
-    },
+    }
 
     /**
      * Iterate raw series before filtered of given type.
-     *
-     * @parma {string} subType
-     * @param {Function} cb
-     * @param {*} context
      */
-    eachRawSeriesByType: function (subType, cb, context) {
+    eachRawSeriesByType<T>(
+        subType: ComponentSubType,
+        cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
+        context?: T
+    ): void {
         return each(this.getSeriesByType(subType), cb, context);
-    },
+    }
 
-    /**
-     * @param {module:echarts/model/Series} seriesModel
-     */
-    isSeriesFiltered: function (seriesModel) {
+    isSeriesFiltered(seriesModel: SeriesModel): boolean {
         assertSeriesInitialized(this);
-        return this._seriesIndicesMap.get(seriesModel.componentIndex) == null;
-    },
+        return this._seriesIndicesMap.get(seriesModel.componentIndex + '') == null;
+    }
 
-    /**
-     * @return {Array.<number>}
-     */
-    getCurrentSeriesIndices: function () {
+    getCurrentSeriesIndices(): number[] {
         return (this._seriesIndices || []).slice();
-    },
+    }
 
-    /**
-     * @param {Function} cb
-     * @param {*} context
-     */
-    filterSeries: function (cb, context) {
+    filterSeries<T>(
+        cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => boolean,
+        context?: T
+    ): void {
         assertSeriesInitialized(this);
         var filteredSeries = filter(
-            this._componentsMap.get('series'), cb, context
+            this._componentsMap.get('series') as SeriesModel[], cb, context
         );
         createSeriesIndices(this, filteredSeries);
-    },
+    }
 
-    restoreData: function (payload) {
+    restoreData(payload?: Payload): void {
         var componentsMap = this._componentsMap;
 
         createSeriesIndices(this, componentsMap.get('series'));
 
-        var componentTypes = [];
+        var componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
             componentTypes.push(componentType);
         });
 
-        ComponentModel.topologicalTravel(
+        (ComponentModel as ComponentModelConstructor).topologicalTravel(
             componentTypes,
-            ComponentModel.getAllClassMainTypes(),
+            (ComponentModel as ComponentModelConstructor).getAllClassMainTypes(),
             function (componentType, dependencies) {
                 each(componentsMap.get(componentType), function (component) {
-                    (componentType !== 'series' || !isNotTargetSeries(component, payload))
+                    (componentType !== 'series' || !isNotTargetSeries(component as SeriesModel, payload))
                         && component.restoreData();
                 });
             }
         );
     }
 
-});
+    static internalField = (function () {
 
-function isNotTargetSeries(seriesModel, payload) {
+        createSeriesIndices = function (ecModel: GlobalModel, seriesModels: ComponentModel[]): void {
+            ecModel._seriesIndicesMap = createHashMap(
+                ecModel._seriesIndices = map(seriesModels, function (series) {
+                    return series.componentIndex;
+                }) || []
+            );
+        }
+
+        assertSeriesInitialized = function (ecModel: GlobalModel): void {
+            // Components that use _seriesIndices should depends on series component,
+            // which make sure that their initialization is after series.
+            if (__DEV__) {
+                if (!ecModel._seriesIndices) {
+                    throw new Error('Option should contains series.');
+                }
+            }
+        }
+
+        initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
+            baseOption = baseOption;
+
+            // Using OPTION_INNER_KEY to mark that this option can not be used outside,
+            // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
+            ecModel.option = {} as ECUnitOption;
+            ecModel.option[OPTION_INNER_KEY] = 1;
+
+            // Init with series: [], in case of calling findSeries method
+            // before series initialized.
+            ecModel._componentsMap = createHashMap({series: []});
+
+            mergeTheme(baseOption, ecModel._theme.option);
+
+            // TODO Needs clone when merging to the unexisted property
+            merge(baseOption, globalDefault, false);
+
+            ecModel.mergeOption(baseOption);
+        };
+
+    })()
+}
+
+// -----------------------
+// Internal method names:
+// -----------------------
+var createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
+var assertSeriesInitialized: (ecModel: GlobalModel) => void;
+var initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
+
+
+/**
+ * @param condition.mainType Mandatory.
+ * @param condition.subType Optional.
+ * @param condition.query like {xxxIndex, xxxId, xxxName},
+ *        where xxx is mainType.
+ *        If query attribute is null/undefined or has no index/id/name,
+ *        do not filtering by query conditions, which is convenient for
+ *        no-payload situations or when target of action is global.
+ * @param condition.filter parameter: component, return boolean.
+ */
+export interface QueryConditionKindA {
+    mainType: ComponentMainType;
+    subType?: ComponentSubType;
+    query?: {
+        [k: string]: number | number[] | string | string[]
+    };
+    filter?: (cmpt: ComponentModel) => boolean;
+}
+
+/**
+ * If none of index and id and name used, return all components with mainType.
+ * @param condition.mainType
+ * @param condition.subType If ignore, only query by mainType
+ * @param condition.index Either input index or id or name.
+ * @param condition.id Either input index or id or name.
+ * @param condition.name Either input index or id or name.
+ */
+export interface QueryConditionKindB {
+    mainType: ComponentMainType;
+    subType?: ComponentSubType;
+    index?: number | number[];
+    id?: string | string[];
+    name?: string | string[];
+}
+export interface EachComponentAllCallback {
+    (mainType: string, model: ComponentModel, index: number): void;
+}
+interface EachComponentInMainTypeCallback {
+    (model: ComponentModel, index: number): void;
+}
+
+
+function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean {
     if (payload) {
         var index = payload.seiresIndex;
         var id = payload.seriesId;
@@ -633,10 +709,7 @@ function isNotTargetSeries(seriesModel, payload) {
     }
 }
 
-/**
- * @inner
- */
-function mergeTheme(option, theme) {
+function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
     // PENDING
     // NOT use `colorLayer` in theme if option has `color`
     var notMergeColorLayer = option.color && !option.colorLayer;
@@ -646,7 +719,7 @@ function mergeTheme(option, theme) {
             return;
         }
         // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
-        if (!ComponentModel.hasClass(name)) {
+        if (!(ComponentModel as ComponentModelConstructor).hasClass(name)) {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
                     ? clone(themeItem)
@@ -661,51 +734,20 @@ function mergeTheme(option, theme) {
     });
 }
 
-function initBase(baseOption) {
-    baseOption = baseOption;
-
-    // Using OPTION_INNER_KEY to mark that this option can not be used outside,
-    // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
-    this.option = {};
-    this.option[OPTION_INNER_KEY] = 1;
-
-    /**
-     * Init with series: [], in case of calling findSeries method
-     * before series initialized.
-     * @type {Object.<string, Array.<module:echarts/model/Model>>}
-     * @private
-     */
-    this._componentsMap = createHashMap({series: []});
-
-    /**
-     * Mapping between filtered series list and raw series list.
-     * key: filtered series indices, value: raw series indices.
-     * @type {Array.<nubmer>}
-     * @private
-     */
-    this._seriesIndices;
-
-    this._seriesIndicesMap;
-
-    mergeTheme(baseOption, this._theme.option);
-
-    // TODO Needs clone when merging to the unexisted property
-    merge(baseOption, globalDefault, false);
-
-    this.mergeOption(baseOption);
-}
-
 /**
- * @inner
- * @param {Array.<string>|string} types model types
- * @return {Object} key: {string} type, value: {Array.<Object>} models
+ * @param types model types
  */
-function getComponentsByTypes(componentsMap, types) {
+function getComponentsByTypes(
+    componentsMap: HashMap<ComponentModel[]>,
+    types: string | string[]
+): {
+    [mainType: string]: ComponentModel[]
+} {
     if (!isArray(types)) {
         types = types ? [types] : [];
     }
 
-    var ret = {};
+    var ret: Dictionary<ComponentModel[]> = {};
     each(types, function (type) {
         ret[type] = (componentsMap.get(type) || []).slice();
     });
@@ -713,36 +755,26 @@ function getComponentsByTypes(componentsMap, types) {
     return ret;
 }
 
-/**
- * @inner
- */
-function determineSubType(mainType, newCptOption, existComponent) {
+function determineSubType(
+    mainType: ComponentMainType,
+    newCptOption: ComponentOption,
+    existComponent: {subType: ComponentSubType} | ComponentModel
+): ComponentSubType {
     var subType = newCptOption.type
         ? newCptOption.type
         : existComponent
         ? existComponent.subType
         // Use determineSubType only when there is no existComponent.
-        : ComponentModel.determineSubType(mainType, newCptOption);
+        : (ComponentModel as ComponentModelConstructor).determineSubType(mainType, newCptOption);
 
     // tooltip, markline, markpoint may always has no subType
     return subType;
 }
 
-/**
- * @inner
- */
-function createSeriesIndices(ecModel, seriesModels) {
-    ecModel._seriesIndicesMap = createHashMap(
-        ecModel._seriesIndices = map(seriesModels, function (series) {
-            return series.componentIndex;
-        }) || []
-    );
-}
-
-/**
- * @inner
- */
-function filterBySubType(components, condition) {
+function filterBySubType(
+    components: ComponentModel[],
+    condition: QueryConditionKindA | QueryConditionKindB
+): ComponentModel[] {
     // Using hasOwnProperty for restrict. Consider
     // subType is undefined in user payload.
     return condition.hasOwnProperty('subType')
@@ -752,19 +784,8 @@ function filterBySubType(components, condition) {
         : components;
 }
 
-/**
- * @inner
- */
-function assertSeriesInitialized(ecModel) {
-    // Components that use _seriesIndices should depends on series component,
-    // which make sure that their initialization is after series.
-    if (__DEV__) {
-        if (!ecModel._seriesIndices) {
-            throw new Error('Option should contains series.');
-        }
-    }
-}
 
-mixin(GlobalModel, colorPaletteMixin);
+interface GlobalModel extends ColorPaletteMixin {}
+tsMixin(GlobalModel, ColorPaletteMixin);
 
 export default GlobalModel;

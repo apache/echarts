@@ -18,20 +18,66 @@
 */
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import {getTooltipMarker, formatTpl} from '../../util/format';
+import {getTooltipMarker, formatTpl, TooltipMarker} from '../../util/format';
 import { getTooltipRenderMode } from '../../util/model';
+import { DataHost, DisplayStatus, DimensionName, TooltipRenderMode } from '../../util/types';
+import GlobalModel from '../Global';
+import Element from 'zrender/src/Element';
+import { DimensionUserOuputEncode } from '../../data/helper/dimensionHelper';
 
 var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
-// PENDING A little ugly
-export default {
+
+interface DataParams {
+    // component main type
+    componentType: string;
+    // component sub type
+    componentSubType: string;
+    componentIndex: number;
+    // series component sub type
+    seriesType?: string;
+    // series component index (the alias of `componentIndex` for series)
+    seriesIndex?: number;
+    seriesId?: string;
+    seriesName?: string;
+    name: string;
+    dataIndex: number;
+    data: any;
+    dataType?: string;
+    value: any;
+    color?: string;
+    borderColor?: string;
+    dimensionNames?: DimensionName[];
+    encode?: DimensionUserOuputEncode;
+    marker?: TooltipMarker;
+    status?: DisplayStatus;
+    dimensionIndex?: number;
+
+    // Param name list for mapping `a`, `b`, `c`, `d`, `e`
+    $vars: string[];
+}
+
+interface DataFormatMixin extends DataHost {
+    ecModel: GlobalModel;
+    mainType: string;
+    subType: string;
+    componentIndex: number;
+    id: string;
+    name: string;
+}
+
+class DataFormatMixin {
+
     /**
      * Get params for formatter
-     * @param {number} dataIndex
-     * @param {string} [dataType]
-     * @return {Object}
      */
-    getDataParams: function (dataIndex, dataType) {
+    getDataParams(
+        this: DataFormatMixin,
+        dataIndex: number,
+        dataType?: string,
+        el?: Element // May be used in override.
+    ): DataParams {
+
         var data = this.getData(dataType);
         var rawValue = this.getRawValue(dataIndex, dataType);
         var rawDataIndex = data.getRawIndex(dataIndex);
@@ -51,7 +97,7 @@ export default {
             componentSubType: this.subType,
             componentIndex: this.componentIndex,
             seriesType: isSeries ? this.subType : null,
-            seriesIndex: this.seriesIndex,
+            seriesIndex: (this as any).seriesIndex,
             seriesId: isSeries ? this.id : null,
             seriesName: isSeries ? this.name : null,
             name: name,
@@ -71,19 +117,26 @@ export default {
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']
         };
-    },
+    }
 
     /**
      * Format label
-     * @param {number} dataIndex
-     * @param {string} [status='normal'] 'normal' or 'emphasis'
-     * @param {string} [dataType]
-     * @param {number} [dimIndex] Only used in some chart that
+     * @param dataIndex
+     * @param status 'normal' by default
+     * @param dataType
+     * @param dimIndex Only used in some chart that
      *        use formatter in different dimensions, like radar.
-     * @param {string} [labelProp='label']
-     * @return {string} If not formatter, return null/undefined
+     * @param labelProp 'label' by default
+     * @return If not formatter, return null/undefined
      */
-    getFormattedLabel: function (dataIndex, status, dataType, dimIndex, labelProp) {
+    getFormattedLabel(
+        this: DataFormatMixin,
+        dataIndex: number,
+        status?: DisplayStatus,
+        dataType?: string,
+        dimIndex?: number,
+        labelProp?: string
+    ): string {
         status = status || 'normal';
         var data = this.getData(dataType);
         var itemModel = data.getItemModel(dataIndex);
@@ -117,7 +170,7 @@ export default {
                 return retrieveRawValue(data, dataIndex, dim);
             });
         }
-    },
+    }
 
     /**
      * Get raw value in option
@@ -125,18 +178,35 @@ export default {
      * @param {string} [dataType]
      * @return {Array|number|string}
      */
-    getRawValue: function (idx, dataType) {
+    getRawValue(
+        this: DataFormatMixin,
+        idx: number,
+        dataType?: string
+    ) {
         return retrieveRawValue(this.getData(dataType), idx);
-    },
+    }
 
     /**
      * Should be implemented.
      * @param {number} dataIndex
      * @param {boolean} [multipleSeries=false]
-     * @param {number} [dataType]
-     * @return {string} tooltip string
+     * @param {string} [dataType]
+     * @param {string} [renderMode='html'] valid values: 'html' and 'richText'.
+     *                                     'html' is used for rendering tooltip in extra DOM form, and the result
+     *                                     string is used as DOM HTML content.
+     *                                     'richText' is used for rendering tooltip in rich text form, for those where
+     *                                     DOM operation is not supported.
      */
-    formatTooltip: function () {
+    formatTooltip(
+        this: DataFormatMixin,
+        dataIndex: number,
+        multipleSeries?: boolean,
+        dataType?: string,
+        renderMode?: TooltipRenderMode
+    ): string | {html: string, markers: {[markName: string]: string}} {
         // Empty function
+        return;
     }
 };
+
+export default DataFormatMixin;

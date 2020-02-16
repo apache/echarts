@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * Simple view coordinate system
  * Mapping given x, y to transformd view x, y
@@ -26,7 +28,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as matrix from 'zrender/src/core/matrix';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import Transformable from 'zrender/src/mixin/Transformable';
+import Transformable from 'zrender/src/core/Transformable';
 
 var v2ApplyTransform = vector.applyTransform;
 

@@ -1,3 +1,5 @@
+import List from '../data/List';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -21,35 +23,48 @@
 /**
  * LegendVisualProvider is an bridge that pick encoded color from data and
  * provide to the legend component.
- * @param {Function} getDataWithEncodedVisual Function to get data after filtered. It stores all the encoding info
- * @param {Function} getRawData Function to get raw data before filtered.
  */
-function LegendVisualProvider(getDataWithEncodedVisual, getRawData) {
-    this.getAllNames = function () {
-        var rawData = getRawData();
+class LegendVisualProvider {
+
+    private _getDataWithEncodedVisual: () => List;
+    private _getRawData: () => List;
+
+    constructor(
+        // Function to get data after filtered. It stores all the encoding info
+        getDataWithEncodedVisual: () => List,
+        // Function to get raw data before filtered.
+        getRawData: () => List
+    ) {
+        this._getDataWithEncodedVisual = getDataWithEncodedVisual;
+        this._getRawData = getRawData;
+    }
+
+    getAllNames(): string[] {
+        var rawData = this._getRawData();
         // We find the name from the raw data. In case it's filtered by the legend component.
         // Normally, the name can be found in rawData, but can't be found in filtered data will display as gray.
         return rawData.mapArray(rawData.getName);
-    };
+    }
 
-    this.containName = function (name) {
-        var rawData = getRawData();
+    containName(name: string): boolean {
+        var rawData = this._getRawData();
         return rawData.indexOfName(name) >= 0;
-    };
+    }
 
-    this.indexOfName = function (name) {
+    indexOfName(name: string): number {
         // Only get data when necessary.
         // Because LegendVisualProvider constructor may be new in the stage that data is not prepared yet.
         // Invoking Series#getData immediately will throw an error.
-        var dataWithEncodedVisual = getDataWithEncodedVisual();
+        var dataWithEncodedVisual = this._getDataWithEncodedVisual();
         return dataWithEncodedVisual.indexOfName(name);
-    };
+    }
 
-    this.getItemVisual = function (dataIndex, key) {
+    getItemVisual(dataIndex: number, key: string): any {
         // Get encoded visual properties from final filtered data.
-        var dataWithEncodedVisual = getDataWithEncodedVisual();
+        var dataWithEncodedVisual = this._getDataWithEncodedVisual();
         return dataWithEncodedVisual.getItemVisual(dataIndex, key);
-    };
+    }
 }
 
 export default LegendVisualProvider;
+export type LegendVisualProviderType = typeof LegendVisualProvider;

@@ -18,10 +18,14 @@
 */
 
 import {makeInner, normalizeToArray} from '../../util/model';
+import Model from '../Model';
+import { ZRColor } from '../../util/types';
 
 var inner = makeInner();
 
-function getNearestColorPalette(colors, requestColorNum) {
+function getNearestColorPalette(
+    colors: ZRColor[][], requestColorNum: number
+): ZRColor[] {
     var paletteNum = colors.length;
     // TODO colors must be in order
     for (var i = 0; i < paletteNum; i++) {
@@ -32,20 +36,27 @@ function getNearestColorPalette(colors, requestColorNum) {
     return colors[paletteNum - 1];
 }
 
-export default {
-    clearColorPalette: function () {
+interface ColorPaletteMixin extends Model {}
+
+class ColorPaletteMixin {
+
+    clearColorPalette(this: ColorPaletteMixin) {
         inner(this).colorIdx = 0;
         inner(this).colorNameMap = {};
-    },
+    }
 
     /**
-     * @param {string} name MUST NOT be null/undefined. Otherwise call this function
-     *                 twise with the same parameters will get different result.
-     * @param {Object} [scope=this]
-     * @param {Object} [requestColorNum]
-     * @return {string} color string.
+     * @param name MUST NOT be null/undefined. Otherwise call this function
+     *             twise with the same parameters will get different result.
+     * @param scope default this.
+     * @return Can be null/undefined
      */
-    getColorFromPalette: function (name, scope, requestColorNum) {
+    getColorFromPalette(
+        this: ColorPaletteMixin,
+        name: string,
+        scope?: any,
+        requestColorNum?: number
+    ): ZRColor {
         scope = scope || this;
         var scopeFields = inner(scope);
         var colorIdx = scopeFields.colorIdx || 0;
@@ -75,3 +86,5 @@ export default {
         return color;
     }
 };
+
+export default ColorPaletteMixin

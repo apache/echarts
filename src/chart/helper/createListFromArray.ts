@@ -17,10 +17,11 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
-import {SOURCE_FORMAT_ORIGINAL} from '../../data/helper/sourceType';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
@@ -28,6 +29,7 @@ import {getCoordSysInfoBySeries} from '../../model/referHelper';
 import Source from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
+import { SOURCE_FORMAT_ORIGINAL } from '../../util/types';
 
 /**
  * @param {module:echarts/data/Source|Array} source Or raw data.
@@ -120,7 +122,7 @@ function createListFromArray(source, seriesModel, opt) {
     return list;
 }
 
-function isNeedCompleteOrdinalData(source) {
+function isNeedCompleteOrdinalData(source: Source) {
     if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
         var sampleItem = firstDataNotNull(source.data || []);
         return sampleItem != null

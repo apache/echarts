@@ -18,30 +18,33 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import OrdinalMeta from './OrdinalMeta';
+import { DataVisualDimensions, DimensionType } from '../util/types';
 
-/**
- * @class
- * @param {Object|DataDimensionInfo} [opt] All of the fields will be shallow copied.
- */
-function DataDimensionInfo(opt) {
-    if (opt != null) {
-        zrUtil.extend(this, opt);
-    }
+class DataDimensionInfo {
+
+    /**
+     * Dimension type. The enumerable values are the key of
+     * `dataCtors` of `data/List`.
+     * Optional.
+     */
+    type: DimensionType;
 
     /**
      * Dimension name.
      * Mandatory.
-     * @type {string}
      */
-    // this.name;
-
+    name: string;
     /**
      * The origin name in dimsDef, see source helper.
      * If displayName given, the tooltip will displayed vertically.
      * Optional.
-     * @type {string}
      */
-    // this.displayName;
+    displayName: string;
+
+    // FIXME: check whether it is still used.
+    // See Series.ts#formatArrayValue
+    tooltip?: boolean
 
     /**
      * Which coordSys dimension this dimension mapped to.
@@ -50,31 +53,20 @@ function DataDimensionInfo(opt) {
      * or an generated "extra coord name" if does not mapped to any "coordSysDim"
      * (That is determined by whether `isExtraCoord` is `true`).
      * Mandatory.
-     * @type {string}
      */
-    // this.coordDim;
+    coordDim: string;
 
     /**
      * The index of this dimension in `series.encode[coordDim]`.
      * Mandatory.
-     * @type {number}
      */
-    // this.coordDimIndex;
-
-    /**
-     * Dimension type. The enumerable values are the key of
-     * `dataCtors` of `data/List`.
-     * Optional.
-     * @type {string}
-     */
-    // this.type;
+    coordDimIndex: number;
 
     /**
      * This index of this dimension info in `data/List#_dimensionInfos`.
      * Mandatory after added to `data/List`.
-     * @type {number}
      */
-    // this.index;
+    index: number;
 
     /**
      * The format of `otherDims` is:
@@ -108,28 +100,34 @@ function DataDimensionInfo(opt) {
      * ```
      *
      * This prop should never be `null`/`undefined` after initialized.
-     * @type {Object}
      */
-    this.otherDims = {};
+    otherDims: DataVisualDimensions = {};
 
     /**
      * Be `true` if this dimension is not mapped to any "coordSysDim" that the
      * "coordSys" required.
      * Mandatory.
-     * @type {boolean}
      */
-    // this.isExtraCoord;
+    isExtraCoord: boolean;
 
-    /**
-     * @type {module:data/OrdinalMeta}
-     */
-    // this.ordinalMeta;
+    defaultTooltip: boolean;
+
+    ordinalMeta: OrdinalMeta;
 
     /**
      * Whether to create inverted indices.
-     * @type {boolean}
      */
-    // this.createInvertedIndices;
+    createInvertedIndices: boolean;
+
+    /**
+     * @param opt All of the fields will be shallow copied.
+     */
+    constructor(opt: object | DataDimensionInfo) {
+        if (opt != null) {
+            zrUtil.extend(this, opt);
+        }
+    }
+
 };
 
 export default DataDimensionInfo;

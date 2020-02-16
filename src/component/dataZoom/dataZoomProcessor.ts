@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as echarts from '../../echarts';
 import {createHashMap, each} from 'zrender/src/core/util';
 
@@ -40,7 +42,8 @@ echarts.registerProcessor({
         return seriesModelMap;
     },
 
-    modifyOutputEnd: true,
+    // FIXME:TS never used, so comment it
+    // modifyOutputEnd: true,
 
     // Consider appendData, where filter should be performed. Because data process is
     // in block mode currently, it is not need to worry about that the overallProgress

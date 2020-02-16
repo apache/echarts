@@ -19,6 +19,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
+import Component from '../model/Component';
+import GlobalModel, { QueryConditionKindB } from '../model/Global';
+import ComponentModel from '../model/Component';
+import List from '../data/List';
+import { Payload, ComponentOption, ComponentMainType, ComponentSubType, DisplayStatusHostOption, OptionDataItem, OptionDataPrimitive, TooltipRenderMode } from './types';
+import { Dictionary } from 'zrender/src/core/types';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -36,7 +42,7 @@ var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
  * @param  {*} value
  * @return {Array} [value] or value
  */
-export function normalizeToArray(value) {
+export function normalizeToArray<T>(value: T | T[]): T[] {
     return value instanceof Array
         ? value
         : value == null
@@ -55,11 +61,12 @@ export function normalizeToArray(value) {
  *     emphasis: {
  *          label: { show: true }
  *     }
- * @param {Object} opt
- * @param {string} key
- * @param {Array.<string>} subOpts
  */
-export function defaultEmphasis(opt, key, subOpts) {
+export function defaultEmphasis(
+    opt: DisplayStatusHostOption,
+    key: string,
+    subOpts: string[]
+): void {
     // Caution: performance sensitive.
     if (opt) {
         opt[key] = opt[key] || {};
@@ -98,24 +105,37 @@ export var TEXT_STYLE_OPTIONS = [
  * The method do not ensure performance.
  * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
  * This helper method retieves value from data.
- * @param {string|number|Date|Array|Object} dataItem
- * @return {number|string|Date|Array.<number|string|Date>}
  */
-export function getDataItemValue(dataItem) {
+export function getDataItemValue(
+    dataItem: OptionDataItem
+): OptionDataPrimitive | OptionDataPrimitive[] {
     return (isObject(dataItem) && !isArray(dataItem) && !(dataItem instanceof Date))
-        ? dataItem.value : dataItem;
+        ? (dataItem as Dictionary<OptionDataPrimitive>).value : dataItem;
 }
 
 /**
  * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
  * This helper method determine if dataItem has extra option besides value
- * @param {string|number|Date|Array|Object} dataItem
  */
-export function isDataItemOption(dataItem) {
+export function isDataItemOption(dataItem: OptionDataItem): boolean {
     return isObject(dataItem)
         && !(dataItem instanceof Array);
         // // markLine data can be array
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
+}
+
+type MappingExistItem = {id?: string, name?: string} | Component;
+interface MappingResultItem<T> {
+    exist?: T;
+    option?: ComponentOption;
+    id?: string;
+    name?: string;
+    keyInfo?: {
+        name?: string,
+        id?: string,
+        mainType?: ComponentMainType,
+        subType?: ComponentSubType
+    };
 }
 
 /**
@@ -123,11 +143,14 @@ export function isDataItemOption(dataItem) {
  *
  * @public
  * @param {Array.<Object>|Array.<module:echarts/model/Component>} exists
- * @param {Object|Array.<Object>} newCptOptions
+ * @param {Array.<Object>} newCptOptions
  * @return {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
  *                          index of which is the same as exists.
  */
-export function mappingToExists(exists, newCptOptions) {
+export function mappingToExists<T extends MappingExistItem>(
+    exists: T[],
+    newCptOptions: ComponentOption[]
+): MappingResultItem<T>[] {
     // Mapping by the order by original option (but not order of
     // new option) in merge mode. Because we should ensure
     // some specified index (like xAxisIndex) is consistent with
@@ -136,13 +159,13 @@ export function mappingToExists(exists, newCptOptions) {
     // update partial option but not be expected to change order.
     newCptOptions = (newCptOptions || []).slice();
 
-    var result = zrUtil.map(exists || [], function (obj, index) {
+    var result: MappingResultItem<T>[] = zrUtil.map(exists || [], function (obj, index) {
         return {exist: obj};
     });
 
     // Mapping by id or name if specified.
     each(newCptOptions, function (cptOption, index) {
-        if (!isObject(cptOption)) {
+        if (!isObject<ComponentOption>(cptOption)) {
             return;
         }
 
@@ -177,7 +200,7 @@ export function mappingToExists(exists, newCptOptions) {
 
     // Otherwise mapping by index.
     each(newCptOptions, function (cptOption, index) {
-        if (!isObject(cptOption)) {
+        if (!isObject<ComponentOption>(cptOption)) {
             return;
         }
 
@@ -213,13 +236,10 @@ export function mappingToExists(exists, newCptOptions) {
 /**
  * Make id and name for mapping result (result of mappingToExists)
  * into `keyInfo` field.
- *
- * @public
- * @param {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
- *                          which order is the same as exists.
- * @return {Array.<Object>} The input.
  */
-export function makeIdAndName(mapResult) {
+export function makeIdAndName(
+    mapResult: MappingResultItem<MappingExistItem>[]
+): void {
     // We use this id to hash component models and view instances
     // in echarts. id can be specified by user, or auto generated.
 
@@ -257,7 +277,7 @@ export function makeIdAndName(mapResult) {
         var opt = item.option;
         var keyInfo = item.keyInfo;
 
-        if (!isObject(opt)) {
+        if (!isObject<ComponentOption>(opt)) {
             return;
         }
 
@@ -296,7 +316,7 @@ export function makeIdAndName(mapResult) {
     });
 }
 
-export function isNameSpecified(componentModel) {
+export function isNameSpecified(componentModel: ComponentModel): boolean {
     var name = componentModel.name;
     // Is specified when `indexOf` get -1 or > 0.
     return !!(name && name.indexOf(DUMMY_COMPONENT_NAME_PREFIX));
@@ -307,30 +327,43 @@ export function isNameSpecified(componentModel) {
  * @param {Object} cptOption
  * @return {boolean}
  */
-export function isIdInner(cptOption) {
+export function isIdInner(cptOption: ComponentOption): boolean {
     return isObject(cptOption)
         && cptOption.id
         && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
 }
 
+type BatchItem = {
+    seriesId: number,
+    dataIndex: number[]
+};
 /**
  * A helper for removing duplicate items between batchA and batchB,
  * and in themselves, and categorize by series.
  *
- * @param {Array.<Object>} batchA Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
- * @param {Array.<Object>} batchB Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
- * @return {Array.<Array.<Object>, Array.<Object>>} result: [resultBatchA, resultBatchB]
+ * @param batchA Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
+ * @param batchB Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
+ * @return result: [resultBatchA, resultBatchB]
  */
-export function compressBatches(batchA, batchB) {
-    var mapA = {};
-    var mapB = {};
+export function compressBatches(
+    batchA: BatchItem[],
+    batchB: BatchItem[]
+): [BatchItem[], BatchItem[]] {
+
+    type InnerMap = {
+        [seriesId: string]: {
+            [dataIndex: string]: 1
+        }
+    };
+    var mapA = {} as InnerMap;
+    var mapB = {} as InnerMap;
 
     makeMap(batchA || [], mapA);
     makeMap(batchB || [], mapB, mapA);
 
     return [mapToArray(mapA), mapToArray(mapB)];
 
-    function makeMap(sourceBatch, map, otherMap) {
+    function makeMap(sourceBatch: BatchItem[], map: InnerMap, otherMap?: InnerMap): void {
         for (var i = 0, len = sourceBatch.length; i < len; i++) {
             var seriesId = sourceBatch[i].seriesId;
             var dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
@@ -349,7 +382,7 @@ export function compressBatches(batchA, batchB) {
         }
     }
 
-    function mapToArray(map, isData) {
+    function mapToArray(map: Dictionary<any>, isData?: boolean): any[] {
         var result = [];
         for (var i in map) {
             if (map.hasOwnProperty(i) && map[i] != null) {
@@ -367,12 +400,11 @@ export function compressBatches(batchA, batchB) {
 }
 
 /**
- * @param {module:echarts/data/List} data
- * @param {Object} payload Contains dataIndex (means rawIndex) / dataIndexInside / name
+ * @param payload Contains dataIndex (means rawIndex) / dataIndexInside / name
  *                         each of which can be Array or primary type.
- * @return {number|Array.<number>} dataIndex If not found, return undefined/null.
+ * @return dataIndex If not found, return undefined/null.
  */
-export function queryDataIndex(data, payload) {
+export function queryDataIndex(data: List, payload: Payload): number | number[] {
     if (payload.dataIndexInside != null) {
         return payload.dataIndexInside;
     }
@@ -415,11 +447,45 @@ export function queryDataIndex(data, payload) {
 export function makeInner() {
     // Consider different scope by es module import.
     var key = '__\0ec_inner_' + innerUniqueIndex++ + '_' + Math.random().toFixed(5);
-    return function (hostObj) {
+    return function (hostObj: any) {
         return hostObj[key] || (hostObj[key] = {});
     };
 }
 var innerUniqueIndex = 0;
+
+/**
+ * If string, e.g., 'geo', means {geoIndex: 0}.
+ * If Object, could contain some of these properties below:
+ * {
+ *     seriesIndex, seriesId, seriesName,
+ *     geoIndex, geoId, geoName,
+ *     bmapIndex, bmapId, bmapName,
+ *     xAxisIndex, xAxisId, xAxisName,
+ *     yAxisIndex, yAxisId, yAxisName,
+ *     gridIndex, gridId, gridName,
+ *     ... (can be extended)
+ * }
+ * Each properties can be number|string|Array.<number>|Array.<string>
+ * For example, a finder could be
+ * {
+ *     seriesIndex: 3,
+ *     geoId: ['aa', 'cc'],
+ *     gridName: ['xx', 'rr']
+ * }
+ * xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
+ * If nothing or null/undefined specified, return nothing.
+ */
+export type ModelFinder = string | ModelFinderObject;
+export type ModelFinderObject = {
+    seriesIndex?: number, seriesId?: string, seriesName?: string,
+    geoIndex?: number, geoId?: string, geoName?: string,
+    bmapIndex?: number, bmapId?: string, bmapName?: string,
+    xAxisIndex?: number, xAxisId?: string, xAxisName?: string,
+    yAxisIndex?: number, yAxisId?: string, yAxisName?: string,
+    gridIndex?: number, gridId?: string, gridName?: string,
+    // ... (can be extended)
+    [key: string]: any
+};
 
 /**
  * @param {module:echarts/model/Global} ecModel
@@ -444,10 +510,10 @@ var innerUniqueIndex = 0;
  *        }
  *        xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
  *        If nothing or null/undefined specified, return nothing.
- * @param {Object} [opt]
- * @param {string} [opt.defaultMainType]
- * @param {Array.<string>} [opt.includeMainTypes]
- * @return {Object} result like:
+ * @param [opt]
+ * @param [opt.defaultMainType]
+ * @param [opt.includeMainTypes]
+ * @return result like:
  *        {
  *            seriesModels: [seriesModel1, seriesModel2],
  *            seriesModel: seriesModel1, // The first model
@@ -456,11 +522,21 @@ var innerUniqueIndex = 0;
  *            ...
  *        }
  */
-export function parseFinder(ecModel, finder, opt) {
-    if (zrUtil.isString(finder)) {
+export function parseFinder(
+    ecModel: GlobalModel,
+    finderInput: ModelFinder,
+    opt?: {defaultMainType?: string, includeMainTypes?: string[]}
+): {
+    [key: string]: ComponentModel | ComponentModel[]
+} {
+    var finder: ModelFinderObject;
+    if (zrUtil.isString(finderInput)) {
         var obj = {};
-        obj[finder + 'Index'] = 0;
+        (obj as any)[finderInput + 'Index'] = 0;
         finder = obj;
+    }
+    else {
+        finder = finderInput;
     }
 
     var defaultMainType = opt && opt.defaultMainType;
@@ -472,7 +548,7 @@ export function parseFinder(ecModel, finder, opt) {
         finder[defaultMainType + 'Index'] = 0;
     }
 
-    var result = {};
+    var result = {} as Dictionary<ComponentModel | ComponentModel[]>;
 
     each(finder, function (value, key) {
         var value = finder[key];
@@ -485,7 +561,7 @@ export function parseFinder(ecModel, finder, opt) {
 
         var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
         var mainType = parsedKey[1];
-        var queryType = (parsedKey[2] || '').toLowerCase();
+        var queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
 
         if (!mainType
             || !queryType
@@ -496,7 +572,7 @@ export function parseFinder(ecModel, finder, opt) {
             return;
         }
 
-        var queryParam = {mainType: mainType};
+        var queryParam = {mainType: mainType} as QueryConditionKindB;
         if (queryType !== 'index' || value !== 'all') {
             queryParam[queryType] = value;
         }
@@ -509,23 +585,23 @@ export function parseFinder(ecModel, finder, opt) {
     return result;
 }
 
-function has(obj, prop) {
+function has(obj: object, prop: string): boolean {
     return obj && obj.hasOwnProperty(prop);
 }
 
-export function setAttribute(dom, key, value) {
+export function setAttribute(dom: HTMLElement, key: string, value: any) {
     dom.setAttribute
         ? dom.setAttribute(key, value)
-        : (dom[key] = value);
+        : ((dom as any)[key] = value);
 }
 
-export function getAttribute(dom, key) {
+export function getAttribute(dom: HTMLElement, key: string): any {
     return dom.getAttribute
         ? dom.getAttribute(key)
-        : dom[key];
+        : (dom as any)[key];
 }
 
-export function getTooltipRenderMode(renderModeOption) {
+export function getTooltipRenderMode(renderModeOption: TooltipRenderMode | 'auto'): TooltipRenderMode {
     if (renderModeOption === 'auto') {
         // Using html when `document` exists, use richText otherwise
         return env.domSupported ? 'html' : 'richText';
@@ -558,4 +634,9 @@ export function groupData(array, getKey) {
     });
 
     return {keys: keys, buckets: buckets};
+}
+
+export function mergeOption<T, K>(option1: T, option2: K): T & K {
+    // See also `model/Component.ts#getDefaultOption`
+    return zrUtil.merge(zrUtil.merge({}, option1, true), option2, true);
 }

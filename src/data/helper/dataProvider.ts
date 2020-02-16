@@ -23,290 +23,287 @@
 
 import {__DEV__} from '../../config';
 import {isTypedArray, extend, assert, each, isObject} from 'zrender/src/core/util';
-import {getDataItemValue, isDataItemOption} from '../../util/model';
-import {parseDate} from '../../util/number';
-import Source from '../Source';
+import {getDataItemValue} from '../../util/model';
+import Source, { SourceConstructor } from '../Source';
+import {ArrayLike, Dictionary} from 'zrender/src/core/types';
 import {
+    SOURCE_FORMAT_ORIGINAL,
+    SOURCE_FORMAT_OBJECT_ROWS,
+    SOURCE_FORMAT_KEYED_COLUMNS,
     SOURCE_FORMAT_TYPED_ARRAY,
     SOURCE_FORMAT_ARRAY_ROWS,
-    SOURCE_FORMAT_ORIGINAL,
-    SOURCE_FORMAT_OBJECT_ROWS
-} from './sourceType';
+    SERIES_LAYOUT_BY_COLUMN,
+    SERIES_LAYOUT_BY_ROW,
+    DimensionName, DimensionIndex, OptionSourceData,
+    DimensionIndexLoose, OptionDataItem, OptionDataPrimitive
+} from '../../util/types';
+import List from '../List';
+
+
+export interface DataProvider {
+    // If data is pure without style configuration
+    pure: boolean;
+    // If data is persistent and will not be released after use.
+    persistent: boolean;
+
+    getSource(): Source;
+    count(): number;
+    getItem(idx: number, out?: OptionDataItem): OptionDataItem;
+    appendData(newData: ArrayLike<OptionDataItem>): void;
+    clean(): void;
+}
 
 /**
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
  */
-export function DefaultDataProvider(source, dimSize) {
-    if (!Source.isInstance(source)) {
-        source = Source.seriesDataToSource(source);
-    }
-    this._source = source;
+export class DefaultDataProvider implements DataProvider {
 
-    var data = this._data = source.data;
-    var sourceFormat = source.sourceFormat;
+    private _source: Source;
 
-    // Typed array. TODO IE10+?
-    if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
-        if (__DEV__) {
-            if (dimSize == null) {
-                throw new Error('Typed array data must specify dimension size');
-            }
-        }
-        this._offset = 0;
-        this._dimSize = dimSize;
-        this._data = data;
-    }
+    private _data: OptionSourceData;
 
-    var methods = providerMethods[
-        sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
-        ? sourceFormat + '_' + source.seriesLayoutBy
-        : sourceFormat
-    ];
+    private _offset: number;
 
-    if (__DEV__) {
-        assert(methods, 'Invalide sourceFormat: ' + sourceFormat);
-    }
+    private _dimSize: number;
 
-    extend(this, methods);
-}
+    pure: boolean;
 
-var providerProto = DefaultDataProvider.prototype;
-// If data is pure without style configuration
-providerProto.pure = false;
-// If data is persistent and will not be released after use.
-providerProto.persistent = true;
+    persistent: boolean;
 
-// ???! FIXME legacy data provider do not has method getSource
-providerProto.getSource = function () {
-    return this._source;
-};
+    static protoInitialize = (function () {
+        // PENDING: To avoid potential incompat (e.g., prototype
+        // is visited somewhere), still init them on prototype.
+        var proto = DefaultDataProvider.prototype;
+        proto.pure = false;
+        proto.persistent = true;
+    })();
 
-var providerMethods = {
 
-    'arrayRows_column': {
-        pure: true,
-        count: function () {
-            return Math.max(0, this._data.length - this._source.startIndex);
-        },
-        getItem: function (idx) {
-            return this._data[idx + this._source.startIndex];
-        },
-        appendData: appendDataSimply
-    },
+    constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
+        // var source: Source;
+        var source: Source = !(Source as SourceConstructor).isInstance(sourceParam)
+            ? Source.seriesDataToSource(sourceParam as OptionSourceData)
+            : sourceParam as Source;
 
-    'arrayRows_row': {
-        pure: true,
-        count: function () {
-            var row = this._data[0];
-            return row ? Math.max(0, row.length - this._source.startIndex) : 0;
-        },
-        getItem: function (idx) {
-            idx += this._source.startIndex;
-            var item = [];
-            var data = this._data;
-            for (var i = 0; i < data.length; i++) {
-                var row = data[i];
-                item.push(row ? row[idx] : null);
-            }
-            return item;
-        },
-        appendData: function () {
-            throw new Error('Do not support appendData when set seriesLayoutBy: "row".');
-        }
-    },
+        // declare source is Source;
+        this._source = source;
 
-    'objectRows': {
-        pure: true,
-        count: countSimply,
-        getItem: getItemSimply,
-        appendData: appendDataSimply
-    },
+        var data = this._data = source.data;
+        var sourceFormat = source.sourceFormat;
 
-    'keyedColumns': {
-        pure: true,
-        count: function () {
-            var dimName = this._source.dimensionsDefine[0].name;
-            var col = this._data[dimName];
-            return col ? col.length : 0;
-        },
-        getItem: function (idx) {
-            var item = [];
-            var dims = this._source.dimensionsDefine;
-            for (var i = 0; i < dims.length; i++) {
-                var col = this._data[dims[i].name];
-                item.push(col ? col[idx] : null);
-            }
-            return item;
-        },
-        appendData: function (newData) {
-            var data = this._data;
-            each(newData, function (newCol, key) {
-                var oldCol = data[key] || (data[key] = []);
-                for (var i = 0; i < (newCol || []).length; i++) {
-                    oldCol.push(newCol[i]);
-                }
-            });
-        }
-    },
-
-    'original': {
-        count: countSimply,
-        getItem: getItemSimply,
-        appendData: appendDataSimply
-    },
-
-    'typedArray': {
-        persistent: false,
-        pure: true,
-        count: function () {
-            return this._data ? (this._data.length / this._dimSize) : 0;
-        },
-        getItem: function (idx, out) {
-            idx = idx - this._offset;
-            out = out || [];
-            var offset = this._dimSize * idx;
-            for (var i = 0; i < this._dimSize; i++) {
-                out[i] = this._data[offset + i];
-            }
-            return out;
-        },
-        appendData: function (newData) {
+        // Typed array. TODO IE10+?
+        if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
             if (__DEV__) {
-                assert(
-                    isTypedArray(newData),
-                    'Added data must be TypedArray if data in initialization is TypedArray'
-                );
+                if (dimSize == null) {
+                    throw new Error('Typed array data must specify dimension size');
+                }
             }
-
-            this._data = newData;
-        },
-
-        // Clean self if data is already used.
-        clean: function () {
-            // PENDING
-            this._offset += this.count();
-            this._data = null;
+            this._offset = 0;
+            this._dimSize = dimSize;
+            this._data = data;
         }
+
+        var methods = providerMethods[
+            sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
+            ? sourceFormat + '_' + source.seriesLayoutBy
+            : sourceFormat
+        ];
+
+        if (__DEV__) {
+            assert(methods, 'Invalide sourceFormat: ' + sourceFormat);
+        }
+
+        extend(this, methods);
     }
-};
 
-function countSimply() {
-    return this._data.length;
-}
-function getItemSimply(idx) {
-    return this._data[idx];
-}
-function appendDataSimply(newData) {
-    for (var i = 0; i < newData.length; i++) {
-        this._data.push(newData[i]);
+    getSource(): Source {
+        return this._source;
     }
+
+    count(): number {
+        return 0;
+    }
+
+    getItem(idx: number): OptionDataItem {
+        return;
+    }
+
+    appendData(newData: OptionSourceData): void {
+    }
+
+    clean(): void {
+    }
+
+    static internalField = (function () {
+
+        providerMethods = {
+
+            [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: {
+                pure: true,
+                count: function (this: DefaultDataProvider): number {
+                    return Math.max(0, (this._data as OptionDataItem[][]).length - this._source.startIndex);
+                },
+                getItem: function (this: DefaultDataProvider, idx: number): OptionDataPrimitive[] {
+                    return (this._data as OptionDataPrimitive[][])[idx + this._source.startIndex];
+                },
+                appendData: appendDataSimply
+            },
+
+            [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: {
+                pure: true,
+                count: function (this: DefaultDataProvider): number {
+                    var row = (this._data as OptionDataPrimitive[][])[0];
+                    return row ? Math.max(0, row.length - this._source.startIndex) : 0;
+                },
+                getItem: function (this: DefaultDataProvider, idx: number): OptionDataPrimitive[] {
+                    idx += this._source.startIndex;
+                    var item = [];
+                    var data = this._data as OptionDataPrimitive[][];
+                    for (var i = 0; i < data.length; i++) {
+                        var row = data[i];
+                        item.push(row ? row[idx] : null);
+                    }
+                    return item;
+                },
+                appendData: function () {
+                    throw new Error('Do not support appendData when set seriesLayoutBy: "row".');
+                }
+            },
+
+            [SOURCE_FORMAT_OBJECT_ROWS]: {
+                pure: true,
+                count: countSimply,
+                getItem: getItemSimply,
+                appendData: appendDataSimply
+            },
+
+            [SOURCE_FORMAT_KEYED_COLUMNS]: {
+                pure: true,
+                count: function (this: DefaultDataProvider): number {
+                    var dimName = this._source.dimensionsDefine[0].name;
+                    var col = (this._data as Dictionary<OptionDataPrimitive[]>)[dimName];
+                    return col ? col.length : 0;
+                },
+                getItem: function (this: DefaultDataProvider, idx: number): OptionDataPrimitive[] {
+                    var item = [];
+                    var dims = this._source.dimensionsDefine;
+                    for (var i = 0; i < dims.length; i++) {
+                        var col = (this._data as Dictionary<OptionDataPrimitive[]>)[dims[i].name];
+                        item.push(col ? col[idx] : null);
+                    }
+                    return item;
+                },
+                appendData: function (this: DefaultDataProvider, newData: OptionSourceData) {
+                    var data = this._data as Dictionary<OptionDataPrimitive[]>;
+                    each(newData, function (newCol, key) {
+                        var oldCol = data[key] || (data[key] = []);
+                        for (var i = 0; i < (newCol || []).length; i++) {
+                            oldCol.push(newCol[i]);
+                        }
+                    });
+                }
+            },
+
+            [SOURCE_FORMAT_ORIGINAL]: {
+                count: countSimply,
+                getItem: getItemSimply,
+                appendData: appendDataSimply
+            },
+
+            [SOURCE_FORMAT_TYPED_ARRAY]: {
+                persistent: false,
+                pure: true,
+                count: function (this: DefaultDataProvider): number {
+                    return this._data ? ((this._data as ArrayLike<number>).length / this._dimSize) : 0;
+                },
+                getItem: function (this: DefaultDataProvider, idx: number, out: ArrayLike<number>): ArrayLike<number> {
+                    idx = idx - this._offset;
+                    out = out || [];
+                    var offset = this._dimSize * idx;
+                    for (var i = 0; i < this._dimSize; i++) {
+                        out[i] = (this._data as ArrayLike<number>)[offset + i];
+                    }
+                    return out;
+                },
+                appendData: function (this: DefaultDataProvider, newData: ArrayLike<number>): void {
+                    if (__DEV__) {
+                        assert(
+                            isTypedArray(newData),
+                            'Added data must be TypedArray if data in initialization is TypedArray'
+                        );
+                    }
+
+                    this._data = newData;
+                },
+
+                // Clean self if data is already used.
+                clean: function (this: DefaultDataProvider): void {
+                    // PENDING
+                    this._offset += this.count();
+                    this._data = null;
+                }
+            }
+        };
+
+        function countSimply(this: DefaultDataProvider): number {
+            return (this._data as []).length;
+        }
+        function getItemSimply(this: DefaultDataProvider, idx: number): OptionDataItem {
+            return (this._data as [])[idx];
+        }
+        function appendDataSimply(this: DefaultDataProvider, newData: ArrayLike<OptionDataItem>): void {
+            for (var i = 0; i < newData.length; i++) {
+                (this._data as any[]).push(newData[i]);
+            }
+        }
+
+    })()
 }
 
+var providerMethods: Dictionary<any>;
 
+// TODO
+// merge it to dataProvider?
+type RawValueGetter = (
+    dataItem: OptionDataItem,
+    dataIndex: number,
+    dimIndex: DimensionIndex,
+    dimName: DimensionName
+    // If dimIndex not provided, return OptionDataItem.
+    // If dimIndex provided, return OptionDataPrimitive.
+) => OptionDataPrimitive | OptionDataItem;
 
-var rawValueGetters = {
+var rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
 
-    arrayRows: getRawValueSimply,
+    [SOURCE_FORMAT_ARRAY_ROWS]: getRawValueSimply,
 
-    objectRows: function (dataItem, dataIndex, dimIndex, dimName) {
+    [SOURCE_FORMAT_OBJECT_ROWS]: function (
+        dataItem: Dictionary<OptionDataPrimitive>, dataIndex: number, dimIndex: number, dimName: string
+    ): OptionDataPrimitive | Dictionary<OptionDataPrimitive> {
         return dimIndex != null ? dataItem[dimName] : dataItem;
     },
 
-    keyedColumns: getRawValueSimply,
+    [SOURCE_FORMAT_KEYED_COLUMNS]: getRawValueSimply,
 
-    original: function (dataItem, dataIndex, dimIndex, dimName) {
-        // FIXME
-        // In some case (markpoint in geo (geo-map.html)), dataItem
-        // is {coord: [...]}
+    [SOURCE_FORMAT_ORIGINAL]: function (
+        dataItem: OptionDataItem, dataIndex: number, dimIndex: number, dimName: string
+    ): OptionDataPrimitive | OptionDataItem {
+        // FIXME: In some case (markpoint in geo (geo-map.html)),
+        // dataItem is {coord: [...]}
         var value = getDataItemValue(dataItem);
         return (dimIndex == null || !(value instanceof Array))
             ? value
             : value[dimIndex];
     },
 
-    typedArray: getRawValueSimply
+    [SOURCE_FORMAT_TYPED_ARRAY]: getRawValueSimply
 };
 
-function getRawValueSimply(dataItem, dataIndex, dimIndex, dimName) {
+function getRawValueSimply(
+    dataItem: ArrayLike<OptionDataPrimitive>, dataIndex: number, dimIndex: number, dimName: string
+): OptionDataPrimitive | ArrayLike<OptionDataPrimitive> {
     return dimIndex != null ? dataItem[dimIndex] : dataItem;
-}
-
-
-export var defaultDimValueGetters = {
-
-    arrayRows: getDimValueSimply,
-
-    objectRows: function (dataItem, dimName, dataIndex, dimIndex) {
-        return converDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
-    },
-
-    keyedColumns: getDimValueSimply,
-
-    original: function (dataItem, dimName, dataIndex, dimIndex) {
-        // Performance sensitive, do not use modelUtil.getDataItemValue.
-        // If dataItem is an plain object with no value field, the var `value`
-        // will be assigned with the object, but it will be tread correctly
-        // in the `convertDataValue`.
-        var value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
-
-        // If any dataItem is like { value: 10 }
-        if (!this._rawData.pure && isDataItemOption(dataItem)) {
-            this.hasItemOption = true;
-        }
-        return converDataValue(
-            (value instanceof Array)
-                ? value[dimIndex]
-                // If value is a single number or something else not array.
-                : value,
-            this._dimensionInfos[dimName]
-        );
-    },
-
-    typedArray: function (dataItem, dimName, dataIndex, dimIndex) {
-        return dataItem[dimIndex];
-    }
-
-};
-
-function getDimValueSimply(dataItem, dimName, dataIndex, dimIndex) {
-    return converDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
-}
-
-/**
- * This helper method convert value in data.
- * @param {string|number|Date} value
- * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
- *        If "dimInfo.ordinalParseAndSave", ordinal value can be parsed.
- */
-function converDataValue(value, dimInfo) {
-    // Performance sensitive.
-    var dimType = dimInfo && dimInfo.type;
-    if (dimType === 'ordinal') {
-        // If given value is a category string
-        var ordinalMeta = dimInfo && dimInfo.ordinalMeta;
-        return ordinalMeta
-            ? ordinalMeta.parseAndCollect(value)
-            : value;
-    }
-
-    if (dimType === 'time'
-        // spead up when using timestamp
-        && typeof value !== 'number'
-        && value != null
-        && value !== '-'
-    ) {
-        value = +parseDate(value);
-    }
-
-    // dimType defaults 'number'.
-    // If dimType is not ordinal and value is null or undefined or NaN or '-',
-    // parse to NaN.
-    return (value == null || value === '')
-        ? NaN
-        // If string (like '-'), using '+' parse to NaN
-        // If object, also parse to NaN
-        : +value;
 }
 
 // ??? FIXME can these logic be more neat: getRawValue, getRawDataItem,
@@ -316,13 +313,9 @@ function converDataValue(value, dimInfo) {
 // how to format is expected. More over, if stack is used, calculated
 // value may be 0.91000000001, which have brings trouble to display.
 // TODO: consider how to treat null/undefined/NaN when display?
-/**
- * @param {module:echarts/data/List} data
- * @param {number} dataIndex
- * @param {string|number} [dim] dimName or dimIndex
- * @return {Array.<number>|string|number} can be null/undefined.
- */
-export function retrieveRawValue(data, dataIndex, dim) {
+export function retrieveRawValue(
+    data: List, dataIndex: number, dim?: DimensionName | DimensionIndexLoose
+): any {
     if (!data) {
         return;
     }
@@ -352,14 +345,14 @@ export function retrieveRawValue(data, dataIndex, dim) {
  * data: [{name: 'xx', value: 5, selected: true}, ...]
  * where only sourceFormat is 'original' and 'objectRows' supported.
  *
- * ??? TODO
+ * // TODO
  * Supported detail options in data item when using 'arrayRows'.
  *
- * @param {module:echarts/data/List} data
- * @param {number} dataIndex
- * @param {string} attr like 'selected'
+ * @param data
+ * @param dataIndex
+ * @param attr like 'selected'
  */
-export function retrieveRawAttr(data, dataIndex, attr) {
+export function retrieveRawAttr(data: List, dataIndex: number, attr: string): any {
     if (!data) {
         return;
     }
@@ -377,6 +370,6 @@ export function retrieveRawAttr(data, dataIndex, attr) {
         dataItem = null;
     }
     if (dataItem) {
-        return dataItem[attr];
+        return (dataItem as Dictionary<OptionDataPrimitive>)[attr];
     }
 }

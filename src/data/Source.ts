@@ -17,15 +17,17 @@
 * under the License.
 */
 
-import {createHashMap, isTypedArray} from 'zrender/src/core/util';
-import {enableClassCheck} from '../util/clazz';
+import {createHashMap, isTypedArray, HashMap} from 'zrender/src/core/util';
+import {enableClassCheck, CheckableConstructor} from '../util/clazz';
 import {
+    SourceFormat, SeriesLayoutBy, DimensionDefinition,
+    OptionEncodeValue, OptionSourceData, OptionEncode,
     SOURCE_FORMAT_ORIGINAL,
     SERIES_LAYOUT_BY_COLUMN,
     SOURCE_FORMAT_UNKNOWN,
-    SOURCE_FORMAT_TYPED_ARRAY,
-    SOURCE_FORMAT_KEYED_COLUMNS
-} from './helper/sourceType';
+    SOURCE_FORMAT_KEYED_COLUMNS,
+    SOURCE_FORMAT_TYPED_ARRAY
+} from '../util/types';
 
 /**
  * [sourceFormat]
@@ -63,87 +65,89 @@ import {
  * + "unknown"
  */
 
-/**
- * @constructor
- * @param {Object} fields
- * @param {string} fields.sourceFormat
- * @param {Array|Object} fields.fromDataset
- * @param {Array|Object} [fields.data]
- * @param {string} [seriesLayoutBy='column']
- * @param {Array.<Object|string>} [dimensionsDefine]
- * @param {Objet|HashMap} [encodeDefine]
- * @param {number} [startIndex=0]
- * @param {number} [dimensionsDetectCount]
- */
-function Source(fields) {
+class Source {
 
-    /**
-     * @type {boolean}
-     */
-    this.fromDataset = fields.fromDataset;
+    readonly fromDataset: boolean;
 
     /**
      * Not null/undefined.
      * @type {Array|Object}
      */
-    this.data = fields.data || (
-        fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []
-    );
+    readonly data: OptionSourceData;
 
     /**
      * See also "detectSourceFormat".
      * Not null/undefined.
-     * @type {string}
      */
-    this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+    readonly sourceFormat: SourceFormat;
 
     /**
      * 'row' or 'column'
      * Not null/undefined.
-     * @type {string} seriesLayoutBy
      */
-    this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
+    readonly seriesLayoutBy: SeriesLayoutBy;
 
     /**
      * dimensions definition in option.
      * can be null/undefined.
-     * @type {Array.<Object|string>}
      */
-    this.dimensionsDefine = fields.dimensionsDefine;
+    readonly dimensionsDefine: DimensionDefinition[];
 
     /**
      * encode definition in option.
      * can be null/undefined.
-     * @type {Objet|HashMap}
      */
-    this.encodeDefine = fields.encodeDefine && createHashMap(fields.encodeDefine);
+    readonly encodeDefine: HashMap<OptionEncodeValue>;
 
     /**
      * Not null/undefined, uint.
-     * @type {number}
      */
-    this.startIndex = fields.startIndex || 0;
+    readonly startIndex: number;
 
     /**
      * Can be null/undefined (when unknown), uint.
-     * @type {number}
      */
-    this.dimensionsDetectCount = fields.dimensionsDetectCount;
+    readonly dimensionsDetectCount: number;
+
+
+    constructor(fields: {
+        fromDataset: boolean,
+        data?: OptionSourceData,
+        sourceFormat?: SourceFormat, // default: SOURCE_FORMAT_UNKNOWN
+        seriesLayoutBy?: SeriesLayoutBy, // default: 'column'
+        dimensionsDefine?: DimensionDefinition[],
+        encodeDefine?: OptionEncode,
+        startIndex?: number, // default: 0
+        dimensionsDetectCount?: number
+    }) {
+
+        this.fromDataset = fields.fromDataset;
+        this.data = fields.data || (
+            fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []
+        );
+        this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+        this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
+        this.dimensionsDefine = fields.dimensionsDefine;
+        this.encodeDefine = fields.encodeDefine && createHashMap(fields.encodeDefine);
+        this.startIndex = fields.startIndex || 0;
+        this.dimensionsDetectCount = fields.dimensionsDetectCount;
+    }
+
+    /**
+     * Wrap original series data for some compatibility cases.
+     */
+    static seriesDataToSource(data: OptionSourceData): Source {
+        return new Source({
+            data: data,
+            sourceFormat: isTypedArray(data)
+                ? SOURCE_FORMAT_TYPED_ARRAY
+                : SOURCE_FORMAT_ORIGINAL,
+            fromDataset: false
+        });
+    };
 }
 
-/**
- * Wrap original series data for some compatibility cases.
- */
-Source.seriesDataToSource = function (data) {
-    return new Source({
-        data: data,
-        sourceFormat: isTypedArray(data)
-            ? SOURCE_FORMAT_TYPED_ARRAY
-            : SOURCE_FORMAT_ORIGINAL,
-        fromDataset: false
-    });
-};
-
-enableClassCheck(Source);
+export type SourceConstructor = typeof Source & CheckableConstructor;
+enableClassCheck(Source as SourceConstructor);
 
 export default Source;

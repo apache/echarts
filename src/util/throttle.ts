@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 
 var ORIGIN_METHOD = '\0__throttleOriginMethod';
 var RATE = '\0__throttleRate';
@@ -31,7 +33,7 @@ var THROTTLE_TYPE = '\0__throttleType';
  *        false: If call interval less than `delay, call works on fixed rate.
  * @return {(Function)} throttled fn.
  */
-export function throttle(fn, delay, debounce) {
+export function throttle(fn, delay?, debounce?) {
 
     var currCall;
     var lastCall = 0;

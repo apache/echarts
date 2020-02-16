@@ -17,13 +17,15 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import * as modelUtil from '../../util/model';
 import * as formatUtil from '../../util/format';
-import dataFormatMixin from '../../model/mixin/dataFormat';
+import DataFormatMixin from '../../model/mixin/dataFormat';
 
 var addCommas = formatUtil.addCommas;
 var encodeHTML = formatUtil.encodeHTML;
@@ -152,6 +154,6 @@ var MarkerModel = echarts.extendComponentModel({
     }
 });
 
-zrUtil.mixin(MarkerModel, dataFormatMixin);
+zrUtil.mixin(MarkerModel, DataFormatMixin.prototype);
 
 export default MarkerModel;

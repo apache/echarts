@@ -58,7 +58,7 @@ zrUtil.each(
         'extend', 'defaults', 'clone', 'merge'
     ],
     function (name) {
-        ecUtil[name] = zrUtil[name];
+        (ecUtil as any)[name] = (zrUtil as any)[name];
     }
 );
 export {ecUtil as util};
@@ -91,7 +91,7 @@ zrUtil.each(
         'BoundingRect'
     ],
     function (name) {
-        graphic[name] = graphicUtil[name];
+        (graphic as any)[name] = (graphicUtil as any)[name];
     }
 );
 export {graphic};

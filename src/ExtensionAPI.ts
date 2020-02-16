@@ -18,18 +18,44 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import {EChartsType} from './echarts';
+import {CoordinateSystem} from './coord/CoordinateSystem';
+import Element from 'zrender/src/Element';
+import ComponentModel from './model/Component';
 
-var echartsAPIList = [
-    'getDom', 'getZr', 'getWidth', 'getHeight', 'getDevicePixelRatio', 'dispatchAction', 'isDisposed',
-    'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption',
-    'getViewOfComponentModel', 'getViewOfSeriesModel'
-];
-// And `getCoordinateSystems` and `getComponentByElement` will be injected in echarts.js
+var availableMethods = {
+    getDom: 1,
+    getZr: 1,
+    getWidth: 1,
+    getHeight: 1,
+    getDevicePixelRatio: 1,
+    dispatchAction: 1,
+    isDisposed: 1,
+    on: 1,
+    off: 1,
+    getDataURL: 1,
+    getConnectedDataURL: 1,
+    getModel: 1,
+    getOption: 1,
+    getViewOfComponentModel: 1,
+    getViewOfSeriesModel: 1
+};
 
-function ExtensionAPI(chartInstance) {
-    zrUtil.each(echartsAPIList, function (name) {
-        this[name] = zrUtil.bind(chartInstance[name], chartInstance);
-    }, this);
+interface ExtensionAPI extends Pick<EChartsType, keyof typeof availableMethods> {}
+
+abstract class ExtensionAPI {
+
+    constructor(ecInstance: EChartsType) {
+        zrUtil.each(availableMethods, function (v, name: string) {
+            (this as any)[name] = zrUtil.bind((ecInstance as any)[name], ecInstance);
+        }, this);
+    }
+
+    // Implemented in echarts.js
+    abstract getCoordinateSystems(): CoordinateSystem[];
+
+    // Implemented in echarts.js
+    abstract getComponentByElement(el: Element): ComponentModel;
 }
 
 export default ExtensionAPI;

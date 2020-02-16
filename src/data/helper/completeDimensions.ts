@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * @deprecated
  * Use `echarts/data/helper/createDimensions` instead.
@@ -26,7 +28,7 @@ import {createHashMap, each, isString, defaults, extend, isObject, clone} from '
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal, BE_ORDINAL} from './sourceHelper';
 import Source from '../Source';
-import {OTHER_DIMENSIONS} from './dimensionHelper';
+import {VISUAL_DIMENSIONS} from '../../util/types';
 import DataDimensionInfo from '../DataDimensionInfo';
 
 /**
@@ -190,7 +192,7 @@ function completeDimensions(sysDims, source, opt) {
     });
 
     function applyDim(resultItem, coordDim, coordDimIndex) {
-        if (OTHER_DIMENSIONS.get(coordDim) != null) {
+        if (VISUAL_DIMENSIONS.get(coordDim) != null) {
             resultItem.otherDims[coordDim] = coordDimIndex;
         }
         else {

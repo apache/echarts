@@ -23,173 +23,184 @@ import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
 import * as graphicUtil from '../util/graphic';
-import {createTask} from '../stream/task';
+import {createTask, TaskResetCallbackReturn} from '../stream/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
+import SeriesModel from '../model/Series';
+import GlobalModel from '../model/Global';
+import ExtensionAPI from '../ExtensionAPI';
+import Element from 'zrender/src/Element';
+import {
+    Payload, ViewRootGroup, ECEvent, EventQueryItem,
+    StageHandlerPlanReturn, DisplayStatus, StageHandlerProgressParams
+} from '../util/types';
+import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
+import List from '../data/List';
 
 var inner = modelUtil.makeInner();
 var renderPlanner = createRenderPlanner();
 
-function Chart() {
 
-    /**
-     * @type {module:zrender/container/Group}
-     * @readOnly
-     */
-    this.group = new Group();
+class Chart {
 
-    /**
-     * @type {string}
-     * @readOnly
-     */
-    this.uid = componentUtil.getUID('viewChart');
+    // [Caution]: for compat the previous "class extend"
+    // publich and protected fields must be initialized on
+    // prototype rather than in constructor. Otherwise the
+    // subclass overrided filed will be overwritten by this
+    // class. That is, they should not be initialized here.
 
-    this.renderTask = createTask({
-        plan: renderTaskPlan,
-        reset: renderTaskReset
-    });
-    this.renderTask.context = {view: this};
-}
+    // @readonly
+    type: string;
 
-Chart.prototype = {
+    readonly group: ViewRootGroup;
 
-    type: 'chart',
+    readonly uid: string;
 
-    /**
-     * Init the chart.
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     */
-    init: function (ecModel, api) {},
+    readonly renderTask: SeriesTask;
 
-    /**
-     * Render the chart.
-     * @param  {module:echarts/model/Series} seriesModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @param  {Object} payload
-     */
-    render: function (seriesModel, ecModel, api, payload) {},
+    // ----------------------
+    // Injectable properties
+    // ----------------------
+    __alive: boolean;
+    __model: SeriesModel;
+    __id: string;
+
+    static protoInitialize = (function () {
+        var proto = Chart.prototype;
+        proto.type = 'chart';
+    })();
+
+
+    constructor() {
+        this.group = new Group();
+        this.uid = componentUtil.getUID('viewChart');
+
+        this.renderTask = createTask<SeriesTaskContext>({
+            plan: renderTaskPlan,
+            reset: renderTaskReset
+        });
+        this.renderTask.context = {view: this} as SeriesTaskContext;
+    }
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {}
+
+    render(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {}
 
     /**
      * Highlight series or specified data item.
-     * @param  {module:echarts/model/Series} seriesModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @param  {Object} payload
      */
-    highlight: function (seriesModel, ecModel, api, payload) {
+    highlight(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         toggleHighlight(seriesModel.getData(), payload, 'emphasis');
-    },
+    }
 
     /**
      * Downplay series or specified data item.
-     * @param  {module:echarts/model/Series} seriesModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @param  {Object} payload
      */
-    downplay: function (seriesModel, ecModel, api, payload) {
+    downplay(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         toggleHighlight(seriesModel.getData(), payload, 'normal');
-    },
+    }
 
     /**
      * Remove self.
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    remove: function (ecModel, api) {
+    remove(ecModel: GlobalModel, api: ExtensionAPI): void {
         this.group.removeAll();
-    },
+    }
 
     /**
      * Dispose self.
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    dispose: function () {},
+    dispose(ecModel: GlobalModel, api: ExtensionAPI): void {}
 
     /**
      * Rendering preparation in progressive mode.
-     * @param  {module:echarts/model/Series} seriesModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @param  {Object} payload
+     * Implement it if needed.
      */
-    incrementalPrepareRender: null,
+    incrementalPrepareRender: (
+        seriesModel: SeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) => void;
 
     /**
      * Render in progressive mode.
-     * @param  {Object} params See taskParams in `stream/task.js`
-     * @param  {module:echarts/model/Series} seriesModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @param  {Object} payload
+     * Implement it if needed.
+     * @param params See taskParams in `stream/task.js`
      */
-    incrementalRender: null,
+    incrementalRender: (
+        params: StageHandlerProgressParams,
+        seriesModel: SeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) => void;
 
     /**
      * Update transform directly.
-     * @param  {module:echarts/model/Series} seriesModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @param  {Object} payload
-     * @return {Object} {update: true}
+     * Implement it if needed.
      */
-    updateTransform: null,
+    updateTransform: (
+        seriesModel: SeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) => void | {update: true};
 
     /**
      * The view contains the given point.
-     * @interface
-     * @param {Array.<number>} point
-     * @return {boolean}
+     * Implement it if needed.
      */
-    // containPoint: function () {}
+    containPoint: (
+        point: number[], seriesModel: SeriesModel
+    ) => boolean;
 
     /**
-     * @param {string} eventType
-     * @param {Object} query
-     * @param {module:zrender/Element} targetEl
-     * @param {Object} packedEvent
-     * @return {boolen} Pass only when return `true`.
+     * Pass only when return `true`.
+     * Implement it if needed.
      */
-    filterForExposedEvent: null
+    filterForExposedEvent: (
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+    ) => boolean;
+
+    updateView(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        this.render(seriesModel, ecModel, api, payload);
+    }
+
+    // FIXME never used?
+    updateLayout(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        this.render(seriesModel, ecModel, api, payload);
+    }
+
+    // FIXME never used?
+    updateVisual(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        this.render(seriesModel, ecModel, api, payload);
+    }
+
+    static markUpdateMethod(payload: Payload, methodName: string): void {
+        inner(payload).updateMethod = methodName;
+    }
 
 };
 
-var chartProto = Chart.prototype;
-chartProto.updateView =
-chartProto.updateLayout =
-chartProto.updateVisual =
-    function (seriesModel, ecModel, api, payload) {
-        this.render(seriesModel, ecModel, api, payload);
-    };
 
 /**
  * Set state of single element
- * @param {module:zrender/Element} el
- * @param {string} state 'normal'|'emphasis'
- * @param {number} highlightDigit
  */
-function elSetState(el, state, highlightDigit) {
+function elSetState(el: Element, state: DisplayStatus, highlightDigit: number) {
     if (el) {
         el.trigger(state, highlightDigit);
         if (el.isGroup
             // Simple optimize.
             && !graphicUtil.isHighDownDispatcher(el)
         ) {
-            for (var i = 0, len = el.childCount(); i < len; i++) {
-                elSetState(el.childAt(i), state, highlightDigit);
+            for (var i = 0, len = (el as Group).childCount(); i < len; i++) {
+                elSetState((el as Group).childAt(i), state, highlightDigit);
             }
         }
     }
 }
 
-/**
- * @param {module:echarts/data/List} data
- * @param {Object} payload
- * @param {string} state 'normal'|'emphasis'
- */
-function toggleHighlight(data, payload, state) {
+function toggleHighlight(data: List, payload: Payload, state: DisplayStatus) {
     var dataIndex = modelUtil.queryDataIndex(data, payload);
 
     var highlightDigit = (payload && payload.highlightKey != null)
@@ -208,31 +219,29 @@ function toggleHighlight(data, payload, state) {
     }
 }
 
-// Enable Chart.extend.
-clazzUtil.enableClassExtend(Chart, ['dispose']);
+export type ChartViewConstructor = typeof Chart
+    & clazzUtil.ExtendableConstructor
+    & clazzUtil.ClassManager;
 
-// Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-clazzUtil.enableClassManagement(Chart, {registerWhenExtend: true});
+clazzUtil.enableClassExtend(Chart as ChartViewConstructor, ['dispose'])
+clazzUtil.enableClassManagement(Chart as ChartViewConstructor, {registerWhenExtend: true});
 
-Chart.markUpdateMethod = function (payload, methodName) {
-    inner(payload).updateMethod = methodName;
-};
 
-function renderTaskPlan(context) {
+function renderTaskPlan(context: SeriesTaskContext): StageHandlerPlanReturn {
     return renderPlanner(context.model);
 }
 
-function renderTaskReset(context) {
+function renderTaskReset(context: SeriesTaskContext): TaskResetCallbackReturn<SeriesTaskContext> {
     var seriesModel = context.model;
     var ecModel = context.ecModel;
     var api = context.api;
     var payload = context.payload;
-    // ???! remove updateView updateVisual
+    // FIXME: remove updateView updateVisual
     var progressiveRender = seriesModel.pipelineContext.progressiveRender;
     var view = context.view;
 
-    var updateMethod = payload && inner(payload).updateMethod;
-    var methodName = progressiveRender
+    var updateMethod: keyof Chart = payload && inner(payload).updateMethod;
+    var methodName: keyof Chart = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod
@@ -241,15 +250,15 @@ function renderTaskReset(context) {
         : 'render';
 
     if (methodName !== 'render') {
-        view[methodName](seriesModel, ecModel, api, payload);
+        (view[methodName] as any)(seriesModel, ecModel, api, payload);
     }
 
     return progressMethodMap[methodName];
 }
 
-var progressMethodMap = {
+var progressMethodMap: {[method: string]: TaskResetCallbackReturn<SeriesTaskContext>} = {
     incrementalPrepareRender: {
-        progress: function (params, context) {
+        progress: function (params: StageHandlerProgressParams, context: SeriesTaskContext): void {
             context.view.incrementalRender(
                 params, context.model, context.ecModel, context.api, context.payload
             );
@@ -261,7 +270,7 @@ var progressMethodMap = {
         // twise. Use `forceFirstProgress` to make sure that view.render is called
         // in any cases.
         forceFirstProgress: true,
-        progress: function (params, context) {
+        progress: function (params: StageHandlerProgressParams, context: SeriesTaskContext): void {
             context.view.render(
                 context.model, context.ecModel, context.api, context.payload
             );

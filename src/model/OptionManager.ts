@@ -19,14 +19,15 @@
 
 /**
  * ECharts option manager
- *
- * @module {echarts/model/OptionManager}
  */
 
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
-import ComponentModel from './Component';
+import ComponentModel, { ComponentModelConstructor } from './Component';
+import ExtensionAPI from '../ExtensionAPI';
+import { OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption } from '../util/types';
+import GlobalModel from './Global';
 
 var each = zrUtil.each;
 var clone = zrUtil.clone;
@@ -35,132 +36,54 @@ var merge = zrUtil.merge;
 
 var QUERY_REG = /^(min|max)?(.+)$/;
 
+interface ParsedRawOption {
+    baseOption: ECUnitOption;
+    timelineOptions: ECUnitOption[];
+    mediaDefault: MediaUnit;
+    mediaList: MediaUnit[];
+}
+
 /**
  * TERM EXPLANATIONS:
- *
- * [option]:
- *
- *     An object that contains definitions of components. For example:
- *     var option = {
- *         title: {...},
- *         legend: {...},
- *         visualMap: {...},
- *         series: [
- *             {data: [...]},
- *             {data: [...]},
- *             ...
- *         ]
- *     };
- *
- * [rawOption]:
- *
- *     An object input to echarts.setOption. 'rawOption' may be an
- *     'option', or may be an object contains multi-options. For example:
- *     var option = {
- *         baseOption: {
- *             title: {...},
- *             legend: {...},
- *             series: [
- *                 {data: [...]},
- *                 {data: [...]},
- *                 ...
- *             ]
- *         },
- *         timeline: {...},
- *         options: [
- *             {title: {...}, series: {data: [...]}},
- *             {title: {...}, series: {data: [...]}},
- *             ...
- *         ],
- *         media: [
- *             {
- *                 query: {maxWidth: 320},
- *                 option: {series: {x: 20}, visualMap: {show: false}}
- *             },
- *             {
- *                 query: {minWidth: 320, maxWidth: 720},
- *                 option: {series: {x: 500}, visualMap: {show: true}}
- *             },
- *             {
- *                 option: {series: {x: 1200}, visualMap: {show: true}}
- *             }
- *         ]
- *     };
- *
- * @alias module:echarts/model/OptionManager
- * @param {module:echarts/ExtensionAPI} api
+ * See `ECOption` and `ECUnitOption` in `src/util/types.ts`.
  */
-function OptionManager(api) {
+class OptionManager {
 
-    /**
-     * @private
-     * @type {module:echarts/ExtensionAPI}
-     */
-    this._api = api;
+    private _api: ExtensionAPI;
 
-    /**
-     * @private
-     * @type {Array.<number>}
-     */
-    this._timelineOptions = [];
+    private _timelineOptions: ECUnitOption[] = [];
 
-    /**
-     * @private
-     * @type {Array.<Object>}
-     */
-    this._mediaList = [];
+    private _mediaList: MediaUnit[] = [];
 
-    /**
-     * @private
-     * @type {Object}
-     */
-    this._mediaDefault;
+    private _mediaDefault: MediaUnit;
 
     /**
      * -1, means default.
      * empty means no media.
-     * @private
-     * @type {Array.<number>}
      */
-    this._currentMediaIndices = [];
+    private _currentMediaIndices: number[] = [];
 
-    /**
-     * @private
-     * @type {Object}
-     */
-    this._optionBackup;
+    private _optionBackup: ParsedRawOption;
 
-    /**
-     * @private
-     * @type {Object}
-     */
-    this._newBaseOption;
-}
+    private _newBaseOption: ECUnitOption;
 
-// timeline.notMerge is not supported in ec3. Firstly there is rearly
-// case that notMerge is needed. Secondly supporting 'notMerge' requires
-// rawOption cloned and backuped when timeline changed, which does no
-// good to performance. What's more, that both timeline and setOption
-// method supply 'notMerge' brings complex and some problems.
-// Consider this case:
-// (step1) chart.setOption({timeline: {notMerge: false}, ...}, false);
-// (step2) chart.setOption({timeline: {notMerge: true}, ...}, false);
+    // timeline.notMerge is not supported in ec3. Firstly there is rearly
+    // case that notMerge is needed. Secondly supporting 'notMerge' requires
+    // rawOption cloned and backuped when timeline changed, which does no
+    // good to performance. What's more, that both timeline and setOption
+    // method supply 'notMerge' brings complex and some problems.
+    // Consider this case:
+    // (step1) chart.setOption({timeline: {notMerge: false}, ...}, false);
+    // (step2) chart.setOption({timeline: {notMerge: true}, ...}, false);
 
-OptionManager.prototype = {
+    constructor(api: ExtensionAPI) {
+        this._api = api;
+    }
 
-    constructor: OptionManager,
-
-    /**
-     * @public
-     * @param {Object} rawOption Raw option.
-     * @param {module:echarts/model/Global} ecModel
-     * @param {Array.<Function>} optionPreprocessorFuncs
-     * @return {Object} Init option
-     */
-    setOption: function (rawOption, optionPreprocessorFuncs) {
+    setOption(rawOption: ECOption, optionPreprocessorFuncs: OptionPreprocessor[]): void {
         if (rawOption) {
             // That set dat primitive is dangerous if user reuse the data when setOption again.
-            zrUtil.each(modelUtil.normalizeToArray(rawOption.series), function (series) {
+            zrUtil.each(modelUtil.normalizeToArray((rawOption as ECUnitOption).series), function (series) {
                 series && series.data && zrUtil.isTypedArray(series.data) && zrUtil.setAsPrimitive(series.data);
             });
         }
@@ -171,11 +94,12 @@ OptionManager.prototype = {
         rawOption = clone(rawOption);
 
         // FIXME
-        // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
+        // If some property is set in timeline options or media option but
+        // not set in baseOption, a warning should be given.
 
         var oldOptionBackup = this._optionBackup;
-        var newParsedOption = parseRawOption.call(
-            this, rawOption, optionPreprocessorFuncs, !oldOptionBackup
+        var newParsedOption = parseRawOption(
+            rawOption, optionPreprocessorFuncs, !oldOptionBackup
         );
         this._newBaseOption = newParsedOption.baseOption;
 
@@ -200,17 +124,10 @@ OptionManager.prototype = {
         else {
             this._optionBackup = newParsedOption;
         }
-    },
+    }
 
-    /**
-     * @param {boolean} isRecreate
-     * @return {Object}
-     */
-    mountOption: function (isRecreate) {
+    mountOption(isRecreate: boolean): ECUnitOption {
         var optionBackup = this._optionBackup;
-
-        // TODO
-        // 如果没有reset功能则不clone。
 
         this._timelineOptions = map(optionBackup.timelineOptions, clone);
         this._mediaList = map(optionBackup.mediaList, clone);
@@ -225,13 +142,9 @@ OptionManager.prototype = {
             // performed by `model.mergeOption`.
             ? optionBackup.baseOption : this._newBaseOption
         );
-    },
+    }
 
-    /**
-     * @param {module:echarts/model/Global} ecModel
-     * @return {Object}
-     */
-    getTimelineOption: function (ecModel) {
+    getTimelineOption(ecModel: GlobalModel): ECUnitOption {
         var option;
         var timelineOptions = this._timelineOptions;
 
@@ -241,26 +154,22 @@ OptionManager.prototype = {
             var timelineModel = ecModel.getComponent('timeline');
             if (timelineModel) {
                 option = clone(
-                    timelineOptions[timelineModel.getCurrentIndex()],
-                    true
+                    // FIXME:TS as TimelineModel or quivlant interface
+                    timelineOptions[(timelineModel as any).getCurrentIndex()]
                 );
             }
         }
 
         return option;
-    },
+    }
 
-    /**
-     * @param {module:echarts/model/Global} ecModel
-     * @return {Array.<Object>}
-     */
-    getMediaOption: function (ecModel) {
+    getMediaOption(ecModel: GlobalModel): ECUnitOption[] {
         var ecWidth = this._api.getWidth();
         var ecHeight = this._api.getHeight();
         var mediaList = this._mediaList;
         var mediaDefault = this._mediaDefault;
         var indices = [];
-        var result = [];
+        var result: ECUnitOption[] = [];
 
         // No media defined.
         if (!mediaList.length && !mediaDefault) {
@@ -293,16 +202,21 @@ OptionManager.prototype = {
 
         return result;
     }
-};
 
-function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) {
+}
+
+function parseRawOption(
+    rawOption: ECOption,
+    optionPreprocessorFuncs: OptionPreprocessor[],
+    isNew: boolean
+): ParsedRawOption {
     var timelineOptions = [];
-    var mediaList = [];
-    var mediaDefault;
+    var mediaList: MediaUnit[] = [];
+    var mediaDefault: MediaUnit;
     var baseOption;
 
     // Compatible with ec2.
-    var timelineOpt = rawOption.timeline;
+    var timelineOpt = (rawOption as any).timeline;
 
     if (rawOption.baseOption) {
         baseOption = rawOption.baseOption;
@@ -367,7 +281,7 @@ function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) {
  * Support: width, height, aspectRatio
  * Can use max or min as prefix.
  */
-function applyMediaQuery(query, ecWidth, ecHeight) {
+function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): boolean {
     var realMap = {
         width: ecWidth,
         height: ecHeight,
@@ -386,7 +300,7 @@ function applyMediaQuery(query, ecWidth, ecHeight) {
         var operator = matched[1];
         var realAttr = matched[2].toLowerCase();
 
-        if (!compare(realMap[realAttr], value, operator)) {
+        if (!compare(realMap[realAttr as keyof typeof realMap], value, operator)) {
             applicatable = false;
         }
     });
@@ -394,7 +308,7 @@ function applyMediaQuery(query, ecWidth, ecHeight) {
     return applicatable;
 }
 
-function compare(real, expect, operator) {
+function compare(real: number, expect: number, operator: string): boolean {
     if (operator === 'min') {
         return real >= expect;
     }
@@ -406,7 +320,7 @@ function compare(real, expect, operator) {
     }
 }
 
-function indicesEquals(indices1, indices2) {
+function indicesEquals(indices1: number[], indices2: number[]): boolean {
     // indices is always order by asc and has only finite number.
     return indices1.join(',') === indices2.join(',');
 }
@@ -432,7 +346,7 @@ function indicesEquals(indices1, indices2) {
  *     (Too complex in logic and error-prone)
  * 2. Use a shadow ecModel. (Performace expensive)
  */
-function mergeOption(oldOption, newOption) {
+function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
     newOption = newOption || {};
 
     each(newOption, function (newCptOpt, mainType) {
@@ -442,7 +356,7 @@ function mergeOption(oldOption, newOption) {
 
         var oldCptOpt = oldOption[mainType];
 
-        if (!ComponentModel.hasClass(mainType)) {
+        if (!(ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
             oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
         }
         else {

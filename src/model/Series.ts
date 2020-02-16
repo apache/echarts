@@ -27,9 +27,14 @@ import {
     getTooltipMarker
 } from '../util/format';
 import * as modelUtil from '../util/model';
-import ComponentModel from './Component';
-import colorPaletteMixin from './mixin/colorPalette';
-import dataFormatMixin from '../model/mixin/dataFormat';
+import {
+    DataHost, DimensionName, StageHandlerProgressParams,
+    SeriesOption, ComponentLayoutMode, TooltipRenderMode, AxisValue, ZRColor
+} from '../util/types';
+import ComponentModel, { ComponentModelConstructor } from './Component';
+import ColorPaletteMixin from './mixin/colorPalette';
+import DataFormatMixin from '../model/mixin/dataFormat';
+import Model from '../model/Model';
 import {
     getLayoutParams,
     mergeLayoutParam
@@ -40,61 +45,66 @@ import {
     getSource
 } from '../data/helper/sourceHelper';
 import {retrieveRawValue} from '../data/helper/dataProvider';
+import GlobalModel from './Global';
+import { CoordinateSystem } from '../coord/CoordinateSystem';
+import { ExtendableConstructor, mountExtend } from '../util/clazz';
+import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
+import { LegendVisualProviderType } from '../visual/LegendVisualProvider';
+import List from '../data/List';
+import Source from '../data/Source';
 
 var inner = modelUtil.makeInner();
 
-var SeriesModel = ComponentModel.extend({
+class SeriesModel extends ComponentModel {
 
-    type: 'series.__base__',
+    // [Caution]: for compat the previous "class extend"
+    // publich and protected fields must be initialized on
+    // prototype rather than in constructor. Otherwise the
+    // subclass overrided filed will be overwritten by this
+    // class. That is, they should not be initialized here.
 
-    /**
-     * @readOnly
-     */
-    seriesIndex: 0,
+    // @readonly
+    type: string;
+
+    // @readonly
+    seriesIndex: number;
 
     // coodinateSystem will be injected in the echarts/CoordinateSystem
-    coordinateSystem: null,
+    coordinateSystem: CoordinateSystem;
 
-    /**
-     * @type {Object}
-     * @protected
-     */
-    defaultOption: null,
+    // Injected outside
+    dataTask: SeriesTask;
+    // Injected outside
+    pipelineContext: PipelineContext;
 
-    /**
-     * legend visual provider to the legend component
-     * @type {Object}
-     */
-    // PENDING
-    legendVisualProvider: null,
+    // legend visual provider to the legend component
+    legendVisualProvider: LegendVisualProviderType;
 
-    /**
-     * Access path of color for visual
-     */
-    visualColorAccessPath: 'itemStyle.color',
+    // Access path of color for visual
+    visualColorAccessPath: string;
 
-    /**
-     * Access path of borderColor for visual
-     */
-    visualBorderColorAccessPath: 'itemStyle.borderColor',
+    // Access path of borderColor for visual
+    visualBorderColorAccessPath: string;
 
-    /**
-     * Support merge layout params.
-     * Only support 'box' now (left/right/top/bottom/width/height).
-     * @type {string|Object} Object can be {ignoreSize: true}
-     * @readOnly
-     */
-    layoutMode: null,
+    // Support merge layout params.
+    readonly layoutMode: ComponentLayoutMode['type'] | ComponentLayoutMode;
 
-    init: function (option, parentModel, ecModel, extraOpt) {
+    readonly preventUsingHoverLayer: boolean;
 
-        /**
-         * @type {number}
-         * @readOnly
-         */
+    static protoInitialize = (function () {
+        var proto = SeriesModel.prototype;
+        proto.type = 'series.__base__';
+        proto.seriesIndex = 0;
+        proto.visualColorAccessPath = 'itemStyle.color';
+        proto.visualBorderColorAccessPath = 'itemStyle.borderColor';
+    })();
+
+
+    init(option: SeriesOption, parentModel: Model, ecModel: GlobalModel) {
+
         this.seriesIndex = this.componentIndex;
 
-        this.dataTask = createTask({
+        this.dataTask = createTask<SeriesTaskContext>({
             count: dataTaskCount,
             reset: dataTaskReset
         });
@@ -104,7 +114,6 @@ var SeriesModel = ComponentModel.extend({
 
         prepareSource(this);
 
-
         var data = this.getInitialData(option, ecModel);
         wrapData(data, this);
         this.dataTask.context.data = data;
@@ -113,10 +122,6 @@ var SeriesModel = ComponentModel.extend({
             zrUtil.assert(data, 'getInitialData returned invalid data.');
         }
 
-        /**
-         * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
-         * @private
-         */
         inner(this).dataBeforeProcessed = data;
 
         // If we reverse the order (make data firstly, and then make
@@ -132,14 +137,12 @@ var SeriesModel = ComponentModel.extend({
         // this.restoreData();
 
         autoSeriesName(this);
-    },
+    }
 
     /**
      * Util for merge default and theme to option
-     * @param  {Object} option
-     * @param  {module:echarts/model/Global} ecModel
      */
-    mergeDefaultAndTheme: function (option, ecModel) {
+    mergeDefaultAndTheme(option: SeriesOption, ecModel: GlobalModel): void {
         var layoutMode = this.layoutMode;
         var inputPositionParams = layoutMode
             ? getLayoutParams(option) : {};
@@ -149,7 +152,7 @@ var SeriesModel = ComponentModel.extend({
         // (for example: parallel) add component mainType,
         // add suffix 'Series'.
         var themeSubType = this.subType;
-        if (ComponentModel.hasClass(themeSubType)) {
+        if ((ComponentModel as ComponentModelConstructor).hasClass(themeSubType)) {
             themeSubType += 'Series';
         }
         zrUtil.merge(
@@ -166,9 +169,9 @@ var SeriesModel = ComponentModel.extend({
         if (layoutMode) {
             mergeLayoutParam(option, inputPositionParams, layoutMode);
         }
-    },
+    }
 
-    mergeOption: function (newSeriesOption, ecModel) {
+    mergeOption(newSeriesOption: SeriesOption, ecModel: GlobalModel) {
         // this.settingTask.dirty();
 
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
@@ -189,9 +192,9 @@ var SeriesModel = ComponentModel.extend({
         inner(this).dataBeforeProcessed = data;
 
         autoSeriesName(this);
-    },
+    }
 
-    fillDataTextStyle: function (data) {
+    fillDataTextStyle(data: ArrayLike<any>): void {
         // Default data label emphasis `show`
         // FIXME Tree structure data ?
         // FIXME Performance ?
@@ -203,36 +206,34 @@ var SeriesModel = ComponentModel.extend({
                 }
             }
         }
-    },
+    }
 
     /**
      * Init a data structure from data related option in series
-     * Must be overwritten
+     * Must be overriden.
      */
-    getInitialData: function () {},
+    getInitialData(option: SeriesOption, ecModel: GlobalModel): List {
+        return;
+    }
 
     /**
      * Append data to list
-     * @param {Object} params
-     * @param {Array|TypedArray} params.data
      */
-    appendData: function (params) {
+    appendData(params: {data: ArrayLike<any>}): void {
         // FIXME ???
         // (1) If data from dataset, forbidden append.
         // (2) support append data of dataset.
         var data = this.getRawData();
         data.appendData(params.data);
-    },
+    }
 
     /**
      * Consider some method like `filter`, `map` need make new data,
      * We should make sure that `seriesModel.getData()` get correct
      * data in the stream procedure. So we fetch data from upstream
      * each time `task.perform` called.
-     * @param {string} [dataType]
-     * @return {module:echarts/data/List}
      */
-    getData: function (dataType) {
+    getData(dataType?: string): List {
         var task = getCurrentTask(this);
         if (task) {
             var data = task.context.data;
@@ -245,19 +246,17 @@ var SeriesModel = ComponentModel.extend({
             // elements want to know whether fade out.
             return inner(this).data;
         }
-    },
+    }
 
-    /**
-     * @param {module:echarts/data/List} data
-     */
-    setData: function (data) {
+    setData(data: List): void {
         var task = getCurrentTask(this);
         if (task) {
             var context = task.context;
             // Consider case: filter, data sample.
-            if (context.data !== data && task.modifyOutputEnd) {
-                task.setOutputEnd(data.count());
-            }
+            // FIXME:TS never used, so comment it
+            // if (context.data !== data && task.modifyOutputEnd) {
+            //     task.setOutputEnd(data.count());
+            // }
             context.outputData = data;
             // Caution: setData should update context.data,
             // Because getData may be called multiply in a
@@ -272,23 +271,21 @@ var SeriesModel = ComponentModel.extend({
             }
         }
         inner(this).data = data;
-    },
+    }
 
     /**
-     * @see {module:echarts/data/helper/sourceHelper#getSource}
      * @return {module:echarts/data/Source} source
      */
-    getSource: function () {
+    getSource(): Source {
         return getSource(this);
-    },
+    }
 
     /**
      * Get data before processed
-     * @return {module:echarts/data/List}
      */
-    getRawData: function () {
+    getRawData(): List {
         return inner(this).dataBeforeProcessed;
-    },
+    }
 
     /**
      * Get base axis if has coordinate system and has axis.
@@ -296,43 +293,52 @@ var SeriesModel = ComponentModel.extend({
      * Can be overrided for some chart.
      * @return {type} description
      */
-    getBaseAxis: function () {
+    getBaseAxis() { // FIXME:TS type ?
         var coordSys = this.coordinateSystem;
+        // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
-    },
+    }
 
     // FIXME
     /**
      * Default tooltip formatter
      *
-     * @param {number} dataIndex
-     * @param {boolean} [multipleSeries=false]
-     * @param {number} [dataType]
-     * @param {string} [renderMode='html'] valid values: 'html' and 'richText'.
-     *                                     'html' is used for rendering tooltip in extra DOM form, and the result
-     *                                     string is used as DOM HTML content.
-     *                                     'richText' is used for rendering tooltip in rich text form, for those where
-     *                                     DOM operation is not supported.
-     * @return {Object} formatted tooltip with `html` and `markers`
+     * @param dataIndex
+     * @param multipleSeries
+     * @param dataType
+     * @param renderMode valid values: 'html'(by default) and 'richText'.
+     *        'html' is used for rendering tooltip in extra DOM form, and the result
+     *        string is used as DOM HTML content.
+     *        'richText' is used for rendering tooltip in rich text form, for those where
+     *        DOM operation is not supported.
+     * @return formatted tooltip with `html` and `markers`
      */
-    formatTooltip: function (dataIndex, multipleSeries, dataType, renderMode) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries?: boolean,
+        dataType?: string,
+        renderMode?: TooltipRenderMode
+    ): {
+        html: string,
+        markers: {[markName: string]: string}
+    } {
 
         var series = this;
         renderMode = renderMode || 'html';
         var newLine = renderMode === 'html' ? '<br/>' : '\n';
         var isRichText = renderMode === 'richText';
-        var markers = {};
+        var markers: {[markName: string]: string} = {};
         var markerId = 0;
 
-        function formatArrayValue(value) {
+        function formatArrayValue(value: any[]) {
             // ??? TODO refactor these logic.
             // check: category-no-encode-has-axis-data in dataset.html
             var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
                 var dimItem = data.getDimensionInfo(idx);
-                return vertially |= dimItem && dimItem.tooltip !== false && dimItem.displayName != null;
+                return vertially |= (dimItem && dimItem.tooltip !== false && dimItem.displayName != null) as any;
             }, 0);
 
-            var result = [];
+            var result: string[] = [];
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dim) {
@@ -341,7 +347,7 @@ var SeriesModel = ComponentModel.extend({
                 // By default, all dims is used on tooltip.
                 : zrUtil.each(value, setEachItem);
 
-            function setEachItem(val, dim) {
+            function setEachItem(val: any, dim: DimensionName | number): void {
                 var dimInfo = data.getDimensionInfo(dim);
                 // If `dimInfo.tooltip` is not set, show tooltip.
                 if (!dimInfo || dimInfo.otherDims.tooltip === false) {
@@ -385,7 +391,7 @@ var SeriesModel = ComponentModel.extend({
             };
         }
 
-        function formatSingleValue(val) {
+        function formatSingleValue(val: any) {
             // return encodeHTML(addCommas(val));
             return {
                 renderMode: renderMode,
@@ -447,12 +453,12 @@ var SeriesModel = ComponentModel.extend({
             html: html,
             markers: markers
         };
-    },
+    }
 
     /**
      * @return {boolean}
      */
-    isAnimationEnabled: function () {
+    isAnimationEnabled() {
         if (env.node) {
             return false;
         }
@@ -464,95 +470,92 @@ var SeriesModel = ComponentModel.extend({
             }
         }
         return animationEnabled;
-    },
+    }
 
-    restoreData: function () {
+    restoreData() {
         this.dataTask.dirty();
-    },
+    }
 
-    getColorFromPalette: function (name, scope, requestColorNum) {
+    getColorFromPalette(name: string, scope: any, requestColorNum: number): ZRColor {
         var ecModel = this.ecModel;
         // PENDING
-        var color = colorPaletteMixin.getColorFromPalette.call(this, name, scope, requestColorNum);
+        var color = ColorPaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
         if (!color) {
             color = ecModel.getColorFromPalette(name, scope, requestColorNum);
         }
         return color;
-    },
+    }
 
     /**
      * Use `data.mapDimension(coordDim, true)` instead.
      * @deprecated
      */
-    coordDimToDataDim: function (coordDim) {
+    coordDimToDataDim(coordDim: DimensionName): DimensionName[] {
         return this.getRawData().mapDimension(coordDim, true);
-    },
+    }
 
     /**
      * Get progressive rendering count each step
-     * @return {number}
      */
-    getProgressive: function () {
+    getProgressive(): number | false {
         return this.get('progressive');
-    },
+    }
 
     /**
      * Get progressive rendering count each step
-     * @return {number}
      */
-    getProgressiveThreshold: function () {
+    getProgressiveThreshold(): number {
         return this.get('progressiveThreshold');
-    },
+    }
 
     /**
      * Get data indices for show tooltip content. See tooltip.
-     * @abstract
-     * @param {Array.<string>|string} dim
-     * @param {Array.<number>} value
-     * @param {module:echarts/coord/single/SingleAxis} baseAxis
-     * @return {Object} {dataIndices, nestestValue}.
+     * Implement it if needed.
      */
-    getAxisTooltipData: null,
+    getAxisTooltipData: (
+        dim: DimensionName[],
+        value: AxisValue,
+        // @ts-ignore
+        baseAxis // FIXME:TS baseAxis type should be coord Axis
+    ) => {
+        dataIndices: number[],
+        nestestValue: any
+    };
 
     /**
      * See tooltip.
-     * @abstract
-     * @param {number} dataIndex
-     * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
+     * Implement it if needed.
+     * @return Point of tooltip. null/undefined can be returned.
      */
-    getTooltipPosition: null,
+    getTooltipPosition: (dataIndex: number) => number[];
 
-    /**
-     * @see {module:echarts/stream/Scheduler}
-     */
-    pipeTask: null,
+    // /**
+    //  * @see {module:echarts/stream/Scheduler}
+    //  */
+    // abstract pipeTask: null
 
     /**
      * Convinient for override in extended class.
-     * @protected
-     * @type {Function}
+     * Implement it if needed.
      */
-    preventIncremental: null,
+    preventIncremental: () => boolean;
 
-    /**
-     * @public
-     * @readOnly
-     * @type {Object}
-     */
-    pipelineContext: null
+}
 
-});
+interface SeriesModel extends DataFormatMixin, ColorPaletteMixin, DataHost {}
+zrUtil.tsMixin(SeriesModel, DataFormatMixin);
+zrUtil.tsMixin(SeriesModel, ColorPaletteMixin);
 
+export type SeriesModelConstructor = typeof SeriesModel & ExtendableConstructor;
+mountExtend(SeriesModel, ComponentModel as SeriesModelConstructor);
 
-zrUtil.mixin(SeriesModel, dataFormatMixin);
-zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
 /**
  * MUST be called after `prepareSource` called
  * Here we need to make auto series, especially for auto legend. But we
  * do not modify series.name in option to avoid side effects.
  */
-function autoSeriesName(seriesModel) {
+function autoSeriesName(seriesModel: SeriesModel): void {
     // User specified name has higher priority, otherwise it may cause
     // series can not be queried unexpectedly.
     var name = seriesModel.name;
@@ -561,10 +564,10 @@ function autoSeriesName(seriesModel) {
     }
 }
 
-function getSeriesAutoName(seriesModel) {
+function getSeriesAutoName(seriesModel: SeriesModel): string {
     var data = seriesModel.getRawData();
     var dataDims = data.mapDimension('seriesName', true);
-    var nameArr = [];
+    var nameArr: string[] = [];
     zrUtil.each(dataDims, function (dataDim) {
         var dimInfo = data.getDimensionInfo(dataDim);
         dimInfo.displayName && nameArr.push(dimInfo.displayName);
@@ -572,17 +575,17 @@ function getSeriesAutoName(seriesModel) {
     return nameArr.join(' ');
 }
 
-function dataTaskCount(context) {
+function dataTaskCount(context: SeriesTaskContext): number {
     return context.model.getRawData().count();
 }
 
-function dataTaskReset(context) {
+function dataTaskReset(context: SeriesTaskContext) {
     var seriesModel = context.model;
     seriesModel.setData(seriesModel.getRawData().cloneShallow());
     return dataTaskProgress;
 }
 
-function dataTaskProgress(param, context) {
+function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTaskContext): void {
     // Avoid repead cloneShallow when data just created in reset.
     if (param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
@@ -590,13 +593,13 @@ function dataTaskProgress(param, context) {
 }
 
 // TODO refactor
-function wrapData(data, seriesModel) {
+function wrapData(data: List, seriesModel: SeriesModel): void {
     zrUtil.each(data.CHANGABLE_METHODS, function (methodName) {
-        data.wrapMethod(methodName, zrUtil.curry(onDataSelfChange, seriesModel));
+        data.wrapMethod(methodName as any, zrUtil.curry(onDataSelfChange, seriesModel));
     });
 }
 
-function onDataSelfChange(seriesModel) {
+function onDataSelfChange(this: List, seriesModel: SeriesModel): void {
     var task = getCurrentTask(seriesModel);
     if (task) {
         // Consider case: filter, selectRange
@@ -604,7 +607,7 @@ function onDataSelfChange(seriesModel) {
     }
 }
 
-function getCurrentTask(seriesModel) {
+function getCurrentTask(seriesModel: SeriesModel): GeneralTask {
     var scheduler = (seriesModel.ecModel || {}).scheduler;
     var pipeline = scheduler && scheduler.getPipeline(seriesModel.uid);
 
@@ -613,7 +616,7 @@ function getCurrentTask(seriesModel) {
         // task (renderTask).
         var task = pipeline.currentTask;
         if (task) {
-            var agentStubMap = task.agentStubMap;
+            var agentStubMap = (task as OverallTask).agentStubMap;
             if (agentStubMap) {
                 task = agentStubMap.get(seriesModel.uid);
             }

@@ -17,13 +17,16 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
+import {TooltipRenderMode} from './types';
 // import Text from 'zrender/src/graphic/Text';
 
 /**
- * 每三位默认加,格式化
+ * Add a comma each three digit.
  * @param {string|number} x
  * @return {string}
  */
@@ -75,22 +78,27 @@ export function encodeHTML(source) {
 
 var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
-var wrapVar = function (varName, seriesIdx) {
+var wrapVar = function (varName: string, seriesIdx?: number): string {
     return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
 };
 
+export interface TplFormatterParam {
+    // Param name list for mapping `a`, `b`, `c`, `d`, `e`
+    $vars: string[];
+}
 /**
  * Template formatter
- * @param {string} tpl
  * @param {Array.<Object>|Object} paramsList
- * @param {boolean} [encode=false]
- * @return {string}
  */
-export function formatTpl(tpl, paramsList, encode) {
+export function formatTpl(
+    tpl: string,
+    paramsList: TplFormatterParam | TplFormatterParam[],
+    encode?: boolean
+): string {
     if (!zrUtil.isArray(paramsList)) {
         paramsList = [paramsList];
     }
-    var seriesLen = paramsList.length;
+    var seriesLen = (paramsList as any).length;
     if (!seriesLen) {
         return '';
     }
@@ -131,16 +139,28 @@ export function formatTplSimple(tpl, param, encode) {
     return tpl;
 }
 
-/**
- * @param {Object|string} [opt] If string, means color.
- * @param {string} [opt.color]
- * @param {string} [opt.extraCssText]
- * @param {string} [opt.type='item'] 'item' or 'subItem'
- * @param {string} [opt.renderMode='html'] render mode of tooltip, 'html' or 'richText'
- * @param {string} [opt.markerId='X'] id name for marker. If only one marker is in a rich text, this can be omitted.
- * @return {string}
- */
-export function getTooltipMarker(opt, extraCssText) {
+interface RichTextTooltipMarker {
+    renderMode: TooltipRenderMode;
+    content: string;
+    style: {
+        color: string
+        [key: string]: any
+    };
+}
+export type TooltipMarker = string | RichTextTooltipMarker;
+interface GetTooltipMarkerOpt {
+    color?: string;
+    extraCssText?: string;
+    // By default: 'item'
+    type?: 'item' | 'subItem';
+    renderMode?: TooltipRenderMode;
+    // id name for marker. If only one marker is in a rich text, this can be omitted.
+    // By default: 'X'
+    markerId?: string;
+}
+export function getTooltipMarker(color: string, extraCssText?: string): TooltipMarker;
+export function getTooltipMarker(opt: GetTooltipMarkerOpt): TooltipMarker;
+export function getTooltipMarker(opt: string | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
     opt = zrUtil.isString(opt) ? {color: opt, extraCssText: extraCssText} : (opt || {});
     var color = opt.color;
     var type = opt.type;
@@ -188,7 +208,7 @@ function pad(str, len) {
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl, value, isUTC) {
+export function formatTime(tpl, value, isUTC?) {
     if (tpl === 'week'
         || tpl === 'month'
         || tpl === 'quarter'

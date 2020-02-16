@@ -59,7 +59,7 @@ var GraphSeries = echarts.extendSeriesModel({
 
     mergeDefaultAndTheme: function (option) {
         GraphSeries.superApply(this, 'mergeDefaultAndTheme', arguments);
-        defaultEmphasis(option, ['edgeLabel'], ['show']);
+        defaultEmphasis(option, 'edgeLabel', ['show']);
     },
 
     getInitialData: function (option, ecModel) {

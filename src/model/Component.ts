@@ -17,38 +17,44 @@
 * under the License.
 */
 
-/**
- * Component model
- *
- * @module echarts/model/Component
- */
 
 import * as zrUtil from 'zrender/src/core/util';
 import Model from './Model';
 import * as componentUtil from '../util/component';
-import {enableClassManagement, parseClassType} from '../util/clazz';
+import {
+    enableClassManagement,
+    parseClassType,
+    isExtendedClass,
+    ExtendableConstructor,
+    ClassManager,
+    mountExtend
+} from '../util/clazz';
 import {makeInner} from '../util/model';
 import * as layout from '../util/layout';
 import boxLayoutMixin from './mixin/boxLayout';
+import { CoordinateSystem } from '../coord/CoordinateSystem';
+import GlobalModel from './Global';
+import { ComponentOption, ComponentMainType, ComponentSubType } from '../util/types';
 
 var inner = makeInner();
 
-/**
- * @alias module:echarts/model/Component
- * @constructor
- * @param {Object} option
- * @param {module:echarts/model/Model} parentModel
- * @param {module:echarts/model/Model} ecModel
- */
-var ComponentModel = Model.extend({
+class ComponentModel extends Model {
 
-    type: 'component',
+    // [Caution]: for compat the previous "class extend"
+    // publich and protected fields must be initialized on
+    // prototype rather than in constructor. Otherwise the
+    // subclass overrided filed will be overwritten by this
+    // class. That is, they should not be initialized here.
 
     /**
-     * @readOnly
-     * @type {string}
+     * @readonly
      */
-    id: '',
+    type: string;
+
+    /**
+     * @readonly
+     */
+    id: string;
 
     /**
      * Because simplified concept is probably better, series.name (or component.name)
@@ -57,73 +63,84 @@ var ComponentModel = Model.extend({
      * (2) As an index to mapping series when merging option or calling API (a name
      * can refer to more then one components, which is convinient is some case).
      * (3) Display.
-     * @readOnly
+     * @readOnly But injected
      */
-    name: '',
+    name: string;
 
     /**
      * @readOnly
-     * @type {string}
      */
-    mainType: '',
+    mainType: ComponentMainType;
 
     /**
      * @readOnly
-     * @type {string}
      */
-    subType: '',
+    subType: ComponentSubType;
 
     /**
      * @readOnly
-     * @type {number}
      */
-    componentIndex: 0,
+    componentIndex: number;
 
     /**
-     * @type {Object}
-     * @protected
-     */
-    defaultOption: null,
-
-    /**
-     * @type {module:echarts/model/Global}
      * @readOnly
      */
-    ecModel: null,
+    protected defaultOption: ComponentOption;
+
+    /**
+     * @readOnly
+     */
+    ecModel: GlobalModel;
+
+    /**
+     * @readOnly
+     */
+    dependencies: string[];
 
     /**
      * key: componentType
-     * value:  Component model list, can not be null.
-     * @type {Object.<string, Array.<module:echarts/model/Model>>}
+     * value: Component model list, can not be null.
      * @readOnly
      */
-    dependentModels: [],
+    dependentModels: {[componentType: string]: ComponentModel[]} = {};
+
+    readonly uid: string;
 
     /**
-     * @type {string}
-     * @readOnly
+     * @readonly
      */
-    uid: null,
+    coordinateSystem: CoordinateSystem;
 
     /**
      * Support merge layout params.
      * Only support 'box' now (left/right/top/bottom/width/height).
-     * @type {string|Object} Object can be {ignoreSize: true}
-     * @readOnly
      */
-    layoutMode: null,
+    readonly layoutMode: string | {ignoreSize: boolean};
 
-    $constructor: function (option, parentModel, ecModel, extraOpt) {
-        Model.call(this, option, parentModel, ecModel, extraOpt);
+    // Injectable properties:
+    __viewId: string;
 
+    static protoInitialize = (function () {
+        var proto = ComponentModel.prototype;
+        proto.type = 'component';
+        proto.id = '';
+        proto.name = '';
+        proto.mainType = '';
+        proto.subType = '';
+        proto.componentIndex = 0;
+    })();
+
+
+    constructor(option: ComponentOption, parentModel: Model, ecModel: GlobalModel) {
+        super(option, parentModel, ecModel);
         this.uid = componentUtil.getUID('ec_cpt_model');
-    },
+    }
 
-    init: function (option, parentModel, ecModel, extraOpt) {
+    init(option: ComponentOption, parentModel: Model, ecModel: GlobalModel): void {
         this.mergeDefaultAndTheme(option, ecModel);
-    },
+    }
 
-    mergeDefaultAndTheme: function (option, ecModel) {
+    mergeDefaultAndTheme(option: ComponentOption, ecModel: GlobalModel): void {
         var layoutMode = this.layoutMode;
         var inputPositionParams = layoutMode
             ? layout.getLayoutParams(option) : {};
@@ -135,29 +152,91 @@ var ComponentModel = Model.extend({
         if (layoutMode) {
             layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
         }
-    },
+    }
 
-    mergeOption: function (option, extraOpt) {
+    mergeOption(option: ComponentOption, ecModel: GlobalModel): void {
         zrUtil.merge(this.option, option, true);
 
         var layoutMode = this.layoutMode;
         if (layoutMode) {
             layout.mergeLayoutParam(this.option, option, layoutMode);
         }
-    },
+    }
 
     // Hooker after init or mergeOption
-    optionUpdated: function (newCptOption, isInit) {},
+    optionUpdated(newCptOption: ComponentOption, isInit: boolean): void {}
 
-    getDefaultOption: function () {
+    /**
+     * [How to declare defaultOption]:
+     *
+     * (A) If using class declaration in typescript (since echarts 5):
+     * ```ts
+     * import {ComponentOption} from '../model/option';
+     * export interface XxxOption extends ComponentOption {
+     *     aaa: number
+     * }
+     * export class XxxModel extends Component {
+     *     readonly defaultOption: XxxOption = {
+     *         aaa: 123
+     *     }
+     * }
+     * ```
+     * ```ts
+     * import {mergeOption} from '../model/util';
+     * import {XxxModel, XxxOption} from './XxxModel';
+     * export interface XxxSubOption extends XxxOption {
+     *     bbb: number
+     * }
+     * class XxxSubModel extends XxxModel {
+     *     readonly defaultOption: XxxSubOption = mergeOption({
+     *         bbb: 456
+     *     }, XxxModel.prototype.defaultOption)
+     *     fn() {
+     *         var opt = this.getDefaultOption();
+     *         // opt is {aaa: 123, bbb: 456}
+     *     }
+     * }
+     * ```
+     *
+     * (B) If using class extend (previous approach in echarts 3 & 4):
+     * ```js
+     * var XxxComponent = Component.extend({
+     *     defaultOption: {
+     *         xx: 123
+     *     }
+     * })
+     * ```
+     * ```js
+     * var XxxSubComponent = XxxComponent.extend({
+     *     defaultOption: {
+     *         yy: 456
+     *     },
+     *     fn: function () {
+     *         var opt = this.getDefaultOption();
+     *         // opt is {xx: 123, yy: 456}
+     *     }
+     * })
+     * ```
+     */
+    getDefaultOption(): ComponentOption {
+        var ctor = this.constructor;
+
+        // If using class declaration, it is different to travel super class
+        // in legacy env and auto merge defaultOption. So if using class
+        // declaration, defaultOption should be merged manually.
+        if (!isExtendedClass(ctor)) {
+            return ctor.prototype.defaultOption;
+        }
+
+        // FIXME: remove this approach?
         var fields = inner(this);
         if (!fields.defaultOption) {
             var optList = [];
-            var Class = this.constructor;
-            while (Class) {
-                var opt = Class.prototype.defaultOption;
+            var clz = ctor as ExtendableConstructor;
+            while (clz) {
+                var opt = clz.prototype.defaultOption;
                 opt && optList.push(opt);
-                Class = Class.superClass;
+                clz = clz.superClass;
             }
 
             var defaultOption = {};
@@ -167,9 +246,9 @@ var ComponentModel = Model.extend({
             fields.defaultOption = defaultOption;
         }
         return fields.defaultOption;
-    },
+    }
 
-    getReferringComponents: function (mainType) {
+    getReferringComponents(mainType: ComponentMainType): ComponentModel[] {
         return this.ecModel.queryComponents({
             mainType: mainType,
             index: this.get(mainType + 'Index', true),
@@ -177,7 +256,7 @@ var ComponentModel = Model.extend({
         });
     }
 
-});
+}
 
 // Reset ComponentModel.extend, add preConstruct.
 // clazzUtil.enableClassExtend(
@@ -195,19 +274,22 @@ var ComponentModel = Model.extend({
 //     }
 // );
 
-// Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-enableClassManagement(
-    ComponentModel, {registerWhenExtend: true}
-);
-componentUtil.enableSubTypeDefaulter(ComponentModel);
+type ComponentModelConstructor = typeof ComponentModel
+    & ClassManager
+    & componentUtil.SubTypeDefaulterManager
+    & ExtendableConstructor
+    & componentUtil.TopologicalTravelable<object>;
 
-// Add capability of ComponentModel.topologicalTravel.
-componentUtil.enableTopologicalTravel(ComponentModel, getDependencies);
+mountExtend(ComponentModel, Model);
+enableClassManagement(ComponentModel as ComponentModelConstructor, {registerWhenExtend: true})
+componentUtil.enableSubTypeDefaulter(ComponentModel as ComponentModelConstructor);
+componentUtil.enableTopologicalTravel(ComponentModel as ComponentModelConstructor, getDependencies);
 
-function getDependencies(componentType) {
-    var deps = [];
-    zrUtil.each(ComponentModel.getClassesByMainType(componentType), function (Clazz) {
-        deps = deps.concat(Clazz.prototype.dependencies || []);
+
+function getDependencies(componentType: string): string[] {
+    var deps: string[] = [];
+    zrUtil.each((ComponentModel as ComponentModelConstructor).getClassesByMainType(componentType), function (clz) {
+        deps = deps.concat((clz as any).prototype.dependencies || []);
     });
 
     // Ensure main type.
@@ -224,5 +306,7 @@ function getDependencies(componentType) {
 }
 
 zrUtil.mixin(ComponentModel, boxLayoutMixin);
+
+export {ComponentModelConstructor};
 
 export default ComponentModel;

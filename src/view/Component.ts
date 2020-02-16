@@ -20,53 +20,76 @@
 import Group from 'zrender/src/container/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
+import ComponentModel from '../model/Component';
+import GlobalModel from '../model/Global';
+import ExtensionAPI from '../ExtensionAPI';
+import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
+import Element from 'zrender/src/Element';
 
-var Component = function () {
+class Component {
+
+    // [Caution]: for compat the previous "class extend"
+    // publich and protected fields must be initialized on
+    // prototype rather than in constructor. Otherwise the
+    // subclass overrided filed will be overwritten by this
+    // class. That is, they should not be initialized here.
+
+    readonly group: ViewRootGroup;
+
+    readonly uid: string;
+
+    // ----------------------
+    // Injectable properties
+    // ----------------------
+    __model: ComponentModel;
+    __alive: boolean;
+    __id: string;
+
+    constructor() {
+        this.group = new Group();
+        this.uid = componentUtil.getUID('viewComponent');
+    }
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {}
+
+    render(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {}
+
+    dispose(ecModel: GlobalModel, api: ExtensionAPI): void {}
+
     /**
-     * @type {module:zrender/container/Group}
-     * @readOnly
+     * Pass only when return `true`.
+     * Implement it if needed.
      */
-    this.group = new Group();
+    filterForExposedEvent: (
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+    ) => boolean;
 
-    /**
-     * @type {string}
-     * @readOnly
-     */
-    this.uid = componentUtil.getUID('viewComponent');
-};
-
-Component.prototype = {
-
-    constructor: Component,
-
-    init: function (ecModel, api) {},
-
-    render: function (componentModel, ecModel, api, payload) {},
-
-    dispose: function () {},
-
-    /**
-     * @param {string} eventType
-     * @param {Object} query
-     * @param {module:zrender/Element} targetEl
-     * @param {Object} packedEvent
-     * @return {boolen} Pass only when return `true`.
-     */
-    filterForExposedEvent: null
-
-};
-
-var componentProto = Component.prototype;
-componentProto.updateView =
-    componentProto.updateLayout =
-    componentProto.updateVisual =
-    function (seriesModel, ecModel, api, payload) {
+    updateView(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         // Do nothing;
-    };
-// Enable Component.extend.
-clazzUtil.enableClassExtend(Component);
+    }
 
-// Enable capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-clazzUtil.enableClassManagement(Component, {registerWhenExtend: true});
+    updateLayout(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        // Do nothing;
+    }
+
+    updateVisual(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        // Do nothing;
+    }
+
+    /**
+     * Implement it if needed.
+     */
+    updateTransform: (
+        seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
+    ) => void | {update: true};
+
+};
+
+export type ComponentViewConstructor = typeof Component
+    & clazzUtil.ExtendableConstructor
+    & clazzUtil.ClassManager;
+
+clazzUtil.enableClassExtend(Component as ComponentViewConstructor)
+clazzUtil.enableClassManagement(Component as ComponentViewConstructor, {registerWhenExtend: true});
 
 export default Component;

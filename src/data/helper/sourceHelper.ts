@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../../config';
 import {makeInner, getDataItemValue} from '../../util/model';
 import {
@@ -37,11 +39,11 @@ import {
     SOURCE_FORMAT_ORIGINAL,
     SOURCE_FORMAT_ARRAY_ROWS,
     SOURCE_FORMAT_OBJECT_ROWS,
+    SERIES_LAYOUT_BY_ROW,
     SOURCE_FORMAT_KEYED_COLUMNS,
-    SOURCE_FORMAT_UNKNOWN,
     SOURCE_FORMAT_TYPED_ARRAY,
-    SERIES_LAYOUT_BY_ROW
-} from './sourceType';
+    SOURCE_FORMAT_UNKNOWN
+} from '../../util/types';
 
 // The result of `guessOrdinal`.
 export var BE_ORDINAL = {

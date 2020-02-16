@@ -19,164 +19,338 @@
 
 import {assert, isArray} from 'zrender/src/core/util';
 import { __DEV__ } from '../config';
+import SeriesModel from '../model/Series';
+import { Pipeline } from './Scheduler';
+import { Payload } from '../util/types';
+
+export interface TaskContext {
+    outputData?: any;
+    data?: any;
+    payload?: Payload;
+    model?: SeriesModel;
+};
+
+export type TaskResetCallback<Ctx extends TaskContext> = (
+    this: Task<Ctx>, context: Ctx
+) => TaskResetCallbackReturn<Ctx>;
+export type TaskResetCallbackReturn<Ctx extends TaskContext> =
+    void
+    | (TaskProgressCallback<Ctx> | TaskProgressCallback<Ctx>[])
+    | {
+        forceFirstProgress?: boolean
+        progress: TaskProgressCallback<Ctx> | TaskProgressCallback<Ctx>[]
+    };
+export type TaskProgressCallback<Ctx extends TaskContext> = (
+    this: Task<Ctx>, params: TaskProgressParams, context: Ctx
+) => void;
+export type TaskProgressParams = {
+    start: number, end: number, count: number, next: TaskDataIteratorNext
+};
+export type TaskPlanCallback<Ctx extends TaskContext> = (
+    this: Task<Ctx>, context: Ctx
+) => TaskPlanCallbackReturn;
+export type TaskPlanCallbackReturn = 'reset' | false | null | undefined;
+export type TaskCountCallback<Ctx extends TaskContext> = (
+    this: Task<Ctx>, context: Ctx
+) => number;
+export type TaskOnDirtyCallback<Ctx extends TaskContext> = (
+    this: Task<Ctx>, context: Ctx
+) => void;
+
+type TaskDataIteratorNext = () => number;
+type TaskDataIterator = {
+    reset: (s: number, e: number, sStep: number, sCount: number) => void,
+    next?: TaskDataIteratorNext
+};
+
+type TaskDefineParam<Ctx extends TaskContext> = {
+    reset?: TaskResetCallback<Ctx>,
+    // Returns 'reset' indicate reset immediately
+    plan?: TaskPlanCallback<Ctx>,
+    // count is used to determine data task.
+    count?: TaskCountCallback<Ctx>,
+    onDirty?: TaskOnDirtyCallback<Ctx>
+};
+export type PerformArgs = {
+    step?: number,
+    skip?: boolean,
+    modBy?: number,
+    modDataCount?: number
+}
 
 /**
  * @param {Object} define
  * @return See the return of `createTask`.
  */
-export function createTask(define) {
-    return new Task(define);
+export function createTask<Ctx extends TaskContext>(
+    define: TaskDefineParam<Ctx>
+): Task<Ctx> {
+    return new Task<Ctx>(define);
 }
 
-/**
- * @constructor
- * @param {Object} define
- * @param {Function} define.reset Custom reset
- * @param {Function} [define.plan] Returns 'reset' indicate reset immediately.
- * @param {Function} [define.count] count is used to determin data task.
- * @param {Function} [define.onDirty] count is used to determin data task.
- */
-function Task(define) {
-    define = define || {};
+export class Task<Ctx extends TaskContext> {
 
-    this._reset = define.reset;
-    this._plan = define.plan;
-    this._count = define.count;
-    this._onDirty = define.onDirty;
+    private _reset: TaskResetCallback<Ctx>;
+    private _plan: TaskPlanCallback<Ctx>;
+    private _count: TaskCountCallback<Ctx>;
+    private _onDirty: TaskOnDirtyCallback<Ctx>;
+    private _progress: TaskProgressCallback<Ctx> | TaskProgressCallback<Ctx>[];
+    private _callingProgress: TaskProgressCallback<Ctx>;
 
-    this._dirty = true;
+    private _dirty: boolean;
+    private _modBy: number;
+    private _modDataCount: number;
+    private _upstream: Task<Ctx>;
+    private _downstream: Task<Ctx>;
+    private _dueEnd: number;
+    private _outputDueEnd: number;
+    private _settedOutputEnd: number;
+    private _dueIndex: number;
+    private _disposed: boolean
+
+    // Injected in schedular
+    __pipeline: Pipeline;
+    __idxInPipeline: number;
+    __block: boolean;
 
     // Context must be specified implicitly, to
     // avoid miss update context when model changed.
-    this.context;
-}
+    context: Ctx;
 
-var taskProto = Task.prototype;
+    constructor(define: TaskDefineParam<Ctx>) {
+        define = define || {};
 
-/**
- * @param {Object} performArgs
- * @param {number} [performArgs.step] Specified step.
- * @param {number} [performArgs.skip] Skip customer perform call.
- * @param {number} [performArgs.modBy] Sampling window size.
- * @param {number} [performArgs.modDataCount] Sampling count.
- */
-taskProto.perform = function (performArgs) {
-    var upTask = this._upstream;
-    var skip = performArgs && performArgs.skip;
+        this._reset = define.reset;
+        this._plan = define.plan;
+        this._count = define.count;
+        this._onDirty = define.onDirty;
 
-    // TODO some refactor.
-    // Pull data. Must pull data each time, because context.data
-    // may be updated by Series.setData.
-    if (this._dirty && upTask) {
-        var context = this.context;
-        context.data = context.outputData = upTask.context.outputData;
+        this._dirty = true;
     }
 
-    if (this.__pipeline) {
-        this.__pipeline.currentTask = this;
-    }
+    /**
+     * @param step Specified step.
+     * @param skip Skip customer perform call.
+     * @param modBy Sampling window size.
+     * @param modDataCount Sampling count.
+     * @return whether unfinished.
+     */
+    perform(performArgs?: PerformArgs): boolean {
+        var upTask = this._upstream;
+        var skip = performArgs && performArgs.skip;
 
-    var planResult;
-    if (this._plan && !skip) {
-        planResult = this._plan(this.context);
-    }
-
-    // Support sharding by mod, which changes the render sequence and makes the rendered graphic
-    // elements uniformed distributed when progress, especially when moving or zooming.
-    var lastModBy = normalizeModBy(this._modBy);
-    var lastModDataCount = this._modDataCount || 0;
-    var modBy = normalizeModBy(performArgs && performArgs.modBy);
-    var modDataCount = performArgs && performArgs.modDataCount || 0;
-    if (lastModBy !== modBy || lastModDataCount !== modDataCount) {
-        planResult = 'reset';
-    }
-
-    function normalizeModBy(val) {
-        !(val >= 1) && (val = 1); // jshint ignore:line
-        return val;
-    }
-
-    var forceFirstProgress;
-    if (this._dirty || planResult === 'reset') {
-        this._dirty = false;
-        forceFirstProgress = reset(this, skip);
-    }
-
-    this._modBy = modBy;
-    this._modDataCount = modDataCount;
-
-    var step = performArgs && performArgs.step;
-
-    if (upTask) {
-
-        if (__DEV__) {
-            assert(upTask._outputDueEnd != null);
+        // TODO some refactor.
+        // Pull data. Must pull data each time, because context.data
+        // may be updated by Series.setData.
+        if (this._dirty && upTask) {
+            var context = this.context;
+            context.data = context.outputData = upTask.context.outputData;
         }
-        this._dueEnd = upTask._outputDueEnd;
-    }
-    // DataTask or overallTask
-    else {
-        if (__DEV__) {
-            assert(!this._progress || this._count);
+
+        if (this.__pipeline) {
+            this.__pipeline.currentTask = this;
         }
-        this._dueEnd = this._count ? this._count(this.context) : Infinity;
-    }
 
-    // Note: Stubs, that its host overall task let it has progress, has progress.
-    // If no progress, pass index from upstream to downstream each time plan called.
-    if (this._progress) {
-        var start = this._dueIndex;
-        var end = Math.min(
-            step != null ? this._dueIndex + step : Infinity,
-            this._dueEnd
-        );
+        var planResult;
+        if (this._plan && !skip) {
+            planResult = this._plan(this.context);
+        }
 
-        if (!skip && (forceFirstProgress || start < end)) {
-            var progress = this._progress;
-            if (isArray(progress)) {
-                for (var i = 0; i < progress.length; i++) {
-                    doProgress(this, progress[i], start, end, modBy, modDataCount);
+        // Support sharding by mod, which changes the render sequence and makes the rendered graphic
+        // elements uniformed distributed when progress, especially when moving or zooming.
+        var lastModBy = normalizeModBy(this._modBy);
+        var lastModDataCount = this._modDataCount || 0;
+        var modBy = normalizeModBy(performArgs && performArgs.modBy);
+        var modDataCount = performArgs && performArgs.modDataCount || 0;
+        if (lastModBy !== modBy || lastModDataCount !== modDataCount) {
+            planResult = 'reset';
+        }
+
+        function normalizeModBy(val: number) {
+            !(val >= 1) && (val = 1); // jshint ignore:line
+            return val;
+        }
+
+        var forceFirstProgress;
+        if (this._dirty || planResult === 'reset') {
+            this._dirty = false;
+            forceFirstProgress = this._doReset(skip);
+        }
+
+        this._modBy = modBy;
+        this._modDataCount = modDataCount;
+
+        var step = performArgs && performArgs.step;
+
+        if (upTask) {
+
+            if (__DEV__) {
+                assert(upTask._outputDueEnd != null);
+            }
+            this._dueEnd = upTask._outputDueEnd;
+        }
+        // DataTask or overallTask
+        else {
+            if (__DEV__) {
+                assert(!this._progress || this._count);
+            }
+            this._dueEnd = this._count ? this._count(this.context) : Infinity;
+        }
+
+        // Note: Stubs, that its host overall task let it has progress, has progress.
+        // If no progress, pass index from upstream to downstream each time plan called.
+        if (this._progress) {
+            var start = this._dueIndex;
+            var end = Math.min(
+                step != null ? this._dueIndex + step : Infinity,
+                this._dueEnd
+            );
+
+            if (!skip && (forceFirstProgress || start < end)) {
+                var progress = this._progress;
+                if (isArray(progress)) {
+                    for (var i = 0; i < progress.length; i++) {
+                        this._doProgress(progress[i], start, end, modBy, modDataCount);
+                    }
+                }
+                else {
+                    this._doProgress(progress, start, end, modBy, modDataCount);
                 }
             }
-            else {
-                doProgress(this, progress, start, end, modBy, modDataCount);
+
+            this._dueIndex = end;
+            // If no `outputDueEnd`, assume that output data and
+            // input data is the same, so use `dueIndex` as `outputDueEnd`.
+            var outputDueEnd = this._settedOutputEnd != null
+                ? this._settedOutputEnd : end;
+
+            if (__DEV__) {
+                // ??? Can not rollback.
+                assert(outputDueEnd >= this._outputDueEnd);
+            }
+
+            this._outputDueEnd = outputDueEnd;
+        }
+        else {
+            // (1) Some overall task has no progress.
+            // (2) Stubs, that its host overall task do not let it has progress, has no progress.
+            // This should always be performed so it can be passed to downstream.
+            this._dueIndex = this._outputDueEnd = this._settedOutputEnd != null
+                ? this._settedOutputEnd : this._dueEnd;
+        }
+
+        return this.unfinished();
+    }
+
+    dirty(): void {
+        this._dirty = true;
+        this._onDirty && this._onDirty(this.context);
+    }
+
+    private _doProgress(
+        progress: TaskProgressCallback<Ctx>,
+        start: number,
+        end: number,
+        modBy: number,
+        modDataCount: number
+    ): void {
+        iterator.reset(start, end, modBy, modDataCount);
+        this._callingProgress = progress;
+        this._callingProgress({
+            start: start, end: end, count: end - start, next: iterator.next
+        }, this.context);
+    }
+
+    private _doReset(skip: boolean): boolean {
+        this._dueIndex = this._outputDueEnd = this._dueEnd = 0;
+        this._settedOutputEnd = null;
+
+        var progress: TaskResetCallbackReturn<Ctx>;
+        var forceFirstProgress: boolean;
+
+        if (!skip && this._reset) {
+            progress = this._reset(this.context);
+            if (progress && (progress as any).progress) {
+                forceFirstProgress = (progress as any).forceFirstProgress;
+                progress = (progress as any).progress;
+            }
+            // To simplify no progress checking, array must has item.
+            if (isArray(progress) && !progress.length) {
+                progress = null;
             }
         }
 
-        this._dueIndex = end;
-        // If no `outputDueEnd`, assume that output data and
-        // input data is the same, so use `dueIndex` as `outputDueEnd`.
-        var outputDueEnd = this._settedOutputEnd != null
-            ? this._settedOutputEnd : end;
+        this._progress = progress as TaskProgressCallback<Ctx>;
+        this._modBy = this._modDataCount = null;
 
+        var downstream = this._downstream;
+        downstream && downstream.dirty();
+
+        return forceFirstProgress;
+    }
+
+    unfinished(): boolean {
+        return this._progress && this._dueIndex < this._dueEnd;
+    }
+
+    /**
+     * @param downTask The downstream task.
+     * @return The downstream task.
+     */
+    pipe(downTask: Task<Ctx>): void {
         if (__DEV__) {
-            // ??? Can not rollback.
-            assert(outputDueEnd >= this._outputDueEnd);
+            assert(downTask && !downTask._disposed && downTask !== this);
         }
 
-        this._outputDueEnd = outputDueEnd;
-    }
-    else {
-        // (1) Some overall task has no progress.
-        // (2) Stubs, that its host overall task do not let it has progress, has no progress.
-        // This should always be performed so it can be passed to downstream.
-        this._dueIndex = this._outputDueEnd = this._settedOutputEnd != null
-            ? this._settedOutputEnd : this._dueEnd;
+        // If already downstream, do not dirty downTask.
+        if (this._downstream !== downTask || this._dirty) {
+            this._downstream = downTask;
+            downTask._upstream = this;
+            downTask.dirty();
+        }
     }
 
-    return this.unfinished();
-};
+    dispose(): void {
+        if (this._disposed) {
+            return;
+        }
 
-var iterator = (function () {
+        this._upstream && (this._upstream._downstream = null);
+        this._downstream && (this._downstream._upstream = null);
 
-    var end;
-    var current;
-    var modBy;
-    var modDataCount;
-    var winCount;
+        this._dirty = false;
+        this._disposed = true;
+    }
 
-    var it = {
-        reset: function (s, e, sStep, sCount) {
+    getUpstream(): Task<Ctx> {
+        return this._upstream;
+    }
+
+    getDownstream(): Task<Ctx> {
+        return this._downstream;
+    }
+
+    setOutputEnd(end: number): void {
+        // This only happend in dataTask, dataZoom, map, currently.
+        // where dataZoom do not set end each time, but only set
+        // when reset. So we should record the setted end, in case
+        // that the stub of dataZoom perform again and earse the
+        // setted end by upstream.
+        this._outputDueEnd = this._settedOutputEnd = end;
+    }
+
+}
+
+var iterator: TaskDataIterator = (function () {
+
+    var end: number;
+    var current: number;
+    var modBy: number;
+    var modDataCount: number;
+    var winCount: number;
+
+    var it: TaskDataIterator = {
+        reset: function (s: number, e: number, sStep: number, sCount: number): void {
             current = s;
             end = e;
 
@@ -190,11 +364,11 @@ var iterator = (function () {
 
     return it;
 
-    function sequentialNext() {
+    function sequentialNext(): number {
         return current < end ? current++ : null;
     }
 
-    function modNext() {
+    function modNext(): number {
         var dataIndex = (current % winCount) * modBy + Math.ceil(current / winCount);
         var result = current >= end
             ? null
@@ -208,99 +382,6 @@ var iterator = (function () {
     }
 })();
 
-taskProto.dirty = function () {
-    this._dirty = true;
-    this._onDirty && this._onDirty(this.context);
-};
-
-function doProgress(taskIns, progress, start, end, modBy, modDataCount) {
-    iterator.reset(start, end, modBy, modDataCount);
-    taskIns._callingProgress = progress;
-    taskIns._callingProgress({
-        start: start, end: end, count: end - start, next: iterator.next
-    }, taskIns.context);
-}
-
-function reset(taskIns, skip) {
-    taskIns._dueIndex = taskIns._outputDueEnd = taskIns._dueEnd = 0;
-    taskIns._settedOutputEnd = null;
-
-    var progress;
-    var forceFirstProgress;
-
-    if (!skip && taskIns._reset) {
-        progress = taskIns._reset(taskIns.context);
-        if (progress && progress.progress) {
-            forceFirstProgress = progress.forceFirstProgress;
-            progress = progress.progress;
-        }
-        // To simplify no progress checking, array must has item.
-        if (isArray(progress) && !progress.length) {
-            progress = null;
-        }
-    }
-
-    taskIns._progress = progress;
-    taskIns._modBy = taskIns._modDataCount = null;
-
-    var downstream = taskIns._downstream;
-    downstream && downstream.dirty();
-
-    return forceFirstProgress;
-}
-
-/**
- * @return {boolean}
- */
-taskProto.unfinished = function () {
-    return this._progress && this._dueIndex < this._dueEnd;
-};
-
-/**
- * @param {Object} downTask The downstream task.
- * @return {Object} The downstream task.
- */
-taskProto.pipe = function (downTask) {
-    if (__DEV__) {
-        assert(downTask && !downTask._disposed && downTask !== this);
-    }
-
-    // If already downstream, do not dirty downTask.
-    if (this._downstream !== downTask || this._dirty) {
-        this._downstream = downTask;
-        downTask._upstream = this;
-        downTask.dirty();
-    }
-};
-
-taskProto.dispose = function () {
-    if (this._disposed) {
-        return;
-    }
-
-    this._upstream && (this._upstream._downstream = null);
-    this._downstream && (this._downstream._upstream = null);
-
-    this._dirty = false;
-    this._disposed = true;
-};
-
-taskProto.getUpstream = function () {
-    return this._upstream;
-};
-
-taskProto.getDownstream = function () {
-    return this._downstream;
-};
-
-taskProto.setOutputEnd = function (end) {
-    // This only happend in dataTask, dataZoom, map, currently.
-    // where dataZoom do not set end each time, but only set
-    // when reset. So we should record the setted end, in case
-    // that the stub of dataZoom perform again and earse the
-    // setted end by upstream.
-    this._outputDueEnd = this._settedOutputEnd = end;
-};
 
 
 ///////////////////////////////////////////////////////////

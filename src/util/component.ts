@@ -18,7 +18,9 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {parseClassType} from './clazz';
+import {parseClassType, ClassManager} from './clazz';
+import { ComponentOption, ComponentMainType, ComponentSubType, ComponentFullType } from './types';
+import { Dictionary } from 'zrender/src/core/types';
 
 var base = 0;
 
@@ -27,58 +29,96 @@ var base = 0;
  * @param {string} type
  * @return {string}
  */
-export function getUID(type) {
+export function getUID(type: string): string {
     // Considering the case of crossing js context,
     // use Math.random to make id as unique as possible.
     return [(type || ''), base++, Math.random().toFixed(5)].join('_');
 }
 
+export interface SubTypeDefaulter {
+    // return subType.
+    (option: ComponentOption): ComponentSubType;
+}
+
+export interface SubTypeDefaulterManager {
+    registerSubTypeDefaulter: (componentType: string, defaulter: SubTypeDefaulter) => void;
+    determineSubType: (componentType: string, option: ComponentOption) => string;
+}
+
 /**
- * @inner
+ * Implements `SubTypeDefaulterManager` for `target`.
  */
-export function enableSubTypeDefaulter(entity) {
+export function enableSubTypeDefaulter(target: SubTypeDefaulterManager & ClassManager): void {
+    var subTypeDefaulters: Dictionary<SubTypeDefaulter> = {};
 
-    var subTypeDefaulters = {};
-
-    entity.registerSubTypeDefaulter = function (componentType, defaulter) {
-        componentType = parseClassType(componentType);
-        subTypeDefaulters[componentType.main] = defaulter;
+    target.registerSubTypeDefaulter = function (
+        componentType: ComponentFullType,
+        defaulter: SubTypeDefaulter
+    ): void {
+        var componentTypeInfo = parseClassType(componentType);
+        subTypeDefaulters[componentTypeInfo.main] = defaulter;
     };
 
-    entity.determineSubType = function (componentType, option) {
+    target.determineSubType = function (
+        componentType: ComponentFullType,
+        option: ComponentOption
+    ): string {
         var type = option.type;
         if (!type) {
             var componentTypeMain = parseClassType(componentType).main;
-            if (entity.hasSubTypes(componentType) && subTypeDefaulters[componentTypeMain]) {
+            if (target.hasSubTypes(componentType) && subTypeDefaulters[componentTypeMain]) {
                 type = subTypeDefaulters[componentTypeMain](option);
             }
         }
         return type;
     };
-
-    return entity;
 }
 
+export interface TopologicalTravelable<T> {
+    topologicalTravel: (
+        targetNameList: ComponentMainType[],
+        fullNameList: ComponentMainType[],
+        callback: (this: T, mainType: string, dependencies: string[]) => void,
+        context?: T
+    ) => void;
+}
+
+
+// ComponentMainType can be 'bb' or 'aa.xx'.
+type DepGraphItem = {
+    predecessor: ComponentMainType[],
+    successor: ComponentMainType[],
+    originalDeps: ComponentMainType[],
+    entryCount: number
+};
+type DepGraph = {[cmptMainType: string]: DepGraphItem};
+
 /**
+ * Implements `TopologicalTravelable<any>` for `entity`.
+ *
  * Topological travel on Activity Network (Activity On Vertices).
  * Dependencies is defined in Model.prototype.dependencies, like ['xAxis', 'yAxis'].
- *
  * If 'xAxis' or 'yAxis' is absent in componentTypeList, just ignore it in topology.
- *
  * If there is circle dependencey, Error will be thrown.
- *
  */
-export function enableTopologicalTravel(entity, dependencyGetter) {
+export function enableTopologicalTravel<T>(
+    entity: TopologicalTravelable<T>,
+    dependencyGetter: (name: ComponentMainType) => ComponentMainType[]
+): void {
 
     /**
-     * @public
-     * @param {Array.<string>} targetNameList Target Component type list.
-     *                                           Can be ['aa', 'bb', 'aa.xx']
-     * @param {Array.<string>} fullNameList By which we can build dependency graph.
-     * @param {Function} callback Params: componentType, dependencies.
-     * @param {Object} context Scope of callback.
+     * @param targetNameList Target Component type list.
+     *                       Can be ['aa', 'bb', 'aa.xx']
+     * @param fullNameList By which we can build dependency graph.
+     * @param callback Params: componentType, dependencies.
+     * @param context Scope of callback.
      */
-    entity.topologicalTravel = function (targetNameList, fullNameList, callback, context) {
+    entity.topologicalTravel = function <Ctx>(
+        targetNameList: ComponentMainType[],
+        fullNameList: ComponentMainType[],
+        callback: (this: Ctx, mainType: ComponentMainType, dependencies: ComponentMainType[]) => void,
+        context?: Ctx
+    ) {
         if (!targetNameList.length) {
             return;
         }
@@ -87,7 +127,7 @@ export function enableTopologicalTravel(entity, dependencyGetter) {
         var graph = result.graph;
         var stack = result.noEntryList;
 
-        var targetNameSet = {};
+        var targetNameSet: {[cmtpMainType: string]: boolean} = {};
         zrUtil.each(targetNameList, function (name) {
             targetNameSet[name] = true;
         });
@@ -110,7 +150,7 @@ export function enableTopologicalTravel(entity, dependencyGetter) {
             throw new Error('Circle dependency may exists');
         });
 
-        function removeEdge(succComponentType) {
+        function removeEdge(succComponentType: ComponentMainType): void {
             graph[succComponentType].entryCount--;
             if (graph[succComponentType].entryCount === 0) {
                 stack.push(succComponentType);
@@ -123,26 +163,17 @@ export function enableTopologicalTravel(entity, dependencyGetter) {
         // not be called, but only sereis.mergeOption is called. Thus legend
         // have no chance to update its local record about series (like which
         // name of series is available in legend).
-        function removeEdgeAndAdd(succComponentType) {
+        function removeEdgeAndAdd(succComponentType: ComponentMainType): void {
             targetNameSet[succComponentType] = true;
             removeEdge(succComponentType);
         }
     };
 
-    /**
-     * DepndencyGraph: {Object}
-     * key: conponentType,
-     * value: {
-     *     successor: [conponentTypes...],
-     *     originalDeps: [conponentTypes...],
-     *     entryCount: {number}
-     * }
-     */
-    function makeDepndencyGraph(fullNameList) {
-        var graph = {};
-        var noEntryList = [];
+    function makeDepndencyGraph(fullNameList: ComponentMainType[]) {
+        var graph: DepGraph = {};
+        var noEntryList: ComponentMainType[] = [];
 
-        zrUtil.each(fullNameList, function (name) {
+        zrUtil.each(fullNameList, function (name: ComponentMainType) {
 
             var thisItem = createDependencyGraphItem(graph, name);
             var originalDeps = thisItem.originalDeps = dependencyGetter(name);
@@ -167,18 +198,21 @@ export function enableTopologicalTravel(entity, dependencyGetter) {
         return {graph: graph, noEntryList: noEntryList};
     }
 
-    function createDependencyGraphItem(graph, name) {
+    function createDependencyGraphItem(graph: DepGraph, name: ComponentMainType) {
         if (!graph[name]) {
-            graph[name] = {predecessor: [], successor: []};
+            graph[name] = {predecessor: [], successor: []} as DepGraphItem;
         }
         return graph[name];
     }
 
-    function getAvailableDependencies(originalDeps, fullNameList) {
-        var availableDeps = [];
+    function getAvailableDependencies(
+        originalDeps: ComponentMainType[], fullNameList: ComponentMainType[]
+    ): ComponentMainType[] {
+        var availableDeps = [] as ComponentMainType[];
         zrUtil.each(originalDeps, function (dep) {
             zrUtil.indexOf(fullNameList, dep) >= 0 && availableDeps.push(dep);
         });
         return availableDeps;
     }
+
 }

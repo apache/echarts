@@ -17,125 +17,103 @@
 * under the License.
 */
 
-import {createHashMap, isObject, map} from 'zrender/src/core/util';
+import {createHashMap, isObject, map, HashMap} from 'zrender/src/core/util';
+import Model from '../model/Model';
 
-/**
- * @constructor
- * @param {Object} [opt]
- * @param {Object} [opt.categories=[]]
- * @param {Object} [opt.needCollect=false]
- * @param {Object} [opt.deduplication=false]
- */
-function OrdinalMeta(opt) {
+class OrdinalMeta {
 
-    /**
-     * @readOnly
-     * @type {Array.<string>}
-     */
-    this.categories = opt.categories || [];
+    readonly categories: string[];
 
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._needCollect = opt.needCollect;
+    private _needCollect: boolean;
 
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._deduplication = opt.deduplication;
+    private _deduplication: boolean;
 
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._map;
-}
+    private _map: HashMap<number>;
 
-/**
- * @param {module:echarts/model/Model} axisModel
- * @return {module:echarts/data/OrdinalMeta}
- */
-OrdinalMeta.createByAxisModel = function (axisModel) {
-    var option = axisModel.option;
-    var data = option.data;
-    var categories = data && map(data, getName);
 
-    return new OrdinalMeta({
-        categories: categories,
-        needCollect: !categories,
-        // deduplication is default in axis.
-        deduplication: option.dedplication !== false
-    });
-};
-
-var proto = OrdinalMeta.prototype;
-
-/**
- * @param {string} category
- * @return {number} ordinal
- */
-proto.getOrdinal = function (category) {
-    return getOrCreateMap(this).get(category);
-};
-
-/**
- * @param {*} category
- * @return {number} The ordinal. If not found, return NaN.
- */
-proto.parseAndCollect = function (category) {
-    var index;
-    var needCollect = this._needCollect;
-
-    // The value of category dim can be the index of the given category set.
-    // This feature is only supported when !needCollect, because we should
-    // consider a common case: a value is 2017, which is a number but is
-    // expected to be tread as a category. This case usually happen in dataset,
-    // where it happent to be no need of the index feature.
-    if (typeof category !== 'string' && !needCollect) {
-        return category;
+    constructor(opt: {
+        categories?: string[],
+        needCollect?: boolean
+        deduplication?: boolean
+    }) {
+        this.categories = opt.categories || [];
+        this._needCollect = opt.needCollect;
+        this._deduplication = opt.deduplication;
     }
 
-    // Optimize for the scenario:
-    // category is ['2012-01-01', '2012-01-02', ...], where the input
-    // data has been ensured not duplicate and is large data.
-    // Notice, if a dataset dimension provide categroies, usually echarts
-    // should remove duplication except user tell echarts dont do that
-    // (set axis.deduplication = false), because echarts do not know whether
-    // the values in the category dimension has duplication (consider the
-    // parallel-aqi example)
-    if (needCollect && !this._deduplication) {
-        index = this.categories.length;
-        this.categories[index] = category;
+    static createByAxisModel(axisModel: Model): OrdinalMeta {
+        var option = axisModel.option;
+        var data = option.data;
+        var categories = data && map(data, getName);
+
+        return new OrdinalMeta({
+            categories: categories,
+            needCollect: !categories,
+            // deduplication is default in axis.
+            deduplication: option.dedplication !== false
+        });
+    };
+
+    getOrdinal(category: string): number {
+        return this._getOrCreateMap().get(category);
+    }
+
+    /**
+     * @return The ordinal. If not found, return NaN.
+     */
+    parseAndCollect(category: any): number {
+        var index;
+        var needCollect = this._needCollect;
+
+        // The value of category dim can be the index of the given category set.
+        // This feature is only supported when !needCollect, because we should
+        // consider a common case: a value is 2017, which is a number but is
+        // expected to be tread as a category. This case usually happen in dataset,
+        // where it happent to be no need of the index feature.
+        if (typeof category !== 'string' && !needCollect) {
+            return category;
+        }
+
+        // Optimize for the scenario:
+        // category is ['2012-01-01', '2012-01-02', ...], where the input
+        // data has been ensured not duplicate and is large data.
+        // Notice, if a dataset dimension provide categroies, usually echarts
+        // should remove duplication except user tell echarts dont do that
+        // (set axis.deduplication = false), because echarts do not know whether
+        // the values in the category dimension has duplication (consider the
+        // parallel-aqi example)
+        if (needCollect && !this._deduplication) {
+            index = this.categories.length;
+            this.categories[index] = category;
+            return index;
+        }
+
+        var map = this._getOrCreateMap();
+        index = map.get(category);
+
+        if (index == null) {
+            if (needCollect) {
+                index = this.categories.length;
+                this.categories[index] = category;
+                map.set(category, index);
+            }
+            else {
+                index = NaN;
+            }
+        }
+
         return index;
     }
 
-    var map = getOrCreateMap(this);
-    index = map.get(category);
-
-    if (index == null) {
-        if (needCollect) {
-            index = this.categories.length;
-            this.categories[index] = category;
-            map.set(category, index);
-        }
-        else {
-            index = NaN;
-        }
+    // Consider big data, do not create map until needed.
+    private _getOrCreateMap(): HashMap<number> {
+        return this._map || (
+            this._map = createHashMap<number>(this.categories)
+        );
     }
-
-    return index;
-};
-
-// Consider big data, do not create map until needed.
-function getOrCreateMap(ordinalMeta) {
-    return ordinalMeta._map || (
-        ordinalMeta._map = createHashMap(ordinalMeta.categories)
-    );
 }
 
-function getName(obj) {
+function getName(obj: any): string {
     if (isObject(obj) && obj.value != null) {
         return obj.value;
     }

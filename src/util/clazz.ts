@@ -19,20 +19,23 @@
 
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
+import { Dictionary } from 'zrender/src/core/types';
+import { ComponentFullType, ComponentTypeInfo, ComponentMainType, ComponentSubType } from './types';
 
 var TYPE_DELIMITER = '.';
-var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';
+var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___' as const;
+var IS_EXTENDED_CLASS = '___EC__EXTENDED_CLASS___' as const;
 
 /**
  * Notice, parseClassType('') should returns {main: '', sub: ''}
  * @public
  */
-export function parseClassType(componentType) {
+export function parseClassType(componentType: ComponentFullType): ComponentTypeInfo {
     var ret = {main: '', sub: ''};
     if (componentType) {
-        componentType = componentType.split(TYPE_DELIMITER);
-        ret.main = componentType[0] || '';
-        ret.sub = componentType[1] || '';
+        var typeArr = componentType.split(TYPE_DELIMITER);
+        ret.main = typeArr[0] || '';
+        ret.sub = typeArr[1] || '';
     }
     return ret;
 }
@@ -40,21 +43,43 @@ export function parseClassType(componentType) {
 /**
  * @public
  */
-function checkClassType(componentType) {
+function checkClassType(componentType: ComponentFullType): void {
     zrUtil.assert(
         /^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)?$/.test(componentType),
         'componentType "' + componentType + '" illegal'
     );
 }
 
+export function isExtendedClass(clz: any): boolean {
+    return !!(clz && clz[IS_EXTENDED_CLASS]);
+}
+
+
+export interface ExtendableConstructor {
+    new (...args: any): any;
+    $constructor?: new (...args: any) => any;
+    extend: (proto: {[name: string]: any}) => ExtendableConstructor;
+    superCall: (context: any, methodName: string, ...args: any) => any;
+    superApply: (context: any, methodName: string, args: []) => any;
+    superClass?: ExtendableConstructor;
+    [IS_EXTENDED_CLASS]?: boolean;
+}
+
 /**
- * @public
+ * Implements `ExtendableConstructor` for `rootClz`.
+ *
+ * @usage
+ * ```ts
+ * class Xxx {}
+ * type XxxConstructor = typeof Xxx & ExtendableConstructor
+ * enableClassExtend(Xxx as XxxConstructor);
+ * ```
  */
-export function enableClassExtend(RootClass, mandatoryMethods) {
+export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMethods?: string[]): void {
 
-    RootClass.$constructor = RootClass;
-    RootClass.extend = function (proto) {
+    rootClz.$constructor = rootClz; // FIXME: not necessary?
 
+    rootClz.extend = function (proto: Dictionary<any>) {
         if (__DEV__) {
             zrUtil.each(mandatoryMethods, function (method) {
                 if (!proto[method]) {
@@ -67,14 +92,24 @@ export function enableClassExtend(RootClass, mandatoryMethods) {
         }
 
         var superClass = this;
-        var ExtendedClass = function () {
-            if (!proto.$constructor) {
-                superClass.apply(this, arguments);
+        // For backward compat, we both support ts class inheritance and this
+        // "extend" approach.
+        // The constructor should keep the same behavior as ts class inheritance:
+        // If this constructor/$constructor is not declared, auto invoke the super
+        // constructor.
+        // If this constructor/$constructor is declared, it is responsible for
+        // calling the super constructor.
+        var ExtendedClass = (class {
+            constructor() {
+                if (!proto.$constructor) {
+                    superClass.apply(this, arguments);
+                }
+                else {
+                    proto.$constructor.apply(this, arguments);
+                }
             }
-            else {
-                proto.$constructor.apply(this, arguments);
-            }
-        };
+            static [IS_EXTENDED_CLASS] = true;
+        }) as ExtendableConstructor;
 
         zrUtil.extend(ExtendedClass.prototype, proto);
 
@@ -84,26 +119,58 @@ export function enableClassExtend(RootClass, mandatoryMethods) {
         zrUtil.inherits(ExtendedClass, this);
         ExtendedClass.superClass = superClass;
 
-        return ExtendedClass;
+        return ExtendedClass as ExtendableConstructor;
     };
+}
+
+/**
+ * A work around to both support ts extend and this extend mechanism.
+ * on sub-class.
+ * @usage
+ * ```ts
+ * class Component { ... }
+ * classUtil.enableClassExtend(Component);
+ * classUtil.enableClassManagement(Component, {registerWhenExtend: true});
+ *
+ * class Series extends Component { ... }
+ * // Without calling `markExtend`, `registerWhenExtend` will not work.
+ * Component.markExtend(Series);
+ * ```
+ */
+export function mountExtend(SubClz: any, SupperClz: any): void {
+    SubClz.extend = SupperClz.extend;
+}
+
+
+export interface CheckableConstructor {
+    new (...args: any): any;
+    isInstance: (ins: any) => boolean;
 }
 
 var classBase = 0;
 
 /**
+ * Implements `CheckableConstructor` for `target`.
  * Can not use instanceof, consider different scope by
  * cross domain or es module import in ec extensions.
  * Mount a method "isInstance()" to Clz.
+ *
+ * @usage
+ * ```ts
+ * class Xxx {}
+ * type XxxConstructor = typeof Xxx & CheckableConstructor;
+ * enableClassCheck(Xxx as XxxConstructor)
+ * ```
  */
-export function enableClassCheck(Clz) {
+export function enableClassCheck(target: CheckableConstructor): void {
     var classAttr = ['__\0is_clz', classBase++, Math.random().toFixed(3)].join('_');
-    Clz.prototype[classAttr] = true;
+    target.prototype[classAttr] = true;
 
     if (__DEV__) {
-        zrUtil.assert(!Clz.isInstance, 'The method "is" can not be defined.');
+        zrUtil.assert(!target.isInstance, 'The method "is" can not be defined.');
     }
 
-    Clz.isInstance = function (obj) {
+    target.isInstance = function (obj) {
         return !!(obj && obj[classAttr]);
     };
 }
@@ -114,22 +181,43 @@ export function enableClassCheck(Clz) {
 // class B inherits class A, overrides method f, f call superApply('f'),
 // class C inherits class B, do not overrides method f,
 // then when method of class C is called, dead loop occured.
-function superCall(context, methodName) {
-    var args = zrUtil.slice(arguments, 2);
+function superCall(this: any, context: any, methodName: string, ...args: any): any {
     return this.superClass.prototype[methodName].apply(context, args);
 }
 
-function superApply(context, methodName, args) {
+function superApply(this: any, context: any, methodName: string, args: any): any {
     return this.superClass.prototype[methodName].apply(context, args);
+}
+
+type Constructor = new (...args: any) => any;
+type SubclassContainer = {[subType: string]: Constructor} & {[IS_CONTAINER]?: true};
+
+export interface ClassManager {
+    registerClass: (clz: Constructor, componentType: ComponentFullType) => Constructor;
+    getClass: (
+        componentMainType: ComponentMainType, subType?: ComponentSubType, throwWhenNotFound?: boolean
+    ) => Constructor;
+    getClassesByMainType: (componentType: ComponentMainType) => Constructor[];
+    hasClass: (componentType: ComponentFullType) => boolean;
+    getAllClassMainTypes: () => ComponentMainType[];
+    hasSubTypes: (componentType: ComponentFullType) => boolean;
 }
 
 /**
- * @param {Object} entity
- * @param {Object} options
- * @param {boolean} [options.registerWhenExtend]
- * @public
+ * Implements `ClassManager` for `target`
+ *
+ * @usage
+ * ```ts
+ * class Xxx {}
+ * type XxxConstructor = typeof Xxx & ClassManager
+ * enableClassManagement(Xxx as XxxConstructor);
+ * ```
  */
-export function enableClassManagement(entity, options) {
+export function enableClassManagement(
+    target: ClassManager,
+    options?: {registerWhenExtend?: boolean}
+): void {
+
     options = options || {};
 
     /**
@@ -138,78 +226,86 @@ export function enableClassManagement(entity, options) {
      * value:
      *     componentClass, when componentType is 'xxx'
      *     or Object.<subKey, componentClass>, when componentType is 'xxx.yy'
-     * @type {Object}
      */
-    var storage = {};
+    var storage: {
+        [componentMainType: string]: (Constructor | SubclassContainer)
+    } = {};
 
-    entity.registerClass = function (Clazz, componentType) {
+    target.registerClass = function (
+        clz: Constructor,
+        componentType: ComponentFullType
+    ): Constructor {
         if (componentType) {
             checkClassType(componentType);
-            componentType = parseClassType(componentType);
+            var componentTypeInfo = parseClassType(componentType);
 
-            if (!componentType.sub) {
+            if (!componentTypeInfo.sub) {
                 if (__DEV__) {
-                    if (storage[componentType.main]) {
-                        console.warn(componentType.main + ' exists.');
+                    if (storage[componentTypeInfo.main]) {
+                        console.warn(componentTypeInfo.main + ' exists.');
                     }
                 }
-                storage[componentType.main] = Clazz;
+                storage[componentTypeInfo.main] = clz;
             }
-            else if (componentType.sub !== IS_CONTAINER) {
-                var container = makeContainer(componentType);
-                container[componentType.sub] = Clazz;
+            else if (componentTypeInfo.sub !== IS_CONTAINER) {
+                var container = makeContainer(componentTypeInfo);
+                container[componentTypeInfo.sub] = clz;
             }
         }
-        return Clazz;
+        return clz;
     };
 
-    entity.getClass = function (componentMainType, subType, throwWhenNotFound) {
-        var Clazz = storage[componentMainType];
+    target.getClass = function (
+        mainType: ComponentMainType,
+        subType?: ComponentSubType,
+        throwWhenNotFound?: boolean
+    ): Constructor {
+        var clz = storage[mainType];
 
-        if (Clazz && Clazz[IS_CONTAINER]) {
-            Clazz = subType ? Clazz[subType] : null;
+        if (clz && (clz as SubclassContainer)[IS_CONTAINER]) {
+            clz = subType ? (clz as SubclassContainer)[subType] : null;
         }
 
-        if (throwWhenNotFound && !Clazz) {
+        if (throwWhenNotFound && !clz) {
             throw new Error(
                 !subType
-                    ? componentMainType + '.' + 'type should be specified.'
-                    : 'Component ' + componentMainType + '.' + (subType || '') + ' not exists. Load it first.'
+                    ? mainType + '.' + 'type should be specified.'
+                    : 'Component ' + mainType + '.' + (subType || '') + ' not exists. Load it first.'
             );
         }
 
-        return Clazz;
+        return clz as Constructor;
     };
 
-    entity.getClassesByMainType = function (componentType) {
-        componentType = parseClassType(componentType);
+    target.getClassesByMainType = function (componentType: ComponentFullType): Constructor[] {
+        var componentTypeInfo = parseClassType(componentType);
 
-        var result = [];
-        var obj = storage[componentType.main];
+        var result: Constructor[] = [];
+        var obj = storage[componentTypeInfo.main];
 
-        if (obj && obj[IS_CONTAINER]) {
-            zrUtil.each(obj, function (o, type) {
+        if (obj && (obj as SubclassContainer)[IS_CONTAINER]) {
+            zrUtil.each(obj as SubclassContainer, function (o, type) {
                 type !== IS_CONTAINER && result.push(o);
             });
         }
         else {
-            result.push(obj);
+            result.push(obj as Constructor);
         }
 
         return result;
     };
 
-    entity.hasClass = function (componentType) {
+    target.hasClass = function (componentType: ComponentFullType): boolean {
         // Just consider componentType.main.
-        componentType = parseClassType(componentType);
-        return !!storage[componentType.main];
+        var componentTypeInfo = parseClassType(componentType);
+        return !!storage[componentTypeInfo.main];
     };
 
     /**
-     * @return {Array.<string>} Like ['aa', 'bb'], but can not be ['aa.xx']
+     * @return Like ['aa', 'bb'], but can not be ['aa.xx']
      */
-    entity.getAllClassMainTypes = function () {
-        var types = [];
+    target.getAllClassMainTypes = function (): ComponentMainType[] {
+        var types: string[] = [];
         zrUtil.each(storage, function (obj, type) {
             types.push(type);
         });
@@ -218,43 +314,38 @@ export function enableClassManagement(entity, options) {
 
     /**
      * If a main type is container and has sub types
-     * @param  {string}  mainType
-     * @return {boolean}
      */
-    entity.hasSubTypes = function (componentType) {
-        componentType = parseClassType(componentType);
-        var obj = storage[componentType.main];
-        return obj && obj[IS_CONTAINER];
+    target.hasSubTypes = function (componentType: ComponentFullType): boolean {
+        var componentTypeInfo = parseClassType(componentType);
+        var obj = storage[componentTypeInfo.main];
+        return obj && (obj as SubclassContainer)[IS_CONTAINER];
     };
 
-    entity.parseClassType = parseClassType;
-
-    function makeContainer(componentType) {
-        var container = storage[componentType.main];
-        if (!container || !container[IS_CONTAINER]) {
-            container = storage[componentType.main] = {};
+    function makeContainer(componentTypeInfo: ComponentTypeInfo): SubclassContainer {
+        var container = storage[componentTypeInfo.main];
+        if (!container || !(container as SubclassContainer)[IS_CONTAINER]) {
+            container = storage[componentTypeInfo.main] = {};
             container[IS_CONTAINER] = true;
         }
-        return container;
+        return container as SubclassContainer;
     }
 
+    // FIXME:TS remove `registerWhenExtend` finally when ts migration completed?
     if (options.registerWhenExtend) {
-        var originalExtend = entity.extend;
+        var originalExtend = (target as any).extend;
         if (originalExtend) {
-            entity.extend = function (proto) {
+            (target as any).extend = function (proto: any) {
                 var ExtendedClass = originalExtend.call(this, proto);
-                return entity.registerClass(ExtendedClass, proto.type);
+                return target.registerClass(ExtendedClass, proto.type);
             };
         }
     }
-
-    return entity;
 }
 
-/**
- * @param {string|Array.<string>} properties
- */
-export function setReadOnly(obj, properties) {
+// /**
+//  * @param {string|Array.<string>} properties
+//  */
+// export function setReadOnly(obj, properties) {
     // FIXME It seems broken in IE8 simulation of IE11
     // if (!zrUtil.isArray(properties)) {
     //     properties = properties != null ? [properties] : [];
@@ -270,4 +361,4 @@ export function setReadOnly(obj, properties) {
     //         && Object.freeze
     //         && Object.freeze(obj[prop]);
     // });
-}
+// }

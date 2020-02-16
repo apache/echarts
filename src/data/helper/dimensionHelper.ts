@@ -17,16 +17,44 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {each, createHashMap, assert} from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
+import List from '../List';
+import {
+    DimensionName, DimensionIndex, VISUAL_DIMENSIONS, DimensionType
+} from '../../util/types';
 
-export var OTHER_DIMENSIONS = createHashMap([
-    'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
-]);
+export type DimensionSummaryEncode = {
+    defaultedLabel: DimensionName[],
+    defaultedTooltip: DimensionName[],
+    [coordOrVisualDimName: string]:
+        // index: coordDimIndex, value: dataDimName
+        DimensionName[]
+};
+export type DimensionUserOuputEncode = {
+    [coordOrVisualDimName: string]:
+        // index: coordDimIndex, value: dataDimIndex
+        DimensionIndex[]
+};
+export type DimensionUserOuput = {
+    // The same as `data.dimensions`
+    dimensionNames: DimensionName[]
+    encode: DimensionUserOuputEncode
+};
+export type DimensionSummary = {
+    encode: DimensionSummaryEncode,
+    // Those details that can be expose to users are put int `userOutput`.
+    userOutput: DimensionUserOuput,
+    // All of the data dim names that mapped by coordDim.
+    dataDimsOnCoord: DimensionName[],
+    encodeFirstDimNotExtra: {[coordDim: string]: DimensionName},
+}
 
-export function summarizeDimensions(data) {
-    var summary = {};
-    var encode = summary.encode = {};
+export function summarizeDimensions(data: List): DimensionSummary {
+    var summary: DimensionSummary = {} as DimensionSummary;
+    var encode = summary.encode = {} as DimensionSummaryEncode;
     var notExtraCoordDimMap = createHashMap();
     var defaultedLabel = [];
     var defaultedTooltip = [];
@@ -43,7 +71,7 @@ export function summarizeDimensions(data) {
         var coordDim = dimItem.coordDim;
         if (coordDim) {
             if (__DEV__) {
-                assert(OTHER_DIMENSIONS.get(coordDim) == null);
+                assert(VISUAL_DIMENSIONS.get(coordDim) == null);
             }
 
             var coordDimIndex = dimItem.coordDimIndex;
@@ -69,7 +97,7 @@ export function summarizeDimensions(data) {
             }
         }
 
-        OTHER_DIMENSIONS.each(function (v, otherDim) {
+        VISUAL_DIMENSIONS.each(function (v, otherDim) {
             var encodeArr = getOrCreateEncodeArr(encode, otherDim);
 
             var dimIndex = dimItem.otherDims[otherDim];
@@ -117,14 +145,17 @@ export function summarizeDimensions(data) {
     return summary;
 }
 
-function getOrCreateEncodeArr(encode, dim) {
+function getOrCreateEncodeArr(
+    encode: DimensionSummaryEncode, dim: DimensionName
+): DimensionName[] {
     if (!encode.hasOwnProperty(dim)) {
         encode[dim] = [];
     }
     return encode[dim];
 }
 
-export function getDimensionTypeByAxis(axisType) {
+// FIXME:TS should be type `AxisType`
+export function getDimensionTypeByAxis(axisType: string) {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'
@@ -132,7 +163,7 @@ export function getDimensionTypeByAxis(axisType) {
         : 'float';
 }
 
-function mayLabelDimType(dimType) {
+function mayLabelDimType(dimType: DimensionType): boolean {
     // In most cases, ordinal and time do not suitable for label.
     // Ordinal info can be displayed on axis. Time is too long.
     return !(dimType === 'ordinal' || dimType === 'time');

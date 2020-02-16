@@ -19,6 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
+import { LoadingEffect } from '../util/types';
+import ExtensionAPI from '../ExtensionAPI';
 
 var PI = Math.PI;
 
@@ -30,7 +32,16 @@ var PI = Math.PI;
  * @param {string} [opts.textColor]
  * @return {module:zrender/Element}
  */
-export default function (api, opts) {
+export default function (
+    api: ExtensionAPI,
+    opts?: {
+        text?: string,
+        color?: string,
+        textColor?: string,
+        maskColor?: string,
+        zlevel?: number
+    }
+): LoadingEffect {
     opts = opts || {};
     zrUtil.defaults(opts, {
         text: 'loading',
@@ -84,10 +95,11 @@ export default function (api, opts) {
         .delay(300)
         .start('circularInOut');
 
-    var group = new graphic.Group();
+    var group = new graphic.Group() as (graphic.Group & LoadingEffect);
     group.add(arc);
     group.add(labelRect);
     group.add(mask);
+
     // Inject resize
     group.resize = function () {
         var cx = api.getWidth() / 2;

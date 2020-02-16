@@ -17,460 +17,591 @@
 * under the License.
 */
 
-/**
- * @module echarts/stream/Scheduler
- */
-
-import {each, map, isFunction, createHashMap, noop} from 'zrender/src/core/util';
-import {createTask} from './task';
+import {each, map, isFunction, createHashMap, noop, HashMap} from 'zrender/src/core/util';
+import {
+    createTask, Task, TaskContext,
+    TaskProgressCallback, TaskProgressParams, TaskPlanCallbackReturn, PerformArgs
+} from './task';
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {normalizeToArray} from '../util/model';
+import {
+    StageHandler, StageHandlerOverallReset, VisualType, StageHandlerInput,
+    Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor
+} from '../util/types';
+import { EChartsType } from '../echarts';
+import SeriesModel from '../model/Series';
+import ChartView from '../view/Chart';
+import List from '../data/List';
 
-/**
- * @constructor
- */
-function Scheduler(ecInstance, api, dataProcessorHandlers, visualHandlers) {
-    this.ecInstance = ecInstance;
-    this.api = api;
-    this.unfinished;
-
-    // Fix current processors in case that in some rear cases that
-    // processors might be registered after echarts instance created.
-    // Register processors incrementally for a echarts instance is
-    // not supported by this stream architecture.
-    var dataProcessorHandlers = this._dataProcessorHandlers = dataProcessorHandlers.slice();
-    var visualHandlers = this._visualHandlers = visualHandlers.slice();
-    this._allHandlers = dataProcessorHandlers.concat(visualHandlers);
-
-    /**
-     * @private
-     * @type {
-     *     [handlerUID: string]: {
-     *         seriesTaskMap?: {
-     *             [seriesUID: string]: Task
-     *         },
-     *         overallTask?: Task
-     *     }
-     * }
-     */
-    this._stageTaskMap = createHashMap();
-}
-
-var proto = Scheduler.prototype;
-
-/**
- * @param {module:echarts/model/Global} ecModel
- * @param {Object} payload
- */
-proto.restoreData = function (ecModel, payload) {
-    // TODO: Only restroe needed series and components, but not all components.
-    // Currently `restoreData` of all of the series and component will be called.
-    // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
-    // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,
-    // and some components like coordinate system, axes, dataZoom, visualMap only
-    // need their target series refresh.
-    // (1) If we are implementing this feature some day, we should consider these cases:
-    // if a data processor depends on a component (e.g., dataZoomProcessor depends
-    // on the settings of `dataZoom`), it should be re-performed if the component
-    // is modified by `setOption`.
-    // (2) If a processor depends on sevral series, speicified by its `getTargetSeries`,
-    // it should be re-performed when the result array of `getTargetSeries` changed.
-    // We use `dependencies` to cover these issues.
-    // (3) How to update target series when coordinate system related components modified.
-
-    // TODO: simply the dirty mechanism? Check whether only the case here can set tasks dirty,
-    // and this case all of the tasks will be set as dirty.
-
-    ecModel.restoreData(payload);
-
-    // Theoretically an overall task not only depends on each of its target series, but also
-    // depends on all of the series.
-    // The overall task is not in pipeline, and `ecModel.restoreData` only set pipeline tasks
-    // dirty. If `getTargetSeries` of an overall task returns nothing, we should also ensure
-    // that the overall task is set as dirty and to be performed, otherwise it probably cause
-    // state chaos. So we have to set dirty of all of the overall tasks manually, otherwise it
-    // probably cause state chaos (consider `dataZoomProcessor`).
-    this._stageTaskMap.each(function (taskRecord) {
-        var overallTask = taskRecord.overallTask;
-        overallTask && overallTask.dirty();
-    });
+export type GeneralTask = Task<TaskContext>;
+export type SeriesTask = Task<SeriesTaskContext>;
+export type OverallTask = Task<OverallTaskContext> & {
+    agentStubMap?: HashMap<StubTask>
+};
+export type StubTask = Task<StubTaskContext> & {
+    agent?: OverallTask
 };
 
-// If seriesModel provided, incremental threshold is check by series data.
-proto.getPerformArgs = function (task, isBlock) {
-    // For overall task
-    if (!task.__pipeline) {
-        return;
+export type Pipeline = {
+    id: string
+    head: GeneralTask,
+    tail: GeneralTask,
+    threshold: number,
+    progressiveEnabled: boolean,
+    blockIndex: number,
+    step: number,
+    count: number,
+    currentTask?: GeneralTask,
+    context?: PipelineContext
+}
+export type PipelineContext = {
+    progressiveRender: boolean,
+    modDataCount: number,
+    large: boolean
+};
+
+type TaskRecord = {
+    // key: seriesUID
+    seriesTaskMap?: HashMap<SeriesTask>,
+    overallTask?: OverallTask
+};
+type PerformStageTaskOpt = {
+    block?: boolean,
+    setDirty?: boolean,
+    visualType?: VisualType,
+    dirtyMap?: HashMap<any>
+};
+
+export interface SeriesTaskContext extends TaskContext {
+    model?: SeriesModel;
+    data?: List;
+    view?: ChartView;
+    ecModel?: GlobalModel;
+    api?: ExtensionAPI;
+    useClearVisual?: boolean;
+    plan?: StageHandlerPlan;
+    reset?: StageHandlerReset;
+    scheduler?: Scheduler;
+    payload?: Payload;
+    resetDefines?: StageHandlerProgressExecutor[]
+}
+interface OverallTaskContext extends TaskContext {
+    ecModel: GlobalModel;
+    api: ExtensionAPI;
+    overallReset: StageHandlerOverallReset;
+    scheduler: Scheduler;
+    payload?: Payload;
+}
+interface StubTaskContext extends TaskContext {
+    model: SeriesModel;
+    overallProgress: boolean;
+};
+
+class Scheduler {
+
+    readonly ecInstance: EChartsType;
+    readonly api: ExtensionAPI;
+
+    // Shared with echarts.js, should only be modified by
+    // this file and echarts.js
+    unfinished: number;
+
+    private _dataProcessorHandlers: StageHandler[];
+    private _visualHandlers: StageHandler[];
+    private _allHandlers: StageHandler[];
+
+    // key: handlerUID
+    private _stageTaskMap: HashMap<TaskRecord> = createHashMap<TaskRecord>();
+    // key: pipelineId
+    private _pipelineMap: HashMap<Pipeline>;
+
+
+    constructor(
+        ecInstance: EChartsType,
+        api: ExtensionAPI,
+        dataProcessorHandlers: StageHandler[],
+        visualHandlers: StageHandler[]
+    ) {
+        this.ecInstance = ecInstance;
+        this.api = api;
+
+        // Fix current processors in case that in some rear cases that
+        // processors might be registered after echarts instance created.
+        // Register processors incrementally for a echarts instance is
+        // not supported by this stream architecture.
+        var dataProcessorHandlers = this._dataProcessorHandlers = dataProcessorHandlers.slice();
+        var visualHandlers = this._visualHandlers = visualHandlers.slice();
+        this._allHandlers = dataProcessorHandlers.concat(visualHandlers);
     }
 
-    var pipeline = this._pipelineMap.get(task.__pipeline.id);
-    var pCtx = pipeline.context;
-    var incremental = !isBlock
-        && pipeline.progressiveEnabled
-        && (!pCtx || pCtx.progressiveRender)
-        && task.__idxInPipeline > pipeline.blockIndex;
+    restoreData(ecModel: GlobalModel, payload: Payload): void {
+        // TODO: Only restroe needed series and components, but not all components.
+        // Currently `restoreData` of all of the series and component will be called.
+        // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
+        // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,
+        // and some components like coordinate system, axes, dataZoom, visualMap only
+        // need their target series refresh.
+        // (1) If we are implementing this feature some day, we should consider these cases:
+        // if a data processor depends on a component (e.g., dataZoomProcessor depends
+        // on the settings of `dataZoom`), it should be re-performed if the component
+        // is modified by `setOption`.
+        // (2) If a processor depends on sevral series, speicified by its `getTargetSeries`,
+        // it should be re-performed when the result array of `getTargetSeries` changed.
+        // We use `dependencies` to cover these issues.
+        // (3) How to update target series when coordinate system related components modified.
 
-    var step = incremental ? pipeline.step : null;
-    var modDataCount = pCtx && pCtx.modDataCount;
-    var modBy = modDataCount != null ? Math.ceil(modDataCount / step) : null;
+        // TODO: simply the dirty mechanism? Check whether only the case here can set tasks dirty,
+        // and this case all of the tasks will be set as dirty.
 
-    return {step: step, modBy: modBy, modDataCount: modDataCount};
-};
+        ecModel.restoreData(payload);
 
-proto.getPipeline = function (pipelineId) {
-    return this._pipelineMap.get(pipelineId);
-};
-
-/**
- * Current, progressive rendering starts from visual and layout.
- * Always detect render mode in the same stage, avoiding that incorrect
- * detection caused by data filtering.
- * Caution:
- * `updateStreamModes` use `seriesModel.getData()`.
- */
-proto.updateStreamModes = function (seriesModel, view) {
-    var pipeline = this._pipelineMap.get(seriesModel.uid);
-    var data = seriesModel.getData();
-    var dataLen = data.count();
-
-    // `progressiveRender` means that can render progressively in each
-    // animation frame. Note that some types of series do not provide
-    // `view.incrementalPrepareRender` but support `chart.appendData`. We
-    // use the term `incremental` but not `progressive` to describe the
-    // case that `chart.appendData`.
-    var progressiveRender = pipeline.progressiveEnabled
-        && view.incrementalPrepareRender
-        && dataLen >= pipeline.threshold;
-
-    var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
-
-    // TODO: modDataCount should not updated if `appendData`, otherwise cause whole repaint.
-    // see `test/candlestick-large3.html`
-    var modDataCount = seriesModel.get('progressiveChunkMode') === 'mod' ? dataLen : null;
-
-    seriesModel.pipelineContext = pipeline.context = {
-        progressiveRender: progressiveRender,
-        modDataCount: modDataCount,
-        large: large
-    };
-};
-
-proto.restorePipelines = function (ecModel) {
-    var scheduler = this;
-    var pipelineMap = scheduler._pipelineMap = createHashMap();
-
-    ecModel.eachSeries(function (seriesModel) {
-        var progressive = seriesModel.getProgressive();
-        var pipelineId = seriesModel.uid;
-
-        pipelineMap.set(pipelineId, {
-            id: pipelineId,
-            head: null,
-            tail: null,
-            threshold: seriesModel.getProgressiveThreshold(),
-            progressiveEnabled: progressive
-                && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
-            blockIndex: -1,
-            step: Math.round(progressive || 700),
-            count: 0
+        // Theoretically an overall task not only depends on each of its target series, but also
+        // depends on all of the series.
+        // The overall task is not in pipeline, and `ecModel.restoreData` only set pipeline tasks
+        // dirty. If `getTargetSeries` of an overall task returns nothing, we should also ensure
+        // that the overall task is set as dirty and to be performed, otherwise it probably cause
+        // state chaos. So we have to set dirty of all of the overall tasks manually, otherwise it
+        // probably cause state chaos (consider `dataZoomProcessor`).
+        this._stageTaskMap.each(function (taskRecord) {
+            var overallTask = taskRecord.overallTask;
+            overallTask && overallTask.dirty();
         });
+    }
 
-        pipe(scheduler, seriesModel, seriesModel.dataTask);
-    });
-};
-
-proto.prepareStageTasks = function () {
-    var stageTaskMap = this._stageTaskMap;
-    var ecModel = this.ecInstance.getModel();
-    var api = this.api;
-
-    each(this._allHandlers, function (handler) {
-        var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, []);
-
-        handler.reset && createSeriesStageTask(this, handler, record, ecModel, api);
-        handler.overallReset && createOverallStageTask(this, handler, record, ecModel, api);
-    }, this);
-};
-
-proto.prepareView = function (view, model, ecModel, api) {
-    var renderTask = view.renderTask;
-    var context = renderTask.context;
-
-    context.model = model;
-    context.ecModel = ecModel;
-    context.api = api;
-
-    renderTask.__block = !view.incrementalPrepareRender;
-
-    pipe(this, model, renderTask);
-};
-
-
-proto.performDataProcessorTasks = function (ecModel, payload) {
-    // If we do not use `block` here, it should be considered when to update modes.
-    performStageTasks(this, this._dataProcessorHandlers, ecModel, payload, {block: true});
-};
-
-// opt
-// opt.visualType: 'visual' or 'layout'
-// opt.setDirty
-proto.performVisualTasks = function (ecModel, payload, opt) {
-    performStageTasks(this, this._visualHandlers, ecModel, payload, opt);
-};
-
-function performStageTasks(scheduler, stageHandlers, ecModel, payload, opt) {
-    opt = opt || {};
-    var unfinished;
-
-    each(stageHandlers, function (stageHandler, idx) {
-        if (opt.visualType && opt.visualType !== stageHandler.visualType) {
+    // If seriesModel provided, incremental threshold is check by series data.
+    getPerformArgs(task: GeneralTask, isBlock?: boolean): {
+        step: number, modBy: number, modDataCount: number
+    } {
+        // For overall task
+        if (!task.__pipeline) {
             return;
         }
 
-        var stageHandlerRecord = scheduler._stageTaskMap.get(stageHandler.uid);
-        var seriesTaskMap = stageHandlerRecord.seriesTaskMap;
-        var overallTask = stageHandlerRecord.overallTask;
+        var pipeline = this._pipelineMap.get(task.__pipeline.id);
+        var pCtx = pipeline.context;
+        var incremental = !isBlock
+            && pipeline.progressiveEnabled
+            && (!pCtx || pCtx.progressiveRender)
+            && task.__idxInPipeline > pipeline.blockIndex;
 
-        if (overallTask) {
-            var overallNeedDirty;
-            var agentStubMap = overallTask.agentStubMap;
-            agentStubMap.each(function (stub) {
-                if (needSetDirty(opt, stub)) {
-                    stub.dirty();
-                    overallNeedDirty = true;
-                }
-            });
-            overallNeedDirty && overallTask.dirty();
-            updatePayload(overallTask, payload);
-            var performArgs = scheduler.getPerformArgs(overallTask, opt.block);
-            // Execute stubs firstly, which may set the overall task dirty,
-            // then execute the overall task. And stub will call seriesModel.setData,
-            // which ensures that in the overallTask seriesModel.getData() will not
-            // return incorrect data.
-            agentStubMap.each(function (stub) {
-                stub.perform(performArgs);
-            });
-            unfinished |= overallTask.perform(performArgs);
-        }
-        else if (seriesTaskMap) {
-            seriesTaskMap.each(function (task, pipelineId) {
-                if (needSetDirty(opt, task)) {
-                    task.dirty();
-                }
-                var performArgs = scheduler.getPerformArgs(task, opt.block);
-                // FIXME
-                // if intending to decalare `performRawSeries` in handlers, only
-                // stream-independent (specifically, data item independent) operations can be
-                // performed. Because is a series is filtered, most of the tasks will not
-                // be performed. A stream-dependent operation probably cause wrong biz logic.
-                // Perhaps we should not provide a separate callback for this case instead
-                // of providing the config `performRawSeries`. The stream-dependent operaions
-                // and stream-independent operations should better not be mixed.
-                performArgs.skip = !stageHandler.performRawSeries
-                    && ecModel.isSeriesFiltered(task.context.model);
-                updatePayload(task, payload);
-                unfinished |= task.perform(performArgs);
-            });
-        }
-    });
+        var step = incremental ? pipeline.step : null;
+        var modDataCount = pCtx && pCtx.modDataCount;
+        var modBy = modDataCount != null ? Math.ceil(modDataCount / step) : null;
 
-    function needSetDirty(opt, task) {
-        return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipeline.id));
+        return {step: step, modBy: modBy, modDataCount: modDataCount};
     }
 
-    scheduler.unfinished |= unfinished;
-}
+    getPipeline(pipelineId: string) {
+        return this._pipelineMap.get(pipelineId);
+    }
 
-proto.performSeriesTasks = function (ecModel) {
-    var unfinished;
+    /**
+     * Current, progressive rendering starts from visual and layout.
+     * Always detect render mode in the same stage, avoiding that incorrect
+     * detection caused by data filtering.
+     * Caution:
+     * `updateStreamModes` use `seriesModel.getData()`.
+     */
+    updateStreamModes(seriesModel: SeriesModel, view: ChartView): void {
+        var pipeline = this._pipelineMap.get(seriesModel.uid);
+        var data = seriesModel.getData();
+        var dataLen = data.count();
 
-    ecModel.eachSeries(function (seriesModel) {
-        // Progress to the end for dataInit and dataRestore.
-        unfinished |= seriesModel.dataTask.perform();
-    });
+        // `progressiveRender` means that can render progressively in each
+        // animation frame. Note that some types of series do not provide
+        // `view.incrementalPrepareRender` but support `chart.appendData`. We
+        // use the term `incremental` but not `progressive` to describe the
+        // case that `chart.appendData`.
+        var progressiveRender = pipeline.progressiveEnabled
+            && view.incrementalPrepareRender
+            && dataLen >= pipeline.threshold;
 
-    this.unfinished |= unfinished;
-};
+        var large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
 
-proto.plan = function () {
-    // Travel pipelines, check block.
-    this._pipelineMap.each(function (pipeline) {
-        var task = pipeline.tail;
-        do {
-            if (task.__block) {
-                pipeline.blockIndex = task.__idxInPipeline;
-                break;
+        // TODO: modDataCount should not updated if `appendData`, otherwise cause whole repaint.
+        // see `test/candlestick-large3.html`
+        var modDataCount = seriesModel.get('progressiveChunkMode') === 'mod' ? dataLen : null;
+
+        seriesModel.pipelineContext = pipeline.context = {
+            progressiveRender: progressiveRender,
+            modDataCount: modDataCount,
+            large: large
+        };
+    }
+
+    restorePipelines(ecModel: GlobalModel): void {
+        var scheduler = this;
+        var pipelineMap = scheduler._pipelineMap = createHashMap();
+
+        ecModel.eachSeries(function (seriesModel) {
+            var progressive = seriesModel.getProgressive();
+            var pipelineId = seriesModel.uid;
+
+            pipelineMap.set(pipelineId, {
+                id: pipelineId,
+                head: null,
+                tail: null,
+                threshold: seriesModel.getProgressiveThreshold(),
+                progressiveEnabled: progressive
+                    && !(seriesModel.preventIncremental && seriesModel.preventIncremental()),
+                blockIndex: -1,
+                step: Math.round(progressive || 700),
+                count: 0
+            });
+
+            scheduler._pipe(seriesModel, seriesModel.dataTask);
+        });
+    }
+
+    prepareStageTasks(): void {
+        var stageTaskMap = this._stageTaskMap;
+        var ecModel = this.ecInstance.getModel();
+        var api = this.api;
+
+        each(this._allHandlers, function (handler) {
+            var record = stageTaskMap.get(handler.uid) || stageTaskMap.set(handler.uid, {});
+
+            handler.reset && this._createSeriesStageTask(handler, record, ecModel, api);
+            handler.overallReset && this._createOverallStageTask(handler, record, ecModel, api);
+        }, this);
+    }
+
+    prepareView(view: ChartView, model: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void {
+        var renderTask = view.renderTask;
+        var context = renderTask.context;
+
+        context.model = model;
+        context.ecModel = ecModel;
+        context.api = api;
+
+        renderTask.__block = !view.incrementalPrepareRender;
+
+        this._pipe(model, renderTask);
+    }
+
+    performDataProcessorTasks(ecModel: GlobalModel, payload?: Payload): void {
+        // If we do not use `block` here, it should be considered when to update modes.
+        this._performStageTasks(this._dataProcessorHandlers, ecModel, payload, {block: true});
+    }
+
+    performVisualTasks(
+        ecModel: GlobalModel,
+        payload?: Payload,
+        opt?: PerformStageTaskOpt
+    ): void {
+        this._performStageTasks(this._visualHandlers, ecModel, payload, opt);
+    }
+
+    private _performStageTasks(
+        stageHandlers: StageHandler[],
+        ecModel: GlobalModel,
+        payload: Payload,
+        opt?: PerformStageTaskOpt
+    ): void {
+        opt = opt || {};
+        var unfinished: number;
+        var scheduler = this;
+
+        each(stageHandlers, function (stageHandler, idx) {
+            if (opt.visualType && opt.visualType !== stageHandler.visualType) {
+                return;
             }
-            task = task.getUpstream();
+
+            var stageHandlerRecord = scheduler._stageTaskMap.get(stageHandler.uid);
+            var seriesTaskMap = stageHandlerRecord.seriesTaskMap;
+            var overallTask = stageHandlerRecord.overallTask;
+
+            if (overallTask) {
+                var overallNeedDirty;
+                var agentStubMap = overallTask.agentStubMap;
+                agentStubMap.each(function (stub) {
+                    if (needSetDirty(opt, stub)) {
+                        stub.dirty();
+                        overallNeedDirty = true;
+                    }
+                });
+                overallNeedDirty && overallTask.dirty();
+                scheduler.updatePayload(overallTask, payload);
+                var performArgs = scheduler.getPerformArgs(overallTask, opt.block);
+                // Execute stubs firstly, which may set the overall task dirty,
+                // then execute the overall task. And stub will call seriesModel.setData,
+                // which ensures that in the overallTask seriesModel.getData() will not
+                // return incorrect data.
+                agentStubMap.each(function (stub) {
+                    stub.perform(performArgs);
+                });
+                unfinished |= overallTask.perform(performArgs) as any;
+            }
+            else if (seriesTaskMap) {
+                seriesTaskMap.each(function (task, pipelineId) {
+                    if (needSetDirty(opt, task)) {
+                        task.dirty();
+                    }
+                    var performArgs: PerformArgs = scheduler.getPerformArgs(task, opt.block);
+                    // FIXME
+                    // if intending to decalare `performRawSeries` in handlers, only
+                    // stream-independent (specifically, data item independent) operations can be
+                    // performed. Because is a series is filtered, most of the tasks will not
+                    // be performed. A stream-dependent operation probably cause wrong biz logic.
+                    // Perhaps we should not provide a separate callback for this case instead
+                    // of providing the config `performRawSeries`. The stream-dependent operaions
+                    // and stream-independent operations should better not be mixed.
+                    performArgs.skip = !stageHandler.performRawSeries
+                        && ecModel.isSeriesFiltered(task.context.model);
+                    scheduler.updatePayload(task, payload);
+                    unfinished |= task.perform(performArgs) as any;
+                });
+            }
+        });
+
+        function needSetDirty(opt: PerformStageTaskOpt, task: GeneralTask): boolean {
+            return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipeline.id));
         }
-        while (task);
-    });
-};
 
-var updatePayload = proto.updatePayload = function (task, payload) {
-    payload !== 'remain' && (task.context.payload = payload);
-};
-
-function createSeriesStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
-    var seriesTaskMap = stageHandlerRecord.seriesTaskMap
-        || (stageHandlerRecord.seriesTaskMap = createHashMap());
-    var seriesType = stageHandler.seriesType;
-    var getTargetSeries = stageHandler.getTargetSeries;
-
-    // If a stageHandler should cover all series, `createOnAllSeries` should be declared mandatorily,
-    // to avoid some typo or abuse. Otherwise if an extension do not specify a `seriesType`,
-    // it works but it may cause other irrelevant charts blocked.
-    if (stageHandler.createOnAllSeries) {
-        ecModel.eachRawSeries(create);
-    }
-    else if (seriesType) {
-        ecModel.eachRawSeriesByType(seriesType, create);
-    }
-    else if (getTargetSeries) {
-        getTargetSeries(ecModel, api).each(create);
+        this.unfinished |= unfinished;
     }
 
-    function create(seriesModel) {
-        var pipelineId = seriesModel.uid;
+    performSeriesTasks(ecModel: GlobalModel): void {
+        var unfinished: number;
 
-        // Init tasks for each seriesModel only once.
-        // Reuse original task instance.
-        var task = seriesTaskMap.get(pipelineId)
-            || seriesTaskMap.set(pipelineId, createTask({
-                plan: seriesTaskPlan,
-                reset: seriesTaskReset,
-                count: seriesTaskCount
-            }));
-        task.context = {
-            model: seriesModel,
+        ecModel.eachSeries(function (seriesModel) {
+            // Progress to the end for dataInit and dataRestore.
+            unfinished |= seriesModel.dataTask.perform() as any;
+        });
+
+        this.unfinished |= unfinished;
+    }
+
+    plan(): void {
+        // Travel pipelines, check block.
+        this._pipelineMap.each(function (pipeline) {
+            var task = pipeline.tail;
+            do {
+                if (task.__block) {
+                    pipeline.blockIndex = task.__idxInPipeline;
+                    break;
+                }
+                task = task.getUpstream();
+            }
+            while (task);
+        });
+    }
+
+    updatePayload(
+        task: Task<SeriesTaskContext | OverallTaskContext>,
+        payload: Payload | 'remain'
+    ): void {
+        payload !== 'remain' && (task.context.payload = payload);
+    }
+
+    private _createSeriesStageTask(
+        stageHandler: StageHandler,
+        stageHandlerRecord: TaskRecord,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ): void {
+        var scheduler = this;
+        var seriesTaskMap = stageHandlerRecord.seriesTaskMap
+            || (stageHandlerRecord.seriesTaskMap = createHashMap());
+        var seriesType = stageHandler.seriesType;
+        var getTargetSeries = stageHandler.getTargetSeries;
+
+        // If a stageHandler should cover all series, `createOnAllSeries` should be declared mandatorily,
+        // to avoid some typo or abuse. Otherwise if an extension do not specify a `seriesType`,
+        // it works but it may cause other irrelevant charts blocked.
+        if (stageHandler.createOnAllSeries) {
+            ecModel.eachRawSeries(create);
+        }
+        else if (seriesType) {
+            ecModel.eachRawSeriesByType(seriesType, create);
+        }
+        else if (getTargetSeries) {
+            getTargetSeries(ecModel, api).each(create);
+        }
+
+        function create(seriesModel: SeriesModel): void {
+            var pipelineId = seriesModel.uid;
+
+            // Init tasks for each seriesModel only once.
+            // Reuse original task instance.
+            var task = seriesTaskMap.get(pipelineId)
+                || seriesTaskMap.set(pipelineId, createTask<SeriesTaskContext>({
+                    plan: seriesTaskPlan,
+                    reset: seriesTaskReset,
+                    count: seriesTaskCount
+                }));
+            task.context = {
+                model: seriesModel,
+                ecModel: ecModel,
+                api: api,
+                // PENDING: `useClearVisual` not used?
+                useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
+                plan: stageHandler.plan,
+                reset: stageHandler.reset,
+                scheduler: scheduler
+            };
+            scheduler._pipe(seriesModel, task);
+        }
+
+        // Clear unused series tasks.
+        var pipelineMap = scheduler._pipelineMap;
+        seriesTaskMap.each(function (task, pipelineId) {
+            if (!pipelineMap.get(pipelineId)) {
+                task.dispose();
+                seriesTaskMap.removeKey(pipelineId);
+            }
+        });
+    }
+
+    private _createOverallStageTask(
+        stageHandler: StageHandler,
+        stageHandlerRecord: TaskRecord,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ): void {
+        var scheduler = this;
+        var overallTask: OverallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
+            // For overall task, the function only be called on reset stage.
+            || createTask<OverallTaskContext>({reset: overallTaskReset});
+
+        overallTask.context = {
             ecModel: ecModel,
             api: api,
-            useClearVisual: stageHandler.isVisual && !stageHandler.isLayout,
-            plan: stageHandler.plan,
-            reset: stageHandler.reset,
+            overallReset: stageHandler.overallReset,
             scheduler: scheduler
         };
-        pipe(scheduler, seriesModel, task);
+
+        // Reuse orignal stubs.
+        var agentStubMap = overallTask.agentStubMap = overallTask.agentStubMap
+            || createHashMap<StubTask>();
+
+        var seriesType = stageHandler.seriesType;
+        var getTargetSeries = stageHandler.getTargetSeries;
+        var overallProgress = true;
+        // FIXME:TS never used, so comment it
+        // var modifyOutputEnd = stageHandler.modifyOutputEnd;
+
+        // An overall task with seriesType detected or has `getTargetSeries`, we add
+        // stub in each pipelines, it will set the overall task dirty when the pipeline
+        // progress. Moreover, to avoid call the overall task each frame (too frequent),
+        // we set the pipeline block.
+        if (seriesType) {
+            ecModel.eachRawSeriesByType(seriesType, createStub);
+        }
+        else if (getTargetSeries) {
+            getTargetSeries(ecModel, api).each(createStub);
+        }
+        // Otherwise, (usually it is legancy case), the overall task will only be
+        // executed when upstream dirty. Otherwise the progressive rendering of all
+        // pipelines will be disabled unexpectedly. But it still needs stubs to receive
+        // dirty info from upsteam.
+        else {
+            overallProgress = false;
+            each(ecModel.getSeries(), createStub);
+        }
+
+        function createStub(seriesModel: SeriesModel): void {
+            var pipelineId = seriesModel.uid;
+            var stub = agentStubMap.get(pipelineId);
+            if (!stub) {
+                stub = agentStubMap.set(pipelineId, createTask<StubTaskContext>(
+                    {reset: stubReset, onDirty: stubOnDirty}
+                ));
+                // When the result of `getTargetSeries` changed, the overallTask
+                // should be set as dirty and re-performed.
+                overallTask.dirty();
+            }
+            stub.context = {
+                model: seriesModel,
+                overallProgress: overallProgress
+                // FIXME:TS never used, so comment it
+                // modifyOutputEnd: modifyOutputEnd
+            };
+            stub.agent = overallTask;
+            stub.__block = overallProgress;
+
+            scheduler._pipe(seriesModel, stub);
+        }
+
+        // Clear unused stubs.
+        var pipelineMap = scheduler._pipelineMap;
+        agentStubMap.each(function (stub, pipelineId) {
+            if (!pipelineMap.get(pipelineId)) {
+                stub.dispose();
+                // When the result of `getTargetSeries` changed, the overallTask
+                // should be set as dirty and re-performed.
+                overallTask.dirty();
+                agentStubMap.removeKey(pipelineId);
+            }
+        });
     }
 
-    // Clear unused series tasks.
-    var pipelineMap = scheduler._pipelineMap;
-    seriesTaskMap.each(function (task, pipelineId) {
-        if (!pipelineMap.get(pipelineId)) {
-            task.dispose();
-            seriesTaskMap.removeKey(pipelineId);
+    private _pipe(seriesModel: SeriesModel, task: GeneralTask) {
+        var pipelineId = seriesModel.uid;
+        var pipeline = this._pipelineMap.get(pipelineId);
+        !pipeline.head && (pipeline.head = task);
+        pipeline.tail && pipeline.tail.pipe(task);
+        pipeline.tail = task;
+        task.__idxInPipeline = pipeline.count++;
+        task.__pipeline = pipeline;
+    }
+
+    static wrapStageHandler(
+        stageHandler: StageHandlerInput | StageHandlerOverallReset,
+        visualType: VisualType
+    ): StageHandler {
+        if (isFunction(stageHandler)) {
+            stageHandler = {
+                overallReset: stageHandler,
+                seriesType: detectSeriseType(stageHandler)
+            } as StageHandler;
         }
-    });
-}
 
-function createOverallStageTask(scheduler, stageHandler, stageHandlerRecord, ecModel, api) {
-    var overallTask = stageHandlerRecord.overallTask = stageHandlerRecord.overallTask
-        // For overall task, the function only be called on reset stage.
-        || createTask({reset: overallTaskReset});
+        (stageHandler as StageHandler).uid = getUID('stageHandler');
+        visualType && ((stageHandler as StageHandler).visualType = visualType);
 
-    overallTask.context = {
-        ecModel: ecModel,
-        api: api,
-        overallReset: stageHandler.overallReset,
-        scheduler: scheduler
+        return stageHandler as StageHandler;
     };
 
-    // Reuse orignal stubs.
-    var agentStubMap = overallTask.agentStubMap = overallTask.agentStubMap || createHashMap();
-
-    var seriesType = stageHandler.seriesType;
-    var getTargetSeries = stageHandler.getTargetSeries;
-    var overallProgress = true;
-    var modifyOutputEnd = stageHandler.modifyOutputEnd;
-
-    // An overall task with seriesType detected or has `getTargetSeries`, we add
-    // stub in each pipelines, it will set the overall task dirty when the pipeline
-    // progress. Moreover, to avoid call the overall task each frame (too frequent),
-    // we set the pipeline block.
-    if (seriesType) {
-        ecModel.eachRawSeriesByType(seriesType, createStub);
-    }
-    else if (getTargetSeries) {
-        getTargetSeries(ecModel, api).each(createStub);
-    }
-    // Otherwise, (usually it is legancy case), the overall task will only be
-    // executed when upstream dirty. Otherwise the progressive rendering of all
-    // pipelines will be disabled unexpectedly. But it still needs stubs to receive
-    // dirty info from upsteam.
-    else {
-        overallProgress = false;
-        each(ecModel.getSeries(), createStub);
-    }
-
-    function createStub(seriesModel) {
-        var pipelineId = seriesModel.uid;
-        var stub = agentStubMap.get(pipelineId);
-        if (!stub) {
-            stub = agentStubMap.set(pipelineId, createTask(
-                {reset: stubReset, onDirty: stubOnDirty}
-            ));
-            // When the result of `getTargetSeries` changed, the overallTask
-            // should be set as dirty and re-performed.
-            overallTask.dirty();
-        }
-        stub.context = {
-            model: seriesModel,
-            overallProgress: overallProgress,
-            modifyOutputEnd: modifyOutputEnd
-        };
-        stub.agent = overallTask;
-        stub.__block = overallProgress;
-
-        pipe(scheduler, seriesModel, stub);
-    }
-
-    // Clear unused stubs.
-    var pipelineMap = scheduler._pipelineMap;
-    agentStubMap.each(function (stub, pipelineId) {
-        if (!pipelineMap.get(pipelineId)) {
-            stub.dispose();
-            // When the result of `getTargetSeries` changed, the overallTask
-            // should be set as dirty and re-performed.
-            overallTask.dirty();
-            agentStubMap.removeKey(pipelineId);
-        }
-    });
 }
 
-function overallTaskReset(context) {
+
+function overallTaskReset(context: OverallTaskContext): void {
     context.overallReset(
         context.ecModel, context.api, context.payload
     );
 }
 
-function stubReset(context, upstreamContext) {
+function stubReset(context: StubTaskContext): TaskProgressCallback<StubTaskContext> {
     return context.overallProgress && stubProgress;
 }
 
-function stubProgress() {
+function stubProgress(this: StubTask): void {
     this.agent.dirty();
     this.getDownstream().dirty();
 }
 
-function stubOnDirty() {
+function stubOnDirty(this: StubTask): void {
     this.agent && this.agent.dirty();
 }
 
-function seriesTaskPlan(context) {
-    return context.plan && context.plan(
+function seriesTaskPlan(context: SeriesTaskContext): TaskPlanCallbackReturn {
+    return context.plan ? context.plan(
         context.model, context.ecModel, context.api, context.payload
-    );
+    ) : null;
 }
 
-function seriesTaskReset(context) {
+function seriesTaskReset(
+    context: SeriesTaskContext
+): TaskProgressCallback<SeriesTaskContext> | TaskProgressCallback<SeriesTaskContext>[] {
     if (context.useClearVisual) {
         context.data.clearAllVisual();
     }
-    var resetDefines = context.resetDefines = normalizeToArray(context.reset(
-        context.model, context.ecModel, context.api, context.payload
-    ));
+    var resetDefines = context.resetDefines = normalizeToArray<StageHandlerProgressExecutor>(
+        context.reset(context.model, context.ecModel, context.api, context.payload)
+    );
     return resetDefines.length > 1
         ? map(resetDefines, function (v, idx) {
             return makeSeriesTaskProgress(idx);
@@ -480,8 +611,8 @@ function seriesTaskReset(context) {
 
 var singleSeriesTaskProgress = makeSeriesTaskProgress(0);
 
-function makeSeriesTaskProgress(resetDefineIdx) {
-    return function (params, context) {
+function makeSeriesTaskProgress(resetDefineIdx: number): TaskProgressCallback<SeriesTaskContext> {
+    return function (params: TaskProgressParams, context: SeriesTaskContext): void {
         var data = context.data;
         var resetDefine = context.resetDefines[resetDefineIdx];
 
@@ -496,33 +627,9 @@ function makeSeriesTaskProgress(resetDefineIdx) {
     };
 }
 
-function seriesTaskCount(context) {
+function seriesTaskCount(context: SeriesTaskContext): number {
     return context.data.count();
 }
-
-function pipe(scheduler, seriesModel, task) {
-    var pipelineId = seriesModel.uid;
-    var pipeline = scheduler._pipelineMap.get(pipelineId);
-    !pipeline.head && (pipeline.head = task);
-    pipeline.tail && pipeline.tail.pipe(task);
-    pipeline.tail = task;
-    task.__idxInPipeline = pipeline.count++;
-    task.__pipeline = pipeline;
-}
-
-Scheduler.wrapStageHandler = function (stageHandler, visualType) {
-    if (isFunction(stageHandler)) {
-        stageHandler = {
-            overallReset: stageHandler,
-            seriesType: detectSeriseType(stageHandler)
-        };
-    }
-
-    stageHandler.uid = getUID('stageHandler');
-    visualType && (stageHandler.visualType = visualType);
-
-    return stageHandler;
-};
 
 
 
@@ -533,7 +640,7 @@ Scheduler.wrapStageHandler = function (stageHandler, visualType) {
  * progressive rendering disabled. We try to detect the series type, to narrow down
  * the block range to only the series type they concern, but not all series.
  */
-function detectSeriseType(legacyFunc) {
+function detectSeriseType(legacyFunc: StageHandlerOverallReset): string {
     seriesType = null;
     try {
         // Assume there is no async when calling `eachSeriesByType`.
@@ -544,8 +651,8 @@ function detectSeriseType(legacyFunc) {
     return seriesType;
 }
 
-var ecModelMock = {};
-var apiMock = {};
+var ecModelMock: GlobalModel = {} as GlobalModel;
+var apiMock: ExtensionAPI = {} as ExtensionAPI;
 var seriesType;
 
 mockMethods(ecModelMock, GlobalModel);
@@ -553,13 +660,13 @@ mockMethods(apiMock, ExtensionAPI);
 ecModelMock.eachSeriesByType = ecModelMock.eachRawSeriesByType = function (type) {
     seriesType = type;
 };
-ecModelMock.eachComponent = function (cond) {
+ecModelMock.eachComponent = function (cond: any): void {
     if (cond.mainType === 'series' && cond.subType) {
         seriesType = cond.subType;
     }
 };
 
-function mockMethods(target, Clz) {
+function mockMethods(target: any, Clz: any): void {
     /* eslint-disable */
     for (var name in Clz.prototype) {
         // Do not use hasOwnProperty

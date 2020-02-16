@@ -17,39 +17,94 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../../config';
 import {createHashMap, isString, isArray, each, assert} from 'zrender/src/core/util';
 import {parseXML} from 'zrender/src/tool/parseSVG';
 
-
-var storage = createHashMap();
-
 // For minimize the code size of common echarts package,
 // do not put too much logic in this module.
 
+export type GeoMapSVGSource = 'string' | Document;
+export type GeoMapGeoJSONSource = 'string' | object;
+export type GeoSpecialAreas = object;
+
+interface GeoMapGeoJSONDefinition {
+    geoJSON?: GeoMapGeoJSONSource;
+    geoJson?: GeoMapGeoJSONSource;
+    specialAreas?: GeoSpecialAreas;
+}
+interface GeoMapSVGDefinition {
+    svg?: GeoMapSVGSource;
+    specialAreas?: GeoSpecialAreas;
+}
+export type GeoMapDefinition = GeoMapGeoJSONDefinition | GeoMapSVGDefinition;
+
+interface GeoMapRecord {
+    type: 'geoJSON' | 'svg';
+    source: GeoMapGeoJSONSource | GeoMapSVGSource;
+    specialAreas: GeoSpecialAreas;
+    geoJSON: object;
+    svgXML: Node
+}
+
+
+var storage = createHashMap<GeoMapRecord[]>();
+
+
 export default {
 
-    // The format of record: see `echarts.registerMap`.
-    // Compatible with previous `echarts.registerMap`.
-    registerMap: function (mapName, rawGeoJson, rawSpecialAreas) {
+    /**
+     * Compatible with previous `echarts.registerMap`.
+     * @usage
+     * ```js
+     * $.get('USA.json', function (geoJson) {
+     *     echarts.registerMap('USA', geoJson);
+     *     // Or
+     *     echarts.registerMap('USA', {
+     *         geoJson: geoJson,
+     *         specialAreas: {}
+     *     })
+     * });
+     *
+     * $.get('airport.svg', function (svg) {
+     *     echarts.registerMap('airport', {
+     *         svg: svg
+     *     }
+     * });
+     *
+     * echarts.registerMap('eu', [
+     *     {svg: eu-topographic.svg},
+     *     {geoJSON: eu.json}
+     * ])
+     * ```
+     */
+    registerMap: function (
+        mapName: string,
+        rawGeoJson: GeoMapDefinition | GeoMapDefinition[] | GeoMapGeoJSONSource,
+        rawSpecialAreas?: GeoSpecialAreas
+    ): GeoMapRecord[] {
 
         var records;
 
         if (isArray(rawGeoJson)) {
             records = rawGeoJson;
         }
-        else if (rawGeoJson.svg) {
+        else if ((rawGeoJson as GeoMapSVGDefinition).svg) {
             records = [{
                 type: 'svg',
-                source: rawGeoJson.svg,
-                specialAreas: rawGeoJson.specialAreas
+                source: (rawGeoJson as GeoMapSVGDefinition).svg,
+                specialAreas: (rawGeoJson as GeoMapSVGDefinition).specialAreas
             }];
         }
         else {
             // Backward compatibility.
-            if (rawGeoJson.geoJson && !rawGeoJson.features) {
-                rawSpecialAreas = rawGeoJson.specialAreas;
-                rawGeoJson = rawGeoJson.geoJson;
+            var geoSource = (rawGeoJson as GeoMapGeoJSONDefinition).geoJson
+                || (rawGeoJson as GeoMapGeoJSONDefinition).geoJSON;
+            if (geoSource && !(rawGeoJson as any).features) {
+                rawSpecialAreas = (rawGeoJson as GeoMapGeoJSONDefinition).specialAreas;
+                rawGeoJson = geoSource;
             }
             records = [{
                 type: 'geoJSON',
@@ -74,7 +129,7 @@ export default {
         return storage.set(mapName, records);
     },
 
-    retrieveMap: function (mapName) {
+    retrieveMap: function (mapName: string): GeoMapRecord[] {
         return storage.get(mapName);
     }
 
@@ -82,7 +137,7 @@ export default {
 
 var parsers = {
 
-    geoJSON: function (record) {
+    geoJSON: function (record: GeoMapRecord): void {
         var source = record.source;
         record.geoJSON = !isString(source)
             ? source
@@ -97,8 +152,8 @@ var parsers = {
     // if we do it here, the clone of zrender elements has to be
     // required. So we do it once for each geo instance, util real
     // performance issues call for optimizing it.
-    svg: function (record) {
-        record.svgXML = parseXML(record.source);
+    svg: function (record: GeoMapRecord): void {
+        record.svgXML = parseXML(record.source as GeoMapSVGSource);
     }
 
 };

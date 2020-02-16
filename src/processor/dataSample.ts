@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 
 var samplers = {
     average: function (frame) {
@@ -71,7 +73,8 @@ export default function (seriesType) {
 
         seriesType: seriesType,
 
-        modifyOutputEnd: true,
+        // FIXME:TS never used, so comment it
+        // modifyOutputEnd: true,
 
         reset: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();

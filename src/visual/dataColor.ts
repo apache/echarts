@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 // Pick color from palette for each data item.
 // Applicable for charts that require applying color palette
 // in data level (like pie, funnel, chord).
@@ -65,7 +67,8 @@ export default function (seriesType) {
                 if (!singleDataColor) {
                     var color = itemModel.get('itemStyle.color')
                         || seriesModel.getColorFromPalette(
-                            dataAll.getName(rawIdx) || (rawIdx + ''), seriesModel.__paletteScope,
+                            dataAll.getName(rawIdx) || (rawIdx + ''),
+                            seriesModel.__paletteScope,
                             dataAll.count()
                         );
                     // Data is not filtered

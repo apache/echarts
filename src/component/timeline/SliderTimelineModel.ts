@@ -17,9 +17,11 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
 import TimelineModel from './TimelineModel';
-import dataFormatMixin from '../../model/mixin/dataFormat';
+import DataFormatMixin from '../../model/mixin/dataFormat';
 
 var SliderTimelineModel = TimelineModel.extend({
 
@@ -117,6 +119,6 @@ var SliderTimelineModel = TimelineModel.extend({
 
 });
 
-zrUtil.mixin(SliderTimelineModel, dataFormatMixin);
+zrUtil.mixin(SliderTimelineModel, DataFormatMixin.prototype);
 
 export default SliderTimelineModel;

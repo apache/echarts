@@ -18,45 +18,44 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from './model/Global';
+import ExtensionAPI from './ExtensionAPI';
+import { CoordinateSystemCreator, CoordinateSystem } from './coord/CoordinateSystem';
 
-var coordinateSystemCreators = {};
+var coordinateSystemCreators: {[type: string]: CoordinateSystemCreator} = {};
 
-function CoordinateSystemManager() {
+class CoordinateSystemManager {
 
-    this._coordinateSystems = [];
-}
+    private _coordinateSystems: CoordinateSystem[] = [];
 
-CoordinateSystemManager.prototype = {
-
-    constructor: CoordinateSystemManager,
-
-    create: function (ecModel, api) {
-        var coordinateSystems = [];
+    create(ecModel: GlobalModel, api: ExtensionAPI): void {
+        var coordinateSystems: CoordinateSystem[] = [];
         zrUtil.each(coordinateSystemCreators, function (creater, type) {
             var list = creater.create(ecModel, api);
             coordinateSystems = coordinateSystems.concat(list || []);
         });
 
         this._coordinateSystems = coordinateSystems;
-    },
+    }
 
-    update: function (ecModel, api) {
+    update(ecModel: GlobalModel, api: ExtensionAPI): void {
         zrUtil.each(this._coordinateSystems, function (coordSys) {
             coordSys.update && coordSys.update(ecModel, api);
         });
-    },
+    }
 
-    getCoordinateSystems: function () {
+    getCoordinateSystems(): CoordinateSystem[] {
         return this._coordinateSystems.slice();
     }
-};
 
-CoordinateSystemManager.register = function (type, coordinateSystemCreator) {
-    coordinateSystemCreators[type] = coordinateSystemCreator;
-};
+    static register = function (type: string, creator: CoordinateSystemCreator): void {
+        coordinateSystemCreators[type] = creator;
+    }
 
-CoordinateSystemManager.get = function (type) {
-    return coordinateSystemCreators[type];
-};
+    static get = function (type: string): CoordinateSystemCreator {
+        return coordinateSystemCreators[type];
+    }
+
+}
 
 export default CoordinateSystemManager;

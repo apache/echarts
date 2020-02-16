@@ -17,8 +17,10 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import * as zrUtil from 'zrender/src/core/util';
-import Eventful from 'zrender/src/mixin/Eventful';
+import Eventful from 'zrender/src/core/Eventful';
 import * as eventTool from 'zrender/src/core/event';
 import * as interactionMutex from './interactionMutex';
 

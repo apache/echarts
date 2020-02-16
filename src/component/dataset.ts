@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 /**
  * This module is imported by echarts directly.
  *
@@ -29,7 +31,7 @@
 import ComponentModel from '../model/Component';
 import ComponentView from '../view/Component';
 import {detectSourceFormat} from '../data/helper/sourceHelper';
-import {SERIES_LAYOUT_BY_COLUMN} from '../data/helper/sourceType';
+import { SERIES_LAYOUT_BY_COLUMN } from '../util/types';
 
 ComponentModel.extend({
 

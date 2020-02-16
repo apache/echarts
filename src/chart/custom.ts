@@ -17,6 +17,8 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
@@ -28,6 +30,8 @@ import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import ChartView from '../view/Chart';
 import {createClipPath} from './helper/createClipPathFromCoordSys';
+import {EventQueryItem, ECEvent} from '../util/types';
+import Element from 'zrender/src/Element';
 
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
 import prepareGeo from '../coord/geo/prepareCustom';
@@ -208,7 +212,9 @@ ChartView.extend({
     /**
      * @override
      */
-    filterForExposedEvent: function (eventType, query, targetEl, packedEvent) {
+    filterForExposedEvent: function (
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+    ): boolean {
         var elementName = query.element;
         if (elementName == null || targetEl.name === elementName) {
             return true;

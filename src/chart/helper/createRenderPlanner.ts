@@ -17,7 +17,11 @@
 * under the License.
 */
 
+// @ts-nocheck
+
 import {makeInner} from '../../util/model';
+import SeriesModel from '../../model/Series';
+import { StageHandlerPlanReturn, StageHandlerPlan } from '../../util/types';
 
 /**
  * @return {string} If large mode changed, return string 'reset';
@@ -25,7 +29,7 @@ import {makeInner} from '../../util/model';
 export default function () {
     var inner = makeInner();
 
-    return function (seriesModel) {
+    return function (seriesModel: SeriesModel): StageHandlerPlanReturn {
         var fields = inner(seriesModel);
         var pipelineContext = seriesModel.pipelineContext;
 
@@ -38,6 +42,8 @@ export default function () {
         var large = fields.large = pipelineContext && pipelineContext.large;
         var progressive = fields.progressiveRender = pipelineContext && pipelineContext.progressiveRender;
 
-        return !!((originalLarge ^ large) || (originalProgressive ^ progressive)) && 'reset';
+        return (
+            !!((originalLarge ^ large as any) || (originalProgressive ^ progressive as any)) && 'reset'
+        ) as StageHandlerPlanReturn;
     };
 }
