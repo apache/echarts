@@ -77,7 +77,6 @@ function toggleItemSelected(
 
     hasAnimation
         // animateTo will stop revious animation like update transition
-        // @ts-ignore FIXME:TS zr?
         ? el.animate()
             .when(200, {
                 position: position
@@ -104,7 +103,6 @@ class PiePiece extends graphic.Group {
     constructor(data: List, idx: number) {
         super();
 
-        // @ts-ignore FIXME:TS modify zr?
         var sector = new graphic.Sector({
             z2: 2
         });
@@ -179,11 +177,9 @@ class PiePiece extends graphic.Group {
                 itemModel.getModel('itemStyle').getItemStyle()
             )
         );
-        // @ts-ignore FIXME:TS make a type in util/graphic.ts to support `hoverStyle`.
         sector.hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
 
         var cursorStyle = itemModel.getShallow('cursor');
-        // @ts-ignore FIXME:TS update zr.
         cursorStyle && sector.attr('cursor', cursorStyle);
 
         // Toggle selected
@@ -212,7 +208,6 @@ class PiePiece extends graphic.Group {
                         shape: {
                             r: layout.r + seriesModel.get('hoverOffset')
                         }
-                    // @ts-ignore FIXME:TS modify zr
                     }, 300, 'elasticOut');
                 }
                 else {
@@ -224,7 +219,6 @@ class PiePiece extends graphic.Group {
                         shape: {
                             r: layout.r
                         }
-                    // @ts-ignore FIXME:TS modify zr
                     }, 300, 'elasticOut');
                 }
             }
@@ -235,7 +229,7 @@ class PiePiece extends graphic.Group {
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
 
-        var labelLine = this.childAt(1) as (PieceElementExtension & graphic.Line);
+        var labelLine = this.childAt(1) as (PieceElementExtension & graphic.Polyline);
         var labelText = this.childAt(2) as (PieceElementExtension & graphic.Text);
 
         var seriesModel = data.hostModel;
@@ -250,7 +244,9 @@ class PiePiece extends graphic.Group {
             return;
         }
 
-        var targetLineShape = {
+        var targetLineShape: {
+            points: number[][]
+        } = {
             points: labelLayout.linePoints || [
                 [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
             ]
@@ -270,11 +266,9 @@ class PiePiece extends graphic.Group {
         }
         else {
             labelLine.attr({
-                // @ts-ignore FIXME:TS modify zr
                 shape: targetLineShape
             });
             labelText.attr({
-                // @ts-ignore FIXME:TS modify zr
                 style: targetTextStyle
             });
         }
@@ -282,7 +276,6 @@ class PiePiece extends graphic.Group {
         labelText.attr({
             rotation: labelLayout.rotation,
             origin: [labelLayout.x, labelLayout.y],
-            // @ts-ignore FIXME:TS modify zr
             z2: 10
         });
 
@@ -294,7 +287,6 @@ class PiePiece extends graphic.Group {
 
         graphic.setLabelStyle(
             labelText.style,
-            // @ts-ignore FIXME:TS make a type in util/graphic.
             labelText.hoverStyle = {},
             labelModel,
             labelHoverModel,
@@ -325,7 +317,6 @@ class PiePiece extends graphic.Group {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        // @ts-ignore FIXME:TS
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
         var smooth = labelLineModel.get('smooth');
@@ -376,7 +367,6 @@ class PieView extends ChartView {
                 var piePiece = new PiePiece(data, idx);
                 // Default expansion animation
                 if (isFirstRender && animationType !== 'scale') {
-                    // @ts-ignore FIXME:TS modify zr?
                     piePiece.eachChild(function (child) {
                         child.stopAnimation(true);
                     });
@@ -392,7 +382,6 @@ class PieView extends ChartView {
                 var piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
 
                 if (!isFirstRender && animationTypeUpdate !== 'transition') {
-                    // @ts-ignore FIXME:TS modify zr?
                     piePiece.eachChild(function (child) {
                         child.stopAnimation(true);
                     });
