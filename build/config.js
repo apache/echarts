@@ -18,7 +18,7 @@
 */
 
 const assert = require('assert');
-// const nodeResolvePlugin = require('rollup-plugin-node-resolve');
+const nodeResolvePlugin = require('rollup-plugin-node-resolve');
 const uglifyPlugin = require('rollup-plugin-uglify');
 const ecRemoveDevPlugin = require('./remove-dev-rollup-plugin');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
@@ -26,11 +26,19 @@ const nodePath = require('path');
 const preamble = require('./preamble');
 const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
+const progress = require('rollup-plugin-progress');
+const fs = require('fs');
 
 function preparePlugins({min, lang, sourcemap, removeDev, addBundleVersion}, {include, exclude}) {
     assert(include);
+    // In case node_modules/zrender is a symlink
+    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
+    const zrRealPath = fs.realpathSync(zrNodeModulePath);
+    if (zrRealPath !== zrNodeModulePath) {
+        include.push(zrRealPath + '/**/*.ts');
+    }
+
     let plugins = [
-        // nodeResolvePlugin(),
         typescriptPlugin({
             tsconfig: nodePath.resolve(ecDir, 'tsconfig.json'),
             tsconfigOverride: {
@@ -42,11 +50,15 @@ function preparePlugins({min, lang, sourcemap, removeDev, addBundleVersion}, {in
                     sourceMap: !!sourcemap,
                     // Use the esm d.ts
                     declaration: false
-                },
-                include: include,
-                exclude: exclude || []
-            }
-        })
+                }
+                // include: include,
+                // exclude: exclude || []
+            },
+            include: include,
+            exclude: exclude || []
+        }),
+        nodeResolvePlugin(),
+        progress()
     ];
 
     removeDev && plugins.push(
@@ -56,10 +68,6 @@ function preparePlugins({min, lang, sourcemap, removeDev, addBundleVersion}, {in
     lang && plugins.push(
         ecLangPlugin({lang})
     );
-
-    // plugins.push(
-    //     nodeResolvePlugin()
-    // );
 
     addBundleVersion && plugins.push({
         outro: function () {
@@ -123,7 +131,7 @@ exports.createECharts = function (opt = {}) {
         plugins: preparePlugins(opt, {
             include: [
                 nodePath.resolve(ecDir, 'src/**/*.ts'),
-                nodePath.resolve(ecDir, 'echarts*.ts'),
+                nodePath.resolve(ecDir, 'echarts*.ts')
                 // nodePath.resolve(ecDir, '/Users/s/sushuangwork/met/act/tigall/echarts/zrender/src/**/*.ts')
                 // nodePath.resolve(ecDir, '../zrender/src/**/*.ts')
             ]

@@ -119,6 +119,10 @@ async function run() {
             '-o, --output <output file path>',
             'If output file path is specified, input file path must be specified too.'
         )
+        // .option(
+        //     '--zrender <zrender>',
+        //     'Local zrender path. Used when you want to use develop version of zrender instead of npm version.'
+        // )
         .parse(process.argv);
 
     let isWatch = !!commander.watch;
@@ -264,7 +268,7 @@ function getPath(relativePath) {
  */
 async function build(configs) {
 
-    ensureZRenderCode.prepare();
+    // ensureZRenderCode.prepare();
 
     for (let singleConfig of configs) {
         console.log(
@@ -288,7 +292,7 @@ async function build(configs) {
         );
     }
 
-    ensureZRenderCode.clear();
+    // ensureZRenderCode.clear();
 }
 
 /**
@@ -327,12 +331,12 @@ function watch(singleConfig) {
         if (event.code === 'BUNDLE_END') {
             printWatchResult(event);
         }
-        if (event.code === 'START') {
-            ensureZRenderCode.prepare();
-        }
-        if (event.code === 'END' || event.code === 'ERROR' || event.code === 'FATAL') {
-            ensureZRenderCode.clear();
-        }
+        // if (event.code === 'START') {
+        //     ensureZRenderCode.prepare();
+        // }
+        // if (event.code === 'END' || event.code === 'ERROR' || event.code === 'FATAL') {
+        //     ensureZRenderCode.clear();
+        // }
     });
 }
 
@@ -470,7 +474,7 @@ async function main() {
         }
         // console.log(err);
 
-        ensureZRenderCode.clear();
+        // ensureZRenderCode.clear();
     }
 }
 

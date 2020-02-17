@@ -14,7 +14,9 @@
         "declaration": true,
         "declarationMap": false,
 
-        "importHelpers": true
+        "importHelpers": true,
+
+        "pretty": true
     },
     "include": [
         "src/**/*.ts",
