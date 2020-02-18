@@ -17,20 +17,26 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Symbol factory
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from './graphic';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {calculateTextPosition} from 'zrender/src/contain/text';
+import { Dictionary } from 'zrender/src/core/types';
+
+type ECSymbol = graphic.Path & {
+    __isEmptyBrush?: boolean
+    setColor: (color: string, innerColor?: string) => void
+}
+type SymbolCtor = { new(): ECSymbol }
+type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void
 
 /**
  * Triangle shape
  * @inner
  */
-var Triangle = graphic.extendShape({
+const Triangle = graphic.Path.extend({
     type: 'triangle',
     shape: {
         cx: 0,
@@ -39,10 +45,10 @@ var Triangle = graphic.extendShape({
         height: 0
     },
     buildPath: function (path, shape) {
-        var cx = shape.cx;
-        var cy = shape.cy;
-        var width = shape.width / 2;
-        var height = shape.height / 2;
+        const cx = shape.cx;
+        const cy = shape.cy;
+        const width = shape.width / 2;
+        const height = shape.height / 2;
         path.moveTo(cx, cy - height);
         path.lineTo(cx + width, cy + height);
         path.lineTo(cx - width, cy + height);
@@ -54,7 +60,7 @@ var Triangle = graphic.extendShape({
  * Diamond shape
  * @inner
  */
-var Diamond = graphic.extendShape({
+const Diamond = graphic.Path.extend({
     type: 'diamond',
     shape: {
         cx: 0,
@@ -63,10 +69,10 @@ var Diamond = graphic.extendShape({
         height: 0
     },
     buildPath: function (path, shape) {
-        var cx = shape.cx;
-        var cy = shape.cy;
-        var width = shape.width / 2;
-        var height = shape.height / 2;
+        const cx = shape.cx;
+        const cy = shape.cy;
+        const width = shape.width / 2;
+        const height = shape.height / 2;
         path.moveTo(cx, cy - height);
         path.lineTo(cx + width, cy);
         path.lineTo(cx, cy + height);
@@ -79,7 +85,7 @@ var Diamond = graphic.extendShape({
  * Pin shape
  * @inner
  */
-var Pin = graphic.extendShape({
+const Pin = graphic.Path.extend({
     type: 'pin',
     shape: {
         // x, y on the cusp
@@ -90,25 +96,25 @@ var Pin = graphic.extendShape({
     },
 
     buildPath: function (path, shape) {
-        var x = shape.x;
-        var y = shape.y;
-        var w = shape.width / 5 * 3;
+        const x = shape.x;
+        const y = shape.y;
+        const w = shape.width / 5 * 3;
         // Height must be larger than width
-        var h = Math.max(w, shape.height);
-        var r = w / 2;
+        const h = Math.max(w, shape.height);
+        const r = w / 2;
 
         // Dist on y with tangent point and circle center
-        var dy = r * r / (h - r);
-        var cy = y - h + r + dy;
-        var angle = Math.asin(dy / r);
+        const dy = r * r / (h - r);
+        const cy = y - h + r + dy;
+        const angle = Math.asin(dy / r);
         // Dist on x with tangent point and circle center
-        var dx = Math.cos(angle) * r;
+        const dx = Math.cos(angle) * r;
 
-        var tanX = Math.sin(angle);
-        var tanY = Math.cos(angle);
+        const tanX = Math.sin(angle);
+        const tanY = Math.cos(angle);
 
-        var cpLen = r * 0.6;
-        var cpLen2 = r * 0.7;
+        const cpLen = r * 0.6;
+        const cpLen2 = r * 0.7;
 
         path.moveTo(x - dx, cy + dy);
 
@@ -135,7 +141,7 @@ var Pin = graphic.extendShape({
  * Arrow shape
  * @inner
  */
-var Arrow = graphic.extendShape({
+const Arrow = graphic.Path.extend({
 
     type: 'arrow',
 
@@ -147,11 +153,11 @@ var Arrow = graphic.extendShape({
     },
 
     buildPath: function (ctx, shape) {
-        var height = shape.height;
-        var width = shape.width;
-        var x = shape.x;
-        var y = shape.y;
-        var dx = width / 3 * 2;
+        const height = shape.height;
+        const width = shape.width;
+        const x = shape.x;
+        const y = shape.y;
+        const dx = width / 3 * 2;
         ctx.moveTo(x, y);
         ctx.lineTo(x + dx, y + height);
         ctx.lineTo(x, y + height / 4 * 3);
@@ -163,32 +169,33 @@ var Arrow = graphic.extendShape({
 
 /**
  * Map of path contructors
- * @type {Object.<string, module:zrender/graphic/Path>}
  */
-var symbolCtors = {
+const symbolCtors: Dictionary<SymbolCtor> = {
 
-    line: graphic.Line,
+    // TODO
+    line: graphic.Line as unknown as SymbolCtor,
 
-    rect: graphic.Rect,
+    rect: graphic.Rect as unknown as SymbolCtor,
 
-    roundRect: graphic.Rect,
+    roundRect: graphic.Rect as unknown as SymbolCtor,
 
-    square: graphic.Rect,
+    square: graphic.Rect as unknown as SymbolCtor,
 
-    circle: graphic.Circle,
+    circle: graphic.Circle as unknown as SymbolCtor,
 
-    diamond: Diamond,
+    diamond: Diamond as unknown as SymbolCtor,
 
-    pin: Pin,
+    pin: Pin as unknown as SymbolCtor,
 
-    arrow: Arrow,
+    arrow: Arrow as unknown as SymbolCtor,
 
-    triangle: Triangle
+    triangle: Triangle as unknown as SymbolCtor
 };
 
-var symbolShapeMakers = {
 
-    line: function (x, y, w, h, shape) {
+const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
+
+    line: function (x: number, y: number, w: number, h: number, shape: graphic.Line['shape']) {
         // FIXME
         shape.x1 = x;
         shape.y1 = y + h / 2;
@@ -196,14 +203,14 @@ var symbolShapeMakers = {
         shape.y2 = y + h / 2;
     },
 
-    rect: function (x, y, w, h, shape) {
+    rect: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
         shape.x = x;
         shape.y = y;
         shape.width = w;
         shape.height = h;
     },
 
-    roundRect: function (x, y, w, h, shape) {
+    roundRect: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
         shape.x = x;
         shape.y = y;
         shape.width = w;
@@ -211,7 +218,7 @@ var symbolShapeMakers = {
         shape.r = Math.min(w, h) / 4;
     },
 
-    square: function (x, y, w, h, shape) {
+    square: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
         var size = Math.min(w, h);
         shape.x = x;
         shape.y = y;
@@ -219,35 +226,35 @@ var symbolShapeMakers = {
         shape.height = size;
     },
 
-    circle: function (x, y, w, h, shape) {
+    circle: function (x: number, y: number, w: number, h: number, shape: graphic.Circle['shape']) {
         // Put circle in the center of square
         shape.cx = x + w / 2;
         shape.cy = y + h / 2;
         shape.r = Math.min(w, h) / 2;
     },
 
-    diamond: function (x, y, w, h, shape) {
+    diamond: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Diamond>['shape']) {
         shape.cx = x + w / 2;
         shape.cy = y + h / 2;
         shape.width = w;
         shape.height = h;
     },
 
-    pin: function (x, y, w, h, shape) {
+    pin: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Pin>['shape']) {
         shape.x = x + w / 2;
         shape.y = y + h / 2;
         shape.width = w;
         shape.height = h;
     },
 
-    arrow: function (x, y, w, h, shape) {
+    arrow: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Arrow>['shape']) {
         shape.x = x + w / 2;
         shape.y = y + h / 2;
         shape.width = w;
         shape.height = h;
     },
 
-    triangle: function (x, y, w, h, shape) {
+    triangle: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Triangle>['shape']) {
         shape.cx = x + w / 2;
         shape.cy = y + h / 2;
         shape.width = w;
@@ -255,12 +262,12 @@ var symbolShapeMakers = {
     }
 };
 
-var symbolBuildProxies = {};
+var symbolBuildProxies: Dictionary<ECSymbol> = {};
 zrUtil.each(symbolCtors, function (Ctor, name) {
     symbolBuildProxies[name] = new Ctor();
 });
 
-var SymbolClz = graphic.extendShape({
+var SymbolClz = graphic.Path.extend({
 
     type: 'symbol',
 
@@ -299,7 +306,7 @@ var SymbolClz = graphic.extendShape({
 });
 
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
-function symbolPathSetColor(color, innerColor) {
+function symbolPathSetColor(this: ECSymbol, color: string, innerColor?: string) {
     if (this.type !== 'image') {
         var symbolStyle = this.style;
         var symbolShape = this.shape;
@@ -330,14 +337,22 @@ function symbolPathSetColor(color, innerColor) {
  * @param {boolean} [keepAspect=false] whether to keep the ratio of w/h,
  *                            for path and image only.
  */
-export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
+export function createSymbol(
+    symbolType: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    color?: string,
+    keepAspect?: boolean
+): graphic.Path | graphic.Image {
     // TODO Support image object, DynamicImage.
 
     var isEmpty = symbolType.indexOf('empty') === 0;
     if (isEmpty) {
         symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
     }
-    var symbolPath;
+    var symbolPath: ECSymbol | graphic.Image;
 
     if (symbolType.indexOf('image://') === 0) {
         symbolPath = graphic.makeImage(
@@ -352,7 +367,7 @@ export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
             {},
             new BoundingRect(x, y, w, h),
             keepAspect ? 'center' : 'cover'
-        );
+        ) as unknown as ECSymbol;
     }
     else {
         symbolPath = new SymbolClz({
@@ -363,14 +378,14 @@ export function createSymbol(symbolType, x, y, w, h, color, keepAspect) {
                 width: w,
                 height: h
             }
-        });
+        }) as unknown as ECSymbol;
     }
 
-    symbolPath.__isEmptyBrush = isEmpty;
+    (symbolPath as ECSymbol).__isEmptyBrush = isEmpty;
 
-    symbolPath.setColor = symbolPathSetColor;
+    (symbolPath as ECSymbol).setColor = symbolPathSetColor;
 
-    symbolPath.setColor(color);
+    (symbolPath as ECSymbol).setColor(color);
 
     return symbolPath;
 }

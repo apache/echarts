@@ -24,6 +24,7 @@ var ORIGIN_METHOD = '\0__throttleOriginMethod';
 var RATE = '\0__throttleRate';
 var THROTTLE_TYPE = '\0__throttleType';
 
+type ThrottleFunction = () => void;
 /**
  * @public
  * @param {(Function)} fn
@@ -33,7 +34,7 @@ var THROTTLE_TYPE = '\0__throttleType';
  *        false: If call interval less than `delay, call works on fixed rate.
  * @return {(Function)} throttled fn.
  */
-export function throttle(fn, delay?, debounce?) {
+export function throttle<T extends ThrottleFunction>(fn:T, delay?: number, debounce?: boolean): T {
 
     var currCall;
     var lastCall = 0;
@@ -127,14 +128,13 @@ export function throttle(fn, delay?, debounce?) {
  *     throttle.clear(this, '_dispatchAction');
  * };
  *
- * @public
- * @param {Object} obj
- * @param {string} fnAttr
- * @param {number} [rate]
- * @param {string} [throttleType='fixRate'] 'fixRate' or 'debounce'
- * @return {Function} throttled function.
  */
-export function createOrUpdate(obj, fnAttr, rate, throttleType) {
+export function createOrUpdate<T, S extends keyof T, P = T[S]>(
+    obj: T,
+    fnAttr: S,
+    rate: number,
+    throttleType: 'fixRate' | 'debounce'
+): P extends ThrottleFunction ? P : never {
     var fn = obj[fnAttr];
 
     if (!fn) {
@@ -163,12 +163,8 @@ export function createOrUpdate(obj, fnAttr, rate, throttleType) {
 
 /**
  * Clear throttle. Example see throttle.createOrUpdate.
- *
- * @public
- * @param {Object} obj
- * @param {string} fnAttr
  */
-export function clear(obj, fnAttr) {
+export function clear<T, S extends keyof T>(obj: T, fnAttr: S): void {
     var fn = obj[fnAttr];
     if (fn && fn[ORIGIN_METHOD]) {
         obj[fnAttr] = fn[ORIGIN_METHOD];

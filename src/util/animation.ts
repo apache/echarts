@@ -20,6 +20,8 @@
 // @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
+import Element, { ElementProps } from 'zrender/src/Element';
+import { easingType } from 'zrender/src/animation/easing';
 
 /**
  * @param {number} [time=500] Time in ms
@@ -62,7 +64,7 @@ export function createWrap() {
          *     add(el, target, time);
          *     add(el, target);
          */
-        add: function (el, target, time, delay, easing) {
+        add: function (el: Element, target: ElementProps, time?: number, delay?: number | easingType, easing?: easingType) {
             if (zrUtil.isString(delay)) {
                 easing = delay;
                 delay = 0;
@@ -83,10 +85,8 @@ export function createWrap() {
         /**
          * Only execute when animation finished. Will not execute when any
          * of 'stop' or 'stopAnimation' called.
-         *
-         * @param {Function} callback
          */
-        done: function (callback) {
+        done: function (callback: () => void) {
             doneCallback = callback;
             return this;
         },

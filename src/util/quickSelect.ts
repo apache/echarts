@@ -17,25 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Quick select n-th element in an array.
  *
  * Note: it will change the elements placement in array.
  */
 
-function defaultCompareFunc(a, b) {
+type CompareFunc<T> = (a: T, b: T) => number;
+function defaultCompareFunc(a: any, b: any): any {
     return a - b;
 }
 
-function swapElement(arr, idx0, idx1) {
+function swapElement<T>(arr: T[], idx0: number, idx1: number) {
     var tmp = arr[idx0];
     arr[idx0] = arr[idx1];
     arr[idx1] = tmp;
 }
 
-function select(arr, left, right, nth, compareFunc) {
+function select<T>(arr: T[], left: number, right: number, nth: number, compareFunc: CompareFunc<T>): number {
     var pivotIdx = left;
     var pivotValue;
     while (right > left) {
@@ -67,12 +66,6 @@ function select(arr, left, right, nth, compareFunc) {
 }
 
 /**
- * @alias module:echarts/core/quickSelect
- * @param {Array} arr
- * @param {number} [left]
- * @param {number} [right]
- * @param {number} nth
- * @param {Function} [compareFunc]
  * @example
  *     var quickSelect = require('echarts/core/quickSelect');
  *     var arr = [5, 2, 1, 4, 3]
@@ -81,17 +74,23 @@ function select(arr, left, right, nth, compareFunc) {
  *
  * @return {number}
  */
-export default function (arr, left, right, nth, compareFunc) {
+function quickSelect<T>(arr: T[], nth: number, compareFunc: CompareFunc<T>): number
+function quickSelect<T>(arr: T[], nth: number, left: number, right: number, compareFunc: CompareFunc<T>): number
+function quickSelect<T>(
+    arr: T[], left: number, right: number | CompareFunc<T>, nth?: number, compareFunc?: CompareFunc<T>
+): number {
     if (arguments.length <= 3) {
         nth = left;
         if (arguments.length === 2) {
             compareFunc = defaultCompareFunc;
         }
         else {
-            compareFunc = right;
+            compareFunc = right as CompareFunc<T>;
         }
         left = 0;
         right = arr.length - 1;
     }
-    return select(arr, left, right, nth, compareFunc);
+    return select(arr, left, right as number, nth, compareFunc);
 }
+
+export default quickSelect;

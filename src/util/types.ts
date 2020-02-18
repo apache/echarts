@@ -447,13 +447,14 @@ export type MediaUnit = {
     option: ECUnitOption
 };
 
-export interface BoxLayoutOption {
-    width?: number;
-    height?: number;
-    top?: number;
-    right?: number;
-    bottom?: number;
-    left?: number;
+/******************* Mixins for Common Option Properties   ********************** */
+export interface BoxLayoutOptionMixin {
+    width?: number | string;
+    height?: number | string;
+    top?: number | string;
+    right?: number | string;
+    bottom?: number | string;
+    left?: number | string;
 }
 export type ComponentLayoutMode = {
     // Only support 'box' now.
@@ -555,4 +556,3 @@ export interface SeriesOption extends ComponentOption{
     emphasis?: Dictionary<any>;
     // FIXME:TS more
 }
-

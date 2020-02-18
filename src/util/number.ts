@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /*
 * A third-party license is embeded for some of the code in this file:
 * The method "quantile" was copied from "d3.js".
@@ -32,20 +30,23 @@ import * as zrUtil from 'zrender/src/core/util';
 
 var RADIAN_EPSILON = 1e-4;
 
-function _trim(str) {
+function _trim(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
 }
 
 /**
  * Linear mapping a value from domain to range
- * @memberOf module:echarts/util/number
- * @param  {(number|Array.<number>)} val
- * @param  {Array.<number>} domain Domain extent domain[0] can be bigger than domain[1]
- * @param  {Array.<number>} range  Range extent range[0] can be bigger than range[1]
- * @param  {boolean} clamp
- * @return {(number|Array.<number>}
+ * @param  val
+ * @param  domain Domain extent domain[0] can be bigger than domain[1]
+ * @param  range  Range extent range[0] can be bigger than range[1]
+ * @param  clamp Default to be false
  */
-export function linearMap(val, domain, range, clamp) {
+export function linearMap(
+    val: number,
+    domain: [number, number],
+    range: [number, number],
+    clamp?: boolean
+): number {
     var subDomain = domain[1] - domain[0];
     var subRange = range[1] - range[0];
 
@@ -93,12 +94,8 @@ export function linearMap(val, domain, range, clamp) {
 /**
  * Convert a percent string to absolute number.
  * Returns NaN if percent is not a valid string or number
- * @memberOf module:echarts/util/number
- * @param {string|number} percent
- * @param {number} all
- * @return {number}
  */
-export function parsePercent(percent, all) {
+export function parsePercent(percent: number | string, all: number): number {
     switch (percent) {
         case 'center':
         case 'middle':
@@ -127,13 +124,8 @@ export function parsePercent(percent, all) {
 /**
  * (1) Fix rounding error of float numbers.
  * (2) Support return string to avoid scientific notation like '3.5e-7'.
- *
- * @param {number} x
- * @param {number} [precision]
- * @param {boolean} [returnStr]
- * @return {number|string}
  */
-export function round(x, precision, returnStr) {
+export function round(x: number | string, precision: number, returnStr?: boolean): string | number {
     if (precision == null) {
         precision = 10;
     }
@@ -144,13 +136,10 @@ export function round(x, precision, returnStr) {
 }
 
 /**
- * asc sort arr.
+ * Inplacd asc sort arr.
  * The input arr will be modified.
- *
- * @param {Array} arr
- * @return {Array} The input arr.
  */
-export function asc(arr) {
+export function asc(arr: number[]): number[] {
     arr.sort(function (a, b) {
         return a - b;
     });
@@ -159,9 +148,8 @@ export function asc(arr) {
 
 /**
  * Get precision
- * @param {number} val
  */
-export function getPrecision(val) {
+export function getPrecision(val: string | number): number {
     val = +val;
     if (isNaN(val)) {
         return 0;
@@ -180,10 +168,9 @@ export function getPrecision(val) {
 }
 
 /**
- * @param {string|number} val
- * @return {number}
+ * Get precision with slow but safe method
  */
-export function getPrecisionSafe(val) {
+export function getPrecisionSafe(val: string | number): number {
     var str = val.toString();
 
     // Consider scientific notation: '3.4e-12' '3.4e+12'
@@ -200,12 +187,8 @@ export function getPrecisionSafe(val) {
 
 /**
  * Minimal dicernible data precisioin according to a single pixel.
- *
- * @param {Array.<number>} dataExtent
- * @param {Array.<number>} pixelExtent
- * @return {number} precision
  */
-export function getPixelPrecision(dataExtent, pixelExtent) {
+export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [number, number]): number {
     var log = Math.log;
     var LN10 = Math.LN10;
     var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
@@ -221,12 +204,12 @@ export function getPixelPrecision(dataExtent, pixelExtent) {
  * The largest remainer method is used.
  * https://en.wikipedia.org/wiki/Largest_remainder_method
  *
- * @param {Array.<number>} valueList a list of all data
- * @param {number} idx index of the data to be processed in valueList
- * @param {number} precision integer number showing digits of precision
- * @return {number} percent ranging from 0 to 100
+ * @param valueList a list of all data
+ * @param idx index of the data to be processed in valueList
+ * @param precision integer number showing digits of precision
+ * @return percent ranging from 0 to 100
  */
-export function getPercentWithPrecision(valueList, idx, precision) {
+export function getPercentWithPrecision(valueList: number[], idx: number, precision: number): number {
     if (!valueList[idx]) {
         return 0;
     }
@@ -282,10 +265,8 @@ export var MAX_SAFE_INTEGER = 9007199254740991;
 
 /**
  * To 0 - 2 * PI, considering negative radian.
- * @param {number} radian
- * @return {number}
  */
-export function remRadian(radian) {
+export function remRadian(radian: number): number {
     var pi2 = Math.PI * 2;
     return (radian % pi2 + pi2) % pi2;
 }
@@ -294,7 +275,7 @@ export function remRadian(radian) {
  * @param {type} radian
  * @return {boolean}
  */
-export function isRadianAroundZero(val) {
+export function isRadianAroundZero(val: number): boolean {
     return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
 }
 
@@ -303,7 +284,7 @@ var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?:
 /* eslint-enable */
 
 /**
- * @param {string|Date|number} value These values can be accepted:
+ * @param value These values can be accepted:
  *   + An instance of Date, represent a time in its own time zone.
  *   + Or string in a subset of ISO 8601, only including:
  *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
@@ -315,9 +296,9 @@ var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?:
  *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
  *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
  *   + a timestamp, which represent a time in UTC.
- * @return {Date} date
+ * @return date
  */
-export function parseDate(value) {
+export function parseDate(value: number | string | Date): Date {
     if (value instanceof Date) {
         return value;
     }
@@ -358,7 +339,7 @@ export function parseDate(value) {
         else {
             var hour = +match[4] || 0;
             if (match[8].toUpperCase() !== 'Z') {
-                hour -= match[8].slice(0, 3);
+                hour -= +match[8].slice(0, 3);
             }
             return new Date(Date.UTC(
                 +match[1],
@@ -381,10 +362,10 @@ export function parseDate(value) {
 /**
  * Quantity of a number. e.g. 0.1, 1, 10, 100
  *
- * @param  {number} val
- * @return {number}
+ * @param val
+ * @return
  */
-export function quantity(val) {
+export function quantity(val: number): number {
     return Math.pow(10, quantityExponent(val));
 }
 
@@ -392,10 +373,10 @@ export function quantity(val) {
  * Exponent of the quantity of a number
  * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
  *
- * @param  {number} val non-negative value
- * @return {number}
+ * @param val non-negative value
+ * @return
  */
-export function quantityExponent(val) {
+export function quantityExponent(val: number): number {
     if (val === 0) {
         return 0;
     }
@@ -419,11 +400,11 @@ export function quantityExponent(val) {
  *
  * See "Nice Numbers for Graph Labels" of Graphic Gems.
  *
- * @param  {number} val Non-negative value.
- * @param  {boolean} round
- * @return {number}
+ * @param  val Non-negative value.
+ * @param  round
+ * @return Niced number
  */
-export function nice(val, round) {
+export function nice(val: number, round?: boolean): number {
     var exponent = quantityExponent(val);
     var exp10 = Math.pow(10, exponent);
     var f = val / exp10; // 1 <= f < 10
@@ -473,9 +454,9 @@ export function nice(val, round) {
  * This code was copied from "d3.js"
  * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.
  * See the license statement at the head of this file.
- * @param {Array.<number>} ascArr
+ * @param ascArr
  */
-export function quantile(ascArr, p) {
+export function quantile(ascArr: number[], p: number): number {
     var H = (ascArr.length - 1) * p + 1;
     var h = Math.floor(H);
     var v = +ascArr[h - 1];
@@ -483,6 +464,10 @@ export function quantile(ascArr, p) {
     return e ? v + e * (ascArr[h] - v) : v;
 }
 
+type IntervalItem = {
+    interval: [number, number]
+    close: [number, number]
+}
 /**
  * Order intervals asc, and split them when overlap.
  * expect(numberUtil.reformIntervals([
@@ -501,11 +486,11 @@ export function quantile(ascArr, p) {
  *     {interval: [62, 150], close: [0, 1]},
  *     {interval: [150, Infinity], close: [0, 0]}
  * ]);
- * @param {Array.<Object>} list, where `close` mean open or close
+ * @param list, where `close` mean open or close
  *        of the interval, and Infinity can be used.
- * @return {Array.<Object>} The origin list, which has been reformed.
+ * @return The origin list, which has been reformed.
  */
-export function reformIntervals(list) {
+export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
     list.sort(function (a, b) {
         return littleThan(a, b, 0) ? -1 : 1;
     });
@@ -535,7 +520,7 @@ export function reformIntervals(list) {
 
     return list;
 
-    function littleThan(a, b, lg) {
+    function littleThan(a: IntervalItem, b: IntervalItem, lg: number): boolean {
         return a.interval[lg] < b.interval[lg]
             || (
                 a.interval[lg] === b.interval[lg]
@@ -551,10 +536,7 @@ export function reformIntervals(list) {
  * parseFloat NaNs numeric-cast false positives (null|true|false|"")
  * ...but misinterprets leading-number strings, particularly hex literals ("0x...")
  * subtraction forces infinities to NaN
- *
- * @param {*} v
- * @return {boolean}
  */
-export function isNumeric(v) {
+export function isNumeric(v: any): v is number {
     return v - parseFloat(v) >= 0;
 }

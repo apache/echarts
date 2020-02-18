@@ -19,14 +19,14 @@
 
 // @ts-nocheck
 
-import {extendShape} from '../graphic';
+import {Path} from '../graphic';
 
 /**
  * Sausage: similar to sector, but have half circle on both sides
  * @public
  */
 
-export default extendShape({
+export default Path.extend({
 
     type: 'sausage',
 

@@ -233,7 +233,7 @@ export function makePath(
  * @param layout 'center' or 'cover'. Default to be 'cover'
  */
 export function makeImage(
-    imageUrl: ImageLike,
+    imageUrl: string,
     rect: RectLike,
     layout?: 'center' | 'cover'
 ) {

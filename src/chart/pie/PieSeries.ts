@@ -98,8 +98,8 @@ class PieSeries extends SeriesModel {
         var params = super.getDataParams(dataIndex);
         // FIXME toFixed?
 
-        var valueList = [] as ParsedDataValue[];
-        data.each(data.mapDimension('value'), function (value) {
+        var valueList: number[] = [];
+        data.each(data.mapDimension('value'), function (value: number) {
             valueList.push(value);
         });
 

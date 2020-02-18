@@ -17,34 +17,27 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
 import {TooltipRenderMode} from './types';
+import { Dictionary } from 'zrender/src/core/types';
+import Style, { StyleProps } from 'zrender/src/graphic/Style';
 // import Text from 'zrender/src/graphic/Text';
 
 /**
  * Add a comma each three digit.
- * @param {string|number} x
- * @return {string}
  */
-export function addCommas(x) {
-    if (isNaN(x)) {
+export function addCommas(x: string | number): string {
+    if (isNaN(x as number)) {
         return '-';
     }
-    x = (x + '').split('.');
-    return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
-            + (x.length > 1 ? ('.' + x[1]) : '');
+    const parts = (x + '').split('.');
+    return parts[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
+            + (parts.length > 1 ? ('.' + parts[1]) : '');
 }
 
-/**
- * @param {string} str
- * @param {boolean} [upperCaseFirst=false]
- * @return {string} str
- */
-export function toCamelCase(str, upperCaseFirst) {
+export function toCamelCase(str: string, upperCaseFirst: boolean): string {
     str = (str || '').toLowerCase().replace(/-(.)/g, function (match, group1) {
         return group1.toUpperCase();
     });
@@ -60,7 +53,7 @@ export var normalizeCssArray = zrUtil.normalizeCssArray;
 
 
 var replaceReg = /([&<>"'])/g;
-var replaceMap = {
+var replaceMap: Dictionary<string> = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
@@ -68,7 +61,7 @@ var replaceMap = {
     '\'': '&#39;'
 };
 
-export function encodeHTML(source) {
+export function encodeHTML(source: string): string {
     return source == null
         ? ''
         : (source + '').replace(replaceReg, function (str, c) {
@@ -82,7 +75,7 @@ var wrapVar = function (varName: string, seriesIdx?: number): string {
     return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
 };
 
-export interface TplFormatterParam {
+export interface TplFormatterParam extends Dictionary<any> {
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
 }
@@ -98,7 +91,7 @@ export function formatTpl(
     if (!zrUtil.isArray(paramsList)) {
         paramsList = [paramsList];
     }
-    var seriesLen = (paramsList as any).length;
+    var seriesLen = paramsList.length;
     if (!seriesLen) {
         return '';
     }
@@ -123,13 +116,8 @@ export function formatTpl(
 
 /**
  * simple Template formatter
- *
- * @param {string} tpl
- * @param {Object} param
- * @param {boolean} [encode=false]
- * @return {string}
  */
-export function formatTplSimple(tpl, param, encode) {
+export function formatTplSimple(tpl: string, param: Dictionary<any>, encode?: boolean) {
     zrUtil.each(param, function (value, key) {
         tpl = tpl.replace(
             '{' + key + '}',
@@ -193,7 +181,7 @@ export function getTooltipMarker(opt: string | GetTooltipMarkerOpt, extraCssText
     }
 }
 
-function pad(str, len) {
+function pad(str: string, len: number): string {
     str += '';
     return '0000'.substr(0, len - str.length) + str;
 }
@@ -208,7 +196,7 @@ function pad(str, len) {
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl, value, isUTC?) {
+export function formatTime(tpl: string, value: number, isUTC?: boolean) {
     if (tpl === 'week'
         || tpl === 'month'
         || tpl === 'quarter'
@@ -220,18 +208,18 @@ export function formatTime(tpl, value, isUTC?) {
 
     var date = numberUtil.parseDate(value);
     var utc = isUTC ? 'UTC' : '';
-    var y = date['get' + utc + 'FullYear']();
-    var M = date['get' + utc + 'Month']() + 1;
-    var d = date['get' + utc + 'Date']();
-    var h = date['get' + utc + 'Hours']();
-    var m = date['get' + utc + 'Minutes']();
-    var s = date['get' + utc + 'Seconds']();
-    var S = date['get' + utc + 'Milliseconds']();
+    var y = (date as any)['get' + utc + 'FullYear']();
+    var M = (date as any)['get' + utc + 'Month']() + 1;
+    var d = (date as any)['get' + utc + 'Date']();
+    var h = (date as any)['get' + utc + 'Hours']();
+    var m = (date as any)['get' + utc + 'Minutes']();
+    var s = (date as any)['get' + utc + 'Seconds']();
+    var S = (date as any)['get' + utc + 'Milliseconds']();
 
     tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)
         .replace('yyyy', y)
-        .replace('yy', y % 100)
+        .replace('yy', y % 100 + '')
         .replace('dd', pad(d, 2))
         .replace('d', d)
         .replace('hh', pad(h, 2))
@@ -250,32 +238,19 @@ export function formatTime(tpl, value, isUTC?) {
  * @param {string} str
  * @return {string}
  */
-export function capitalFirst(str) {
+export function capitalFirst(str: string): string {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
 }
 
 export var truncateText = textContain.truncateText;
 
-/**
- * @public
- * @param {Object} opt
- * @param {string} opt.text
- * @param {string} opt.font
- * @param {string} [opt.textAlign='left']
- * @param {string} [opt.textVerticalAlign='top']
- * @param {Array.<number>} [opt.textPadding]
- * @param {number} [opt.textLineHeight]
- * @param {Object} [opt.rich]
- * @param {Object} [opt.truncate]
- * @return {Object} {x, y, width, height, lineHeight}
- */
-export function getTextBoundingRect(opt) {
+export function getTextBoundingRect(opt: StyleProps): ReturnType<typeof textContain.getBoundingRect> {
     return textContain.getBoundingRect(
         opt.text,
         opt.font,
         opt.textAlign,
         opt.textVerticalAlign,
-        opt.textPadding,
+        opt.textPadding as number[],
         opt.textLineHeight,
         opt.rich,
         opt.truncate
@@ -289,9 +264,16 @@ export function getTextBoundingRect(opt) {
  * But deprecated this interface. Please use `getTextBoundingRect` instead.
  */
 export function getTextRect(
-    text, font, textAlign, textVerticalAlign, textPadding, rich, truncate, textLineHeight
-) {
+    text: StyleProps['text'],
+    font: StyleProps['font'],
+    textAlign: StyleProps['textAlign'],
+    textVerticalAlign: StyleProps['textVerticalAlign'],
+    textPadding: StyleProps['textPadding'],
+    rich: StyleProps['rich'],
+    truncate: StyleProps['truncate'],
+    textLineHeight: number
+): ReturnType<typeof textContain.getBoundingRect> {
     return textContain.getBoundingRect(
-        text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate
+        text, font, textAlign, textVerticalAlign, textPadding as number[], textLineHeight, rich, truncate
     );
 }

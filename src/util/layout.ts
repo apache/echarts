@@ -17,33 +17,50 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Layout helpers for each component positioning
 
 import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
+import { BoxLayoutOptionMixin, ECUnitOption } from './types';
+import { Group } from 'zrender/src/export';
+import Element from 'zrender/src/Element';
+import { Dictionary } from 'zrender/src/core/types';
 
-var each = zrUtil.each;
+const each = zrUtil.each;
 
+interface LayoutRect extends BoundingRect {
+    margin: number[]
+}
+
+export interface NewlineElement extends Element {
+    newline: boolean
+}
+
+type BoxLayoutKeys = keyof BoxLayoutOptionMixin
 /**
  * @public
  */
-export var LOCATION_PARAMS = [
+export const LOCATION_PARAMS = [
     'left', 'right', 'top', 'bottom', 'width', 'height'
-];
+] as const;
 
 /**
  * @public
  */
-export var HV_NAMES = [
+export const HV_NAMES = [
     ['width', 'left', 'right'],
     ['height', 'top', 'bottom']
-];
+] as const;
 
-function boxLayout(orient, group, gap, maxWidth, maxHeight) {
+function boxLayout(
+    orient: 'horizontal' | 'vertical',
+    group: Group,
+    gap: number,
+    maxWidth?: number,
+    maxHeight?: number
+) {
     var x = 0;
     var y = 0;
 
@@ -68,7 +85,7 @@ function boxLayout(orient, group, gap, maxWidth, maxHeight) {
             nextX = x + moveX;
             // Wrap when width exceeds maxWidth or meet a `newline` group
             // FIXME compare before adding gap?
-            if (nextX > maxWidth || child.newline) {
+            if (nextX > maxWidth || (child as NewlineElement).newline) {
                 x = 0;
                 nextX = moveX;
                 y += currentLineMaxSize + gap;
@@ -83,7 +100,7 @@ function boxLayout(orient, group, gap, maxWidth, maxHeight) {
             var moveY = rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
             nextY = y + moveY;
             // Wrap when width exceeds maxHeight or meet a `newline` group
-            if (nextY > maxHeight || child.newline) {
+            if (nextY > maxHeight || (child as NewlineElement).newline) {
                 x += currentLineMaxSize + gap;
                 y = 0;
                 nextY = moveY;
@@ -94,7 +111,7 @@ function boxLayout(orient, group, gap, maxWidth, maxHeight) {
             }
         }
 
-        if (child.newline) {
+        if ((child as NewlineElement).newline) {
             return;
         }
 
@@ -140,17 +157,17 @@ export var hbox = zrUtil.curry(boxLayout, 'horizontal');
  * the width would be as long as possible.
  * If y or y2 is not specified or 'middle' 'top' 'bottom',
  * the height would be as long as possible.
- *
- * @param {Object} positionInfo
- * @param {number|string} [positionInfo.x]
- * @param {number|string} [positionInfo.y]
- * @param {number|string} [positionInfo.x2]
- * @param {number|string} [positionInfo.y2]
- * @param {Object} containerRect {width, height}
- * @param {string|number} margin
- * @return {Object} {width, height}
  */
-export function getAvailableSize(positionInfo, containerRect, margin) {
+export function getAvailableSize(
+    positionInfo: {
+        x: number | string
+        y: number | string
+        x2: number | string
+        y2: number | string
+    },
+    containerRect: RectLike,
+    margin: number[] | number
+) {
     var containerWidth = containerRect.width;
     var containerHeight = containerRect.height;
 
@@ -159,10 +176,10 @@ export function getAvailableSize(positionInfo, containerRect, margin) {
     var x2 = parsePercent(positionInfo.x2, containerWidth);
     var y2 = parsePercent(positionInfo.y2, containerHeight);
 
-    (isNaN(x) || isNaN(parseFloat(positionInfo.x))) && (x = 0);
-    (isNaN(x2) || isNaN(parseFloat(positionInfo.x2))) && (x2 = containerWidth);
-    (isNaN(y) || isNaN(parseFloat(positionInfo.y))) && (y = 0);
-    (isNaN(y2) || isNaN(parseFloat(positionInfo.y2))) && (y2 = containerHeight);
+    (isNaN(x) || isNaN(parseFloat(positionInfo.x as string))) && (x = 0);
+    (isNaN(x2) || isNaN(parseFloat(positionInfo.x2 as string))) && (x2 = containerWidth);
+    (isNaN(y) || isNaN(parseFloat(positionInfo.y as string))) && (y = 0);
+    (isNaN(y2) || isNaN(parseFloat(positionInfo.y2 as string))) && (y2 = containerHeight);
 
     margin = formatUtil.normalizeCssArray(margin || 0);
 
@@ -174,23 +191,14 @@ export function getAvailableSize(positionInfo, containerRect, margin) {
 
 /**
  * Parse position info.
- *
- * @param {Object} positionInfo
- * @param {number|string} [positionInfo.left]
- * @param {number|string} [positionInfo.top]
- * @param {number|string} [positionInfo.right]
- * @param {number|string} [positionInfo.bottom]
- * @param {number|string} [positionInfo.width]
- * @param {number|string} [positionInfo.height]
- * @param {number|string} [positionInfo.aspect] Aspect is width / height
- * @param {Object} containerRect
- * @param {string|number} [margin]
- *
- * @return {module:zrender/core/BoundingRect}
  */
 export function getLayoutRect(
-    positionInfo, containerRect, margin
-) {
+    positionInfo: BoxLayoutOptionMixin & {
+        aspect?: number // aspect is width / height
+    },
+    containerRect: RectLike,
+    margin?: number | number[]
+): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);
 
     var containerWidth = containerRect.width;
@@ -279,7 +287,7 @@ export function getLayoutRect(
         height = containerHeight - verticalMargin - top - (bottom || 0);
     }
 
-    var rect = new BoundingRect(left + margin[3], top + margin[0], width, height);
+    var rect = new BoundingRect(left + margin[3], top + margin[0], width, height) as LayoutRect;
     rect.margin = margin;
     return rect;
 }
@@ -300,19 +308,19 @@ export function getLayoutRect(
  *
  * If be called repeatly with the same input el, the same result will be gotten.
  *
- * @param {module:zrender/Element} el Should have `getBoundingRect` method.
- * @param {Object} positionInfo
- * @param {number|string} [positionInfo.left]
- * @param {number|string} [positionInfo.top]
- * @param {number|string} [positionInfo.right]
- * @param {number|string} [positionInfo.bottom]
- * @param {number|string} [positionInfo.width] Only for opt.boundingModel: 'raw'
- * @param {number|string} [positionInfo.height] Only for opt.boundingModel: 'raw'
- * @param {Object} containerRect
- * @param {string|number} margin
- * @param {Object} [opt]
- * @param {Array.<number>} [opt.hv=[1,1]] Only horizontal or only vertical.
- * @param {Array.<number>} [opt.boundingMode='all']
+ * @param el Should have `getBoundingRect` method.
+ * @param positionInfo
+ * @param positionInfo.left
+ * @param positionInfo.top
+ * @param positionInfo.right
+ * @param positionInfo.bottom
+ * @param positionInfo.width Only for opt.boundingModel: 'raw'
+ * @param positionInfo.height Only for opt.boundingModel: 'raw'
+ * @param containerRect
+ * @param margin
+ * @param opt
+ * @param opt.hv Only horizontal or only vertical. Default to be [1, 1]
+ * @param opt.boundingMode
  *        Specify how to calculate boundingRect when locating.
  *        'all': Position the boundingRect that is transformed and uioned
  *               both itself and its descendants.
@@ -323,9 +331,18 @@ export function getLayoutRect(
  *               container. (Consider a rotated circle needs to be located in a corner.)
  *               In this mode positionInfo.width/height can only be number.
  */
-export function positionElement(el, positionInfo, containerRect, margin, opt) {
-    var h = !opt || !opt.hv || opt.hv[0];
-    var v = !opt || !opt.hv || opt.hv[1];
+export function positionElement(
+    el:  Element,
+    positionInfo: BoxLayoutOptionMixin,
+    containerRect: RectLike,
+    margin: number[] | number,
+    opt: {
+        hv: [1 | 0, 1 | 0],
+        boundingMode: 'all' | 'raw'
+    }
+) {
+    const h = !opt || !opt.hv || opt.hv[0];
+    const v = !opt || !opt.hv || opt.hv[1];
     var boundingMode = opt && opt.boundingMode || 'all';
 
     if (!h && !v) {
@@ -350,7 +367,7 @@ export function positionElement(el, positionInfo, containerRect, margin, opt) {
     }
 
     // The real width and height can not be specified but calculated by the given el.
-    positionInfo = getLayoutRect(
+    const layoutRect = getLayoutRect(
         zrUtil.defaults(
             {width: rect.width, height: rect.height},
             positionInfo
@@ -363,24 +380,24 @@ export function positionElement(el, positionInfo, containerRect, margin, opt) {
     // (see zrender/core/Transformable#getLocalTransform),
     // we can just only modify el.position to get final result.
     var elPos = el.position;
-    var dx = h ? positionInfo.x - rect.x : 0;
-    var dy = v ? positionInfo.y - rect.y : 0;
+    var dx = h ? layoutRect.x - rect.x : 0;
+    var dy = v ? layoutRect.y - rect.y : 0;
 
     el.attr('position', boundingMode === 'raw' ? [dx, dy] : [elPos[0] + dx, elPos[1] + dy]);
 }
 
 /**
- * @param {Object} option Contains some of the properties in HV_NAMES.
- * @param {number} hvIdx 0: horizontal; 1: vertical.
+ * @param option Contains some of the properties in HV_NAMES.
+ * @param hvIdx 0: horizontal; 1: vertical.
  */
-export function sizeCalculable(option, hvIdx) {
+export function sizeCalculable(option: BoxLayoutOptionMixin, hvIdx: number): boolean {
     return option[HV_NAMES[hvIdx][0]] != null
         || (option[HV_NAMES[hvIdx][1]] != null && option[HV_NAMES[hvIdx][2]] != null);
 }
 
 /**
  * Consider Case:
- * When defulat option has {left: 0, width: 100}, and we set {right: 0}
+ * When default option has {left: 0, width: 100}, and we set {right: 0}
  * through setOption or media query, using normal zrUtil.merge will cause
  * {right: 0} does not take effect.
  *
@@ -397,13 +414,22 @@ export function sizeCalculable(option, hvIdx) {
  *     }
  * });
  *
- * @param {Object} targetOption
- * @param {Object} newOption
- * @param {Object|string} [opt]
+ * @param targetOption
+ * @param newOption
+ * @param opt
  * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Used for the components
  *  that width (or height) should not be calculated by left and right (or top and bottom).
  */
-export function mergeLayoutParam(targetOption, newOption, opt) {
+export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
+    targetOption: T,
+    newOption: T,
+    opt?: {
+        /**
+         * Used for the components that width (or height) should not be calculated by left and right (or top and bottom).
+         */
+        ignoreSize?: boolean | [boolean, boolean]
+    }
+) {
     !zrUtil.isObject(opt) && (opt = {});
 
     var ignoreSize = opt.ignoreSize;
@@ -415,17 +441,17 @@ export function mergeLayoutParam(targetOption, newOption, opt) {
     copy(HV_NAMES[0], targetOption, hResult);
     copy(HV_NAMES[1], targetOption, vResult);
 
-    function merge(names, hvIdx) {
-        var newParams = {};
+    function merge(names: typeof HV_NAMES[number], hvIdx: number) {
+        var newParams: BoxLayoutOptionMixin = {};
         var newValueCount = 0;
-        var merged = {};
+        var merged: BoxLayoutOptionMixin = {};
         var mergedValueCount = 0;
         var enoughParamNumber = 2;
 
-        each(names, function (name) {
+        each(names, function (name: BoxLayoutKeys) {
             merged[name] = targetOption[name];
         });
-        each(names, function (name) {
+        each(names, function (name: BoxLayoutKeys) {
             // Consider case: newOption.width is null, which is
             // set by user for removing width setting.
             hasProp(newOption, name) && (newParams[name] = merged[name] = newOption[name]);
@@ -433,7 +459,7 @@ export function mergeLayoutParam(targetOption, newOption, opt) {
             hasValue(merged, name) && mergedValueCount++;
         });
 
-        if (ignoreSize[hvIdx]) {
+        if ((ignoreSize as [boolean, boolean])[hvIdx]) {
             // Only one of left/right is premitted to exist.
             if (hasValue(newOption, names[1])) {
                 merged[names[2]] = null;
@@ -470,15 +496,15 @@ export function mergeLayoutParam(targetOption, newOption, opt) {
         }
     }
 
-    function hasProp(obj, name) {
+    function hasProp(obj: object, name: string): boolean {
         return obj.hasOwnProperty(name);
     }
 
-    function hasValue(obj, name) {
+    function hasValue(obj: Dictionary<any>, name: string): boolean {
         return obj[name] != null && obj[name] !== 'auto';
     }
 
-    function copy(names, target, source) {
+    function copy(names: readonly string[], target: Dictionary<any>, source: Dictionary<any>) {
         each(names, function (name) {
             target[name] = source[name];
         });
@@ -487,10 +513,8 @@ export function mergeLayoutParam(targetOption, newOption, opt) {
 
 /**
  * Retrieve 'left', 'right', 'top', 'bottom', 'width', 'height' from object.
- * @param {Object} source
- * @return {Object} Result contains those props.
  */
-export function getLayoutParams(source) {
+export function getLayoutParams(source: BoxLayoutOptionMixin): BoxLayoutOptionMixin {
     return copyLayoutParams({}, source);
 }
 
@@ -499,8 +523,8 @@ export function getLayoutParams(source) {
  * @param {Object} source
  * @return {Object} Result contains those props.
  */
-export function copyLayoutParams(target, source) {
-    source && target && each(LOCATION_PARAMS, function (name) {
+export function copyLayoutParams(target: BoxLayoutOptionMixin, source: BoxLayoutOptionMixin): BoxLayoutOptionMixin {
+    source && target && each(LOCATION_PARAMS, function (name: BoxLayoutKeys) {
         source.hasOwnProperty(name) && (target[name] = source[name]);
     });
     return target;
