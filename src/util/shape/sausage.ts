@@ -25,6 +25,7 @@ import {extendShape} from '../graphic';
  * Sausage: similar to sector, but have half circle on both sides
  * @public
  */
+
 export default extendShape({
 
     type: 'sausage',

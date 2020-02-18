@@ -34,13 +34,12 @@ import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
 import List, {ListDimensionType} from '../data/List';
-import { Dictionary } from 'zrender/src/core/types';
+import { Dictionary, ImageLike } from 'zrender/src/core/types';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import Source from '../data/Source';
 import { TooltipMarker } from './format';
-
-
+import { easingType } from 'zrender/src/animation/easing';
 
 
 
@@ -462,12 +461,84 @@ export type ComponentLayoutMode = {
     ignoreSize: boolean
 };
 
-export interface ItemStyle {
-    // FIXME:TS more
+export type ShadowOptionMixin = {
+    shadowBlur?: number
+    shadowColor?: string
+    shadowOffsetX?: number
+    shadowOffsetY?: number
 }
 
-export interface Label {
-    // FIXME:TS more
+export type AnimationDelayCallbackParam = {
+    count: number
+    index: number
+}
+export type AnimationDurationCallback = (idx: number) => number;
+export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
+
+export type AnimationOptionMixin = {
+    animation?: boolean
+    animationThreshold?: number
+    // For init animation
+    animationDuration?: number | AnimationDurationCallback
+    animationEasing?: easingType
+    animationDelay?: AnimationDelayCallback
+    // For update animation
+    animationDurationUpdate?: number | AnimationDurationCallback
+    animationEasingUpdate?: easingType
+    animationDelayUpdate?: number | AnimationDelayCallback
+}
+
+export type ItemStyleOption = ShadowOptionMixin & {
+    color?: string | GradientObject | PatternObject
+    borderColor?: string
+    borderWidth?: number
+    borderType?: 'solid' | 'dotted'
+    opacity?: number
+}
+
+type TextCommonOption = ShadowOptionMixin & {
+    color?: string
+    fontStyle?: 'normal' | 'italic' | 'oblique'
+    fontWeight?: 'normal' | 'bold' | 'bolder' | 'lighter' | number
+    fontFamily?: string
+    fontSize?: number
+    align?: 'left' | 'center' | 'right'
+    verticalAlign?: 'top' | 'middle' | 'bottom'
+    // @deprecated
+    baseline?: 'top' | 'middle' | 'bottom'
+
+    lineHeight?: number
+    backgroundColor?: string | {
+        image: ImageLike
+    }
+    borderColor?: string
+    borderWidth?: number
+    borderRadius?: number | [number, number, number, number]
+    padding?: number | [number, number] | [number, number, number, number]
+
+    width?: number | string// Percent
+    height?: number
+    textBorderColor?: string
+    textBorderWidth?: number
+
+    textShadowBlur?: number
+    textShadowColor?: string
+    textShadowOffsetX?: number
+    textShadowOffsetY?: number
+
+    tag?: string
+}
+
+export type LabelOption = TextCommonOption & {
+    show?: boolean
+    // TODO: TYPE More specified 'inside', 'insideTop'....
+    position?: string | number[] | string[]
+    distance?: number
+    rotate?: number
+    offset?: number[]
+    formatter?: (params: DataParamsUserOutput) => string
+
+    rich?: Dictionary<TextCommonOption>
 }
 
 export interface ComponentOption {

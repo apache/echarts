@@ -31,7 +31,9 @@ import List from '../../data/List';
 
 export interface PieOption extends SeriesOption {
     // FIXME:TS need more. [k: string]: any should be removed finally.
-    [k: string]: any
+    [k: string]: any,
+
+    animationType: string
 }
 
 class PieSeries extends SeriesModel {

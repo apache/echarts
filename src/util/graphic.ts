@@ -17,16 +17,14 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as pathTool from 'zrender/src/tool/path';
 import * as colorTool from 'zrender/src/tool/color';
 import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
-import Path from 'zrender/src/graphic/Path';
+import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Transformable from 'zrender/src/core/Transformable';
-import ZImage from 'zrender/src/graphic/Image';
+import ZImage, {ZImageStyleProps} from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
 import Circle from 'zrender/src/graphic/shape/Circle';
@@ -41,47 +39,119 @@ import Arc from 'zrender/src/graphic/shape/Arc';
 import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
+import { Dictionary, ImageLike, PropType } from 'zrender/src/core/types';
+import LRU from 'zrender/src/core/LRU';
+import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
+import Style, { StyleProps } from 'zrender/src/graphic/Style';
+import { PatternObject } from 'zrender/src/graphic/Pattern';
+import { GradientObject } from 'zrender/src/graphic/Gradient';
+import Element, { ElementEvent, ElementProps } from 'zrender/src/Element';
+import Model from '../model/Model';
+import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam } from './types';
+import GlobalModel from '../model/Global';
 
 
-var mathMax = Math.max;
-var mathMin = Math.min;
+const mathMax = Math.max;
+const mathMin = Math.min;
 
-var EMPTY_OBJ = {};
+const EMPTY_OBJ = {};
 
-export var Z2_EMPHASIS_LIFT = 1;
+export const Z2_EMPHASIS_LIFT = 1;
 
 // key: label model property nane, value: style property name.
-export var CACHED_LABEL_STYLE_PROPERTIES = {
+export const CACHED_LABEL_STYLE_PROPERTIES = {
     color: 'textFill',
     textBorderColor: 'textStroke',
     textBorderWidth: 'textStrokeWidth'
 };
 
-var EMPHASIS = 'emphasis';
-var NORMAL = 'normal';
+const EMPHASIS = 'emphasis';
+const NORMAL = 'normal';
 
 // Reserve 0 as default.
-var _highlightNextDigit = 1;
-var _highlightKeyMap = {};
+let _highlightNextDigit = 1;
+const _highlightKeyMap: Dictionary<number> = {};
 
-var _customShapeMap = {};
+const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
+
+type AvailableStates = typeof EMPHASIS | typeof NORMAL;
+
+type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
+type ExtendShapeReturn = ReturnType<typeof Path.extend>;
+
+
+type ExtendedDisplayable = Displayable & {
+    __hoverStlDirty?: boolean
+    __hoverStl?: StyleProps
+    __cachedNormalStl?: StyleProps
+    __cachedNormalZ2?: number
+
+    __highlighted?: boolean | 'layer' | 'plain'
+    __highByOuter: number
+
+    __highDownSilentOnTouch: boolean
+    __highDownOnUpdate: (fromState: AvailableStates, toState: AvailableStates) => void
+
+    __highDownDispatcher: boolean
+}
+
+type ExtendedStyleProps = StyleProps & {
+    insideRollback?: StyleProps
+    insideRollbackOpt?: TextCommonParams
+}
+
+type TextCommonParams = {
+    /**
+     * Whether diable drawing box of block (outer most).
+     */
+    disableBox?: boolean
+    isRectText?: boolean
+    /**
+     * Specify a color when color is 'auto',
+     * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
+     */
+    autoColor?: string
+    /**
+     * `true`: Use inside style (textFill, textStroke, textStrokeWidth)
+     *     if `textFill` is not specified.
+     * `false`: Do not use inside style.
+     * `null/undefined`: use inside style if `isRectText` is true and
+     *     `textFill` is not specified and textPosition contains `'inside'`.
+     */
+    useInsideStyle?: boolean
+
+    forceRich?: boolean
+
+    getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
+
+    textStyle?: StyleProps
+}
+
+// Method for type guard
+function isExtendedDisplayable(el: Displayable): el is ExtendedDisplayable {
+    return true;
+}
 
 /**
  * Extend shape with parameters
  */
-export function extendShape(opts) {
+export function extendShape(opts: ExtendShapeOpt): ExtendShapeReturn {
     return Path.extend(opts);
 }
 
+const extendPathFromString = pathTool.extendFromString;
+type SVGPathOption = Parameters<typeof extendPathFromString>[1];
+type SVGPathCtor = ReturnType<typeof extendPathFromString>;
+type SVGPath = InstanceType<SVGPathCtor>
 /**
  * Extend path
  */
-export function extendPath(pathData, opts) {
-    return pathTool.extendFromString(pathData, opts);
+export function extendPath(pathData: string, opts: SVGPathOption): SVGPathCtor {
+    return extendPathFromString(pathData, opts);
 }
 
 /**
@@ -92,10 +162,10 @@ export function extendPath(pathData, opts) {
  * The shape can be used in `custom series` and
  * `graphic component` by declaring `{type: name}`.
  *
- * @param {string} name
- * @param {Object} ShapeClass Can be generated by `extendShape`.
+ * @param name
+ * @param ShapeClass Can be generated by `extendShape`.
  */
-export function registerShape(name, ShapeClass) {
+export function registerShape(name: string, ShapeClass: {new(): Path}) {
     _customShapeMap[name] = ShapeClass;
 }
 
@@ -123,10 +193,10 @@ export function registerShape(name, ShapeClass) {
  * names). But that case probably rearly happen. So we dont make more mechanism
  * to resolve this issue here.
  *
- * @param {string} name
- * @return {Object} The shape class. If not found, return nothing.
+ * @param name
+ * @return The shape class. If not found, return nothing.
  */
-export function getShapeClass(name) {
+export function getShapeClass(name: string): {new(): Path} {
     if (_customShapeMap.hasOwnProperty(name)) {
         return _customShapeMap[name];
     }
@@ -134,12 +204,17 @@ export function getShapeClass(name) {
 
 /**
  * Create a path element from path data string
- * @param {string} pathData
- * @param {Object} opts
- * @param {module:zrender/core/BoundingRect} rect
- * @param {string} [layout=cover] 'center' or 'cover'
+ * @param pathData
+ * @param opts
+ * @param rect
+ * @param layout 'center' or 'cover' default to be cover
  */
-export function makePath(pathData, opts, rect, layout) {
+export function makePath(
+    pathData: string,
+    opts: SVGPathOption,
+    rect: RectLike,
+    layout?: 'center' | 'cover'
+): SVGPath {
     var path = pathTool.createFromString(pathData, opts);
     if (rect) {
         if (layout === 'center') {
@@ -152,12 +227,16 @@ export function makePath(pathData, opts, rect, layout) {
 
 /**
  * Create a image element from image url
- * @param {string} imageUrl image url
- * @param {Object} opts options
- * @param {module:zrender/core/BoundingRect} rect constrain rect
- * @param {string} [layout=cover] 'center' or 'cover'
+ * @param imageUrl image url
+ * @param opts options
+ * @param rect constrain rect
+ * @param layout 'center' or 'cover'. Default to be 'cover'
  */
-export function makeImage(imageUrl, rect, layout) {
+export function makeImage(
+    imageUrl: ImageLike,
+    rect: RectLike,
+    layout?: 'center' | 'cover'
+) {
     var path = new ZImage({
         style: {
             image: imageUrl,
@@ -166,7 +245,7 @@ export function makeImage(imageUrl, rect, layout) {
             width: rect.width,
             height: rect.height
         },
-        onload: function (img) {
+        onload: function (img: ImageLike) {
             if (layout === 'center') {
                 var boundingRect = {
                     width: img.width,
@@ -182,11 +261,14 @@ export function makeImage(imageUrl, rect, layout) {
 /**
  * Get position of centered element in bounding box.
  *
- * @param  {Object} rect         element local bounding box
- * @param  {Object} boundingRect constraint bounding box
- * @return {Object} element position containing x, y, width, and height
+ * @param  rect         element local bounding box
+ * @param  boundingRect constraint bounding box
+ * @return element position containing x, y, width, and height
  */
-function centerGraphic(rect, boundingRect) {
+function centerGraphic(rect: RectLike, boundingRect: {
+    width: number
+    height: number
+}): RectLike {
     // Set rect to center, keep width / height ratio.
     var aspect = boundingRect.width / boundingRect.height;
     var width = rect.height * aspect;
@@ -213,10 +295,10 @@ export var mergePath = pathTool.mergePath;
 
 /**
  * Resize a path to fit the rect
- * @param {module:zrender/graphic/Path} path
- * @param {Object} rect
+ * @param path
+ * @param rect
  */
-export function resizePath(path, rect) {
+export function resizePath(path: SVGPath, rect: RectLike): void {
     if (!path.applyTransform) {
         return;
     }
@@ -230,36 +312,30 @@ export function resizePath(path, rect) {
 
 /**
  * Sub pixel optimize line for canvas
- *
- * @param {Object} param
- * @param {Object} [param.shape]
- * @param {number} [param.shape.x1]
- * @param {number} [param.shape.y1]
- * @param {number} [param.shape.x2]
- * @param {number} [param.shape.y2]
- * @param {Object} [param.style]
- * @param {number} [param.style.lineWidth]
- * @return {Object} Modified param
  */
-export function subPixelOptimizeLine(param) {
+export function subPixelOptimizeLine(param: {
+    shape: {
+        x1: number, y1: number, x2: number, y2: number
+    },
+    style: {
+        lineWidth: number
+    }
+}) {
     subPixelOptimizeUtil.subPixelOptimizeLine(param.shape, param.shape, param.style);
     return param;
 }
 
 /**
  * Sub pixel optimize rect for canvas
- *
- * @param {Object} param
- * @param {Object} [param.shape]
- * @param {number} [param.shape.x]
- * @param {number} [param.shape.y]
- * @param {number} [param.shape.width]
- * @param {number} [param.shape.height]
- * @param {Object} [param.style]
- * @param {number} [param.style.lineWidth]
- * @return {Object} Modified param
  */
-export function subPixelOptimizeRect(param) {
+export function subPixelOptimizeRect(param: {
+    shape: {
+        x: number, y: number, width: number, height: number
+    },
+    style: {
+        lineWidth: number
+    }
+}) {
     subPixelOptimizeUtil.subPixelOptimizeRect(param.shape, param.shape, param.style);
     return param;
 }
@@ -267,38 +343,34 @@ export function subPixelOptimizeRect(param) {
 /**
  * Sub pixel optimize for canvas
  *
- * @param {number} position Coordinate, such as x, y
- * @param {number} lineWidth Should be nonnegative integer.
- * @param {boolean=} positiveOrNegative Default false (negative).
- * @return {number} Optimized position.
+ * @param position Coordinate, such as x, y
+ * @param lineWidth Should be nonnegative integer.
+ * @param positiveOrNegative Default false (negative).
+ * @return Optimized position.
  */
 export var subPixelOptimize = subPixelOptimizeUtil.subPixelOptimize;
 
 
-function hasFillOrStroke(fillOrStroke) {
+function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) {
     return fillOrStroke != null && fillOrStroke !== 'none';
 }
 
 // Most lifted color are duplicated.
-var liftedColorMap = zrUtil.createHashMap();
-var liftedColorCount = 0;
+var liftedColorCache = new LRU<string>(100);
 
-function liftColor(color) {
+function liftColor(color: string): string {
     if (typeof color !== 'string') {
         return color;
     }
-    var liftedColor = liftedColorMap.get(color);
+    var liftedColor = liftedColorCache.get(color);
     if (!liftedColor) {
         liftedColor = colorTool.lift(color, -0.1);
-        if (liftedColorCount < 10000) {
-            liftedColorMap.set(color, liftedColor);
-            liftedColorCount++;
-        }
+        liftedColorCache.put(color, liftedColor);
     }
     return liftedColor;
 }
 
-function cacheElementStl(el) {
+function cacheElementStl(el: ExtendedDisplayable) {
     if (!el.__hoverStlDirty) {
         return;
     }
@@ -310,14 +382,15 @@ function cacheElementStl(el) {
         return;
     }
 
-    var normalStyle = el.__cachedNormalStl = {};
+    var normalStyle = el.__cachedNormalStl = {} as StyleProps;
     el.__cachedNormalZ2 = el.z2;
     var elStyle = el.style;
 
-    for (var name in hoverStyle) {
-        // See comment in `singleEnterEmphasis`.
-        if (hoverStyle[name] != null) {
-            normalStyle[name] = elStyle[name];
+    const styleKeys = zrUtil.keys(hoverStyle);
+    for (let idx = 0; idx < styleKeys.length; idx++) {
+        const key = styleKeys[idx];
+        if (hoverStyle[key] != null) {
+            (normalStyle as any)[key] = elStyle[key];
         }
     }
 
@@ -326,7 +399,7 @@ function cacheElementStl(el) {
     normalStyle.stroke = elStyle.stroke;
 }
 
-function singleEnterEmphasis(el) {
+function singleEnterEmphasis(el:  ExtendedDisplayable) {
     var hoverStl = el.__hoverStl;
 
     if (!hoverStl || el.__highlighted) {
@@ -392,13 +465,17 @@ function singleEnterEmphasis(el) {
     }
 }
 
-function setDefaultHoverFillStroke(targetStyle, hoverStyle, prop) {
+function setDefaultHoverFillStroke(
+    targetStyle: StyleProps,
+    hoverStyle: StyleProps,
+    prop: 'fill' | 'stroke'
+) {
     if (!hasFillOrStroke(hoverStyle[prop]) && hasFillOrStroke(targetStyle[prop])) {
-        targetStyle[prop] = liftColor(targetStyle[prop]);
+        targetStyle[prop] = liftColor(targetStyle[prop] as string);
     }
 }
 
-function singleEnterNormal(el) {
+function singleEnterNormal(el: ExtendedDisplayable) {
     var highlighted = el.__highlighted;
 
     if (!highlighted) {
@@ -433,10 +510,14 @@ function singleEnterNormal(el) {
     }
 }
 
-function traverseUpdate(el, updater, commonParam) {
+function traverseUpdate<T>(
+    el: ExtendedDisplayable,
+    updater: (this: void, el: Displayable, commonParam?: T) => void,
+    commonParam?: T
+) {
     // If root is group, also enter updater for `highDownOnUpdate`.
-    var fromState = NORMAL;
-    var toState = NORMAL;
+    var fromState: AvailableStates = NORMAL;
+    var toState: AvailableStates = NORMAL;
     var trigger;
     // See the rule of `highDownOnUpdate` on `graphic.setAsHighDownDispatcher`.
     el.__highlighted && (fromState = EMPHASIS, trigger = true);
@@ -456,21 +537,21 @@ function traverseUpdate(el, updater, commonParam) {
  * This method should be called after all of the normal styles have been adopted
  * to the `el`. See the reason on `setHoverStyle`.
  *
- * @param {module:zrender/Element} el Should not be `zrender/container/Group`.
- * @param {Object} [el.hoverStyle] Can be set on el or its descendants,
+ * @param el Should not be `zrender/container/Group`.
+ * @param el.hoverStyle Can be set on el or its descendants,
  *        e.g., `el.hoverStyle = ...; graphic.setHoverStyle(el); `.
  *        Often used when item group has a label element and it's hoverStyle is different.
- * @param {Object|boolean} [hoverStl] The specified hover style.
+ * @param hoverStl The specified hover style.
  *        If set as `false`, disable the hover style.
  *        Similarly, The `el.hoverStyle` can alse be set
  *        as `false` to disable the hover style.
  *        Otherwise, use the default hover style if not provided.
  */
-export function setElementHoverStyle(el, hoverStl) {
+export function setElementHoverStyle(el: ExtendedDisplayable, hoverStl: StyleProps) {
     // For performance consideration, it might be better to make the "hover style" only the
     // difference properties from the "normal style", but not a entire copy of all styles.
     hoverStl = el.__hoverStl = hoverStl !== false && (el.hoverStyle || hoverStl || {});
-    el.__hoverStlDirty = true;
+    el.__hoverStlDirty = true;``
 
     // FIXME
     // It is not completely right to save "normal"/"emphasis" flag on elements.
@@ -494,31 +575,31 @@ export function setElementHoverStyle(el, hoverStl) {
     }
 }
 
-function onElementMouseOver(e) {
+function onElementMouseOver(this: ExtendedDisplayable, e: ElementEvent) {
     !shouldSilent(this, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
         && !this.__highByOuter
         && traverseUpdate(this, singleEnterEmphasis);
 }
 
-function onElementMouseOut(e) {
+function onElementMouseOut(this: ExtendedDisplayable, e: ElementEvent) {
     !shouldSilent(this, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
         && !this.__highByOuter
         && traverseUpdate(this, singleEnterNormal);
 }
 
-function onElementEmphasisEvent(highlightDigit) {
+function onElementEmphasisEvent(this: ExtendedDisplayable, highlightDigit: number) {
     this.__highByOuter |= 1 << (highlightDigit || 0);
     traverseUpdate(this, singleEnterEmphasis);
 }
 
-function onElementNormalEvent(highlightDigit) {
+function onElementNormalEvent(this: ExtendedDisplayable, highlightDigit: number) {
     !(this.__highByOuter &= ~(1 << (highlightDigit || 0)))
         && traverseUpdate(this, singleEnterNormal);
 }
 
-function shouldSilent(el, e) {
+function shouldSilent(el: ExtendedDisplayable, e: ElementEvent) {
     return el.__highDownSilentOnTouch && e.zrByTouch;
 }
 
@@ -552,16 +633,10 @@ function shouldSilent(el, e) {
  * not call this method for them.
  *
  * (3) These input parameters can be set directly on `el`:
- *
- * @param {module:zrender/Element} el
- * @param {Object} [el.hoverStyle] See `graphic.setElementHoverStyle`.
- * @param {boolean} [el.highDownSilentOnTouch=false] See `graphic.setAsHighDownDispatcher`.
- * @param {Function} [el.highDownOnUpdate] See `graphic.setAsHighDownDispatcher`.
- * @param {Object|boolean} [hoverStyle] See `graphic.setElementHoverStyle`.
  */
-export function setHoverStyle(el, hoverStyle?) {
+export function setHoverStyle(el: Displayable, hoverStyle?: StyleProps) {
     setAsHighDownDispatcher(el, true);
-    traverseUpdate(el, setElementHoverStyle, hoverStyle);
+    traverseUpdate(el as ExtendedDisplayable, setElementHoverStyle, hoverStyle);
 }
 
 /**
@@ -598,35 +673,33 @@ export function setHoverStyle(el, hoverStyle?) {
  *        hover-highlight on touch device.
  * @param {boolean} [asDispatcher=true] If `false`, do not set as "highDownDispatcher".
  */
-export function setAsHighDownDispatcher(el, asDispatcher) {
+export function setAsHighDownDispatcher(el: Displayable, asDispatcher: boolean) {
     var disable = asDispatcher === false;
-    // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
-    // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
-    el.__highDownSilentOnTouch = el.highDownSilentOnTouch;
-    el.__highDownOnUpdate = el.highDownOnUpdate;
+    if (isExtendedDisplayable(el)) {
+        // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
+        // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
+        el.__highDownSilentOnTouch = el.highDownSilentOnTouch;
+        el.__highDownOnUpdate = el.highDownOnUpdate;
 
-    // Simple optimize, since this method might be
-    // called for each elements of a group in some cases.
-    if (!disable || el.__highDownDispatcher) {
-        var method = disable ? 'off' : 'on';
+        // Simple optimize, since this method might be
+        // called for each elements of a group in some cases.
+        if (!disable || el.__highDownDispatcher) {
+            var method: 'on' | 'off' = disable ? 'off' : 'on';
 
-        // Duplicated function will be auto-ignored, see Eventful.js.
-        el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
-        // Emphasis, normal can be triggered manually by API or other components like hover link.
-        el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
-        // Also keep previous record.
-        el.__highByOuter = el.__highByOuter || 0;
+            // Duplicated function will be auto-ignored, see Eventful.js.
+            el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
+            // Emphasis, normal can be triggered manually by API or other components like hover link.
+            el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
+            // Also keep previous record.
+            el.__highByOuter = el.__highByOuter || 0;
 
-        el.__highDownDispatcher = !disable;
+            el.__highDownDispatcher = !disable;
+        }
     }
 }
 
-/**
- * @param {module:zrender/src/Element} el
- * @return {boolean}
- */
-export function isHighDownDispatcher(el) {
-    return !!(el && el.__highDownDispatcher);
+export function isHighDownDispatcher(el: Displayable): boolean {
+    return !!(el && (el as ExtendedDisplayable).__highDownDispatcher);
 }
 
 /**
@@ -637,7 +710,7 @@ export function isHighDownDispatcher(el) {
  * @param {string} highlightKey
  * @return {number} highlightDigit
  */
-export function getHighlightDigit(highlightKey) {
+export function getHighlightDigit(highlightKey: number) {
     var highlightDigit = _highlightKeyMap[highlightKey];
     if (highlightDigit == null && _highlightNextDigit <= 32) {
         highlightDigit = _highlightKeyMap[highlightKey] = _highlightNextDigit++;
@@ -647,26 +720,29 @@ export function getHighlightDigit(highlightKey) {
 
 /**
  * See more info in `setTextStyleCommon`.
- * @param {Object|module:zrender/graphic/Style} normalStyle
- * @param {Object} emphasisStyle
- * @param {module:echarts/model/Model} normalModel
- * @param {module:echarts/model/Model} emphasisModel
- * @param {Object} opt Check `opt` of `setTextStyleCommon` to find other props.
- * @param {string|Function} [opt.defaultText]
- * @param {module:echarts/model/Model} [opt.labelFetcher] Fetch text by
- *      `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
- * @param {module:echarts/model/Model} [opt.labelDataIndex] Fetch text by
- *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
- * @param {module:echarts/model/Model} [opt.labelDimIndex] Fetch text by
- *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
- * @param {Object} [normalSpecified]
- * @param {Object} [emphasisSpecified]
  */
 export function setLabelStyle(
-    normalStyle, emphasisStyle,
-    normalModel, emphasisModel,
-    opt,
-    normalSpecified, emphasisSpecified?
+    normalStyle: StyleProps,
+    emphasisStyle: StyleProps,
+    normalModel: Model,
+    emphasisModel: Model,
+    opt?: {
+        defaultText?: string,
+        // Fetch text by `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
+        labelFetcher?: {
+            getFormattedLabel?: (
+                labelDataIndex: number,
+                state:
+                AvailableStates,
+                dataType: string,
+                labelDimIndex: number
+            ) => string
+        },
+        labelDataIndex?: number,
+        labelDimIndex?: number
+    } & TextCommonParams,
+    normalSpecified?: StyleProps,
+    emphasisSpecified?: StyleProps
 ) {
     opt = opt || EMPTY_OBJ;
     var labelFetcher = opt.labelFetcher;
@@ -720,37 +796,38 @@ export function setLabelStyle(
 /**
  * Modify label style manually.
  * Only works after `setLabelStyle` and `setElementHoverStyle` called.
- *
- * @param {module:zrender/src/Element} el
- * @param {Object} [normalStyleProps] optional
- * @param {Object} [emphasisStyleProps] optional
  */
-export function modifyLabelStyle(el, normalStyleProps, emphasisStyleProps) {
-    var elStyle = el.style;
+export function modifyLabelStyle(
+    el: Displayable,
+    normalStyleProps?: StyleProps,
+    emphasisStyleProps?: StyleProps
+) {
+    var elStyle = el.style as StyleProps;
     if (normalStyleProps) {
         rollbackDefaultTextStyle(elStyle);
         el.setStyle(normalStyleProps);
         applyDefaultTextStyle(elStyle);
     }
-    elStyle = el.__hoverStl;
-    if (emphasisStyleProps && elStyle) {
-        rollbackDefaultTextStyle(elStyle);
-        zrUtil.extend(elStyle, emphasisStyleProps);
-        applyDefaultTextStyle(elStyle);
+    if (isExtendedDisplayable(el)) {
+        elStyle = el.__hoverStl;
+        if (emphasisStyleProps && elStyle) {
+            rollbackDefaultTextStyle(elStyle);
+            zrUtil.extend(elStyle, emphasisStyleProps);
+            applyDefaultTextStyle(elStyle);
+        }
     }
 }
 
 /**
  * Set basic textStyle properties.
  * See more info in `setTextStyleCommon`.
- * @param {Object|module:zrender/graphic/Style} textStyle
- * @param {module:echarts/model/Model} model
- * @param {Object} [specifiedTextStyle] Can be overrided by settings in model.
- * @param {Object} [opt] See `opt` of `setTextStyleCommon`.
- * @param {boolean} [isEmphasis]
  */
 export function setTextStyle(
-    textStyle, textStyleModel, specifiedTextStyle, opt, isEmphasis
+    textStyle: StyleProps,
+    textStyleModel: Model,
+    specifiedTextStyle?: StyleProps,    // Can be overrided by settings in model.
+    opt?: TextCommonParams,
+    isEmphasis?: boolean
 ) {
     setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis);
     specifiedTextStyle && zrUtil.extend(textStyle, specifiedTextStyle);
@@ -768,8 +845,12 @@ export function setTextStyle(
  * @param {string|boolean} defaultColor Default text color.
  *        If set as false, it will be processed as a emphasis style.
  */
-export function setText(textStyle, labelModel, defaultColor) {
-    var opt = {isRectText: true};
+export function setText(
+    textStyle: StyleProps,
+    labelModel: Model,
+    defaultColor: string | false
+) {
+    var opt: TextCommonParams = {isRectText: true};
     var isEmphasis;
 
     if (defaultColor === false) {
@@ -799,23 +880,13 @@ export function setText(textStyle, labelModel, defaultColor) {
  *
  * Default value will be adopted and `insideRollbackOpt` will be created.
  * See `applyDefaultTextStyle` `rollbackDefaultTextStyle` for more details.
- *
- * opt: {
- *      disableBox: boolean, Whether diable drawing box of block (outer most).
- *      isRectText: boolean,
- *      autoColor: string, specify a color when color is 'auto',
- *              for textFill, textStroke, textBackgroundColor, and textBorderColor.
- *              If autoColor specified, it is used as default textFill.
- *      useInsideStyle:
- *              `true`: Use inside style (textFill, textStroke, textStrokeWidth)
- *                  if `textFill` is not specified.
- *              `false`: Do not use inside style.
- *              `null/undefined`: use inside style if `isRectText` is true and
- *                  `textFill` is not specified and textPosition contains `'inside'`.
- *      forceRich: boolean
- * }
  */
-function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
+function setTextStyleCommon(
+    textStyle: StyleProps,
+    textStyleModel: Model,
+    opt?: TextCommonParams,
+    isEmphasis?: boolean
+) {
     // Consider there will be abnormal when merge hover style to normal style if given default value.
     opt = opt || EMPTY_OBJ;
 
@@ -860,7 +931,7 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
     //     }
     // }
     var richItemNames = getRichItemNames(textStyleModel);
-    var richResult;
+    var richResult: Dictionary<StyleProps>;
     if (richItemNames) {
         richResult = {};
         for (var name in richItemNames) {
@@ -901,17 +972,18 @@ function setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis) {
 //         a: { ... }
 //     }
 // }
-function getRichItemNames(textStyleModel) {
+// TODO TextStyleModel
+function getRichItemNames(textStyleModel: Model<LabelOption>) {
     // Use object to remove duplicated names.
-    var richItemNameMap;
+    var richItemNameMap: Dictionary<number>;
     while (textStyleModel && textStyleModel !== textStyleModel.ecModel) {
-        var rich = (textStyleModel.option || EMPTY_OBJ).rich;
+        var rich = (textStyleModel.option || EMPTY_OBJ as LabelOption).rich;
         if (rich) {
             richItemNameMap = richItemNameMap || {};
-            for (var name in rich) {
-                if (rich.hasOwnProperty(name)) {
-                    richItemNameMap[name] = 1;
-                }
+            const richKeys = zrUtil.keys(rich);
+            for (let i = 0; i < richKeys.length; i++) {
+                const richKey = richKeys[i];
+                richItemNameMap[richKey] = 1;
             }
         }
         textStyleModel = textStyleModel.parentModel;
@@ -919,7 +991,14 @@ function getRichItemNames(textStyleModel) {
     return richItemNameMap;
 }
 
-function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, isBlock) {
+function setTokenTextStyle(
+    textStyle: StyleProps,
+    textStyleModel: Model<LabelOption>,
+    globalTextStyle: LabelOption,
+    opt?: TextCommonParams,
+    isEmphasis?: boolean,
+    isBlock?: boolean
+) {
     // In merge mode, default value should not be given.
     globalTextStyle = !isEmphasis && globalTextStyle || EMPTY_OBJ;
 
@@ -934,7 +1013,7 @@ function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEm
 
     if (!isEmphasis) {
         if (isBlock) {
-            textStyle.insideRollbackOpt = opt;
+            (textStyle as ExtendedStyleProps).insideRollbackOpt = opt;
             applyDefaultTextStyle(textStyle);
         }
 
@@ -962,7 +1041,7 @@ function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEm
     textStyle.textTag = textStyleModel.getShallow('tag');
 
     if (!isBlock || !opt.disableBox) {
-        textStyle.textBackgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor'), opt);
+        textStyle.textBackgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor') as string, opt);
         textStyle.textPadding = textStyleModel.getShallow('padding');
         textStyle.textBorderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);
         textStyle.textBorderWidth = textStyleModel.getShallow('borderWidth');
@@ -984,7 +1063,9 @@ function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEm
         || globalTextStyle.textShadowOffsetY;
 }
 
-function getAutoColor(color, opt) {
+function getAutoColor(color: string, opt?: {
+    autoColor?: string
+}): string {
     return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
 }
 
@@ -1005,9 +1086,9 @@ function getAutoColor(color, opt) {
  * (For the case that all of the text related properties is reset, like `setTextStyleCommon`
  * does, `rollbackDefaultTextStyle` is not needed to be called).
  */
-function applyDefaultTextStyle(textStyle) {
+function applyDefaultTextStyle(textStyle: StyleProps) {
     var textPosition = textStyle.textPosition;
-    var opt = textStyle.insideRollbackOpt;
+    var opt = (textStyle as ExtendedStyleProps).insideRollbackOpt;
     var insideRollback;
 
     if (opt && textStyle.textFill == null) {
@@ -1048,7 +1129,7 @@ function applyDefaultTextStyle(textStyle) {
     }
 
     // Always set `insideRollback`, so that the previous one can be cleared.
-    textStyle.insideRollback = insideRollback;
+    (textStyle as ExtendedStyleProps).insideRollback = insideRollback;
 }
 
 /**
@@ -1061,18 +1142,18 @@ function applyDefaultTextStyle(textStyle) {
  * `applyDefaultTextStyle`), but when switching to emphasis state, the `textFill`
  * should be retured to 'autoColor', but not keep '#fff'.
  */
-function rollbackDefaultTextStyle(style) {
-    var insideRollback = style.insideRollback;
+function rollbackDefaultTextStyle(style: StyleProps) {
+    var insideRollback = (style as ExtendedStyleProps).insideRollback;
     if (insideRollback) {
         // Reset all of the props in `CACHED_LABEL_STYLE_PROPERTIES`.
         style.textFill = insideRollback.textFill;
         style.textStroke = insideRollback.textStroke;
         style.textStrokeWidth = insideRollback.textStrokeWidth;
-        style.insideRollback = null;
+        (style as ExtendedStyleProps).insideRollback = null;
     }
 }
 
-export function getFont(opt, ecModel) {
+export function getFont(opt: LabelOption, ecModel: GlobalModel) {
     var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return zrUtil.trim([
         // FIXME in node-canvas fontWeight is before fontStyle
@@ -1083,7 +1164,16 @@ export function getFont(opt, ecModel) {
     ].join(' '));
 }
 
-function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) {
+function animateOrSetProps(
+    isUpdate: boolean,
+    el: Displayable,
+    props: DisplayableProps,
+    animatableModel?: Model<AnimationOptionMixin> & {
+        getAnimationDelayParams?: (el: Displayable, dataIndex: number) => AnimationDelayCallbackParam
+    },
+    dataIndex?: number,
+    cb?: () => void
+) {
     if (typeof dataIndex === 'function') {
         cb = dataIndex;
         dataIndex = null;
@@ -1094,10 +1184,15 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
     var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
     if (animationEnabled) {
-        var postfix = isUpdate ? 'Update' : '';
-        var duration = animatableModel.getShallow('animationDuration' + postfix);
-        var animationEasing = animatableModel.getShallow('animationEasing' + postfix);
-        var animationDelay = animatableModel.getShallow('animationDelay' + postfix);
+        var duration = animatableModel.getShallow(
+            isUpdate ? 'animationDurationUpdate' : 'animationDuration'
+        );
+        var animationEasing = animatableModel.getShallow(
+            isUpdate ? 'animationEasingUpdate' : 'animationEasing'
+        );
+        var animationDelay = animatableModel.getShallow(
+            isUpdate ? 'animationDelayUpdate' : 'animationDelay'
+        );
         if (typeof animationDelay === 'function') {
             animationDelay = animationDelay(
                 dataIndex,
@@ -1128,12 +1223,6 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  * Caution: this method will stop previous animation.
  * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
- *
- * @param {module:zrender/Element} el
- * @param {Object} props
- * @param {module:echarts/model/Model} [animatableModel]
- * @param {number} [dataIndex]
- * @param {Function} [cb]
  * @example
  *     graphic.updateProps(el, {
  *         position: [100, 100]
@@ -1143,7 +1232,14 @@ function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) 
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
-export function updateProps(el, props, animatableModel, dataIndex, cb?) {
+export function updateProps(
+    el: Displayable,
+    props: DisplayableProps,
+    // TODO: TYPE AnimatableModel
+    animatableModel?: Model<AnimationOptionMixin>,
+    dataIndex?: number,
+    cb?: () => void
+) {
     animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
 }
 
@@ -1154,14 +1250,14 @@ export function updateProps(el, props, animatableModel, dataIndex, cb?) {
  * Caution: this method will stop previous animation.
  * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
- *
- * @param {module:zrender/Element} el
- * @param {Object} props
- * @param {module:echarts/model/Model} [animatableModel]
- * @param {number} [dataIndex]
- * @param {Function} cb
  */
-export function initProps(el, props, animatableModel, dataIndex, cb?) {
+export function initProps(
+    el: Displayable,
+    props: DisplayableProps,
+    animatableModel?: Model<AnimationOptionMixin>,
+    dataIndex?: number,
+    cb?: () => void
+) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
 }
 
@@ -1169,10 +1265,10 @@ export function initProps(el, props, animatableModel, dataIndex, cb?) {
  * Get transform matrix of target (param target),
  * in coordinate of its ancestor (param ancestor)
  *
- * @param {module:zrender/mixin/Transformable} target
- * @param {module:zrender/mixin/Transformable} [ancestor]
+ * @param target
+ * @param [ancestor]
  */
-export function getTransform(target, ancestor) {
+export function getTransform(target: Transformable, ancestor: Transformable): matrix.MatrixArray {
     var mat = matrix.identity([]);
 
     while (target && target !== ancestor) {
@@ -1185,31 +1281,39 @@ export function getTransform(target, ancestor) {
 
 /**
  * Apply transform to an vertex.
- * @param {Array.<number>} target [x, y]
- * @param {Array.<number>|TypedArray.<number>|Object} transform Can be:
+ * @param target [x, y]
+ * @param transform Can be:
  *      + Transform matrix: like [1, 0, 0, 1, 0, 0]
  *      + {position, rotation, scale}, the same as `zrender/Transformable`.
- * @param {boolean=} invert Whether use invert matrix.
- * @return {Array.<number>} [x, y]
+ * @param invert Whether use invert matrix.
+ * @return [x, y]
  */
-export function applyTransform(target, transform, invert) {
+export function applyTransform(
+    target: vector.VectorArray,
+    transform: Transformable | matrix.MatrixArray,
+    invert?: boolean
+): vector.VectorArray {
     if (transform && !zrUtil.isArrayLike(transform)) {
         transform = Transformable.getLocalTransform(transform);
     }
 
     if (invert) {
-        transform = matrix.invert([], transform);
+        transform = matrix.invert([], transform as matrix.MatrixArray);
     }
-    return vector.applyTransform([], target, transform);
+    return vector.applyTransform([], target, transform as matrix.MatrixArray);
 }
 
 /**
- * @param {string} direction 'left' 'right' 'top' 'bottom'
- * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
- * @param {boolean=} invert Whether use invert matrix.
- * @return {string} Transformed direction. 'left' 'right' 'top' 'bottom'
+ * @param direction 'left' 'right' 'top' 'bottom'
+ * @param transform Transform matrix: like [1, 0, 0, 1, 0, 0]
+ * @param invert Whether use invert matrix.
+ * @return Transformed direction. 'left' 'right' 'top' 'bottom'
  */
-export function transformDirection(direction, transform, invert) {
+export function transformDirection(
+    direction: 'left' | 'right' | 'top' | 'bottom',
+    transform: matrix.MatrixArray,
+    invert?: boolean
+): 'left' | 'right' | 'top' | 'bottom' {
 
     // Pick a base, ensure that transform result will not be (0, 0).
     var hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
@@ -1217,7 +1321,7 @@ export function transformDirection(direction, transform, invert) {
     var vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
         ? 1 : Math.abs(2 * transform[4] / transform[2]);
 
-    var vertex = [
+    var vertex: vector.VectorArray = [
         direction === 'left' ? -hBase : direction === 'right' ? hBase : 0,
         direction === 'top' ? -vBase : direction === 'bottom' ? vBase : 0
     ];
@@ -1229,30 +1333,40 @@ export function transformDirection(direction, transform, invert) {
         : (vertex[1] > 0 ? 'bottom' : 'top');
 }
 
+function isNotGroup(el: Element): el is Displayable {
+    return !el.isGroup;
+}
+function isPath(el: Displayable): el is Path {
+    return (el as Path).shape != null;
+}
 /**
  * Apply group transition animation from g1 to g2.
  * If no animatableModel, no animation.
  */
-export function groupTransition(g1, g2, animatableModel, cb) {
+export function groupTransition(
+    g1: Group,
+    g2: Group,
+    animatableModel: Model<AnimationOptionMixin>
+) {
     if (!g1 || !g2) {
         return;
     }
 
-    function getElMap(g) {
-        var elMap = {};
-        g.traverse(function (el) {
-            if (!el.isGroup && el.anid) {
-                elMap[el.anid] = el;
+    function getElMap(g: Group) {
+        var elMap: Dictionary<Displayable> = {};
+        g.traverse(function (el: Element) {
+            if (isNotGroup(el) && el.anid) {
+                elMap[el.anid];
             }
         });
         return elMap;
     }
-    function getAnimatableProps(el) {
-        var obj = {
+    function getAnimatableProps(el: Displayable) {
+        var obj: PathProps = {
             position: vector.clone(el.position),
             rotation: el.rotation
         };
-        if (el.shape) {
+        if (isPath(el)) {
             obj.shape = zrUtil.extend({}, el.shape);
         }
         return obj;
@@ -1260,28 +1374,18 @@ export function groupTransition(g1, g2, animatableModel, cb) {
     var elMap1 = getElMap(g1);
 
     g2.traverse(function (el) {
-        if (!el.isGroup && el.anid) {
+        if (isNotGroup(el) && el.anid) {
             var oldEl = elMap1[el.anid];
             if (oldEl) {
                 var newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
                 updateProps(el, newProp, animatableModel, el.dataIndex);
             }
-            // else {
-            //     if (el.previousProps) {
-            //         graphic.updateProps
-            //     }
-            // }
         }
     });
 }
 
-/**
- * @param {Array.<Array.<number>>} points Like: [[23, 44], [53, 66], ...]
- * @param {Object} rect {x, y, width, height}
- * @return {Array.<Array.<number>>} A new clipped points.
- */
-export function clipPointsByRect(points, rect) {
+export function clipPointsByRect(points: vector.VectorArray[], rect: RectLike): vector.VectorArray[] {
     // FIXME: this way migth be incorrect when grpahic clipped by a corner.
     // and when element have border.
     return zrUtil.map(points, function (point) {
@@ -1296,11 +1400,9 @@ export function clipPointsByRect(points, rect) {
 }
 
 /**
- * @param {Object} targetRect {x, y, width, height}
- * @param {Object} rect {x, y, width, height}
- * @return {Object} A new clipped rect. If rect size are negative, return undefined.
+ * Return a new clipped rect. If rect size are negative, return undefined.
  */
-export function clipRectByRect(targetRect, rect) {
+export function clipRectByRect(targetRect: RectLike, rect: RectLike): RectLike {
     var x = mathMax(targetRect.x, rect.x);
     var x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
     var y = mathMax(targetRect.y, rect.y);
@@ -1318,21 +1420,19 @@ export function clipRectByRect(targetRect, rect) {
     }
 }
 
-/**
- * @param {string} iconStr Support 'image://' or 'path://' or direct svg path.
- * @param {Object} [opt] Properties of `module:zrender/Element`, except `style`.
- * @param {Object} [rect] {x, y, width, height}
- * @return {module:zrender/Element} Icon path or image element.
- */
-export function createIcon(iconStr, opt, rect) {
-    opt = zrUtil.extend({rectHover: true}, opt);
-    var style = opt.style = {strokeNoScale: true};
+export function createIcon(
+    iconStr: string,    // Support 'image://' or 'path://' or direct svg path.
+    opt?: Omit<DisplayableProps, 'style'>,
+    rect?: RectLike
+): SVGPath | ZImage {
+    const innerOpts: DisplayableProps = zrUtil.extend({rectHover: true}, opt);
+    const style: StyleProps = innerOpts.style = {strokeNoScale: true};
     rect = rect || {x: -1, y: -1, width: 2, height: 2};
 
     if (iconStr) {
         return iconStr.indexOf('image://') === 0
             ? (
-                style.image = iconStr.slice(8),
+                (style as ZImageStyleProps).image = iconStr.slice(8),
                 zrUtil.defaults(style, rect),
                 new ZImage(opt)
             )
@@ -1352,15 +1452,11 @@ export function createIcon(iconStr, opt, rect) {
  * are intersect.
  * Note that we do not count colinear as intersect here because no
  * requirement for that. We could do that if required in future.
- *
- * @param {number} a1x
- * @param {number} a1y
- * @param {number} a2x
- * @param {number} a2y
- * @param {Array.<Array.<number>>} points Points of the polygon.
- * @return {boolean}
  */
-export function linePolygonIntersect(a1x, a1y, a2x, a2y, points) {
+export function linePolygonIntersect(
+    a1x: number, a1y: number, a2x: number, a2y: number,
+    points: vector.VectorArray[]
+): boolean {
     for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
         var p = points[i];
         if (lineLineIntersect(a1x, a1y, a2x, a2y, p[0], p[1], p2[0], p2[1])) {
@@ -1375,18 +1471,11 @@ export function linePolygonIntersect(a1x, a1y, a2x, a2y, points) {
  * are intersect.
  * Note that we do not count colinear as intersect here because no
  * requirement for that. We could do that if required in future.
- *
- * @param {number} a1x
- * @param {number} a1y
- * @param {number} a2x
- * @param {number} a2y
- * @param {number} b1x
- * @param {number} b1y
- * @param {number} b2x
- * @param {number} b2y
- * @return {boolean}
  */
-export function lineLineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
+export function lineLineIntersect(
+    a1x: number, a1y: number, a2x: number, a2y: number,
+    b1x: number, b1y: number, b2x: number, b2y: number
+): boolean {
     // let `vec_m` to be `vec_a2 - vec_a1` and `vec_n` to be `vec_b2 - vec_b1`.
     var mx = a2x - a1x;
     var my = a2y - a1y;
@@ -1421,11 +1510,11 @@ export function lineLineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
 /**
  * Cross product of 2-dimension vector.
  */
-function crossProduct2d(x1, y1, x2, y2) {
+function crossProduct2d(x1: number, y1: number, x2: number, y2: number) {
     return x1 * y2 - x2 * y1;
 }
 
-function nearZero(val) {
+function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
 
@@ -1458,5 +1547,6 @@ export {
     CompoundPath,
     LinearGradient,
     RadialGradient,
-    BoundingRect
+    BoundingRect,
+    Path
 };
