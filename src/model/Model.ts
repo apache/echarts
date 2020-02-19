@@ -36,19 +36,11 @@ import textStyleMixin from './mixin/textStyle';
 import {LineStyleMixin} from './mixin/lineStyle';
 import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
-import { ModelOption, ECUnitOption } from '../util/types';
+import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
 var mixin = zrUtil.mixin;
 var inner = makeInner();
-
-// Since model.option can be not only `Dictionary` but also primary types,
-// we do this conditional type to avoid getting type 'never';
-type Key<Opt> = Opt extends ECUnitOption
-    ? keyof Opt : string;
-type Value<Opt, R> = Opt extends ECUnitOption
-    ? (R extends keyof Opt ? Opt[R] : ModelOption)
-    : ModelOption;
 
 /**
  * @alias module:echarts/model/Model
@@ -121,7 +113,7 @@ class Model<Opt extends ModelOption = ModelOption> {
         path: [R, S, T], ignoreParent?: boolean
     ): Opt[R][S][T];
     // `path` can be 'xxx.yyy.zzz', so the return value type have to be `ModelOption`
-    // TODO: Type strict key check?
+    // TODO: TYPE strict key check?
     // get(path: string | string[], ignoreParent?: boolean): ModelOption;
     get(path: string | string[], ignoreParent?: boolean): ModelOption {
         if (path == null) {
@@ -140,11 +132,12 @@ class Model<Opt extends ModelOption = ModelOption> {
     ): Opt[R] {
         var option = this.option;
 
-        var val = option == null ? option : option[key];
-        var parentModel = !ignoreParent && getParent(this, key as string);
-        if (val == null && parentModel) {
-            // FIXME:TS do not know how to make it works
-            val = parentModel.getShallow(key);
+        var val: Opt[R] = option == null ? null : option[key];
+        if (val == null) {
+            var parentModel = !ignoreParent && getParent(this, key as string);
+            if (parentModel) {
+                val = (parentModel as Model<Opt>).getShallow(key);
+            }
         }
         return val;
     }
@@ -236,7 +229,7 @@ function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model<Dictiona
             continue;
         }
         // obj could be number/string/... (like 0)
-        obj = (obj && typeof obj === 'object') ? obj[pathArr[i] as keyof ModelOption] : null;
+        obj = obj[pathArr[i]];
         if (obj == null) {
             break;
         }

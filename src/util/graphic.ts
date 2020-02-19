@@ -50,7 +50,7 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam } from './types';
+import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam, DisplayState } from './types';
 import GlobalModel from '../model/Global';
 
 
@@ -77,9 +77,6 @@ const _highlightKeyMap: Dictionary<number> = {};
 
 const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
-
-type AvailableStates = typeof EMPHASIS | typeof NORMAL;
-
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
@@ -94,7 +91,7 @@ type ExtendedProps = {
     __highByOuter: number
 
     __highDownSilentOnTouch: boolean
-    __highDownOnUpdate: (fromState: AvailableStates, toState: AvailableStates) => void
+    __highDownOnUpdate: (fromState: DisplayState, toState: DisplayState) => void
 
     __highDownDispatcher: boolean
 
@@ -514,8 +511,8 @@ function traverseUpdate<T>(
     commonParam?: T
 ) {
     // If root is group, also enter updater for `highDownOnUpdate`.
-    var fromState: AvailableStates = NORMAL;
-    var toState: AvailableStates = NORMAL;
+    var fromState: DisplayState = NORMAL;
+    var toState: DisplayState = NORMAL;
     var trigger;
     // See the rule of `highDownOnUpdate` on `graphic.setAsHighDownDispatcher`.
     el.__highlighted && (fromState = EMPHASIS, trigger = true);
@@ -731,7 +728,7 @@ export function setLabelStyle(
             getFormattedLabel?: (
                 labelDataIndex: number,
                 state:
-                AvailableStates,
+                DisplayState,
                 dataType: string,
                 labelDimIndex: number
             ) => string

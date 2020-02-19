@@ -51,8 +51,7 @@ import {
     ThemeOption,
     ComponentOption,
     ComponentMainType,
-    ComponentSubType,
-    ColorPaletteOptionMixin
+    ComponentSubType
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';

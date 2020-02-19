@@ -36,7 +36,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
-    ParsedDataValue, ParsedDataNumeric, OrdinalRawValueIndex, DimensionUserOuput
+    ParsedDataValue, ParsedDataNumeric, OrdinalRawValueIndex, DimensionUserOuput, ModelOption
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -504,7 +504,6 @@ class List {
     }
 
     private _initDataFromProvider(start: number, end: number): void {
-        // Optimize.
         if (start >= end) {
             return;
         }
@@ -1559,7 +1558,11 @@ class List {
     // FIXME Model proxy ?
     getItemModel(idx: number): Model {
         var hostModel = this.hostModel;
-        return new Model(this.getRawDataItem(idx), hostModel, hostModel && hostModel.ecModel);
+        var dataItem = this.getRawDataItem(idx) as ModelOption;
+        if (this._rawData.pure || !isDataItemOption(dataItem)) {
+            dataItem = { value: dataItem };
+        }
+        return new Model(dataItem, hostModel, hostModel && hostModel.ecModel);
     }
 
     /**

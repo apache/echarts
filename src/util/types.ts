@@ -161,26 +161,27 @@ export interface PostUpdater {
 
 export type VisualType = 'layout' | 'visual';
 
-export interface StageHandlerInput {
+export interface StageHandlerOverallReset {
+    (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
+}
+export interface StageHandler {
     seriesType?: string;
     createOnAllSeries?: boolean;
     performRawSeries?: boolean;
     plan?: StageHandlerPlan;
     overallReset?: StageHandlerOverallReset;
     reset?: StageHandlerReset;
+    getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
 }
-export interface StageHandler extends StageHandlerInput {
+
+export interface StageHandlerInternal extends StageHandler {
     uid: string;
     visualType?: VisualType;
     // modifyOutputEnd?: boolean;
-    getTargetSeries: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
     __prio: number;
-    __raw: StageHandlerInput | StageHandlerOverallReset;
+    __raw: StageHandler | StageHandlerOverallReset;
     isVisual?: boolean; // PENDING: not used
     isLayout?: boolean; // PENDING: not used
-}
-export interface StageHandlerOverallReset {
-    (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export type StageHandlerProgressParams = TaskProgressParams;
 export interface StageHandlerProgressExecutor {
@@ -379,7 +380,7 @@ export type OptionDataItem =
 export type OptionDataPrimitive = string | number | Date;
 
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
-export type ModelOption = any;
+export type ModelOption = Dictionary<any>;
 export type ThemeOption = Dictionary<any>;
 
 export type DisplayState = 'normal' | 'emphasis';

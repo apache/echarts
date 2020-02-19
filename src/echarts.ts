@@ -54,8 +54,8 @@ import {ECEventProcessor} from './util/ECEventProcessor';
 import {
     Payload, PayloadItem, ECElement, RendererType, ECEvent,
     ActionHandler, ActionInfo, OptionPreprocessor, PostUpdater,
-    LoadingEffect, LoadingEffectCreator, StageHandler,
-    StageHandlerOverallReset, VisualType, StageHandlerInput,
+    LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
+    StageHandlerOverallReset, VisualType, StageHandler,
     ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption,
     ECOption,
     ECUnitOption,
@@ -268,7 +268,7 @@ class ECharts {
         var api = this._api = createExtensionAPI(this);
 
         // Sort on demand
-        function prioritySortFunc(a: StageHandler, b: StageHandler): number {
+        function prioritySortFunc(a: StageHandlerInternal, b: StageHandlerInternal): number {
             return a.__prio - b.__prio;
         }
         timsort(visualFuncs, prioritySortFunc);
@@ -1873,13 +1873,13 @@ var actions: {
  */
 var eventActionMap: {[eventType: string]: string} = {};
 
-var dataProcessorFuncs: StageHandler[] = [];
+var dataProcessorFuncs: StageHandlerInternal[] = [];
 
 var optionPreprocessorFuncs: OptionPreprocessor[] = [];
 
 var postUpdateFuncs: PostUpdater[] = [];
 
-var visualFuncs: StageHandler[] = [];
+var visualFuncs: StageHandlerInternal[] = [];
 
 var themeStorage: {[themeName: string]: ThemeOption} = {};
 
@@ -2049,8 +2049,8 @@ export function registerPreprocessor(preprocessorFunc: OptionPreprocessor): void
 }
 
 export function registerProcessor(
-    priority: number | StageHandlerInput | StageHandlerOverallReset,
-    processor?: StageHandlerInput | StageHandlerOverallReset
+    priority: number | StageHandler | StageHandlerOverallReset,
+    processor?: StageHandler | StageHandlerOverallReset
 ): void {
     normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_FILTER);
 }
@@ -2138,29 +2138,35 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
  * Most visual encoding like color are common for different chart
  * But each chart has it's own layout algorithm
  */
-export function registerLayout(
-    priority: number | StageHandlerInput | StageHandlerOverallReset,
-    layoutTask?: StageHandlerInput | StageHandlerOverallReset
+function registerLayout(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void
+function registerLayout(layoutTask: StageHandler | StageHandlerOverallReset): void
+function registerLayout(
+    priority: number | StageHandler | StageHandlerOverallReset,
+    layoutTask?: StageHandler | StageHandlerOverallReset
 ): void {
     normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT, 'layout');
 }
 
-export function registerVisual(
-    priority: number | StageHandlerInput | StageHandlerOverallReset,
-    visualTask?: StageHandlerInput | StageHandlerOverallReset
+function registerVisual(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void
+function registerVisual(layoutTask: StageHandler | StageHandlerOverallReset): void
+function registerVisual(
+    priority: number | StageHandler | StageHandlerOverallReset,
+    visualTask?: StageHandler | StageHandlerOverallReset
 ): void {
     normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART, 'visual');
 }
 
+export {registerLayout, registerVisual};
+
 function normalizeRegister(
-    targetList: StageHandlerInput[],
-    priority: number | StageHandlerInput | StageHandlerOverallReset,
-    fn: StageHandlerInput | StageHandlerOverallReset,
+    targetList: StageHandler[],
+    priority: number | StageHandler | StageHandlerOverallReset,
+    fn: StageHandler | StageHandlerOverallReset,
     defaultPriority: number,
     visualType?: VisualType
 ): void {
     if (isFunction(priority) || isObject(priority)) {
-        fn = priority as (StageHandlerInput | StageHandlerOverallReset);
+        fn = priority as (StageHandler | StageHandlerOverallReset);
         priority = defaultPriority;
     }
 
@@ -2170,7 +2176,7 @@ function normalizeRegister(
         }
         // Check duplicate
         each(targetList, function (wrap) {
-            assert((wrap as StageHandler).__raw !== fn);
+            assert((wrap as StageHandlerInternal).__raw !== fn);
         });
     }
 

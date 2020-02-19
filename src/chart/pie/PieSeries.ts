@@ -44,6 +44,18 @@ interface PieLabelOption extends LabelOption {
     bleedMargin?: number
     distanceToLabelLine?: number
 }
+
+interface PieDataItem {
+    itemStyle?: ItemStyleOption
+    label?: PieLabelOption
+    labelLine?: LabelLineOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: PieLabelOption
+        labelLine?: LabelLineOption
+    }
+}
 export interface PieSeriesOption extends
     SeriesOption,
     DataSelectableOptionMixin,
@@ -54,6 +66,7 @@ export interface PieSeriesOption extends
 
     roseType?: 'radius' | 'area'
 
+    // TODO: TYPE Color Callback
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
     labelLine?: LabelLineOption
@@ -73,14 +86,14 @@ export interface PieSeriesOption extends
 
     emphasis?: {
         itemStyle?: ItemStyleOption
-
         label?: PieLabelOption
-
         labelLine?: LabelLineOption
     }
 
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
+
+    data?: number[] | PieDataItem[]
 }
 
 class PieSeries extends SeriesModel<PieSeriesOption> {
